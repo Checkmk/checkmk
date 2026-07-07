@@ -14,6 +14,7 @@ host_crates.from_cargo(
     supported_platform_triples = [
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
+        "x86_64-pc-windows-msvc",
     ],
 )
 use_repo(host_crates, "host_crates")

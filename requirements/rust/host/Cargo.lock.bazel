@@ -1,5 +1,5 @@
 {
-  "checksum": "02349cd368e073d7cb4c7090f53ce1bc318f8e9e32aa14a368ee410a9d6c1c1c",
+  "checksum": "dcadd3622cb4a5e295d37b18519496133cda0a4dbca2bade2902e9ef31a028b5",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -556,7 +556,14 @@
               "target": "utf8parse"
             }
           ],
-          "selects": {}
+          "selects": {
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "anstyle-wincon 3.0.10",
+                "target": "anstyle_wincon"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.6.20"
@@ -1441,6 +1448,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -1835,10 +1849,15 @@
           "**"
         ],
         "crate_features": {
-          "common": [
-            "std"
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              "std"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "std"
+            ]
+          }
         },
         "edition": "2021",
         "version": "2.11.1"
@@ -2370,15 +2389,30 @@
         "deps": {
           "common": [
             {
-              "id": "iana-time-zone 0.1.63",
-              "target": "iana_time_zone"
-            },
-            {
               "id": "num-traits 0.2.19",
               "target": "num_traits"
             }
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "iana-time-zone 0.1.63",
+                "target": "iana_time_zone"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "windows-link 0.1.3",
+                "target": "windows_link"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "iana-time-zone 0.1.63",
+                "target": "iana_time_zone"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.4.41"
@@ -3708,6 +3742,14 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "edition": "2021",
         "version": "1.2.0"
       },
@@ -4939,6 +4981,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "edition": "2021",
         "version": "0.1.2"
       },
@@ -6656,6 +6705,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -8016,7 +8071,14 @@
               "target": "tracing"
             }
           ],
-          "selects": {}
+          "selects": {
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "windows-registry 0.5.3",
+                "target": "windows_registry"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.1.16"
@@ -10957,10 +11019,16 @@
         ],
         "crate_features": {
           "common": [
-            "default",
-            "vendored"
+            "default"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              "vendored"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "vendored"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -11441,6 +11509,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "user"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -13078,6 +13153,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "odbc_version_3_80"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -13160,6 +13242,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "odbc_version_3_50",
+            "odbc_version_3_80"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -13437,6 +13526,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
         "edition": "2021",
         "version": "1.70.1"
       },
@@ -15944,8 +16039,24 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "default",
+            "getrandom",
+            "getrandom_package",
+            "libc",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
+            {
+              "id": "getrandom 0.1.16",
+              "target": "getrandom",
+              "alias": "getrandom_package"
+            },
             {
               "id": "rand_core 0.5.1",
               "target": "rand_core"
@@ -16020,10 +16131,6 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.175",
-              "target": "libc"
-            },
-            {
               "id": "rand_chacha 0.3.1",
               "target": "rand_chacha"
             },
@@ -16032,7 +16139,20 @@
               "target": "rand_core"
             }
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.8.5"
@@ -16121,6 +16241,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -16283,6 +16409,23 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "getrandom",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "getrandom 0.1.16",
+              "target": "getrandom"
+            }
+          ],
+          "selects": {}
+        },
         "edition": "2018",
         "version": "0.5.1"
       },
@@ -16465,6 +16608,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "std"
+          ],
+          "selects": {}
+        },
         "edition": "2021",
         "version": "0.6.2"
       },
@@ -17224,12 +17374,18 @@
             "json",
             "multipart",
             "native-tls",
-            "native-tls-vendored",
             "rustls-tls-manual-roots",
             "rustls-tls-manual-roots-no-provider",
             "system-proxy"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              "native-tls-vendored"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "native-tls-vendored"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -19730,6 +19886,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "edition": "2018",
         "version": "0.2.2"
       },
@@ -20442,7 +20605,11 @@
             "system",
             "user"
           ],
-          "selects": {}
+          "selects": {
+            "x86_64-pc-windows-msvc": [
+              "windows"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -20456,6 +20623,16 @@
               {
                 "id": "libc 0.2.175",
                 "target": "libc"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "ntapi 0.4.2",
+                "target": "ntapi"
+              },
+              {
+                "id": "windows 0.62.2",
+                "target": "windows"
               }
             ]
           }
@@ -21110,7 +21287,14 @@
               "target": "uuid"
             }
           ],
-          "selects": {}
+          "selects": {
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "winauth 0.0.4",
+                "target": "winauth"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "proc_macro_deps": {
@@ -21508,17 +21692,17 @@
             "time",
             "tokio-macros"
           ],
-          "selects": {}
+          "selects": {
+            "x86_64-pc-windows-msvc": [
+              "windows-sys"
+            ]
+          }
         },
         "deps": {
           "common": [
             {
               "id": "bytes 1.12.0",
               "target": "bytes"
-            },
-            {
-              "id": "libc 0.2.175",
-              "target": "libc"
             },
             {
               "id": "mio 1.0.4",
@@ -21533,19 +21717,29 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "signal-hook-registry 1.4.6",
-              "target": "signal_hook_registry"
-            },
-            {
               "id": "socket2 0.6.0",
               "target": "socket2"
             }
           ],
           "selects": {
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              },
+              {
+                "id": "signal-hook-registry 1.4.6",
+                "target": "signal_hook_registry"
+              }
+            ],
             "cfg(all(tokio_uring, target_os = \"linux\"))": [
               {
                 "id": "io-uring 0.7.10",
                 "target": "io_uring"
+              },
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
               },
               {
                 "id": "slab 0.4.11",
@@ -21556,6 +21750,22 @@
               {
                 "id": "backtrace 0.3.75",
                 "target": "backtrace"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "windows-sys 0.59.0",
+                "target": "windows_sys"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              },
+              {
+                "id": "signal-hook-registry 1.4.6",
+                "target": "signal_hook_registry"
               }
             ]
           }
@@ -23895,6 +24105,14 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "edition": "2021",
         "version": "1.2.0"
       },
@@ -23946,6 +24164,38 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "accctrl",
+            "aclapi",
+            "basetsd",
+            "cfg",
+            "evntrace",
+            "fileapi",
+            "handleapi",
+            "impl-default",
+            "in6addr",
+            "inaddr",
+            "lmaccess",
+            "lmapibuf",
+            "lmcons",
+            "minwinbase",
+            "minwindef",
+            "ntsecapi",
+            "processthreadsapi",
+            "sddl",
+            "securitybaseapi",
+            "sspi",
+            "winbase",
+            "windef",
+            "winerror",
+            "winioctl",
+            "winnt",
+            "winsock2",
+            "winsvc"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24277,6 +24527,56 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Wdk",
+            "Wdk_System",
+            "Wdk_System_SystemInformation",
+            "Wdk_System_SystemServices",
+            "Wdk_System_Threading",
+            "Win32",
+            "Win32_Foundation",
+            "Win32_NetworkManagement",
+            "Win32_NetworkManagement_IpHelper",
+            "Win32_NetworkManagement_Ndis",
+            "Win32_NetworkManagement_NetManagement",
+            "Win32_Networking",
+            "Win32_Networking_WinSock",
+            "Win32_Security",
+            "Win32_Security_Authentication",
+            "Win32_Security_Authentication_Identity",
+            "Win32_Security_Authorization",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "Win32_System",
+            "Win32_System_Com",
+            "Win32_System_Diagnostics",
+            "Win32_System_Diagnostics_Debug",
+            "Win32_System_Diagnostics_ToolHelp",
+            "Win32_System_IO",
+            "Win32_System_Ioctl",
+            "Win32_System_Kernel",
+            "Win32_System_Memory",
+            "Win32_System_Ole",
+            "Win32_System_Performance",
+            "Win32_System_Power",
+            "Win32_System_ProcessStatus",
+            "Win32_System_Registry",
+            "Win32_System_RemoteDesktop",
+            "Win32_System_Rpc",
+            "Win32_System_SystemInformation",
+            "Win32_System_SystemServices",
+            "Win32_System_Threading",
+            "Win32_System_Variant",
+            "Win32_System_WindowsProgramming",
+            "Win32_System_Wmi",
+            "Win32_UI",
+            "Win32_UI_Shell",
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24337,6 +24637,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24454,6 +24760,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24523,6 +24835,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24769,6 +25087,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24821,6 +25145,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24877,6 +25208,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24925,6 +25262,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -24973,6 +25316,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -25021,6 +25370,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -25119,6 +25474,22 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Security",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "Win32_System",
+            "Win32_System_Diagnostics",
+            "Win32_System_Diagnostics_Debug",
+            "Win32_System_Registry",
+            "Win32_System_Time",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -25167,6 +25538,50 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Devices",
+            "Win32_Devices_HumanInterfaceDevice",
+            "Win32_Foundation",
+            "Win32_Globalization",
+            "Win32_Graphics",
+            "Win32_Graphics_Dwm",
+            "Win32_Graphics_Gdi",
+            "Win32_Media",
+            "Win32_Networking",
+            "Win32_Networking_WinSock",
+            "Win32_Security",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "Win32_System",
+            "Win32_System_Com",
+            "Win32_System_Com_StructuredStorage",
+            "Win32_System_Console",
+            "Win32_System_IO",
+            "Win32_System_LibraryLoader",
+            "Win32_System_Ole",
+            "Win32_System_Registry",
+            "Win32_System_SystemInformation",
+            "Win32_System_SystemServices",
+            "Win32_System_Threading",
+            "Win32_System_WindowsProgramming",
+            "Win32_UI",
+            "Win32_UI_Accessibility",
+            "Win32_UI_Controls",
+            "Win32_UI_HiDpi",
+            "Win32_UI_Input",
+            "Win32_UI_Input_Ime",
+            "Win32_UI_Input_KeyboardAndMouse",
+            "Win32_UI_Input_Pointer",
+            "Win32_UI_Input_Touch",
+            "Win32_UI_Shell",
+            "Win32_UI_TextServices",
+            "Win32_UI_WindowsAndMessaging",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -25215,6 +25630,32 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Wdk",
+            "Wdk_Foundation",
+            "Wdk_Storage",
+            "Wdk_Storage_FileSystem",
+            "Wdk_System",
+            "Wdk_System_IO",
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Networking",
+            "Win32_Networking_WinSock",
+            "Win32_Security",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "Win32_System",
+            "Win32_System_Console",
+            "Win32_System_IO",
+            "Win32_System_Pipes",
+            "Win32_System_SystemServices",
+            "Win32_System_Threading",
+            "Win32_System_WindowsProgramming",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -25263,6 +25704,18 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "Win32_System",
+            "Win32_System_Console",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -25311,6 +25764,27 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Globalization",
+            "Win32_Security",
+            "Win32_Security_Authentication",
+            "Win32_Security_Authentication_Identity",
+            "Win32_Security_Credentials",
+            "Win32_Security_Cryptography",
+            "Win32_System",
+            "Win32_System_Com",
+            "Win32_System_LibraryLoader",
+            "Win32_System_Memory",
+            "Win32_System_SystemInformation",
+            "Win32_UI",
+            "Win32_UI_Shell",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -27941,6 +28415,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "rwh_06"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -27954,6 +28434,11 @@
             {
               "id": "dpi 0.1.2",
               "target": "dpi"
+            },
+            {
+              "id": "raw-window-handle 0.6.2",
+              "target": "raw_window_handle",
+              "alias": "rwh_06"
             },
             {
               "id": "smol_str 0.2.2",
@@ -29278,7 +29763,9 @@
     "cfg(all(any(all(target_arch = \"aarch64\", target_endian = \"little\"), all(target_arch = \"arm\", target_endian = \"little\")), any(target_os = \"android\", target_os = \"linux\")))": [
       "aarch64-unknown-linux-gnu"
     ],
-    "cfg(all(any(target_arch = \"x86_64\", target_arch = \"arm64ec\"), target_env = \"msvc\", not(windows_raw_dylib)))": [],
+    "cfg(all(any(target_arch = \"x86_64\", target_arch = \"arm64ec\"), target_env = \"msvc\", not(windows_raw_dylib)))": [
+      "x86_64-pc-windows-msvc"
+    ],
     "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", any(target_endian = \"little\", any(target_arch = \"s390x\", target_arch = \"powerpc\")), any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc\"), all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"s390x\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [],
     "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", any(target_endian = \"little\", target_arch = \"s390x\"), any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"s390x\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [],
     "cfg(all(any(target_os = \"linux\", target_os = \"android\"), not(any(all(target_os = \"linux\", target_env = \"\"), getrandom_backend = \"custom\", getrandom_backend = \"linux_raw\", getrandom_backend = \"rdrand\", getrandom_backend = \"rndr\"))))": [
@@ -29304,7 +29791,9 @@
     "cfg(all(target_arch = \"x86_64\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
       "x86_64-unknown-linux-gnu"
     ],
-    "cfg(all(target_arch = \"x86_64\", target_env = \"msvc\", not(windows_raw_dylib)))": [],
+    "cfg(all(target_arch = \"x86_64\", target_env = \"msvc\", not(windows_raw_dylib)))": [
+      "x86_64-pc-windows-msvc"
+    ],
     "cfg(all(target_family = \"wasm\", target_feature = \"atomics\"))": [],
     "cfg(all(target_family = \"wasm\", target_os = \"unknown\"))": [],
     "cfg(all(target_os = \"uefi\", getrandom_backend = \"efi_rng\"))": [],
@@ -29327,13 +29816,17 @@
       "aarch64-unknown-linux-gnu",
       "x86_64-unknown-linux-gnu"
     ],
-    "cfg(any(windows, target_os = \"cygwin\"))": [],
+    "cfg(any(windows, target_os = \"cygwin\"))": [
+      "x86_64-pc-windows-msvc"
+    ],
     "cfg(not(all(target_arch = \"arm\", target_os = \"none\")))": [
       "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(not(all(target_family = \"wasm\", target_os = \"unknown\")))": [
       "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(not(all(windows, target_env = \"msvc\", not(target_vendor = \"uwp\"))))": [
@@ -29342,6 +29835,7 @@
     ],
     "cfg(not(any(target_os = \"unknown\", target_arch = \"wasm32\")))": [
       "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
@@ -29350,10 +29844,12 @@
     ],
     "cfg(not(target_arch = \"wasm32\"))": [
       "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(not(target_os = \"emscripten\"))": [
       "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(not(windows))": [
@@ -29362,6 +29858,7 @@
     ],
     "cfg(not(windows_raw_dylib))": [
       "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(target_arch = \"wasm32\")": [],
@@ -29378,14 +29875,18 @@
     "cfg(target_os = \"solaris\")": [],
     "cfg(target_os = \"vxworks\")": [],
     "cfg(target_os = \"wasi\")": [],
-    "cfg(target_os = \"windows\")": [],
+    "cfg(target_os = \"windows\")": [
+      "x86_64-pc-windows-msvc"
+    ],
     "cfg(target_vendor = \"apple\")": [],
     "cfg(tokio_taskdump)": [],
     "cfg(unix)": [
       "aarch64-unknown-linux-gnu",
       "x86_64-unknown-linux-gnu"
     ],
-    "cfg(windows)": [],
+    "cfg(windows)": [
+      "x86_64-pc-windows-msvc"
+    ],
     "cfg(windows_raw_dylib)": [],
     "i686-pc-windows-gnu": [],
     "i686-pc-windows-gnullvm": [],
@@ -29394,7 +29895,9 @@
     "i686-uwp-windows-msvc": [],
     "x86_64-pc-windows-gnu": [],
     "x86_64-pc-windows-gnullvm": [],
-    "x86_64-pc-windows-msvc": [],
+    "x86_64-pc-windows-msvc": [
+      "x86_64-pc-windows-msvc"
+    ],
     "x86_64-unknown-linux-gnu": [
       "x86_64-unknown-linux-gnu"
     ],

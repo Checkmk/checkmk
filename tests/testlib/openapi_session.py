@@ -416,7 +416,14 @@ class ChangesAPI(BaseAPI):
                             "Activation of the following sites did not succeed:\n"
                             f"{pprint.pformat(not_succeeded_sites)}"
                         )
-                logger.info("Activation status: %s", str(pprint.pformat(activation_status)))
+                logger.info(
+                    "%s Use `--log-cli-level=DEBUG` for analysis.",
+                    activation_status.get(
+                        "title",
+                        "Activation status: UNKNOWN.",
+                    ),
+                )
+                logger.debug("Activation status: %s", pprint.pformat(activation_status))
 
         # Suppression for mypy `unreachable` error is added here because this code could be actually
         # reached. Mypy does not realize that `wait_for_completion` context manager is swallowing

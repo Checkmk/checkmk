@@ -67,7 +67,7 @@ from cmk.gui.type_defs import Row
                                 service_name="",
                                 metric_name="growth",
                                 consolidation_func_name="min",
-                                scale=12.136296296296296,
+                                scale=1048576.0,
                             ),
                             MetricOpConstant(value=0.0),
                         ],
@@ -211,7 +211,7 @@ def test_template_recipes() -> None:
                         service_name="Service name",
                         metric_name="growth",
                         consolidation_func_name="max",
-                        scale=12.136296296296296,
+                        scale=1048576.0,
                     ),
                     unit=ConvertibleUnitSpecification(
                         notation=IECNotation(symbol="B/d"),

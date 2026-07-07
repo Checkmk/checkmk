@@ -1,0 +1,3 @@
+# Tests skipped when the Windows test binary runs under Wine
+# (rust-test-wine.sh passes each line as a libtest --skip substring).
+# Empty for now: everything passes.

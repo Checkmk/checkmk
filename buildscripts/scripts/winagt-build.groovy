@@ -23,6 +23,9 @@ def main() {
                 string(
                     credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                     variable:"CI_TEST_SQL_DB_ENDPOINT"),
+                string(
+                    credentialsId: "sectigo_2023_pin",
+                    variable: "SECTIGO_2023_PIN"),
             ]) {
                 // The windows.build function will create stages.
                 windows.build(

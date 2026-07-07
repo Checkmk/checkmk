@@ -59,7 +59,9 @@ fn main_instance_name() -> InstanceName {
 #[cfg(windows)]
 #[test]
 fn test_environment() {
-    // it seems we need this flag to properly link openssl on Windows
+    // C code built via cc must not use assert(): it maps to _wassert,
+    // which libucrt doesn't provide, and we link the CRT statically.
+    // See .cargo/config.toml.
     let env_value = std::env::var("CFLAGS")
         .map_err(|e| anyhow::anyhow!("{e}"))
         .unwrap();

@@ -1,5 +1,5 @@
 {
-  "checksum": "154f6c230f1fa542a8d078e4336ba269188638eb3818b1d04fb3ecd447ad66e2",
+  "checksum": "bba03335d54edfd774050f1e4944c7f8d18fc43931dccfc0ea867aab35909448",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1381,7 +1381,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -2004,14 +2004,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "bytes 1.11.1": {
+    "bytes 1.12.0": {
       "name": "bytes",
-      "version": "1.11.1",
+      "version": "1.12.0",
       "package_url": "https://github.com/tokio-rs/bytes",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bytes/1.11.1/download",
-          "sha256": "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
+          "url": "https://static.crates.io/crates/bytes/1.12.0/download",
+          "sha256": "8ae3f5d315924270530207e2a68396c3cc547f6dca3fbdca317cfb1a51edb593"
         }
       },
       "targets": [
@@ -2041,7 +2041,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.11.1"
+        "version": "1.12.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -6618,7 +6618,7 @@
               "target": "atomic_waker"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -7044,7 +7044,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -7100,7 +7100,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -7157,7 +7157,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -7311,7 +7311,7 @@
               "target": "atomic_waker"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -7493,7 +7493,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -7586,7 +7586,7 @@
               "target": "base64"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -10377,10 +10377,6 @@
               "target": "build_script_build"
             },
             {
-              "id": "openssl 0.10.80",
-              "target": "openssl"
-            },
-            {
               "id": "tiberius 0.12.3",
               "target": "tiberius"
             },
@@ -10398,6 +10394,12 @@
             }
           ],
           "selects": {
+            "cfg(unix)": [
+              {
+                "id": "openssl 0.10.80",
+                "target": "openssl"
+              }
+            ],
             "cfg(windows)": [
               {
                 "id": "encoding_rs 0.8.35",
@@ -14719,7 +14721,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -14834,7 +14836,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -16347,7 +16349,7 @@
               "target": "base64"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -19867,7 +19869,7 @@
               "target": "byteorder"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -20326,7 +20328,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -20599,7 +20601,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -21009,7 +21011,7 @@
               "target": "bitflags"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {

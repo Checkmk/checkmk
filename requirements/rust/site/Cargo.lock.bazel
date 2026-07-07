@@ -1,5 +1,5 @@
 {
-  "checksum": "776d0562312caab2f612aff1b44a18126fc1eb88bf5e2788bbe643858c633cca",
+  "checksum": "e0edc9e48bc7b91b4a1f54600b39b84ccfbed8195efb2f4904b432c93eddb217",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1404,14 +1404,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "bytes 1.11.1": {
+    "bytes 1.12.0": {
       "name": "bytes",
-      "version": "1.11.1",
+      "version": "1.12.0",
       "package_url": "https://github.com/tokio-rs/bytes",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bytes/1.11.1/download",
-          "sha256": "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
+          "url": "https://static.crates.io/crates/bytes/1.12.0/download",
+          "sha256": "8ae3f5d315924270530207e2a68396c3cc547f6dca3fbdca317cfb1a51edb593"
         }
       },
       "targets": [
@@ -1441,7 +1441,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.11.1"
+        "version": "1.12.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -1702,7 +1702,7 @@
               "target": "anyhow"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -3868,7 +3868,7 @@
               "target": "atomic_waker"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4084,7 +4084,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4140,7 +4140,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4191,7 +4191,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4380,7 +4380,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4580,7 +4580,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4667,7 +4667,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -8052,7 +8052,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -8134,7 +8134,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -8784,7 +8784,7 @@
               "target": "base64"
             },
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -12165,7 +12165,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -12493,7 +12493,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.11.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -16206,7 +16206,7 @@
   "direct_deps": [
     "aes-gcm 0.10.3",
     "anyhow 1.0.95",
-    "bytes 1.11.1",
+    "bytes 1.12.0",
     "clap 4.5.29",
     "der-parser 8.2.0",
     "encoding_rs 0.8.35",

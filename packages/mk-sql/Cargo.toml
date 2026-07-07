@@ -23,10 +23,6 @@ flexi_logger.workspace = true
 futures.workspace = true
 lazy_static.workspace = true
 log.workspace = true
-# need to compile OpenSSL. See:
-# https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
-# https://github.com/rust-cross/rust-musl-cross/issues/44
-openssl = { workspace = true, features = ["vendored"] }
 tiberius = { workspace = true, features = [
   "winauth",
   "sql-browser-tokio",
@@ -42,6 +38,15 @@ tokio = { workspace = true, features = [
 # tokio-rustls = "0.24.1"
 tokio-util = { workspace = true, features = ["compat"] }
 yaml-rust2.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+# On unix, tiberius' native-tls backend is OpenSSL: vendor it so the static
+# musl builds need no system OpenSSL (the Bazel build overrides this with
+# OPENSSL_NO_VENDOR=1 and links @openssl instead). On Windows, native-tls is
+# SChannel and no OpenSSL is involved at all. See:
+# https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
+# https://github.com/rust-cross/rust-musl-cross/issues/44
+openssl = { workspace = true, features = ["vendored"] }
 
 [target.'cfg(windows)'.dependencies]
 odbc-api.workspace = true

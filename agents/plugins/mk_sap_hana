@@ -585,6 +585,14 @@ get_instance_user() {
 
 }
 
+sap_hana_sid_from_ps_line() {
+    echo "$1" | sed 's/.*\/\(.*\)\/.*\/exe\/sapstartsrv.*/\1/g'
+}
+
+sap_hana_instance_from_ps_line() {
+    echo "$1" | sed -e 's/.*\/\(.*\)\/exe\/sapstartsrv.*/\1/g' -e 's/[^0-9]//g'
+}
+
 read_global_ini() {
     local sid=$1
     content="$(cat "/usr/sap/${sid}/SYS/global/hdb/custom/config/global.ini")"
@@ -861,8 +869,8 @@ else
         # /hana/shared/ABC/HDB10/exe/sapstartsrv pf=/hana/shared/ABC/profile/ABC_HDB10_FOOBAR -D -u USER
         # /usr/sap/ABC/HDB10/exe/sapstartsrv pf=/hana/shared/ABC/profile/ABC_HDB10_FOOBAR -D -u USER
         # From these paths we extract: SID=ABC, INSTANCE=10
-        SID=$(echo "$line" | sed 's/.*\/\(.*\)\/.*\/exe\/sapstartsrv.*/\1/g')
-        INSTANCE=$(echo "$line" | sed -e 's/.*\/\(.*\)\/exe\/sapstartsrv.*/\1/g' -e 's/[^0-9]//g')
+        SID=$(sap_hana_sid_from_ps_line "$line")
+        INSTANCE=$(sap_hana_instance_from_ps_line "$line")
 
         # grep only the first word = the user running the instance
         INSTANCE_USER=$(echo "$line" | grep -Po "^\s*(\w+)")

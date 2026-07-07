@@ -20,10 +20,6 @@ def main() {
 
         lock(label: "win_sign_key", quantity: 1, resource : null) {
             withCredentials([
-                usernamePassword(
-                    credentialsId: 'win_sign',
-                    passwordVariable: 'WIN_SIGN_PASSWORD',
-                    usernameVariable: ''),
                 string(
                     credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                     variable:"CI_TEST_SQL_DB_ENDPOINT"),
@@ -31,7 +27,6 @@ def main() {
                 // The windows.build function will create stages.
                 windows.build(
                     TARGET: 'agent_with_sign',
-                    PASSWORD: WIN_SIGN_PASSWORD,
                 );
             }
         }

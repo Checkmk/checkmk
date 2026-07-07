@@ -196,6 +196,7 @@ _TEST_PARAMS: Mapping[str, VSResultAge] = {
     "resizepending": ("levels", (5 * MINUTE, 10 * MINUTE)),
     "resizeinprogress": ("levels", (5 * MINUTE, 10 * MINUTE)),
     "allcontainersrestarting": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "hasnetwork": ("levels", (5 * MINUTE, 10 * MINUTE)),
 }
 
 _ALL_NO_LEVELS: Mapping[str, VSResultAge] = {
@@ -252,14 +253,13 @@ def test_check_all_ok_when_status_unexpected_but_no_levels_configured(
     assert all(isinstance(r, Result) and r.state == State.OK for r in results)
 
 
-@pytest.mark.parametrize("age_minutes", [0, 5, 10])
-def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
-    """Each condition's summary reports the wrong status and the time since
-    its last transition. Uses params={} so state stays OK regardless of age;
-    this exercises summary format and ordering across different age renderings,
-    not threshold behavior.
+def _pod_conditions_section_status_unexpected(age_minutes: int) -> PodConditions:
+    """Return `PodConditions` template, where `age_minutes` needs to be initialized.
+
+    This is specifically a section with all of the pod conditions in their unexpected
+    or abnormal states.
     """
-    section = _make_section(
+    return _make_section(
         initialized=ConditionStatus.FALSE,
         scheduled=ConditionStatus.FALSE,
         containersready=ConditionStatus.FALSE,
@@ -270,6 +270,16 @@ def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
         allcontainersrestarting=ConditionStatus.TRUE,
         age_minutes=age_minutes,
     )
+
+
+@pytest.mark.parametrize("age_minutes", [0, 6, 11])
+def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
+    """Each condition's summary reports the wrong status and the time since
+    its last transition. Uses params={} so state stays OK regardless of age;
+    this exercises summary format and ordering across different age renderings,
+    not threshold behavior.
+    """
+    section = _pod_conditions_section_status_unexpected(age_minutes)
     results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))
     time_diff = render.timespan(age_minutes * MINUTE)
     expected = [
@@ -286,6 +296,21 @@ def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
         ]
     ]
     assert [r.summary for r in results if isinstance(r, Result)] == expected
+
+
+@pytest.mark.parametrize(
+    "age_minutes, expected_state",
+    [
+        pytest.param(0, State.OK),
+        pytest.param(6, State.WARN),
+        pytest.param(11, State.CRIT),
+    ],
+)
+def test_check_results_when_all_status_unexpected(age_minutes: int, expected_state: State) -> None:
+    """Validate service states based on the provided thresholds."""
+    section = _pod_conditions_section_status_unexpected(age_minutes)
+    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))
+    assert all(r.state == expected_state for r in results if isinstance(r, Result))
 
 
 def test_check_disruption_target_condition() -> None:

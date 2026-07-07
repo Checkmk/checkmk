@@ -29,6 +29,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
+import { resolveSiteId } from '@/mode-host/lib/site'
 
 defineOptions({
   inheritAttrs: false
@@ -137,9 +138,13 @@ function checkPushMode() {
 const hostname = ref(props.hostnameInputElement.value || '')
 const ipV4Selected = ref(false)
 const ipV6Selected = ref(false)
-const selectedSiteIdHash = ref(props.siteSelectElement.value)
 const siteId = ref(
-  props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+  resolveSiteId(
+    props.siteInputElement,
+    props.siteSelectElement,
+    props.siteDefaultElement,
+    props.sites
+  )
 )
 const siteServer = ref(
   props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
@@ -193,9 +198,12 @@ onMounted(() => {
   ipV6Selected.value = props.ipv6InputButtonElement.checked
   ipV4.value = props.ipv4InputElement.value || ''
   ipV6.value = props.ipv6InputElement.value || ''
-  selectedSiteIdHash.value = props.siteSelectElement.value
-  siteId.value =
-    props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+  siteId.value = resolveSiteId(
+    props.siteInputElement,
+    props.siteSelectElement,
+    props.siteDefaultElement,
+    props.sites
+  )
   siteServer.value = props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
 
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
@@ -215,9 +223,12 @@ onMounted(() => {
         switchVisibility()
         updateTargetElement()
 
-        selectedSiteIdHash.value = props.siteSelectElement.value
-        siteId.value =
-          props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+        siteId.value = resolveSiteId(
+          props.siteInputElement,
+          props.siteSelectElement,
+          props.siteDefaultElement,
+          props.sites
+        )
         siteServer.value =
           props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
         agentReceiverPortFetched.value = false
@@ -236,13 +247,12 @@ onMounted(() => {
         break
       }
       case props.siteInputElement: {
-        if (props.siteInputElement.checked) {
-          selectedSiteIdHash.value = props.siteSelectElement.value
-          siteId.value =
-            props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
-        } else {
-          siteId.value = props.siteDefaultElement.textContent?.split(' - ')[0] ?? ''
-        }
+        siteId.value = resolveSiteId(
+          props.siteInputElement,
+          props.siteSelectElement,
+          props.siteDefaultElement,
+          props.sites
+        )
         siteServer.value =
           props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
         agentReceiverPortFetched.value = false
@@ -362,15 +372,13 @@ type AjaxOptions = {
 
 async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
   try {
-    const siteIdHash = props.siteSelectElement.value
-    const siteIdent = props.sites.find((site) => site.id_hash === siteIdHash)?.site_id ?? ''
     const postDataRaw = new URLSearchParams({
       host_name: hostname.value || '',
       ipaddress: ipV4.value || ipV6.value || '',
       address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
       agent_port: String(agentPort.value),
       timeout: '5',
-      site_id: siteIdent
+      site_id: siteId.value
     })
 
     const postData = postDataRaw.toString()

@@ -142,8 +142,6 @@ def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
 
 MEGA = 1048576.0
 
-MB_PER_DAY_TO_B_PER_S = MEGA / 86400.0
-
 
 def _scaled_metric(new_name: str, metric: Metric, factor: float) -> Metric:
     return Metric(
@@ -238,8 +236,8 @@ def check_network_fs_mount(
         ("fs_used_percent", "fs_used_percent", 1),
         ("fs_free", "fs_free", MEGA),
         ("fs_size", "fs_size", MEGA),
-        ("growth", "fs_growth", MB_PER_DAY_TO_B_PER_S),
-        ("trend", "fs_trend", MB_PER_DAY_TO_B_PER_S),
+        ("growth", "fs_growth", MEGA),
+        ("trend", "fs_trend", MEGA),
     ):
         metric = metrics.get(old_name)
         if metric is not None:

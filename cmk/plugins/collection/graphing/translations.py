@@ -320,9 +320,15 @@ translation_cisco_mem_cisco_mem_asa_cisco_mem_asa64 = translations.Translation(
         translations.PassiveCheck("cisco_mem_asa64"),
     ],
     translations={
-        "growth": translations.RenameTo("mem_growth"),
+        "growth": translations.RenameToAndScaleBy(
+            "mem_growth",
+            1048576,
+        ),
         "mem_used": translations.RenameTo("mem_used_percent"),
-        "trend": translations.RenameTo("mem_trend"),
+        "trend": translations.RenameToAndScaleBy(
+            "mem_trend",
+            1048576,
+        ),
     },
 )
 
@@ -427,13 +433,13 @@ translation_filesystem_storages_df = translations.Translation(
         "fs_used": translations.ScaleBy(1048576),
         "growth": translations.RenameToAndScaleBy(
             "fs_growth",
-            12.136296296296296,
+            1048576,
         ),
         "overprovisioned": translations.ScaleBy(1048576),
         "reserved": translations.ScaleBy(1048576),
         "trend": translations.RenameToAndScaleBy(
             "fs_trend",
-            12.136296296296296,
+            1048576,
         ),
         "trend_hoursleft": translations.ScaleBy(3600),
         "uncommitted": translations.ScaleBy(1048576),
@@ -1206,7 +1212,7 @@ translation_netapp_ontap_volumes = translations.Translation(
         "fs_used": translations.ScaleBy(1048576),
         "growth": translations.RenameToAndScaleBy(
             "fs_growth",
-            12.136296296296296,
+            1048576,
         ),
         "iscsi_other_latency": translations.ScaleBy(0.001),
         "iscsi_read_latency": translations.ScaleBy(0.001),
@@ -1221,7 +1227,7 @@ translation_netapp_ontap_volumes = translations.Translation(
         "san_write_latency": translations.ScaleBy(0.001),
         "trend": translations.RenameToAndScaleBy(
             "fs_trend",
-            12.136296296296296,
+            1048576,
         ),
         "write_latency": translations.ScaleBy(0.001),
     },
@@ -1499,14 +1505,14 @@ translation_sansymphony_pool = translations.Translation(
         "fs_used": translations.ScaleBy(1048576),
         "growth": translations.RenameToAndScaleBy(
             "fs_growth",
-            12.136296296296296,
+            1048576,
         ),
         "overprovisioned": translations.ScaleBy(1048576),
         "percent_allocated": translations.RenameTo("fs_used_percent"),
         "reserved": translations.ScaleBy(1048576),
         "trend": translations.RenameToAndScaleBy(
             "fs_trend",
-            12.136296296296296,
+            1048576,
         ),
         "trend_hoursleft": translations.ScaleBy(3600),
         "uncommitted": translations.ScaleBy(1048576),

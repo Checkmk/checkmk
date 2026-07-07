@@ -140,8 +140,8 @@ def test_network_fs_mounts_discovery(
                 ),
                 Metric("fs_free", 30158487552.0, boundaries=(0.0, None)),
                 Metric("fs_size", 32212254720.0, boundaries=(0.0, None)),
-                Metric("fs_growth", -54252.567354853214),
-                Metric("fs_trend", -54252.567354853214, boundaries=(0.0, 15534.459259259258)),
+                Metric("fs_growth", -4687421819.459318),
+                Metric("fs_trend", -4687421819.459318, boundaries=(0.0, 1342177280.0)),
             ],
         ),
         (  # two mountpoints with empty data
@@ -180,8 +180,8 @@ def test_network_fs_mounts_discovery(
                 ),
                 Metric("fs_free", 5596896296960.0, boundaries=(0.0, None)),
                 Metric("fs_size", 6597069766656.0, boundaries=(0.0, None)),
-                Metric("fs_growth", -52531.05513336153),
-                Metric("fs_trend", -52531.05513336153, boundaries=(0.0, 3181457.256296296)),
+                Metric("fs_growth", -4538683163.522436),
+                Metric("fs_trend", -4538683163.522436, boundaries=(0.0, 274877906944.0)),
             ],
         ),
         (  # with perfdata
@@ -205,8 +205,8 @@ def test_network_fs_mounts_discovery(
                 ),
                 Metric("fs_free", 30158487552.0, boundaries=(0.0, None)),
                 Metric("fs_size", 32212254720.0, boundaries=(0.0, None)),
-                Metric("fs_growth", -54252.567354853214),
-                Metric("fs_trend", -54252.567354853214, boundaries=(0.0, 15534.459259259258)),
+                Metric("fs_growth", -4687421819.459318),
+                Metric("fs_trend", -4687421819.459318, boundaries=(0.0, 1342177280.0)),
             ],
         ),
         (  # state == 'hanging'

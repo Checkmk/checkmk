@@ -2257,7 +2257,7 @@ def test_template_recipes_fs() -> None:
                         service_name=ServiceName("service_name"),
                         metric_name="growth",
                         consolidation_func_name="max",
-                        scale=12.136296296296296,
+                        scale=1048576.0,
                     ),
                     unit=ConvertibleUnitSpecification(
                         notation=IECNotation(symbol="B/d"),

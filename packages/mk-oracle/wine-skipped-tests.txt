@@ -1,0 +1,6 @@
+# Asserts the case of the real Windows system directory (C:\Windows);
+# Wine's is lowercase (C:\windows).
+platform::tests::test_which
+# Asserts real Windows ACL semantics (c:\Windows modifiable only by
+# admins); a Wine prefix is wholly owned by the invoking user.
+permissions_windows::tests::test_only_admins_can_modify

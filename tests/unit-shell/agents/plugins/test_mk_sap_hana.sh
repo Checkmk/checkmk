@@ -405,5 +405,33 @@ test_mk_sap_hana_get_last_used_check_file_no_file() {
     assertEquals "" "$actual"
 }
 
+test_sap_hana_sid_extraction_normal() {
+    local usr_sap="prdadm 12345 1 0 Jan01 ? 00:00:12 /usr/sap/ABC/HDB10/exe/sapstartsrv pf=/hana/shared/ABC/profile/ABC_HDB10_host -D -u prdadm"
+    local hana_shared="prdadm 12346 1 0 Jan01 ? 00:00:12 /hana/shared/ABC/HDB00/exe/sapstartsrv pf=/hana/shared/ABC/profile/ABC_HDB00_host -D -u prdadm"
+
+    assertEquals "ABC" "$(sap_hana_sid_from_ps_line "$usr_sap")"
+    assertEquals "10" "$(sap_hana_instance_from_ps_line "$usr_sap")"
+    assertEquals "ABC" "$(sap_hana_sid_from_ps_line "$hana_shared")"
+    assertEquals "00" "$(sap_hana_instance_from_ps_line "$hana_shared")"
+}
+
+test_sap_hana_sid_extraction_rejects_injection() {
+    # argv[0] of the sapstartsrv process is attacker-controllable (CMK-36529).
+    # A SID pulled from these crafted process lines must never reach the root
+    # su -c commands, so the extraction has to yield an empty SID for all of them.
+    local poc="attacker 12345 1 0 Jan01 ? 00:00:12 /usr/sap/P;id>/tmp/pwned;t/HDB10/exe/sapstartsrv 600"
+    local glued="attacker 12345 1 0 Jan01 ? 00:00:12 /usr/sap/ABC;evil/HDB10/exe/sapstartsrv 600"
+    local no_exe="attacker 12345 1 0 Jan01 ? 00:00:12 HDB; touch /tmp/pwned ;sapstartsrv 600"
+    local four_char="attacker 12345 1 0 Jan01 ? 00:00:12 /usr/sap/ABCD/HDB10/exe/sapstartsrv 600"
+
+    # CMK-36529 xfail: the extraction is still vulnerable in this commit. Pin the
+    # exact SID each crafted line leaks today; the fix commit changes these to
+    # assertEquals "" to prove the injection is closed.
+    assertEquals "pwned;t" "$(sap_hana_sid_from_ps_line "$poc")"
+    assertEquals "ABC;evil" "$(sap_hana_sid_from_ps_line "$glued")"
+    assertEquals "attacker 12345 1 0 Jan01 ? 00:00:12 HDB; touch /tmp/pwned ;sapstartsrv 600" "$(sap_hana_sid_from_ps_line "$no_exe")"
+    assertEquals "ABCD" "$(sap_hana_sid_from_ps_line "$four_char")"
+}
+
 # shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

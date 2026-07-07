@@ -356,3 +356,60 @@ def test_parse_lldp_cache_empty_network_address_port_id() -> None:
     assert parsed is not None
     assert len(parsed.lldp_neighbors) == 1
     assert parsed.lldp_neighbors[0].neighbor_port == "n/a"
+
+
+# SUP-29056: on Cisco Nexus9000 devices a neighbour advertises a network-address port-id
+# sub-type ("5") whose address family is 2 (IPv6) but which carries a 4-byte IPv4 address.
+# Rendering it went through _render_networkaddress -> _render_ipv6_address, where ip_address()
+# raised a ValueError on the non-16-byte payload, crashing the whole section parse.  Unlike the
+# management-address branch, this chassis/port path had no length guard.
+STRING_TABLE_NETWORK_ADDRESS_IPV4_AS_IPV6_PORT_ID: Sequence[StringByteTable] = [
+    [  # lldp_rem_entry
+        [
+            "0.1.1",
+            "4",  # lldpRemChassisIdSubtype: mac-address
+            [0, 13, 185, 74, 165, 68],  # lldpRemChassisId
+            "5",  # lldpRemPortIdSubtype: network-address
+            [2, 192, 168, 1, 1],  # lldpRemPortId: family 2 (IPv6) but 4-byte IPv4 payload
+            "",
+            "NEXUS-SW",
+            "Cisco NX-OS",
+            "9",
+            "\x08",
+        ]
+    ],
+    [  # lldp_local_port_entry
+        ["1", "5", [69, 116, 104, 49]]  # lldpLocPortIdSubtype: network-address, "Eth1"
+    ],
+    [  # lldp_local_info
+        ["4", [184, 236, 163, 230, 8, 135], "Local Sys Name", "Local Sys Desc", " ", " "]
+    ],
+    [  # lldp_rem_man_addr_entry
+        ["0.1.1", "3"]
+    ],
+]
+
+
+def test_parse_lldp_cache_network_address_ipv4_as_ipv6_port_id() -> None:
+    """A network-address port-id carrying an IPv4 address with family 2 (IPv6) must not crash."""
+    parsed = parse_lldp_cache(string_table=STRING_TABLE_NETWORK_ADDRESS_IPV4_AS_IPV6_PORT_ID)
+    assert parsed is not None
+    assert len(parsed.lldp_neighbors) == 1
+    assert parsed.lldp_neighbors[0].neighbor_port == "192.168.1.1"
+
+
+@pytest.mark.parametrize(
+    "raw_bytes",
+    [
+        [],  # empty
+        [2, 10, 20],  # family IPv6, too short (odd)
+        [2, 10, 20, 30, 40, 50, 60],  # family IPv6, too short (even)
+        [2] + list(range(15)),  # family IPv6, one byte short
+    ],
+    ids=["empty", "ipv6-odd", "ipv6-even-short", "ipv6-one-short"],
+)
+def test_render_networkaddress_never_raises(raw_bytes: list[int]) -> None:
+    """Malformed network-address payloads must render gracefully, not raise."""
+    from cmk.plugins.network.agent_based.lldp_cache import _render_networkaddress
+
+    assert isinstance(_render_networkaddress(raw_bytes), str)

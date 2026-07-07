@@ -168,7 +168,6 @@ def _render_ipv4_address(bytes_: Sequence[int]) -> str:
 
 
 def _render_ipv6_address(bytes_: Sequence[int]) -> str:
-    # print(bytes_)
     hex_bytes = [f"{byte:02x}" for byte in bytes_]
     address = ":".join(
         ["".join([hex_bytes[i], hex_bytes[i + 1]]) for i in range(0, len(hex_bytes), 2)]
@@ -183,7 +182,14 @@ def _render_networkaddress(bytes_: Sequence[int]) -> str:
         case 1:  # ipv4 address
             return _render_ipv4_address(bytes_[1:])
         case 2:  # ipv6 address
-            return _render_ipv6_address(bytes_[1:])
+            if len(bytes_[1:]) == 16:
+                return _render_ipv6_address(bytes_[1:])
+            elif len(bytes_[1:]) == 4:
+                # Some devices incorrectly report IPv4 addresses
+                # with address family 2 (IPv6)
+                return _render_ipv4_address(bytes_[1:])
+            else:
+                return "invalid IPv6 sequence"
         case _:  # all other
             return "".join(chr(m) for m in bytes_)
 

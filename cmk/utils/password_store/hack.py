@@ -32,6 +32,7 @@ HACK_AGENTS = {
     "cisco_prime": True,
     "datadog": True,
     "elasticsearch": True,
+    "extremecloud_iq": False,
     "fritzbox": False,  # needs no secret
     "gcp": True,
     "gerrit": False,

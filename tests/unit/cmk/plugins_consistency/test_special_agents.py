@@ -19,6 +19,7 @@ from cmk.utils import password_store
 from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.bazel.lib import agent as agent_bazel
+from cmk.plugins.extremecloud_iq.special_agent import agent_extremecloud_iq
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
@@ -84,6 +85,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "ddn_s2a": None,
     "elasticsearch": agent_elasticsearch,
     "emcvnx": None,
+    "extremecloud_iq": agent_extremecloud_iq,
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,
@@ -159,6 +161,12 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "fritzbox": ["HOSTNAME"],
     "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "graylog": ["HOSTNAME"],
+    "extremecloud_iq": [
+        "URL",
+        "USERNAME",
+        "--password",
+        "PASSWORD",
+    ],
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [
         "URL",

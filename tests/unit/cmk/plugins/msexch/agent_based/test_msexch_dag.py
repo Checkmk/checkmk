@@ -102,6 +102,9 @@ class TestParseMsexchDag:
             }
         }
 
+    def test_parse_empty_section(self) -> None:
+        assert parse_msexch_dag(EMPTY_DATA) == {}
+
     def test_parse_no_database_name(self) -> None:
         data = [
             ["RunspaceId", "test-id"],

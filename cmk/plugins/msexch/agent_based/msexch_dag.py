@@ -122,6 +122,9 @@ def parse_msexch_dag(string_table: StringTable) -> Section:
     collected_databases: dict[str, dict[str, str]] = {}
     current_record: dict[str, str] = {}
 
+    if not string_table:
+        return collected_databases
+
     # We don't know which entry starts the table, so we record it.
     # We can then at least expect that a new DB starts with this entry.
     start_key = string_table[0][0].strip()

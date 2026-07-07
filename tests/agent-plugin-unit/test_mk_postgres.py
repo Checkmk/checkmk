@@ -250,8 +250,7 @@ class TestLinux:
         myPostgresOnLinux.run_sql_as_db_user("SELECT 1")
 
         argv = mock_Popen.call_args[0][0]
-        # Bug: this causes trouble with newer linux utils versions, see CMK-34792
-        assert argv[:3] == ["su", "-", "postgres"]
+        assert argv[:3] == ["su", "--login", "-c"]
 
     @patch("subprocess.Popen")
     def test_get_instances(

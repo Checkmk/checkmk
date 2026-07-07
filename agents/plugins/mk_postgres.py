@@ -785,13 +785,6 @@ class PostgresLinux(PostgresBase):
         self, sql_file_path, extra_args="", field_sep=";", quiet=True, rows_only=True
     ):
         # type: (str, str, str, bool, bool) -> str
-        base_cmd_list = [
-            "su",
-            "-",
-            self.db_user,
-            "-c",
-            r"""PGPASSFILE=%s %s -X %s -A0 -F'%s' -f %s""",
-        ]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
@@ -801,13 +794,14 @@ class PostgresLinux(PostgresBase):
         if rows_only:
             extra_args += " -t"
 
-        base_cmd_list[-1] = base_cmd_list[-1] % (
+        cmd = r"""PGPASSFILE=%s %s -X %s -A0 -F'%s' -f %s""" % (
             self.pg_passfile,
             self.psql_binary_path,
             extra_args,
             field_sep,
             sql_file_path,
         )
+        base_cmd_list = ["su", "--login", "-c", cmd, self.db_user]
         proc = subprocess.Popen(  # pylint: disable=consider-using-with
             base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
         )

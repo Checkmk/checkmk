@@ -1,3 +1,6 @@
+# The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
+exports_files(["xcomp/rust-test-wine.sh"])
+
 py_library(
     name = "runpath_patch",
     srcs = ["runpath_patch.py"],

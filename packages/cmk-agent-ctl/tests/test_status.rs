@@ -17,7 +17,11 @@ use common::agent;
 use assert_cmd::prelude::OutputAssertExt;
 use predicates::prelude::*;
 
+// Guards the cargo build only: under Bazel the CRT linkage is enforced by
+// the build (platform flag + toolchain args) and asserted by
+// static_crt_test, and CFLAGS is not in the test env.
 #[cfg(windows)]
+#[cfg(not(feature = "build_system_bazel"))]
 #[test]
 fn test_environment() {
     // C code built via cc (e.g. ring) must not use assert(): it maps to _wassert,

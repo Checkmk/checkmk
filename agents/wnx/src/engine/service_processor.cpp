@@ -732,6 +732,17 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                                            : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
+        // Install Modules (containing Python interpreter) before running agent
+        // controller. Python is required since the controller may invoke agent
+        // updater registration.
+        if (is_service) {
+            mc_.InstallDefault(cfg::modules::InstallMode::normal);
+            install::ClearPostInstallFlag();
+            PrepareTempFolder();
+        } else {
+            mc_.LoadDefault();
+        }
+
         auto controller_params = OptionallyStartAgentController(1000ms);
 
         ON_OUT_OF_SCOPE(ac::KillAgentController());
@@ -740,13 +751,6 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                                     FOLDERID_ProgramData)} /
                                     ac::kCmkAgentUninstall,
                                 controller_params.has_value());
-        }
-        if (is_service) {
-            mc_.InstallDefault(cfg::modules::InstallMode::normal);
-            install::ClearPostInstallFlag();
-            PrepareTempFolder();
-        } else {
-            mc_.LoadDefault();
         }
 
         auto to_load = is_service

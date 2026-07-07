@@ -33,20 +33,11 @@ use_repo(
     "io_opentelemetry_go_collector_service",
 )
 
-# The overrides are needed to avoid issues like:
-# no such package '@@gazelle~~go_deps~com_github_prometheus_prometheus//gogoproto': BUILD file not found in directory 'gogoproto' of external repository
-# See conversation here: https://github.com/bazel-contrib/bazel-gazelle/issues/1035
-# The mentioned solution 'build_file_proto_mode = "disable_global"' is deprecated and was moved to 'gazelle_override':
-# https://github.com/bazel-contrib/bazel-gazelle/blob/56b3f7867eff7bd43dd93777987af9f9668ae896/internal/bzlmod/go_deps.bzl#L206
-go_deps.gazelle_override(
+# This maps more closely to how vanilla go pulls in modules.
+# See https://github.com/bazelbuild/bazel-gazelle/pull/1888
+go_deps.gazelle_default_attributes(
+    build_file_generation = "clean",
     directives = [
         "gazelle:proto disable",
     ],
-    path = "go.opentelemetry.io/collector/pdata/xpdata",
-)
-go_deps.gazelle_override(
-    directives = [
-        "gazelle:proto disable",
-    ],
-    path = "go.opentelemetry.io/collector/exporter/exporterhelper",
 )

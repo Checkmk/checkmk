@@ -2873,9 +2873,6 @@ msgstr "APC Symmetraチェック"
 msgid "API (via Unix socket)"
 msgstr "Unix ソケット経由で接続"
 
-msgid "API access token"
-msgstr "APIアクセストークン"
-
 #, fuzzy
 msgid "API cache is disabled."
 msgstr "グラフが無効になっています"
@@ -3740,7 +3737,8 @@ msgstr ""
 msgid "Activate monitoring of host via a HTTP connect to the HiveManager"
 msgstr "HiveManagerへのHTTP接続を介してホストの監視をアクティブ化する"
 
-msgid "Activate monitoring of the HiveManagerNG cloud."
+#, fuzzy
+msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
 msgstr "HiveManagerNGクラウドの監視をアクティブにします。"
 
 msgid "Activate on selected sites"
@@ -5035,7 +5033,8 @@ msgstr "終了前に再認証を勧める"
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
-msgid "Aerohive HiveManager NG"
+#, fuzzy
+msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 msgstr "Aerohive HiveManager NG"
 
 #, python-format
@@ -9642,6 +9641,10 @@ msgstr "ベースURL(OMDサイト)"
 
 msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
+
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -25504,6 +25507,14 @@ msgstr ""
 "SGAパフォーマンスデータを別のサービスに抽出し、さらにPGAパフォーマンスデータ"
 "を表示します"
 
+#, fuzzy
+msgid "ExtremeCloud IQ password"
+msgstr "ユーザーパスワードを入力"
+
+#, fuzzy
+msgid "ExtremeCloud IQ username"
+msgstr "ユーザーネームを入力してください"
+
 msgid "Extremes only"
 msgstr "極端な場合のみ"
 
@@ -37761,6 +37772,12 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Checkmkが学習する"
 
+#, fuzzy
+msgid "Leave unset on installations where over-voltage is not a concern."
+msgstr ""
+"UPSやPDUなどのデバイスの上位電圧レベル。過電圧が問題にならないインストールで"
+"は、設定しないままにしておいてください。"
+
 msgid "Left"
 msgstr "左"
 
@@ -47132,9 +47149,6 @@ msgstr "作成する番号"
 msgid "Numeric value"
 msgstr "数値"
 
-msgid "Numerical ID of the VHM, e.g. 102"
-msgstr "VHMの数値ID、例: 102"
-
 msgid "Nutanix Cluster CPU utilization"
 msgstr "NutanixクラスタのCPU使用率"
 
@@ -54227,9 +54241,6 @@ msgstr "Redfish 物理ポート検出"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "ダイレクトI/O"
-
-msgid "Redirect URL (has to be https)"
-msgstr "リダイレクトURL(httpsである必要があります)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -79960,9 +79971,6 @@ msgstr "CheckmkへのリンクのURLプレフィックス"
 msgid "URL server address"
 msgstr "URLサーバーアドレス"
 
-msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
-
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -81425,6 +81433,14 @@ msgstr "ログ使用の上位レベル"
 msgid ""
 "Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Upper levels for the nominal frequencies of AC devices like UPSs or PDUs. "
+"Leave unset where over-frequency is not a concern."
+msgstr ""
+"UPSやPDUなどのACデバイスの公称周波数のレベル。いくつかのフェーズは、独立して"
+"対処できます。"
 
 msgid "Upper levels for the number of HTTP requests per second"
 msgstr "1秒あたりのHTTPリクエスト数の上位レベル"
@@ -93219,17 +93235,6 @@ msgid ""
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 msgstr ""
 
-msgid "The time window used to aggregate data for each point on the chart.<ul>"
-msgstr ""
-
-#, fuzzy
-msgid "Aggregation lookback"
-msgstr "集約チェック"
-
-#, fuzzy
-msgid "Percentile (histograms)"
-msgstr "パーセンタイル"
-
 msgid "Auto"
 msgstr "自動"
 
@@ -93570,16 +93575,16 @@ msgid "Existence"
 msgstr "リスナー"
 
 #, fuzzy
-msgid "Attribute operator"
-msgstr "設定する属性"
+msgid "Edit condition"
+msgstr "接続を編集する"
 
 #, fuzzy
 msgid "Remove condition"
 msgstr "タグ条件を削除します"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "接続を編集する"
+msgid "Attribute operator"
+msgstr "設定する属性"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -93647,6 +93652,183 @@ msgstr "\"%s\"で終わることはできません"
 #, fuzzy
 msgid "does not exist"
 msgstr "存在しない"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "最終報告"
+
+#, fuzzy
+msgid "Avg"
+msgstr "年数"
+
+#, fuzzy
+msgid "Max"
+msgstr "May"
+
+#, fuzzy
+msgid "Min"
+msgstr "メイン"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "パーセンタイル"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "カウントのみ"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "レートを計算する"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "サイズデルタ"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%sレート"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "まで"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "分数"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "分数"
+
+#, fuzzy
+msgid "Cumulative sum field"
+msgstr "カスタマイズフィールド"
+
+msgid "%{label} (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "Histogram"
+msgstr "ヒストリー"
+
+#, fuzzy
+msgid "last"
+msgstr "最後 "
+
+#, fuzzy
+msgid "raw"
+msgstr "行"
+
+#, fuzzy
+msgid "avg"
+msgstr "タグ"
+
+#, fuzzy
+msgid "rate"
+msgstr "%sレート"
+
+#, fuzzy
+msgid "delta"
+msgstr "サイズデルタ"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "パーセンタイル"
+
+#, fuzzy
+msgid "count delta"
+msgstr "ドキュメント数のデルタ"
+
+#, fuzzy
+msgid "count rate"
+msgstr "でのファイル数"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "サイズデルタ"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%sレート"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
+
+#, fuzzy
+msgctxt "Abbreviation for hours"
+msgid "h"
+msgstr "h"
+
+#, fuzzy
+msgctxt "Abbreviation for minutes"
+msgid "m"
+msgstr "m"
+
+#, fuzzy
+msgctxt "Abbreviation for seconds"
+msgid "s"
+msgstr "s"
+
+#, fuzzy
+msgid "Treat as %{type}"
+msgstr "データ・タイプ"
+
+#, fuzzy
+msgid "Enter a quantile between 0 and 1"
+msgstr "ポートは0から65535の間でなければならない。"
+
+#, fuzzy
+msgid "Enter a threshold"
+msgstr "しきい値を超えて"
+
+#, fuzzy
+msgid "Enter both thresholds"
+msgstr "しきい値を超えて"
+
+#, fuzzy
+msgid "Lower threshold must be below the upper threshold"
+msgstr "下限は上限よりも大きいです。"
+
+#, fuzzy
+msgid "Edit consolidation"
+msgstr "接続を編集する"
+
+#, fuzzy
+msgid "Consolidation function"
+msgstr "統合機能"
+
+msgid "Quantile (0 to 1)"
+msgstr ""
+
+#, fuzzy
+msgid "Lower threshold"
+msgstr "しきい値を超えて"
+
+#, fuzzy
+msgid "Upper threshold"
+msgstr "しきい値を超えて"
+
+#, fuzzy
+msgid "over last"
+msgstr "最後 "
+
+#, fuzzy
+msgid "Lookback"
+msgstr "振り返ってください"
+
+#, fuzzy
+msgid "Consolidation"
+msgstr "RRDの統合"
 
 #, fuzzy
 msgid "Unknown error"
@@ -95731,6 +95913,22 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "API access token"
+#~ msgstr "APIアクセストークン"
+
+#~ msgid "Numerical ID of the VHM, e.g. 102"
+#~ msgstr "VHMの数値ID、例: 102"
+
+#~ msgid "Redirect URL (has to be https)"
+#~ msgstr "リダイレクトURL(httpsである必要があります)"
+
+#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+#~ msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
+
+#, fuzzy
+#~ msgid "Aggregation lookback"
+#~ msgstr "集約チェック"
+
 #~ msgid "Levels for time until forced reboot due to pending important updates"
 #~ msgstr "重要なアップデート保留による強制再起動までの時間レベル"
 
@@ -97200,9 +97398,6 @@ msgstr ""
 #~ msgid "RPM packaging"
 #~ msgstr "RPMパッケージ"
 
-#~ msgid "RRD consolidation"
-#~ msgstr "RRDの統合"
-
 #~ msgid "RRDCached"
 #~ msgstr "RRDcached"
 
@@ -98030,9 +98225,6 @@ msgstr ""
 #~ msgid "l/s"
 #~ msgstr "l/s"
 
-#~ msgid "m"
-#~ msgstr "m"
-
 #~ msgid "pkts / sec"
 #~ msgstr "pkts/秒"
 
@@ -98059,9 +98251,6 @@ msgstr ""
 
 #~ msgid "Decryption of SNMPv3 password failed."
 #~ msgstr "SNMPv3 パスワードの復号化に失敗しました。"
-
-#~ msgid "Compute a rate"
-#~ msgstr "レートを計算する"
 
 #~ msgid "Capacity"
 #~ msgstr "容量"

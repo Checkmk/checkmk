@@ -2957,9 +2957,6 @@ msgstr "Controlli APC Symmetra"
 msgid "API (via Unix socket)"
 msgstr "API (attraverso socket Unix)"
 
-msgid "API access token"
-msgstr "Token di accesso API"
-
 msgid "API cache is disabled."
 msgstr "Cache delle API disabilitata."
 
@@ -3814,7 +3811,8 @@ msgid "Activate monitoring of host via a HTTP connect to the HiveManager"
 msgstr ""
 "Attivare il monitoraggio dell'host tramite una connessione HTTP a HiveManager"
 
-msgid "Activate monitoring of the HiveManagerNG cloud."
+#, fuzzy
+msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
 msgstr "Attivare il monitoraggio del cloud HiveManagerNG."
 
 msgid "Activate on selected sites"
@@ -5111,7 +5109,8 @@ msgstr "Consiglia la ri-autenticazione prima della terminazione"
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
-msgid "Aerohive HiveManager NG"
+#, fuzzy
+msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 msgstr "Aerohive HiveManager NG"
 
 #, python-format
@@ -9979,6 +9978,10 @@ msgstr "URL di base (sito OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL di base per il motore docker API"
+
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26506,6 +26509,14 @@ msgstr ""
 "Estrae i dati sulle prestazioni SGA in un servizio separato e visualizza "
 "inoltre i dati sulle prestazioni PGA"
 
+#, fuzzy
+msgid "ExtremeCloud IQ password"
+msgstr "Inserisci la password dell'utente"
+
+#, fuzzy
+msgid "ExtremeCloud IQ username"
+msgstr "Inserisci il nome utente"
+
 msgid "Extremes only"
 msgstr "Solo gli estremi"
 
@@ -39549,6 +39560,12 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Controllo dell'apprendimento"
 
+#, fuzzy
+msgid "Leave unset on installations where over-voltage is not a concern."
+msgstr ""
+"Livelli di tensione per dispositivi come UPS o PDU. Diverse fasi possono "
+"essere affrontate in modo indipendente."
+
 msgid "Left"
 msgstr "Sinistra"
 
@@ -49325,9 +49342,6 @@ msgstr "Numero da creare"
 msgid "Numeric value"
 msgstr "Valore numerico"
 
-msgid "Numerical ID of the VHM, e.g. 102"
-msgstr "ID numerico del VHM, per esempio 102"
-
 msgid "Nutanix Cluster CPU utilization"
 msgstr "Utilizzo della CPU del cluster Nutanix"
 
@@ -56960,9 +56974,6 @@ msgstr "Stati delle porte fisiche da scoprire"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "I/O diretto"
-
-msgid "Redirect URL (has to be https)"
-msgstr "URL di reindirizzamento (deve essere https)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -84178,9 +84189,6 @@ msgstr "Prefisso URL per i link a Checkmk"
 msgid "URL server address"
 msgstr "Indirizzo del server URL personalizzato"
 
-msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "URL a HiveManagerNG, ad esempio https://cloud.aerohive.com"
-
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -85710,6 +85718,14 @@ msgstr "Livelli superiori per la dimensione della licenza"
 msgid ""
 "Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Upper levels for the nominal frequencies of AC devices like UPSs or PDUs. "
+"Leave unset where over-frequency is not a concern."
+msgstr ""
+"Livelli per le frequenze nominali di dispositivi AC come UPS o PDU. Diverse "
+"fasi possono essere affrontate indipendentemente."
 
 msgid "Upper levels for the number of HTTP requests per second"
 msgstr "Livelli superiori per il numero di richieste HTTP al secondo"
@@ -98092,17 +98108,6 @@ msgid ""
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 msgstr ""
 
-msgid "The time window used to aggregate data for each point on the chart.<ul>"
-msgstr ""
-
-#, fuzzy
-msgid "Aggregation lookback"
-msgstr "Controlli di aggregazione"
-
-#, fuzzy
-msgid "Percentile (histograms)"
-msgstr "Percentile"
-
 #, fuzzy
 msgid "Auto"
 msgstr "Automatico"
@@ -98463,16 +98468,16 @@ msgid "Existence"
 msgstr "Ascoltatore"
 
 #, fuzzy
-msgid "Attribute operator"
-msgstr "Attributo da impostare"
+msgid "Edit condition"
+msgstr "Modifica connessione"
 
 #, fuzzy
 msgid "Remove condition"
 msgstr "Rimuovere la condizione di tag"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Modifica connessione"
+msgid "Attribute operator"
+msgstr "Attributo da impostare"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -98540,6 +98545,183 @@ msgstr "Non termina con %s"
 #, fuzzy
 msgid "does not exist"
 msgstr "Non esiste"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Rapporto d'urto"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Età"
+
+#, fuzzy
+msgid "Max"
+msgstr "Maggio"
+
+#, fuzzy
+msgid "Min"
+msgstr "Principale"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Percentile"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Conta solo"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Tasso di messaggi consegnati"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Dimensione delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s tasso"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Fino a"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Frazione"
+
+#, fuzzy
+msgid "Cumulative sum field"
+msgstr "personalizzato"
+
+msgid "%{label} (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "Histogram"
+msgstr "Storia"
+
+#, fuzzy
+msgid "last"
+msgstr "L'ultimo "
+
+#, fuzzy
+msgid "raw"
+msgstr "riga"
+
+#, fuzzy
+msgid "avg"
+msgstr "Tag"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s tasso"
+
+#, fuzzy
+msgid "delta"
+msgstr "Dimensione delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Percentile"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Delta del conteggio dei documenti"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Conteggio dei file a"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Dimensione delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s tasso"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
+
+#, fuzzy
+msgctxt "Abbreviation for hours"
+msgid "h"
+msgstr "h"
+
+#, fuzzy
+msgctxt "Abbreviation for minutes"
+msgid "m"
+msgstr "m"
+
+#, fuzzy
+msgctxt "Abbreviation for seconds"
+msgid "s"
+msgstr "s"
+
+#, fuzzy
+msgid "Treat as %{type}"
+msgstr "Tipo di dati"
+
+#, fuzzy
+msgid "Enter a quantile between 0 and 1"
+msgstr "Il valore di %s deve essere tra %d e %d"
+
+#, fuzzy
+msgid "Enter a threshold"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "Enter both thresholds"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "Lower threshold must be below the upper threshold"
+msgstr "Il tempo non deve essere maggiore di %02d:%02d."
+
+#, fuzzy
+msgid "Edit consolidation"
+msgstr "Modifica connessione"
+
+#, fuzzy
+msgid "Consolidation function"
+msgstr "Funzioni di consolidamento"
+
+msgid "Quantile (0 to 1)"
+msgstr ""
+
+#, fuzzy
+msgid "Lower threshold"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "Upper threshold"
+msgstr "oltre la soglia"
+
+#, fuzzy
+msgid "over last"
+msgstr "L'ultimo "
+
+#, fuzzy
+msgid "Lookback"
+msgstr "Guardando indietro"
+
+#, fuzzy
+msgid "Consolidation"
+msgstr "Consolidamento RRD"
 
 #, fuzzy
 msgid "Unknown error"
@@ -100603,6 +100785,22 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "API access token"
+#~ msgstr "Token di accesso API"
+
+#~ msgid "Numerical ID of the VHM, e.g. 102"
+#~ msgstr "ID numerico del VHM, per esempio 102"
+
+#~ msgid "Redirect URL (has to be https)"
+#~ msgstr "URL di reindirizzamento (deve essere https)"
+
+#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+#~ msgstr "URL a HiveManagerNG, ad esempio https://cloud.aerohive.com"
+
+#, fuzzy
+#~ msgid "Aggregation lookback"
+#~ msgstr "Controlli di aggregazione"
+
 #~ msgid "Levels for time until forced reboot due to pending important updates"
 #~ msgstr ""
 #~ "Livelli di tempo fino al riavvio forzato a causa di aggiornamenti "
@@ -102034,9 +102232,6 @@ msgstr ""
 #~ msgid "RPM packaging"
 #~ msgstr "Imballaggio RPM"
 
-#~ msgid "RRD consolidation"
-#~ msgstr "Consolidamento RRD"
-
 #~ msgid "RRDCached"
 #~ msgstr "RRDCached"
 
@@ -102770,9 +102965,6 @@ msgstr ""
 #~ msgid "l/s"
 #~ msgstr "l/s"
 
-#~ msgid "m"
-#~ msgstr "m"
-
 #~ msgid "pkts / sec"
 #~ msgstr "pkts / sec"
 
@@ -102800,10 +102992,6 @@ msgstr ""
 
 #~ msgid "Decryption of SNMPv3 password failed."
 #~ msgstr "Decrittazione fallita per la password SNMPv3."
-
-#, fuzzy
-#~ msgid "Compute a rate"
-#~ msgstr "Tasso di messaggi consegnati"
 
 #, fuzzy
 #~ msgid "Capacity"

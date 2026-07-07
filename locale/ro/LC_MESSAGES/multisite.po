@@ -2968,10 +2968,6 @@ msgid "API (via Unix socket)"
 msgstr "Conectare prin socket UNIX"
 
 #, fuzzy
-msgid "API access token"
-msgstr "Token de acces la API"
-
-#, fuzzy
 msgid "API cache is disabled."
 msgstr "Graficul este dezactivat"
 
@@ -3887,7 +3883,8 @@ msgstr ""
 "Activați monitorizarea gazdei prin intermediul unei conexiuni HTTP la "
 "HiveManager"
 
-msgid "Activate monitoring of the HiveManagerNG cloud."
+#, fuzzy
+msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
 msgstr "Activați monitorizarea cloud-ului HiveManagerNG."
 
 msgid "Activate on selected sites"
@@ -5240,7 +5237,8 @@ msgstr "Recomandați o reautentificare înainte de terminarea programului:"
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
-msgid "Aerohive HiveManager NG"
+#, fuzzy
+msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 msgstr "Aerohive HiveManager NG"
 
 #, python-format
@@ -10168,6 +10166,10 @@ msgstr "URL de bază (Site OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL de bază pentru motorul API docker"
+
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26805,6 +26807,14 @@ msgstr ""
 "Extrage datele de performanță SGA într-un serviciu separat și afișează "
 "suplimentar datele de performanță PGA"
 
+#, fuzzy
+msgid "ExtremeCloud IQ password"
+msgstr "Introduceți parola de utilizator"
+
+#, fuzzy
+msgid "ExtremeCloud IQ username"
+msgstr "Introduceți numele de utilizator"
+
 msgid "Extremes only"
 msgstr "Doar extreme"
 
@@ -39899,6 +39909,12 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Învățare Checkmk"
 
+#, fuzzy
+msgid "Leave unset on installations where over-voltage is not a concern."
+msgstr ""
+"Nivelurile de tensiune pentru dispozitive precum UPS sau PDU. Mai multe faze "
+"pot fi abordate în mod independent."
+
 msgid "Left"
 msgstr "Stânga"
 
@@ -49707,9 +49723,6 @@ msgstr "Număr de creat"
 msgid "Numeric value"
 msgstr "Valoare numerică"
 
-msgid "Numerical ID of the VHM, e.g. 102"
-msgstr "Numărul de identificare numerică al VHM, de exemplu 102"
-
 msgid "Nutanix Cluster CPU utilization"
 msgstr "Utilizare CPU a clusterului Nutanix Cluster"
 
@@ -57364,9 +57377,6 @@ msgstr "Stări de port fizic de descoperit"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "I/O direct"
-
-msgid "Redirect URL (has to be https)"
-msgstr "URL de redirecționare (trebuie să fie https)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -84707,9 +84717,6 @@ msgstr "Prefixul URL pentru legăturile către Checkmk"
 msgid "URL server address"
 msgstr "Adresa serverului URL personalizat"
 
-msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "URL către HiveManagerNG, de exemplu https://cloud.aerohive.com"
-
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -86240,6 +86247,15 @@ msgstr "Niveluri superioare pentru dimensiunea de utilizare a jurnalelor"
 msgid ""
 "Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Upper levels for the nominal frequencies of AC devices like UPSs or PDUs. "
+"Leave unset where over-frequency is not a concern."
+msgstr ""
+"Nivelurile pentru frecvențele nominale ale dispozitivelor de curent "
+"alternativ, cum ar fi UPS-urile sau PDU-urile. Mai multe faze pot fi "
+"abordate independent."
 
 msgid "Upper levels for the number of HTTP requests per second"
 msgstr "Niveluri superioare pentru numărul de cereri HTTP pe secundă"
@@ -98653,17 +98669,6 @@ msgid ""
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 msgstr ""
 
-msgid "The time window used to aggregate data for each point on the chart.<ul>"
-msgstr ""
-
-#, fuzzy
-msgid "Aggregation lookback"
-msgstr "Controale de agregare"
-
-#, fuzzy
-msgid "Percentile (histograms)"
-msgstr "Procentuală"
-
 #, fuzzy
 msgid "Auto"
 msgstr "Automat"
@@ -99023,16 +99028,16 @@ msgid "Existence"
 msgstr "Ascultător"
 
 #, fuzzy
-msgid "Attribute operator"
-msgstr "Atributul de setat"
+msgid "Edit condition"
+msgstr "Editați conexiunea"
 
 #, fuzzy
 msgid "Remove condition"
 msgstr "Eliminarea condiției de etichetare"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editați conexiunea"
+msgid "Attribute operator"
+msgstr "Atributul de setat"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -99100,6 +99105,183 @@ msgstr "Nu se termină cu \"%s\"."
 #, fuzzy
 msgid "does not exist"
 msgstr "Nu există"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Raport de accident"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Vârsta"
+
+#, fuzzy
+msgid "Max"
+msgstr "Mai"
+
+#, fuzzy
+msgid "Min"
+msgstr "Principal"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Procentuală"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Doar numărătoarea"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Rata mesajelor livrate"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s rata"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Până la"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "Cumulative sum field"
+msgstr "Personalizat"
+
+msgid "%{label} (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "Histogram"
+msgstr "Istorie"
+
+#, fuzzy
+msgid "last"
+msgstr "Ultimul "
+
+#, fuzzy
+msgid "raw"
+msgstr "rand"
+
+#, fuzzy
+msgid "avg"
+msgstr "Etichetă"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s rata"
+
+#, fuzzy
+msgid "delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Procentuală"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Numărul de documente delta"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Numărul de fișiere la"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s rata"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
+
+#, fuzzy
+msgctxt "Abbreviation for hours"
+msgid "h"
+msgstr "h"
+
+#, fuzzy
+msgctxt "Abbreviation for minutes"
+msgid "m"
+msgstr "m"
+
+#, fuzzy
+msgctxt "Abbreviation for seconds"
+msgid "s"
+msgstr "s"
+
+#, fuzzy
+msgid "Treat as %{type}"
+msgstr "Tipul de date"
+
+#, fuzzy
+msgid "Enter a quantile between 0 and 1"
+msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
+
+#, fuzzy
+msgid "Enter a threshold"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "Enter both thresholds"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "Lower threshold must be below the upper threshold"
+msgstr "Timpul nu trebuie să fie mai mare decât %02d:%02d."
+
+#, fuzzy
+msgid "Edit consolidation"
+msgstr "Editați conexiunea"
+
+#, fuzzy
+msgid "Consolidation function"
+msgstr "Funcții de consolidare"
+
+msgid "Quantile (0 to 1)"
+msgstr ""
+
+#, fuzzy
+msgid "Lower threshold"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "Upper threshold"
+msgstr "peste treshold"
+
+#, fuzzy
+msgid "over last"
+msgstr "Ultimul "
+
+#, fuzzy
+msgid "Lookback"
+msgstr "Privind înapoi"
+
+#, fuzzy
+msgid "Consolidation"
+msgstr "Consolidarea RRD"
 
 #, fuzzy
 msgid "Unknown error"
@@ -101173,6 +101355,23 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "API access token"
+#~ msgstr "Token de acces la API"
+
+#~ msgid "Numerical ID of the VHM, e.g. 102"
+#~ msgstr "Numărul de identificare numerică al VHM, de exemplu 102"
+
+#~ msgid "Redirect URL (has to be https)"
+#~ msgstr "URL de redirecționare (trebuie să fie https)"
+
+#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+#~ msgstr "URL către HiveManagerNG, de exemplu https://cloud.aerohive.com"
+
+#, fuzzy
+#~ msgid "Aggregation lookback"
+#~ msgstr "Controale de agregare"
+
 #~ msgid "Levels for time until forced reboot due to pending important updates"
 #~ msgstr ""
 #~ "Niveluri pentru timpul până la repornirea forțată din cauza unor "
@@ -102591,9 +102790,6 @@ msgstr ""
 #~ msgid "RPM packaging"
 #~ msgstr "Ambalaje RPM"
 
-#~ msgid "RRD consolidation"
-#~ msgstr "Consolidarea RRD"
-
 #~ msgid "RRDCached"
 #~ msgstr "RRDCached"
 
@@ -103300,9 +103496,6 @@ msgstr ""
 #~ msgid "l/s"
 #~ msgstr "l/s"
 
-#~ msgid "m"
-#~ msgstr "m"
-
 #~ msgid "pkts / sec"
 #~ msgstr "pkts / sec"
 
@@ -103331,10 +103524,6 @@ msgstr ""
 
 #~ msgid "Decryption of SNMPv3 password failed."
 #~ msgstr "Decriptarea parolei SNMPv3 a eșuat."
-
-#, fuzzy
-#~ msgid "Compute a rate"
-#~ msgstr "Rata mesajelor livrate"
 
 #, fuzzy
 #~ msgid "Capacity"

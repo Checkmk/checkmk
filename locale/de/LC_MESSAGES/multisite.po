@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-06 13:58+0000\n"
+"PO-Revision-Date: 2026-07-07 13:22+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -1830,27 +1830,27 @@ msgid ""
 "the day should be set. Otherwise a warning may be displayed if the file for "
 "the current day is not present yet.</p>"
 msgstr ""
-"<p>Hier kann eine Liste von Dateinamen-Patterns eintragen werden, die vom "
-"Agenten im Abschnitt <tt>fileinfo</tt> gesendet werden. Sie können Globbing "
-"Patterns, wie z.B. <tt>C:\\foo\\*.log</tt> oder <tt>/var/*/*.log</tt> "
-"verwenden. Standardmäßig wird die Größe und das Alter jeder gefundenen Datei "
-"überwacht. Durch die Verwendung von Dateigruppen kann alternativ eine Gruppe "
-"von Dateien zusammen überwacht werden. Dadurch kann die Anzahl, die "
-"Gesamtgröße, sowie die Größe der größten, kleinsten und neuesten Datei "
-"überwacht werden. Hinweis: Wenn Sie mehr als eine passende Regel angeben, "
-"werden <b>alle</b> passenden Regeln für die Definition des Patterns "
-"verwendet - nicht nur die erste.</p><p>Unter Linux kann die Variable "
-"$DATE:format-spec$ für die aktuelle Zeit/Datum verwendet werden, wobei "
-"format-spec eine Liste von Zeitformat-Direktiven des Unix-Befehls date ist. "
-"Beispiel: $DATE:%Y%m%d$ ist das aktuelle Datum im Format YYYYMMDD. Mit "
-"dieser Option sendet der Agent nur Dateien, die das aktuelle Datum "
-"enthalten. Die Datumsvariablen können zusammen mit den Regeln "
-"Dateigruppierungs-Patterns und Größe, Alter und Anzahl der Dateigruppen "
-"verwendet werden, um zu überwachen, ob täglich Dateien in einem Verzeichnis "
-"erstellt werden. Beachten Sie, dass die Option 'Nur zu den folgenden "
-"Tageszeiten prüfen' eingestellt sein sollte. Andernfalls kann eine Warnung "
-"angezeigt werden, wenn die Datei für den aktuellen Tag noch nicht vorhanden "
-"ist.</p>"
+"<p>Hier können Sie eine Liste von Dateinamen-Pattern angeben, die vom "
+"Agenten in der Sektion <tt>fileinfo</tt> gesendet werden sollen. Verwenden "
+"Sie hierfür Globbing-Pattern wie <tt>C:\\foo\\*.log</tt> oder <tt>/var/*/"
+"*.log</tt>. Standardmäßig werden Größe und Alter jeder gefundenen Datei "
+"überwacht. Durch die Bildung von Gruppen können Sie alternativ eine "
+"Kollektion von Dateien als Einheit überwachen und die Anzahl, die "
+"Gesamtgröße sowie die größte, kleinste, älteste oder neueste Datei erfassen. "
+"Hinweis: Wenn Sie mehr als eine Übereinstimmungsregel angeben, werden <b>"
+"alle</b> Übereinstimmungsregeln zur Definition des Patterns herangezogen – "
+"nicht nur die erste. </p><p>Unter Linux kann die Variable $DATE:format-spec$ "
+"für die aktuelle Uhrzeit/das aktuelle Datum verwendet werden, wobei format-"
+"spec eine Liste von Zeitformat-Anweisungen des Unix-Datumsbefehls ist. "
+"Beispiel: $DATE:%Y%m%d$ ist das heutige Datum im Format JJJJMMTT. Bei "
+"Verwendung dieser Option sendet der Agent nur Dateien, die das aktuelle "
+"Datum enthalten. Datumsvariablen können zusammen mit den Regeln 'Patterns "
+"und Größe für Dateigruppierungen' sowie 'Alter und Anzahl der zu "
+"überwachenden Dateigruppen' verwendet werden, wenn Dateien täglich in einem "
+"Verzeichnis erstellt werden. Beachten Sie, dass die Option 'Nur zu den "
+"folgenden Tageszeiten checken' aktiviert sein sollte. Andernfalls wird "
+"möglicherweise eine Warnung angezeigt, wenn die Datei für den aktuellen Tag "
+"noch nicht vorhanden ist.</p>"
 
 msgid ""
 "<p>In distributed setups Livestatus is used to transport the status "
@@ -1864,15 +1864,14 @@ msgid ""
 "for further information.</p>"
 msgstr ""
 "<p>In verteilten Setups wird Livestatus verwendet, um die in einer Instanz "
-"gesammelten Zustandsinformationen zur Zentralinstanz zu transportieren. Mit "
+"gesammelten Zustandsinformationen zur Zentralinstanz zu transportieren. Seit "
 "Checkmk 1.6 ist es nativ möglich und dringend empfohlen, diesen Livestatus-"
 "Verkehr zu verschlüsseln.</p> <p>Dies kann über die globale Einstellung <a "
 "href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">Zugriff auf "
 "Livestatus über TCP</a> aktiviert werden. Bevor Sie dies aktivieren, sollten "
 "Sie sicherstellen, dass alle Ihre Livestatus-Clients in der Lage sind, die "
-"SSL-verschlüsselte Livestatus-Kommunikation zu verarbeiten. Werfen Sie einen "
-"Blick auf <a href=\"werk.py?werk=7017\">werk #7017</a> für weitere "
-"Informationen.</p>"
+"SSL-verschlüsselte Livestatus-Kommunikation zu verarbeiten. Lesen Sie <a "
+"href=\"werk.py?werk=7017\">werk #7017</a> für weitere Informationen.</p>"
 
 msgid ""
 "<p>In distributed setups it is possible to synchronize the extensions (MKPs "
@@ -2984,9 +2983,6 @@ msgstr "APC Symmetra Checks"
 msgid "API (via Unix socket)"
 msgstr "API (über Unix-Socket)"
 
-msgid "API access token"
-msgstr "API Zugriffstoken"
-
 msgid "API cache is disabled."
 msgstr "API-Cache ist deaktiviert."
 
@@ -3071,10 +3067,10 @@ msgid "ASM - Processes"
 msgstr "ASM - Prozesse"
 
 msgid "ASM Disk Group"
-msgstr "ASM Diskgruppe"
+msgstr "ASM Festplattengruppe"
 
 msgid "ASM Disk Group (used space and growth)"
-msgstr "ASM Diskgruppe (belegter Platz und Wachstum)"
+msgstr "ASM Festplattengruppe (belegter Platz und Wachstum)"
 
 msgid ""
 "ASM calculates the free space depending on free_mb or required mirror free "
@@ -3862,8 +3858,9 @@ msgid "Activate monitoring of host via a HTTP connect to the HiveManager"
 msgstr ""
 "Monitoring eines Hosts durch einen HTTP-Zugang zum HiveManager aktivieren"
 
-msgid "Activate monitoring of the HiveManagerNG cloud."
-msgstr "Aktivieren des Monitorings für die HiveManagerNG Cloud."
+msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
+msgstr ""
+"Aktivieren des Monitorings für die ExtremeCloud IQ (HiveManager NG) Cloud."
 
 msgid "Activate on selected sites"
 msgstr "Auf ausgewählten Instanzen aktivieren"
@@ -4174,7 +4171,7 @@ msgid "Add Condition"
 msgstr "Bedingung hinzufügen"
 
 msgid "Add Counter"
-msgstr "Counter hinzufügen"
+msgstr "Zähler hinzufügen"
 
 msgid "Add Counter Object"
 msgstr "Leistungsindikatorobjekt hinzufügen"
@@ -5164,8 +5161,8 @@ msgstr "Erneute Authentifizierung vor Beendigung empfehlen"
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
-msgid "Aerohive HiveManager NG"
-msgstr "Aerohive HiveManager NG"
+msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
+msgstr "Aerohive HiveManager NG / ExtremeCloud IQ"
 
 #, python-format
 msgid "Affected %s: %s"
@@ -5377,7 +5374,7 @@ msgid "Age levels"
 msgstr "Alterslevels"
 
 msgid "Age of Anti-Virus signature"
-msgstr "Alter der AntiVirus-Signatur"
+msgstr "Alter der Anti-Virus-Signatur"
 
 msgid "Age of Anti-Virus signature extended database"
 msgstr "Alter der AntiVirus-Signatur (erweiterte Datenbank)"
@@ -9738,6 +9735,10 @@ msgstr "Basis-URL (OMD Instanz)"
 msgid "Base URL for Docker API engine"
 msgstr "Basis-URL für die Docker API Engine"
 
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr "Basis-URL der ExtremeCloud IQ-API, z. B. https://api.extremecloudiq.com"
+
 msgid "Base directory"
 msgstr "Basisverzeichnis"
 
@@ -13408,8 +13409,8 @@ msgstr ""
 "aktive Checkmk-Prüfung und für Legacy-Prüfungen. Hier können Sie ein "
 "größeres Intervall festlegen. Bitte beachten Sie, dass diese Einstellung nur "
 "für aktive Checks gilt (solche mit dem Knopf \"Neu einplanen\"). Wenn Sie "
-"nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie <tt>"
-"<b>Check_MK$</b></tt> in der Liste der Services an."
+"nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
+"<tt><b>Check_MK$</b></tt> in der Liste der Services an."
 
 msgid "Checkmk versions"
 msgstr "Checkmk-Versionen"
@@ -25675,6 +25676,12 @@ msgstr ""
 "Extrahiert die SGA-Metriken in einen separaten Service und zeigt zusätzlich "
 "die PGA-Metriken an"
 
+msgid "ExtremeCloud IQ password"
+msgstr "Passwort für ExtremeCloud IQ"
+
+msgid "ExtremeCloud IQ username"
+msgstr "Benutzername für ExtremeCloud IQ"
+
 msgid "Extremes only"
 msgstr "Nur Extreme"
 
@@ -27583,7 +27590,7 @@ msgid "Found rule packs"
 msgstr "Regelpaket gefunden"
 
 msgid "Fraction"
-msgstr "Quotient"
+msgstr "Bruchteil"
 
 msgid "Fragmentation"
 msgstr "Fragmentierung"
@@ -32251,7 +32258,7 @@ msgid "INotify Levels"
 msgstr "INotify-Levels"
 
 msgid "INotify Operation"
-msgstr "INotify Operation"
+msgstr ""
 
 msgid "IO Bandwith"
 msgstr "E/A-Bandbreite"
@@ -38043,6 +38050,11 @@ msgstr ""
 
 msgid "Learning Checkmk"
 msgstr "Checkmk kennenlernen"
+
+msgid "Leave unset on installations where over-voltage is not a concern."
+msgstr ""
+"Bei Installationen, bei denen keine Gefahr durch Überspannung besteht, diese "
+"Einstellung nicht vornehmen."
 
 msgid "Left"
 msgstr "Links"
@@ -47282,9 +47294,6 @@ msgstr "Zahl erstellen"
 msgid "Numeric value"
 msgstr "Numerischer Wert"
 
-msgid "Numerical ID of the VHM, e.g. 102"
-msgstr "Numerische ID der VHM, z.B. 102"
-
 msgid "Nutanix Cluster CPU utilization"
 msgstr "Nutanix Cluster CPU-Auslastung"
 
@@ -54396,9 +54405,6 @@ msgstr "Physikalische Port-Erkennung für Redfish"
 
 msgid "Redirect URI"
 msgstr "Redirect-URI"
-
-msgid "Redirect URL (has to be https)"
-msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 
 msgid "Redis Caches"
 msgstr "Redis-Caches"
@@ -80845,9 +80851,6 @@ msgstr "URL-Präfix für Links zu Checkmk"
 msgid "URL server address"
 msgstr "URL-Server-Adresse"
 
-msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
-
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
 "(<tt>http://</tt> or <tt>https://</tt>) and </tt>/check_mk/</tt>. In case of "
@@ -82309,6 +82312,13 @@ msgid ""
 msgstr ""
 "Obergrenzen für die maximale Latenz. Standardwerte: 5 ms (WARN), 10 ms "
 "(CRIT)."
+
+msgid ""
+"Upper levels for the nominal frequencies of AC devices like UPSs or PDUs. "
+"Leave unset where over-frequency is not a concern."
+msgstr ""
+"Obergrenzen für die Nennfrequenzen von Wechselstromgeräten wie USVs oder "
+"PDUs. Nicht einstellen, wenn keine Gefahr einer Überfrequenz besteht."
 
 msgid "Upper levels for the number of HTTP requests per second"
 msgstr "Obergrenzen für die Anzahl der HTTP-Anfragen pro Sekunde"
@@ -91432,7 +91442,7 @@ msgid "microseconds"
 msgstr "Mikrosekunden"
 
 msgid "min"
-msgstr "Min"
+msgstr "min"
 
 msgid "min. duration"
 msgstr "min. Dauer"
@@ -91441,7 +91451,7 @@ msgid "minimum"
 msgstr "Minimum"
 
 msgid "mins"
-msgstr "Min"
+msgstr "min"
 
 msgid "minute"
 msgid_plural "minutes"
@@ -94161,17 +94171,6 @@ msgstr ""
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 
-msgid "The time window used to aggregate data for each point on the chart.<ul>"
-msgstr ""
-"Das Zeitfenster, das zur Aggregation der Daten für jeden Punkt im Diagramm "
-"verwendet wird.<ul>"
-
-msgid "Aggregation lookback"
-msgstr "Aggregationsrückblick"
-
-msgid "Percentile (histograms)"
-msgstr "Perzentile (Histogramme)"
-
 msgid "Auto"
 msgstr "Auto"
 
@@ -94490,14 +94489,14 @@ msgstr "Strg + Alt"
 msgid "Existence"
 msgstr "Existenz"
 
-msgid "Attribute operator"
-msgstr "Attribut-Operator"
+msgid "Edit condition"
+msgstr "Bedingung bearbeiten"
 
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
 
-msgid "Edit condition"
-msgstr "Bedingung bearbeiten"
+msgid "Attribute operator"
+msgstr "Attribut-Operator"
 
 msgid "Add condition after %{key}"
 msgstr "Bedingung nach %{key} hinzufügen"
@@ -94549,6 +94548,144 @@ msgstr "endet nicht mit"
 
 msgid "does not exist"
 msgstr "existiert nicht"
+
+msgid "Last recorded value"
+msgstr "Zuletzt aufgezeichneter Wert"
+
+msgid "Avg"
+msgstr "Durchschn."
+
+msgid "Max"
+msgstr "Max"
+
+msgid "Min"
+msgstr "Min"
+
+msgid "Rate"
+msgstr "Rate"
+
+msgid "Delta"
+msgstr "Delta"
+
+msgid "Preserve histograms"
+msgstr "Histogramme beibehalten"
+
+msgid "Count delta"
+msgstr ""
+
+msgid "Count rate"
+msgstr ""
+
+msgid "Sum delta"
+msgstr ""
+
+msgid "Sum rate"
+msgstr ""
+
+msgid "Quantile"
+msgstr "Quantil"
+
+msgid "Fraction below"
+msgstr "Bruchteil unterhalb"
+
+msgid "Fraction between"
+msgstr "Bruchteil zwischen"
+
+msgid "Cumulative sum field"
+msgstr "Kumulatives Summenfeld"
+
+msgid "%{label} (raw)"
+msgstr "%{label} (roh)"
+
+msgid "Histogram"
+msgstr "Histogramm"
+
+msgid "last"
+msgstr "letzter"
+
+msgid "raw"
+msgstr "roh"
+
+msgid "avg"
+msgstr "Durchschn."
+
+msgid "rate"
+msgstr "Rate"
+
+msgid "delta"
+msgstr "Delta"
+
+msgid "preserve histograms"
+msgstr "Histogramme beibehalten"
+
+msgid "count delta"
+msgstr ""
+
+msgid "count rate"
+msgstr ""
+
+msgid "sum delta"
+msgstr ""
+
+msgid "sum rate"
+msgstr ""
+
+msgid "fraction <%{value}"
+msgstr "Bruchteil <%{value}"
+
+msgid "fraction %{lower}–%{upper}"
+msgstr "Bruchteil %{lower}–%{upper}"
+
+msgctxt "Abbreviation for hours"
+msgid "h"
+msgstr "h"
+
+msgctxt "Abbreviation for minutes"
+msgid "m"
+msgstr "m"
+
+msgctxt "Abbreviation for seconds"
+msgid "s"
+msgstr "s"
+
+msgid "Treat as %{type}"
+msgstr "Behandeln als %{type}"
+
+msgid "Enter a quantile between 0 and 1"
+msgstr "Geben Sie ein Quantil zwischen 0 und 1 ein"
+
+msgid "Enter a threshold"
+msgstr "Geben Sie einen Schwellwert ein"
+
+msgid "Enter both thresholds"
+msgstr "Geben Sie beide Schwellwerte ein"
+
+msgid "Lower threshold must be below the upper threshold"
+msgstr "Unterer Schwellwert muss unterhalb des oberen Schwellwerts liegen"
+
+msgid "Edit consolidation"
+msgstr "Konsolidierung bearbeiten"
+
+msgid "Consolidation function"
+msgstr "Konsolidierungsfunktion"
+
+msgid "Quantile (0 to 1)"
+msgstr "Quantil (0 bis 1)"
+
+msgid "Lower threshold"
+msgstr "Unterer Schwellwert"
+
+msgid "Upper threshold"
+msgstr "Oberer Schwellwert"
+
+msgid "over last"
+msgstr "der letzten"
+
+msgid "Lookback"
+msgstr "Rückblick"
+
+msgid "Consolidation"
+msgstr "Konsolidierung"
 
 msgid "Unknown error"
 msgstr "Unbekannter Fehler"
@@ -96745,6 +96882,27 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "API access token"
+#~ msgstr "API Zugriffstoken"
+
+#~ msgid "Numerical ID of the VHM, e.g. 102"
+#~ msgstr "Numerische ID der VHM, z.B. 102"
+
+#~ msgid "Redirect URL (has to be https)"
+#~ msgstr "URL für die Umleitung (muss HTTPS verwenden)"
+
+#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+#~ msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
+
+#~ msgid ""
+#~ "The time window used to aggregate data for each point on the chart.<ul>"
+#~ msgstr ""
+#~ "Das Zeitfenster, das zur Aggregation der Daten für jeden Punkt im "
+#~ "Diagramm verwendet wird.<ul>"
+
+#~ msgid "Aggregation lookback"
+#~ msgstr "Aggregationsrückblick"
+
 #~ msgid "Levels for time until forced reboot due to pending important updates"
 #~ msgstr ""
 #~ "Levels für die Zeit bis zum erzwungenen Reboot aufgrund anstehender "
@@ -98218,9 +98376,6 @@ msgstr ""
 #~ msgid "RPM packaging"
 #~ msgstr "RPM-Paketierung"
 
-#~ msgid "RRD consolidation"
-#~ msgstr "RRD-Konsolidierung"
-
 #~ msgid "RRDCached"
 #~ msgstr "RRDCached"
 
@@ -99083,9 +99238,6 @@ msgstr ""
 #~ msgid "l/s"
 #~ msgstr "l/s"
 
-#~ msgid "m"
-#~ msgstr "m"
-
 #~ msgid "pkts / sec"
 #~ msgstr "Pkt/sec"
 
@@ -99112,9 +99264,6 @@ msgstr ""
 
 #~ msgid "Decryption of SNMPv3 password failed."
 #~ msgstr "Entschlüsselung des SNMPv3 Passworts ist fehlgeschlagen."
-
-#~ msgid "Compute a rate"
-#~ msgstr "Eine Rate berechnen"
 
 #~ msgid "Capacity"
 #~ msgstr "Kapazität"

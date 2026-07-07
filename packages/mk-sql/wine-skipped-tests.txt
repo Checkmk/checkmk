@@ -1,0 +1,4 @@
+# Relies on real Windows connecting slowly enough to a closed loopback
+# port to observe the connect timeout; Wine refuses immediately, like
+# Linux (which the cfg(unix) flavour of the same assertion expects).
+ms_sql::client::tests::test_create_client_from_config_timeout

@@ -148,66 +148,29 @@ mod test_renew_certificate {
     use crate::config::Registry;
     use crate::configuration::config::test_helpers::TestRegistry;
     use crate::modes::renew_certificate::*;
-    use openssl;
-    use openssl::asn1::Asn1Time;
-    use openssl::bn::{BigNum, MsbOption};
-    use openssl::hash::MessageDigest;
-    use openssl::pkey::PKey;
-    use openssl::rsa::Rsa;
-    use openssl::x509::extension::{BasicConstraints, KeyUsage, SubjectKeyIdentifier};
-    use openssl::x509::{X509NameBuilder, X509};
     use std::convert::From;
-    use std::time::{SystemTime, UNIX_EPOCH};
 
-    // Taken from openssl::examples with minor adaptions
     fn mk_ca_cert(days_valid: u32) -> AnyhowResult<String> {
-        let rsa = Rsa::generate(2048)?;
-        let key_pair = PKey::from_rsa(rsa)?;
-
-        let mut x509_name = X509NameBuilder::new()?;
-        x509_name.append_entry_by_text("CN", "test")?;
-        let x509_name = x509_name.build();
-
-        let mut cert_builder = X509::builder()?;
-        cert_builder.set_version(2)?;
-        let serial_number = {
-            let mut serial = BigNum::new()?;
-            serial.rand(159, MsbOption::MAYBE_ZERO, false)?;
-            serial.to_asn1_integer()?
-        };
-        cert_builder.set_serial_number(&serial_number)?;
-        cert_builder.set_subject_name(&x509_name)?;
-        cert_builder.set_issuer_name(&x509_name)?;
-        cert_builder.set_pubkey(&key_pair)?;
-        let not_before = Asn1Time::days_from_now(0)?;
-        cert_builder.set_not_before(&not_before)?;
-
-        // We have to calculate the not_after time like this, because Asn1Time::days_from_now()
-        // wants to calculate the resulting seconds (at least on Windows) as u32, which is not
-        // enough for our 600 years.
-        let not_after = {
-            let na = SystemTime::now() + Duration::from_secs((days_valid as u64) * 24 * 60 * 60);
-            Asn1Time::from_unix(na.duration_since(UNIX_EPOCH)?.as_secs().try_into()?)?
-        };
-        cert_builder.set_not_after(&not_after)?;
-
-        cert_builder.append_extension(BasicConstraints::new().critical().ca().build()?)?;
-        cert_builder.append_extension(
-            KeyUsage::new()
-                .critical()
-                .key_cert_sign()
-                .crl_sign()
-                .build()?,
-        )?;
-
-        let subject_key_identifier =
-            SubjectKeyIdentifier::new().build(&cert_builder.x509v3_context(None, None))?;
-        cert_builder.append_extension(subject_key_identifier)?;
-
-        cert_builder.sign(&key_pair, MessageDigest::sha256())?;
-        let cert = cert_builder.build();
-
-        Ok(String::from_utf8(cert.to_pem().unwrap())?)
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256)?;
+        let mut params = rcgen::CertificateParams::default();
+        params.distinguished_name = rcgen::DistinguishedName::new();
+        params
+            .distinguished_name
+            .push(rcgen::DnType::CommonName, "test");
+        params.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
+        params.key_usages = vec![
+            rcgen::KeyUsagePurpose::KeyCertSign,
+            rcgen::KeyUsagePurpose::CrlSign,
+        ];
+        params.not_before = time::OffsetDateTime::now_utc();
+        // 600 years of validity must work here, see CERT_VALIDITY_UPPER_LIMIT
+        params.not_after = params.not_before + time::Duration::days(days_valid.into());
+        Ok(pem_rfc7468::encode_string(
+            "CERTIFICATE",
+            pem_rfc7468::LineEnding::LF,
+            params.self_signed(&key_pair)?.der().as_ref(),
+        )
+        .expect("failed to PEM-encode test CA certificate"))
     }
 
     struct TestApi {}

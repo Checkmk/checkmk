@@ -62,6 +62,7 @@ rust_test(
         "@host_crates//:lazy_static",
         "@host_crates//:predicates",
         "@host_crates//:tempfile",
+        "@host_crates//:time",
     ],
 )
 
@@ -84,6 +85,7 @@ rust_library(
         "@host_crates//:lazy_static",
         "@host_crates//:predicates",
         "@host_crates//:tempfile",
+        "@host_crates//:time",
     ],
 )
 

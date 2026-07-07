@@ -4,19 +4,14 @@
 
 use crate::constants;
 use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
-use openssl::hash::MessageDigest;
-use openssl::nid::Nid;
-use openssl::pkey::PKey;
-use openssl::rsa::Rsa;
-use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
-use openssl::x509::{X509Name, X509Req};
 use reqwest::blocking::{Client, ClientBuilder};
+use rsa::pkcs8::{EncodePrivateKey, LineEnding};
 use rustls::client::danger::{
     DangerousClientConfigBuilder, HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier,
 };
 use rustls::client::WebPkiServerVerifier;
 use rustls::crypto::{verify_tls12_signature, verify_tls13_signature, CryptoProvider};
-use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName, UnixTime};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer, ServerName, UnixTime};
 use rustls::{
     CertificateError, ClientConfig, DigitallySignedStruct, Error as RusttlsError, RootCertStore,
     SignatureScheme,
@@ -27,22 +22,31 @@ use std::sync::Arc;
 use x509_parser::prelude::FromDer;
 
 pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
-    // https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
-    let rsa = Rsa::generate(constants::CERT_RSA_KEY_SIZE)?;
-    let key_pair = PKey::from_rsa(rsa)?;
+    let private_key = rsa::RsaPrivateKey::new(
+        &mut rand::thread_rng(),
+        constants::CERT_RSA_KEY_SIZE as usize,
+    )?;
+    let private_key_der = private_key.to_pkcs8_der()?;
+    let private_key_pem = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
-    let mut name = X509Name::builder()?;
-    name.append_entry_by_nid(Nid::COMMONNAME, cn)?;
-    let name = name.build();
-
-    let mut crt_builder = X509Req::builder()?;
-    crt_builder.set_subject_name(&name)?;
-    crt_builder.set_pubkey(&key_pair)?;
-    crt_builder.sign(&key_pair, MessageDigest::sha256())?;
+    let key_pair = rcgen::KeyPair::from_pkcs8_der_and_sign_algo(
+        &PrivatePkcs8KeyDer::from(private_key_der.as_bytes()),
+        &rcgen::PKCS_RSA_SHA256,
+    )?;
+    let mut params = rcgen::CertificateParams::default();
+    params.distinguished_name = rcgen::DistinguishedName::new();
+    params
+        .distinguished_name
+        .push(rcgen::DnType::CommonName, cn);
 
     Ok((
-        String::from_utf8(crt_builder.build().to_pem()?)?,
-        String::from_utf8(key_pair.private_key_to_pem_pkcs8()?)?,
+        pem_rfc7468::encode_string(
+            "CERTIFICATE REQUEST",
+            LineEnding::LF,
+            params.serialize_request(&key_pair)?.der().as_ref(),
+        )
+        .map_err(|e| anyhow!("Failed to PEM-encode certificate request: {e}"))?,
+        private_key_pem.to_string(),
     ))
 }
 
@@ -233,24 +237,97 @@ pub fn client(
     Ok(client_builder.build()?)
 }
 
+// emulate openssl::ssl::SslVerifyMode::NONE: accept any certificate, but still
+// verify the handshake signatures so we know the peer actually holds the key
+#[derive(Debug)]
+struct AcceptAnyServerCert {
+    crypto_provider: Arc<CryptoProvider>,
+}
+
+impl ServerCertVerifier for AcceptAnyServerCert {
+    fn verify_server_cert(
+        &self,
+        _end_entity: &CertificateDer,
+        _intermediates: &[CertificateDer],
+        _server_name: &ServerName,
+        _ocsp_response: &[u8],
+        _now: UnixTime,
+    ) -> Result<ServerCertVerified, RusttlsError> {
+        Ok(ServerCertVerified::assertion())
+    }
+
+    fn verify_tls12_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &DigitallySignedStruct,
+    ) -> Result<HandshakeSignatureValid, RusttlsError> {
+        verify_tls12_signature(
+            message,
+            cert,
+            dss,
+            &self.crypto_provider.signature_verification_algorithms,
+        )
+    }
+
+    fn verify_tls13_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &DigitallySignedStruct,
+    ) -> Result<HandshakeSignatureValid, RusttlsError> {
+        verify_tls13_signature(
+            message,
+            cert,
+            dss,
+            &self.crypto_provider.signature_verification_algorithms,
+        )
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
+        self.crypto_provider
+            .signature_verification_algorithms
+            .supported_schemes()
+    }
+}
+
 pub fn fetch_server_cert_pem(server: &str, port: &u16) -> AnyhowResult<String> {
-    let tcp_stream = TcpStream::connect(format!("{server}:{port}"))?;
-    let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
-    ssl_connector_builder.set_verify(SslVerifyMode::NONE);
-    let mut ssl_stream = ssl_connector_builder.build().connect(server, tcp_stream)?;
+    let crypto_provider =
+        CryptoProvider::get_default().ok_or(anyhow!("No default crypto provider set"))?;
+    let config = DangerousClientConfigBuilder {
+        cfg: ClientConfig::builder(),
+    }
+    .with_custom_certificate_verifier(Arc::new(AcceptAnyServerCert {
+        crypto_provider: crypto_provider.clone(),
+    }))
+    .with_no_client_auth();
 
-    let server_cert = ssl_stream
-        .ssl()
-        .peer_cert_chain()
-        .context("Failed fetching peer cert chain")?
-        .iter()
-        .next()
-        .context("Failed unpacking peer cert chain")?
-        .to_pem()?;
+    let mut connection = rustls::ClientConnection::new(
+        Arc::new(config),
+        ServerName::try_from(server.to_owned())
+            .context("Server name cannot be used for a TLS connection")?,
+    )?;
+    let mut tcp_stream = TcpStream::connect(format!("{server}:{port}"))?;
+    while connection.is_handshaking() {
+        connection.complete_io(&mut tcp_stream)?;
+    }
 
-    ssl_stream.shutdown()?;
+    let server_cert = pem_rfc7468::encode_string(
+        "CERTIFICATE",
+        LineEnding::LF,
+        connection
+            .peer_certificates()
+            .context("Failed fetching peer cert chain")?
+            .first()
+            .context("Failed unpacking peer cert chain")?
+            .as_ref(),
+    )
+    .map_err(|e| anyhow!("Failed to PEM-encode server certificate: {e}"))?;
 
-    Ok(String::from_utf8(server_cert)?)
+    connection.send_close_notify();
+    let _ = connection.complete_io(&mut tcp_stream);
+
+    Ok(server_cert)
 }
 
 pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
@@ -306,14 +383,25 @@ mod test_cn_no_uuid {
 
     #[test]
     fn test_csr_version() {
-        let (csr, _key_pair) = make_csr("stuff").unwrap();
-        let csr_obj = X509Req::from_pem(csr.as_bytes()).unwrap();
+        let (csr, key) = make_csr("stuff").unwrap();
+        let csr_pem = parse_pem(&csr).unwrap();
+        let (_rem, csr_obj) =
+            x509_parser::certification_request::X509CertificationRequest::from_der(
+                &csr_pem.contents,
+            )
+            .unwrap();
         // A CSR is a simple x509 structure without any extensions, and must be of version 1,
         // which equals to a raw version value of 0.
         // See also https://www.rfc-editor.org/rfc/rfc2986 .
         // This is actually tested in recent versions of python-cryptography and a registration call
         // with a non-compliant CSR would fail.
-        assert!(csr_obj.version() == 0)
+        assert!(csr_obj.certification_request_info.version.0 == 0);
+        assert_eq!(
+            common_names(&csr_obj.certification_request_info.subject).unwrap(),
+            ["stuff"]
+        );
+        // The private key must remain consumable by our TLS stack.
+        assert!(rustls_private_key(&key).is_ok());
     }
 
     #[test]

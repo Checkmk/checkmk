@@ -27,6 +27,7 @@ from cmk.plugins.cisco_prime.special_agent import agent_cisco_prime
 from cmk.plugins.couchbase.special_agent import agent_couchbase
 from cmk.plugins.datadog.special_agent import agent_datadog
 from cmk.plugins.elasticsearch.special_agent import agent_elasticsearch
+from cmk.plugins.extremecloud_iq.special_agent import agent_extremecloud_iq
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
@@ -79,6 +80,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "datadog": agent_datadog,
     "ddn_s2a": None,
     "elasticsearch": agent_elasticsearch,
+    "extremecloud_iq": agent_extremecloud_iq,
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,
@@ -170,6 +172,12 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "fritzbox": ["HOSTNAME"],
     "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "graylog": ["--password", "PASSWORD", "HOSTNAME"],
+    "extremecloud_iq": [
+        "URL",
+        "USERNAME",
+        "--password",
+        "PASSWORD",
+    ],
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [
         "URL",

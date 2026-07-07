@@ -44,6 +44,7 @@ HACK_AGENTS = {
     "datadog": False,
     "ddn_s2a": False,
     "elasticsearch": False,
+    "extremecloud_iq": False,
     "fritzbox": False,  # needs no secret
     "gcp_status": False,  # needs no secret
     "gcp": False,

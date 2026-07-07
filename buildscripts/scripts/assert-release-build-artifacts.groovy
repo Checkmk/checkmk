@@ -56,8 +56,8 @@ void main() {
                         if (result == 2 && use_case == "release") {
                             mail(
                                 to: "team-donau@checkmk.com",
-                                from: "\"CI\" <${JENKINS_MAIL}>",
-                                replyTo: "${TEAM_CI_MAIL}",
+                                from: "\"CI\" <${env.JENKINS_MAIL}>",
+                                replyTo: "${env.TEAM_CI_MAIL}",
                                 subject: "[Release] Relay image missing on Docker Hub: checkmk/check-mk-relay:${cmk_version}",
                                 body: ("""
     |The relay image checkmk/check-mk-relay:${cmk_version} is not available on Docker Hub.

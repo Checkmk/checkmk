@@ -23,7 +23,7 @@ void main() {
         "PUBLISH_IN_MARKETPLACE",
     ])
 
-    if (EDITION != 'cloud') {
+    if (params.EDITION != 'cloud') {
         error("The AMI/Azure builds must currently *only* use the cloud edition.");
     }
 

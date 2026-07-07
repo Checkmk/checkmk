@@ -8,8 +8,8 @@ void notify_maintainer_of_package(maintainers, package_name, build_url) {
             to: maintainers.join(","),  // TODO: Add the commmiter
             cc: maintainers.join(","),
             bcc: "",
-            from: "\"CI\" <${JENKINS_MAIL}>",
-            replyTo: "${TEAM_CI_MAIL}",
+            from: "\"CI\" <${env.JENKINS_MAIL}>",
+            replyTo: "${env.TEAM_CI_MAIL}",
             subject: "[${package_name} failed]",
             body: ("""
     |The following package has failed - check the console log here:
@@ -49,7 +49,7 @@ void notify_error(error) {
             /// include me for now to give me the chance to debug
             def List<String> notify_emails = [];
             // ugly workaround, split() only + unique() does not work
-            notify_emails.addAll(TEAM_CI_MAIL.replaceAll(',', ' ').split(' ').grep());
+            notify_emails.addAll(env.TEAM_CI_MAIL.replaceAll(',', ' ').split(' ').grep());
             currentBuild.changeSets.each { changeSet ->
                 def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(
@@ -86,12 +86,12 @@ void notify_error(error) {
 
             /// Inform QA if something's wrong with those jobs
             if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
-                notify_emails.addAll(TEAM_QA_MAIL.replaceAll(',', ' ').split(' ').grep());
+                notify_emails.addAll(env.TEAM_QA_MAIL.replaceAll(',', ' ').split(' ').grep());
             }
 
             /// fallback - for investigation
             /* groovylint-disable DuplicateListLiteral */
-            notify_emails = notify_emails ?: TEAM_CI_MAIL.split(",");
+            notify_emails = notify_emails ?: env.TEAM_CI_MAIL.split(",");
             /* groovylint-enable DuplicateListLiteral */
 
             print("|| error-reporting: notify_emails ${notify_emails}");
@@ -100,8 +100,8 @@ void notify_error(error) {
                 to: "${notify_emails.join(',')}",
                 cc: "", // the code owner maybe?
                 bcc: "",
-                from: "\"Greetings from CI\" <${JENKINS_MAIL}>",
-                replyTo: "${TEAM_CI_MAIL}",
+                from: "\"Greetings from CI\" <${env.JENKINS_MAIL}>",
+                replyTo: "${env.TEAM_CI_MAIL}",
                 subject: "Build failure in ${env.JOB_NAME}",
                 body: ("""
     |The following build failed:

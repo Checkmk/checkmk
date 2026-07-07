@@ -424,13 +424,10 @@ test_sap_hana_sid_extraction_rejects_injection() {
     local no_exe="attacker 12345 1 0 Jan01 ? 00:00:12 HDB; touch /tmp/pwned ;sapstartsrv 600"
     local four_char="attacker 12345 1 0 Jan01 ? 00:00:12 /usr/sap/ABCD/HDB10/exe/sapstartsrv 600"
 
-    # CMK-36529 xfail: the extraction is still vulnerable in this commit. Pin the
-    # exact SID each crafted line leaks today; the fix commit changes these to
-    # assertEquals "" to prove the injection is closed.
-    assertEquals "pwned;t" "$(sap_hana_sid_from_ps_line "$poc")"
-    assertEquals "ABC;evil" "$(sap_hana_sid_from_ps_line "$glued")"
-    assertEquals "attacker 12345 1 0 Jan01 ? 00:00:12 HDB; touch /tmp/pwned ;sapstartsrv 600" "$(sap_hana_sid_from_ps_line "$no_exe")"
-    assertEquals "ABCD" "$(sap_hana_sid_from_ps_line "$four_char")"
+    assertEquals "" "$(sap_hana_sid_from_ps_line "$poc")"
+    assertEquals "" "$(sap_hana_sid_from_ps_line "$glued")"
+    assertEquals "" "$(sap_hana_sid_from_ps_line "$no_exe")"
+    assertEquals "" "$(sap_hana_sid_from_ps_line "$four_char")"
 }
 
 # shellcheck disable=SC1090 # Can't follow

@@ -585,12 +585,13 @@ get_instance_user() {
 
 }
 
+# Must emit nothing on non-match: the SID feeds a root su -c, and argv[0] is attacker-controlled (CMK-36529).
 sap_hana_sid_from_ps_line() {
-    echo "$1" | sed 's/.*\/\(.*\)\/.*\/exe\/sapstartsrv.*/\1/g'
+    echo "$1" | grep -Po '(?<=/)[A-Z][A-Z0-9]{2}(?=/HDB[0-9]{2}/exe/sapstartsrv)'
 }
 
 sap_hana_instance_from_ps_line() {
-    echo "$1" | sed -e 's/.*\/\(.*\)\/exe\/sapstartsrv.*/\1/g' -e 's/[^0-9]//g'
+    echo "$1" | grep -Po '(?<=/HDB)[0-9]{2}(?=/exe/sapstartsrv)'
 }
 
 read_global_ini() {
@@ -875,8 +876,8 @@ else
         # grep only the first word = the user running the instance
         INSTANCE_USER=$(echo "$line" | grep -Po "^\s*(\w+)")
 
-        if [ -z "$INSTANCE" ] || [ -z "$SID" ]; then
-            echo "No SID or INSTANCE found" >&2
+        if ! [[ $SID =~ ^[A-Z][A-Z0-9]{2}$ && $INSTANCE =~ ^[0-9]{2}$ ]]; then
+            echo "No valid SID or INSTANCE found" >&2
             continue
         fi
 

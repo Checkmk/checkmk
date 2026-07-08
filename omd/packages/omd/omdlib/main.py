@@ -2950,7 +2950,7 @@ def _restore_backup_from_tar_root(
         old_site_name, version = omdlib.backup.get_site_and_version_from_backup(tar)
     # Ensure the restore is done with the sites version
     if version != omdlib.__version__:
-        if verify_security(version) or not is_root():
+        if not verify_security(version) and is_root():
             sys.stderr.write(werk_18891_warning(version))
         exec_other_omd(version)
 

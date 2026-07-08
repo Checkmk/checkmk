@@ -11,19 +11,25 @@ def test_command_creation() -> None:
     assert list(
         special_agent_hivemanager_ng(
             {
-                "url": "https://api.extremecloudiq.com",
-                "username": "user",
-                "password": Secret(1),
+                "url": "http://cloud.com",
+                "vhm_id": "102",
+                "api_token": "token",
+                "client_id": "clientID",
+                "client_secret": Secret(1),
+                "redirect_url": "http://redirect.com",
             },
             HostConfig(name="hostname"),
         )
     ) == [
         SpecialAgentCommand(
             command_arguments=[
-                "https://api.extremecloudiq.com",
-                "user",
-                "--password-id",
+                "http://cloud.com",
+                "102",
+                "token",
+                "clientID",
+                "--secret-id",
                 Secret(1),
+                "http://redirect.com",
             ]
         )
     ]

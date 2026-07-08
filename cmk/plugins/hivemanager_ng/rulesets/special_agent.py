@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
+    FieldSize,
     migrate_to_password,
     Password,
     String,
@@ -17,32 +16,14 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def _migrate(value: object) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise TypeError(value)
-
-    if "username" in value:
-        # Already in the ExtremeCloud IQ shape.
-        return value
-
-    # Legacy Aerohive rules carried "vhm_id", "api_token", "client_id",
-    # "client_secret" and "redirect_url". The ExtremeCloud IQ API authenticates
-    # with username and password instead, so only the URL can be carried over;
-    # the credentials have to be entered again.
-    return {"url": value["url"]}
-
-
 def _parameter_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."),
-        migrate=_migrate,
+        help_text=Help("Activate monitoring of the HiveManagerNG cloud."),
         elements={
             "url": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title(
-                        "Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-                    ),
+                    title=Title("URL to HiveManagerNG, e.g. https://cloud.aerohive.com"),
                     custom_validate=(
                         validators.Url(
                             protocols=[
@@ -53,18 +34,47 @@ def _parameter_form() -> Dictionary:
                     ),
                 ),
             ),
-            "username": DictElement(
+            "vhm_id": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("ExtremeCloud IQ username"),
+                    title=Title("Numerical ID of the VHM, e.g. 102"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),
-            "password": DictElement(
+            "api_token": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("API access token"),
+                    field_size=FieldSize.LARGE,
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "client_id": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Client ID"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "client_secret": DictElement(
                 required=True,
                 parameter_form=Password(
-                    title=Title("ExtremeCloud IQ password"),
+                    title=Title("Client secret"),
                     migrate=migrate_to_password,
+                ),
+            ),
+            "redirect_url": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Redirect URL (has to be https)"),
+                    custom_validate=(
+                        validators.Url(
+                            protocols=[
+                                validators.UrlProtocol.HTTP,
+                                validators.UrlProtocol.HTTPS,
+                            ]
+                        ),
+                    ),
                 ),
             ),
         },
@@ -73,7 +83,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_special_agent_hivemanager_ng = SpecialAgent(
     name="hivemanager_ng",
-    title=Title("Aerohive HiveManager NG / ExtremeCloud IQ"),
+    title=Title("Aerohive HiveManager NG"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_parameter_form,
 )

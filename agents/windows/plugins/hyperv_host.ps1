@@ -31,7 +31,7 @@ function Get-VMGeneralInfo {
   Write-Output "config.created $($vm.CreationTime)"
 
   if ($null -ne $vm.Groups) {
-    Write-Output "config.MemberOfVMGroups $($vm.Groups.Count)"
+    Write-Output "config.MemberOfVMGroups $(@($vm.Groups).Count)"
     foreach ($Member in $vm.Groups) {
       Write-Output "$null $($vm.Groups.Name) ($($vm.Groups.InstanceId))"
     }
@@ -183,7 +183,7 @@ function Get-VMDriveInfo {
 
   $vmHDDs = (Get-VMHardDiskDrive -VMName $vm.Name -ComputerName $clusterNode | Sort-Object Name)
 
-  Write-Output "vhd $($vmHDDs.Count)"
+  Write-Output "vhd $(@($vmHDDs).Count)"
 
   foreach ($vmHDD in $vmHDDs) {
     Write-Output "vhd.Name $($vmHDD.Name)"
@@ -234,7 +234,7 @@ function Get-VMDriveInfo {
   # Get vFC, if any
   $vmvSAN = (Get-VMFibreChannelHba -VMName $vm.Name -ComputerName $clusterNode | Sort-Object Name)
   if ($null -ne $vmvSAN) {
-    Write-Output "vsan $($vmvSAN.Count)"
+    Write-Output "vsan $(@($vmvSAN).Count)"
 
     foreach ($vmvSAN in $vmvSAN) {
       Write-Output "vsan.Name $($vmvSAN.SanName)"
@@ -259,7 +259,7 @@ function Get-VMNICInfo {
 
   $vmNetCards = (Get-VMNetworkAdapter -VMName $vm.Name -ComputerName $clusterNode | Sort-Object Name, ID)
 
-  Write-Output "nic $($vmNetCards.Count)"
+  Write-Output "nic $(@($vmNetCards).Count)"
 
   foreach ($vmNetCard in $vmNetCards) {
     Write-Output "nic.name $($vmNetCard.Name)"
@@ -317,7 +317,7 @@ function Get-VMISInfo {
   )
 
   $vmIntSer = (Get-VMIntegrationService -VMName $vm.Name -ComputerName $clusterNode | Sort-Object Name)
-  Write-Output "guest.tools.number $($vmIntSer.Count)"
+  Write-Output "guest.tools.number $(@($vmIntSer).Count)"
   foreach ($IS in $vmIntSer) {
     if ($IS.Enabled) {
       $ISActive = 'active'

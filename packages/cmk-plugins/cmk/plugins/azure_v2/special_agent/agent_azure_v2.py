@@ -48,6 +48,7 @@ from cmk.plugins.azure_v2.lib import (
     RESOURCE_TYPE_ABBREVIATIONS,
     short_resource_type,
 )
+from cmk.plugins.azure_v2.special_agent._data_cache import DataCache
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -71,8 +72,6 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     OPTIONAL_METRICS,
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-
-from ._data_cache import DataCache
 
 type ResourceId = str
 
@@ -2470,9 +2469,20 @@ class ResourceHealth(TypedDict, total=False):
     properties: Required[Mapping[str, str]]
 
 
+def _unknown_resource_health_data(resource: AzureResource) -> Mapping[str, object]:
+    resource_id = resource.info["id"]
+    return {
+        "id": f"{resource_id}/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
+        "name": "/".join(resource_id.split("/")[-2:]),
+        "availabilityState": "Unknown",
+        "summary": "No health status returned by the Azure Resource Health API",
+        "reasonType": "",
+        "tags": resource.tags,
+    }
+
+
 def _get_resource_health_sections(
-    resource_health_view: Sequence[ResourceHealth],
-    resources: Mapping[ResourceId, AzureResource],
+    resource_health_view: Sequence[ResourceHealth], resources: Mapping[ResourceId, AzureResource]
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
@@ -2497,6 +2507,14 @@ def _get_resource_health_sections(
         }
 
         health_section[resource.piggytarget].append(json.dumps(health_data))
+
+    for resource in resources.values():
+        if resource.piggytarget in health_section:
+            continue
+        # when not health data in the API, put Unknown:
+        health_section[resource.piggytarget].append(
+            json.dumps(_unknown_resource_health_data(resource))
+        )
 
     sections = []
     for resource_piggytarget, values in health_section.items():

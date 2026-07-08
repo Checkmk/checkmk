@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk special agent for Aerohive HiveManager NG."""
 
 import argparse
 import sys
@@ -11,20 +10,6 @@ import traceback
 import requests
 
 from cmk.utils.password_store import replace_passwords
-
-# The agent delivers at most this many devices.
-_PAGE_SIZE = 1000
-
-# Device field names forwarded to the check plugin; all other fields are dropped.
-_USED_FIELDS = {
-    "hostName",
-    "connected",
-    "activeClients",
-    "ip",
-    "serialId",
-    "osVersion",
-    "lastUpdated",
-}
 
 
 def bail_out(message, debug=False):
@@ -54,16 +39,16 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def device_line(device):
-    """Render a single device as a section line, keeping only the used fields."""
-    return "|".join(f"{key}::{value}" for key, value in device.items() if key in _USED_FIELDS)
+def main():
+    replace_passwords()
+    args = parse_arguments(sys.argv[1:])
 
+    sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
 
-def fetch_devices(args):
-    """Query the HiveManager NG API and return the list of devices."""
+    address = "%s/xapi/v1/monitor/devices" % args.url
     params = {
         "ownerId": args.vhm_id,
-        "pageSize": _PAGE_SIZE,
+        "pageSize": 1000,  # the agent will deliver at most 1000 devices
     }
     headers = {
         "Authorization": "Bearer %s" % args.api_token,
@@ -74,11 +59,7 @@ def fetch_devices(args):
     }
 
     try:
-        response = requests.get(
-            "%s/xapi/v1/monitor/devices" % args.url,
-            headers=headers,
-            params=params,
-        )  # nosec B113 # BNS:0b0eac
+        response = requests.get(address, headers=headers, params=params)  # nosec B113 # BNS:0b0eac
     except requests.RequestException:
         bail_out(
             "Request to the API failed. Please check your connection settings. "
@@ -99,14 +80,16 @@ def fetch_devices(args):
             args.debug,
         )
 
-    return json["data"]
+    used = {
+        "hostName",
+        "connected",
+        "activeClients",
+        "ip",
+        "serialId",
+        "osVersion",
+        "lastUpdated",
+    }
 
-
-def main():
-    replace_passwords()
-    args = parse_arguments(sys.argv[1:])
-
-    sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
-
-    for device in fetch_devices(args):
-        sys.stdout.write(device_line(device) + "\n")
+    for device in json["data"]:
+        device_txt = "|".join([f"{k}::{v}" for (k, v) in device.items() if k in used])
+        sys.stdout.write(device_txt + "\n")

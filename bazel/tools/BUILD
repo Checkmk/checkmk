@@ -1,7 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_env.bzl", "bazel_env")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
-load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
@@ -48,11 +47,6 @@ py_binary(
         requirement("mypy"),
         requirement("pydantic"),
     ],
-)
-
-native_binary(
-    name = "clang_tidy",
-    src = "@clang-linux-x86_64//:bin/clang-tidy",
 )
 
 filegroup(

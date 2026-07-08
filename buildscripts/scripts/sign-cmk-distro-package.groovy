@@ -83,18 +83,18 @@ void main() {
 
             stage("Download built package") {
                 single_tests.fetch_package(
-                    relative_job_name: "builders/build-cmk-distro-package",
-                    edition: edition,
-                    distro: distro,
-                    version: version,
-                    download_dir: checkout_dir,
-                    disable_cache: disable_cache,
                     bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                    disable_cache: disable_cache,
+                    distro: distro,
+                    docker_tag: docker_tag,
+                    download_dir: checkout_dir,
+                    edition: edition,
                     fake_artifacts: fake_artifacts,
                     force_build: force_build,
-                    docker_tag: docker_tag,
-                    safe_branch_name: safe_branch_name,
                     no_remove_others: true,
+                    relative_job_name: "builders/build-cmk-distro-package",
+                    safe_branch_name: safe_branch_name,
+                    version: version,
                 );
             }
 

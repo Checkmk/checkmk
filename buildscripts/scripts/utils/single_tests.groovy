@@ -63,28 +63,28 @@ void fetch_package(Map args) {
 
     inside_container_minimal(safe_branch_name: args.safe_branch_name) {
         def this_parameters = [
-            force_build: args.force_build ?: false,
-            relative_job_name: relative_job_name,
             build_params: [
                 /// currently CUSTOM_GIT_REF must match, but in the future
                 /// we should define dependency paths for build-cmk-distro-package
                 CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
-                EDITION: args.edition,
-                DISTRO: args.distro,
-                FAKE_ARTIFACTS: args.fake_artifacts,
                 DISABLE_CACHE: args.disable_cache ?: false,
                 DISABLE_CMK_DISTRO_PACKAGE_SIGNING: args.disable_signing ?: false,
+                DISTRO: args.distro,
+                EDITION: args.edition,
+                FAKE_ARTIFACTS: args.fake_artifacts,
             ],
             build_params_no_check: [
-                CIPARAM_OVERRIDE_BUILD_NODE: build_node,
                 CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                CIPARAM_OVERRIDE_BUILD_NODE: build_node,
                 CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: args.docker_tag,
             ],
             dest: args.download_dir,
-            no_remove_others: args.no_remove_others,    // do not delete other files in the dest dir
-            no_venv: true,          // run ci-artifacts call without venv
+            force_build: args.force_build ?: false,
             omit_build_venv: true,  // do not check or build a venv first
             no_raise: false,        // abort on problems of upstream build
+            no_remove_others: args.no_remove_others,    // do not delete other files in the dest dir
+            no_venv: true,          // run ci-artifacts call without venv
+            relative_job_name: relative_job_name,
         ];
         if (args.version) {
             // Pin the match to the exact upstream VERSION (e.g. an RC like "2.5.0p9-rc2").

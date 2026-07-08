@@ -41,15 +41,15 @@ void main() {
 
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
-                edition: edition,
-                distro: distro,
-                download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_artifacts: fake_artifacts,
                 disable_cache: disable_cache,
                 disable_signing: disable_signing,
-                force_build: force_build,
+                distro: distro,
                 docker_tag: setup_values.docker_tag,
+                download_dir: download_dir,
+                edition: edition,
+                fake_artifacts: fake_artifacts,
+                force_build: force_build,
                 safe_branch_name: setup_values.safe_branch_name,
             );
         }

@@ -41,6 +41,7 @@ To search for hosts with specific tags set on them:
 # mypy: disable-error-code="type-arg"
 
 import ast
+import json
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any
 
@@ -224,7 +225,11 @@ def fixup_inventory_column(
     for row in result:
         if inventory_data := row.get(INVENTORY_COLUMN):
             copy = dict(row)
-            copy[INVENTORY_COLUMN] = ast.literal_eval(inventory_data.decode("utf-8"))
+            raw = inventory_data.decode("utf-8")
+            try:
+                copy[INVENTORY_COLUMN] = json.loads(raw)
+            except json.JSONDecodeError:
+                copy[INVENTORY_COLUMN] = ast.literal_eval(raw)
             yield ResultRow(copy)
         else:
             yield row

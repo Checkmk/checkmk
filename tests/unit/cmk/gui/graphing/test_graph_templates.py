@@ -1605,7 +1605,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             ),
                             "#cc00ff",
                             "area",
-                            "Foo",
+                            "foo",
                         )
                     ],
                 ),
@@ -1649,7 +1649,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             ),
                             "#4b4b4b",
                             "area",
-                            "Prediction of Foo (upper levels)",
+                            "Prediction of foo (upper levels)",
                         )
                     ],
                 ),
@@ -1693,7 +1693,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             ),
                             "#5a5a5a",
                             "area",
-                            "Prediction of Foo (lower levels)",
+                            "Prediction of foo (lower levels)",
                         )
                     ],
                 ),

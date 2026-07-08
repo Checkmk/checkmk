@@ -435,7 +435,7 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     )
 
 
-def _parse_dump(dump: bytes) -> object:
+def parse_dump(dump: bytes) -> object:
     try:
         return json.loads(dump.decode("utf-8"))
     except json.JSONDecodeError:
@@ -444,8 +444,8 @@ def _parse_dump(dump: bytes) -> object:
 
 
 def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
-    return _parse_from_unzipped(_parse_dump(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
+    return _parse_from_unzipped(parse_dump(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
 
 
 def parse_from_raw_status_data_tree(dump: bytes) -> ImmutableTree:
-    return deserialize_tree(_parse_dump(dump))
+    return deserialize_tree(parse_dump(dump))

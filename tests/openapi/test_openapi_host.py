@@ -7,6 +7,7 @@
 
 import ast
 import base64
+import json
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
@@ -229,6 +230,41 @@ def test_openapi_livestatus_host_list_all(
             query={"op": "=", "left": "name", "right": "heute"}, columns=["notes"]
         )
         assert resp.json["value"][0]["extensions"]["notes"] == test_note
+
+
+@pytest.mark.parametrize(
+    ["payload_type", "inventory_bytes"],
+    [
+        (
+            "json",
+            b'{"Attributes": {}, "Table": {}, "Nodes": {"networking": {"Attributes": {"Pairs": {"hostname": "heute", "is_wan": true}}}}}',
+        ),
+        (
+            "python_repr",
+            b"{'Attributes': {}, 'Table': {}, 'Nodes': {'networking': {'Attributes': {'Pairs': {'hostname': 'heute', 'is_wan': True}}}}}",
+        ),
+    ],
+    ids=["json", "python_repr"],
+)
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_livestatus_host_inventory_parses_json_and_repr_data(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    inventory_bytes: bytes,
+    payload_type: str,
+) -> None:
+    _add_hosts_table(mock_livestatus, {"mk_inventory": inventory_bytes})
+    mock_livestatus.expect_query("GET hosts\nColumns: name mk_inventory\nFilter: name = heute")
+
+    with mock_livestatus():
+        resp = clients.Host.list_all(
+            query={"op": "=", "left": "name", "right": "heute"},
+            columns=["mk_inventory"],
+        )
+
+    raw = inventory_bytes.decode("utf-8")
+    decoder = json.loads if payload_type == "json" else ast.literal_eval
+    assert resp.json["value"][0]["extensions"]["mk_inventory"] == decoder(raw)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")

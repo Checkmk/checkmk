@@ -61,7 +61,6 @@ pyasn1~=0.6.1
 pydantic-core~=2.41.5
 pydantic~=2.12.5
 pyghmi~=1.6.11
-pyjwt[crypto]~=2.10.1
 pymssql~=2.3.10
 pymysql~=1.1.2
 pyparsing~=3.2.5

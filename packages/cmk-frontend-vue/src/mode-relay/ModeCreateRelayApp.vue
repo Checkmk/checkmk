@@ -65,7 +65,11 @@ const openRelayOverviewPage = () => {
       </ul>
     </CmkParagraph>
 
-    <CmkToggleButtonGroup v-model="selectedOs" :options="osOptions" />
+    <CmkToggleButtonGroup
+      v-if="props.exp_add_windows_relay_enabled"
+      v-model="selectedOs"
+      :options="osOptions"
+    />
 
     <CmkWizard v-model="currentStep" mode="guided">
       <!-- Linux path -->

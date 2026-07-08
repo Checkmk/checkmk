@@ -46,8 +46,13 @@ def check_ups_bat_temp(item, params, info):
     for line in info:
         name = format_item_ups_bat_temp(line[0], "Battery" in item)
         if name == item:
+            try:
+                temperature = int(line[1])
+            except ValueError:
+                # Skip instead of crashing for empty battery temperature.
+                return None
             status, infotext, perfdata = check_temperature(
-                int(line[1]), params, "ups_bat_temp_%s" % item
+                temperature, params, "ups_bat_temp_%s" % item
             )
             perfdatanew = [perfdata[0] + (80,)]
             return status, infotext, perfdatanew

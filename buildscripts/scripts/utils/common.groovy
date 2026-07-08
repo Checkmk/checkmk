@@ -73,8 +73,8 @@ withCredentialFileAtLocation = {Map args, Closure body ->
 
     try {
         withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
-                cmd_output("${cp_cmd} ${SECRET_LOCATION} ${args.location}");
-                body();
+            cmd_output("${cp_cmd} ${SECRET_LOCATION} ${args.location}");
+            body();
         }
         return true;
     } finally {

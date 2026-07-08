@@ -14,11 +14,16 @@ import type { PasswordConfig } from './password_store_password.types.ts'
 const { _t } = usei18n()
 
 /**
- * Standard REST API object endpoints (password, folder) enforce ETag locking:
- * a DELETE without an `If-Match` header is rejected with 428 Precondition
- * Required. Since rollbacks delete objects this run just created, there is no
- * concurrent-modification concern — send the star tag to satisfy the
- * precondition without a preceding GET. (Internal otel endpoints ignore it.)
+ * Several REST API object DELETE endpoints enforce ETag locking: a DELETE
+ * without an `If-Match` header is rejected with 428 Precondition Required. This
+ * covers the standard password and folder endpoints as well as the internal
+ * OTel collector receiver, Prometheus scrape config, and DCD metric backend
+ * endpoints. We send the star tag rather than a captured ETag because the Quick
+ * Setup mutates these records after creating them — the configuration bundle
+ * stamps `locked_by` on them, which is part of the hashed state — so an ETag
+ * captured at creation is already stale by the time a rollback deletes the
+ * record. The star tag matches any version. (The OTel bundle endpoint does not
+ * enforce ETag locking, so its rollback omits the header.)
  */
 const IF_MATCH_ANY = { 'If-Match': '*' }
 
@@ -548,9 +553,12 @@ export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): 
         return {
           ok: true,
           rollback: async () => {
+            // The receiver DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
             await fetchRestAPI(
               `api/internal/objects/otel_collector_config_receivers/${encodeURIComponent(input.id)}`,
-              'DELETE'
+              'DELETE',
+              undefined,
+              IF_MATCH_ANY
             )
             await deletePasswords(createdIds)
           }
@@ -616,9 +624,12 @@ export function createPrometheusScrapeConfigAction(
         return {
           ok: true,
           rollback: async () => {
+            // The prom-scrape DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
             await fetchRestAPI(
               `api/internal/objects/otel_collector_config_prom_scrape/${encodeURIComponent(input.id)}`,
-              'DELETE'
+              'DELETE',
+              undefined,
+              IF_MATCH_ANY
             )
           }
         }

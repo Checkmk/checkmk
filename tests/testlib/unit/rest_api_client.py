@@ -68,6 +68,18 @@ def set_if_match_header(
             return None
 
 
+def _if_match_header(if_match: IF_MATCH_HEADER_OPTIONS | str) -> Mapping[str, str] | None:
+    """Like set_if_match_header, but a value that is not a known keyword (and not None)
+    is sent verbatim as the If-Match header, e.g. a concrete (possibly stale) ETag."""
+    match if_match:
+        case None | "valid_etag":
+            return None
+        case "star" | "invalid_etag":
+            return set_if_match_header(if_match)
+        case _:
+            return {"If-Match": if_match}
+
+
 @dataclasses.dataclass(frozen=True)
 class Response:
     status_code: int
@@ -3445,23 +3457,33 @@ class OtelConfigClient(RestApiClient):
         )
 
     def edit_receivers(
-        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+        self,
+        config_id: str,
+        payload: Mapping[str, Any],
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
     ) -> Response:
         return self.request(
             "put",
             url=f"/objects/{self.receivers_domain}/{config_id}",
             body=dict(payload),
+            headers=self._receiver_etag_header(config_id, etag),
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )
 
     def edit_prom_scrape(
-        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+        self,
+        config_id: str,
+        payload: Mapping[str, Any],
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
     ) -> Response:
         return self.request(
             "put",
             url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
             body=dict(payload),
+            headers=self._prom_scrape_etag_header(config_id, etag),
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )
@@ -3474,21 +3496,47 @@ class OtelConfigClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
-    def delete_receivers(self, config_id: str, expect_ok: bool = True) -> Response:
+    def delete_receivers(
+        self,
+        config_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
+    ) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.receivers_domain}/{config_id}",
+            headers=self._receiver_etag_header(config_id, etag),
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )
 
-    def delete_prom_scrape(self, config_id: str, expect_ok: bool = True) -> Response:
+    def delete_prom_scrape(
+        self,
+        config_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
+    ) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
+            headers=self._prom_scrape_etag_header(config_id, etag),
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )
+
+    def _receiver_etag_header(
+        self, config_id: str, etag: IF_MATCH_HEADER_OPTIONS | str
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get_receiver(config_id).headers["ETag"]}
+        return _if_match_header(etag)
+
+    def _prom_scrape_etag_header(
+        self, config_id: str, etag: IF_MATCH_HEADER_OPTIONS | str
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get_prom_scraper(config_id).headers["ETag"]}
+        return _if_match_header(etag)
 
 
 class OtelCollectorClient(RestApiClient):

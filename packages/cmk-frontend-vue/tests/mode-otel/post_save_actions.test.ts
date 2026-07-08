@@ -485,9 +485,12 @@ describe('createOTelReceiverConfigAction', () => {
     if (result.ok) {
       expect(result.rollback).toBeDefined()
       await result.rollback!()
+      // The receiver DELETE must carry If-Match — the endpoint enforces ETag locking.
       expect(spy).toHaveBeenLastCalledWith(
         'api/internal/objects/otel_collector_config_receivers/cfg1',
-        'DELETE'
+        'DELETE',
+        undefined,
+        { 'If-Match': '*' }
       )
     }
   })
@@ -703,6 +706,37 @@ describe('createPrometheusScrapeConfigAction', () => {
         }
       ]
     })
+  })
+
+  test('returns a rollback that DELETEs the prom-scrape config with an If-Match header', async () => {
+    const spy = vi
+      .spyOn(cmkFetch, 'fetchRestAPI')
+      .mockResolvedValueOnce(makeFetchResponse(200, {}))
+      .mockResolvedValueOnce(makeFetchResponse(204))
+
+    const action = createPrometheusScrapeConfigAction({
+      id: 'p1',
+      siteId: 'prod',
+      jobName: 'node',
+      metricsPath: '/metrics',
+      address: '10.0.0.1',
+      port: 9090,
+      encryption: false
+    })
+    const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.rollback).toBeDefined()
+      await result.rollback!()
+      // The prom-scrape DELETE must carry If-Match — the endpoint enforces ETag locking.
+      expect(spy).toHaveBeenLastCalledWith(
+        'api/internal/objects/otel_collector_config_prom_scrape/p1',
+        'DELETE',
+        undefined,
+        { 'If-Match': '*' }
+      )
+    }
   })
 
   test('returns a structured error when the endpoint returns a REST problem', async () => {

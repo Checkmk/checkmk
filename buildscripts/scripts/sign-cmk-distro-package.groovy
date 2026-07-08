@@ -112,6 +112,7 @@ void main() {
                     disable_cache: disable_cache,
                     no_remove_others: true,
                     dependency_paths: package_helper.dependency_paths_hashes()["winagt-build"],
+                    klaus_spezial: true,
                 );
 
                 // Hardcoded paths are the dream of all devs,

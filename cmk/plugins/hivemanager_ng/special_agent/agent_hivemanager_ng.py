@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """agent_hivemanager_ng
 
-Checkmk special agent for Aerohive HiveManager NG."""
+Checkmk special agent for Aerohive HiveManagerNG.
+"""
 
+import argparse
 import sys
 import traceback
-from argparse import ArgumentParser
-from argparse import Namespace as Args
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import NoReturn
 
 import requests
@@ -18,20 +18,6 @@ import requests
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 SECRET_OPTION = "secret"
-
-# The agent delivers at most this many devices.
-_PAGE_SIZE = 1000
-
-# Device field names forwarded to the check plugin; all other fields are dropped.
-_USED_FIELDS = {
-    "hostName",
-    "connected",
-    "activeClients",
-    "ip",
-    "serialId",
-    "osVersion",
-    "lastUpdated",
-}
 
 
 def bail_out(message: str, debug: bool = False) -> NoReturn:
@@ -43,9 +29,9 @@ def bail_out(message: str, debug: bool = False) -> NoReturn:
     sys.exit(1)
 
 
-def parse_arguments(argv: Sequence[str]) -> Args:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", maxsplit=1)
-    parser = ArgumentParser(description=description, prog=prog)
+    parser = argparse.ArgumentParser(description=description, prog=prog)
     parser.add_argument("-d", "--debug", help="enable debugging", action="store_true")
     parser.add_argument("url", help="URL to Aerohive NG, e.g. https://cloud.aerohive.com")
     parser.add_argument("vhm_id", help="Numericl ID of the VHM e.g. 102")
@@ -56,16 +42,15 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     return parser.parse_args(argv)
 
 
-def device_line(device: Mapping[str, object]) -> str:
-    """Render a single device as a section line, keeping only the used fields."""
-    return "|".join(f"{key}::{value}" for key, value in device.items() if key in _USED_FIELDS)
+def main() -> int:
+    args = parse_arguments(sys.argv[1:])
 
+    sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
 
-def fetch_devices(args: Args) -> Sequence[Mapping[str, object]]:
-    """Query the HiveManager NG API and return the list of devices."""
+    address = "%s/xapi/v1/monitor/devices" % args.url
     params = {
         "ownerId": args.vhm_id,
-        "pageSize": _PAGE_SIZE,
+        "pageSize": 1000,  # the agent will deliver at most 1000 devices
     }
     headers = {
         "Authorization": "Bearer %s" % args.api_token,
@@ -76,12 +61,7 @@ def fetch_devices(args: Args) -> Sequence[Mapping[str, object]]:
     }
 
     try:
-        response = requests.get(
-            "%s/xapi/v1/monitor/devices" % args.url,
-            headers=headers,
-            params=params,
-            timeout=900,
-        )
+        response = requests.get(address, headers=headers, params=params, timeout=900)
     except requests.RequestException:
         bail_out(
             "Request to the API failed. Please check your connection settings. "
@@ -102,17 +82,19 @@ def fetch_devices(args: Args) -> Sequence[Mapping[str, object]]:
             args.debug,
         )
 
-    devices: Sequence[Mapping[str, object]] = json["data"]
-    return devices
+    used = {
+        "hostName",
+        "connected",
+        "activeClients",
+        "ip",
+        "serialId",
+        "osVersion",
+        "lastUpdated",
+    }
 
-
-def main() -> int:
-    args = parse_arguments(sys.argv[1:])
-
-    sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
-
-    for device in fetch_devices(args):
-        sys.stdout.write(device_line(device) + "\n")
+    for device in json["data"]:
+        device_txt = "|".join([f"{k}::{v}" for (k, v) in device.items() if k in used])
+        sys.stdout.write(device_txt + "\n")
 
     return 0
 

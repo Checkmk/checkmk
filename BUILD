@@ -133,6 +133,7 @@ compile_requirements_in(
         "//cmk:requirements.in",
         "//tests:dev-requirements.in",
         "//packages:python_requirements",
+        "//omd:dev-requirements.in",
     ],
 )
 

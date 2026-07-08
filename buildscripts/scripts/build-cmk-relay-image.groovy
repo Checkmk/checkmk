@@ -78,13 +78,15 @@ void main() {
                 name: "Upload to download server",
                 condition: push_to_registry,
             ) {
-                artifacts_helper.upload_via_rsync(
-                    "${artifact_directory}",
-                    "${cmk_version_rc_aware}",
-                    "${tarball_name}",
-                    "${WEB_DEPLOY_DEST}",
-                    "${WEB_DEPLOY_PORT}",
-                )
+                [tarball_name, sbom_name].each { filename ->
+                    artifacts_helper.upload_via_rsync(
+                        "${artifact_directory}",
+                        "${cmk_version_rc_aware}",
+                        "${filename}",
+                        "${WEB_DEPLOY_DEST}",
+                        "${WEB_DEPLOY_PORT}",
+                    )
+                }
             }
 
             smart_stage(

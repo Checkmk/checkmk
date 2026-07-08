@@ -447,14 +447,21 @@ fn test_execute_config_custom_sqls() {
     let vars = mk_oracle::config::migration::convert_config(Path::new(&cfg)).unwrap();
 
     // variables set inside the section function are extracted per section
-    assert_eq!(vars["SQLS_SECTIONS"], "mycustomsection1 mycustomsection2");
+    assert_eq!(
+        vars["SQLS_SECTIONS"],
+        "mycustomsection1 mycustomsection2 mycustomsection3 mycustomsection4"
+    );
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SIDS"], "MYINST3");
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_DIR"], "/etc/check_mk");
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SQL"], "MyCustomSQL.sql");
     // section 1 values must not leak into section 2
     assert_eq!(vars["SQLS.mycustomsection2.SQLS_SQL"], "OtherSQL.sql");
-    assert!(!vars.contains_key("SQLS.mycustomsection2.SQLS_SIDS"));
     assert!(!vars.contains_key("SQLS.mycustomsection2.SQLS_DIR"));
+    // SQLS_SIDS=$(...) evaluates to empty during extraction (AWK/GREP unset)
+    assert_eq!(vars["SQLS.mycustomsection3.SQLS_SQL"], "custom_sql.sql");
+    assert!(!vars.contains_key("SQLS.mycustomsection3.SQLS_SIDS"));
+    assert_eq!(vars["SQLS.mycustomsection4.SQLS_SIDS"], "MYINST3 MYINST2");
+    assert_eq!(vars["SQLS.mycustomsection4.SQLS_SQL"], "custom_sql_2.sql");
 }
 
 #[test]
@@ -499,14 +506,15 @@ fn test_migrate_reference_config_connection_and_auth() {
     assert_eq!(auth.auth_type().to_string(), "standard");
     assert!(auth.role().is_none(), "empty role must be None");
 
-    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2, REMOTE_INSTANCE_1 (Linux only)
+    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2, REMOTE_INSTANCE_1 and
+    // MYINST2 from static SQLS_SIDS (both Linux only)
     // DBUSER with $ORACLE_SID is skipped: env var absent at load time
     let instances = ora.instances();
     #[cfg(not(windows))]
     assert_eq!(
         instances.len(),
-        3,
-        "must have 3 instances from DBUSER_XE1 + DBUSER_XE2 + REMOTE_INSTANCE_1"
+        4,
+        "must have 4 instances from DBUSER_XE1 + DBUSER_XE2 + REMOTE_INSTANCE_1 + MYINST2"
     );
     #[cfg(windows)]
     assert_eq!(
@@ -611,39 +619,62 @@ fn test_migrate_reference_config_custom_metrics() {
     let config = mk_oracle::config::OracleConfig::load_str(&stdout)
         .expect("migrated output must be valid YAML");
     let ora = config.ora_sql().expect("must have oracle config");
-    let metrics: Vec<_> = ora
+    let global: Vec<_> = ora
         .all_sections()
         .iter()
         .filter(|s| s.is_custom_metric())
+        .map(|s| (s.item_value().unwrap().as_str(), s.path()))
         .collect();
     #[cfg(windows)]
     // windows ps1 legacy plugin doesn't support custom SQL sections
-    assert!(metrics.is_empty(), "no custom metrics on windows");
+    assert!(global.is_empty(), "no custom metrics on windows");
     #[cfg(not(windows))]
     {
+        use std::path::Path;
+
+        // dynamic SQLS_SIDS (env var / command) target all instances
         assert_eq!(
-            metrics.len(),
-            2,
-            "one custom metric per SQLS_SECTIONS entry"
+            global,
+            [
+                ("mycustomsection2", Some(Path::new("OtherSQL.sql"))),
+                ("mycustomsection3", Some(Path::new("custom_sql.sql"))),
+            ]
+        );
+
+        // static SQLS_SIDS → custom_metrics on the matching instances,
+        // MYINST3 exists (REMOTE_INSTANCE_1), MYINST2 is created for the metric
+        let custom_metrics_of = |sid: &str| -> Vec<(String, Option<&Path>)> {
+            ora.instances()
+                .iter()
+                .find(|i| {
+                    i.standalone_sid().map(|s| s.to_string()).as_deref() == Some(sid)
+                        || i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some(sid)
+                })
+                .unwrap_or_else(|| panic!("instance {sid} not found"))
+                .custom_metrics()
+                .iter()
+                .map(|s| (s.item_value().unwrap().as_str().to_string(), s.path()))
+                .collect()
+        };
+        assert_eq!(
+            custom_metrics_of("MYINST3"),
+            [
+                (
+                    "mycustomsection1".to_string(),
+                    Some(Path::new("/etc/check_mk/MyCustomSQL.sql"))
+                ),
+                (
+                    "mycustomsection4".to_string(),
+                    Some(Path::new("custom_sql_2.sql"))
+                ),
+            ]
         );
         assert_eq!(
-            metrics[0].item_value().unwrap().as_str(),
-            "mycustomsection1",
-            "item name must be the legacy section function name"
-        );
-        assert_eq!(
-            metrics[0].path(),
-            Some(std::path::Path::new("/etc/check_mk/MyCustomSQL.sql")),
-            "path must be SQLS_DIR/SQLS_SQL"
-        );
-        assert_eq!(
-            metrics[1].item_value().unwrap().as_str(),
-            "mycustomsection2"
-        );
-        assert_eq!(
-            metrics[1].path(),
-            Some(std::path::Path::new("OtherSQL.sql")),
-            "no SQLS_DIR must give a relative path"
+            custom_metrics_of("MYINST2"),
+            [(
+                "mycustomsection4".to_string(),
+                Some(Path::new("custom_sql_2.sql"))
+            )]
         );
     }
 }

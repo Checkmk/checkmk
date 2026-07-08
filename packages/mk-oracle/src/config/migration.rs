@@ -60,6 +60,7 @@ struct LegacyCustomSql {
     name: String,
     dir: Option<String>,
     sql_file: String,
+    sids: Vec<String>,
 }
 
 fn optional_value(s: &str) -> Option<String> {
@@ -160,10 +161,11 @@ fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
 /// Parse custom SQL sections from SQLS_SECTIONS and the per-section
 /// `SQLS.<section>.<VAR>` entries extracted by the config shell script.
 /// Top-level SQLS_DIR/SQLS_SQL act as defaults, as in the legacy plugin.
-fn parse_custom_sqls(variables: &HashMap<String, String>) -> Vec<LegacyCustomSql> {
+fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<LegacyCustomSql> {
     let Some(section_names) = variables.get("SQLS_SECTIONS") else {
         return Vec::new();
     };
+    let raw_sids = collect_raw_sqls_sids(legacy);
 
     section_names
         .split([',', ' '])
@@ -181,9 +183,72 @@ fn parse_custom_sqls(variables: &HashMap<String, String>) -> Vec<LegacyCustomSql
                     .or_else(|| variables.get("SQLS_DIR"))
                     .cloned(),
                 sql_file: sql_file.clone(),
+                sids: parse_custom_sql_sids(name, &raw_sids, variables),
             })
         })
         .collect()
+}
+
+/// SIDs a custom SQL section is restricted to, empty means all instances.
+///
+/// `raw_sids` comes from parsing the config text and decides the outcome: a
+/// shell expansion (`$`, backtick) means all instances.
+/// `variables` comes from sourcing the config and only
+/// supplies the literal SID values once a plain assignment is confirmed; its
+/// value can't be trusted for the decision, as it depends on the migration
+/// host's environment.
+fn parse_custom_sql_sids(
+    section: &str,
+    raw_sids: &HashMap<Option<String>, String>,
+    variables: &HashMap<String, String>,
+) -> Vec<String> {
+    let raw = raw_sids
+        .get(&Some(section.to_string()))
+        .or_else(|| raw_sids.get(&None));
+    if raw.is_some_and(|r| r.contains('$') || r.contains('`')) {
+        // Dynamic expression — can't resolve at migration time.
+        // Empty sids = global metric (runs on all instances).
+        return Vec::new();
+    }
+    variables
+        .get(&format!("SQLS.{section}.SQLS_SIDS"))
+        .or_else(|| variables.get("SQLS_SIDS"))
+        .map(|v| {
+            v.split(|c: char| c == ',' || c.is_whitespace())
+                .filter(|s| !s.is_empty())
+                .map(String::from)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
+/// the enclosing function name (None = top level).
+fn collect_raw_sqls_sids(legacy: &str) -> HashMap<Option<String>, String> {
+    let mut assignments = HashMap::new();
+    let mut current_fn: Option<String> = None;
+    for line in legacy.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('#') {
+            // Commented line: neither a function scope nor an assignment.
+            continue;
+        }
+        if let Some(value) = trimmed.strip_prefix("SQLS_SIDS=") {
+            assignments.insert(current_fn.clone(), value.to_string());
+        } else if current_fn.is_some() && trimmed.starts_with('}') {
+            current_fn = None;
+        } else if let Some(name) = parse_custom_sqls_function_def(trimmed) {
+            current_fn = Some(name);
+        }
+    }
+    assignments
+}
+
+fn parse_custom_sqls_function_def(line: &str) -> Option<String> {
+    let (name, _) = line.split_once("()")?;
+    let name = name.trim();
+    (!name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'))
+        .then(|| name.to_string())
 }
 
 pub fn convert(
@@ -310,11 +375,11 @@ pub fn convert(
     let custom_sqls = if cfg!(windows) {
         Vec::new()
     } else {
-        parse_custom_sqls(variables)
+        parse_custom_sqls(legacy, variables)
     };
 
     out.extend(format_options(max_tasks));
-    out.extend(format_instances(&dbuser, &dbuser_extras));
+    out.extend(format_instances(&dbuser, &dbuser_extras, &custom_sqls));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_custom_metrics(&custom_sqls));
     out.extend(format_cache_age(cache_maxage));
@@ -338,11 +403,17 @@ fn format_options(max_tasks: Option<u32>) -> Vec<String> {
     lines
 }
 
-fn format_instances(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Vec<String> {
+fn format_instances(
+    dbuser: &LegacyDbUser,
+    dbuser_extras: &[LegacyDbUser],
+    custom_sqls: &[LegacyCustomSql],
+) -> Vec<String> {
     let mut lines = vec!["    instances:\n".to_string()];
+    let mut known_sids: Vec<&str> = Vec::new();
     let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
         let sid = entry.sid.as_deref().unwrap_or(&entry.alias_or_sid);
+        known_sids.push(sid);
         lines.push(format!("      - sid: {sid}\n"));
         if entry.sid.is_some() && entry.alias_or_sid == "$ORACLE_SID" {
             // sid known from variable name suffix, no explicit alias needed
@@ -350,6 +421,7 @@ fn format_instances(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Ve
             lines.push(format!("        alias: {}\n", entry.alias_or_sid));
         }
         if entry.sid.is_none() {
+            lines.extend(instance_custom_metrics(custom_sqls, sid));
             continue;
         }
 
@@ -376,8 +448,34 @@ fn format_instances(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Ve
                 lines.push(format!("          role: {}\n", role.to_lowercase()));
             }
         }
+        lines.extend(instance_custom_metrics(custom_sqls, sid));
+    }
+    // SIDs only referenced by SQLS_SIDS need an own entry to carry the metrics
+    for sid in custom_sql_only_sids(custom_sqls, &known_sids) {
+        lines.push(format!("      - sid: {sid}\n"));
+        lines.extend(instance_custom_metrics(custom_sqls, &sid));
     }
     lines
+}
+
+fn instance_custom_metrics(custom_sqls: &[LegacyCustomSql], sid: &str) -> Vec<String> {
+    let metrics: Vec<&LegacyCustomSql> = custom_sqls
+        .iter()
+        .filter(|c| c.sids.iter().any(|s| s == sid))
+        .collect();
+    format_custom_metric_entries(&metrics, "        ")
+}
+
+/// SIDs referenced by custom SQL sections without a matching instance entry
+fn custom_sql_only_sids(custom_sqls: &[LegacyCustomSql], known: &[&str]) -> Vec<String> {
+    let mut seen = HashSet::new();
+    custom_sqls
+        .iter()
+        .flat_map(|c| &c.sids)
+        .filter(|sid| !known.contains(&sid.as_str()))
+        .filter(|sid| seen.insert(sid.as_str()))
+        .cloned()
+        .collect()
 }
 
 fn format_sections(
@@ -410,19 +508,24 @@ fn format_sections(
     lines
 }
 
-// TODO(CMK-34630): SQLS_SIDS is ignored, all custom metrics apply to every instance
+/// Sections without a SID restriction apply to all instances → global level
 fn format_custom_metrics(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
-    if custom_sqls.is_empty() {
+    let global: Vec<&LegacyCustomSql> = custom_sqls.iter().filter(|c| c.sids.is_empty()).collect();
+    format_custom_metric_entries(&global, "    ")
+}
+
+fn format_custom_metric_entries(metrics: &[&LegacyCustomSql], indent: &str) -> Vec<String> {
+    if metrics.is_empty() {
         return Vec::new();
     }
-    let mut lines = vec!["    custom_metrics:\n".to_string()];
-    for custom in custom_sqls {
+    let mut lines = vec![format!("{indent}custom_metrics:\n")];
+    for custom in metrics {
         let path = match &custom.dir {
             Some(dir) => format!("{}/{}", dir.trim_end_matches('/'), custom.sql_file),
             None => custom.sql_file.clone(),
         };
-        lines.push(format!("      - {}:\n", custom.name));
-        lines.push(format!("          path: {path}\n"));
+        lines.push(format!("{indent}  - {}:\n", custom.name));
+        lines.push(format!("{indent}      path: {path}\n"));
     }
     lines
 }
@@ -814,13 +917,14 @@ mod tests {
                 "MyCustomSQL.sql".into(),
             ),
         ]);
-        let result = parse_custom_sqls(&vars);
+        let result = parse_custom_sqls("", &vars);
         assert_eq!(
             result,
             vec![LegacyCustomSql {
                 name: "mycustomsection1".into(),
                 dir: Some("/etc/check_mk".into()),
                 sql_file: "MyCustomSQL.sql".into(),
+                sids: vec!["MYINST3".into()],
             }]
         );
     }
@@ -832,13 +936,14 @@ mod tests {
             ("SQLS_DIR".into(), "/global/dir".into()),
             ("SQLS_SQL".into(), "global.sql".into()),
         ]);
-        let result = parse_custom_sqls(&vars);
+        let result = parse_custom_sqls("", &vars);
         assert_eq!(
             result,
             vec![LegacyCustomSql {
                 name: "sec1".into(),
                 dir: Some("/global/dir".into()),
                 sql_file: "global.sql".into(),
+                sids: vec![],
             }]
         );
     }
@@ -850,36 +955,159 @@ mod tests {
             ("SQLS.nosql.SQLS_DIR".into(), "/etc/check_mk".into()),
             ("SQLS.withsql.SQLS_SQL".into(), "query.sql".into()),
         ]);
-        let result = parse_custom_sqls(&vars);
+        let result = parse_custom_sqls("", &vars);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].name, "withsql");
     }
 
     #[test]
     fn test_parse_custom_sqls_no_sections() {
-        assert!(parse_custom_sqls(&HashMap::new()).is_empty());
+        assert!(parse_custom_sqls("", &HashMap::new()).is_empty());
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_dynamic_sids_apply_to_all() {
+        let legacy = r#"SQLS_SECTIONS="sec1 sec2"
+sec1 () {
+    SQLS_SIDS=${ORACLE_SID:-$SIDS}
+    SQLS_SQL="a.sql"
+}
+sec2 () {
+    SQLS_SIDS=$(ps -ef | grep pmon | cut -d"_" -f3-)
+    SQLS_SQL="b.sql"
+}
+"#;
+
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "LEAKED".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS.sec2.SQLS_SQL".into(), "b.sql".into()),
+        ]);
+        let result = parse_custom_sqls(legacy, &vars);
+        assert_eq!(result.len(), 2);
+        assert!(result[0].sids.is_empty(), "env var SIDS must mean all");
+        assert!(result[1].sids.is_empty(), "command SIDS must mean all");
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_sids_comma_and_space_separated() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "A,B C".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(result[0].sids, vec!["A", "B", "C"]);
+    }
+
+    #[test]
+    fn test_collect_raw_sqls_sids() {
+        let legacy = r#"SQLS_SIDS='TOP1 TOP2'
+sec1 () {
+    SQLS_SIDS="MYINST3"
+}
+sec2() {
+    SQLS_SIDS=$(ps -ef | awk '{print $NF}')
+}
+sec3 () {
+    SQLS_SQL="x.sql"
+}
+"#;
+        let raw = collect_raw_sqls_sids(legacy);
+        assert_eq!(raw[&None], "'TOP1 TOP2'");
+        assert_eq!(raw[&Some("sec1".to_string())], "\"MYINST3\"");
+        assert!(raw[&Some("sec2".to_string())].starts_with("$("));
+        assert!(!raw.contains_key(&Some("sec3".to_string())));
+    }
+
+    fn make_custom_sql(
+        name: &str,
+        dir: Option<&str>,
+        sql_file: &str,
+        sids: &[&str],
+    ) -> LegacyCustomSql {
+        LegacyCustomSql {
+            name: name.into(),
+            dir: dir.map(String::from),
+            sql_file: sql_file.into(),
+            sids: sids.iter().map(|s| s.to_string()).collect(),
+        }
     }
 
     #[test]
     fn test_format_custom_metrics_dir_trailing_slash() {
-        let custom = LegacyCustomSql {
-            name: "sec1".into(),
-            dir: Some("/etc/check_mk/".into()),
-            sql_file: "query.sql".into(),
-        };
+        let custom = make_custom_sql("sec1", Some("/etc/check_mk/"), "query.sql", &[]);
         let out: String = format_custom_metrics(&[custom]).join("");
         assert!(out.contains("          path: /etc/check_mk/query.sql\n"));
     }
 
     #[test]
     fn test_format_custom_metrics_no_dir_relative_path() {
-        let custom = LegacyCustomSql {
-            name: "sec1".into(),
-            dir: None,
-            sql_file: "query.sql".into(),
-        };
+        let custom = make_custom_sql("sec1", None, "query.sql", &[]);
         let out: String = format_custom_metrics(&[custom]).join("");
         assert!(out.contains("          path: query.sql\n"));
+    }
+
+    #[test]
+    fn test_format_custom_metrics_skips_sid_restricted() {
+        let global = make_custom_sql("global_sec", None, "a.sql", &[]);
+        let restricted = make_custom_sql("sid_sec", None, "b.sql", &["XE"]);
+        let out: String = format_custom_metrics(&[global, restricted]).join("");
+        assert!(out.contains("      - global_sec:\n"));
+        assert!(
+            !out.contains("sid_sec"),
+            "restricted metric must not be global"
+        );
+    }
+
+    // Run this test only on Linux since on Windows the legacy plugin
+    // doesn't support custom SQL sections and the test would fail.
+    #[cfg(unix)]
+    #[test]
+    fn test_convert_custom_metrics_static_sids_attach_to_instances() {
+        let legacy = "myscn () {\n    SQLS_SIDS=\"XE MYINST2\"\n    SQLS_SQL=\"c.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("DBUSER_XE".into(), "xe:xepwd::::".into()),
+            ("SQLS_SECTIONS".into(), "myscn".into()),
+            ("SQLS.myscn.SQLS_SIDS".into(), "XE MYINST2".into()),
+            ("SQLS.myscn.SQLS_SQL".into(), "c.sql".into()),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        // no global custom metric
+        assert!(!ms.all_sections().iter().any(|s| s.is_custom_metric()));
+
+        let instance_metric = |result: &str, sid: &str| {
+            result.contains(&format!(
+                "      - sid: {sid}\n        custom_metrics:\n          - myscn:\n              path: c.sql\n"
+            ))
+        };
+        // MYINST2 has no DBUSER entry — created just for the custom metric
+        assert!(instance_metric(&result, "MYINST2"), "got: {result}");
+        // XE exists (DBUSER_XE) and carries the metric after its auth block
+        assert!(
+            result.contains(
+                "          type: standard\n        custom_metrics:\n          - myscn:\n              path: c.sql\n"
+            ),
+            "got: {result}"
+        );
+        let metric_of = |sid: &str| {
+            ms.instances()
+                .iter()
+                .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some(sid))
+                .map(|i| i.custom_metrics().to_vec())
+                .unwrap_or_else(|| panic!("instance {sid} not found"))
+        };
+        for sid in ["XE", "MYINST2"] {
+            let metrics = metric_of(sid);
+            assert_eq!(metrics.len(), 1, "{sid} must have one custom metric");
+            assert_eq!(metrics[0].item_value().unwrap().as_str(), "myscn");
+            assert_eq!(metrics[0].path(), Some(Path::new("c.sql")));
+        }
     }
 
     #[test]
@@ -1285,7 +1513,7 @@ mod tests {
             "$ORACLE_SID",
         );
 
-        let out: String = format_instances(&dbuser, &[xe1, xe2]).join("");
+        let out: String = format_instances(&dbuser, &[xe1, xe2], &[]).join("");
 
         // DBUSER: sid from alias_or_sid, alias emitted
         assert!(out.contains("      - sid: $ORACLE_SID\n"));

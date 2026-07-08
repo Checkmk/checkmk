@@ -231,3 +231,24 @@ class TestMerakiOrganizationPiggybackDevice:
     def _enable_net_id_as_prefix(self, meraki_org: MerakiOrganisation) -> MerakiOrganisation:
         patched_config = dataclasses.replace(meraki_org.config, net_id_as_prefix=True)
         return dataclasses.replace(meraki_org, config=patched_config)
+
+
+class TestMerakiOrganizationUsageBySerial:
+    @pytest.fixture
+    def meraki_org(self) -> MerakiOrganisation:
+        config = MerakiConfig.build(agent.parse_arguments(_DEFAULT_ARGS))
+        client = MerakiClient(FakeMerakiSDK(), config)
+        org = RawOrganizationFactory.build(id="123", name="Org-123")
+        return MerakiOrganisation(config=config, client=client, organisation=org)
+
+    def test_usage_is_grouped_by_serial(self, meraki_org: MerakiOrganisation) -> None:
+        usage_by_serial = meraki_org._get_usage_by_serial()
+
+        # Two devices sharing the same interface name ("wan1") must not overwrite each other.
+        assert usage_by_serial["S123-1"] == {
+            "wan1": {"sent": 100, "received": 200},
+            "wan2": {"sent": 100, "received": 200},
+        }
+        assert usage_by_serial["S123-2"] == {
+            "wan1": {"sent": 300, "received": 400},
+        }

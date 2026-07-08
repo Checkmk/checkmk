@@ -185,12 +185,13 @@ class MerakiOrganisation:
 
         if devices_by_type.get("appliance"):
             if self.config.required.appliance_uplinks:
+                usage_by_serial = self._get_usage_by_serial()
                 for raw_statuses in self.client.get_uplink_statuses(self.id):
                     serial = raw_statuses["serial"]
                     if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                         uplink_statuses = UplinkStatuses(
                             networkName=networks[raw_statuses["networkId"]]["organizationName"],
-                            usageByInterface=self._get_usage_by_serial(),
+                            usageByInterface=usage_by_serial.get(serial, {}),
                             **raw_statuses,
                         )
                         yield Section(
@@ -281,15 +282,15 @@ class MerakiOrganisation:
 
         return None
 
-    def _get_usage_by_serial(self) -> UplinkUsageByInterface:
-        return {
-            uplink["interface"]: {
-                "sent": uplink["sent"],
-                "received": uplink["received"],
-            }
-            for network in self.client.get_uplink_usage(self.id)
-            for uplink in network["byUplink"]
-        }
+    def _get_usage_by_serial(self) -> Mapping[str, UplinkUsageByInterface]:
+        usage_by_serial: dict[str, UplinkUsageByInterface] = defaultdict(dict)
+        for network in self.client.get_uplink_usage(self.id):
+            for uplink in network["byUplink"]:
+                usage_by_serial[uplink["serial"]][uplink["interface"]] = {
+                    "sent": uplink["sent"],
+                    "received": uplink["received"],
+                }
+        return usage_by_serial
 
 
 def _query_meraki_objects(*, organisations: Sequence[MerakiOrganisation]) -> Iterable[Section]:

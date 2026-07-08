@@ -56,7 +56,11 @@ class _FakeApplianceSDK:
             "123": [
                 factories.RawUplinkUsageFactory.build(
                     networkId="1",
-                    byUplink=[{"serial": "S123-1", "interface": "wan1", **example_bandwith}],
+                    byUplink=[
+                        {"serial": "S123-1", "interface": "wan1", **example_bandwith},
+                        # Same interface name as S123-1, on a different device: must not collide.
+                        {"serial": "S123-2", "interface": "wan1", "sent": 300, "received": 400},
+                    ],
                 ),
                 factories.RawUplinkUsageFactory.build(
                     networkId="1",

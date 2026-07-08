@@ -35,7 +35,7 @@ def _fallback_metric_spec(
     color_counter.update({"metric": 1})
     return MetricSpec(
         name=metric_name,
-        title=metric_name.title(),
+        title=metric_name,
         unit_spec=ConvertibleUnitSpecification(
             notation=DecimalNotation(symbol=""),
             precision=AutoPrecision(digits=2),

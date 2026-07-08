@@ -14,9 +14,9 @@ from cmk.gui.unit_formatter import AutoPrecision
 
 def test_fallback_metric_spec() -> None:
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
-    assert _fallback_metric_spec("foo", color_counter) == MetricSpec(
-        name="foo",
-        title="Foo",
+    assert _fallback_metric_spec("nm-openvpn", color_counter) == MetricSpec(
+        name="nm-openvpn",
+        title="nm-openvpn",
         unit_spec=ConvertibleUnitSpecification(
             notation=DecimalNotation(symbol=""),
             precision=AutoPrecision(digits=2),

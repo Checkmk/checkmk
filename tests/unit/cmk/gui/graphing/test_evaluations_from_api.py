@@ -270,13 +270,13 @@ def test_evaluate_graph_plugin_range(
                     value=12.34,
                     rendered_value="12.34 U",
                     color="#ffd000",
-                    title="Warning of Metric",
+                    title="Warning of metric",
                 ),
                 HorizontalRule(
                     value=56.78,
                     rendered_value="56.78 U",
                     color="#ff3232",
-                    title="Critical of Metric",
+                    title="Critical of metric",
                 ),
             ],
             id="graph-with-scalars-with-values",
@@ -309,13 +309,13 @@ def test_evaluate_graph_plugin_range(
                     value=12.34,
                     rendered_value="12.34 U",
                     color="#ffd000",
-                    title="Warning of Metric",
+                    title="Warning of metric",
                 ),
                 HorizontalRule(
                     value=-56.78,
                     rendered_value="56.78 U",
                     color="#ff3232",
-                    title="Critical of Metric",
+                    title="Critical of metric",
                 ),
             ],
             id="bidirectional",
@@ -407,7 +407,7 @@ def test_evaluate_graph_plugin_scalars(
             GraphedMetrics(
                 graph_metrics=[
                     GraphMetric(
-                        title="Metric",
+                        title="metric",
                         line_type="stack",
                         operation=GraphMetricRRDSource(
                             site_id=SiteId("site-id"),
@@ -478,7 +478,7 @@ def test_evaluate_graph_plugin_scalars(
             GraphedMetrics(
                 graph_metrics=[
                     GraphMetric(
-                        title="Metric",
+                        title="metric",
                         line_type="stack",
                         operation=GraphMetricRRDSource(
                             site_id=SiteId("site-id"),
@@ -495,7 +495,7 @@ def test_evaluate_graph_plugin_scalars(
                         color="#123456",
                     ),
                     GraphMetric(
-                        title="Prediction of Metric (upper levels)",
+                        title="Prediction of metric (upper levels)",
                         line_type="line",
                         operation=GraphMetricRRDSource(
                             site_id=SiteId("site-id"),
@@ -512,7 +512,7 @@ def test_evaluate_graph_plugin_scalars(
                         color="#123456",
                     ),
                     GraphMetric(
-                        title="Prediction of Metric (lower levels)",
+                        title="Prediction of metric (lower levels)",
                         line_type="line",
                         operation=GraphMetricRRDSource(
                             site_id=SiteId("site-id"),
@@ -577,7 +577,7 @@ def test_evaluate_graph_plugin_scalars(
             GraphedMetrics(
                 graph_metrics=[
                     GraphMetric(
-                        title="Metric_Upper",
+                        title="metric_upper",
                         line_type="stack",
                         operation=GraphMetricRRDSource(
                             site_id=SiteId("site-id"),
@@ -594,7 +594,7 @@ def test_evaluate_graph_plugin_scalars(
                         color="#111111",
                     ),
                     GraphMetric(
-                        title="Metric_Lower",
+                        title="metric_lower",
                         line_type="-stack",
                         operation=GraphMetricRRDSource(
                             site_id=SiteId("site-id"),

@@ -25,6 +25,7 @@ def _parameter_valuespec_efreq():
                 (
                     "levels_lower",
                     Tuple(
+                        title=_("Lower levels"),
                         help=_(
                             "Levels for the nominal frequencies of AC devices "
                             "like UPSs or PDUs. Several phases may be addressed independently."
@@ -48,6 +49,7 @@ def _parameter_valuespec_efreq():
                 (
                     "levels_upper",
                     Tuple(
+                        title=_("Upper levels"),
                         help=_(
                             "Upper levels for the nominal frequencies of AC devices "
                             "like UPSs or PDUs. Leave unset where over-frequency is not a concern."

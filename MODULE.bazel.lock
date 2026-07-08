@@ -918,7 +918,7 @@
     "@@perl-modules+//:extensions.bzl%perl_modules": {
       "general": {
         "bzlTransitiveDigest": "0N81OWmLbJkIaOhPdKTytfOZ9pBrTxSa9PAOUUZw7IQ=",
-        "usagesDigest": "F9iXh4lsL1YcVzvUq+03dwiK/DeBJNuHC9SzpgAJKJ4=",
+        "usagesDigest": "rdluZTxTW3M/s48AHcXOAAf301ZYhLivFZ+No9XLIdA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},

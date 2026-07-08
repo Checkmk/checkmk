@@ -253,6 +253,31 @@ def test_network_fs_mounts_check(
 
 
 @pytest.mark.usefixtures("value_store_patch")
+def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(monkeypatch) -> None:
+    """This check emits growth/trend (recorded in MB/day) directly rather than via a translation,
+    so it must rescale them to bytes/day by MEGA, like fs_size. See SUP-29835."""
+    captured_factors: dict[str, float] = {}
+    original_scaled_metric = network_fs_mounts._scaled_metric
+
+    def _capture(new_name, metric, factor):
+        captured_factors[new_name] = factor
+        return original_scaled_metric(new_name, metric, factor)
+
+    monkeypatch.setattr(network_fs_mounts, "_scaled_metric", _capture)
+
+    section = network_fs_mounts.parse_network_fs_mounts([["/PERFshare", "ok", *size1.info]])
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
+        list(
+            network_fs_mounts.check_network_fs_mount(
+                "/PERFshare", {**FILESYSTEM_DEFAULT_PARAMS, "has_perfdata": True}, section
+            )
+        )
+
+    assert captured_factors["fs_growth"] == network_fs_mounts.MEGA
+    assert captured_factors["fs_trend"] == network_fs_mounts.MEGA
+
+
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "string_table, item, check_result",
     [

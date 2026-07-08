@@ -8,10 +8,10 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Generic, Literal, NamedTuple, TypeVar
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from cmk.bakery.v2_unstable import (
     BakeryPlugin,
@@ -146,24 +146,26 @@ class OracleAuthType(StrEnum):
     WALLET = "wallet"
 
 
-class GuiAuthUserPasswordData(BaseModel):
+SecretT = TypeVar("SecretT", default=Secret)
+
+
+class GuiAuthUserPasswordData(BaseModel, Generic[SecretT]):
     username: str | None
-    password: Secret | None
+    password: SecretT | None
 
 
-class GuiAsmAuthConf(BaseModel):
+class GuiAsmAuthConf(BaseModel, Generic[SecretT]):
     username: str
-    password: Secret
+    password: SecretT
     role: str | None = None
 
 
-class GuiAuthConf(BaseModel):
-    auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData | None] | None = None
-    role: str | None = None
-    asm_auth: GuiAsmAuthConf | None = None
+class GuiAuthConf(BaseModel, Generic[SecretT]):
+    model_config = ConfigDict(use_enum_values=True)
 
-    class Config:
-        use_enum_values = True
+    auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData[SecretT] | None] | None = None
+    role: str | None = None
+    asm_auth: GuiAsmAuthConf[SecretT] | None = None
 
 
 class GuiOracleIdentificationConf(BaseModel):
@@ -201,8 +203,8 @@ class GuiAdditionalOptionsConf(BaseModel):
     oracle_client_library: GuiOracleClientLibOptions | None = None
 
 
-class GuiMainConf(BaseModel):
-    auth: GuiAuthConf
+class GuiMainConf(BaseModel, Generic[SecretT]):
+    auth: GuiAuthConf[SecretT]
     connection: GuiConnectionConf
     options: GuiAdditionalOptionsConf | None = None
     cache_age: int | None = None
@@ -224,17 +226,17 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
     oracle_client_library: GuiOracleClientLibOptions | None = None
 
 
-class GuiInstanceConf(BaseModel):
+class GuiInstanceConf(BaseModel, Generic[SecretT]):
     oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
-    auth: GuiAuthConf | None = None
+    auth: GuiAuthConf[SecretT] | None = None
     connection: GuiConnectionConf | None = None
     piggyback_host: str | None = None
 
 
-class GuiConfig(BaseModel):
+class GuiConfig(BaseModel, Generic[SecretT]):
     deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
-    main: GuiMainConf
-    instances: list[GuiInstanceConf] | None = None
+    main: GuiMainConf[SecretT]
+    instances: list[GuiInstanceConf[SecretT]] | None = None
 
 
 class OracleAdditionalOptions(BaseModel):

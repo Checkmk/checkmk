@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
-_SPEED_TO_BITS_PER_SEC = 12_500
+_SPEED_TO_BITS_PER_SEC = 125_000
 
 type Section = Mapping[str, WirelessEthernetPort]
 

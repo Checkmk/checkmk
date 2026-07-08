@@ -32,7 +32,7 @@ def test_discover_wireless_ethernet_statuses_no_payload(string_table: StringTabl
 def test_discover_wireless_ethernet_statuses() -> None:
     status = _RawWirelessEthernetStatusFactory.build(
         ports=[
-            {"name": "port 1", "linkNegotiation": {"speed": "10"}},
+            {"name": "port 1", "linkNegotiation": {"speed": "1"}},
             {"name": "port 2", "linkNegotiation": {"speed": None}},
         ]
     )
@@ -69,7 +69,7 @@ def test_check_wireless_ethernet_statuses_no_payload(
 def test_check_wireless_ethernet_statuses_no_speed_change(params: CheckParams) -> None:
     params["speed"] = 125_000
     status = _RawWirelessEthernetStatusFactory.build(
-        ports=[{"name": "port 1", "linkNegotiation": {"speed": "10"}}]
+        ports=[{"name": "port 1", "linkNegotiation": {"speed": "1"}}]
     )
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)
@@ -82,7 +82,7 @@ def test_check_wireless_ethernet_statuses_no_speed_change(params: CheckParams) -
 
 def test_check_wireless_ethernet_statuses_with_speed_change(params: CheckParams) -> None:
     status = _RawWirelessEthernetStatusFactory.build(
-        ports=[{"name": "port 1", "linkNegotiation": {"speed": "10"}}]
+        ports=[{"name": "port 1", "linkNegotiation": {"speed": "1"}}]
     )
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)

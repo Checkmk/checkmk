@@ -910,8 +910,19 @@ RESOURCE_GROUPS = {
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
             [],
-            [],
-            id="Empty resource health entries",
+            [
+                MockAzureSection(
+                    name="resource_health",
+                    piggytargets=["VM-test-1"],
+                    content=[
+                        '{"id": "/subscriptions/subscription_id/resourceGroups/resource_group_1/providers/Microsoft.Compute/virtualMachines/VM-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
+"name": "virtualMachines/VM-test-1", "availabilityState": "Unknown", "summary": "No health status returned by the Azure Resource Health API", \
+"reasonType": "", "tags": {"tag1": "value1"}}\n',
+                    ],
+                    separator=0,
+                )
+            ],
+            id="Monitored resource missing from Azure response gets Unknown placeholder",
         ),
     ],
 )

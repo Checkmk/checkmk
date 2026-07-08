@@ -65,6 +65,28 @@ def test_translations_to_be_standalone() -> None:
             )
 
 
+_MB_TO_BYTES = 1048576
+_SIZE_TREND_RAW_METRICS = ("growth", "trend")
+
+
+def test_growth_and_trend_translations_scale_mb_per_day_to_bytes_per_day() -> None:
+    """The raw growth/trend metrics are recorded in MB/day but render directly in bytes/day, so
+    every translation of them must rename and scale by 1 MiB. See SUP-29835."""
+    offenders = [
+        f"{location.module}: translation {plugin.name!r} maps {raw_name!r} via {op!r}"
+        for location, plugin in _load_graphing_plugins().plugins.items()
+        if isinstance(plugin, translations_api.Translation)
+        for raw_name, op in plugin.translations.items()
+        if raw_name in _SIZE_TREND_RAW_METRICS
+        and not (isinstance(op, translations_api.RenameToAndScaleBy) and op.factor == _MB_TO_BYTES)
+    ]
+    assert not offenders, (
+        f"growth/trend must be renamed and scaled by 1 MiB ({_MB_TO_BYTES}) to convert MB/day to"
+        " bytes/day; these translations render the graph in the wrong unit:\n"
+        + "\n".join(offenders)
+    )
+
+
 def _collect_metric_names_from_quantity(
     quantity: (
         str

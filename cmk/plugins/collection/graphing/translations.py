@@ -309,7 +309,17 @@ translation_cisco_cpu_memory_cisco_sys_mem = translations.Translation(
         translations.PassiveCheck("cisco_cpu_memory"),
         translations.PassiveCheck("cisco_sys_mem"),
     ],
-    translations={"mem_used": translations.RenameTo("mem_used_percent")},
+    translations={
+        "growth": translations.RenameToAndScaleBy(
+            "mem_growth",
+            1048576,
+        ),
+        "mem_used": translations.RenameTo("mem_used_percent"),
+        "trend": translations.RenameToAndScaleBy(
+            "mem_trend",
+            1048576,
+        ),
+    },
 )
 
 translation_cisco_mem_cisco_mem_asa_cisco_mem_asa64 = translations.Translation(

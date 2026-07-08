@@ -1988,6 +1988,32 @@ class MsTeamsPlugin:
         )
 
 
+def _to_tuples(value: object) -> object:
+    if isinstance(value, dict):
+        return {k: _to_tuples(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return tuple(_to_tuples(item) for item in value)
+    return value
+
+
+def _normalize_postprocessed(value: object) -> object:
+    """Convert JSON lists encoding a ``cmk_postprocessed`` FormSpec value (e.g. proxy or
+    password references) back into the tuples the rest of Checkmk expects.
+
+    Custom notification plug-ins have no REST schema, so their parameters are stored
+    verbatim from the JSON request. Only ``cmk_postprocessed`` markers are turned into
+    tuples; genuine list parameters are left untouched, since they are exported to the
+    plug-in differently than tuples.
+    """
+    if isinstance(value, dict):
+        return {k: _normalize_postprocessed(v) for k, v in value.items()}
+    if isinstance(value, list):
+        if value and value[0] == "cmk_postprocessed":
+            return _to_tuples(value)
+        return [_normalize_postprocessed(item) for item in value]
+    return value
+
+
 @dataclass
 class CustomPluginAdapter:
     plugin_name: CustomPluginName
@@ -2018,7 +2044,11 @@ class CustomPluginAdapter:
         return cls(
             plugin_name=plugin_name,
             option=PluginOptions.WITH_CUSTOM_PARAMS,
-            plugin_options={k: v for k, v in pluginparams_with_dict.items() if k != "plugin_name"},
+            plugin_options={
+                k: _normalize_postprocessed(v)
+                for k, v in pluginparams_with_dict.items()
+                if k != "plugin_name"
+            },
         )
 
     def api_response(self) -> APINotifyPlugin:

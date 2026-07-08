@@ -10,6 +10,8 @@ from typing import cast
 import pytest
 
 from cmk.ccc import store, version
+from cmk.gui.rest_api_types.notifications_rule_types import APINotifyPlugin
+from cmk.gui.rest_api_types.notifications_types import get_plugin_from_api_request
 from cmk.gui.watolib.notifications import (
     ContactSelection,
     NotificationParameterConfigFile,
@@ -23,6 +25,7 @@ from cmk.utils.notify_types import (
     NotificationParameterSpecs,
     NotificationRuleID,
     NotifyPluginParamsDict,
+    PluginOptions,
 )
 
 
@@ -308,3 +311,30 @@ def test_notification_parameter_config_file_preserves_parameter_order(
         target_path, key="notification_parameter", default={}, lock=False
     )
     assert list(loaded["mail"].keys()) == ids
+
+
+def test_custom_plugin_from_api_request_normalizes_postprocessed_lists() -> None:
+    # Custom plug-in parameters have no REST schema, so they arrive as an untyped dict.
+    incoming = cast(
+        APINotifyPlugin,
+        {
+            "option": PluginOptions.WITH_CUSTOM_PARAMS,
+            "plugin_params": {
+                "plugin_name": "ringring_sms",
+                "proxy_url": ["cmk_postprocessed", "stored_proxy", "PSBRU"],
+                "api_key": ["cmk_postprocessed", "stored_password", ["ringring_api", ""]],
+                "recipients": ["+491234", "+495678"],
+            },
+        },
+    )
+
+    name, raw_params = get_plugin_from_api_request(incoming).to_mk_file_format()
+    assert raw_params is not None
+    params = cast(dict[str, object], raw_params)
+
+    assert name == "ringring_sms"
+    # cmk_postprocessed markers (proxy, password) must be tuples, like the GUI stores them
+    assert params["proxy_url"] == ("cmk_postprocessed", "stored_proxy", "PSBRU")
+    assert params["api_key"] == ("cmk_postprocessed", "stored_password", ("ringring_api", ""))
+    # genuine lists must stay lists so they are exported to the plug-in unchanged
+    assert params["recipients"] == ["+491234", "+495678"]

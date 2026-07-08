@@ -152,10 +152,41 @@ _PROXIES_GLOBAL_SETTINGS: Mapping[str, HTTPProxySpec] = {
             NoProxyConfig(),
             id="FormSpec no proxy",
         ),
+        pytest.param(
+            ["cmk_postprocessed", "environment_proxy", ""],
+            EnvironmentProxyConfig(),
+            id="FormSpec from environment as list",
+        ),
+        pytest.param(
+            ["cmk_postprocessed", "explicit_proxy", "http://11.11.19.81:2020"],
+            ExplicitProxyConfig("http://11.11.19.81:2020"),
+            id="FormSpec explicitly configured as list",
+        ),
+        pytest.param(
+            ["cmk_postprocessed", "stored_proxy", "https_blab"],
+            ExplicitProxyConfig("https://blab:8181"),
+            id="FormSpec global proxy https as list",
+        ),
+        pytest.param(
+            ["cmk_postprocessed", "no_proxy", ""],
+            NoProxyConfig(),
+            id="FormSpec no proxy as list",
+        ),
+        pytest.param(
+            ["only_one_element"],
+            EnvironmentProxyConfig(),
+            id="malformed list falls back instead of crashing",
+        ),
+        pytest.param(
+            ["a", "b", "c", "d"],
+            EnvironmentProxyConfig(),
+            id="oversized list falls back instead of crashing",
+        ),
     ],
 )
 def test_http_proxy_config_from_user_setting(
     rulesepc_value: str
+    | list[str]
     | tuple[str, str | None]
     | tuple[
         Literal["cmk_postprocessed"],

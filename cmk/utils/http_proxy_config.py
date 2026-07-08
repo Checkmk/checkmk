@@ -149,10 +149,9 @@ def http_proxy_config_from_user_setting(
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
-    # For legacy compatibility
-    if not isinstance(rulespec_value, tuple):
-        return EnvironmentProxyConfig()
-
+    # The value is a tuple (valuespec/FormSpec) or, for notification rules stored via the
+    # REST API for a custom plug-in, a JSON-decoded list. Sequence patterns match both.
+    # Any other shape (legacy strings, malformed values, ...) falls back to the environment.
     match rulespec_value:
         case ("cmk_postprocessed", p_type, p_value):
             # FormSpec format
@@ -162,11 +161,14 @@ def http_proxy_config_from_user_setting(
                 "explicit_proxy": "url",
                 "no_proxy": "no_proxy",
             }.get(p_type, "environment")
-            value = p_value
+            value: str | None = p_value
         # Valuespec format
         case (p_type, p_value):
-            assert len(rulespec_value) == 2
-            proxy_type, value = rulespec_value
+            assert p_type is not None
+            proxy_type = p_type
+            value = p_value
+        case _:
+            return EnvironmentProxyConfig()
 
     if proxy_type == "environment":
         return EnvironmentProxyConfig()

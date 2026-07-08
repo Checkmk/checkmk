@@ -1,5 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/theoremlp/rules_multitool/main/lockfile.schema.json",
+  "clang-format": {
+    "binaries": [
+      {
+        "kind": "file",
+        "url": "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/llvm/clang-format/19.1.7/linux/amd64/static/bin",
+        "sha256": "d59b04c04b67556e7773c6b85350438c691d83026c96b7b0837deaa927845935",
+        "os": "linux",
+        "cpu": "x86_64"
+      }
+    ]
+  },
+  "clang-tidy": {
+    "binaries": [
+      {
+        "kind": "file",
+        "url": "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/llvm/clang-tidy/19.1.7/linux/amd64/static/bin",
+        "sha256": "5a35629a93eb4706b3aab9b90026b2907c09baede3c550ab3ea57447ecb85324",
+        "os": "linux",
+        "cpu": "x86_64"
+      }
+    ]
+  },
   "ruff": {
     "binaries": [
       {

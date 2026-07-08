@@ -93,6 +93,8 @@ bazel_env(
     name = "bazel_env",
     toolchains = {},
     tools = {
+        "clang-format": "@multitool_hub//tools/clang-format",
+        "clang-tidy": "@multitool_hub//tools/clang-tidy",
         "msibuild": "@msitools//:msibuild",
         "msiinfo": "@msitools//:msiinfo",
         "osslsigncode": "@osslsigncode",

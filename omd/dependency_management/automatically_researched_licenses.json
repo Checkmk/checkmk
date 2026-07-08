@@ -1373,6 +1373,7 @@
   "pkg:pypi/click@8.4.1": "BSD-3-Clause",
   "pkg:pypi/click@8.4.2": "BSD-3-Clause",
   "pkg:pypi/cryptography@46.0.7": "Apache-2.0 OR BSD-3-Clause",
+  "pkg:pypi/cryptography@48.0.1": "Apache-2.0 OR BSD-3-Clause",
   "pkg:pypi/dnspython@2.8.0": "ISC",
   "pkg:pypi/docstring-parser@0.17.0": "MIT",
   "pkg:pypi/durationpy@0.10": "MIT",

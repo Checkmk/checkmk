@@ -6,9 +6,11 @@
 
 import json
 import traceback
-from collections.abc import Sequence
-from typing import assert_never, get_args, Literal, NamedTuple, TypeGuard
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from typing import assert_never, get_args, Literal, NamedTuple, override, TypeGuard
 
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId, url_prefix
 from cmk.gui import pagetypes
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -178,6 +180,52 @@ def _filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tu
             continue
         sites_enabled.append(entry)
     return sites_enabled
+
+
+@dataclass(frozen=True)
+class MonitorMenuTopicContributor:
+    """Topics a feature module contributes to the Monitor main menu.
+
+    ``topics`` receives the caller's resolved permissions and returns the topics
+    to merge into the menu. Feature modules register a contributor rather than the
+    core menu builders importing them, so cmk.gui core stays free of feature
+    imports (mirroring FolderMenuEntryRegistry / HostActionMenuRegistry).
+    """
+
+    ident: str
+    topics: Callable[[UserPermissions], list[NavItemTopic]]
+
+
+class MonitorMenuTopicRegistry(Registry[MonitorMenuTopicContributor]):
+    @override
+    def plugin_name(self, instance: MonitorMenuTopicContributor) -> str:
+        return instance.ident
+
+
+monitor_menu_topic_registry = MonitorMenuTopicRegistry()
+
+
+def registered_monitor_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:
+    """Topics contributed to the Monitor menu by registered feature modules."""
+    topics: list[NavItemTopic] = []
+    for contributor in monitor_menu_topic_registry.values():
+        topics += contributor.topics(user_permissions)
+    return topics
+
+
+def merge_registered_monitor_topics(
+    topics: list[NavItemTopic], user_permissions: UserPermissions
+) -> list[NavItemTopic]:
+    """Append the registered feature topics to *topics* and re-sort the whole menu.
+
+    ``make_main_menu`` sorts the topics it builds, but the renderer keeps list
+    order, so the appended ones have to be merged back in by sort_index. Shared by
+    every Monitor-menu builder (the views snap-in and the reporting variant).
+    """
+    return sorted(
+        topics + registered_monitor_menu_topics(user_permissions),
+        key=lambda topic: (topic.sort_index, topic.title),
+    )
 
 
 def make_main_menu(

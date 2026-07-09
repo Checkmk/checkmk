@@ -69,8 +69,13 @@ from ._snapin import heading as heading
 from ._snapin import iconlink as iconlink
 from ._snapin import link as link
 from ._snapin import make_main_menu as make_main_menu
+from ._snapin import merge_registered_monitor_topics as merge_registered_monitor_topics
+from ._snapin import monitor_menu_topic_registry as monitor_menu_topic_registry
+from ._snapin import MonitorMenuTopicContributor as MonitorMenuTopicContributor
+from ._snapin import MonitorMenuTopicRegistry as MonitorMenuTopicRegistry
 from ._snapin import PageHandlers as PageHandlers
 from ._snapin import PERMISSION_SECTION_SIDEBAR_SNAPINS
+from ._snapin import registered_monitor_menu_topics as registered_monitor_menu_topics
 from ._snapin import render_link as render_link
 from ._snapin import show_main_menu as show_main_menu
 from ._snapin import SidebarSnapin as SidebarSnapin

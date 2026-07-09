@@ -13,6 +13,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-data-backend:__pkg__",
         "//omd/packages/appliance:__pkg__",
+        "//packages/cmk-maps:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

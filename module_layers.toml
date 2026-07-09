@@ -778,6 +778,27 @@ allows = [
 [components."cmk.maps.shared"]
 allows = ["@ccc", "cmk.utils"]
 
+# GUI integration for Maps. Lives in the cmk-maps package but imports cmk.gui
+# internals (there is no clean cmk.gui public API); mirrors cmk.network_flow.gui.
+[components."cmk.maps.gui"]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "@plugin_apis",
+  "cmk.bi",
+  "cmk.graphing_engine",
+  "cmk.gui",
+  "cmk.maps.shared",
+  "cmk.shared_typing",
+  "cmk.utils",
+  "cmk.web.utils",
+]
+
+# The feature's composition root: the GuiFeaturePlugin cmk.gui.main_modules
+# discovers, so that cmk.gui does not have to import the feature.
+[components."cmk.maps.registration"]
+allows = ["@ccc", "cmk.gui_plugins.internal", "cmk.maps.gui"]
+
 [components."cmk.mcp"]
 allows = ["@ccc", "@trace", "@crash"]
 
@@ -925,6 +946,7 @@ allows = [
   "cmk.gui.openapi",
   "cmk.gui.pages",
   "cmk.gui.pagetypes",
+  "cmk.gui.permissions",
   "cmk.gui.sidebar",
   "cmk.gui.visuals.filter",
   "cmk.gui.watolib",

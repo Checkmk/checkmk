@@ -10,9 +10,11 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",

@@ -14,6 +14,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
+from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.watolib.config_domain_name import (
@@ -22,6 +23,8 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableRegistry,
 )
 from cmk.gui.watolib.config_sync import ReplicationPathRegistry
+from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.sample_config import SampleConfigGeneratorRegistry
 from cmk.licensing.basics.options import LicenseOptions
 
 
@@ -39,8 +42,12 @@ class RegistrationContext:
     endpoint_family_registry: EndpointFamilyRegistry
     filter_registry: FilterRegistry
     main_menu_page_registry: MainMenuPageRegistry
+    mode_registry: ModeRegistry
     page_registry: PageRegistry
+    permission_registry: PermissionRegistry
+    permission_section_registry: PermissionSectionRegistry
     replication_path_registry: ReplicationPathRegistry
+    sample_config_generator_registry: SampleConfigGeneratorRegistry
     snapin_registry: SnapinRegistry
     versioned_endpoint_registry: VersionedEndpointRegistry
     # Add more registries here as new GuiFeaturePlugin instances require them.

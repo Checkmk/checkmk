@@ -31,6 +31,7 @@ from ._helpers import (
     footnotelinks,
     is_menu_item_supported_visual,
     make_main_menu,
+    merge_registered_monitor_topics,
     show_main_menu,
     VisualItem,
     VisualMenuItem,
@@ -81,12 +82,7 @@ class Views(SidebarSnapin):
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",
-            menu=make_main_menu(
-                view_menu_items(
-                    user_permissions := UserPermissions.from_config(config, permission_registry)
-                ),
-                user_permissions,
-            ),
+            menu=default_view_menu_topics(UserPermissions.from_config(config, permission_registry)),
         )
 
         links = []
@@ -105,9 +101,10 @@ def ajax_export_views(ctx: PageContext) -> None:  # noqa: ARG001
 
 
 def default_view_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:
-    return make_main_menu(
-        view_menu_items(user_permissions),
-        user_permissions,
+    # Feature modules (e.g. Checkmk Maps) contribute their own Monitor topics
+    # through the registry, so this core builder needs no feature-specific imports.
+    return merge_registered_monitor_topics(
+        make_main_menu(view_menu_items(user_permissions), user_permissions), user_permissions
     )
 
 

@@ -25,6 +25,11 @@ from ._helpers import heading as heading
 from ._helpers import iconlink as iconlink
 from ._helpers import link as link
 from ._helpers import make_main_menu as make_main_menu
+from ._helpers import merge_registered_monitor_topics as merge_registered_monitor_topics
+from ._helpers import monitor_menu_topic_registry as monitor_menu_topic_registry
+from ._helpers import MonitorMenuTopicContributor as MonitorMenuTopicContributor
+from ._helpers import MonitorMenuTopicRegistry as MonitorMenuTopicRegistry
+from ._helpers import registered_monitor_menu_topics as registered_monitor_menu_topics
 from ._helpers import render_link as render_link
 from ._helpers import show_main_menu as show_main_menu
 from ._helpers import snapin_site_choice as snapin_site_choice

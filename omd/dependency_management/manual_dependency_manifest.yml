@@ -83,3 +83,7 @@ dependencies:
   - purl: pkg:generic/googletest@1.17.0
     license: BSD-3-Clause
     path: third_party/googletest/googletest-e90fe24856-patched.tar.gz
+
+  - purl: pkg:npm/%40tabler/icons@3.45.0
+    license: MIT
+    comment: outline subset vendored in packages/cmk-maps/cmk/maps/gui/builtin_icons

@@ -8,6 +8,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-network-flow:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

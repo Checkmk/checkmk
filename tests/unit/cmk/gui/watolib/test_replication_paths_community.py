@@ -155,6 +155,11 @@ def _expected_replication_paths() -> list[ReplicationPath]:
             ident="diskspace",
             site_path="etc/check_mk/diskspace.d/wato",
         ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="maps",
+            site_path="etc/check_mk/maps.d/wato",
+        ),
     ]
 
 

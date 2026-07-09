@@ -20,6 +20,7 @@ from cmk.gui.main_navigation import main_navigation_renderer_registry, MainNavig
 from cmk.gui.openapi import endpoint_family_registry, versioned_endpoint_registry
 from cmk.gui.pages import page_registry
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
+from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.sidebar import SidebarRenderer, snapin_registry
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -28,6 +29,8 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
+from cmk.gui.watolib.mode import mode_registry
+from cmk.gui.watolib.sample_config import sample_config_generator_registry
 from cmk.gui_plugins.internal.feature_registration import GuiFeaturePlugin, RegistrationContext
 from cmk.licensing.basics.options import get_license_options, LicenseOptions
 from cmk.utils import paths
@@ -54,8 +57,12 @@ def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationCo
         endpoint_family_registry=endpoint_family_registry,
         filter_registry=filter_registry,
         main_menu_page_registry=main_menu_page_registry,
+        mode_registry=mode_registry,
         page_registry=page_registry,
+        permission_registry=permission_registry,
+        permission_section_registry=permission_section_registry,
         replication_path_registry=replication_path_registry,
+        sample_config_generator_registry=sample_config_generator_registry,
         snapin_registry=snapin_registry,
         versioned_endpoint_registry=versioned_endpoint_registry,
     )
@@ -72,17 +79,27 @@ def load_feature_plugins(module_paths: Iterable[str], ctx: RegistrationContext) 
             plugin.register(ctx)
 
 
+# Available in every edition, so it is listed for every one of them.
+_MAPS_REGISTRATION = "cmk.maps.registration"
+
 # TODO: flatten this into Sequence[str]. For this we need to block the imports first
 _FEATURE_PLUGIN_MODULES: Mapping[Edition, Sequence[str]] = {
+    Edition.COMMUNITY: [_MAPS_REGISTRATION],
+    Edition.PRO: [_MAPS_REGISTRATION],
     Edition.ULTIMATE: [
         "cmk.data_backend.telemetry_metrics.gui._registration_ultimate",
         "cmk.network_flow.gui.registration_ultimate",
+        _MAPS_REGISTRATION,
     ],
     Edition.ULTIMATEMT: [
         "cmk.data_backend.telemetry_metrics.gui._registration_ultimate",
         "cmk.network_flow.gui.registration_ultimate",
+        _MAPS_REGISTRATION,
     ],
-    Edition.CLOUD: ["cmk.data_backend.telemetry_metrics.gui._registration_cloud"],
+    Edition.CLOUD: [
+        "cmk.data_backend.telemetry_metrics.gui._registration_cloud",
+        _MAPS_REGISTRATION,
+    ],
 }
 _registered_edition: Edition | None = None
 

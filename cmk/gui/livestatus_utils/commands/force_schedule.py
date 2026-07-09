@@ -7,7 +7,7 @@
 import datetime as dt
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.logged_in import user as _user
 from cmk.livestatus_client import (
     LivestatusClient,
@@ -18,7 +18,10 @@ from cmk.livestatus_client import (
 
 
 def force_schedule_host_check(
-    connection: MultiSiteConnection, host_name: HostName, check_time: dt.datetime
+    connection: MultiSiteConnection,
+    host_name: HostName,
+    check_time: dt.datetime,
+    site_id: SiteId | None = None,
 ) -> None:
     """Schedule a forced active check of a particular host
 
@@ -32,11 +35,17 @@ def force_schedule_host_check(
         check_time:
             The time at which this forced check should be performed
 
+        site_id:
+            The site the host lives on. Defaults to the local site; a distributed
+            setup must pass the host's real site or the command reaches the wrong
+            core and is silently dropped.
+
 
     """
     _user.need_permission("action.reschedule")
     LivestatusClient(connection).command(
-        ScheduleForcedHostCheck(host_name=host_name, check_time=check_time), omd_site()
+        ScheduleForcedHostCheck(host_name=host_name, check_time=check_time),
+        omd_site() if site_id is None else site_id,
     )
 
 
@@ -45,6 +54,7 @@ def force_schedule_service_check(
     host_name: HostName,
     service_description: str,
     check_time: dt.datetime,
+    site_id: SiteId | None = None,
 ) -> None:
     """Schedule a forced active check of a particular service
 
@@ -61,6 +71,10 @@ def force_schedule_service_check(
         check_time:
             The time at which this forced check should be performed
 
+        site_id:
+            The site the service lives on. Defaults to the local site; a
+            distributed setup must pass the real site (see force_schedule_host_check).
+
     """
     _user.need_permission("action.reschedule")
     LivestatusClient(connection).command(
@@ -69,5 +83,5 @@ def force_schedule_service_check(
             description=service_description,
             check_time=check_time,
         ),
-        omd_site(),
+        omd_site() if site_id is None else site_id,
     )

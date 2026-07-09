@@ -799,6 +799,42 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "hide_version": True,
         "login_message": NoSaveableDefault(),
     },
+    "maps_connections": {
+        # The revealed socket path is prefilled from $OMD_ROOT, so every value
+        # carrying it is environment-dependent.
+        "[add]": UnstableDefault(),
+        "[add].type.livestatus": UnstableDefault(),
+        "[add].type.livestatus.target.socket": UnstableDefault(),
+        "[add].type.livestatus.checkmk_url": NoSaveableDefault(),
+        "[add].type.livestatus.metric_history.livestatus": None,
+        # The automation secret is a freshly generated explicit-password id.
+        "[add].type.livestatus.metric_history.rest_api": UnstableDefault(),
+        "[add].type.livestatus.target.tcp": {
+            "host": NoSaveableDefault(),
+            "port": 6557,
+            "tls": True,
+            "tls_verify": True,
+        },
+    },
+    "maps_map_defaults": {
+        "default_map_type.flow": None,
+        "default_map_type.foldertree": None,
+        "default_map_type.presentation": None,
+        "default_map_type.radar": None,
+        "default_map_type.static": None,
+        "default_map_type.worldmap": {},
+        "default_map_type.worldmap.tile_url": NoSaveableDefault(),
+    },
+    "maps_object_defaults": {
+        "context_template": NoSaveableDefault(),
+        "hover_template": NoSaveableDefault(),
+        "labels.hidden": None,
+        "labels.shown": {"size": 11},
+        "labels.shown.background": ("transparent", None),
+        "labels.shown.background.color": "#000000",
+        "labels.shown.background.transparent": None,
+        "labels.shown.color": "#ffffff",
+    },
     "data_backend": {
         "disabled": None,
         "enabled": {
@@ -1250,6 +1286,22 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         },
     ),
     "login_screen": {},
+    "maps_connections": [],
+    "maps_map_defaults": {
+        # No connections configured in the test context, so the default
+        # connection falls back to the free-text variant, see
+        # cmk.maps.gui.form_specs.global_settings._default_connection_element.
+        "default_backend_id": "",
+        "default_map_type": ("static", None),
+        "default_render_mode": "default",
+    },
+    "maps_object_defaults": {
+        "view_type": "icon",
+        "icon_size": 30,
+        "line_style": "plain",
+        "url_target": "_blank",
+        "labels": ("shown", {"size": 11}),
+    },
     "data_backend": ("disabled", None),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
@@ -2006,6 +2058,73 @@ CASES: Mapping[str, list[Case]] = {
         ),
         CaseFail("unknown-link-target", {"footer_links": [("Docs", "https://docs", "_new")]}),
         CaseFail("hide-version-not-fixed-value", {"hide_version": False}),
+    ],
+    "maps_connections": [
+        CasePass("no-connections", []),
+        CasePass(
+            "configured",
+            [
+                {
+                    "id": "cmk_local",
+                    "label": "Local site",
+                    "type": (
+                        "livestatus",
+                        {
+                            "target": ("socket", {"socket_path": "/omd/sites/test/tmp/run/live"}),
+                            "timeout": 10,
+                            "metric_history": ("livestatus", None),
+                        },
+                    ),
+                }
+            ],
+        ),
+        CaseFail(
+            "id-with-spaces",
+            [
+                {
+                    "id": "not a valid id",
+                    "label": "Local site",
+                    "type": (
+                        "livestatus",
+                        {
+                            "target": ("socket", {"socket_path": "/omd/sites/test/tmp/run/live"}),
+                            "timeout": 10,
+                            "metric_history": ("livestatus", None),
+                        },
+                    ),
+                }
+            ],
+        ),
+        CaseFail("not-a-list", {}),
+    ],
+    "maps_log_level": choice_cases("DEBUG", "TRACE"),
+    "maps_map_defaults": [
+        CasePass("default", DefaultWithOverrides({})),
+        CasePass(
+            "geo-map-with-tile-url",
+            DefaultWithOverrides(
+                {
+                    "default_map_type": (
+                        "worldmap",
+                        {"tile_url": "https://tiles.example.com/{z}/{x}/{y}.png"},
+                    )
+                }
+            ),
+        ),
+        CaseFail("unknown-map-type", DefaultWithOverrides({"default_map_type": ("bogus", None)})),
+        CaseFail("unknown-render-mode", DefaultWithOverrides({"default_render_mode": "bogus"})),
+    ],
+    "maps_object_defaults": [
+        CasePass("default", DefaultWithOverrides({})),
+        CasePass("labels-hidden", DefaultWithOverrides({"labels": ("hidden", None)})),
+        CaseFail("icon-size-below-minimum", DefaultWithOverrides({"icon_size": 4})),
+        CaseFail("unknown-view-type", DefaultWithOverrides({"view_type": "bogus"})),
+    ],
+    "maps_state_refresh_interval": [
+        CasePass("configured", 10),
+        CaseFail("below-minimum", 0),
+        CaseFail("above-maximum", 301),
+        CaseFail("not-an-int", "10"),
     ],
     "max_long_output_size": [
         CasePass("configured", 5000),

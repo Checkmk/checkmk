@@ -38,6 +38,13 @@ verified in `cmk.maps.backend.core.auth` using the site-internal secret. The
 GUI↔daemon ticket contract is pinned by
 `tests/unit/cmk/gui/maps/test_ticket_contract.py`.
 
+## Built-in icons
+
+`cmk/maps/gui/builtin_icons` is the outline subset of [Tabler
+Icons](https://tabler.io/icons) 3.45.0, vendored unchanged under the MIT
+license (`cmk/maps/gui/builtin_icons/LICENSE`, shipped with the icons) and
+listed in `omd/dependency_management/manual_dependency_manifest.yml`.
+
 ## Packaging
 
 The package ships as one wheel (`:wheel`, bundling `backend`, `gui`, `rest_api`

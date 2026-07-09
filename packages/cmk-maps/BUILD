@@ -79,9 +79,79 @@ run_binary(
     visibility = ["//packages:__subpackages__"],
 )
 
+# GUI integration (permissions, WATO modes, config domains, session-auth AJAX
+# endpoints backing the SPA). Imports cmk.gui.* internals and the shared layer;
+# depends only on cmk/gui sub-targets (never //cmk/gui:app), so //cmk/gui:app
+# can depend on this target without a cycle.
+py_library(
+    name = "gui",
+    srcs = glob(["cmk/maps/gui/**/*.py"]),
+    data = glob(["cmk/maps/gui/builtin_icons/*.svg"]) + [
+        "cmk/maps/gui/builtin_icons/LICENSE",
+        "cmk/maps/py.typed",
+    ],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":shared",
+        "//cmk/bi",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
+        "//cmk/gui:page_toolkit",
+        "//cmk/gui/bi:bi_manager",
+        "//cmk/gui/form_specs",
+        "//cmk/gui/graphing",
+        "//cmk/gui/pagetypes",
+        "//cmk/gui/rule_specs:legacy_converter",
+        "//cmk/gui/sidebar",
+        "//cmk/gui/watolib:registries",
+        "//cmk/utils",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-web/cmk/web/utils",
+        requirement("defusedxml"),
+    ],
+)
+
+# The GuiFeaturePlugin cmk.gui.main_modules discovers: the composition root that
+# plugs the feature into the GUI, so that cmk.gui never imports the package.
+py_library(
+    name = "registration",
+    srcs = ["cmk/maps/registration.py"],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":gui",
+        "//cmk/gui_plugins/internal",
+    ],
+)
+
 filegroup(
     name = "py_typed",
     srcs = ["cmk/maps/py.typed"],
+)
+
+# The icons ``cmk.maps.gui._images`` seeds into ``var/maps/images`` on page
+# load. They are a filegroup and a wheel dep of their own because py_wheel
+# packages only the Python sources its py_library deps carry: the ``data`` on
+# ``:gui`` puts them in runfiles (so tests and a dev site see them), but not in
+# the wheel an installation runs from.
+filegroup(
+    name = "builtin_icons",
+    srcs = glob(["cmk/maps/gui/builtin_icons/*.svg"]) + [
+        "cmk/maps/gui/builtin_icons/LICENSE",
+    ],
 )
 
 py_wheel(
@@ -103,7 +173,10 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = [
         ":backend",
+        ":builtin_icons",
+        ":gui",
         ":py_typed",
+        ":registration",
         ":shared",
     ],
 )

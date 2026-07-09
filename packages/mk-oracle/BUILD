@@ -164,6 +164,9 @@ rust_test_suite(
         "references/output-xe-no-tnsalias.cfg",
     ],
     env_inherit = [
+        # Optional local-database endpoint; without it the local-connection
+        # tests skip themselves.
+        "CI_ORA1_DB_TEST",
         "CI_ORA2_DB_TEST",
         "LD_LIBRARY_PATH",
         "MK_CONFDIR",

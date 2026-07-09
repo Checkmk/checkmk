@@ -20,7 +20,7 @@ set -e
 JOBS=6
 readonly ALL_LINTERS=clippy
 
-# Oracle Test Database Params
+# Oracle CI Test Database Params (password: CI_ORA_TEST_PASSWORD)
 test_host=oracle-rocky-ci.lan.checkmk.net
 test_port=1521
 test_service=dbtest23
@@ -216,12 +216,24 @@ setup_tests() {
     export MK_LIBDIR
 }
 
-run_test_component() {
-    if [[ -z "${CI_ORA_TEST_PASSWORD}" ]]; then
-        failure "CI_ORA_TEST_PASSWORD is not set in the environment, component testing will fail."
+# Resolve which database the component tests run against and export
+# CI_ORA2_DB_TEST accordingly (host:user:password:port:instance:role:
+# service_name:sid:custom3 — the format from CMK-23904 reserves the
+# trailing slot). A pre-set CI_ORA2_DB_TEST is used verbatim; otherwise
+# the CI endpoint is constructed from CI_ORA_TEST_PASSWORD.
+resolve_test_endpoint() {
+    if [[ -z "${CI_ORA2_DB_TEST:-}" ]]; then
+        [[ -n "${CI_ORA_TEST_PASSWORD:-}" ]] ||
+            failure "no test database configured; either export CI_ORA2_DB_TEST (full endpoint)" \
+                "or CI_ORA_TEST_PASSWORD (CI database), or run the local Docker database" \
+                "via --docker-tests"
+        export CI_ORA2_DB_TEST="$test_host:$test_user:$CI_ORA_TEST_PASSWORD:$test_port:$test_instance::$test_service:$test_sid:_:"
     fi
-    export CI_ORA2_DB_TEST="$test_host:$test_user:$CI_ORA_TEST_PASSWORD:$test_port:$test_instance::$test_service:$test_sid:_:"
-    echo "CI_ORA2_DB_TEST is constructed and exported"
+    echo "component tests use the database at ${CI_ORA2_DB_TEST%%:*}" >&2
+}
+
+run_test_component() {
+    resolve_test_endpoint
     setup_tests
 
     case "$(uname)" in

@@ -19,9 +19,6 @@ void main() {
                 credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                 variable:"CI_TEST_SQL_DB_ENDPOINT"),
             string(
-                credentialsId: "CI_ORA2_DB_TEST_PASSWORD",
-                variable:"CI_ORA2_DB_TEST_PASSWORD"),
-            string(
                 credentialsId: "CI_ORA_TEST_PASSWORD",
                 variable:"CI_ORA_TEST_PASSWORD"),
         ]) {

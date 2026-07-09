@@ -313,7 +313,7 @@ oracle:
        username: "{user}"
        password: "{pwd}"
        type: standard
-       role: ""
+       role: "{role}"
     connection:
        hostname: {host}
        port: {port}
@@ -325,6 +325,14 @@ oracle:
 "#,
         user = endpoint.user,
         pwd = endpoint.pwd,
+        // Same heuristic as _make_mini_config: the localhost (Docker) DB is
+        // accessed as sys, which Oracle refuses without SYSDBA (ORA-28009,
+        // https://docs.oracle.com/en/error-help/db/ora-28009).
+        role = if endpoint.host == "localhost" {
+            "sysdba"
+        } else {
+            ""
+        },
         host = endpoint.host,
         port = endpoint.port,
         service = endpoint.service_name,

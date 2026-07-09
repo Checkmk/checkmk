@@ -348,8 +348,12 @@ run_test_component_docker() {
             ;;
     esac
 
-    # Set up test environment variables for Docker Oracle
-    export CI_ORA2_DB_TEST="localhost:sys:oracle:1521:${db_sid}::${db_service_name}:_:_:"
+    # Set up test environment variables for Docker Oracle. Field order is
+    # host:user:password:port:instance:role:service_name:sid:custom3 per
+    # SqlDbEndpoint::from_str (src/config/authentication.rs); the format
+    # (CMK-23904) reserves the trailing slot, "_" marks an unset field.
+    # The SID field must be filled: get_sid() in the test suite unwraps it.
+    export CI_ORA2_DB_TEST="localhost:sys:oracle:1521:_::${db_service_name}:${db_sid}:_:"
     echo "CI_ORA2_DB_TEST set to: ${CI_ORA2_DB_TEST}"
 
     setup_tests
@@ -378,9 +382,7 @@ run_test_component_docker() {
     export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
 
     # Run tests and capture exit code
-    if ! bazel test :mk-oracle-lib-test-external; then
-        test_exit_code=$?
-    fi
+    bazel test :mk-oracle-lib-test-external || test_exit_code=$?
 
     # Always cleanup Docker container
     cleanup_docker_container "${ORACLE_DOCKER_VERSION}"

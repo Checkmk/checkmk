@@ -228,7 +228,7 @@ def check_mails(
 
 def subject_regex(subject: str) -> re.Pattern:
     """Returns regex used for subject matching - extra function for testability"""
-    return re.compile(rf"(?i)(?:re: |wg: )?{subject} ([0-9]+) ([0-9]+)")
+    return re.compile(rf"(?i)(?:re: |wg: |aw: )?{subject} ([0-9]+) ([0-9]+)")
 
 
 def check_mail_roundtrip(args: Args) -> CheckResult:

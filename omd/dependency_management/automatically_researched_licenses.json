@@ -2267,6 +2267,7 @@
   "pkg:pypi/pypdf@6.10.2": "BSD-3-Clause",
   "pkg:pypi/pypdf@6.12.2": "BSD-3-Clause",
   "pkg:pypi/pypdf@6.14.1": "BSD-3-Clause",
+  "pkg:pypi/pypdf@6.14.2": "BSD-3-Clause",
   "pkg:pypi/pypdf@6.7.0": "BSD-3-Clause",
   "pkg:pypi/pyprof2calltree@1.4.5": "MIT",
   "pkg:pypi/pysaml2@7.5.0": "Apache-2.0",

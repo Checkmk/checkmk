@@ -89,8 +89,8 @@ void main() {
             def stepName = "Test ${distro}";
             def run_condition = distro in selected_distros;
 
-            if (cross_edition_target && distro != "ubuntu-22.04") {
-                // see CMK-18366
+            if (cross_edition_target && distro != "ubuntu-24.04") {
+                // see CMK-18366, CMK-23506
                 run_condition = false;
             }
 

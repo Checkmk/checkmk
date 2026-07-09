@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Monitoring - All Hosts App",
+  "$id": "../all_hosts.json",
+  "allOf": [{ "$ref": "monitoring/_base.json" }]
+}

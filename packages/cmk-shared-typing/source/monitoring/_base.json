@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Monitoring - Base Structure",
+  "properties": {
+    "poll_interval_ms": {
+      "type": "number",
+      "default": 30000
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/monitoring_action" },
+      "default": []
+    },
+    "row_actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/row_action" },
+      "default": []
+    },
+    "legacy_view_button": { "$ref": "page_link_button.json" }
+  },
+  "$defs": {
+    "monitoring_action": {
+      "type": "object",
+      "properties": {
+        "ident": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["ident", "title"]
+    },
+    "row_action": {
+      "type": "object",
+      "properties": {
+        "ident": { "type": "string" },
+        "title": { "type": "string" },
+        "icon": { "type": "string" },
+        "url": { "type": "string" }
+      },
+      "required": ["ident", "title", "icon", "url"]
+    }
+  }
+}

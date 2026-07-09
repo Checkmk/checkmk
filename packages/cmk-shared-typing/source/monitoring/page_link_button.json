@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Monitoring Page Link Button",
+  "properties": {
+    "url": { "type": "string" },
+    "title": { "type": "string" }
+  },
+  "required": ["url", "title"]
+}

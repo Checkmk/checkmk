@@ -39,6 +39,8 @@ SOURCES_COMMON = [
     "agent_slideout.json",
     "product_usage_analytics.json",
     "two_factor_auth.json",
+    "monitoring/all_hosts.json",
+    "monitoring/page_link_button.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [

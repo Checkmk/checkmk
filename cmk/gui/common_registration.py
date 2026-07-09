@@ -48,6 +48,7 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuTopicEntries
+from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
 from cmk.gui.nodevis import nodevis
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
@@ -233,6 +234,13 @@ def register(
         config_variable_group_registry,
         config_variable_registry,
         filter_registry,
+    )
+    monitor_hosts_registration.register(
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        page_registry,
+        command_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     watolib_registration.register(
         edition,

@@ -47,10 +47,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.werks import may_acknowledge
 
 from . import _snapin
-from ._snapin import all_snapins, CustomSnapins, PermissionSectionSidebarSnapins
+from ._snapin import all_snapins, PermissionSectionSidebarSnapins
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from ._snapin import CustomSnapins as CustomSnapins
 from ._snapin import default_view_menu_topics as default_view_menu_topics
 from ._snapin import end_footnote_links as end_footnote_links
 from ._snapin import footnotelinks as footnotelinks

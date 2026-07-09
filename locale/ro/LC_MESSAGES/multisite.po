@@ -2968,6 +2968,10 @@ msgid "API (via Unix socket)"
 msgstr "Conectare prin socket UNIX"
 
 #, fuzzy
+msgid "API access token"
+msgstr "Token de acces la API"
+
+#, fuzzy
 msgid "API cache is disabled."
 msgstr "Graficul este dezactivat"
 
@@ -3884,7 +3888,7 @@ msgstr ""
 "HiveManager"
 
 #, fuzzy
-msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
+msgid "Activate monitoring of the HiveManagerNG cloud."
 msgstr "Activați monitorizarea cloud-ului HiveManagerNG."
 
 msgid "Activate on selected sites"
@@ -5238,8 +5242,8 @@ msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
 #, fuzzy
-msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
-msgstr "Aerohive HiveManager NG"
+msgid "Aerohive HiveManager NG"
+msgstr "Aerohive HiveManager"
 
 #, python-format
 msgid "Affected %s: %s"
@@ -10166,10 +10170,6 @@ msgstr "URL de bază (Site OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL de bază pentru motorul API docker"
-
-msgid ""
-"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26806,14 +26806,6 @@ msgid ""
 msgstr ""
 "Extrage datele de performanță SGA într-un serviciu separat și afișează "
 "suplimentar datele de performanță PGA"
-
-#, fuzzy
-msgid "ExtremeCloud IQ password"
-msgstr "Introduceți parola de utilizator"
-
-#, fuzzy
-msgid "ExtremeCloud IQ username"
-msgstr "Introduceți numele de utilizator"
 
 msgid "Extremes only"
 msgstr "Doar extreme"
@@ -49723,6 +49715,9 @@ msgstr "Număr de creat"
 msgid "Numeric value"
 msgstr "Valoare numerică"
 
+msgid "Numerical ID of the VHM, e.g. 102"
+msgstr "Numărul de identificare numerică al VHM, de exemplu 102"
+
 msgid "Nutanix Cluster CPU utilization"
 msgstr "Utilizare CPU a clusterului Nutanix Cluster"
 
@@ -57377,6 +57372,9 @@ msgstr "Stări de port fizic de descoperit"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "I/O direct"
+
+msgid "Redirect URL (has to be https)"
+msgstr "URL de redirecționare (trebuie să fie https)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -84717,6 +84715,9 @@ msgstr "Prefixul URL pentru legăturile către Checkmk"
 msgid "URL server address"
 msgstr "Adresa serverului URL personalizat"
 
+msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+msgstr "URL către HiveManagerNG, de exemplu https://cloud.aerohive.com"
+
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -101356,17 +101357,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "API access token"
-#~ msgstr "Token de acces la API"
+#~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
+#~ msgstr "Aerohive HiveManager NG"
 
-#~ msgid "Numerical ID of the VHM, e.g. 102"
-#~ msgstr "Numărul de identificare numerică al VHM, de exemplu 102"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ password"
+#~ msgstr "Introduceți parola de utilizator"
 
-#~ msgid "Redirect URL (has to be https)"
-#~ msgstr "URL de redirecționare (trebuie să fie https)"
-
-#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-#~ msgstr "URL către HiveManagerNG, de exemplu https://cloud.aerohive.com"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ username"
+#~ msgstr "Introduceți numele de utilizator"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"

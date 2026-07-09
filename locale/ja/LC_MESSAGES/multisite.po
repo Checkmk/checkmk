@@ -2873,6 +2873,9 @@ msgstr "APC Symmetraチェック"
 msgid "API (via Unix socket)"
 msgstr "Unix ソケット経由で接続"
 
+msgid "API access token"
+msgstr "APIアクセストークン"
+
 #, fuzzy
 msgid "API cache is disabled."
 msgstr "グラフが無効になっています"
@@ -3738,7 +3741,7 @@ msgid "Activate monitoring of host via a HTTP connect to the HiveManager"
 msgstr "HiveManagerへのHTTP接続を介してホストの監視をアクティブ化する"
 
 #, fuzzy
-msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
+msgid "Activate monitoring of the HiveManagerNG cloud."
 msgstr "HiveManagerNGクラウドの監視をアクティブにします。"
 
 msgid "Activate on selected sites"
@@ -5034,8 +5037,8 @@ msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
 #, fuzzy
-msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
-msgstr "Aerohive HiveManager NG"
+msgid "Aerohive HiveManager NG"
+msgstr "Aerohive HiveManager"
 
 #, python-format
 msgid "Affected %s: %s"
@@ -9641,10 +9644,6 @@ msgstr "ベースURL(OMDサイト)"
 
 msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
-
-msgid ""
-"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -25506,14 +25505,6 @@ msgid ""
 msgstr ""
 "SGAパフォーマンスデータを別のサービスに抽出し、さらにPGAパフォーマンスデータ"
 "を表示します"
-
-#, fuzzy
-msgid "ExtremeCloud IQ password"
-msgstr "ユーザーパスワードを入力"
-
-#, fuzzy
-msgid "ExtremeCloud IQ username"
-msgstr "ユーザーネームを入力してください"
 
 msgid "Extremes only"
 msgstr "極端な場合のみ"
@@ -47149,6 +47140,9 @@ msgstr "作成する番号"
 msgid "Numeric value"
 msgstr "数値"
 
+msgid "Numerical ID of the VHM, e.g. 102"
+msgstr "VHMの数値ID、例: 102"
+
 msgid "Nutanix Cluster CPU utilization"
 msgstr "NutanixクラスタのCPU使用率"
 
@@ -54241,6 +54235,9 @@ msgstr "Redfish 物理ポート検出"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "ダイレクトI/O"
+
+msgid "Redirect URL (has to be https)"
+msgstr "リダイレクトURL(httpsである必要があります)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -79971,6 +79968,9 @@ msgstr "CheckmkへのリンクのURLプレフィックス"
 msgid "URL server address"
 msgstr "URLサーバーアドレス"
 
+msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
+
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -95913,17 +95913,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
-#~ msgid "API access token"
-#~ msgstr "APIアクセストークン"
+#, fuzzy
+#~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
+#~ msgstr "Aerohive HiveManager NG"
 
-#~ msgid "Numerical ID of the VHM, e.g. 102"
-#~ msgstr "VHMの数値ID、例: 102"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ password"
+#~ msgstr "ユーザーパスワードを入力"
 
-#~ msgid "Redirect URL (has to be https)"
-#~ msgstr "リダイレクトURL(httpsである必要があります)"
-
-#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-#~ msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ username"
+#~ msgstr "ユーザーネームを入力してください"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"

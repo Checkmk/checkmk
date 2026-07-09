@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-08 13:34+0000\n"
+"PO-Revision-Date: 2026-07-09 08:21+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -2946,6 +2946,10 @@ msgid "API (via Unix socket)"
 msgstr "Conectar via tomada UNIX"
 
 #, fuzzy
+msgid "API access token"
+msgstr "Token de Acesso API"
+
+#, fuzzy
 msgid "API cache is disabled."
 msgstr "O gráfico está desativado"
 
@@ -3865,7 +3869,7 @@ msgstr ""
 "Ativar o monitoramento do host através de uma conexão HTTP ao HiveManager"
 
 #, fuzzy
-msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
+msgid "Activate monitoring of the HiveManagerNG cloud."
 msgstr "Activar a monitorização da nuvem HiveManagerNG."
 
 msgid "Activate on selected sites"
@@ -5229,8 +5233,8 @@ msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
 
 #, fuzzy
-msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
-msgstr "Aerohive HiveManager NG"
+msgid "Aerohive HiveManager NG"
+msgstr "Aerohive HiveManager"
 
 #, fuzzy, python-format
 msgid "Affected %s: %s"
@@ -10181,10 +10185,6 @@ msgstr "URL base (Site OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL base para o motor API do docker"
-
-msgid ""
-"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26709,14 +26709,6 @@ msgid ""
 msgstr ""
 "Extrai os dados de desempenho SGA em um serviço separado e exibe "
 "adicionalmente os dados de desempenho PGA"
-
-#, fuzzy
-msgid "ExtremeCloud IQ password"
-msgstr "Digite a senha do usuário"
-
-#, fuzzy
-msgid "ExtremeCloud IQ username"
-msgstr "Digite o nome do usuário"
 
 msgid "Extremes only"
 msgstr "Apenas Extremos"
@@ -49586,6 +49578,9 @@ msgstr "Número para criar"
 msgid "Numeric value"
 msgstr "Valor numérico"
 
+msgid "Numerical ID of the VHM, e.g. 102"
+msgstr "Identificação numérica da VHM, por exemplo, 102"
+
 msgid "Nutanix Cluster CPU utilization"
 msgstr "Utilização da CPU do cluster da Nutanix"
 
@@ -57220,6 +57215,9 @@ msgstr "Estados físicos portuários a descobrir"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "E/S direta"
+
+msgid "Redirect URL (has to be https)"
+msgstr "URL redireccionada (tem de ser https)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -84383,6 +84381,9 @@ msgstr "Prefixo URL para links para Checkmk"
 msgid "URL server address"
 msgstr "Endereço de servidor URL personalizado"
 
+msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+msgstr "URL para HiveManagerNG, por exemplo https://cloud.aerohive.com"
+
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -100921,17 +100922,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "API access token"
-#~ msgstr "Token de Acesso API"
+#~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
+#~ msgstr "Aerohive HiveManager NG"
 
-#~ msgid "Numerical ID of the VHM, e.g. 102"
-#~ msgstr "Identificação numérica da VHM, por exemplo, 102"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ password"
+#~ msgstr "Digite a senha do usuário"
 
-#~ msgid "Redirect URL (has to be https)"
-#~ msgstr "URL redireccionada (tem de ser https)"
-
-#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-#~ msgstr "URL para HiveManagerNG, por exemplo https://cloud.aerohive.com"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ username"
+#~ msgstr "Digite o nome do usuário"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"

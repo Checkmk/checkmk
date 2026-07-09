@@ -2938,6 +2938,10 @@ msgid "API (via Unix socket)"
 msgstr "Verbinden via UNIX socket"
 
 #, fuzzy
+msgid "API access token"
+msgstr "API Toegangstoken"
+
+#, fuzzy
 msgid "API cache is disabled."
 msgstr "Grafiek is uitgeschakeld"
 
@@ -3864,7 +3868,7 @@ msgstr ""
 "Activeer monitoring van host via een HTTP verbinding met de HiveManager"
 
 #, fuzzy
-msgid "Activate monitoring of the ExtremeCloud IQ (HiveManager NG) cloud."
+msgid "Activate monitoring of the HiveManagerNG cloud."
 msgstr "Activeer monitoring van de HiveManagerNG cloud."
 
 msgid "Activate on selected sites"
@@ -5231,8 +5235,8 @@ msgid "Aerohive HiveManager"
 msgstr "Aerohive Hive Beheerder"
 
 #, fuzzy
-msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
-msgstr "Aerohive HiveManager NG"
+msgid "Aerohive HiveManager NG"
+msgstr "Aerohive Hive Beheerder"
 
 #, fuzzy, python-format
 msgid "Affected %s: %s"
@@ -10168,10 +10172,6 @@ msgstr "Basis URL (OMD site)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "Basis URL voor docker API engine"
-
-msgid ""
-"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26715,14 +26715,6 @@ msgid ""
 msgstr ""
 "Extraheert SGA-prestatiegegevens in een afzonderlijke dienst en geeft "
 "daarnaast PGA-prestatiegegevens weer"
-
-#, fuzzy
-msgid "ExtremeCloud IQ password"
-msgstr "Voer gebruikerswachtwoord in"
-
-#, fuzzy
-msgid "ExtremeCloud IQ username"
-msgstr "Voer gebruikersnaam in"
 
 msgid "Extremes only"
 msgstr "Alleen extremen"
@@ -49591,6 +49583,9 @@ msgstr "Aantal te creëren"
 msgid "Numeric value"
 msgstr "Numerieke waarde"
 
+msgid "Numerical ID of the VHM, e.g. 102"
+msgstr "Numerieke ID van de VHM, b.v. 102"
+
 #, fuzzy
 msgid "Nutanix Cluster CPU utilization"
 msgstr "Cluster gebruik"
@@ -57243,6 +57238,9 @@ msgstr "Fysieke poort toestanden om te ontdekken"
 #, fuzzy
 msgid "Redirect URI"
 msgstr "Directe I/O"
+
+msgid "Redirect URL (has to be https)"
+msgstr "Redirect URL (moet https zijn)"
 
 #, fuzzy
 msgid "Redis Caches"
@@ -84436,6 +84434,9 @@ msgstr "URL prefix voor links naar Checkmk"
 msgid "URL server address"
 msgstr "Aangepast URL-serveradres"
 
+msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+msgstr "URL naar HiveManagerNG, b.v. https://cloud.aerohive.com"
+
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -101025,17 +101026,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "API access token"
-#~ msgstr "API Toegangstoken"
+#~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
+#~ msgstr "Aerohive HiveManager NG"
 
-#~ msgid "Numerical ID of the VHM, e.g. 102"
-#~ msgstr "Numerieke ID van de VHM, b.v. 102"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ password"
+#~ msgstr "Voer gebruikerswachtwoord in"
 
-#~ msgid "Redirect URL (has to be https)"
-#~ msgstr "Redirect URL (moet https zijn)"
-
-#~ msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-#~ msgstr "URL naar HiveManagerNG, b.v. https://cloud.aerohive.com"
+#, fuzzy
+#~ msgid "ExtremeCloud IQ username"
+#~ msgstr "Voer gebruikersnaam in"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"

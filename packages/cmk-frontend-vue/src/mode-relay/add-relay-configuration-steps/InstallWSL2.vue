@@ -18,8 +18,29 @@ const { _t } = usei18n()
 
 defineProps<CmkWizardStepProps>()
 
-// TODO: Verify this command is correct once the actual MSI installer is ready.
-const installCommand = 'wsl --install'
+const installScript = `# Enable the Windows features required for WSL2 (no reboot yet)
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform, Microsoft-Windows-Subsystem-Linux -NoRestart -All
+
+# Fetch the download URL of the latest official WSL package from GitHub
+$msiUrl = (Invoke-RestMethod "https://api.github.com/repos/microsoft/WSL/releases/latest").assets.browser_download_url | Where-Object { $_ -match '\\.x64\\.msi$' }
+$installerPath = "$env:TEMP\\wsl-latest.msi"
+
+# Download the installer
+$ProgressPreference = 'SilentlyContinue'
+Invoke-WebRequest -Uri $msiUrl -OutFile $installerPath
+
+# Verify the installer is signed by Microsoft before running it
+$sig = Get-AuthenticodeSignature -FilePath $installerPath
+if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'O=Microsoft') {
+    Remove-Item $installerPath
+    throw "Security check failed: invalid or non-Microsoft signature. Aborting."
+}
+
+# Install WSL2 machine-wide, silently
+Start-Process msiexec.exe -Wait -ArgumentList "/i $installerPath /qn /norestart"
+
+# Restart the computer to finish the installation
+Restart-Computer -Force`
 </script>
 
 <template>
@@ -33,13 +54,22 @@ const installCommand = 'wsl --install'
         {{
           _t(
             'The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). ' +
-              'Run the command below in an elevated PowerShell or Command Prompt to install WSL2.'
+              'Run the script below in an elevated PowerShell to set it up. It enables the ' +
+              'required Windows features, downloads the latest official WSL package from ' +
+              "Microsoft's GitHub repository, verifies that it is signed by Microsoft, and " +
+              'then installs it.'
           )
         }}
       </CmkParagraph>
-      <CmkCode :code_txt="installCommand" data-testid="install-wsl2-command"></CmkCode>
-      <CmkAlertBox variant="info">
-        {{ _t('A system reboot may be required after installing WSL2 before proceeding.') }}
+      <CmkCode :code_txt="installScript" data-testid="install-wsl2-command"></CmkCode>
+      <CmkAlertBox variant="warning">
+        {{
+          _t(
+            'This script requires administrator privileges and will restart the computer ' +
+              'automatically, without further confirmation, once the installation completes. ' +
+              'Save your work before running it.'
+          )
+        }}
       </CmkAlertBox>
     </template>
 

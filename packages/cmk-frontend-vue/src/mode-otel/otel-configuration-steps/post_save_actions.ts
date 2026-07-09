@@ -187,9 +187,12 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
     return {
       ok: true,
       rollback: async () => {
+        // The dcd_metric_backend DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
         await fetchRestAPI(
           `api/internal/objects/dcd_metric_backend/${encodeURIComponent(dcdId)}`,
-          'DELETE'
+          'DELETE',
+          undefined,
+          IF_MATCH_ANY
         )
       }
     }

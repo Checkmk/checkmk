@@ -2630,6 +2630,26 @@ class DcdMetricBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def delete(
+        self,
+        dcd_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            headers=self._etag_header(dcd_id, etag),
+            expect_ok=expect_ok,
+        )
+
+    def _etag_header(
+        self, dcd_id: str, etag: IF_MATCH_HEADER_OPTIONS | str
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(dcd_id).headers["ETag"]}
+        return _if_match_header(etag)
+
 
 class AuditLogClient(RestApiClient):
     domain: DomainType = "audit_log"

@@ -63,7 +63,21 @@ if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSIO
     echo "Waiting for $SERVICE to be healthy..."
 
     while true; do
-        CONTAINER_ID=$(docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps -q "$SERVICE")
+        # -a: an exited container must be found too, or the loop below
+        # would poll an empty ID forever instead of reporting the crash.
+        CONTAINER_ID=$(docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps -aq "$SERVICE")
+        if [ -z "$CONTAINER_ID" ]; then
+            echo "Error: no container for $SERVICE found."
+            exit 1
+        fi
+
+        STATE=$(docker inspect --format '{{.State.Status}}' "$CONTAINER_ID")
+        if [ "$STATE" != "running" ]; then
+            echo "Error: $SERVICE container is '$STATE' instead of running. Last log lines:"
+            docker logs --tail 15 "$CONTAINER_ID" 2>&1
+            exit 1
+        fi
+
         STATUS=$(docker inspect --format '{{.State.Health.Status}}' "$CONTAINER_ID")
 
         if [ "$STATUS" == "healthy" ]; then

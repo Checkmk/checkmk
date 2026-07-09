@@ -1,0 +1,52 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script lang="ts">
+export interface CommentValues {
+  comment: string
+}
+</script>
+
+<script setup lang="ts">
+import { watch } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CmkInput from '@/components/user-input/CmkInput.vue'
+
+const model = defineModel<CommentValues>({ required: true })
+
+const emit = defineEmits<{
+  (event: 'update:valid', valid: boolean): void
+}>()
+
+const { _t } = usei18n()
+
+watch(
+  () => model.value.comment,
+  (comment) => emit('update:valid', comment.trim() !== ''),
+  { immediate: true }
+)
+</script>
+
+<template>
+  <label class="monitoring-comment-form">
+    <span class="monitoring-comment-form__label">{{ _t('Comment') }}</span>
+    <CmkInput v-model="model.comment" field-size="LARGE" :placeholder="_t('Enter a comment…')" />
+  </label>
+</template>
+
+<style scoped>
+.monitoring-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-3);
+}
+
+.monitoring-comment-form__label {
+  font-weight: var(--font-weight-bold);
+}
+</style>

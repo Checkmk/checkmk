@@ -28,6 +28,8 @@ import OAuth2ConnectionInfoApp from './mode-oauth2-connection/OAuth2ConnectionIn
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreatePrometheusConfApp from './mode-otel/ModeCreatePrometheusConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
+import AllHostsApp from './monitoring/all-hosts/AllHostsApp.vue'
+import MonitoringPageLinkButton from './monitoring/shared/components/MonitoringPageLinkButton.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
@@ -70,3 +72,5 @@ defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-webauthn-register-button', WebAuthnRegisterButtonApp)
 defineCmkComponent('cmk-product-usage-analytics', ProductUsageAnalyticsApp)
+defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
+defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)

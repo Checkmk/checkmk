@@ -8,6 +8,9 @@
     "node": ">=22.0.0 <=23.0.0"
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.0",
+    "@tanstack/vue-table": "^8.21.3",
+    "@tanstack/vue-virtual": "^3.13.24",
     "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -16,6 +19,7 @@
     "marked": "^16.4.1",
     "openapi-fetch": "^0.14.1",
     "radix-vue": "^1.9.17",
+    "reka-ui": "^2.9.6",
     "sanitize-html": "^2.15.0",
     "tailwindcss": "^3.4.18",
     "tailwindcss-animate": "^1.0.7",

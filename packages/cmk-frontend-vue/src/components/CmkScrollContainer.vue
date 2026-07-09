@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+import { useTemplateRef } from 'vue'
 
 const scrollContainerVariants = cva('', {
   variants: {
@@ -26,10 +27,18 @@ export interface ScrollContainerProps {
   type?: ScrollContainerVariants['type']
 }
 const { type, maxHeight = '100%', height = '100%' } = defineProps<ScrollContainerProps>()
+
+const containerRef = useTemplateRef('containerRef')
+
+defineExpose({ containerRef })
 </script>
 
 <template>
-  <div :style="{ maxHeight, height, overflow: 'auto' }" :class="scrollContainerVariants({ type })">
+  <div
+    ref="containerRef"
+    :style="{ maxHeight, height, overflow: 'auto' }"
+    :class="scrollContainerVariants({ type })"
+  >
     <slot></slot>
   </div>
 </template>

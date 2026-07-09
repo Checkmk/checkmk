@@ -752,9 +752,18 @@ export const oneColorIcons = [
   'back',
   'chain',
   'broken-chain',
-  'share'
+  'share',
+  'chevron-down',
+  'chevron-up',
+  'filter',
+  'more-actions',
+  'pause',
+  'play',
+  'stale',
+  'user-interface',
+  'waiting'
 ] as const
-export const twoColorIcons = ['aggr'] as const
+export const twoColorIcons = ['aggr', 'experiment'] as const
 
 export const iconSizes: Record<IconSizes, number> = {
   xxsmall: 8,

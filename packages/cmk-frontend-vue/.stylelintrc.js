@@ -48,6 +48,13 @@ export default {
             ignoreFunctions: ['v-bind']
           }
         ],
+        // Vue scoped-style pseudo-classes are not known to plain stylelint-config-standard.
+        'selector-pseudo-class-no-unknown': [
+          true,
+          {
+            ignorePseudoClasses: ['deep', 'slotted', 'global']
+          }
+        ],
         'checkmk/vue-bem-naming-convention': true,
         // renaming the error message to make it more clear what happens:
         'no-empty-source': [true, { message: 'No empty <style> section allowed in vue files.' }]

@@ -259,6 +259,7 @@ class GUIViewRenderer(ABCViewRenderer):
             html.show_warning(message)
 
         call_hooks("rmk_view_banner", self.view.name)
+        call_hooks("experimental_view_button", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
             if self.view.spec.get("mustsearch") and len(rows) == 0:

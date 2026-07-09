@@ -51,6 +51,27 @@ export class ServiceBase {
     return id
   }
 
+  protected removeCallBack(key: string, id?: string) {
+    const ensuredKey = this.ensureKey(key)
+    if (id === undefined) {
+      delete callbacks[ensuredKey]
+      return
+    }
+    const list = callbacks[ensuredKey]
+    if (list) {
+      callbacks[ensuredKey] = list.filter((c) => c.id !== id)
+    }
+  }
+
+  protected removeCallbacks() {
+    const prefix = `${this.serviceId}-`
+    for (const key of Object.keys(callbacks)) {
+      if (key.startsWith(prefix)) {
+        delete callbacks[key]
+      }
+    }
+  }
+
   protected dispatchCallback(key: string, ...args: any) {
     const ensuredKey = this.ensureKey(key)
     callbacks[ensuredKey]?.forEach((c) => {

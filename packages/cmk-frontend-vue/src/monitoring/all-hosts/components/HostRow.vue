@@ -1,0 +1,204 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import type { Row } from '@tanstack/vue-table'
+import { inject } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import type { HostEntry } from '@/monitoring/shared/api/types'
+import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
+import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
+import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
+import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
+import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+
+const props = withDefaults(
+  defineProps<{
+    row: HostEntry
+    tableRow: Row<HostEntry>
+    actions?: CellAction[]
+  }>(),
+  { actions: () => [] }
+)
+
+const emit = defineEmits<{
+  (event: 'action', payload: { action: CellAction; host: HostEntry }): void
+}>()
+
+const { _t } = usei18n()
+
+const SERVICE_COUNT_MIN_WIDTH = 35
+
+function onActionSelect(action: CellAction): void {
+  emit('action', { action, host: props.row })
+}
+
+const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+function hasColumn(columnId: string): boolean {
+  return columns?.value.has(columnId) ?? true
+}
+
+function toggleSelected(selected: boolean): void {
+  props.tableRow.toggleSelected(selected)
+}
+</script>
+
+<template>
+  <CheckboxCell
+    v-if="hasColumn('select')"
+    column-id="select"
+    :aria-label="_t('Select host %{name}', { name: row.name })"
+    :model-value="tableRow.getIsSelected()"
+    @update:model-value="toggleSelected"
+  />
+  <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
+  <ModesCell v-if="hasColumn('modes')" column-id="modes" :modes="row.modes ?? []" />
+  <StringCell v-if="hasColumn('name')" column-id="name" :value="row.name" />
+  <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
+  <NumberCell
+    v-if="hasColumn('num_services')"
+    column-id="num_services"
+    :value="row.num_services"
+    :tag-properties="
+      row.num_services === 0
+        ? undefined
+        : {
+            variant: 'fill',
+            color: 'default',
+            minWidth: SERVICE_COUNT_MIN_WIDTH
+          }
+    "
+    :linked-to="
+      row.num_services === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host`,
+            target: '_top'
+          }
+    "
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_ok')"
+    column-id="num_services_ok"
+    :value="row.num_services_ok"
+    :tag-properties="
+      row.num_services_ok === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'success',
+            minWidth: SERVICE_COUNT_MIN_WIDTH
+          }
+    "
+    :linked-to="
+      row.num_services_ok === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_ok`,
+            target: '_top'
+          }
+    "
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_warn')"
+    column-id="num_services_warn"
+    :value="row.num_services_warn"
+    :tag-properties="
+      row.num_services_warn === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'warning',
+            minWidth: SERVICE_COUNT_MIN_WIDTH
+          }
+    "
+    :linked-to="
+      row.num_services_warn === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_warn`,
+            target: '_top'
+          }
+    "
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_crit')"
+    column-id="num_services_crit"
+    :value="row.num_services_crit"
+    :tag-properties="
+      row.num_services_crit === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'danger',
+            minWidth: SERVICE_COUNT_MIN_WIDTH
+          }
+    "
+    :linked-to="
+      row.num_services_crit === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_crit`,
+            target: '_top'
+          }
+    "
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_unknown')"
+    column-id="num_services_unknown"
+    :value="row.num_services_unknown"
+    :tag-properties="
+      row.num_services_unknown === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'unknown',
+            minWidth: SERVICE_COUNT_MIN_WIDTH
+          }
+    "
+    :linked-to="
+      row.num_services_unknown === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_unknown`,
+            target: '_top'
+          }
+    "
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_pending')"
+    column-id="num_services_pending"
+    :value="row.num_services_pending"
+    :tag-properties="
+      row.num_services_pending === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'default',
+            minWidth: SERVICE_COUNT_MIN_WIDTH
+          }
+    "
+    :linked-to="
+      row.num_services_pending === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_pending`,
+            target: '_top'
+          }
+    "
+  />
+
+  <ActionsCell
+    v-if="actions.length > 0 && hasColumn('actions')"
+    column-id="actions"
+    :actions="actions"
+    @select="onActionSelect"
+  />
+</template>

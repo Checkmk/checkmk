@@ -1,0 +1,437 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts" generic="T">
+import {
+  type Column,
+  type ColumnDef,
+  FlexRender,
+  type Header,
+  type HeaderGroup,
+  type Table
+} from '@tanstack/vue-table'
+import { type CSSProperties, inject } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
+
+import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
+import FilterDropdown from './filter/FilterDropdown.vue'
+
+const { _t } = usei18n()
+
+const borderSpacing = TABLE_BORDER_SPACING_PX
+
+defineProps<{
+  headerGroups: HeaderGroup<T>[]
+  disabled?: boolean
+}>()
+
+function filterValue(column: Column<T, unknown>): ColumnFilterNode<FilterField> | undefined {
+  return column.getFilterValue() as ColumnFilterNode<FilterField> | undefined
+}
+
+function setFilterValue(
+  column: Column<T, unknown>,
+  node: ColumnFilterNode<FilterField> | undefined
+): void {
+  column.setFilterValue(node)
+}
+
+function columnLabel(column: Column<T, unknown>): string {
+  return column.columnDef.header?.toString() ?? column.id
+}
+
+function selectAllModel(table: Table<T>): boolean {
+  return table.getIsAllRowsSelected()
+}
+
+function setSelectAll(table: Table<T>, value: boolean): void {
+  table.toggleAllRowsSelected(value === true)
+}
+
+const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+function stickyStyle(columnId: string): CSSProperties {
+  const info = columns?.value.get(columnId)
+  const left = info?.pinnedLeft ?? null
+  if (left !== null) {
+    return { position: 'sticky', left: `${left}px`, zIndex: 3 }
+  }
+  const right = info?.pinnedRight ?? null
+  if (right !== null) {
+    return { position: 'sticky', right: `${right}px`, zIndex: 3 }
+  }
+  return {}
+}
+
+function isLastPinned(columnId: string): boolean {
+  return columns?.value.get(columnId)?.isLastPinned ?? false
+}
+
+function isFirstPinnedRight(columnId: string): boolean {
+  return columns?.value.get(columnId)?.isFirstPinnedRight ?? false
+}
+
+type SortDirection = false | 'asc' | 'desc'
+
+function ariaSortFor(direction: SortDirection): 'ascending' | 'descending' | 'none' {
+  if (direction === 'asc') {
+    return 'ascending'
+  }
+  if (direction === 'desc') {
+    return 'descending'
+  }
+  return 'none'
+}
+
+function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
+  const style: CSSProperties = {}
+  if (columnDef.size !== undefined) {
+    style.width = `${columnDef.size}px`
+  }
+  if (columnDef.minSize !== undefined) {
+    style.minWidth = `${columnDef.minSize}px`
+  }
+  if (columnDef.maxSize !== undefined) {
+    style.maxWidth = `${columnDef.maxSize}px`
+  }
+  if (columnDef.meta?.justify !== undefined) {
+    style.textAlign = columnDef.meta.justify
+  }
+  return style
+}
+
+function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
+  const justify = columnDef.meta?.justify
+  if (justify === 'right') {
+    return { justifyContent: 'flex-end' }
+  }
+  if (justify === 'center') {
+    return { justifyContent: 'center' }
+  }
+  return {}
+}
+
+function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
+  const justify = columnDef.meta?.justify
+  return justify !== undefined ? { textAlign: justify } : {}
+}
+
+function hasFilterButton(header: Header<T, unknown>): boolean {
+  return (
+    !header.isPlaceholder &&
+    header.column.getCanFilter() &&
+    header.column.columnDef.meta?.filter !== undefined
+  )
+}
+
+function reservesFilterSpace(header: Header<T, unknown>): boolean {
+  return (
+    !header.isPlaceholder && !header.column.columnDef.meta?.selectColumn && !hasFilterButton(header)
+  )
+}
+</script>
+
+<template>
+  <thead>
+    <tr v-for="headerGroup in headerGroups" :key="headerGroup.id">
+      <th
+        v-for="header in headerGroup.headers"
+        :key="header.id"
+        :colspan="header.colSpan"
+        :class="[
+          'monitoring-table-header__header-cell',
+          {
+            'monitoring-table-header__header-cell--last-pinned': isLastPinned(header.column.id),
+            'monitoring-table-header__header-cell--first-pinned-right': isFirstPinnedRight(
+              header.column.id
+            )
+          }
+        ]"
+        :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
+        :aria-sort="ariaSortFor(header.column.getIsSorted())"
+      >
+        <div
+          class="monitoring-table-header__cell-content"
+          :class="{
+            'monitoring-table-header__cell-content--reserve-filter': reservesFilterSpace(header)
+          }"
+        >
+          <div
+            v-if="!header.isPlaceholder && header.column.columnDef.meta?.selectColumn"
+            class="monitoring-table-header__select"
+            :style="contentStyle(header.column.columnDef)"
+          >
+            <CmkCheckbox
+              :aria-label="_t('Select all rows')"
+              :model-value="selectAllModel(header.getContext().table)"
+              @update:model-value="setSelectAll(header.getContext().table, $event)"
+            />
+          </div>
+          <button
+            v-else-if="!header.isPlaceholder && header.column.getCanSort()"
+            type="button"
+            class="monitoring-table-header__header-button"
+            :style="contentStyle(header.column.columnDef)"
+            :title="
+              header.column.columnDef.meta?.headerTitle?.toString() ??
+              header.column.columnDef.header?.toString()
+            "
+            :disabled="disabled"
+            @click="header.column.getToggleSortingHandler()?.($event)"
+          >
+            <div class="monitoring-table-header__sort-icon-wrapper">
+              <CmkMultitoneIcon
+                name="chevron-up"
+                class="monitoring-table-header__sort-icon"
+                :class="{
+                  'monitoring-table-header__sort-icon--active':
+                    header.column.getIsSorted() === 'asc'
+                }"
+                primary-color="font"
+                aria-hidden="true"
+                size="xsmall"
+              />
+              <CmkMultitoneIcon
+                name="chevron-down"
+                class="monitoring-table-header__sort-icon"
+                :class="{
+                  'monitoring-table-header__sort-icon--active':
+                    header.column.getIsSorted() === 'desc'
+                }"
+                primary-color="font"
+                aria-hidden="true"
+                size="xsmall"
+              />
+            </div>
+
+            <span class="monitoring-table-header__label">
+              <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+            </span>
+          </button>
+          <span
+            v-else-if="!header.isPlaceholder"
+            class="monitoring-table-header__label monitoring-table-header__label--standalone"
+            :style="labelStyle(header.column.columnDef)"
+            :title="
+              header.column.columnDef.meta?.headerTitle?.toString() ??
+              header.column.columnDef.header?.toString()
+            "
+          >
+            <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+          </span>
+          <FilterDropdown
+            v-if="
+              !header.isPlaceholder &&
+              header.column.getCanFilter() &&
+              header.column.columnDef.meta?.filter
+            "
+            :definition="header.column.columnDef.meta.filter"
+            :label="columnLabel(header.column)"
+            :model-value="filterValue(header.column)"
+            @update:model-value="setFilterValue(header.column, $event)"
+          >
+            <template #trigger="{ toggle, isOpen, isActive }">
+              <button
+                type="button"
+                class="monitoring-table-header__filter-button"
+                :class="{
+                  'monitoring-table-header__filter-button--active': isActive || isOpen
+                }"
+                :title="
+                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
+                "
+                :aria-label="
+                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
+                "
+                aria-haspopup="true"
+                :aria-expanded="isOpen"
+                @click="toggle"
+              >
+                <CmkIconEmblem :emblem="isActive ? 'warning' : undefined">
+                  <CmkMultitoneIcon
+                    name="filter"
+                    :primary-color="{ custom: 'var(--success)' }"
+                    aria-hidden="true"
+                  />
+                </CmkIconEmblem>
+              </button>
+            </template>
+          </FilterDropdown>
+        </div>
+      </th>
+    </tr>
+  </thead>
+</template>
+
+<style scoped>
+.monitoring-table-header__header-cell {
+  position: sticky;
+  top: v-bind(borderSpacing);
+  z-index: 2;
+  vertical-align: middle;
+  height: 24px;
+  font-weight: var(--font-weight-bold);
+  background: var(--ux-theme-1);
+  box-shadow: 0 0 0 1px var(--ux-theme-4);
+  white-space: nowrap;
+  text-align: left;
+}
+
+.monitoring-table-header__header-cell--last-pinned::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  pointer-events: none;
+  background: var(--default-border-color);
+}
+
+.monitoring-table-header__header-cell--first-pinned-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  pointer-events: none;
+  background: var(--default-border-color);
+}
+
+.monitoring-table-header__cell-content {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.monitoring-table-header__cell-content--reserve-filter {
+  margin-right: var(--dimension-4);
+}
+
+.monitoring-table-header__select {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+}
+
+.monitoring-table-header__header-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-2);
+  max-width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  padding: var(--dimension-2) var(--dimension-4);
+
+  &:focus-visible {
+    outline: 1px solid var(--success);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    color: inherit;
+    cursor: default;
+    background: transparent;
+    filter: none;
+  }
+
+  &:not(:disabled):hover {
+    background-color: var(--ux-theme-3);
+  }
+}
+
+.monitoring-table-header__label {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.monitoring-table-header__label--standalone {
+  flex: 1 1 auto;
+  padding-left: var(--dimension-4);
+}
+
+.monitoring-table-header__filter-button {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: var(--dimension-2);
+  background: transparent;
+  border: none;
+  margin: 0;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  opacity: 0.5;
+
+  &:focus-visible {
+    outline: 1px solid var(--success);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    color: inherit;
+    cursor: default;
+    background: transparent;
+    filter: none;
+  }
+
+  &:not(:disabled):hover {
+    background-color: var(--ux-theme-3);
+    opacity: 1;
+  }
+}
+
+.monitoring-table-header__filter-button--active {
+  opacity: 1;
+}
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.monitoring-table-header__filter-button :deep(.cmk-icon-emblem__emblem) {
+  width: 50%;
+  height: 50%;
+  right: -10%;
+  bottom: -10%;
+}
+
+.monitoring-table-header__sort-icon-wrapper {
+  flex-shrink: 0;
+  margin-right: var(--dimension-2);
+}
+
+.monitoring-table-header__sort-icon {
+  opacity: 0.4;
+
+  &:first-child {
+    margin-top: calc(-1 * var(--dimension-2));
+  }
+
+  &:last-child {
+    margin-top: calc(-1 * var(--dimension-3));
+  }
+
+  &.monitoring-table-header__sort-icon--active {
+    opacity: 1;
+  }
+}
+</style>

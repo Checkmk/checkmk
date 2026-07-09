@@ -53,6 +53,16 @@ export default defineConfig(({ command }) => {
             }
             console.warn(message.message)
 
+            // Third-party dependencies (e.g. @vueuse/core, pulled in by reka-ui) may carry
+            // `/* #__PURE__ */` annotations in positions this Rollup version cannot interpret.
+            // Rollup removes them automatically; the warning is benign, so we let it pass.
+            if (
+              message.code === 'INVALID_ANNOTATION' &&
+              message.message.includes('/node_modules/')
+            ) {
+              return
+            }
+
             // vue3-gettext uses node to extract gettext strings, but we need the module
             // as a runtime module as well (not the node part though), so we let this pass
             if (

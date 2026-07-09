@@ -21,3 +21,15 @@ ora_remote =
   )
   )
 
+
+ora_docker =
+ (DESCRIPTION =
+ (ADDRESS_LIST =
+ (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
+ )
+ (CONNECT_DATA =
+ (SID = FREE)
+ (SERVER = DEDICATED)
+ )
+ )
+

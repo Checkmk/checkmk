@@ -462,10 +462,17 @@ async fn test_remote_tns_custom_instance_connection() {
         std::env::var("TNS_ADMIN").unwrap_or_default()
     );
     let endpoint = remote_reference_endpoint();
+    // The fixture freezes ora_remote to the CI database; the Docker tier
+    // (localhost) uses the static ora_docker alias instead.
+    let alias = if endpoint.host == "localhost" {
+        "ora_docker"
+    } else {
+        "ora_remote"
+    };
     let config = make_mini_config_custom_instance(
         &endpoint,
         "FREE",
-        Some(InstanceAlias::from("ora_remote".to_string())),
+        Some(InstanceAlias::from(alias.to_string())),
     );
     let env = Env::default();
     let r = generate_data(&config, &env).await;

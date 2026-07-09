@@ -254,27 +254,33 @@ run_test_component() {
             cargo test --test "*"
             ;;
         *)
-            # 1. obtain rebundled client
-            bazel build //omd/packages/oci:oci_light_lin_x64
-
-            # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
-            # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
-            path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
-            unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
-
-            # 3. relink libaio
-            libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
-            if [ -e "${libaio}" ]; then
-                ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
-            else
-                echo "libaio absent. Integration testing is not possible"
-                exit 1
-            fi
-
-            export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
+            setup_oci_runtime || failure "cannot stage the Oracle client runtime"
             bazel test :mk-oracle-lib-test-external
             ;;
     esac
+}
+
+# Stage the rebundled Oracle client into the runtime directory the way the
+# Agent Bakery would: build, unzip, relink libaio from the host, and make
+# it loadable. Expects setup_tests to have set path_to_runtime.
+# ATTENTION! Shell solution below is pure temporary: to be replaced with a
+# pure bazel after consulting by Bazel team
+setup_oci_runtime() {
+    bazel build //omd/packages/oci:oci_light_lin_x64 || return 1
+    local path_to_zip
+    path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip" || return 1
+    unzip -uoq "${path_to_zip}" -d "${path_to_runtime}" || return 1
+
+    # ldconfig lives in /sbin, which regular users often do not have on PATH.
+    local libaio
+    libaio=$(PATH="${PATH}:/sbin:/usr/sbin" ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
+    if [ ! -e "${libaio}" ]; then
+        echo "libaio absent. Integration testing is not possible"
+        return 1
+    fi
+    ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1" || return 1
+
+    export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
 }
 
 run_test_component_remote_host() {
@@ -370,30 +376,13 @@ run_test_component_docker() {
 
     setup_tests
 
-    # Run the tests and capture exit code
-    local test_exit_code=0
-
-    # 1. obtain rebundled client
-    bazel build //omd/packages/oci:oci_light_lin_x64
-
-    # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
-    # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
-    path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
-    path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
-    unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
-
-    # 3. relink libaio
-    libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
-    if [ -e "${libaio}" ]; then
-        ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
-    else
+    if ! setup_oci_runtime; then
         cleanup_docker_container "${ORACLE_DOCKER_VERSION}"
-        failure "libaio absent. Integration testing is not possible"
+        failure "cannot stage the Oracle client runtime"
     fi
 
-    export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
-
     # Run tests and capture exit code
+    local test_exit_code=0
     bazel test :mk-oracle-lib-test-external || test_exit_code=$?
 
     # Always cleanup Docker container

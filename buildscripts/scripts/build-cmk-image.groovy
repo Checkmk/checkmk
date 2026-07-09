@@ -36,6 +36,7 @@ void main() {
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
@@ -47,7 +48,6 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
 
-    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
     def package_dir = "${checkout_dir}/download";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
     /// In order to ensure a fixed order for stages executed in parallel,

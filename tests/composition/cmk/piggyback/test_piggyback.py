@@ -213,10 +213,9 @@ def test_piggyback_services_remote_remote_diff_customer(
                 )
 
 
-def _piggybackhub_conf_timestamp(site: Site) -> int | None:
-    if not site.file_exists(site.root / RELATIVE_CONFIG_PATH):
-        return None
-    return site.file_timestamp_ms(site.root / RELATIVE_CONFIG_PATH)
+def _piggybackhub_conf_inode(site: Site) -> int | None:
+    path = site.root / RELATIVE_CONFIG_PATH
+    return site.inode(path) if site.file_exists(path) else None
 
 
 @contextmanager
@@ -236,25 +235,36 @@ def _change_remote_site_customer(
         central_site.openapi.changes.activate_and_wait_for_completion()
 
 
-def _check_update_config_timestamps(sites: Sequence[Site], timestamps_dict: dict[str, int]) -> None:
+def _wait_for_conf_redistributed(site: Site, previous_inode: int, timeout: int) -> None:
+    """
+    Wait until piggyback_hub.conf has been rewritten on site.
+
+    The hub writes the config atomically whenever it receives a config message,
+    so the file gets a fresh inode on every redistribution.
+    """
+
+    def _conf_rewritten() -> bool:
+        current_inode = _piggybackhub_conf_inode(site)
+        return current_inode is not None and current_inode != previous_inode
+
+    wait_until(
+        _conf_rewritten,
+        timeout=timeout,
+        interval=1,
+        condition_name=f"piggyback_hub.conf redistributed for site {site.id}",
+    )
+
+
+def _check_config_redistributed(
+    sites: Sequence[Site], config_inodes: dict[str, int], timeout: int = 60
+) -> None:
     for site in sites:
-        if site.id in timestamps_dict:
-            previous_timestamp = timestamps_dict[site.id]
+        if (previous_inode := config_inodes.get(site.id)) is not None:
+            _wait_for_conf_redistributed(site, previous_inode, timeout)
 
-            def _conf_updated() -> bool:
-                current_timestamp = _piggybackhub_conf_timestamp(site)
-                return current_timestamp is not None and current_timestamp > previous_timestamp
-
-            wait_until(
-                _conf_updated,
-                timeout=_TIMEOUT,
-                interval=1,
-                condition_name=f"piggyback_hub.conf should be updated for site {site.id}",
-            )
-
-        file_timestamp = _piggybackhub_conf_timestamp(site)
-        assert file_timestamp is not None, f"piggyback_hub.conf should exist for site {site.id}"
-        timestamps_dict[site.id] = file_timestamp
+        current_inode = _piggybackhub_conf_inode(site)
+        assert current_inode is not None, f"piggyback_hub.conf should exist for site {site.id}"
+        config_inodes[site.id] = current_inode
 
 
 @pytest.mark.skip_if_not_edition("ultimatemt")
@@ -265,21 +275,21 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
     """
 
     _HOSTNAME_PIGGYBACKED = "piggybacked_host"
-    timestamps_dict: dict[str, int] = {}
+    config_inodes: dict[str, int] = {}
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         # same "provider" customer
-        # save starting timestamps
-        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+        # record the initial config file state
+        _check_config_redistributed([central_site, remote_site], config_inodes)
 
         with _change_remote_site_customer(central_site, remote_site, "customer1"):
             # service are NOT updated anymore (tested elsewhere), but config file is
-            _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+            _check_config_redistributed([central_site, remote_site], config_inodes)
 
         # After restoring customer, data distribution resumes, so config file is updated again
-        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+        _check_config_redistributed([central_site, remote_site], config_inodes)
 
 
 @pytest.mark.xfail(reason="CMK-35803; flake")
@@ -295,7 +305,7 @@ def test_config_sync_source_remote_remote_diff_customer(
     """
     central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_two_remotes_both_customer"
-    timestamps_dict: dict[str, int] = {}
+    config_inodes: dict[str, int] = {}
     with (
         create_local_check(
             central_site,
@@ -310,25 +320,23 @@ def test_config_sync_source_remote_remote_diff_customer(
         )
 
         # Initially both sites on "provider" customer - data flows from remote_site to remote_site_2
-        # save starting timestamps
-        _check_update_config_timestamps([central_site, remote_site, remote_site_2], timestamps_dict)
+        # record the initial config file state
+        _check_config_redistributed([central_site, remote_site, remote_site_2], config_inodes)
 
         # Change customer on one remote sites; data must stop flowing, config updates must continue
         with _change_remote_site_customer(central_site, remote_site, "customer1"):
             # all sites get config updates
-            _check_update_config_timestamps(
-                [central_site, remote_site, remote_site_2], timestamps_dict
-            )
+            _check_config_redistributed([central_site, remote_site, remote_site_2], config_inodes)
 
             # now change customer on the other remote site as well
             with _change_remote_site_customer(central_site, remote_site_2, "customer1"):
                 # all sites get config updates
-                _check_update_config_timestamps(
-                    [central_site, remote_site, remote_site_2], timestamps_dict
+                _check_config_redistributed(
+                    [central_site, remote_site, remote_site_2], config_inodes
                 )
 
         # all sites get config updates
-        _check_update_config_timestamps([central_site, remote_site, remote_site_2], timestamps_dict)
+        _check_config_redistributed([central_site, remote_site, remote_site_2], config_inodes)
 
 
 @pytest.mark.xfail(reason="CMK-35803; flake")
@@ -338,7 +346,7 @@ def test_config_sync_rename_host(central_site: Site, remote_site: Site) -> None:
     """
 
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_rename"
-    timestamps_dict: dict[str, int] = {}
+    config_inodes: dict[str, int] = {}
     with (
         create_local_check(
             central_site,
@@ -346,15 +354,15 @@ def test_config_sync_rename_host(central_site: Site, remote_site: Site) -> None:
             [_HOSTNAME_PIGGYBACKED],
         ),
     ):
-        # save starting timestamps
-        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+        # record the initial config file state
+        _check_config_redistributed([central_site, remote_site], config_inodes)
 
         with _create_and_rename_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
             # config distribution is triggered on both sites after renaming
-            _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+            _check_config_redistributed([central_site, remote_site], config_inodes)
 
         # config distribution is triggered on both sites after deleting the host
-        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+        _check_config_redistributed([central_site, remote_site], config_inodes)
 
 
 def test_piggyback_services_remote_remote(

@@ -32,6 +32,7 @@ from dataclasses import dataclass, replace
 from typing import Generic, Literal, override, Self, TypeVar
 
 from pydantic import BaseModel as PydanticBaseModel
+from pydantic import ValidationError
 
 import cmk.utils.paths
 from cmk.ccc import store
@@ -50,6 +51,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l, _u
+from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
 from cmk.gui.main_menu_types import (
@@ -911,7 +913,14 @@ class Overridable(Base[_T_OverridableConfig]):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for (user_id, name), raw_page_dict in cls.load_raw().items():
-            instances.add_instance((user_id, name), cls.deserialize(raw_page_dict))
+            try:
+                instance = cls.deserialize(raw_page_dict)
+            except ValidationError:
+                logger.exception(
+                    "Skipping invalid %s %r of user %r", cls.type_name(), name, user_id
+                )
+                continue
+            instances.add_instance((user_id, name), instance)
 
         cls._declare_instance_permissions(instances, user_permissions)
         return instances

@@ -53,7 +53,7 @@ from ._snapin import all_snapins as all_snapins
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
-from ._snapin import CustomSnapins, PERMISSION_SECTION_SIDEBAR_SNAPINS
+from ._snapin import CustomSnapins as CustomSnapins
 from ._snapin import default_view_menu_topics as default_view_menu_topics
 from ._snapin import end_footnote_links as end_footnote_links
 from ._snapin import footnotelinks as footnotelinks
@@ -62,6 +62,7 @@ from ._snapin import iconlink as iconlink
 from ._snapin import link as link
 from ._snapin import make_main_menu as make_main_menu
 from ._snapin import PageHandlers as PageHandlers
+from ._snapin import PERMISSION_SECTION_SIDEBAR_SNAPINS
 from ._snapin import render_link as render_link
 from ._snapin import show_main_menu as show_main_menu
 from ._snapin import SidebarSnapin as SidebarSnapin

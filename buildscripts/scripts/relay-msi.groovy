@@ -27,14 +27,16 @@ void main() {
     // build-msi.ps1 normalises it into the strict x.x.x.x WiX requires.
     dir("${checkout_dir}") {
         if (should_sign) {
-            // Serialise access to the shared YubiKey signing token via the
-            // "win_sign_key" lock, the same way the agent build does (see
-            // buildscripts/scripts/winagt-build.groovy).
-            lock(label: "win_sign_key", quantity: 1, resource : null) {
-                windows.build(
-                    TARGET: 'relay_msi_with_sign',
-                    VERSION: cmk_version,
-                );
+            withCredentials([string(credentialsId: "sectigo_2023_pin", variable: "SECTIGO_2023_PIN")]) {
+                // Serialise access to the shared YubiKey signing token via the
+                // "win_sign_key" lock, the same way the agent build does (see
+                // buildscripts/scripts/winagt-build.groovy).
+                lock(label: "win_sign_key", quantity: 1, resource : null) {
+                    windows.build(
+                        TARGET: 'relay_msi_with_sign',
+                        VERSION: cmk_version,
+                    );
+                }
             }
         } else {
             windows.build(

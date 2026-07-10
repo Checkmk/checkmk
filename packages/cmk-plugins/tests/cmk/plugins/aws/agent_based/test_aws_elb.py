@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.aws_elb import check_aws_elb_statistics
+from cmk.plugins.aws.agent_based.aws_elb import check_aws_elb_statistics
 
 
 def test_check_aws_elb_statistics() -> None:

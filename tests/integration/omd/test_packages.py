@@ -342,8 +342,11 @@ def test_unixcat(site: Site) -> None:
     ),
 )
 def test_mk_oracle_exotic_distros(distro: str, expectation: str, site: Site) -> None:
+    # Use `file -k` (keep-going) so all matching magic rules are reported, not just the
+    # highest-scored one. Older libmagic (e.g. file 5.41 on Ubuntu 22.04) mis-scores the AIX
+    # XCOFF64 binary as "JPEG 2000 image" and would otherwise hide the correct XCOFF match.
     process = site.run(
-        ["file", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
+        ["file", "-k", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
     )
     assert expectation in process.stdout, process.stdout
 

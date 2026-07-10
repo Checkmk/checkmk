@@ -80,3 +80,88 @@ def test_returns_false_when_remote_site_flags_are_false(
     )
 
     assert cmk_update_agent._is_ultimatemt_remote_site() is False
+
+
+def test_migrate_proxy_old_format_none() -> None:
+    assert cmk_update_agent._migrate_proxy_old_format(None) == ("no_proxy", None)
+
+
+def test_migrate_proxy_old_format_env() -> None:
+    assert cmk_update_agent._migrate_proxy_old_format("env") == ("env_proxy", "env")
+
+
+def test_migrate_proxy_old_format_http_without_credentials() -> None:
+    # 2.4.0 stores an empty dict here when the (optional) credentials sub-dictionary
+    # is not filled in, rather than omitting the "proxy_protocol" tuple's second element.
+    old_value = {
+        "server": "proxy.example.com",
+        "port": 8080,
+        "proxy_protocol": ("http", {}),
+    }
+
+    assert cmk_update_agent._migrate_proxy_old_format(old_value) == (
+        "explicit_proxy",
+        {
+            "server": "proxy.example.com",
+            "port": 8080,
+            "proxy_protocol": "http",
+        },
+    )
+
+
+def test_migrate_proxy_old_format_socks5_without_credentials() -> None:
+    old_value = {
+        "server": "proxy.example.com",
+        "port": 1080,
+        "proxy_protocol": ("socks5", {}),
+    }
+
+    assert cmk_update_agent._migrate_proxy_old_format(old_value) == (
+        "explicit_proxy",
+        {
+            "server": "proxy.example.com",
+            "port": 1080,
+            "proxy_protocol": "socks5",
+        },
+    )
+
+
+def test_migrate_proxy_old_format_http_with_credentials() -> None:
+    old_value = {
+        "server": "proxy.example.com",
+        "port": 8080,
+        "proxy_protocol": ("http", {"credentials": ("user", "password")}),
+    }
+
+    assert cmk_update_agent._migrate_proxy_old_format(old_value) == (
+        "explicit_proxy",
+        {
+            "server": "proxy.example.com",
+            "port": 8080,
+            "proxy_protocol": "http",
+            "credentials": {"user": "user", "password": "password"},
+        },
+    )
+
+
+def test_migrate_proxy_old_format_socks4() -> None:
+    old_value = {
+        "server": "proxy.example.com",
+        "port": 1080,
+        "proxy_protocol": ("socks4", None),
+    }
+
+    assert cmk_update_agent._migrate_proxy_old_format(old_value) == (
+        "explicit_proxy",
+        {
+            "server": "proxy.example.com",
+            "port": 1080,
+            "proxy_protocol": "socks4",
+        },
+    )
+
+
+def test_migrate_proxy_old_format_new_format_passthrough() -> None:
+    new_value = ("explicit_proxy", {"server": "proxy.example.com", "port": 8080})
+
+    assert cmk_update_agent._migrate_proxy_old_format(new_value) == new_value

@@ -100,13 +100,13 @@ def _parse_proxy_protocol(
 ) -> tuple[str, tuple[str, str] | None]:
     match proxy_protocol:
         case ("http", Mapping() as credentials):
-            return "http", credentials["credentials"]
+            return "http", credentials.get("credentials")
         case ("http", None):
             return "http", None
         case ("socks4", None):
             return "socks4", None
         case ("socks5", Mapping() as credentials):
-            return "socks5", credentials["credentials"]
+            return "socks5", credentials.get("credentials")
         case ("socks5", None):
             return "socks5", None
         case "http":

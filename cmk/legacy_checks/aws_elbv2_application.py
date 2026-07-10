@@ -3,25 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, StringTable
-from cmk.legacy_includes.aws import (
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    StringTable,
+)
+from cmk.plugins.aws.lib import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
     aws_get_float_human_readable,
+    AWSMetric,
     check_aws_http_errors,
     check_aws_metrics,
-    inventory_aws_generic_single,
-    MetricInfo,
+    discover_aws_generic_single,
+    extract_aws_metrics_by_labels,
+    parse_aws,
 )
-from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
-
-check_info = {}
 
 Section = Mapping[str, float]
 
@@ -55,57 +60,48 @@ def parse_aws_elbv2_application(string_table: StringTable) -> Section:
     # We get exactly one entry: {INST-ID: METRICS}
     # INST-ID is the piggyback host name
     try:
-        last_metrics = list(metrics.values())[-1]
+        return list(metrics.values())[-1]
     except IndexError:
         return {}
-    return {name: float(value) for name, value in last_metrics.items()}
 
 
 #   .--LCU-----------------------------------------------------------------.
-#   |                          _     ____ _   _                            |
-#   |                         | |   / ___| | | |                           |
-#   |                         | |  | |   | | | |                           |
-#   |                         | |__| |___| |_| |                           |
-#   |                         |_____\____|\___/                            |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
-def check_aws_elbv2_application_lcu(item, params, parsed: Section):
-    lcus = parsed.get("ConsumedLCUs")
+def check_aws_elbv2_application_lcu(params: Mapping[str, Any], section: Section) -> CheckResult:
+    lcus = section.get("ConsumedLCUs")
     if lcus is None:
         raise IgnoreResultsError("Currently no data from AWS")
-    yield check_levels(
+    yield from check_levels_v1(
         lcus,
-        "aws_consumed_lcus",
-        params.get("levels"),
-        human_readable_func=aws_get_float_human_readable,
-        infoname="Consumption",
+        metric_name="aws_consumed_lcus",
+        levels_upper=params.get("levels"),
+        render_func=aws_get_float_human_readable,
+        label="Consumption",
     )
 
 
-def discover_aws_elbv2_application(p: Section):
-    return inventory_aws_generic_single(p, ["ConsumedLCUs"])
+def discover_aws_elbv2_application(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["ConsumedLCUs"])
 
 
-check_info["aws_elbv2_application"] = LegacyCheckDefinition(
+agent_section_aws_elbv2_application = AgentSection(
     name="aws_elbv2_application",
     parse_function=parse_aws_elbv2_application,
+)
+
+
+check_plugin_aws_elbv2_application = CheckPlugin(
+    name="aws_elbv2_application",
     service_name="AWS/ApplicationELB LCUs",
     discovery_function=discover_aws_elbv2_application,
     check_function=check_aws_elbv2_application_lcu,
     check_ruleset_name="aws_elbv2_lcu",
+    check_default_parameters={},
 )
 
-# .
+
 #   .--connections---------------------------------------------------------.
-#   |                                        _   _                         |
-#   |         ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
-#   |        / __/ _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \| '_ \/ __|        |
-#   |       | (_| (_) | | | | | | |  __/ (__| |_| | (_) | | | \__ \        |
-#   |        \___\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_|___/        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 _aws_elbv2_application_connection_types = [
     "ActiveConnectionCount",
@@ -115,16 +111,14 @@ _aws_elbv2_application_connection_types = [
 ]
 
 
-def check_aws_elbv2_application_connections(item, params, parsed: Section):
-    return check_aws_metrics(
+def check_aws_elbv2_application_connections(section: Section) -> CheckResult:
+    yield from check_aws_metrics(
         [
-            MetricInfo(
-                metric_val=parsed.get(cw_metric_name),
-                metric_name="aws_client_tls_errors"
-                if key == "tls_errors"
-                else f"aws_{key}_connections",
-                info_name=info_name,
-                human_readable_func=aws_get_counts_rate_human_readable,
+            AWSMetric(
+                value=value,
+                name="aws_client_tls_errors" if key == "tls_errors" else f"aws_{key}_connections",
+                label=info_name,
+                render_func=aws_get_counts_rate_human_readable,
             )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_application_connection_types,
@@ -135,15 +129,18 @@ def check_aws_elbv2_application_connections(item, params, parsed: Section):
                     ("TLS errors", "tls_errors"),
                 ],
             )
+            if (value := section.get(cw_metric_name)) is not None
         ]
     )
 
 
-def discover_aws_elbv2_application_connections(p: Section):
-    return inventory_aws_generic_single(p, _aws_elbv2_application_connection_types, requirement=any)
+def discover_aws_elbv2_application_connections(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
+        section, _aws_elbv2_application_connection_types, requirement=any
+    )
 
 
-check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
+check_plugin_aws_elbv2_application_connections = CheckPlugin(
     name="aws_elbv2_application_connections",
     service_name="AWS/ApplicationELB Connections",
     sections=["aws_elbv2_application"],
@@ -151,48 +148,37 @@ check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
     check_function=check_aws_elbv2_application_connections,
 )
 
-# .
+
 #   .--HTTP ELB------------------------------------------------------------.
-#   |             _   _ _____ _____ ____    _____ _     ____               |
-#   |            | | | |_   _|_   _|  _ \  | ____| |   | __ )              |
-#   |            | |_| | | |   | | | |_) | |  _| | |   |  _ \              |
-#   |            |  _  | | |   | | |  __/  | |___| |___| |_) |             |
-#   |            |_| |_| |_|   |_| |_|     |_____|_____|____/              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
-def check_aws_elbv2_application_http_elb(item, params, parsed: Section):
-    return check_aws_http_errors(
+def check_aws_elbv2_application_http_elb(
+    params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    yield from check_aws_http_errors(
         params.get("levels_load_balancers", params),
-        parsed,
+        section,
         ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
         "HTTPCode_ELB_%s_Count",
     )
 
 
-def discover_aws_elbv2_application_http_elb(p: Section):
-    return inventory_aws_generic_single(p, ["RequestCount"])
+def discover_aws_elbv2_application_http_elb(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["RequestCount"])
 
 
-check_info["aws_elbv2_application.http_elb"] = LegacyCheckDefinition(
+check_plugin_aws_elbv2_application_http_elb = CheckPlugin(
     name="aws_elbv2_application_http_elb",
     service_name="AWS/ApplicationELB HTTP ELB",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_http_elb,
     check_function=check_aws_elbv2_application_http_elb,
     check_ruleset_name="aws_elb_http",
+    check_default_parameters={},
 )
 
-# .
+
 #   .--HTTP redirects------------------------------------------------------.
-#   |  _   _ _____ _____ ____                 _ _               _          |
-#   | | | | |_   _|_   _|  _ \   _ __ ___  __| (_)_ __ ___  ___| |_ ___    |
-#   | | |_| | | |   | | | |_) | | '__/ _ \/ _` | | '__/ _ \/ __| __/ __|   |
-#   | |  _  | | |   | | |  __/  | | |  __/ (_| | | | |  __/ (__| |_\__ \   |
-#   | |_| |_| |_|   |_| |_|     |_|  \___|\__,_|_|_|  \___|\___|\__|___/   |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 _aws_elbv2_application_http_redirects_metrics = [
     "HTTP_Redirect_Count",
@@ -201,15 +187,15 @@ _aws_elbv2_application_http_redirects_metrics = [
 ]
 
 
-def check_aws_elbv2_application_http_redirects(item, params, parsed: Section):
-    return check_aws_metrics(
+def check_aws_elbv2_application_http_redirects(section: Section) -> CheckResult:
+    yield from check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            AWSMetric(
+                value=value,
+                name=f"aws_{key}",
+                label=info_name,
+                render_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_application_http_redirects_metrics,
                 [
@@ -218,17 +204,18 @@ def check_aws_elbv2_application_http_redirects(item, params, parsed: Section):
                     ("Successful fixed responses", "http_fixed_response"),
                 ],
             )
+            if (value := section.get(cw_metric_name)) is not None
         ]
     )
 
 
-def discover_aws_elbv2_application_http_redirects(p: Section):
-    return inventory_aws_generic_single(
-        p, _aws_elbv2_application_http_redirects_metrics, requirement=any
+def discover_aws_elbv2_application_http_redirects(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
+        section, _aws_elbv2_application_http_redirects_metrics, requirement=any
     )
 
 
-check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
+check_plugin_aws_elbv2_application_http_redirects = CheckPlugin(
     name="aws_elbv2_application_http_redirects",
     service_name="AWS/ApplicationELB HTTP Redirects",
     sections=["aws_elbv2_application"],
@@ -236,15 +223,8 @@ check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
     check_function=check_aws_elbv2_application_http_redirects,
 )
 
-# .
+
 #   .--statistics----------------------------------------------------------.
-#   |                    _        _   _     _   _                          |
-#   |                ___| |_ __ _| |_(_)___| |_(_) ___ ___                 |
-#   |               / __| __/ _` | __| / __| __| |/ __/ __|                |
-#   |               \__ \ || (_| | |_| \__ \ |_| | (__\__ \                |
-#   |               |___/\__\__,_|\__|_|___/\__|_|\___|___/                |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 _aws_elbv2_application_statistics_metrics = [
     "ProcessedBytes",
@@ -254,42 +234,40 @@ _aws_elbv2_application_statistics_metrics = [
 ]
 
 
-def check_aws_elbv2_application_statistics(item, params, parsed: Section):
-    metric_infos = []
-
-    for cw_metric_name, (info_name, metric_name) in zip(
-        _aws_elbv2_application_statistics_metrics,
+def check_aws_elbv2_application_statistics(section: Section) -> CheckResult:
+    yield from check_aws_metrics(
         [
-            ("Processed bytes", "aws_proc_bytes"),
-            ("IPv6 Processed bytes", "aws_ipv6_proc_bytes"),
-            ("IPv6RequestCount", "aws_ipv6_requests"),
-            ("Rule evaluations", "aws_rule_evaluations"),
-        ],
-    ):
-        if "bytes" in metric_name:
-            human_readable_func = aws_get_bytes_rate_human_readable
-        else:
-            human_readable_func = aws_get_counts_rate_human_readable
-
-        metric_infos.append(
-            MetricInfo(
-                metric_val=parsed.get(cw_metric_name),
-                metric_name=metric_name,
-                info_name=info_name,
-                human_readable_func=human_readable_func,
+            AWSMetric(
+                value=value,
+                name=metric_name,
+                label=info_name,
+                render_func=(
+                    aws_get_bytes_rate_human_readable
+                    if "bytes" in metric_name
+                    else aws_get_counts_rate_human_readable
+                ),
             )
-        )
-
-    return check_aws_metrics(metric_infos)
-
-
-def discover_aws_elbv2_application_statistics(p: Section):
-    return inventory_aws_generic_single(
-        p, _aws_elbv2_application_statistics_metrics, requirement=any
+            for cw_metric_name, (info_name, metric_name) in zip(
+                _aws_elbv2_application_statistics_metrics,
+                [
+                    ("Processed bytes", "aws_proc_bytes"),
+                    ("IPv6 Processed bytes", "aws_ipv6_proc_bytes"),
+                    ("IPv6RequestCount", "aws_ipv6_requests"),
+                    ("Rule evaluations", "aws_rule_evaluations"),
+                ],
+            )
+            if (value := section.get(cw_metric_name)) is not None
+        ]
     )
 
 
-check_info["aws_elbv2_application.statistics"] = LegacyCheckDefinition(
+def discover_aws_elbv2_application_statistics(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
+        section, _aws_elbv2_application_statistics_metrics, requirement=any
+    )
+
+
+check_plugin_aws_elbv2_application_statistics = CheckPlugin(
     name="aws_elbv2_application_statistics",
     service_name="AWS/ApplicationELB Statistics",
     sections=["aws_elbv2_application"],

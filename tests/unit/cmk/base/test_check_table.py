@@ -10,7 +10,12 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.config import EnforcedServicesTable, FilterMode, HostCheckTable
+from cmk.base.config import (
+    EnforcedServicesTable,
+    FilterMode,
+    HostCheckTable,
+    iter_skipped_services_warnings,
+)
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -20,11 +25,14 @@ from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
+    CheckPlugin,
     CheckPluginName,
+    LegacyPluginLocation,
+    ParsedSectionName,
     ServiceID,
 )
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
 # No stub file
@@ -39,6 +47,36 @@ class CheckingConfigTest(ABCCheckingConfig):
         self, host_name: HostName, item: object, service_labels: object, ruleset_name: object
     ) -> Sequence[Mapping[str, object]]:
         return self.rules.get(host_name, [])
+
+
+# Test-only check plug-ins. The tests below only ever read `service_name` and
+# `check_default_parameters` for `EnforcedServicesTable` lookups; they never
+# invoke `discovery_function` or `check_function`, so those are no-ops.
+def _make_plugin(
+    name: str, service_name: str, check_default_parameters: Mapping[str, object] | None
+) -> CheckPlugin:
+    return CheckPlugin(
+        name=CheckPluginName(name),
+        sections=[ParsedSectionName(name)],
+        service_name=service_name,
+        discovery_function=lambda *args, **kw: iter(()),
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type="merged",
+        check_function=lambda *args, **kw: iter(()),
+        check_default_parameters=check_default_parameters,
+        check_ruleset_name=None,
+        cluster_check_function=None,
+        location=LegacyPluginLocation(file_name="<test>"),
+    )
+
+
+_TEST_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPlugin] = {
+    CheckPluginName("smart_temp"): _make_plugin(
+        "smart_temp", "Temperature SMART %s", {"levels": (35, 40)}
+    ),
+    CheckPluginName("df"): _make_plugin("df", "Filesystem %s", None),
+}
 
 
 def test_cluster_ignores_nodes_parameters(
@@ -697,3 +735,126 @@ def test_check_table__static_checks_win(
     # assert static checks won
     effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
     assert effective_params["source"] == "static"
+
+
+def test_check_table_skips_services_with_invalid_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Services with invalid names must never be part of the check table.
+
+    The monitoring cores reject them during config creation. If they stayed
+    in the check table, the checker would submit results for services unknown
+    to the core, rendering all services of the host stale (CMK-33390).
+    """
+    hostname = HostName("invalid-names-host")
+    smart = CheckPluginName("smart_temp")
+    # "Temperature SMART " + item exceeds MAX_SERVICE_NAME_LEN
+    too_long_item = "x" * MAX_SERVICE_NAME_LEN
+
+    empty_name_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("df"),
+        item="stripped-to-nothing",
+        description="",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=True,
+    )
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_autochecks(
+        hostname,
+        [
+            AutocheckEntry(smart, "ok", {}, {}),
+            AutocheckEntry(smart, too_long_item, {}, {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+    )
+    service_configurer = config_cache.make_service_configurer(
+        _TEST_CHECK_PLUGINS, service_name_config
+    )
+
+    def enforced_services_table(
+        hn: HostName,
+    ) -> Mapping[ServiceID, tuple[object, ConfiguredService]]:
+        return {empty_name_service.id(): ("enforced", empty_name_service)}
+
+    chk_table = config_cache.check_table(
+        hostname,
+        _TEST_CHECK_PLUGINS,
+        service_configurer,
+        service_name_config,
+        enforced_services_table,
+    )
+
+    assert set(chk_table) == {ServiceID(smart, "ok")}
+    assert {s.id() for s in chk_table.skipped_services} == {
+        ServiceID(smart, too_long_item),
+        empty_name_service.id(),
+    }
+
+    # the cached table must be filtered in the same way
+    assert (
+        config_cache.check_table(
+            hostname,
+            _TEST_CHECK_PLUGINS,
+            service_configurer,
+            service_name_config,
+            enforced_services_table,
+        )
+        is chk_table
+    )
+
+
+def test_iter_skipped_services_warnings() -> None:
+    hostname = HostName("some-host")
+    too_long_name: str = "Temperature SMART " + "x" * MAX_SERVICE_NAME_LEN
+
+    valid_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("cpu_loads"),
+        item=None,
+        description="CPU load",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=False,
+    )
+    too_long_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("smart_temp"),
+        item="item",
+        description=too_long_name,
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=False,
+    )
+    empty_name_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("df"),
+        item="item",
+        description="",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=False,
+    )
+
+    table = HostCheckTable(
+        services=[valid_service, too_long_service, empty_name_service],
+    )
+
+    assert ServiceID(CheckPluginName("cpu_loads"), None) in table
+    assert ServiceID(CheckPluginName("smart_temp"), "item") not in table
+    assert ServiceID(CheckPluginName("df"), "item") not in table
+    assert list(iter_skipped_services_warnings(hostname, table.skipped_services)) == [
+        f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
+        f"(plugin: smart_temp) on host: {hostname}, Service: {too_long_name}",
+        f"Skipping invalid service with empty description (plugin: df) on host {hostname}",
+    ]

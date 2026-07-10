@@ -26,6 +26,7 @@ from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
     HostgroupName,
+    iter_skipped_services_warnings,
     ObjectAttributes,
     ServicegroupName,
 )
@@ -74,7 +75,7 @@ from cmk.utils.notify import (
 from cmk.utils.notify_types import Contact
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import TimeperiodSpecs
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
@@ -609,22 +610,12 @@ def _process_services_data(
         passive_service_name_config,
         enforced_services_table,
     )
+    for warning in iter_skipped_services_warnings(hostname, host_check_table.skipped_services):
+        config_warnings.warn(warning)
+
     services_ids: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
-        if not service.description:
-            config_warnings.warn(
-                f"Skipping invalid service with empty description (plugin: {service.check_plugin_name}) on host {hostname}"
-            )
-            continue
-
-        if len(service.description) > MAX_SERVICE_NAME_LEN:
-            config_warnings.warn(
-                f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
-                f"(plugin: {service.check_plugin_name}) on host: {hostname}, Service: {service.description}"
-            )
-            continue
-
         if service.description in services_ids:
             duplicate_service_warning(
                 checktype="auto",

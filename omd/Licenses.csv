@@ -236,7 +236,7 @@ Python module: feedparser,6.0.10,BSD-2-Clause,https://opensource.org/licenses/BS
 Python module: fido2,1.1.2,BSD-2-Clause AND MPL-2.0 AND Apache-2.0,"https://opensource.org/licenses/BSD-2-Clause
 https://opensource.org/licenses/MPL-2.0
 https://opensource.org/licenses/Apache-2.0",,
-Python module: flask,3.0.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: flask,3.1.3,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: frozenlist,1.5.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: gitdb,4.0.11,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: gitpython,3.1.43,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
@@ -262,7 +262,7 @@ Python module: idna,3.10,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clau
 Python module: idna,3.7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: idna,3.7,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: isodate,0.7.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
-Python module: itsdangerous,2.1.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: itsdangerous,2.2.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: jinja2,3.1.3,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: jira,3.5.0,BSD-2-Clause,https://opensource.org/licenses/BSD-2-Clause,,
 Python module: jmespath,1.0.1,MIT,https://opensource.org/licenses/MIT,,

@@ -331,6 +331,7 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 
 CEE_UNUSED_PACKAGES = [
+    "aiohttp",  # not imported directly; pinned to keep vcrpy 6.0.0's stubs working (see Pipfile)
     "cython",
     "grpcio",
     "itsdangerous",
@@ -338,6 +339,8 @@ CEE_UNUSED_PACKAGES = [
     "markupsafe",
     "more-itertools",
     "multidict",
+    "propcache",  # not imported directly; pinned to a version that builds under our setuptools<82 constraint (see Pipfile)
+    "yarl",  # not imported directly; pinned to a version that builds under our setuptools<82 constraint (see Pipfile)
     "oracledb",  # actually used now by check_sql but those files are not yet checked to to missing .py extension (CMK-21797)
     "pbr",
     "ply",

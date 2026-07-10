@@ -18,7 +18,7 @@
     "prettier": "prettier --write tests/ src/ *.json *.ts *.html"
   },
   "dependencies": {
-    "axios": "^1.7.9",
+    "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmk-shared-typing": "file:../cmk-shared-typing",

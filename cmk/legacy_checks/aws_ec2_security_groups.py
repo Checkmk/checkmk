@@ -3,17 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.aws.lib import parse_aws
-
-check_info = {}
 
 
 @dataclass(frozen=True)
@@ -34,29 +39,31 @@ def parse_aws_ec2_security_groups(string_table: StringTable) -> Sequence[Ec2Secu
     ]
 
 
-def discover_aws_ec2_security_groups(parsed: Sequence[Ec2SecurityGroup]):
-    if parsed:
-        yield None, {"groups": [group.group_id for group in parsed]}
+def discover_aws_ec2_security_groups(section: Sequence[Ec2SecurityGroup]) -> DiscoveryResult:
+    if section:
+        yield Service(parameters={"groups": [group.group_id for group in section]})
 
 
-def check_aws_ec2_security_groups(item, params, parsed: Sequence[Ec2SecurityGroup]):
-    for group in parsed:
-        state = 0
-        descr = group.description
-        if descr:
-            prefix = "[%s] " % descr
-        else:
-            prefix = ""
+def check_aws_ec2_security_groups(
+    params: Mapping[str, Any], section: Sequence[Ec2SecurityGroup]
+) -> CheckResult:
+    for group in section:
+        prefix = f"[{group.description}] " if group.description else ""
         infotext = f"{prefix}{group.group_name}: {group.group_id}"
         if group.group_id not in params["groups"]:
-            infotext += " (has changed)"
-            state = 2
-        yield state, infotext
+            yield Result(state=State.CRIT, summary=f"{infotext} (has changed)")
+        else:
+            yield Result(state=State.OK, summary=infotext)
 
 
-check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
+agent_section_aws_ec2_security_groups = AgentSection(
     name="aws_ec2_security_groups",
     parse_function=parse_aws_ec2_security_groups,
+)
+
+
+check_plugin_aws_ec2_security_groups = CheckPlugin(
+    name="aws_ec2_security_groups",
     service_name="AWS/EC2 Security Groups",
     discovery_function=discover_aws_ec2_security_groups,
     check_function=check_aws_ec2_security_groups,

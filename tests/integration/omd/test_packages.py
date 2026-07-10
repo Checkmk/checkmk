@@ -348,7 +348,8 @@ def test_mk_oracle_exotic_distros(distro: str, expectation: str, site: Site) -> 
     process = site.run(
         ["file", "-k", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
     )
-    assert expectation in process.stdout, process.stdout
+    normalized_stdout = process.stdout.replace("\\012- ", "")
+    assert expectation in normalized_stdout, process.stdout
 
 
 @pytest.mark.medium_test_chain

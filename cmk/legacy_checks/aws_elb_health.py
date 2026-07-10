@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.aws.lib import parse_aws
-
-check_info = {}
 
 AWSELBHealthMap = {
     "InService": "in service",
@@ -42,34 +46,39 @@ def parse_aws_elb_health(string_table: StringTable) -> ElbHealth | None:
     )
 
 
-def discover_aws_elb_health(section: ElbHealth | None):
+def discover_aws_elb_health(section: ElbHealth | None) -> DiscoveryResult:
     if section is not None:
-        yield None, {}
+        yield Service()
 
 
-def check_aws_elb_health(item, params, parsed: ElbHealth):
-    state_readable = AWSELBHealthMap[parsed.state]
+def check_aws_elb_health(section: ElbHealth | None) -> CheckResult:
+    if section is None:
+        return
+    state_readable = AWSELBHealthMap[section.state]
     if state_readable == "in service":
-        state = 0
+        state = State.OK
     elif state_readable == "out of service":
-        state = 1
+        state = State.WARN
     else:
-        state = 3
-    yield state, "Status: %s" % state_readable
-    yield 0, "Instance: %s" % parsed.instance_id
+        state = State.UNKNOWN
+    yield Result(state=state, summary=f"Status: {state_readable}")
+    yield Result(state=State.OK, summary=f"Instance: {section.instance_id}")
 
-    reason_code = parsed.reason_code
-    if reason_code not in [None, "", "N/A"]:
-        yield 0, "Reason: %s" % reason_code
+    if section.reason_code not in [None, "", "N/A"]:
+        yield Result(state=State.OK, summary=f"Reason: {section.reason_code}")
 
-    description = parsed.description
-    if description not in [None, "", "N/A"]:
-        yield 0, "Description: %s" % description
+    if section.description not in [None, "", "N/A"]:
+        yield Result(state=State.OK, summary=f"Description: {section.description}")
 
 
-check_info["aws_elb_health"] = LegacyCheckDefinition(
+agent_section_aws_elb_health = AgentSection(
     name="aws_elb_health",
     parse_function=parse_aws_elb_health,
+)
+
+
+check_plugin_aws_elb_health = CheckPlugin(
+    name="aws_elb_health",
     service_name="AWS/ELB Health ",
     discovery_function=discover_aws_elb_health,
     check_function=check_aws_elb_health,

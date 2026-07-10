@@ -3,20 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-# mypy: disable-error-code="var-annotated"
 
 import collections
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
 from cmk.plugins.aws.lib import parse_aws
-
-check_info = {}
 
 
 @dataclass(frozen=True)
@@ -52,70 +54,61 @@ def parse_aws_costs_and_usage(string_table: StringTable) -> Section:
 
 
 #   .--summary-------------------------------------------------------------.
-#   |                                                                      |
-#   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
-#   |          / __| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |            |
-#   |          \__ \ |_| | | | | | | | | | | | (_| | |  | |_| |            |
-#   |          |___/\__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |            |
-#   |                                                    |___/             |
-#   '----------------------------------------------------------------------'
 
 
-def discover_aws_costs_and_usage_summary(parsed):
-    if parsed:
-        return [("Summary", {})]
-    return []
+def discover_aws_costs_and_usage_summary(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service(item="Summary")
 
 
-def check_aws_costs_and_usage_summary(item, params, parsed: Section):
-    amounts_by_metrics = collections.defaultdict(float)
-    for (timeperiod, _service_name), metrics in parsed.items():
-        for (
-            title,
-            metric_name,
-            key,
-        ) in AWSCostAndUageMetrics:
+def check_aws_costs_and_usage_summary(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    amounts_by_metrics: dict[tuple[str, str, str, str], float] = collections.defaultdict(float)
+    for (timeperiod, _service_name), metrics in section.items():
+        for title, metric_name, key in AWSCostAndUageMetrics:
             metric = metrics[metric_name]
             amounts_by_metrics[(timeperiod, title, metric.unit, key)] += metric.amount
 
     for (timeperiod, title, unit, key), costs in amounts_by_metrics.items():
-        yield check_levels(
+        yield from check_levels_v1(
             costs,
-            "aws_costs_%s" % key,
-            params.get("levels_%s" % key, (None, None)),
-            infoname=f"({timeperiod}) Total {title} {unit}",
+            metric_name=f"aws_costs_{key}",
+            levels_upper=params.get(f"levels_{key}", (None, None)),
+            label=f"({timeperiod}) Total {title} {unit}",
         )
 
 
-check_info["aws_costs_and_usage"] = LegacyCheckDefinition(
+check_plugin_aws_costs_and_usage = CheckPlugin(
     name="aws_costs_and_usage",
-    parse_function=parse_aws_costs_and_usage,
     service_name="AWS/CE %s",
     discovery_function=discover_aws_costs_and_usage_summary,
     check_function=check_aws_costs_and_usage_summary,
     check_ruleset_name="aws_costs_and_usage",
+    check_default_parameters={},
 )
 
-# .
+
+agent_section_aws_costs_and_usage = AgentSection(
+    name="aws_costs_and_usage",
+    parse_function=parse_aws_costs_and_usage,
+)
+
+
 #   .--per service---------------------------------------------------------.
-#   |                                                _                     |
-#   |          _ __   ___ _ __   ___  ___ _ ____   _(_) ___ ___            |
-#   |         | '_ \ / _ \ '__| / __|/ _ \ '__\ \ / / |/ __/ _ \           |
-#   |         | |_) |  __/ |    \__ \  __/ |   \ V /| | (_|  __/           |
-#   |         | .__/ \___|_|    |___/\___|_|    \_/ |_|\___\___|           |
-#   |         |_|                                                          |
-#   '----------------------------------------------------------------------'
 
 
-def discover_aws_costs_and_usage_per_service(parsed):
-    for _timeperiod, service_name in parsed:
-        yield service_name, {}
+def discover_aws_costs_and_usage_per_service(section: Section) -> DiscoveryResult:
+    for _timeperiod, service_name in section:
+        yield Service(item=service_name)
 
 
-def check_aws_costs_and_usage_per_service(item, params, parsed: Section):
+def check_aws_costs_and_usage_per_service(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     data = None
     timeperiod = None
-    for (timeperiod, service_name), metrics in parsed.items():
+    for (timeperiod, service_name), metrics in section.items():
         if item == service_name:
             data = metrics
             break
@@ -124,19 +117,20 @@ def check_aws_costs_and_usage_per_service(item, params, parsed: Section):
 
     for title, metric_name, key in AWSCostAndUageMetrics:
         metric = data[metric_name]
-        yield check_levels(
+        yield from check_levels_v1(
             metric.amount,
-            "aws_costs_%s" % key,
-            params.get("levels_%s" % key, (None, None)),
-            infoname=f"({timeperiod}) {title} {metric.unit}",
+            metric_name=f"aws_costs_{key}",
+            levels_upper=params.get(f"levels_{key}", (None, None)),
+            label=f"({timeperiod}) {title} {metric.unit}",
         )
 
 
-check_info["aws_costs_and_usage.per_service"] = LegacyCheckDefinition(
+check_plugin_aws_costs_and_usage_per_service = CheckPlugin(
     name="aws_costs_and_usage_per_service",
     service_name="AWS/CE %s",
     sections=["aws_costs_and_usage"],
     discovery_function=discover_aws_costs_and_usage_per_service,
     check_function=check_aws_costs_and_usage_per_service,
     check_ruleset_name="aws_costs_and_usage",
+    check_default_parameters={},
 )

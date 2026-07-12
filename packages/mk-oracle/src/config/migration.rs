@@ -61,6 +61,7 @@ struct LegacyCustomSql {
     dir: Option<String>,
     sql_file: String,
     sids: Vec<String>,
+    tns_alias: Option<String>,
 }
 
 fn optional_value(s: &str) -> Option<String> {
@@ -184,6 +185,9 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                     .cloned(),
                 sql_file: sql_file.clone(),
                 sids: parse_custom_sql_sids(name, &raw_sids, variables),
+                // no global fallback: the legacy plugin unsets SQLS_TNSALIAS
+                // before each section and never saves a global value
+                tns_alias: section_var("SQLS_TNSALIAS").cloned(),
             })
         })
         .collect()
@@ -410,18 +414,22 @@ fn format_instances(
 ) -> Vec<String> {
     let mut lines = vec!["    instances:\n".to_string()];
     let mut known_sids: Vec<&str> = Vec::new();
+    let mut known_aliases: Vec<&str> = Vec::new();
     let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
         let sid = entry.sid.as_deref().unwrap_or(&entry.alias_or_sid);
         known_sids.push(sid);
         lines.push(format!("      - sid: {sid}\n"));
-        if entry.sid.is_some() && entry.alias_or_sid == "$ORACLE_SID" {
+        let alias = if entry.sid.is_some() && entry.alias_or_sid == "$ORACLE_SID" {
             // sid known from variable name suffix, no explicit alias needed
+            None
         } else {
             lines.push(format!("        alias: {}\n", entry.alias_or_sid));
-        }
+            known_aliases.push(&entry.alias_or_sid);
+            Some(entry.alias_or_sid.as_str())
+        };
         if entry.sid.is_none() {
-            lines.extend(instance_custom_metrics(custom_sqls, sid));
+            lines.extend(instance_custom_metrics(custom_sqls, Some(sid), alias));
             continue;
         }
 
@@ -448,34 +456,65 @@ fn format_instances(
                 lines.push(format!("          role: {}\n", role.to_lowercase()));
             }
         }
-        lines.extend(instance_custom_metrics(custom_sqls, sid));
+        lines.extend(instance_custom_metrics(custom_sqls, Some(sid), alias));
     }
-    // SIDs only referenced by SQLS_SIDS need an own entry to carry the metrics
-    for sid in custom_sql_only_sids(custom_sqls, &known_sids) {
+    // SIDs and aliases only referenced by SQLS_SIDS/SQLS_TNSALIAS need an
+    // own entry to carry the metrics
+    let (sids, aliases) =
+        custom_sql_only_sids_and_aliases(custom_sqls, &known_sids, &known_aliases);
+    for sid in sids {
         lines.push(format!("      - sid: {sid}\n"));
-        lines.extend(instance_custom_metrics(custom_sqls, &sid));
+        lines.extend(instance_custom_metrics(custom_sqls, Some(&sid), None));
+    }
+    for alias in aliases {
+        lines.push(format!("      - alias: {alias}\n"));
+        lines.extend(instance_custom_metrics(custom_sqls, None, Some(&alias)));
     }
     lines
 }
 
-fn instance_custom_metrics(custom_sqls: &[LegacyCustomSql], sid: &str) -> Vec<String> {
+fn instance_custom_metrics(
+    custom_sqls: &[LegacyCustomSql],
+    sid: Option<&str>,
+    alias: Option<&str>,
+) -> Vec<String> {
     let metrics: Vec<&LegacyCustomSql> = custom_sqls
         .iter()
-        .filter(|c| c.sids.iter().any(|s| s == sid))
+        .filter(|c| match &c.tns_alias {
+            // a TNS alias overrides the connect string in the legacy plugin,
+            // so the metric belongs to exactly one instance: the aliased one
+            Some(tns_alias) => alias == Some(tns_alias.as_str()),
+            None => sid.is_some_and(|sid| c.sids.iter().any(|s| s == sid)),
+        })
         .collect();
     format_custom_metric_entries(&metrics, "        ")
 }
 
-/// SIDs referenced by custom SQL sections without a matching instance entry
-fn custom_sql_only_sids(custom_sqls: &[LegacyCustomSql], known: &[&str]) -> Vec<String> {
-    let mut seen = HashSet::new();
-    custom_sqls
+/// SIDs and TNS aliases referenced by custom SQL sections without a matching
+/// instance entry; a section with a TNS alias contributes only the alias
+fn custom_sql_only_sids_and_aliases(
+    custom_sqls: &[LegacyCustomSql],
+    known_sids: &[&str],
+    known_aliases: &[&str],
+) -> (Vec<String>, Vec<String>) {
+    let mut seen_sids = HashSet::new();
+    let mut seen_aliases = HashSet::new();
+    let sids = custom_sqls
         .iter()
+        .filter(|c| c.tns_alias.is_none())
         .flat_map(|c| &c.sids)
-        .filter(|sid| !known.contains(&sid.as_str()))
-        .filter(|sid| seen.insert(sid.as_str()))
+        .filter(|sid| !known_sids.contains(&sid.as_str()))
+        .filter(|sid| seen_sids.insert(sid.as_str()))
         .cloned()
-        .collect()
+        .collect();
+    let aliases = custom_sqls
+        .iter()
+        .filter_map(|c| c.tns_alias.as_deref())
+        .filter(|alias| !known_aliases.contains(alias))
+        .filter(|alias| seen_aliases.insert(*alias))
+        .map(String::from)
+        .collect();
+    (sids, aliases)
 }
 
 fn format_sections(
@@ -508,9 +547,12 @@ fn format_sections(
     lines
 }
 
-/// Sections without a SID restriction apply to all instances → global level
+/// Sections without a SID or TNS alias restriction apply to all instances → global level
 fn format_custom_metrics(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
-    let global: Vec<&LegacyCustomSql> = custom_sqls.iter().filter(|c| c.sids.is_empty()).collect();
+    let global: Vec<&LegacyCustomSql> = custom_sqls
+        .iter()
+        .filter(|c| c.sids.is_empty() && c.tns_alias.is_none())
+        .collect();
     format_custom_metric_entries(&global, "    ")
 }
 
@@ -925,6 +967,7 @@ mod tests {
                 dir: Some("/etc/check_mk".into()),
                 sql_file: "MyCustomSQL.sql".into(),
                 sids: vec!["MYINST3".into()],
+                tns_alias: None,
             }]
         );
     }
@@ -944,6 +987,7 @@ mod tests {
                 dir: Some("/global/dir".into()),
                 sql_file: "global.sql".into(),
                 sids: vec![],
+                tns_alias: None,
             }]
         );
     }
@@ -1032,6 +1076,7 @@ sec3 () {
             dir: dir.map(String::from),
             sql_file: sql_file.into(),
             sids: sids.iter().map(|s| s.to_string()).collect(),
+            tns_alias: None,
         }
     }
 
@@ -1059,6 +1104,61 @@ sec3 () {
             !out.contains("sid_sec"),
             "restricted metric must not be global"
         );
+    }
+
+    #[test]
+    fn test_format_custom_metrics_skips_tnsalias_restricted() {
+        let mut restricted = make_custom_sql("alias_sec", None, "b.sql", &[]);
+        restricted.tns_alias = Some("PROD".into());
+        let out: String = format_custom_metrics(&[restricted]).join("");
+        assert!(out.is_empty(), "alias-restricted metric must not be global");
+    }
+
+    #[test]
+    fn test_format_instances_tnsalias_attaches_to_existing_alias() {
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, "$ORACLE_SID");
+        let xe = make_dbuser(Some("XE"), "", "", "", None, None, "PROD");
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &[]);
+        custom.tns_alias = Some("PROD".into());
+        let out: String = format_instances(&dbuser, &[xe], &[custom]).join("");
+        assert!(out.contains(
+            "      - sid: XE\n        alias: PROD\n        custom_metrics:\n          - sec1:\n              path: a.sql\n"
+        ), "got: {out}");
+        assert!(
+            !out.contains("      - alias: PROD\n"),
+            "no extra instance for an already known alias"
+        );
+    }
+
+    #[test]
+    fn test_format_instances_tnsalias_creates_shared_alias_entry() {
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, "$ORACLE_SID");
+        let mut c1 = make_custom_sql("sec1", None, "a.sql", &[]);
+        c1.tns_alias = Some("REPORTING".into());
+        let mut c2 = make_custom_sql("sec2", None, "b.sql", &[]);
+        c2.tns_alias = Some("REPORTING".into());
+        let out: String = format_instances(&dbuser, &[], &[c1, c2]).join("");
+        assert_eq!(
+            out.matches("      - alias: REPORTING\n").count(),
+            1,
+            "shared alias entry must be created once, got: {out}"
+        );
+        assert!(out.contains(
+            "      - alias: REPORTING\n        custom_metrics:\n          - sec1:\n              path: a.sql\n          - sec2:\n              path: b.sql\n"
+        ), "got: {out}");
+    }
+
+    #[test]
+    fn test_format_instances_tnsalias_takes_precedence_over_sids() {
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, "$ORACLE_SID");
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE"]);
+        custom.tns_alias = Some("PROD".into());
+        let out: String = format_instances(&dbuser, &[], &[custom]).join("");
+        assert!(
+            !out.contains("- sid: XE"),
+            "no SID entry when the metric is pinned to a TNS alias"
+        );
+        assert!(out.contains("      - alias: PROD\n        custom_metrics:\n"));
     }
 
     // Run this test only on Linux since on Windows the legacy plugin
@@ -1108,6 +1208,40 @@ sec3 () {
             assert_eq!(metrics[0].item_value().unwrap().as_str(), "myscn");
             assert_eq!(metrics[0].path(), Some(Path::new("c.sql")));
         }
+    }
+
+    // Run this test only on Linux since on Windows the legacy plugin
+    // doesn't support custom SQL sections and the test would fail.
+    #[cfg(unix)]
+    #[test]
+    fn test_convert_custom_metrics_tnsalias_attaches_to_alias_instance() {
+        let legacy = "myscn () {\n    SQLS_TNSALIAS=\"PROD_ALIAS\"\n    SQLS_SQL=\"c.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("SQLS_SECTIONS".into(), "myscn".into()),
+            ("SQLS.myscn.SQLS_TNSALIAS".into(), "PROD_ALIAS".into()),
+            ("SQLS.myscn.SQLS_SQL".into(), "c.sql".into()),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        // no global custom metric
+        assert!(!ms.all_sections().iter().any(|s| s.is_custom_metric()));
+
+        let inst = ms
+            .instances()
+            .iter()
+            .find(|i| i.alias() == &Some("PROD_ALIAS".to_string().into()))
+            .expect("instance with TNS alias must exist");
+        assert!(
+            inst.standalone_sid().is_none(),
+            "alias-only instance must have no sid"
+        );
+        let metrics = inst.custom_metrics();
+        assert_eq!(metrics.len(), 1);
+        assert_eq!(metrics[0].item_value().unwrap().as_str(), "myscn");
+        assert_eq!(metrics[0].path(), Some(Path::new("c.sql")));
     }
 
     #[test]

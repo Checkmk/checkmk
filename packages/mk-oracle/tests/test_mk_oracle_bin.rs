@@ -449,7 +449,7 @@ fn test_execute_config_custom_sqls() {
     // variables set inside the section function are extracted per section
     assert_eq!(
         vars["SQLS_SECTIONS"],
-        "mycustomsection1 mycustomsection2 mycustomsection3 mycustomsection4"
+        "mycustomsection1 mycustomsection2 mycustomsection3 mycustomsection4 mycustomsection5"
     );
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SIDS"], "MYINST3");
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_DIR"], "/etc/check_mk");
@@ -462,6 +462,8 @@ fn test_execute_config_custom_sqls() {
     assert!(!vars.contains_key("SQLS.mycustomsection3.SQLS_SIDS"));
     assert_eq!(vars["SQLS.mycustomsection4.SQLS_SIDS"], "MYINST3 MYINST2");
     assert_eq!(vars["SQLS.mycustomsection4.SQLS_SQL"], "custom_sql_2.sql");
+    assert_eq!(vars["SQLS.mycustomsection5.SQLS_TNSALIAS"], "TNS");
+    assert_eq!(vars["SQLS.mycustomsection5.SQLS_SQL"], "custom_sql_2.sql");
 }
 
 #[test]
@@ -506,15 +508,15 @@ fn test_migrate_reference_config_connection_and_auth() {
     assert_eq!(auth.auth_type().to_string(), "standard");
     assert!(auth.role().is_none(), "empty role must be None");
 
-    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2, REMOTE_INSTANCE_1 and
-    // MYINST2 from static SQLS_SIDS (both Linux only)
+    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2, REMOTE_INSTANCE_1,
+    // MYINST2 from static SQLS_SIDS and TNS from SQLS_TNSALIAS (Linux only)
     // DBUSER with $ORACLE_SID is skipped: env var absent at load time
     let instances = ora.instances();
     #[cfg(not(windows))]
     assert_eq!(
         instances.len(),
-        4,
-        "must have 4 instances from DBUSER_XE1 + DBUSER_XE2 + REMOTE_INSTANCE_1 + MYINST2"
+        5,
+        "must have 5 instances from DBUSER_XE1 + DBUSER_XE2 + REMOTE_INSTANCE_1 + MYINST2 + TNS"
     );
     #[cfg(windows)]
     assert_eq!(
@@ -675,6 +677,22 @@ fn test_migrate_reference_config_custom_metrics() {
                 "mycustomsection4".to_string(),
                 Some(Path::new("custom_sql_2.sql"))
             )]
+        );
+
+        // SQLS_TNSALIAS pins the metric to the aliased instance,
+        // its SQLS_SIDS is ignored
+        assert_eq!(
+            custom_metrics_of("TNS"),
+            [(
+                "mycustomsection5".to_string(),
+                Some(Path::new("custom_sql_2.sql"))
+            )]
+        );
+        assert!(
+            !ora.instances()
+                .iter()
+                .any(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("NOT_USED")),
+            "SQLS_SIDS must be ignored when SQLS_TNSALIAS is set"
         );
     }
 }

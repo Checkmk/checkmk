@@ -456,6 +456,10 @@ fn test_execute_config_custom_sqls() {
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SQL"], "MyCustomSQL.sql");
     // section 1 values must not leak into section 2
     assert_eq!(vars["SQLS.mycustomsection2.SQLS_SQL"], "OtherSQL.sql");
+    assert_eq!(
+        vars["SQLS.mycustomsection2.SQLS_SECTION_NAME"],
+        "my_custom_section"
+    );
     assert!(!vars.contains_key("SQLS.mycustomsection2.SQLS_DIR"));
     // SQLS_SIDS=$(...) evaluates to empty during extraction (AWK/GREP unset)
     assert_eq!(vars["SQLS.mycustomsection3.SQLS_SQL"], "custom_sql.sql");
@@ -641,6 +645,14 @@ fn test_migrate_reference_config_custom_metrics() {
                 ("mycustomsection2", Some(Path::new("OtherSQL.sql"))),
                 ("mycustomsection3", Some(Path::new("custom_sql.sql"))),
             ]
+        );
+
+        // SQLS_SECTION_NAME is migrated as-is (runtime support comes separately)
+        assert!(
+            stdout.contains(
+                "      - mycustomsection2:\n          path: OtherSQL.sql\n          header_name: my_custom_section\n"
+            ),
+            "got: {stdout}"
         );
 
         // static SQLS_SIDS → custom_metrics on the matching instances,

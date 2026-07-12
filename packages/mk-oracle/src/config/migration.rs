@@ -62,6 +62,7 @@ struct LegacyCustomSql {
     sql_file: String,
     sids: Vec<String>,
     tns_alias: Option<String>,
+    header_name: Option<String>,
 }
 
 fn optional_value(s: &str) -> Option<String> {
@@ -188,6 +189,12 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                 // no global fallback: the legacy plugin unsets SQLS_TNSALIAS
                 // before each section and never saves a global value
                 tns_alias: section_var("SQLS_TNSALIAS").cloned(),
+                // no global fallback either (hardcoded to "oracle_sql" in the
+                // legacy plugin); the default value means default output
+                // section, so only a custom name is kept
+                header_name: section_var("SQLS_SECTION_NAME")
+                    .filter(|v| v.as_str() != "oracle_sql")
+                    .cloned(),
             })
         })
         .collect()
@@ -568,6 +575,9 @@ fn format_custom_metric_entries(metrics: &[&LegacyCustomSql], indent: &str) -> V
         };
         lines.push(format!("{indent}  - {}:\n", custom.name));
         lines.push(format!("{indent}      path: {path}\n"));
+        if let Some(header_name) = &custom.header_name {
+            lines.push(format!("{indent}      header_name: {header_name}\n"));
+        }
     }
     lines
 }
@@ -968,6 +978,7 @@ mod tests {
                 sql_file: "MyCustomSQL.sql".into(),
                 sids: vec!["MYINST3".into()],
                 tns_alias: None,
+                header_name: None,
             }]
         );
     }
@@ -988,6 +999,7 @@ mod tests {
                 sql_file: "global.sql".into(),
                 sids: vec![],
                 tns_alias: None,
+                header_name: None,
             }]
         );
     }
@@ -1046,6 +1058,22 @@ sec2 () {
     }
 
     #[test]
+    fn test_parse_custom_sqls_header_name() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS.sec1.SQLS_SECTION_NAME".into(), "my_section".into()),
+            ("SQLS.sec2.SQLS_SECTION_NAME".into(), "oracle_sql".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(result[0].header_name.as_deref(), Some("my_section"));
+        assert!(
+            result[1].header_name.is_none(),
+            "default 'oracle_sql' must not produce a header_name field"
+        );
+    }
+
+    #[test]
     fn test_collect_raw_sqls_sids() {
         let legacy = r#"SQLS_SIDS='TOP1 TOP2'
 sec1 () {
@@ -1077,6 +1105,7 @@ sec3 () {
             sql_file: sql_file.into(),
             sids: sids.iter().map(|s| s.to_string()).collect(),
             tns_alias: None,
+            header_name: None,
         }
     }
 
@@ -1112,6 +1141,17 @@ sec3 () {
         restricted.tns_alias = Some("PROD".into());
         let out: String = format_custom_metrics(&[restricted]).join("");
         assert!(out.is_empty(), "alias-restricted metric must not be global");
+    }
+
+    #[test]
+    fn test_format_custom_metrics_header_name() {
+        let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
+        custom.header_name = Some("my_section".into());
+        let out: String = format_custom_metrics(&[custom]).join("");
+        assert!(
+            out.contains("          path: query.sql\n          header_name: my_section\n"),
+            "got: {out}"
+        );
     }
 
     #[test]
@@ -1242,6 +1282,32 @@ sec3 () {
         assert_eq!(metrics.len(), 1);
         assert_eq!(metrics[0].item_value().unwrap().as_str(), "myscn");
         assert_eq!(metrics[0].path(), Some(Path::new("c.sql")));
+    }
+
+    // Run this test only on Linux since on Windows the legacy plugin
+    // doesn't support custom SQL sections and the test would fail.
+    #[cfg(unix)]
+    #[test]
+    fn test_convert_custom_metrics_header_name_in_yaml() {
+        let legacy =
+            "myscn () {\n    SQLS_SECTION_NAME=\"my_section\"\n    SQLS_SQL=\"c.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("SQLS_SECTIONS".into(), "myscn".into()),
+            ("SQLS.myscn.SQLS_SECTION_NAME".into(), "my_section".into()),
+            ("SQLS.myscn.SQLS_SQL".into(), "c.sql".into()),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains(
+                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n"
+            ),
+            "got: {result}"
+        );
+        // the loader must tolerate the header_name key (support comes later)
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        assert!(config.ora_sql().is_some());
     }
 
     #[test]

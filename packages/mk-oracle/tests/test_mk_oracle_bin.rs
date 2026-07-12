@@ -460,6 +460,7 @@ fn test_execute_config_custom_sqls() {
         vars["SQLS.mycustomsection2.SQLS_SECTION_NAME"],
         "my_custom_section"
     );
+    assert_eq!(vars["SQLS.mycustomsection2.SQLS_SECTION_SEP"], "124");
     assert!(!vars.contains_key("SQLS.mycustomsection2.SQLS_DIR"));
     // SQLS_SIDS=$(...) evaluates to empty during extraction (AWK/GREP unset)
     assert_eq!(vars["SQLS.mycustomsection3.SQLS_SQL"], "custom_sql.sql");
@@ -647,10 +648,11 @@ fn test_migrate_reference_config_custom_metrics() {
             ]
         );
 
-        // SQLS_SECTION_NAME is migrated as-is (runtime support comes separately)
+        // SQLS_SECTION_NAME/SQLS_SECTION_SEP are migrated as-is
+        // (runtime support comes separately)
         assert!(
             stdout.contains(
-                "      - mycustomsection2:\n          path: OtherSQL.sql\n          header_name: my_custom_section\n"
+                "      - mycustomsection2:\n          path: OtherSQL.sql\n          header_name: my_custom_section\n          header_sep: \"|\"\n"
             ),
             "got: {stdout}"
         );

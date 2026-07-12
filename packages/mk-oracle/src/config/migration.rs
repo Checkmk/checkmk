@@ -63,6 +63,7 @@ struct LegacyCustomSql {
     sids: Vec<String>,
     tns_alias: Option<String>,
     header_name: Option<String>,
+    header_sep: Option<char>,
 }
 
 fn optional_value(s: &str) -> Option<String> {
@@ -195,9 +196,26 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                 header_name: section_var("SQLS_SECTION_NAME")
                     .filter(|v| v.as_str() != "oracle_sql")
                     .cloned(),
+                header_sep: section_var("SQLS_SECTION_SEP")
+                    .or_else(|| variables.get("SQLS_SECTION_SEP"))
+                    .and_then(|v| parse_header_sep(name, v)),
             })
         })
         .collect()
+}
+
+/// Convert a legacy SQLS_SECTION_SEP (an ASCII code, e.g. "124") to the
+/// separator character used by the `header_sep:` field.
+fn parse_header_sep(section: &str, value: &str) -> Option<char> {
+    let sep = value
+        .parse::<u8>()
+        .ok()
+        .map(char::from)
+        .filter(|c| (' '..='~').contains(c) && *c != '"' && *c != '\\');
+    if sep.is_none() {
+        log::warn!("{section}: SQLS_SECTION_SEP '{value}' is not a printable ASCII code, ignoring");
+    }
+    sep
 }
 
 /// SIDs a custom SQL section is restricted to, empty means all instances.
@@ -577,6 +595,10 @@ fn format_custom_metric_entries(metrics: &[&LegacyCustomSql], indent: &str) -> V
         lines.push(format!("{indent}      path: {path}\n"));
         if let Some(header_name) = &custom.header_name {
             lines.push(format!("{indent}      header_name: {header_name}\n"));
+            // the legacy plugin uses the separator only together with a custom section name
+            if let Some(sep) = custom.header_sep {
+                lines.push(format!("{indent}      header_sep: \"{sep}\"\n"));
+            }
         }
     }
     lines
@@ -702,6 +724,7 @@ const KNOWN_VARIABLES: &[&str] = &[
     "SQLS_SQL",
     "SQLS_PARAMETERS",
     "SQLS_SECTION_NAME",
+    "SQLS_SECTION_SEP",
     "SQLS_MAX_CACHE_AGE",
 ];
 
@@ -979,6 +1002,7 @@ mod tests {
                 sids: vec!["MYINST3".into()],
                 tns_alias: None,
                 header_name: None,
+                header_sep: None,
             }]
         );
     }
@@ -1000,6 +1024,7 @@ mod tests {
                 sids: vec![],
                 tns_alias: None,
                 header_name: None,
+                header_sep: None,
             }]
         );
     }
@@ -1074,6 +1099,28 @@ sec2 () {
     }
 
     #[test]
+    fn test_parse_custom_sqls_section_sep() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2 sec3".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS_SECTION_SEP".into(), "59".into()),
+            ("SQLS.sec1.SQLS_SECTION_SEP".into(), "124".into()),
+            ("SQLS.sec3.SQLS_SECTION_SEP".into(), "not-a-number".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(result[0].header_sep, Some('|'));
+        assert_eq!(
+            result[1].header_sep,
+            Some(';'),
+            "top-level SQLS_SECTION_SEP is a global fallback"
+        );
+        assert!(
+            result[2].header_sep.is_none(),
+            "invalid ASCII code must be ignored"
+        );
+    }
+
+    #[test]
     fn test_collect_raw_sqls_sids() {
         let legacy = r#"SQLS_SIDS='TOP1 TOP2'
 sec1 () {
@@ -1106,6 +1153,7 @@ sec3 () {
             sids: sids.iter().map(|s| s.to_string()).collect(),
             tns_alias: None,
             header_name: None,
+            header_sep: None,
         }
     }
 
@@ -1151,6 +1199,29 @@ sec3 () {
         assert!(
             out.contains("          path: query.sql\n          header_name: my_section\n"),
             "got: {out}"
+        );
+    }
+
+    #[test]
+    fn test_format_custom_metrics_section_sep() {
+        let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
+        custom.header_name = Some("my_section".into());
+        custom.header_sep = Some('|');
+        let out: String = format_custom_metrics(&[custom]).join("");
+        assert!(
+            out.contains("          header_name: my_section\n          header_sep: \"|\"\n"),
+            "got: {out}"
+        );
+    }
+
+    #[test]
+    fn test_format_custom_metrics_section_sep_needs_section_name() {
+        let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
+        custom.header_sep = Some('|');
+        let out: String = format_custom_metrics(&[custom]).join("");
+        assert!(
+            !out.contains("header_sep:"),
+            "sep has no effect on the default oracle_sql section, got: {out}"
         );
     }
 
@@ -1290,21 +1361,22 @@ sec3 () {
     #[test]
     fn test_convert_custom_metrics_header_name_in_yaml() {
         let legacy =
-            "myscn () {\n    SQLS_SECTION_NAME=\"my_section\"\n    SQLS_SQL=\"c.sql\"\n}\n";
+            "myscn () {\n    SQLS_SECTION_NAME=\"my_section\"\n    SQLS_SECTION_SEP=124\n    SQLS_SQL=\"c.sql\"\n}\n";
         let vars = HashMap::from([
             ("DBUSER".into(), "checkmk:secret::::".into()),
             ("SQLS_SECTIONS".into(), "myscn".into()),
             ("SQLS.myscn.SQLS_SECTION_NAME".into(), "my_section".into()),
+            ("SQLS.myscn.SQLS_SECTION_SEP".into(), "124".into()),
             ("SQLS.myscn.SQLS_SQL".into(), "c.sql".into()),
         ]);
         let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
         assert!(
             result.contains(
-                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n"
+                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n          header_sep: \"|\"\n"
             ),
             "got: {result}"
         );
-        // the loader must tolerate the header_name key (support comes later)
+        // the loader must tolerate the header_name/sep keys (support comes later)
         let config =
             super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
         assert!(config.ora_sql().is_some());

@@ -181,7 +181,11 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                 return None;
             };
             Some(LegacyCustomSql {
-                name: name.to_string(),
+                // SQLS_ITEM_NAME overrides the name used as [[[<sid>|<name>]]]
+                // output item; can only be set within a section
+                name: section_var("SQLS_ITEM_NAME")
+                    .cloned()
+                    .unwrap_or_else(|| name.to_string()),
                 dir: section_var("SQLS_DIR")
                     .or_else(|| variables.get("SQLS_DIR"))
                     .cloned(),
@@ -1096,6 +1100,18 @@ sec2 () {
             result[1].header_name.is_none(),
             "default 'oracle_sql' must not produce a header_name field"
         );
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_item_name() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS.sec1.SQLS_ITEM_NAME".into(), "my_item".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(result[0].name, "my_item");
+        assert_eq!(result[1].name, "sec2", "default is the section name");
     }
 
     #[test]

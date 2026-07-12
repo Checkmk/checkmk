@@ -454,6 +454,7 @@ fn test_execute_config_custom_sqls() {
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SIDS"], "MYINST3");
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_DIR"], "/etc/check_mk");
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SQL"], "MyCustomSQL.sql");
+    assert_eq!(vars["SQLS.mycustomsection1.SQLS_ITEM_NAME"], "my_item");
     // section 1 values must not leak into section 2
     assert_eq!(vars["SQLS.mycustomsection2.SQLS_SQL"], "OtherSQL.sql");
     assert_eq!(
@@ -675,8 +676,9 @@ fn test_migrate_reference_config_custom_metrics() {
         assert_eq!(
             custom_metrics_of("MYINST3"),
             [
+                // SQLS_ITEM_NAME renames mycustomsection1 to my_item
                 (
-                    "mycustomsection1".to_string(),
+                    "my_item".to_string(),
                     Some(Path::new("/etc/check_mk/MyCustomSQL.sql"))
                 ),
                 (

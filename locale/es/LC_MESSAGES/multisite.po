@@ -14166,6 +14166,9 @@ msgstr "Checkmk: BI"
 msgid "Checkmk: Search: Secs"
 msgstr "Checkmk: BI"
 
+msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk: Setup: Bytes"
 msgstr "Checkmk: BI"
@@ -92696,6 +92699,15 @@ msgstr ""
 
 msgid "You are not permitted to view this page"
 msgstr "No tiene permiso para ver esta página"
+
+msgid ""
+"You are receiving this advisory because you are a contact of affected hosts."
+"<br><br>The agent updates for some of your hosts are signed with agent "
+"signature keys that have expired or are about to expire. Once a key has "
+"expired, the affected hosts reject agent updates signed with it, so the "
+"Checkmk agent on these hosts can no longer be updated automatically. Please "
+"contact your Checkmk administrator to renew the agent signature keys."
+msgstr ""
 
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Está intentando editar una regla que ya no existe."

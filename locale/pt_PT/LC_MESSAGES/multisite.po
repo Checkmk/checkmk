@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-10 14:02+0000\n"
+"PO-Revision-Date: 2026-07-11 18:01+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -14087,6 +14087,9 @@ msgstr "Checkmk: BI"
 #, fuzzy
 msgid "Checkmk: Search: Secs"
 msgstr "Checkmk: BI"
+
+msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk: Setup: Bytes"
@@ -91925,6 +91928,15 @@ msgstr ""
 
 msgid "You are not permitted to view this page"
 msgstr "Não tem permissão para visualizar esta página"
+
+msgid ""
+"You are receiving this advisory because you are a contact of affected hosts."
+"<br><br>The agent updates for some of your hosts are signed with agent "
+"signature keys that have expired or are about to expire. Once a key has "
+"expired, the affected hosts reject agent updates signed with it, so the "
+"Checkmk agent on these hosts can no longer be updated automatically. Please "
+"contact your Checkmk administrator to renew the agent signature keys."
+msgstr ""
 
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Você está tentando editar uma regra que não existe mais."

@@ -13413,6 +13413,9 @@ msgstr "Checkmk: Setup: Requests"
 msgid "Checkmk: Search: Secs"
 msgstr "Checkmk: Setup: Secs"
 
+msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
+msgstr ""
+
 msgid "Checkmk: Setup: Bytes"
 msgstr "Checkmk: Setup: Bytes"
 
@@ -87074,6 +87077,15 @@ msgstr ""
 
 msgid "You are not permitted to view this page"
 msgstr "このページを閲覧することは許可されていません"
+
+msgid ""
+"You are receiving this advisory because you are a contact of affected hosts."
+"<br><br>The agent updates for some of your hosts are signed with agent "
+"signature keys that have expired or are about to expire. Once a key has "
+"expired, the affected hosts reject agent updates signed with it, so the "
+"Checkmk agent on these hosts can no longer be updated automatically. Please "
+"contact your Checkmk administrator to renew the agent signature keys."
+msgstr ""
 
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "存在しないルールを編集しようとしています。"

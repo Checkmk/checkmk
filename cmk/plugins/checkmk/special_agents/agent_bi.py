@@ -251,8 +251,24 @@ class AggregationRawdataGenerator:
             },
             timeout=900,
         )
+
+        if response.status_code == 503:
+            # BI aggregations are compiled asynchronously (see cmk.gui.bi._openapi); the
+            # endpoint returns 503 with a human-readable `detail` while compilation is
+            # still pending. Surface that message instead of the generic HTTP error text,
+            # since this is an expected, self-resolving condition, not a connection error.
+            raise RawdataException(self._get_error_detail(response))
+
         response.raise_for_status()
         return response.text
+
+    @staticmethod
+    def _get_error_detail(response: requests.Response) -> str:
+        try:
+            detail = response.json().get("detail")
+        except ValueError:
+            detail = None
+        return detail or f"{response.status_code} Server Error: {response.reason}"
 
     def _parse_response_text(self, response_text: str) -> dict[str, Any]:
         try:

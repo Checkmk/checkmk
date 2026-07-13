@@ -6,8 +6,21 @@
 # mypy: disable-error-code="type-arg"
 
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 import pytest
 
+from cmk.bi.aggregation_functions import BIAggregationFunctionWorst
+from cmk.bi.filesystem import get_default_site_filesystem
+from cmk.bi.lib import BIAggregationComputationOptions, BIAggregationGroups
+from cmk.bi.packs import BIAggregationPacks
+from cmk.bi.rule_interface import BIRuleProperties
+from cmk.bi.storage import AggregationStore
+from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
+from cmk.bi.type_defs import ComputationConfigDict
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import SetConfig
@@ -447,8 +460,53 @@ def test_delete_non_existent_pack(clients: ClientRegistry) -> None:
     ).assert_status_code(404)
 
 
+_AGGREGATION_TITLE = "Host heute"
+
+
+@contextmanager
+def _stored_compiled_aggregation() -> Iterator[None]:
+    """Put a compiled aggregation into the store, as the background compilation job would."""
+    branch = BICompiledRule(
+        rule_id="host",
+        pack_id="default",
+        nodes=[BICompiledLeaf(host_name=HostName("heute"), site_id="NO_SITE")],
+        required_hosts=[(SiteId("NO_SITE"), HostName("heute"))],
+        properties=BIRuleProperties(
+            {
+                "title": _AGGREGATION_TITLE,
+                "comment": "",
+                "docu_url": "",
+                "icon": "",
+                "state_messages": {},
+            }
+        ),
+        aggregation_function=BIAggregationFunctionWorst(
+            {"type": "worst", "count": 1, "restrict_state": 2}
+        ),
+        node_visualization={"style_config": {}, "type": "none"},
+    )
+    aggregation = BICompiledAggregation(
+        aggregation_id="default_aggregation",
+        branches=[branch],
+        computation_options=BIAggregationComputationOptions(
+            ComputationConfigDict(
+                disabled=False, use_hard_states=False, escalate_downtimes_as_warn=False
+            )
+        ),
+        aggregation_visualization={},
+        groups=BIAggregationGroups({"names": ["Hosts"], "paths": []}),
+    )
+
+    fs = get_default_site_filesystem()
+    AggregationStore(fs.cache).save(aggregation)
+    try:
+        yield
+    finally:
+        fs.cache.clear_compilation_cache()
+
+
 @pytest.mark.parametrize("wato_enabled", [True, False])
-def test_get_aggregation_state_empty(
+def test_get_aggregation_state_empty_store(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
     wato_enabled: bool,
@@ -456,14 +514,31 @@ def test_get_aggregation_state_empty(
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query(
-        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
-    )
 
-    with live(), set_config(wato_enabled=wato_enabled):
-        clients.BiAggregation.get_aggregation_state_post(body={})
+    with live(expect_status_query=False), set_config(wato_enabled=wato_enabled):
+        resp = clients.BiAggregation.get_aggregation_state_post(body={})
+
+    assert resp.json == {"aggregations": {}, "missing_sites": [], "missing_aggr": []}
+
+
+def test_get_aggregation_state_not_yet_compiled(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    counter_path = BIAggregationPacks._num_enabled_aggregations_path()
+    counter_path.parent.mkdir(parents=True, exist_ok=True)
+    counter_path.write_text("1")
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+
+    try:
+        with live(expect_status_query=False):
+            resp = clients.BiAggregation.get_aggregation_state(expect_ok=False)
+    finally:
+        counter_path.unlink()
+
+    resp.assert_status_code(503)
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -475,14 +550,62 @@ def test_get_aggregation_state_filter_names(
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query("GET status\nColumns: program_start")
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": "heute",
+                "state": 0,
+                "has_been_checked": 1,
+                "hard_state": 0,
+                "plugin_output": "OK",
+                "scheduled_downtime_depth": 0,
+                "in_service_period": 1,
+                "acknowledged": 0,
+                "services_with_fullstate": [],
+            }
+        ],
+    )
     live.expect_query(
-        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+        [
+            "GET hosts",
+            "Columns: name state has_been_checked hard_state plugin_output scheduled_downtime_depth in_service_period acknowledged services_with_fullstate",
+            "Filter: name = heute",
+        ]
     )
 
-    with live(), set_config(wato_enabled=wato_enabled):
-        clients.BiAggregation.get_aggregation_state_post(body={"filter_names": ["Host heute"]})
+    with (
+        _stored_compiled_aggregation(),
+        live(),
+        set_config(wato_enabled=wato_enabled),
+    ):
+        resp = clients.BiAggregation.get_aggregation_state_post(
+            body={"filter_names": [_AGGREGATION_TITLE]}
+        )
+
+    assert _AGGREGATION_TITLE in resp.json["aggregations"]
+
+
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_get_aggregation_state_filter_names_no_match(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+    set_config: SetConfig,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+
+    with (
+        _stored_compiled_aggregation(),
+        live(expect_status_query=False),
+        set_config(wato_enabled=wato_enabled),
+    ):
+        resp = clients.BiAggregation.get_aggregation_state_post(
+            body={"filter_names": ["Not a compiled aggregation"]}
+        )
+
+    assert resp.json == {"aggregations": {}, "missing_sites": [], "missing_aggr": []}
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -522,15 +645,10 @@ def test_get_aggregation_state_should_not_update_config_generation(
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query(
-        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
-    )
 
     generation_before_calling_endpoint = activate_changes._get_current_config_generation()
 
-    with live(), set_config(wato_enabled=wato_enabled):
+    with live(expect_status_query=False), set_config(wato_enabled=wato_enabled):
         clients.BiAggregation.get_aggregation_state_post(body={"filter_names": ["Host heute"]})
 
     generation_after_calling_endpoint = activate_changes._get_current_config_generation()
@@ -588,7 +706,7 @@ def test_create_bi_aggregation_invalid_pack_id(clients: ClientRegistry) -> None:
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
-def test_aggregation_state_empty_with_get_method(
+def test_aggregation_state_empty_store_with_get_method(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
     wato_enabled: bool,
@@ -596,14 +714,11 @@ def test_aggregation_state_empty_with_get_method(
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query(
-        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
-    )
 
-    with live(), set_config(wato_enabled=wato_enabled):
-        clients.BiAggregation.get_aggregation_state()
+    with live(expect_status_query=False), set_config(wato_enabled=wato_enabled):
+        resp = clients.BiAggregation.get_aggregation_state()
+
+    assert resp.json == {"aggregations": {}, "missing_sites": [], "missing_aggr": []}
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -615,14 +730,40 @@ def test_aggregation_state_filter_names_with_get_method(
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
-    live.expect_query("GET status\nColumns: program_start")
-    live.expect_query("GET status\nColumns: program_start")
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": "heute",
+                "state": 0,
+                "has_been_checked": 1,
+                "hard_state": 0,
+                "plugin_output": "OK",
+                "scheduled_downtime_depth": 0,
+                "in_service_period": 1,
+                "acknowledged": 0,
+                "services_with_fullstate": [],
+            }
+        ],
+    )
     live.expect_query(
-        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+        [
+            "GET hosts",
+            "Columns: name state has_been_checked hard_state plugin_output scheduled_downtime_depth in_service_period acknowledged services_with_fullstate",
+            "Filter: name = heute",
+        ]
     )
 
-    with live(), set_config(wato_enabled=wato_enabled):
-        clients.BiAggregation.get_aggregation_state(query_params={"filter_names": ["Host heute"]})
+    with (
+        _stored_compiled_aggregation(),
+        live(),
+        set_config(wato_enabled=wato_enabled),
+    ):
+        resp = clients.BiAggregation.get_aggregation_state(
+            query_params={"filter_names": [_AGGREGATION_TITLE]}
+        )
+
+    assert _AGGREGATION_TITLE in resp.json["aggregations"]
 
 
 def create_bipack_get_rule_test_data(clients: ClientRegistry) -> dict:

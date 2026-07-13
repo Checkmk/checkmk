@@ -29,6 +29,7 @@ from cmk.bi.lib import BIState, NodeResultBundle
 from cmk.bi.packs import (
     AggregationNotFoundException,
     BIAggregationPack,
+    BIAggregationPacks,
     DeleteErrorUsedByAggregation,
     DeleteErrorUsedByRule,
     PackNotFoundException,
@@ -309,6 +310,7 @@ class BIAggregationStateResponseSchema(Schema):
     tag_group="Monitoring",
     skip_locking=True,
     update_config_generation=False,
+    additional_status_codes=[503],
 )
 def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -332,6 +334,7 @@ def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     response_schema=BIAggregationStateResponseSchema,
     permissions_required=RO_PERMISSIONS,
     tag_group="Monitoring",
+    additional_status_codes=[503],
 )
 def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -344,7 +347,18 @@ def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
 def _aggregation_state(
     filter_names: list[str] | None = None, filter_groups: list[str] | None = None
 ) -> dict[str, object]:
-    bi_manager = BIManager()
+    bi_manager = BIManager(run_compile_check=False)
+    if (
+        not bi_manager.compiler.compiled_aggregations
+        and BIAggregationPacks.get_num_enabled_aggregations()
+    ):
+        # Not compiled yet (e.g. right after a site restart, since the compilation cache lives
+        # in tmpfs). Signal "no data yet" instead of pretending no aggregations exist.
+        raise ProblemException(
+            status=503,
+            title=http.client.responses[503],
+            detail="BI aggregations have not been compiled yet. Retry later.",
+        )
     bi_aggregation_filter = BIAggregationFilter(
         [],
         [],

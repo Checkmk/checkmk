@@ -22,6 +22,12 @@
   - [Enabling Wallet Authentication](#enabling-wallet-authentication)
   - [Workflow 1: Using Default Configuration](#workflow-1-using-default-configuration-no-explicit-tns_admin)
   - [Workflow 2: Using Custom tns_admin Location](#workflow-2-using-custom-tns_admin-location)
+- [Migration from the Legacy mk_oracle Plugin](#migration-from-the-legacy-mk_oracle-plugin)
+  - [Running the Migration](#running-the-migration)
+  - [Migration Output](#migration-output)
+  - [What Is Migrated](#what-is-migrated)
+  - [What Is Not Migrated](#what-is-not-migrated)
+  - [Adapting Custom SQL Files](#adapting-custom-sql-files)
 
 ## Oracle Instant Client Download and Installation
 
@@ -835,3 +841,251 @@ In this case:
    - Oracle Wallet files in the location specified in your `sqlnet.ora`
 
 This workflow is useful when you have an existing Oracle configuration setup that you want to reuse.
+
+## Migration from the Legacy `mk_oracle` Plugin
+
+`mk-oracle` replaces the shell-based `mk_oracle` agent plugin (Linux/AIX) and the
+PowerShell `mk_oracle.ps1` plugin (Windows). The binary contains a built-in migration
+command that converts a legacy configuration file into the
+[YAML configuration](#yaml-configuration) described above.
+
+### Running the Migration
+
+```
+mk-oracle --migrate-config <legacy-config> [--migrate-output <file>]
+```
+
+| Option                          | Description                                                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `-M`, `--migrate-config <path>` | Path to the legacy configuration file to convert                                                               |
+| `--migrate-output <path>`       | Write the result to this file (overwritten if it exists). Without this option the result is printed to stdout. |
+
+Typical invocations:
+
+```bash
+# Linux/AIX: convert and review on stdout first
+mk-oracle --migrate-config /etc/check_mk/mk_oracle.cfg
+
+# then write the new configuration file
+mk-oracle --migrate-config /etc/check_mk/mk_oracle.cfg --migrate-output /etc/check_mk/mk-oracle.yml
+```
+
+```powershell
+# Windows
+mk-oracle.exe --migrate-config C:\ProgramData\checkmk\agent\config\mk_oracle_cfg.ps1 --migrate-output C:\ProgramData\checkmk\agent\config\mk-oracle.yml
+```
+
+The command exits with code `0` on success and `1` on failure (the legacy file cannot
+be read, `DBUSER` is not defined, or the output file cannot be written).
+
+**The legacy config is executed.** To resolve variable values, the migration sources
+the legacy file in its native shell — `bash` on Linux, `ksh` on AIX, PowerShell on
+Windows. Run the migration on the host where the legacy plugin is deployed, so that
+shell logic in the config (environment variables, conditionals) resolves the same way
+it does for the legacy plugin.
+
+### Migration Output
+
+The generated file is a single YAML document consisting of:
+
+1. A header with the source path and the conversion timestamp.
+2. The complete legacy configuration, commented out — nothing is lost, and
+   unrecognized variables stay visible for manual follow-up.
+3. The recognized legacy variables with their resolved values, as comments.
+4. `# WARNING:` comments for custom SQL files that need manual attention, also
+   printed to the terminal (see [Adapting Custom SQL Files](#adapting-custom-sql-files)).
+5. The converted configuration below the `# --- Unified Config ---` marker.
+
+### What Is Migrated
+
+| Legacy variable                            | Migrated to                                                                                       |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `DBUSER` (required)                        | Top-level `connection:` (hostname, port) and `authentication:`, plus the first `instances:` entry |
+| `DBUSER_<SID>`                             | An `instances:` entry with per-instance `connection:` and `authentication:`                       |
+| `ASMUSER`                                  | `asm_username`, `asm_password`, `asm_role` under `authentication:`                                |
+| `REMOTE_INSTANCE_<ID>`                     | An `instances:` entry including `piggyback_host:` (Linux/AIX only)                                |
+| `SYNC_SECTIONS` / `ASYNC_SECTIONS`         | `sections:` entries with `is_async: false` / `true`                                               |
+| `SYNC_ASM_SECTIONS` / `ASYNC_ASM_SECTIONS` | `sections:` entries with `affinity: "asm"` (`"all"` if the section is also a normal section)      |
+| `CACHE_MAXAGE`                             | `cache_age:`                                                                                      |
+| `SQLS_MAX_CACHE_AGE`                       | `custom_metrics_cache_age:`                                                                       |
+| `MAX_TASKS`                                | `options.threads:` (only for values ≥ 2, capped at 8)                                             |
+| `ONLY_SIDS`                                | `discovery.include:` (with `detect: true`)                                                        |
+| `SKIP_SIDS`, `EXCLUDE_<SID>="ALL"`         | `discovery.exclude:` (with `detect: true`)                                                        |
+| `TNS_ADMIN`                                | `connection.tns_admin:`                                                                           |
+| `OLRLOC`                                   | `connection.oracle_local_registry:`                                                               |
+| `SQLS_SECTIONS` + per-section `SQLS_*`     | `custom_metrics:` entries (see below)                                                             |
+
+Notes:
+
+- The fields of `DBUSER`-style variables are `USERNAME:PASSWORD:ROLE:HOST:PORT:TNSALIAS`.
+  An empty host becomes `localhost`; a `/` username (OS authentication) becomes an
+  empty username.
+- A `DBUSER` without the TNS-alias field produces an instance entry with the literal
+  placeholder `$ORACLE_SID`. Replace it with the actual SID, or remove the entry and
+  enable `discovery:` instead.
+- `REMOTE_INSTANCE_<ID>` fields are `USER:PASSWORD:ROLE:HOST:PORT:PIGGYBACKHOST:SID:VERSION`;
+  the version is ignored (detected at runtime). Entries missing mandatory fields are
+  skipped and recorded as `# INVALID` comments.
+
+#### Custom SQL Sections (`SQLS_*`)
+
+Each function listed in `SQLS_SECTIONS` becomes one `custom_metrics:` entry:
+
+| Legacy variable                                  | Migrated to                                                     |
+| ------------------------------------------------ | --------------------------------------------------------------- |
+| Function name in `SQLS_SECTIONS`                 | The item name (YAML key) of the entry                           |
+| `SQLS_ITEM_NAME`                                 | Overrides the item name                                         |
+| `SQLS_DIR` + `SQLS_SQL`                          | `path:`                                                         |
+| `SQLS_SIDS` (literal list)                       | Places the entry under the matching `instances:` entries        |
+| `SQLS_SIDS` (dynamic, e.g. `$SIDS` or a command) | Global `custom_metrics:` (runs on all instances)                |
+| `SQLS_TNSALIAS`                                  | Places the entry under the instance with that `alias:`          |
+| `SQLS_SECTION_NAME` (≠ `oracle_sql`)             | `header_name:`                                                  |
+| `SQLS_SECTION_SEP` (ASCII code)                  | `header_sep:` (kept only together with a custom `header_name:`) |
+
+Placement rules:
+
+- A section restricted to specific SIDs or to a TNS alias is attached to the
+  corresponding `instances:` entries; new entries are created for SIDs and aliases
+  that have no `DBUSER_*` counterpart.
+- A section without restrictions — including a dynamic `SQLS_SIDS` value that cannot
+  be resolved at migration time — becomes a global custom metric and runs on every
+  instance.
+- A section without `SQLS_SQL` is skipped with a warning.
+
+### What Is Not Migrated
+
+The following variables are recognized but only preserved as comments in the output;
+port them manually if you still need them:
+
+| Legacy variable                                       | Remark                                                                                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `SQLS_DBUSER`, `SQLS_DBPASSWORD`, `SQLS_DBSYSCONNECT` | Per-custom-SQL credentials; use per-instance `authentication:` overrides instead                                         |
+| `SQLS_PARAMETERS`                                     | SQL\*Plus parameter passing is not supported                                                                             |
+| `EXCLUDE_<SID>="<section> ..."`                       | Per-SID exclusion of individual sections; only `EXCLUDE_<SID>="ALL"` is converted                                        |
+| `ORACLE_HOME`, `REMOTE_ORACLE_HOME`                   | The OCI runtime is located as described in [Options](#options) (`use_host_client`)                                       |
+| `ID_BY`                                               | Selects `SID=` vs `SERVICE_NAME=` in the legacy connect string; use the `sid:` / `service_name:` instance fields instead |
+
+On Windows the legacy plugin supports neither `REMOTE_INSTANCE_*` nor custom SQL
+sections, so both are ignored when migrating a Windows configuration.
+
+Anything else — custom shell logic, unrecognized variables — is not converted; it
+remains visible in the commented-out legacy config at the top of the output.
+
+### Adapting Custom SQL Files
+
+The legacy plugin piped custom SQL files through `sqlplus`; `mk-oracle` executes them
+through the Oracle OCI driver (see
+[Differences from the legacy `mk_oracle` bash plugin](#differences-from-the-legacy-mk_oracle-bash-plugin)).
+Two consequences:
+
+1. **SQL\*Plus commands do not work.** `PROMPT`, `SET`, `COLUMN`, `SPOOL`,
+   `EXEC`/`EXECUTE`, `VAR`/`VARIABLE` and similar directives are `sqlplus` features,
+   not SQL.
+2. **PL/SQL blocks are not supported.** `DECLARE`/`BEGIN … END;` blocks cannot be
+   executed; only plain SQL statements run.
+
+The migration scans every referenced SQL file and emits a `# WARNING:` (in the
+terminal and in the generated YAML). The affected sections are migrated regardless — fix
+the SQL files, otherwise the queries fail at runtime.
+
+Useful properties of the new execution model:
+
+- A `.sql` file may contain **multiple statements** separated by `;` at the top
+  level; they are executed in order and their rows are concatenated.
+- Each returned row must be a single string column matching the
+  [SQL contract](#sql-contract) (`details:`, `perfdata:`, `long:`, `exit:`).
+
+#### Removing SQL\*Plus Commands
+
+Formatting and interactive directives have no equivalent and are simply deleted —
+the plugin emits every returned row as-is.
+
+Legacy SQL file:
+
+```sql
+SET PAGESIZE 0
+SET FEEDBACK OFF
+COLUMN details FORMAT A80
+PROMPT collecting session count ...
+SELECT 'details:' || COUNT(*) || ' sessions' FROM v$session;
+```
+
+Adapted SQL file:
+
+```sql
+SELECT 'details:' || COUNT(*) || ' sessions' FROM v$session
+```
+
+#### Converting a PL/SQL Block to Plain SELECTs
+
+Typical rewrite rules: PL/SQL variables become a `WITH` clause, `IF`/`ELSIF` becomes
+`CASE`, and each `DBMS_OUTPUT.PUT_LINE` becomes one returned row (via `UNION ALL` or
+a separate `;`-terminated statement).
+
+Legacy SQL file:
+
+```sql
+SET SERVEROUTPUT ON
+DECLARE
+    invalid_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO invalid_count
+      FROM dba_objects
+     WHERE status = 'INVALID';
+    IF invalid_count > 10 THEN
+        DBMS_OUTPUT.PUT_LINE('exit:2');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('exit:0');
+    END IF;
+    DBMS_OUTPUT.PUT_LINE('details:' || invalid_count || ' invalid objects');
+END;
+/
+```
+
+Adapted SQL file:
+
+```sql
+WITH invalid AS (
+    SELECT COUNT(*) AS cnt
+      FROM dba_objects
+     WHERE status = 'INVALID'
+)
+SELECT 'exit:' || CASE WHEN cnt > 10 THEN '2' ELSE '0' END FROM invalid
+UNION ALL
+SELECT 'details:' || cnt || ' invalid objects' FROM invalid
+```
+
+#### Wrapping Complex PL/SQL in a Stored Function
+
+When the logic genuinely needs PL/SQL (loops, exception handling, temporary state),
+move it into the database as a pipelined function and `SELECT` from it. One-time
+setup, run by a DBA in the monitored database:
+
+```sql
+CREATE OR REPLACE FUNCTION checkmk_invalid_objects
+    RETURN sys.odcivarchar2list PIPELINED
+AS
+    invalid_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO invalid_count
+      FROM dba_objects
+     WHERE status = 'INVALID';
+    -- arbitrary PL/SQL logic is allowed here
+    PIPE ROW ('details:' || invalid_count || ' invalid objects');
+    PIPE ROW ('perfdata:invalid_objects=' || invalid_count || ';10;100');
+    PIPE ROW (CASE WHEN invalid_count > 10 THEN 'exit:2' ELSE 'exit:0' END);
+    RETURN;
+END;
+/
+
+GRANT EXECUTE ON checkmk_invalid_objects TO checkmk;
+```
+
+The custom SQL file then reduces to:
+
+```sql
+SELECT column_value FROM TABLE(checkmk_invalid_objects)
+```
+
+If the function lives in another schema, qualify it:
+`TABLE(owner.checkmk_invalid_objects)`.

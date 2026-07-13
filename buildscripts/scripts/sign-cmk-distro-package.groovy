@@ -81,6 +81,7 @@ void main() {
                     relative_job_name: "builders/build-cmk-distro-package",
                     edition: edition,
                     distro: distro,
+                    version: version,
                     download_dir: checkout_dir,
                     disable_cache: params.DISABLE_CACHE,
                     bisect_comment: params.CIPARAM_BISECT_COMMENT,

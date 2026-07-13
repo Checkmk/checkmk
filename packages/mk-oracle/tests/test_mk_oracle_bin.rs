@@ -283,9 +283,10 @@ fn test_migrate_config_to_stdout() {
     let cfg = legacy_cfg_path();
     let output = run_bin().args(["-M", &cfg]).ok().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
+    // custom SQL warnings are printed before the converted config
     assert!(
-        stdout.starts_with(&format!("# --- Converted from {cfg} at ")),
-        "must start with conversion header"
+        stdout.contains(&format!("# --- Converted from {cfg} at ")),
+        "missing conversion header"
     );
     assert!(stdout.contains("DBUSER"), "legacy config not in comments");
     assert!(
@@ -311,8 +312,8 @@ fn test_migrate_config_yaml_structure() {
     let output = run_bin().args(["-M", &cfg]).ok().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
-    // Header
-    assert!(stdout.starts_with(&format!("# --- Converted from {cfg} at ")));
+    // Header (custom SQL warnings are printed before it)
+    assert!(stdout.contains(&format!("# --- Converted from {cfg} at ")));
 
     // Legacy config echoed as comments
     for var in ["DBUSER", "ASMUSER", "SYNC_SECTIONS", "ASYNC_SECTIONS"] {
@@ -711,6 +712,59 @@ fn test_migrate_reference_config_custom_metrics() {
             "SQLS_SIDS must be ignored when SQLS_TNSALIAS is set"
         );
     }
+}
+
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_custom_sql_warnings() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    fs::write(dir.join("plain.sql"), "SELECT * FROM dual;\n").unwrap();
+    fs::write(dir.join("block.sql"), "BEGIN\n  NULL;\nEND;\n").unwrap();
+
+    let dir_str = dir.to_str().unwrap();
+    let cfg = dir.join("mk_oracle.cfg");
+    fs::write(
+        &cfg,
+        format!(
+            r#"DBUSER='user:pass'
+SQLS_SECTIONS="plain block missing"
+plain () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="plain.sql"
+}}
+block () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="block.sql"
+}}
+missing () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="missing.sql"
+}}
+"#
+        ),
+    )
+    .unwrap();
+
+    let output = run_bin().args(["-M", cfg.to_str().unwrap()]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        !stdout.contains("# WARNING: plain:"),
+        "readable plain SQL must not warn, got: {stdout}"
+    );
+    assert!(
+        stdout.contains(&format!(
+            "# WARNING: block: SQL file '{dir_str}/block.sql' contains a PL/SQL block"
+        )),
+        "got: {stdout}"
+    );
+    assert!(
+        stdout.contains(&format!(
+            "# WARNING: missing: cannot read SQL file '{dir_str}/missing.sql'"
+        )),
+        "got: {stdout}"
+    );
 }
 
 #[test]

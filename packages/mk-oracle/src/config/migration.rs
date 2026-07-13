@@ -66,6 +66,16 @@ struct LegacyCustomSql {
     header_sep: Option<char>,
 }
 
+impl LegacyCustomSql {
+    /// Full path of the SQL file (SQLS_DIR + SQLS_SQL)
+    fn path(&self) -> String {
+        match &self.dir {
+            Some(dir) => format!("{}/{}", dir.trim_end_matches('/'), self.sql_file),
+            None => self.sql_file.clone(),
+        }
+    }
+}
+
 fn optional_value(s: &str) -> Option<String> {
     (!s.is_empty()).then(|| s.to_string())
 }
@@ -222,6 +232,48 @@ fn parse_header_sep(section: &str, value: &str) -> Option<char> {
     sep
 }
 
+/// Warnings for custom SQL files that need manual review after migration:
+/// unreadable files and PL/SQL blocks, which the new plugin cannot execute.
+/// The sections are migrated regardless.
+fn custom_sql_warnings(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
+    custom_sqls
+        .iter()
+        .filter_map(|custom| {
+            let path = custom.path();
+            match std::fs::read_to_string(&path) {
+                Err(err) => Some(format!(
+                    "{}: cannot read SQL file '{path}': {err}",
+                    custom.name
+                )),
+                Ok(sql) if contains_plsql_block(&sql) => Some(format!(
+                    "{}: SQL file '{path}' contains a PL/SQL block, which is not supported",
+                    custom.name
+                )),
+                Ok(_) => None,
+            }
+        })
+        .collect()
+}
+
+/// Keywords starting a PL/SQL block or a SQL*Plus command,
+/// neither of which the new plugin can execute
+const PLSQL_KEYWORDS: [&str; 10] = [
+    "begin", "declare", "prompt", "exec", "var", "set", "column", "spool", "execute", "variable",
+];
+
+/// Detect a line starting with one of the PLSQL_KEYWORDS
+fn contains_plsql_block(sql: &str) -> bool {
+    sql.lines()
+        .map(str::trim_start)
+        .any(|line| PLSQL_KEYWORDS.iter().any(|kw| starts_with_word(line, kw)))
+}
+
+fn starts_with_word(line: &str, word: &str) -> bool {
+    line.len() >= word.len()
+        && line[..word.len()].eq_ignore_ascii_case(word)
+        && !line[word.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_')
+}
+
 /// SIDs a custom SQL section is restricted to, empty means all instances.
 ///
 /// `raw_sids` comes from parsing the config text and decides the outcome: a
@@ -329,6 +381,19 @@ pub fn convert(
         out.push_str(&format!("# INVALID {name}\n# {name} {value}\n"));
     }
 
+    // Windows legacy plugin doesn't support custom SQL sections
+    let custom_sqls = if cfg!(windows) {
+        Vec::new()
+    } else {
+        parse_custom_sqls(legacy, variables)
+    };
+
+    for warning in custom_sql_warnings(&custom_sqls) {
+        let warning = format!("# WARNING: {warning}\n");
+        print!("{warning}");
+        out.push_str(&warning);
+    }
+
     out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
 
     // connection
@@ -403,13 +468,6 @@ pub fn convert(
     let only_sids = parse_sid_list(variables, "ONLY_SIDS");
     let mut skip_sids = parse_sid_list(variables, "SKIP_SIDS");
     skip_sids.extend(find_excluded_instances(variables));
-
-    // Windows legacy plugin doesn't support custom SQL sections
-    let custom_sqls = if cfg!(windows) {
-        Vec::new()
-    } else {
-        parse_custom_sqls(legacy, variables)
-    };
 
     out.extend(format_options(max_tasks));
     out.extend(format_instances(&dbuser, &dbuser_extras, &custom_sqls));
@@ -591,12 +649,8 @@ fn format_custom_metric_entries(metrics: &[&LegacyCustomSql], indent: &str) -> V
     }
     let mut lines = vec![format!("{indent}custom_metrics:\n")];
     for custom in metrics {
-        let path = match &custom.dir {
-            Some(dir) => format!("{}/{}", dir.trim_end_matches('/'), custom.sql_file),
-            None => custom.sql_file.clone(),
-        };
         lines.push(format!("{indent}  - {}:\n", custom.name));
-        lines.push(format!("{indent}      path: {path}\n"));
+        lines.push(format!("{indent}      path: {}\n", custom.path()));
         if let Some(header_name) = &custom.header_name {
             lines.push(format!("{indent}      header_name: {header_name}\n"));
             // the legacy plugin uses the separator only together with a custom section name
@@ -1134,6 +1188,53 @@ sec2 () {
             result[2].header_sep.is_none(),
             "invalid ASCII code must be ignored"
         );
+    }
+
+    #[test]
+    fn test_contains_plsql_block() {
+        assert!(contains_plsql_block("BEGIN\n  NULL;\nEND;\n"));
+        assert!(contains_plsql_block(
+            "SELECT 1 FROM dual;\n  declare\n    x NUMBER;\nbegin\n"
+        ));
+        assert!(contains_plsql_block("DECLARE x NUMBER;"));
+        assert!(contains_plsql_block("EXEC something; SELECT * FROM dual;"));
+        assert!(contains_plsql_block("VAR variable; SELECT * FROM dual;"));
+        assert!(contains_plsql_block("SET variable; SELECT * FROM dual;"));
+        assert!(contains_plsql_block("SELECT * FROM dual;\nspool something"));
+        assert!(contains_plsql_block(
+            "Execute variable; SELECT * FROM dual;"
+        ));
+        assert!(contains_plsql_block("SELECT * FROM dual;\n variable var"));
+        assert!(contains_plsql_block("SELECT * FROM dual;\n column var"));
+        assert!(!contains_plsql_block("SELECT * FROM dual;\n"));
+        assert!(!contains_plsql_block("SELECT begin_date FROM t;\n"));
+        assert!(
+            !contains_plsql_block("BEGIN_DATE := 1;\n"),
+            "keyword must match the whole word"
+        );
+    }
+
+    // Run this test only on Linux since on Windows the legacy plugin
+    // doesn't support custom SQL sections and the test would fail.
+    #[cfg(unix)]
+    #[test]
+    fn test_convert_warns_on_unreadable_custom_sql() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("SQLS_SECTIONS".into(), "myscn".into()),
+            (
+                "SQLS.myscn.SQLS_SQL".into(),
+                "/nonexistent/dir/c.sql".into(),
+            ),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("# WARNING: myscn: cannot read SQL file '/nonexistent/dir/c.sql'"),
+            "got: {result}"
+        );
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        assert!(config.ora_sql().is_some());
     }
 
     #[test]

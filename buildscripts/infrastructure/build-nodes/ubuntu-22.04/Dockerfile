@@ -182,6 +182,11 @@ RUN /opt/install-cmk-dependencies.sh
 COPY install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
+# lz4 is required to tar home cache folder
+# this image is used to sign packages, requiring hot cache restore functionality
+COPY install-lz4-parallel.sh /opt/
+RUN /opt/install-lz4-parallel.sh
+
 COPY ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc
 common:ci --@cmk//distro="ubuntu-22.04"

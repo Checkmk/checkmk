@@ -80,6 +80,12 @@ void fetch_package(Map args) {
             omit_build_venv: true,  // do not check or build a venv first
             no_raise: false,        // abort on problems of upstream build
         ];
+        if (args.version) {
+            // Pin the match to the exact upstream VERSION (e.g. an RC like "2.5.0p9-rc2").
+            // Without this, ci-artifacts may match a different same-commit build (e.g. a
+            // "daily" build) and download a package with an unexpected version in its name.
+            this_parameters.build_params += [VERSION: args.version];
+        }
         if (args.dependency_paths) {
             this_parameters["build_params"].remove("CUSTOM_GIT_REF");
 

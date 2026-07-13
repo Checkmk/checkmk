@@ -29,7 +29,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
-from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -37,7 +37,13 @@ import cmk.base.utils
 from cmk.base import config, core_config
 from cmk.base.api.agent_based import plugin_index
 from cmk.base.api.agent_based.register import AgentBasedPlugins, get_check_plugin
-from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
+from cmk.base.config import (
+    ConfigCache,
+    HostgroupName,
+    iter_skipped_services_warnings,
+    ObjectAttributes,
+    ServicegroupName,
+)
 from cmk.base.core_config import (
     AbstractServiceID,
     CoreCommand,
@@ -433,23 +439,13 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         return result
 
     host_check_table = config_cache.check_table(hostname)
+    for warning in iter_skipped_services_warnings(hostname, host_check_table.skipped_services):
+        config_warnings.warn(warning)
+
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
-        if not service.description:
-            config_warnings.warn(
-                f"Skipping invalid service with empty description (plugin: {service.check_plugin_name}) on host {hostname}"
-            )
-            continue
-
-        if len(service.description) > MAX_SERVICE_NAME_LEN:
-            config_warnings.warn(
-                f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
-                f"(plugin: {service.check_plugin_name}) on host: {hostname}, Service: {service.description}"
-            )
-            continue
-
         if service.description in used_descriptions:
             core_config.duplicate_service_warning(
                 checktype="auto",

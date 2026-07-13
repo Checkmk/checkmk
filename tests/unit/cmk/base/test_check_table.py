@@ -16,6 +16,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets import RuleSetName
+from cmk.utils.servicename import MAX_SERVICE_NAME_LEN
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
@@ -25,7 +26,7 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.config import FilterMode, HostCheckTable
+from cmk.base.config import FilterMode, HostCheckTable, iter_skipped_services_warnings
 
 from cmk.discover_plugins import PluginLocation
 
@@ -664,3 +665,49 @@ def test_check_table__get_static_check_entries(
             TimespecificParameterSet({}, ()),
         )
     )
+
+
+def test_iter_skipped_services_warnings() -> None:
+    hostname = HostName("some-host")
+    too_long_name: str = "Temperature SMART " + "x" * MAX_SERVICE_NAME_LEN
+
+    valid_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("cpu_loads"),
+        item=None,
+        description="CPU load",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        discovered_labels={},
+        is_enforced=False,
+    )
+    too_long_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("smart_temp"),
+        item="item",
+        description=too_long_name,
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        discovered_labels={},
+        is_enforced=False,
+    )
+    empty_name_service = ConfiguredService(
+        check_plugin_name=CheckPluginName("df"),
+        item="item",
+        description="",
+        parameters=TimespecificParameters(()),
+        discovered_parameters={},
+        discovered_labels={},
+        is_enforced=False,
+    )
+
+    table = HostCheckTable(
+        services=[valid_service, too_long_service, empty_name_service],
+    )
+
+    assert ServiceID(CheckPluginName("cpu_loads"), None) in table
+    assert ServiceID(CheckPluginName("smart_temp"), "item") not in table
+    assert ServiceID(CheckPluginName("df"), "item") not in table
+    assert list(iter_skipped_services_warnings(hostname, table.skipped_services)) == [
+        f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
+        f"(plugin: smart_temp) on host: {hostname}, Service: {too_long_name}",
+        f"Skipping invalid service with empty description (plugin: df) on host {hostname}",
+    ]

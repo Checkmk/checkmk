@@ -67,7 +67,7 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RulesetName, RuleSpec
 from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import Item, MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
@@ -200,13 +200,32 @@ class FilterMode(enum.Enum):
     INCLUDE_CLUSTERED = enum.auto()
 
 
+def _split_services_by_name_validity(
+    services: Iterable[ConfiguredService],
+) -> tuple[Sequence[ConfiguredService], Sequence[ConfiguredService]]:
+    valid: list[ConfiguredService] = []
+    invalid: list[ConfiguredService] = []
+    for service in services:
+        if 0 < len(service.description) <= MAX_SERVICE_NAME_LEN:
+            valid.append(service)
+        else:
+            invalid.append(service)
+    return valid, invalid
+
+
 class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
     def __init__(
         self,
         *,
         services: Iterable[ConfiguredService],
     ) -> None:
-        self._data = {s.id(): s for s in services}
+        valid, skipped = _split_services_by_name_validity(services)
+        self._data = {s.id(): s for s in valid}
+        # Services with an invalid name must not be part of the table.
+        # The monitoring cores reject them during config creation, so keeping
+        # them here would make the checker compute results the core does not
+        # know about, rendering all services of the host stale (CMK-33390).
+        self.skipped_services: Final[Sequence[ConfiguredService]] = skipped
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(services={list(self._data.values())!r})"
@@ -222,6 +241,23 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
 
     def needed_check_names(self) -> set[CheckPluginName]:
         return {s.check_plugin_name for s in self.values()}
+
+
+def iter_skipped_services_warnings(
+    host_name: HostName, services: Sequence[ConfiguredService]
+) -> Iterator[str]:
+    for service in services:
+        if not service.description:
+            yield (
+                f"Skipping invalid service with empty description "
+                f"(plugin: {service.check_plugin_name}) on host {host_name}"
+            )
+        else:
+            yield (
+                f"Skipping invalid service exceeding the name length limit of "
+                f"{MAX_SERVICE_NAME_LEN} (plugin: {service.check_plugin_name}) "
+                f"on host: {host_name}, Service: {service.description}"
+            )
 
 
 class IgnoredServices(Container[ServiceName]):

@@ -100,6 +100,13 @@ def make_lookup_mgmt_board_ip_address(
         family: SupportedAddressFamily,
     ) -> HostAddress | None:
         mgmt_address: Final = ip_config.management_address(host_name, family)
+        # A NO_IP host has no IP address, so management_address() returns None
+        # (unless an explicit management address is configured). Do not fall
+        # through to a DNS lookup on the host name in that case: there is
+        # nothing to resolve. An explicitly configured management address (IP
+        # or host name) is still honored, because mgmt_address is then not None.
+        if mgmt_address is None and ip_config.ip_stack_config(host_name) is IPStackConfig.NO_IP:
+            return None
         try:
             mgmt_ipa = (
                 None

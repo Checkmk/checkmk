@@ -3248,6 +3248,13 @@ def automation_diag_cmk_agent(
         return socket.AddressFamily.AF_INET
 
     if not ipaddress:
+        if family == "no-ip":
+            # A host with no IP address family has nothing to resolve and
+            # nothing to connect to. Do not trigger a superfluous DNS lookup.
+            return DiagCmkAgentResult(
+                1,
+                f"Host {host_name} has no IP address family configured",
+            )
         try:
             resolved_address = ip_lookup.cached_dns_lookup(
                 hostname=host_name,

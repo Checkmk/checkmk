@@ -5,7 +5,6 @@
 
 import logging
 import re
-import time
 from re import Pattern
 from typing import override
 
@@ -25,12 +24,18 @@ class ActivateChangesSlideout(LocatorHelper):
     slide_title: str = "Quick activation of pending changes"
     activate_changes_btn_name: str = "Activate pending changes"
 
-    def __init__(self, cmk_page: CmkPage) -> None:
+    def __init__(self, cmk_page: CmkPage, open_slideout: bool = True) -> None:
+        """Page object for the 'Quick activation of pending changes' slideout.
+
+        Args:
+            open_slideout: Open the slideout via the main menu.
+                Pass False when the slideout is already open.
+        """
         self.cmk_page = cmk_page
-        logger.info("Navigate to 'Main menu' -> 'Quick activation of pending changes' slideout")
-        if not self.title.is_visible():
+        if open_slideout:
+            logger.info("Navigate to 'Main menu' -> 'Quick activation of pending changes' slideout")
             self.cmk_page.main_menu.changes_menu().click()
-        logger.info("Validate that slideout is %s open", self.slide_title)
+        logger.info("Validate that slideout '%s' is open", self.slide_title)
         expect(self.title).to_be_visible()
 
     @override
@@ -119,31 +124,22 @@ class ActivateChangesSlideout(LocatorHelper):
     def activation_succcess_banner(self) -> Locator:
         return self.slideout.get_by_role("heading").filter(has_text="Successfully activated")
 
-    def _extract_count_from_label(self, label_locator: Locator, label_name: str) -> int:
-        """Get the number in parentheses from a label text."""
-        txt = label_locator.text_content()
-        if not txt:
-            raise AssertionError(f"The '{label_name}' label text is empty!")
+    def expect_total_changes_count(self, expected: int) -> None:
+        """Wait until the 'Changes' label shows the expected number of total changes."""
+        expect(
+            self.total_changes_lbl,
+            message=f"The number of total changes is not {expected}!",
+        ).to_contain_text(f"Changes: ({expected})")
 
-        match = re.search(r"\((\d+)\)", txt)
-        if not match:
-            raise AssertionError(
-                f"The '{label_name}' label text '{txt}' does not contain the number in parentheses!"
-            )
-
-        return int(match.group(1))
-
-    def total_changes_count(self) -> int:
-        """Extract the number of total changes from the label text."""
-        return self._extract_count_from_label(self.total_changes_lbl, "Changes")
-
-    def foreign_changes_count(self) -> int:
-        """Extract the number of foreign changes from the label text."""
-        return self._extract_count_from_label(self.foreign_changes_lbl, "Foreign changes")
+    def expect_foreign_changes_count(self, expected: int) -> None:
+        """Wait until the 'Foreign changes' label shows the expected number of changes."""
+        expect(
+            self.foreign_changes_lbl,
+            message=f"The number of foreign changes is not {expected}!",
+        ).to_contain_text(f"Foreign changes: ({expected})")
 
     def close(self) -> None:
         self.cmk_page.main_menu.changes_menu().click()
-        time.sleep(1)  # wait for the slideout to close
         expect(self.title).not_to_be_visible()
         expect(self.slideout).not_to_be_visible()
 
@@ -156,22 +152,23 @@ class ActivateChangesSlideout(LocatorHelper):
         """Get the locator for the online status badge of a specific site."""
         return site_entry.locator("div.cmk-badge.cmk-badge--success", has_text="online")
 
-    def site_changes_count(self, site_entry: Locator) -> int:
-        """Get the locator of round badge showing the number of changes."""
-        txt = site_entry.locator("div.cmk-badge.cmk-badge--default").text_content()
-        if not txt or not txt.isdigit():
-            raise AssertionError(
-                f"The site entry does not contain a valid changes count badge! Found text: '{txt}'"
-            )
-        return int(txt)
+    def expect_site_changes_count(self, site_entry: Locator, expected: int) -> None:
+        """Wait until the site entry's badge shows the expected number of changes."""
+        expect(
+            site_entry.locator("div.cmk-badge.cmk-badge--default"),
+            message=f"The number of changes for the site entry is not {expected}!",
+        ).to_have_text(str(expected))
 
     def site_entry_checkbox(self, site_entry: Locator) -> Locator:
         """Get the locator of the checkbox to select/deselect a site entry."""
         return site_entry.locator("button[role='checkbox']")
 
-    def is_site_entry_selected(self, site_entry: Locator) -> bool:
-        """Check if the site entry checkbox is selected."""
-        return self.site_entry_checkbox(site_entry).get_attribute("aria-checked") == "true"
+    def expect_site_entry_selected(self, site_entry: Locator, selected: bool = True) -> None:
+        """Wait until the site entry checkbox reaches the expected selection state."""
+        expect(
+            self.site_entry_checkbox(site_entry),
+            message=f"The site entry is not {'selected' if selected else 'deselected'}!",
+        ).to_be_checked(checked=selected)
 
     def ensure_expected_changes_activated(self, expected_changes: int) -> None:
         expect(

@@ -64,9 +64,7 @@ def test_activate_changes_slideout_one_change(
             slideout.site_online_status(central_site_entry),
             f"Status of '{test_site.id}' site is not online!",
         ).to_be_visible()
-        assert slideout.site_changes_count(central_site_entry) == 1, (
-            f"The number of changes for {test_site.id} is not correct!"
-        )
+        slideout.expect_site_changes_count(central_site_entry, 1)
     finally:
         host_properties = HostProperties(dashboard_page.page, host_details, exists=True)
         host_properties.delete_host(test_site, activate=False)
@@ -97,9 +95,7 @@ def test_activate_changes_slideout_bulk_changes(
         slideout.site_online_status(central_site_entry),
         f"Status of '{test_site.id}' site is not online!",
     ).to_be_visible()
-    assert slideout.site_changes_count(central_site_entry) == 100, (
-        f"The number of changes for {test_site.id} is not correct!"
-    )
+    slideout.expect_site_changes_count(central_site_entry, 100)
     slideout.activate_changes_strict(expected_changes=100)
 
 
@@ -124,12 +120,8 @@ def test_activate_changes_slideout_distributed_setup(
         slideout.site_online_status(central_site_entry),
         f"Status of central site '{test_site.id}' is not online!",
     ).to_be_visible()
-    assert slideout.site_changes_count(central_site_entry) == 10, (
-        f"The number of changes for central site '{test_site.id}' is not correct!"
-    )
-    assert slideout.is_site_entry_selected(central_site_entry), (
-        f"The site entry for central site '{test_site.id}' is not selected!"
-    )
+    slideout.expect_site_changes_count(central_site_entry, 10)
+    slideout.expect_site_entry_selected(central_site_entry)
 
     remote_site_entry = slideout.site_entry(site_name=remote_site_wato_disabled.id, central=False)
     expect(
@@ -140,40 +132,28 @@ def test_activate_changes_slideout_distributed_setup(
         slideout.site_online_status(remote_site_entry),
         f"Status of remote site '{remote_site_wato_disabled.id}' is not online!",
     ).to_be_visible()
-    assert slideout.site_changes_count(remote_site_entry) == 20, (
-        f"The number of changes for remote site '{remote_site_wato_disabled.id}' is not correct!"
-    )
-    assert slideout.is_site_entry_selected(remote_site_entry), (
-        f"The site entry for remote site '{remote_site_wato_disabled.id}' is not selected!"
-    )
+    slideout.expect_site_changes_count(remote_site_entry, 20)
+    slideout.expect_site_entry_selected(remote_site_entry)
 
     logging.info("Check that total changes label is visible with correct text")
     expect(slideout.total_changes_lbl, "The 'Total changes' label is not visible!").to_be_visible()
-    count = slideout.total_changes_count()
-    assert count == 30, f"The number of total changes is not correct! Shown: {count}, Expected: 30"
+    slideout.expect_total_changes_count(30)
 
     logging.info("Check that foreign changes label is visible with correct text")
     expect(
         slideout.foreign_changes_lbl, "The 'Foreign changes' label is not visible!"
     ).to_be_visible()
-    count = slideout.foreign_changes_count()
     # All changes were made by other user 'not_automation' via API
-    assert count == 30, (
-        f"The number of foreign changes is not correct! Shown: {count}, Expected: 30"
-    )
+    slideout.expect_foreign_changes_count(30)
 
     logging.info("Deselect remote site")
     slideout.site_entry_checkbox(remote_site_entry).click()
-    assert not slideout.is_site_entry_selected(remote_site_entry), (
-        f"The site entry for remote site '{remote_site_wato_disabled.id}' is still selected!"
-    )
+    slideout.expect_site_entry_selected(remote_site_entry, selected=False)
     logging.info("Activate changes only for central site")
     slideout.activate_changes_strict(expected_changes=10)
 
     logging.info("Now activate changes for remote site")
     expect(slideout.activate_changes_btn).to_be_enabled()
-    expect(slideout.total_changes_lbl).to_have_text("Changes: (20)")
-    assert slideout.is_site_entry_selected(remote_site_entry), (
-        f"The site entry for remote site '{remote_site_wato_disabled.id}' is not selected!"
-    )
+    slideout.expect_total_changes_count(20)
+    slideout.expect_site_entry_selected(remote_site_entry)
     slideout.activate_changes_strict(expected_changes=20)

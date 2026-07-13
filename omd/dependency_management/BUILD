@@ -3,6 +3,7 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load(":dependency_management.bzl", "bill_of_materials", "dependency_list")
 
 py_binary(
@@ -45,6 +46,23 @@ bill_of_materials(
     name = "bill_of_materials",
     dependencies = ":list_of_dependencies",
     vulnerability_info = "vulnerability_info.yml",
+)
+
+py_cmk_test(
+    name = "test_licenses",
+    srcs = [
+        "cyclonedx.py",
+        "test_licenses.py",
+    ],
+    data = [
+        "automatically_researched_licenses.json",
+        "manually_researched_licenses.json",
+        ":list_of_dependencies",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("pydantic"),
+    ],
 )
 
 py_binary(

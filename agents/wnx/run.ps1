@@ -502,7 +502,7 @@ function Start-BazelSigning {
     $stamp_file = "install\obj\Release\.epf_stamp"
     $current_val = $env:SignedPluginsFolder ?? ""
     $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
-    &bazel build //agents/windows/plugins:signed_plugins
+    &bazel build //agents/windows/plugins:signed_plugins --action_env=SECTIGO_2023_PIN
 
     if ($current_val -ne $previous_val) {
         Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue

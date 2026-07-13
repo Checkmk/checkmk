@@ -709,3 +709,46 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
         )
         is None
     )
+
+
+def test_lookup_mgmt_board_ip_address_no_ip_host_skips_dns(monkeypatch: MonkeyPatch) -> None:
+    """A NO_IP host without an explicit management address must not trigger a DNS lookup."""
+
+    def _fail(*_a: object, **_kw: object) -> object:
+        raise AssertionError("No DNS lookup must be performed for NO_IP hosts")
+
+    monkeypatch.setattr(socket, "getaddrinfo", _fail)
+
+    hostname = HostName("piggyback_host")
+    ts = Scenario()
+    ts.add_host(hostname, tags={TagGroupID("address_family"): TagID("no-ip")})
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+
+    assert ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP
+    assert (
+        ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+            hostname, ip_lookup_config.default_address_family(hostname)
+        )
+        is None
+    )
+
+
+def test_lookup_mgmt_board_ip_address_no_ip_host_honors_explicit_mgmt_address(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """An explicitly configured management address is honored even for NO_IP hosts."""
+
+    def _fail(*_a: object, **_kw: object) -> object:
+        raise AssertionError("No DNS lookup must be performed for a configured IP address")
+
+    monkeypatch.setattr(socket, "getaddrinfo", _fail)
+
+    hostname = HostName("piggyback_host")
+    ts = Scenario()
+    ts.add_host(hostname, tags={TagGroupID("address_family"): TagID("no-ip")})
+    ts.set_option("host_attributes", {hostname: {"management_address": "1.2.3.4"}})
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+
+    assert ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+        hostname, ip_lookup_config.default_address_family(hostname)
+    ) == HostAddress("1.2.3.4")

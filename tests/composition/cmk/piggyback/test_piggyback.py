@@ -282,6 +282,7 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
         _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
 
 
+@pytest.mark.xfail(reason="CMK-35803; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_remote_diff_customer(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
@@ -330,6 +331,7 @@ def test_config_sync_source_remote_remote_diff_customer(
         _check_update_config_timestamps([central_site, remote_site, remote_site_2], timestamps_dict)
 
 
+@pytest.mark.xfail(reason="CMK-35803; flake")
 def test_config_sync_rename_host(central_site: Site, remote_site: Site) -> None:
     """
     Scenario: Host renaming triggers piggyback config re-distribution

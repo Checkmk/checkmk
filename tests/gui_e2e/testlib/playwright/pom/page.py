@@ -96,19 +96,18 @@ class CmkPage(LocatorHelper):
         logger.info("Click 'Activate on selected sites' button")
         self.main_area.locator("#menu_suggestion_activate_selected").click()
 
-    def _expect_success_state(self) -> None:
+    def _expect_success_state(self, number_of_sites: int = 1) -> None:
         logger.info("Check changes were activated successfully")
 
-        progress_elements = self.main_area.locator("td.repprogress > div.progress")
-        success_elements = self.main_area.locator("td.repprogress > div.progress.state_success")
+        site_status_cells = self.main_area.locator("td.repprogress")
+        expect(
+            site_status_cells.first, message="Activation status table is not shown"
+        ).to_be_visible()
 
         expect(
-            success_elements, message="Changes were not successfully activated in all the sites"
-        ).to_have_count(progress_elements.count())
-
-        # TODO: implement the check for 'no changes' state in the new menu budget
-        # It seems to be not trustworthy by now, so we disable it for now.
-        # expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible()
+            self.main_area.locator("td.repprogress > div.progress.state_success"),
+            message=f"Changes were not successfully activated on all {number_of_sites} site(s)",
+        ).to_have_count(number_of_sites)
 
     def select_host(self, host_name: str) -> None:
         logger.info("Click on host link: %s", host_name)
@@ -122,7 +121,12 @@ class CmkPage(LocatorHelper):
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
-    def activate_changes(self, site: Site | None = None, navigate_to_page: bool = True) -> None:
+    def activate_changes(
+        self,
+        site: Site | None = None,
+        navigate_to_page: bool = True,
+        number_of_sites: int = 1,
+    ) -> None:
         """Activate changes using the UI.
 
         Args:
@@ -131,6 +135,10 @@ class CmkPage(LocatorHelper):
                 make sure to activate the changes using REST-API.
                 Defaults to None.
                 NOTE: Activate 'foreign changes' is enabled using REST-API!
+            navigate_to_page (bool, optional): Navigate to the 'Activate changes' page
+                before activating changes. Defaults to True.
+            number_of_sites (int, optional): The number of sites changes are expected
+                to be activated on. Defaults to 1.
         """
         logger.info("Activate changes")
         try:
@@ -138,7 +146,7 @@ class CmkPage(LocatorHelper):
                 self.main_menu.changes_menu("Open full view").click()
             self.page.wait_for_url(url=re.compile(re.escape("wato.py?mode=changelog")))
             self._activate_selected()
-            self._expect_success_state()
+            self._expect_success_state(number_of_sites)
         except Exception as e:
             if site:
                 logger.warning("fail-safe: could not activate changes using UI; using REST-API...")

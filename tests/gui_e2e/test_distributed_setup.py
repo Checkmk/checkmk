@@ -121,7 +121,7 @@ def test_remote_host_configuring(
         distributed_monitoring_page.login_to_remote_site(remote_site, credentials)
         distributed_monitoring_page.check_site_online_status(remote_site.id)
 
-        distributed_monitoring_page.activate_changes(test_site)
+        distributed_monitoring_page.activate_changes(test_site, number_of_sites=2)
 
         distributed_monitoring_page.navigate()
         distributed_monitoring_page.check_site_online_status(remote_site.id)

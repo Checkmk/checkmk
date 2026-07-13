@@ -1843,7 +1843,9 @@ class EnabledDisabledServicesEditor:
                 services.remove(service)
 
         service_patterns = [service_description_to_condition(s) for s in services]
-        modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
+        modified_folders += self._update_rule_of_host(
+            ruleset, service_patterns, value=value, use_git=use_git
+        )
 
         for folder in modified_folders:
             rulesets.save_folder(folder, pprint_value=pprint_value, debug=debug)
@@ -1858,30 +1860,45 @@ class EnabledDisabledServicesEditor:
     ) -> list[Folder]:
         other_rule = self._get_rule_of_host(ruleset, value)
         if other_rule and isinstance(other_rule.conditions.service_description, list):
+            original_rule = other_rule.clone(preserve_id=True)
+            modified = False
             for service_condition in service_patterns:
                 if service_condition in other_rule.conditions.service_description:
                     other_rule.conditions.service_description.remove(service_condition)
+                    modified = True
 
             if not other_rule.conditions.service_description:
                 ruleset.delete_rule(other_rule, create_change=True, use_git=use_git)
+            elif modified:
+                self._log_edit_rule(ruleset, original_rule, other_rule, use_git=use_git)
 
             return [other_rule.folder]
 
         return []
 
     def _update_rule_of_host(
-        self, ruleset: Ruleset, service_patterns: Sequence[HostOrServiceConditionRegex], value: Any
+        self,
+        ruleset: Ruleset,
+        service_patterns: Sequence[HostOrServiceConditionRegex],
+        value: Any,
+        *,
+        use_git: bool,
     ) -> list[Folder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 
         if rule and isinstance(rule.conditions.service_description, list):
+            original_rule = rule.clone(preserve_id=True)
             rule_service_conditions = cast(
                 list[HostOrServiceConditionRegex], rule.conditions.service_description
             )
+            modified = False
             for service_condition in service_patterns:
                 if service_condition not in rule_service_conditions:
                     rule.conditions.service_description.append(service_condition)
+                    modified = True
+            if modified:
+                self._log_edit_rule(ruleset, original_rule, rule, use_git=use_git)
 
         elif service_patterns:
             value_model = ruleset.rulespec.value_model
@@ -1900,10 +1917,26 @@ class EnabledDisabledServicesEditor:
 
             rule.value = value
             ruleset.prepend_rule(folder, rule)
+            index = ruleset.get_folder_rules(folder).index(rule)
+            ruleset.add_new_rule_change(index, folder, rule, use_git=use_git)
 
         if rule:
             return [rule.folder]
         return []
+
+    @staticmethod
+    def _log_edit_rule(ruleset: Ruleset, original_rule: Rule, rule: Rule, *, use_git: bool) -> None:
+        index = ruleset.get_folder_rules(rule.folder).index(rule)
+        add_change(
+            action_name="edit-rule",
+            text=_l('Changed properties of rule #%d in rule set "%s" in folder "%s"')
+            % (index, ruleset.title(), rule.folder.alias_path()),
+            user_id=user.id,
+            sites=rule.folder.all_site_ids(),
+            diff_text=ruleset.diff_rules(original_rule, rule),
+            object_ref=rule.object_ref(),
+            use_git=use_git,
+        )
 
     def _get_rule_of_host(self, ruleset: Ruleset, value: Any) -> Rule | None:
         for _folder, _index, rule in ruleset.get_rules():

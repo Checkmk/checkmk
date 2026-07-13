@@ -99,10 +99,8 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
         return json.loads((home / ".cmk-werk-ids").read_text().strip())["ids_by_project"]
 
     cmk_repo_path = tmp_path / "repo_cmk"
-    cloudmk_repo_path = tmp_path / "repo_cloudmk"
 
     initialize_werks_project(cmk_repo_path, project="cmk", first_free=11_111)
-    initialize_werks_project(cloudmk_repo_path, project="cloudmk", first_free=1_111_111)
 
     with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
         os.chdir(cmk_repo_path)
@@ -113,53 +111,31 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
             "cmk": [11111, 11112, 11113, 11114, 11115],
         }
 
-        os.chdir(cloudmk_repo_path)
-        call("ids", "2")
-        assert latest_commit_subject(cloudmk_repo_path) == "Reserved 2 Werk IDS"
-        assert (cloudmk_repo_path / ".werks/first_free").read_text().strip() == "1111113"
-        assert read_reserved_werks() == {
-            "cmk": [11111, 11112, 11113, 11114, 11115],
-            "cloudmk": [1111111, 1111112],
-        }
-
-        os.chdir(cmk_repo_path)
         create_werk(title="some_title")
         assert latest_commit_subject(cmk_repo_path) == "11111 some_title"
         assert "some_title" in (cmk_repo_path / ".werks/11111.md").read_text()
         assert read_reserved_werks() == {
             "cmk": [11112, 11113, 11114, 11115],
-            "cloudmk": [1111111, 1111112],
-        }
-
-        os.chdir(cloudmk_repo_path)
-        create_werk(title="some_cloud_title")
-        assert latest_commit_subject(cloudmk_repo_path) == "1111111 some_cloud_title"
-        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111.md").read_text()
-        assert read_reserved_werks() == {
-            "cmk": [11112, 11113, 11114, 11115],
-            "cloudmk": [1111112],
         }
 
 
 def test_commit_config(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
-    cloudmk_repo_path = tmp_path / "repo_cloudmk"
-    initialize_werks_project(
-        cloudmk_repo_path, project="cloudmk", first_free=1_111_111, commit=False
-    )
-    assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
+    cmk_repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(cmk_repo_path, project="cmk", first_free=11_111, commit=False)
+    assert latest_commit_subject(cmk_repo_path) == "initial commit"
 
     with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
-        os.chdir(cloudmk_repo_path)
+        os.chdir(cmk_repo_path)
         call("ids", "2")
-        assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
+        assert latest_commit_subject(cmk_repo_path) == "initial commit"
         # just lets make sure that the ids were actually reserved:
         json.loads((home / ".cmk-werk-ids").read_text())["ids_by_project"] == {
-            "cloudmk": [1111111, 1111112]
+            "cmk": [11111, 11112]
         }
 
         create_werk(title="some_cloud_title")
-        assert latest_commit_subject(cloudmk_repo_path) == "initial commit"
+        assert latest_commit_subject(cmk_repo_path) == "initial commit"
         # just lets make sure that the werk was actually created:
-        assert "some_cloud_title" in (cloudmk_repo_path / ".werks/1111111.md").read_text()
+        assert "some_cloud_title" in (cmk_repo_path / ".werks/11111.md").read_text()

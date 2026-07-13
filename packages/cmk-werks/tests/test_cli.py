@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from cmk.werks.cli import (
+    _reject_ids_unsupported_by_legacy_workflow,
     _reserve_werk_ids,
     add_id_to_stash,
     dump_stash_to_file,
@@ -86,6 +87,15 @@ def test_reserve_werk_id_fails():
     with pytest.raises(RuntimeError, match="Not enough ids available"):
         # too many ids requested
         _reserve_werk_ids([(10, 20), (30, 40), (50, 60)], 15, 200)
+
+
+def test_reject_ids_unsupported_by_legacy_workflow_allows_low_ids() -> None:
+    _reject_ids_unsupported_by_legacy_workflow(tw([22_001, 22_002]))
+
+
+def test_reject_ids_unsupported_by_legacy_workflow_bails_on_high_id() -> None:
+    with pytest.raises(SystemExit):
+        _reject_ids_unsupported_by_legacy_workflow(tw([22_002, 22_003]))
 
 
 # ---------------------------------------------------------------------------

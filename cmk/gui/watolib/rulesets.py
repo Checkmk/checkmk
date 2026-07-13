@@ -1750,12 +1750,17 @@ class EnabledDisabledServicesEditor:
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
         other_rule = self._get_rule_of_host(ruleset, value)
         if other_rule and isinstance(other_rule.conditions.service_description, list):
+            original_rule = other_rule.clone(preserve_id=True)
+            modified = False
             for service_condition in service_patterns:
                 if service_condition in other_rule.conditions.service_description:
                     other_rule.conditions.service_description.remove(service_condition)
+                    modified = True
 
             if not other_rule.conditions.service_description:
                 ruleset.delete_rule(other_rule)
+            elif modified:
+                self._log_edit_rule(ruleset, original_rule, other_rule)
 
             return [other_rule.folder]
 
@@ -1768,9 +1773,14 @@ class EnabledDisabledServicesEditor:
         rule = self._get_rule_of_host(ruleset, value)
 
         if rule:
+            original_rule = rule.clone(preserve_id=True)
+            modified = False
             for service_condition in service_patterns:
                 if service_condition not in rule.conditions.service_description:
                     rule.conditions.service_description.append(service_condition)
+                    modified = True
+            if modified:
+                self._log_edit_rule(ruleset, original_rule, rule)
 
         elif service_patterns:
             rule = Rule.from_ruleset_defaults(folder, ruleset)
@@ -1786,10 +1796,25 @@ class EnabledDisabledServicesEditor:
 
             rule.value = value
             ruleset.prepend_rule(folder, rule)
+            index = ruleset.get_folder_rules(folder).index(rule)
+            ruleset.add_new_rule_change(index, folder, rule)
 
         if rule:
             return [rule.folder]
         return []
+
+    @staticmethod
+    def _log_edit_rule(ruleset: Ruleset, original_rule: Rule, rule: Rule) -> None:
+        index = ruleset.get_folder_rules(rule.folder).index(rule)
+        add_change(
+            action_name="edit-rule",
+            text=_l('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
+            % (index, ruleset.title(), rule.folder.alias_path()),
+            add_user=True,
+            sites=rule.folder.all_site_ids(),
+            diff_text=ruleset.diff_rules(original_rule, rule),
+            object_ref=rule.object_ref(),
+        )
 
     def _get_rule_of_host(self, ruleset, value):
         for _folder, _index, rule in ruleset.get_rules():

@@ -70,6 +70,8 @@ WERK_ID_RANGES = {
     "cloudmk": [(1_000_000, 2_000_000)],
 }
 
+_FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW = 22003
+
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1100,6 +1102,15 @@ def _reserve_werk_ids(
     raise RuntimeError("could not allocate ids")
 
 
+def _reject_ids_unsupported_by_legacy_workflow(werk_ids: Sequence[WerkId]) -> None:
+    if any(werk_id.id >= _FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW for werk_id in werk_ids):
+        bail_out(
+            "The manual reservation of werk IDs is no longer supported. Please run 'werk init' "
+            "to migrate to the new reservation mechanism, which reserves werk IDs on the fly "
+            "during 'werk new'."
+        )
+
+
 def main_fetch_ids(args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
     stash = load_stash_from_file(paths)
@@ -1140,6 +1151,8 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     ranges = WERK_ID_RANGES[project].copy()
 
     new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
+
+    _reject_ids_unsupported_by_legacy_workflow(fresh_ids)
 
     stash = load_legacy_stash_from_file(paths)
     for werk_id in fresh_ids:

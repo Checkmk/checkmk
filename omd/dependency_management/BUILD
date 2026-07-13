@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_pytest_main", "py_test")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -45,6 +45,35 @@ bill_of_materials(
     name = "bill_of_materials",
     dependencies = ":list_of_dependencies",
     vulnerability_info = "vulnerability_info.yml",
+)
+
+py_pytest_main(
+    name = "__test__",
+    args = [
+        "omd/dependency_management/test_licenses.py",
+    ],
+    deps = [requirement("pytest")],
+)
+
+py_test(
+    name = "test_licenses",
+    srcs = [
+        "cyclonedx.py",
+        "test_licenses.py",
+        ":__test__.py",
+    ],
+    data = [
+        "automatically_researched_licenses.json",
+        "manually_researched_licenses.json",
+        ":list_of_dependencies",
+    ],
+    imports = ["."],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        requirement("pydantic"),
+        requirement("pytest"),
+    ],
 )
 
 py_binary(

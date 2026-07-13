@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import timedelta
+
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
@@ -18,6 +21,7 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistr
 from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _config, _filters, _icons, _openapi, _snapins, _valuespecs
+from ._cron import compile_bi_aggregations, COMPILE_BI_AGGREGATIONS_JOB_ID
 from ._host_rename import rename_host_in_bi
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
 from .permissions import register_permissions
@@ -68,6 +72,7 @@ def register(
     endpoint_registry: EndpointRegistry,
     command_registry: CommandRegistry,
     command_group_registry: CommandGroupRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     data_source_registry.register(DataSourceBIAggregations)
     data_source_registry.register(DataSourceBIHostAggregations)
@@ -120,3 +125,12 @@ def register(
         RenameHostHook(RenamePhase.SETUP, "BI aggregations", rename_host_in_bi)
     )
     _openapi.register(endpoint_registry)
+
+    cron_job_registry.register(
+        CronJob(
+            name=COMPILE_BI_AGGREGATIONS_JOB_ID,
+            callable=compile_bi_aggregations,
+            interval=timedelta(minutes=1),
+            run_in_thread=True,
+        )
+    )

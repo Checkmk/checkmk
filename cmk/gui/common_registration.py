@@ -302,6 +302,7 @@ def register(
         endpoint_registry,
         command_registry,
         command_group_registry,
+        cron_job_registry,
     )
     nodevis.register(page_registry, filter_registry, icon_and_action_registry, cron_job_registry)
     notifications.register(page_registry, permission_section_registry)

@@ -73,20 +73,6 @@ class BICompiler:
         return self._compiled_aggregations
 
     def load_compiled_aggregations(self) -> None:
-        try:
-            self._check_compilation_status()
-        finally:
-            self._load_compiled_aggregations()
-
-    def _get_currently_loaded_aggregation_identifiers(self) -> set[storage.Identifier]:
-        return {storage.generate_identifier(id_) for id_ in self._compiled_aggregations}
-
-    def _get_vanished_aggregation_identifiers(self) -> set[storage.Identifier]:
-        stored_identifiers = set(self._aggregation_store.yield_stored_identifiers())
-        loaded_identifiers = self._get_currently_loaded_aggregation_identifiers()
-        return stored_identifiers - loaded_identifiers
-
-    def _load_compiled_aggregations(self) -> None:
         for identifier in self._get_vanished_aggregation_identifiers():
             aggregation = self._aggregation_store.get_by_identifier(identifier)
             LOGGER.debug(
@@ -97,7 +83,7 @@ class BICompiler:
 
         self._compiled_aggregations = self._frozen_manager.update(self._compiled_aggregations)
 
-    def _check_compilation_status(self) -> None:
+    def compile_if_needed(self) -> None:
         current_configstatus = self.compute_current_configstatus()
         if not self._compilation_required(current_configstatus):
             LOGGER.debug("No compilation required.")
@@ -134,6 +120,14 @@ class BICompiler:
             self._metadata_store.update_last_compilation(
                 current_configstatus["configfile_timestamp"]
             )
+
+    def _get_currently_loaded_aggregation_identifiers(self) -> set[storage.Identifier]:
+        return {storage.generate_identifier(id_) for id_ in self._compiled_aggregations}
+
+    def _get_vanished_aggregation_identifiers(self) -> set[storage.Identifier]:
+        stored_identifiers = set(self._aggregation_store.yield_stored_identifiers())
+        loaded_identifiers = self._get_currently_loaded_aggregation_identifiers()
+        return stored_identifiers - loaded_identifiers
 
     def _get_multiprocessing_pool(self, aggregation_count: int) -> Pool:
         # HACK: due to known constraints with multiprocessing in Python, this is a simple way to

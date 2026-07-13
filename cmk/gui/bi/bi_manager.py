@@ -26,10 +26,16 @@ from cmk.livestatus_client import LivestatusResponse, Query
 
 
 class BIManager:
-    def __init__(self) -> None:
+    def __init__(self, run_compile_check: bool = True) -> None:
         sites_callback = create_default_sites_callback()
         self.compiler = BICompiler(get_bi_config_path(), sites_callback)
-        self.compiler.load_compiled_aggregations()
+
+        try:
+            if run_compile_check:
+                self.compiler.compile_if_needed()
+        finally:
+            self.compiler.load_compiled_aggregations()
+
         self.status_fetcher = BIStatusFetcher(sites_callback)
         self.computer = BIComputer(self.compiler.compiled_aggregations, self.status_fetcher)
 

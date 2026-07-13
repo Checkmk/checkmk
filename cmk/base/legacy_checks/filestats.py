@@ -31,6 +31,19 @@ check_info = {}
 
 # 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
+
+_FUTURE_MTIME_MESSAGE = (
+    "The timestamp of the file is in the future. Please investigate your host times"
+)
+
+
+def _render_age(age: float) -> str:
+    """Render a file age, marking a future mtime (negative age) with a leading minus."""
+    if age < 0:
+        return f"-{render.timespan(-age)}"
+    return render.timespan(age)
+
+
 # .
 #   .--Parsing-------------------------------------------------------------.
 #   |                  ____                _                               |
@@ -119,6 +132,12 @@ def check_filestats_extremes(files, params, show_files=False):
 
         files_with_metric.sort(key=lambda f: f.get(key))
         for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
+            if key == "age" and efile[key] < 0:
+                yield (
+                    3,
+                    f"[{efile['path']}] {label.title()}: {_render_age(efile[key])}, {_FUTURE_MTIME_MESSAGE}",
+                )
+                continue
             levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
                 f"min{key}_{label}", (None, None)
             )
@@ -145,12 +164,11 @@ def check_filestats_extremes(files, params, show_files=False):
             if state == 0:
                 break
             if efile["path"] not in long_output:
-                text = "Age: {}, Size: {}{}".format(
-                    render.timespan(efile["age"]),
+                long_output[efile["path"]] = "Age: {}, Size: {}{}".format(
+                    _render_age(efile["age"]),
                     render.disksize(efile["size"]),
                     STATE_MARKERS[state],
                 )
-                long_output[efile["path"]] = text
 
         max_label_levels = params.get(f"max{key}_{maxlabel}", (None, None)) + params.get(
             f"min{key}_{maxlabel}", (None, None)
@@ -164,12 +182,11 @@ def check_filestats_extremes(files, params, show_files=False):
             if state == 0:
                 break
             if efile["path"] not in long_output:
-                text = "Age: {}, Size: {}{}".format(
-                    render.timespan(efile["age"]),
+                long_output[efile["path"]] = "Age: {}, Size: {}{}".format(
+                    _render_age(efile["age"]),
                     render.disksize(efile["size"]),
                     STATE_MARKERS[state],
                 )
-                long_output[efile["path"]] = text
 
     return ["[%s] %s" % key_text for key_text in sorted(long_output.items())]
 
@@ -274,6 +291,13 @@ def check_filestats_single(item, params, parsed):
 
     for key, hr_function in (("size", render.disksize), ("age", render.timespan)):
         if (value := single_stat.get(key)) is None:
+            continue
+
+        if key == "age" and value < 0:
+            yield (
+                3,
+                f"[{single_stat['path']}] Age: {_render_age(value)}, {_FUTURE_MTIME_MESSAGE}",
+            )
             continue
 
         yield check_levels(

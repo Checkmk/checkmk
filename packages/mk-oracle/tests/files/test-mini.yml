@@ -4,12 +4,12 @@ oracle:
     options:
       _use_host_client: /usr/lib/oracle/21/client64/lib # you may use it to correctly set path to custom client
     connection: # mandatory
-      hostname: ora-rocktest.dev.checkmk.net
+      hostname: oracle-rocky-ci.lan.checkmk.net
       port: 1521
-      service_name: TEST23
+      service_name: dbtest23
     authentication: # mandatory
-      username: $CI_ORA2_DB_TEST
-      password: $CI_ORA2_DB_TEST
+      username: system
+      password: $CI_ORA_TEST_PASSWORD
       type: standard
 #      role: sysdba # it may be not enabled by Oracle DBA
 #    sections: # optional, if absent will use default as defined below

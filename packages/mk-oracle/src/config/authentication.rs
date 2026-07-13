@@ -257,6 +257,7 @@ fn _extract_username_if_env_var<T: AsRef<str> + Sized>(value: T) -> String {
     let v = value.as_ref();
     _extract_endpoint_if_env_var(v)
         .map(|ep| ep.user)
+        .or_else(|| _extract_env_var(v))
         .unwrap_or_else(|| v.to_owned())
 }
 
@@ -264,7 +265,16 @@ fn _extract_password_if_env_var<T: AsRef<str> + Sized>(value: T) -> String {
     let v = value.as_ref();
     _extract_endpoint_if_env_var(v)
         .map(|ep| ep.pwd)
+        .or_else(|| _extract_env_var(v))
         .unwrap_or_else(|| v.to_owned())
+}
+
+fn _extract_env_var(value: &str) -> Option<String> {
+    let name = value.strip_prefix('$')?;
+    if name.is_empty() {
+        return None;
+    }
+    std::env::var(name).ok()
 }
 
 fn _extract_endpoint_if_env_var<T: AsRef<str> + Sized>(value: T) -> Option<SqlDbEndpoint> {
@@ -457,5 +467,32 @@ authentication:
         assert_eq!(a.username(), "");
         assert_eq!(a.password(), None);
         assert_eq!(a.auth_type(), &AuthType::Os);
+    }
+
+    #[test]
+    fn test_extract_env_var() {
+        assert_eq!(_extract_env_var("no_dollar"), None);
+        assert_eq!(_extract_env_var(""), None);
+        assert_eq!(_extract_env_var("$"), None);
+        assert_eq!(_extract_env_var("$SURELY_UNSET_VAR_XYZ"), None);
+    }
+
+    #[test]
+    fn test_extract_if_env_var_literal_passthrough() {
+        assert_eq!(_extract_username_if_env_var("admin"), "admin");
+        assert_eq!(_extract_password_if_env_var("secret"), "secret");
+        assert_eq!(
+            _extract_username_if_env_var("$SURELY_UNSET_VAR_XYZ"),
+            "$SURELY_UNSET_VAR_XYZ"
+        );
+    }
+
+    #[test]
+    fn test_extract_from_ci_env_var() {
+        if std::env::var("CI_ORA_TEST_PASSWORD").is_err() {
+            return;
+        }
+        assert!(!_extract_password_if_env_var("$CI_ORA_TEST_PASSWORD").is_empty());
+        assert!(!_extract_username_if_env_var("$CI_ORA_TEST_PASSWORD").is_empty());
     }
 }

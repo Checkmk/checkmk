@@ -217,6 +217,45 @@ def test_check_single_regression(item, params, expected):
     assert results == expected
 
 
+def test_check_single_future_mtime() -> None:
+    """A single file whose mtime is in the future yields a negative age."""
+    string_table = [
+        ["[[[single_file future file]]]"],
+        [
+            "{'type': 'file', 'path': '/tmp/future', 'stat_status': 'ok', 'size': 10, 'age': -3600, 'mtime': 99999999999}"
+        ],
+    ]
+    section = parse_filestats(string_table)
+    results = list(check_filestats_single("future file", {}, section))
+    assert results == [
+        (0, "Size: 10 B", [("size", 10, None, None)]),
+        (
+            3,
+            "[/tmp/future] Age: -1 hour 0 minutes, The timestamp of the file is in the future. Please investigate your host times",
+        ),
+    ]
+
+
+def test_check_group_future_mtime() -> None:
+    """A negative age (mtime in the future) must not crash the group check."""
+    string_table = [
+        ["[[[file_stats future files]]]"],
+        [
+            "{'type': 'file', 'path': '/tmp/future', 'stat_status': 'ok', 'size': 10, 'age': -3600, 'mtime': 99999999999}"
+        ],
+        [
+            "{'type': 'file', 'path': '/tmp/normal', 'stat_status': 'ok', 'size': 20, 'age': 3600, 'mtime': 1}"
+        ],
+        ["{'type': 'summary', 'count': 2}"],
+    ]
+    section = parse_filestats(string_table)
+    results = list(check_filestats("future files", {}, section))
+    assert (
+        3,
+        "[/tmp/future] Newest: -1 hour 0 minutes, The timestamp of the file is in the future. Please investigate your host times",
+    ) in results
+
+
 def test_check_single_duplicate_file() -> None:
     """Data as the one below occurs due to Werk 15605. However, since the behaviour below was not
     introduced by that Werk, such data may occur in other situations as well."""

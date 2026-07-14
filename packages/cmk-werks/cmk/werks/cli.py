@@ -1453,14 +1453,22 @@ def _reserve_werk_ids(
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
-    stash = load_legacy_stash_from_file(paths)
+    stash = load_stash_from_file(paths)
 
     if args.count is None:
-        per_project = "\n".join(
-            f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items()
-        )
-        sys.stdout.write(f"You have {stash.count()} reserved IDs:\n{per_project}\n")
+        sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
+        if isinstance(stash, LegacyStash):
+            sys.stdout.write(
+                "\n".join(f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items())
+            )
+            sys.stdout.write("\n")
         sys.exit(0)
+
+    if isinstance(stash, Stash):
+        bail_out(
+            "You already converted to the new workflow, there is no need to reserve Werks. "
+            "Go live your happy life and just create Werks."
+        )
 
     if current_branch() != "master" or current_repo() != "check_mk":
         bail_out("Werk IDs can only be reserved on the master branch of the check_mk repository.")

@@ -1519,6 +1519,8 @@ oracle:
     authentication:
       username: "c##checkmk"
       password: "********"
+    discovery:
+      detect: no
     instances:
       - sid: $NON_EXISTING_ENV_VAR_FDFDD
         alias: $NON_EXISTING_ENV_VAR_FDFDD
@@ -1551,6 +1553,8 @@ oracle:
     authentication:
       username: "c##checkmk"
       password: "********"
+    discovery:
+      detect: no
     instances:
       - sid: $USERNAME
         alias: $USERNAME
@@ -1565,7 +1569,8 @@ oracle:
         assert_eq!(
             config.instances().len(),
             1,
-            "instance with unresolvable env ref must be skipped"
+            "instance with unresolvable env ref must be skipped {:?}",
+            config.instances()
         );
     }
 

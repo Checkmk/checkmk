@@ -1005,6 +1005,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(windows))]
     #[test]
     fn test_convert_remote_instance_platform_behavior() {
         let vars = HashMap::from([

@@ -70,6 +70,15 @@ class SignatureKeysPage(CmkPage):
     def create_key_button(self) -> Locator:
         return self.main_area.get_suggestion("Create")
 
+    @property
+    def keys_table(self) -> Locator:
+        return self.main_area.locator("table.data")
+
+    @property
+    def no_keys_message(self) -> Locator:
+        """Shown instead of `keys_table` when there are no keys."""
+        return self.main_area.locator("div.info", has_text="No entries.")
+
     def _ensure_agents_menu_content_visible(self) -> None:
         """
         Flake-proofing: interaction with 'Agents menu' is unreliable.
@@ -133,23 +142,29 @@ class SignatureKeysPage(CmkPage):
         `Setup > Windows, Linux, ... > Signature keys for signing agents`
         """
 
-        def _delete_key(row: Locator) -> None:
+        def _delete_key(row: Locator, verify_removal: bool = True) -> None:
             key_identifier = identifier if identifier else row.inner_text().replace("\t", " ")
             logger.info("Deleting key: '%s'!", key_identifier)
             row.get_by_role("link", name="Delete this key").click()
             self.confirm_delete_button.click()
-            expect(row, f"Key: '{key_identifier}' not deleted from the list!").to_have_count(0)
+            if verify_removal:
+                expect(row, f"Key: '{key_identifier}' not deleted from the list!").to_have_count(0)
 
         if identifier:
-            key_to_delete = self.main_area.locator(f"tr.data:has-text('{identifier}')")
-            _delete_key(key_to_delete)
+            _delete_key(self.main_area.locator(f"tr.data:has-text('{identifier}')"))
         else:
-            rows = self.main_area.locator("tr.data").all()
-            if not rows:
+            rows = self.main_area.locator("tr.data")
+            # Guards rows.count() below: the table only renders when there's at least
+            # one key, otherwise the page shows the "no entries" message instead.
+            expect(
+                self.keys_table.or_(self.no_keys_message),
+                message="Neither the signature keys table nor the 'no entries' message rendered",
+            ).to_be_visible()
+            if not rows.count():
                 logger.info("There are no keys available. Skip deletion ...")
-            # delete the listed keys, if any.
-            for row in rows:
-                _delete_key(row)
+            for expected_remaining in range(rows.count() - 1, -1, -1):
+                _delete_key(rows.first, verify_removal=False)
+                expect(rows).to_have_count(expected_remaining)
 
     def delete_all_keys(self) -> None:
         self.delete_key(None)

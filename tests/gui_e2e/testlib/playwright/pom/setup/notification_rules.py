@@ -66,8 +66,12 @@ class BaseNotificationPage(QuickSetupPage):
         return self._get_row("Host events").get_by_role("list").get_by_role("listitem")
 
     @property
+    def _service_events_list(self) -> Locator:
+        return self._get_row("Service events").get_by_role("list")
+
+    @property
     def _service_events_rows(self) -> Locator:
-        return self._get_row("Service events").get_by_role("list").get_by_role("listitem")
+        return self._service_events_list.get_by_role("listitem")
 
     @property
     def _add_service_event_button(self) -> Locator:
@@ -177,8 +181,16 @@ class BaseNotificationPage(QuickSetupPage):
         return self._stage_four.get_by_role("button", name="Add recipient")
 
     @property
+    def _select_recipient_group(self) -> Locator:
+        return self._stage_four.get_by_role("group", name="Select recipient")
+
+    @property
+    def _recipients_table(self) -> Locator:
+        return self._select_recipient_group.locator("table")
+
+    @property
     def _recipients_rows(self) -> Locator:
-        return self._stage_four.get_by_role("group", name="Select recipient").locator("table > tr")
+        return self._select_recipient_group.locator("table > tr")
 
     @property
     def _recipient_group(self) -> Locator:
@@ -215,8 +227,15 @@ class BaseNotificationPage(QuickSetupPage):
         )
 
     def delete_all_service_events(self) -> None:
-        for _ in self._service_events_rows.all():
-            self._service_events_rows.first.get_by_role("button", name="Remove element").click()
+        rows = self._service_events_rows
+        expect(
+            self._service_events_list, message="The service events list did not render"
+        ).to_be_visible()
+        remaining = len(rows.all())
+        for _ in range(remaining):
+            remaining -= 1
+            rows.first.get_by_role("button", name="Remove element").click()
+            expect(rows).to_have_count(remaining)
 
     # stage 6
     @property
@@ -264,8 +283,15 @@ class BaseNotificationPage(QuickSetupPage):
         self._match_services_text_field(0).fill(service_name)
 
     def delete_all_recipients(self) -> None:
-        for _ in self._recipients_rows.all():
+        rows = self._recipients_rows
+        expect(
+            self._recipients_table, message="The recipients table did not render"
+        ).to_be_visible()
+        remaining = len(rows.all())
+        for _ in range(remaining):
+            remaining -= 1
             self.delete_recipient_button(0).click()
+            expect(rows).to_have_count(remaining)
 
     def set_recipient(self, index: int, recipient_option_name: str) -> None:
         self.select_recipient_dropdown(index).click()

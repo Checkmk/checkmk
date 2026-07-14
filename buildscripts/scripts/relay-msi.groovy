@@ -75,7 +75,8 @@ void main() {
         }
 
         // Unit tests: validate the MSI we just built (structure + signature).
-        // test-msi.ps1 gates via exit code AND emits a JUnit XML.
+        // run-tests.ps1 gates via exit code AND emits a JUnit XML. Runs outside the
+        // signing credentials, exactly as before.
         try {
             windows.build(
                 TARGET: 'relay_msi_test',

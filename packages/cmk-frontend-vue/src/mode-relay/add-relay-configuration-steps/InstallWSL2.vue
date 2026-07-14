@@ -45,6 +45,16 @@ const installScript = `wsl --install --web-download --no-distribution`
           )
         }}
       </CmkAlertBox>
+      <CmkAlertBox variant="warning">
+        {{
+          _t(
+            'For running WSL2 your system needs to have virtualization enabled. ' +
+              'If Windows runs on a VM, the VM must support nested virtualization. ' +
+              'This is usually disabled by default and must be enabled at the ' +
+              'hypervisor/cloud level, not inside Windows.'
+          )
+        }}
+      </CmkAlertBox>
     </template>
 
     <template #actions>

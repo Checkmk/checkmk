@@ -27,4 +27,10 @@ describe('InstallWSL2', () => {
 
     expect(screen.getByText(/restart the computer manually/)).toBeInTheDocument()
   })
+
+  test('shows nested virtualization notice', () => {
+    mountWithWizardContext(InstallWSL2, baseProps)
+
+    expect(screen.getByText(/must support nested virtualization/)).toBeInTheDocument()
+  })
 })

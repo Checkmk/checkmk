@@ -78,7 +78,7 @@ def check_sap_hana_diskusage(
     elif state_name == "UNKNOWN":
         state = State.UNKNOWN
     elif state_name == "WARNING":
-        state = State.WARN        
+        state = State.WARN
     else:
         state = State.CRIT
     yield Result(state=state, summary="Status: %s" % state_name)

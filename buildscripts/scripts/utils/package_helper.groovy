@@ -73,6 +73,37 @@ LinkedHashMap<String, List> dependency_paths_hashes() {
     }
 }
 
+/// TEMPORARY -- REVERT once the AIX build host is healthy again.
+/// The AIX build host (161.156.22.82) refuses SSH connections (sshd closes the
+/// connection before its protocol banner), so build-mk-oracle-on-aix-and-solaris
+/// cannot build the AIX binary and has been failing since build #1141. Until it is
+/// fixed we download pre-built mk-oracle.{aix,solaris} binaries -- built from the
+/// last known-good commit and uploaded manually to Nexus -- instead of building
+/// them. (copyArtifacts does not work on the k8s executors, see test-gerrit.groovy.)
+void download_pinned_mk_oracle_aix_solaris_artifacts(String commit, String target) {
+    sh("""
+        set -e
+        mkdir -p "${target}"
+        base_url="https://artifacts.lan.tribe29.com/repository/upstream-archives"
+
+        # The minimal container this runs in has no curl/wget, but always has
+        # python3 (ci-artifacts is a python tool run in the same container).
+        fetch() {
+            if command -v curl >/dev/null 2>&1; then
+                curl -sSfL "\$1" -o "\$2"
+            elif command -v wget >/dev/null 2>&1; then
+                wget -q -O "\$2" "\$1"
+            else
+                python3 -c "import sys, urllib.request; urllib.request.urlretrieve(sys.argv[1], sys.argv[2])" "\$1" "\$2"
+            fi
+        }
+
+        for os in aix solaris; do
+            fetch "\${base_url}/mk-oracle.\${os}_${commit}" "${target}/mk-oracle.\${os}"
+        done
+    """);
+}
+
 /* groovylint-disable MethodSize */
 void provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
@@ -111,7 +142,15 @@ void provide_agent_binaries(Map args) {
         ],
         "build-mk-oracle-aix-solaris": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
+            // TEMPORARY -- REVERT once the AIX build host is healthy again.
+            // The AIX build host (161.156.22.82) refuses SSH connections (sshd closes
+            // the connection before its protocol banner), so this job cannot build the
+            // AIX binary and has been failing since build #1141. Instead of building or
+            // resolving an upstream build, download pre-built mk-oracle.{aix,solaris}
+            // binaries from Nexus. They were built from the last known-good release
+            // candidate and uploaded to the upstream-archives repository manually.
+            // See download_pinned_mk_oracle_aix_solaris_artifacts() below.
+            pinned_nexus_commit: "2.5.0p9-rc4",
             additional_build_params: [],
             condition: ! test_binaries_only,
             retry: 1,
@@ -254,6 +293,17 @@ void provide_agent_binaries(Map args) {
                 raiseOnError: true,
                 retry: details.retry ?: 1,
             ) {
+                if (details.pinned_nexus_commit) {
+                    // TEMPORARY: download the pre-built artifacts from Nexus instead of
+                    // building / resolving an upstream build (see the job entry above).
+                    download_pinned_mk_oracle_aix_solaris_artifacts(
+                        details.pinned_nexus_commit,
+                        "${checkout_dir}/${args.artifacts_base_dir}/${job_name}",
+                    );
+                    // truthy so the "Move artifacts around" stage runs
+                    build_instance = true;
+                    return build_instance;
+                }
                 def this_parameters = [
                     use_upstream_build: true,
                     force_build: params.DISABLE_JENKINS_CACHE == true,

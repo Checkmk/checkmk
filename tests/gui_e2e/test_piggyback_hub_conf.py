@@ -69,7 +69,9 @@ def _enable_hub_globally(
 
 
 def _disable_hub_globally(
-    dashboard_page: MainDashboard, disable_action: HubDisableActions = HubDisableActions.SAVE
+    dashboard_page: MainDashboard,
+    disable_action: HubDisableActions = HubDisableActions.SAVE,
+    expect_success: bool = True,
 ) -> None:
     logger.info("Disable the piggyback-hub globally")
     match disable_action:
@@ -82,7 +84,7 @@ def _disable_hub_globally(
             global_settings_page.toggle("Enable piggyback-hub")
         case HubDisableActions.RESET:
             settings_page = EditPiggybackHubGlobally(dashboard_page.page)
-            settings_page.to_factory_settings()
+            settings_page.to_factory_settings(expect_success=expect_success)
         case _:
             assert_never(disable_action)
 
@@ -111,6 +113,7 @@ def _disable_hub_site_specific(
     dashboard_page: MainDashboard,
     site_id: str,
     disable_action: HubDisableActions = HubDisableActions.SAVE,
+    expect_success: bool = True,
 ) -> None:
     logger.info("Disable the piggyback-hub site-specific")
     match disable_action:
@@ -125,7 +128,7 @@ def _disable_hub_site_specific(
             site_specific_global_settings_page.toggle("Enable piggyback-hub")
         case HubDisableActions.RESET:
             site_specific_settings_page = EditPiggybackHubSiteSpecific(dashboard_page.page, site_id)
-            site_specific_settings_page.to_factory_settings()
+            site_specific_settings_page.to_factory_settings(expect_success=expect_success)
         case _:
             assert_never(disable_action)
 
@@ -445,7 +448,9 @@ def test_enabled_on_remote__disable_on_central_by_reset__error(
         ][test_site.id]["globals"]
 
         # when
-        _disable_hub_site_specific(dashboard_page, test_site.id, HubDisableActions.RESET)
+        _disable_hub_site_specific(
+            dashboard_page, test_site.id, HubDisableActions.RESET, expect_success=False
+        )
 
         # then
         dashboard_page.main_area.check_error(
@@ -547,7 +552,7 @@ def test_enabled_on_remote__disable_globally__error(
         original_settings = test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH)
 
         # when
-        _disable_hub_globally(dashboard_page, disable_action)
+        _disable_hub_globally(dashboard_page, disable_action, expect_success=False)
 
         # then
         dashboard_page.main_area.check_error(

@@ -25,10 +25,15 @@ logger = logging.getLogger(__name__)
 class UnifiedSearchSlideout(LocatorHelper):
     """Represents main menu 'Search' slideout"""
 
-    def __init__(self, cmk_page: CmkPage) -> None:
+    def __init__(self, cmk_page: CmkPage, open_slideout: bool = True) -> None:
+        """
+        Args:
+            open_slideout: Open the slideout via the main menu.
+                Pass False when the slideout is already open.
+        """
         self.cmk_page = cmk_page
-        logger.info("Navigate to 'Main menu' -> 'Search' slideout")
-        if not self.slideout.is_visible():
+        if open_slideout:
+            logger.info("Navigate to 'Main menu' -> 'Search' slideout")
             self.cmk_page.main_menu.search_menu().click()
         logger.info("Validate that the unified search is open")
         self.validate()

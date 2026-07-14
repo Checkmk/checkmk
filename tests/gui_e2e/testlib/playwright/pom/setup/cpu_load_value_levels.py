@@ -5,7 +5,7 @@
 
 import logging
 
-from playwright.sync_api import Locator
+from playwright.sync_api import expect, Locator
 
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.gui_e2e.testlib.playwright.pom.setup.predictive_level_helpers import (
@@ -204,6 +204,20 @@ class CPULoadValueLevels:
         """
         logger.info("Setting level type to: %s for %s", level_type.name, self.checkbox_label)
         self.level_type_dropdown.select_option(value=level_type)
+        match level_type:
+            case LevelType.FIXED_LEVELS:
+                expect(
+                    self.fixed_levels_form,
+                    f"Fixed levels form for '{self.checkbox_label}' is not expanded or accessible.",
+                ).to_be_visible()
+            case LevelType.PREDICTIVE_LEVELS:
+                expect(
+                    self.predictive_levels_form,
+                    f"Predictive levels form for '{self.checkbox_label}' "
+                    "is not expanded or accessible.",
+                ).to_be_visible()
+            case LevelType.NO_LEVELS:
+                pass
 
     def configure_fixed_levels(self, warning: float, critical: float) -> None:
         """Configure fixed warning and critical thresholds.
@@ -219,9 +233,6 @@ class CPULoadValueLevels:
             critical,
         )
         self.set_level_type(LevelType.FIXED_LEVELS)
-        assert self.is_fixed_levels_expanded(), (
-            f"Fixed levels form for '{self.checkbox_label}' is not expanded or accessible."
-        )
         self.fixed_warning_input.fill(str(warning))
         self.fixed_critical_input.fill(str(critical))
 
@@ -245,11 +256,7 @@ class CPULoadValueLevels:
             horizon_days,
         )
 
-        # Ensure we're in predictive levels mode and the form is expanded
         self.set_level_type(LevelType.PREDICTIVE_LEVELS)
-        assert self.is_predictive_levels_expanded(), (
-            f"Predictive levels form for '{self.checkbox_label}' is not expanded or accessible."
-        )
 
         # Configure settings
         self.prediction_period_dropdown.select_option(label=period_text)
@@ -365,29 +372,6 @@ class CPULoadValueLevels:
     def is_upper_bound_limits_enabled(self) -> bool:
         """Check if upper bound limits are enabled."""
         return self.upper_bound_limit_checkbox.is_checked()
-
-    def is_predictive_levels_expanded(self) -> bool:
-        """Check if the predictive levels form is expanded and ready for configuration."""
-        try:
-            return (
-                self.is_levels_enabled()
-                and list(LevelType)[int(self.get_current_level_type())]
-                == LevelType.PREDICTIVE_LEVELS
-                and self.predictive_levels_form.is_visible()
-                and self.prediction_period_dropdown.is_visible()
-            )
-        except Exception:
-            return False
-
-    def is_fixed_levels_expanded(self) -> bool:
-        """Check if fixed levels are expanded."""
-        return (
-            self.is_levels_enabled()
-            and list(LevelType)[int(self.get_current_level_type())] == LevelType.FIXED_LEVELS
-            and self.fixed_levels_form.is_visible()
-            and self.fixed_warning_input.is_visible()
-            and self.fixed_critical_input.is_visible()
-        )
 
     def is_no_levels_selected(self) -> bool:
         """Check if no levels are selected."""

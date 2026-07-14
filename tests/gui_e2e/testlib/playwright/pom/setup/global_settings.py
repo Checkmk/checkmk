@@ -9,7 +9,7 @@ from abc import ABC
 from typing import override
 from urllib.parse import quote_plus
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
@@ -83,11 +83,10 @@ class EditGlobalSetting(CmkPage, ABC):
 
     @property
     def factory_settings_button(self) -> Locator:
-        reset_option_1 = self.main_area.get_suggestion("Reset to default")
         # button is named differently depending on current settings
-        if reset_option_1.is_visible():
-            return reset_option_1
-        return self.main_area.get_suggestion("Remove explicit setting")
+        return self.main_area.get_suggestion("Reset to default").or_(
+            self.main_area.get_suggestion("Remove explicit setting")
+        )
 
     @property
     def reset_confirmation_window(self) -> Locator:
@@ -97,11 +96,36 @@ class EditGlobalSetting(CmkPage, ABC):
     def reset_confirmation_button(self) -> Locator:
         return self.reset_confirmation_window.get_by_role("button", name="Reset")
 
-    def to_factory_settings(self) -> None:
-        """Reset and confirm the reset if reset is possible"""
+    def to_factory_settings(self, expect_success: bool = True) -> None:
+        """Reset the setting to default and confirm the reset.
+
+        Skip when the reset suggestion is disabled: the setting is not
+        explicitly configured, so there is nothing to reset.
+
+        Args:
+            expect_success: the reset form submit either redirects to the
+                'Global settings' page (success) or re-renders this page with
+                a validation error (e.g. reset not permitted). Pass True to
+                wait for and validate the redirect. Pass False when the reset
+                is expected to fail; the caller is then responsible for
+                checking the resulting validation error.
+        """
+        expect(
+            self.factory_settings_button,
+            message="Neither 'Reset to default' nor 'Remove explicit setting' is visible.",
+        ).to_be_visible()
+        if "disabled" in (self.factory_settings_button.get_attribute("class") or ""):
+            logger.info("The setting is not explicitly configured; nothing to reset")
+            return
         self.factory_settings_button.click()
-        if self.reset_confirmation_window.is_visible():
-            self.reset_confirmation_button.click()
+        expect(
+            self.reset_confirmation_window, message="The reset confirmation popup did not appear."
+        ).to_be_visible()
+        self.reset_confirmation_button.click()
+        if expect_success:
+            GlobalSettings(self.page, navigate_to_page=False)
+        else:
+            self.page.wait_for_load_state("load")
 
 
 class EditPiggybackHubGlobally(EditGlobalSetting):
@@ -149,11 +173,11 @@ class SiteSpecificGlobalSettings(CmkPage):
 
     @property
     def page_title(self) -> str:
-        return f"Edit site specific global settings of {self._site_id}"
+        return f"Edit site-specific global settings of {self._site_id}"
 
     @override
     def navigate(self) -> None:
-        logger.info("Navigate to 'Edit site specific global settings of %s' page", self._site_id)
+        logger.info("Navigate to 'Edit site-specific global settings of %s' page", self._site_id)
 
         distributed_monitoring_page = DistributedMonitoring(self.page)
         distributed_monitoring_page.site_specific_global_configuration(self._site_id).click()
@@ -228,11 +252,10 @@ class EditSiteSpecificGlobalSetting(CmkPage, ABC):
 
     @property
     def factory_settings_button(self) -> Locator:
-        reset_option_1 = self.main_area.get_suggestion("Reset to default")
         # button is named differently depending on current settings
-        if reset_option_1.is_visible():
-            return reset_option_1
-        return self.main_area.get_suggestion("Remove explicit setting")
+        return self.main_area.get_suggestion("Reset to default").or_(
+            self.main_area.get_suggestion("Remove explicit setting")
+        )
 
     @property
     def reset_confirmation_window(self) -> Locator:
@@ -242,11 +265,36 @@ class EditSiteSpecificGlobalSetting(CmkPage, ABC):
     def reset_confirmation_button(self) -> Locator:
         return self.reset_confirmation_window.get_by_role("button", name="Reset")
 
-    def to_factory_settings(self) -> None:
-        """Reset and confirm the reset if reset is possible"""
+    def to_factory_settings(self, expect_success: bool = True) -> None:
+        """Reset the setting to default and confirm the reset.
+
+        Skip when the reset suggestion is disabled: the setting is not
+        explicitly configured, so there is nothing to reset.
+
+        Args:
+            expect_success: the reset form submit either redirects to the
+                'Site-specific global settings' page (success) or re-renders
+                this page with a validation error (e.g. reset not permitted).
+                Pass True to wait for and validate the redirect. Pass False
+                when the reset is expected to fail; the caller is then
+                responsible for checking the resulting validation error.
+        """
+        expect(
+            self.factory_settings_button,
+            message="Neither 'Reset to default' nor 'Remove explicit setting' is visible.",
+        ).to_be_visible()
+        if "disabled" in (self.factory_settings_button.get_attribute("class") or ""):
+            logger.info("The setting is not explicitly configured; nothing to reset")
+            return
         self.factory_settings_button.click()
-        if self.reset_confirmation_window.is_visible():
-            self.reset_confirmation_button.click()
+        expect(
+            self.reset_confirmation_window, message="The reset confirmation popup did not appear."
+        ).to_be_visible()
+        self.reset_confirmation_button.click()
+        if expect_success:
+            SiteSpecificGlobalSettings(self.page, self._site_id, navigate_to_page=False)
+        else:
+            self.page.wait_for_load_state("load")
 
 
 class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):

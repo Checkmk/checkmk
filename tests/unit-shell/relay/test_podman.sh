@@ -64,6 +64,7 @@ test_registry_not_accessible() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?

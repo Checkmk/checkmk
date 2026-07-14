@@ -35,6 +35,7 @@ const props = defineProps<
     domain: string
     agentReceiverPort: number
     siteVersion: string
+    certFingerprint: string
   }
 >()
 
@@ -49,6 +50,7 @@ const installCommand = computed(() => {
     `  --initial-tag-version ${props.siteVersion} \\`,
     `  --target-server ${props.domain}:${props.agentReceiverPort} \\`,
     `  --target-site-name ${props.siteName} \\`,
+    `  --cert-fingerprint ${escapeShellArg(props.certFingerprint)} \\`,
     `  --token ${token}`
   ].join('\n')
 })

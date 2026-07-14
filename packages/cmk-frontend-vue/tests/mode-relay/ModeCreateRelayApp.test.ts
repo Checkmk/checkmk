@@ -16,6 +16,7 @@ const mockProps: CreateRelay = {
     documentation: 'https://docs.checkmk.com/relay'
   },
   site_name: 'test_site',
+  cert_fingerprint: 'AB:CD:EF:00:11',
   domain: 'localhost',
   agent_receiver_port: 8000,
   site_version: '2.5.0',

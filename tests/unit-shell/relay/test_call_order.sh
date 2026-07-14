@@ -69,6 +69,7 @@ test_main_successful_call_order() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             2>/dev/null
     )

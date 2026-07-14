@@ -18,7 +18,8 @@ const baseProps = {
   siteName: 'my_site',
   domain: 'checkmk.example.com',
   agentReceiverPort: 8000,
-  siteVersion: '2.5.0'
+  siteVersion: '2.5.0',
+  certFingerprint: 'AB:CD:EF:00:11'
 }
 
 const mockTokenResponse = {
@@ -81,6 +82,19 @@ describe('ExecuteInstallationScript', () => {
     expect(cmd).toContain('my_site')
     expect(cmd).toContain('2.5.0')
     expect(cmd).toContain('mock-token-abc')
+  })
+
+  test('install command pins the certificate fingerprint', async () => {
+    vi.spyOn(Api.prototype, 'post').mockResolvedValue(mockTokenResponse)
+    mountWithWizardContext(ExecuteInstallationScript, baseProps)
+
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/This token remains valid for/)
+
+    const cmd = screen.getByTestId('run-relay-install-script').textContent ?? ''
+    expect(cmd).toContain('--cert-fingerprint')
+    expect(cmd).toContain('AB:CD:EF:00:11')
+    expect(cmd).not.toContain('--trust-cert')
   })
 
   test('Next button is blocked until a valid token is generated', async () => {

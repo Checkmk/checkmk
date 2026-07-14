@@ -25,6 +25,8 @@ setUp() {
     ARGS_PASSWORD=""
     TOKEN=""
     ARGS_TOKEN_STDIN=""
+    ARGS_CERT_FINGERPRINT=""
+    ARGS_TRUST_CERT=""
 
     # Mock functions that parse_args depends on
     # shellcheck disable=SC2317
@@ -53,7 +55,8 @@ test_parse_args_all_required_args() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token-stdin
+        --token-stdin \
+        --trust-cert
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
     assertEquals "1.0.0" "$ARGS_INITIAL_TAG_VERSION"
@@ -68,7 +71,8 @@ test_parse_args_different_order() {
         --relay-name "test-relay" \
         --target-server "server.example.com" \
         --initial-tag-version "1.0.0" \
-        --token-stdin
+        --token-stdin \
+        --trust-cert
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
     assertEquals "1.0.0" "$ARGS_INITIAL_TAG_VERSION"
@@ -147,7 +151,8 @@ test_parse_args_values_with_spaces() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "my site" \
-        --token-stdin
+        --token-stdin \
+        --trust-cert
 
     assertEquals "test relay with spaces" "$ARGS_RELAY_NAME"
     assertEquals "my site" "$ARGS_TARGET_SITE_NAME"
@@ -160,7 +165,8 @@ test_parse_args_special_characters() {
         --initial-tag-version "2.3.0-p1" \
         --target-server "https://server.example.com:8080" \
         --target-site-name "site_123" \
-        --token-stdin
+        --token-stdin \
+        --trust-cert
 
     assertEquals "test-relay_v2" "$ARGS_RELAY_NAME"
     assertEquals "2.3.0-p1" "$ARGS_INITIAL_TAG_VERSION"
@@ -209,7 +215,8 @@ test_parse_args_with_user() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --user "testuser"
+        --user "testuser" \
+        --trust-cert
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
     assertEquals "1.0.0" "$ARGS_INITIAL_TAG_VERSION"
@@ -300,7 +307,8 @@ test_parse_args_with_token_value() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token "secret-token"
+        --token "secret-token" \
+        --trust-cert
 
     assertEquals "secret-token" "$TOKEN"
     assertEquals "" "$ARGS_TOKEN_STDIN"
@@ -380,6 +388,38 @@ test_parse_args_install_arg_and_update_systemd_fails() {
 # Test: registration-vs-mode exclusivity is order-independent
 test_parse_args_uninstall_and_install_arg_fails() {
     (parse_args --uninstall --relay-name "test-relay" 2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: --cert-fingerprint sets ARGS_CERT_FINGERPRINT
+test_parse_args_cert_fingerprint() {
+    parse_args --relay-name "r" --initial-tag-version "1.0.0" \
+        --target-server "s" --target-site-name "site" \
+        --token-stdin --cert-fingerprint "AB:CD"
+    assertEquals "AB:CD" "$ARGS_CERT_FINGERPRINT"
+}
+
+# Test: --trust-cert sets ARGS_TRUST_CERT
+test_parse_args_trust_cert_flag() {
+    parse_args --relay-name "r" --initial-tag-version "1.0.0" \
+        --target-server "s" --target-site-name "site" \
+        --token-stdin --trust-cert
+    assertEquals "true" "$ARGS_TRUST_CERT"
+}
+
+# Test: install mode requires exactly one trust option (neither -> error)
+test_parse_args_requires_exactly_one_trust_option() {
+    (parse_args --relay-name "r" --initial-tag-version "1.0.0" \
+        --target-server "s" --target-site-name "site" \
+        --token-stdin 2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: --trust-cert and --cert-fingerprint are mutually exclusive
+test_parse_args_rejects_both_trust_options() {
+    (parse_args --relay-name "r" --initial-tag-version "1.0.0" \
+        --target-server "s" --target-site-name "site" \
+        --token-stdin --trust-cert --cert-fingerprint "AB:CD" 2>/dev/null)
     assertEquals 1 $?
 }
 

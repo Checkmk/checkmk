@@ -66,6 +66,7 @@ test_registration_fails() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             2>&1
     )
@@ -112,6 +113,7 @@ test_registration_localhost_warns_about_loopback() {
             --initial-tag-version "1.0.0" \
             --target-server "localhost" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             2>&1
     )
@@ -153,6 +155,7 @@ test_registration_loopback_with_port_warns() {
             --initial-tag-version "1.0.0" \
             --target-server "localhost:8000" \
             --target-site-name "mysite" \
+            --trust-cert \
             --user "testuser" \
             2>&1
     )
@@ -187,6 +190,7 @@ test_registration_remote_host_with_port_uses_network_bridge() {
             --initial-tag-version "1.0.0" \
             --target-server "192.168.122.1:8000" \
             --target-site-name "mysite" \
+            --trust-cert \
             --user "testuser" \
             2>&1
     )
@@ -218,6 +222,7 @@ test_registration_use_host_network_flag() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             --use-host-network \
             2>&1
@@ -262,6 +267,7 @@ test_registration_unresolvable_address_fails() {
             --initial-tag-version "1.0.0" \
             --target-server "unresolvable.invalid" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             2>&1
     )
@@ -295,6 +301,7 @@ test_registration_aborts_when_already_registered_without_force() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             2>&1
     )
@@ -333,6 +340,7 @@ test_registration_force_flag_bypasses_already_registered_check() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             --force \
             2>&1
@@ -365,6 +373,7 @@ test_registration_force_flag_is_forwarded_to_podman_run() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             --force \
             2>&1
@@ -399,6 +408,7 @@ test_registration_with_token_arg() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token "testtoken123" \
             2>&1
     )
@@ -409,6 +419,41 @@ test_registration_with_token_arg() {
 
     grep -q "podman run --rm -i --uidmap=0:99000:65536 --gidmap=0:99000:65536 --network=bridge -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --token-stdin" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should use --token-stdin (not --token VALUE)" $?
+}
+
+# Test: --cert-fingerprint is forwarded to cmk-relay register instead of --trust-cert
+test_registration_forwards_cert_fingerprint() {
+    # shellcheck disable=SC2317
+    podman() {
+        echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
+        return 0
+    }
+    export -f podman
+
+    set +e
+    output=$(
+        set -euo pipefail
+        printf 'testtoken\n' | main --relay-name "test-relay" \
+            --initial-tag-version "1.0.0" \
+            --target-server "server.example.com" \
+            --target-site-name "mysite" \
+            --token-stdin \
+            --cert-fingerprint "AB:CD:EF" \
+            2>&1
+    )
+    local exit_code=$?
+    set -e
+
+    assertEquals "main should succeed" 0 "$exit_code"
+
+    grep -q "cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --cert-fingerprint AB:CD:EF --token-stdin" "$PODMAN_CALLS_FILE"
+    assertTrue "podman run should forward --cert-fingerprint" $?
+
+    grep -q -- "--trust-cert" "$PODMAN_CALLS_FILE"
+    assertFalse "podman run should not pass --trust-cert when a fingerprint is given" $?
 }
 
 # shellcheck disable=SC1090

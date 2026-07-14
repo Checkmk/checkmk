@@ -21,6 +21,9 @@
     "site_name": {
       "type": "string"
     },
+    "cert_fingerprint": {
+      "type": "string"
+    },
     "domain": {
       "type": "string"
     },
@@ -40,5 +43,13 @@
       "type": ["integer", "null"]
     }
   },
-  "required": ["urls", "site_name", "domain", "agent_receiver_port", "site_version", "supported_os"]
+  "required": [
+    "urls",
+    "site_name",
+    "cert_fingerprint",
+    "domain",
+    "agent_receiver_port",
+    "site_version",
+    "supported_os"
+  ]
 }

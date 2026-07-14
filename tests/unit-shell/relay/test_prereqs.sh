@@ -80,6 +80,7 @@ test_missing_systemd() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?
@@ -110,6 +111,7 @@ test_missing_podman() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?
@@ -139,6 +141,7 @@ test_runs_as_non_root() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?

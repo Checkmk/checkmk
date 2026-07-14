@@ -76,6 +76,7 @@ test_token_stdin_not_in_output_verbose() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin \
             --verbose \
             2>&1
@@ -104,6 +105,7 @@ test_password_not_in_output_verbose() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --user "testuser" \
             --verbose \
             2>&1
@@ -137,6 +139,7 @@ test_token_arg_not_in_output_verbose() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token "$SECRET_TOKEN" \
             --verbose \
             2>&1

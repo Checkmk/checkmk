@@ -64,6 +64,7 @@ test_systemctl_daemon_reload_failure() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?
@@ -108,6 +109,7 @@ test_systemctl_enable_path_failure() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?
@@ -156,6 +158,7 @@ test_systemctl_start_relay_service_failure() {
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
+            --trust-cert \
             --token-stdin 2>&1
     )
     local exit_code=$?

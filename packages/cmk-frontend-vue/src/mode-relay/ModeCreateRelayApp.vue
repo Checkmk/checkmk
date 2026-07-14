@@ -85,6 +85,7 @@ const openRelayOverviewPage = () => {
           :domain="props.domain"
           :agent-receiver-port="props.agent_receiver_port"
           :site-version="props.site_version"
+          :cert-fingerprint="props.cert_fingerprint"
           :index="4"
           :is-completed="() => currentStep > 4"
         />

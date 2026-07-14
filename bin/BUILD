@@ -63,6 +63,7 @@ pkg_files(
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets",
         ":cmk-migrate-http",
+        ":cmk-migrate-oracle-rulesets.py",
         ":cmk-monitor-apache",
         ":cmk-monitor-broker",
         ":cmk-monitor-core",
@@ -96,6 +97,7 @@ pkg_files(
     prefix = "bin",
     renames = {
         ":cmk-config-anonymizer.py": "cmk-config-anonymizer",
+        ":cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
     },
 )
 

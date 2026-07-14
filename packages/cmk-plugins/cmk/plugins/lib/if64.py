@@ -37,27 +37,27 @@ END_OIDS: list[str | OIDBytes] = [
 ]
 
 # ifName (.31.1.1.1.1) is deliberately *not* part of END_OIDS. It is fetched by the
-# standalone `if_names` SNMP section (see agent_based/if64.py) and merged into the `name`
+# standalone `if_name` SNMP section (see agent_based/if64.py) and merged into the `name`
 # attribute at check time, so it can be disabled separately via the "Disabled or enabled
 # sections (SNMP)" ruleset to reduce SNMP traffic.
 
 HAS_ifHCInOctets = exists(".1.3.6.1.2.1.31.1.1.1.6.*")
 
 # Maps the interface index to its ifName (.1.3.6.1.2.1.31.1.1.1.1), provided by the
-# standalone `if_names` SNMP section and merged into the `name` attribute at check time.
-IfNamesSection = Mapping[str, str]
+# standalone `if_name` SNMP section and merged into the `name` attribute at check time.
+IfNameSection = Mapping[str, str]
 
 
 def add_names_to_ifaces[
     TInterfaceType: (interfaces.InterfaceWithCounters, interfaces.InterfaceWithRates)
 ](
     section: interfaces.Section[TInterfaceType],
-    section_if_names: IfNamesSection | None,
+    section_if_name: IfNameSection | None,
 ) -> None:
-    if section_if_names is None:
+    if section_if_name is None:
         return
     for iface in section:
-        if (name := section_if_names.get(iface.attributes.index)) is not None:
+        if (name := section_if_name.get(iface.attributes.index)) is not None:
             iface.attributes.name = name
 
 

@@ -1444,6 +1444,48 @@ async fn test_pdb_nonexistent_pattern_produces_no_subsection() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_pdb_wildcard_pattern_targets_all_discovered_pdbs() {
+    use mk_oracle::ora_sql::pdbs::Pdbs;
+    add_runtime_to_path();
+    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+        return;
+    };
+    let sid = endpoint
+        .sid
+        .as_deref()
+        .unwrap_or(&endpoint.service_name)
+        .to_uppercase();
+
+    let config = make_mini_config_pdb(&endpoint, &[".*"]);
+    let spot = backend::make_spot(&config.endpoint()).unwrap();
+    let conn = spot
+        .connect(None)
+        .expect("Connect failed, check environment variables");
+
+    let discovered = Pdbs::discover(&conn).expect("PDB discovery failed");
+    let env = Env::default();
+    let output = generate_data(&config, &env).await.unwrap().join("\n");
+
+    assert!(
+        !discovered.is_empty(),
+        "test endpoint must expose at least one PDB for this scenario"
+    );
+
+    assert_eq!(
+        output.matches("|container_identity").count(),
+        discovered.len(),
+        "expected exactly one subsection per discovered PDB: {output}"
+    );
+
+    for pdb in discovered.names() {
+        assert!(
+            output.contains(&format!("{sid}_{pdb}|container_identity")),
+            "expected subsection header for PDB {pdb}: {output}"
+        );
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_pdb_absent_runs_against_cdb_root() {
     add_runtime_to_path();
     let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {

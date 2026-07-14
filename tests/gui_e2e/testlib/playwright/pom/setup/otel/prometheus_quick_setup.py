@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import re
 from typing import override
 
 from playwright.sync_api import expect, Locator, Page
@@ -26,7 +27,10 @@ class PrometheusQuickSetup(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
-        self.main_menu.setup_menu(self.main_menu_name, exact=True).click()
+        self.click_and_wait_for_navigation(
+            self.main_menu.setup_menu(self.main_menu_name, exact=True),
+            frame_url=re.compile("mode=prometheus_overview"),
+        )
         self.validate_page()
 
     @override
@@ -82,7 +86,10 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
     @override
     def navigate(self) -> None:
         overview = PrometheusQuickSetup(self.page)
-        overview.add_configuration_button.click()
+        self.click_and_wait_for_navigation(
+            overview.add_configuration_button,
+            frame_url=re.compile("mode=create_prometheus_config"),
+        )
         self.validate_page()
 
     @override
@@ -185,7 +192,9 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
         expect(self.finalize_items_list).to_have_attribute("aria-busy", "false", timeout=timeout_ms)
 
     def finish_and_go_to_activate_changes(self) -> None:
-        self.finish_button.click()
+        self.click_and_wait_for_navigation(
+            self.finish_button, frame_url=re.compile("mode=prometheus_overview")
+        )
         PrometheusQuickSetup(self.page, navigate_to_page=False)
 
 
@@ -204,7 +213,10 @@ class EditPrometheusQuickSetupConfiguration(CmkPage):
             "A configuration name is required to navigate to the Prometheus configuration edit page"
         )
         overview = PrometheusQuickSetup(self.page)
-        overview.edit_button(self._configuration_name).click()
+        self.click_and_wait_for_navigation(
+            overview.edit_button(self._configuration_name),
+            frame_url=re.compile("mode=edit_prometheus_config"),
+        )
         self.validate_page()
 
     @override
@@ -261,7 +273,10 @@ class EditPrometheusQuickSetupScraper(AddOpenTelemetryCollectorPrometheusScrapin
             "A configuration name is required to navigate to the Prometheus scraper edit page"
         )
         edit_page = EditPrometheusQuickSetupConfiguration(self.page, self._configuration_name)
-        edit_page.prometheus_scraper_button.click()
+        self.click_and_wait_for_navigation(
+            edit_page.prometheus_scraper_button,
+            frame_url=re.compile("mode=edit_otel_collectors_prom_scrape"),
+        )
         self.validate_page()
 
     @override

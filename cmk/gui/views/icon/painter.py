@@ -5,12 +5,16 @@
 
 from __future__ import annotations
 
+import contextlib
 import traceback
-from collections.abc import Iterator, Sequence
+from collections.abc import Container, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
 import cmk.ccc.regex
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+from cmk.gui import sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
@@ -28,6 +32,8 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import CellSpec, CSVExportError
+from cmk.livestatus_client import livestatus_lql
+from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
 
 from .base import Icon, IconConfig
@@ -205,6 +211,7 @@ def get_icons(
     icon_config: IconConfig,
     *,
     toplevel: bool,
+    ignore_idents: Container[str] = (),
 ) -> list[ABCIconEntry]:
     host_custom_vars = dict(
         zip(
@@ -237,6 +244,7 @@ def get_icons(
             toplevel,
             user_icon_ids,
             icon_config,
+            ignore_idents,
         ),
         key=lambda i: i.sort_index,
     )
@@ -251,9 +259,13 @@ def _process_icons(
     toplevel: bool,
     user_icon_ids: list[str],
     icon_config: IconConfig,
+    ignore_idents: Container[str] = (),
 ) -> list[ABCIconEntry]:
     icons: list[ABCIconEntry] = []
     for icon_id, icon in all_icons().items():
+        if icon_id in ignore_idents:
+            continue
+
         if icon.toplevel != toplevel:
             continue
 
@@ -382,3 +394,21 @@ def iconpainter_columns(what: IconObjectType, toplevel: bool | None) -> list[Col
                 cols.update(["service_" + c for c in icon.service_columns])
 
     return list(cols)
+
+
+def query_icon_row(
+    what: IconObjectType,
+    host: HostName,
+    site: SiteId,
+    service_description: ServiceName | None = None,
+) -> Row:
+    """Fetch the livestatus row carrying all columns the action-menu icons need."""
+    columns = list(iconpainter_columns(what, toplevel=False))
+    with contextlib.suppress(ValueError):
+        columns.remove("site")
+
+    query = livestatus_lql([host], columns, service_description)
+    with sites.prepend_site(), sites.only_sites(site):
+        values = sites.live().query_row(query)
+
+    return dict(zip(["site"] + columns, values))

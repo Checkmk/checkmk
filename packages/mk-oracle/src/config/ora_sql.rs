@@ -574,7 +574,9 @@ oracle:
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
     custom_metrics: # additional queries that produce <<<oracle_sql:sep(58)>>> + [[[SID|item_name]]] for each instance
       - my_custom_metric: # item name (mandatory); becomes the subsection item
-          sql: "select 'details:hello' from dual" # inline SQL executed against the instance
+          sql: "select '${prefix}:hello' from dual" # inline SQL executed against the instance
+          sql_params: # optional; ${name} placeholders replaced textually in the SQL
+            prefix: "details" # value may also reference an env var: "${SOME_ENV_VAR}"
     sections: # optional
       - instance: # special section
           affinity: "all" # optional, default: "db", values: "all", "db", "asm"
@@ -784,7 +786,11 @@ piggyback:
             custom.item_value().map(|v| v.as_str()),
             Some("my_custom_metric")
         );
-        assert_eq!(custom.sql(), Some("select 'details:hello' from dual"));
+        assert_eq!(custom.sql(), Some("select '${prefix}:hello' from dual"));
+        assert_eq!(
+            custom.sql_params(),
+            &[("prefix".to_string(), "details".to_string())]
+        );
         assert_eq!(custom.sep(), defaults::CUSTOM_METRIC_SEPARATOR);
 
         product.sections().iter().for_each(|s| {

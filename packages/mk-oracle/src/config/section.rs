@@ -132,6 +132,7 @@ pub struct SectionBuilder {
     is_async: bool,
     is_disabled: bool,
     sql: Option<String>,
+    sql_params: Vec<(String, String)>,
     path: Option<PathBuf>,
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // [PROD|locks]
@@ -148,6 +149,7 @@ impl SectionBuilder {
             is_async,
             is_disabled: false,
             sql: None,
+            sql_params: Vec::new(),
             path: None,
             affinity: DEFAULT_AFFINITY_MAP
                 .get(name.as_str())
@@ -189,6 +191,11 @@ impl SectionBuilder {
         self
     }
 
+    pub fn sql_params(mut self, params: Vec<(String, String)>) -> Self {
+        self.sql_params = params;
+        self
+    }
+
     pub fn path<P: Into<PathBuf>>(mut self, path: P) -> Self {
         self.path = Some(path.into());
         self
@@ -219,6 +226,7 @@ impl SectionBuilder {
                 SectionKind::Sync
             },
             sql: self.sql,
+            sql_params: self.sql_params,
             path: self.path,
             affinity: self.affinity,
             item_value: self.item_value,
@@ -233,6 +241,7 @@ pub struct Section {
     sep: char,
     kind: SectionKind,
     sql: Option<String>,
+    sql_params: Vec<(String, String)>,
     path: Option<PathBuf>,
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // part of [SID|item_value]
@@ -266,6 +275,10 @@ impl Section {
 
     pub fn sql(&self) -> Option<&str> {
         self.sql.as_deref()
+    }
+
+    pub fn sql_params(&self) -> &[(String, String)] {
+        &self.sql_params
     }
 
     pub fn path(&self) -> Option<&Path> {
@@ -348,7 +361,9 @@ impl Section {
     }
     fn from_yaml_entry(name: &str, yaml: &Yaml) -> Self {
         let c = yaml.get_string(keys::SEP).and_then(|s| s.chars().next());
-        let mut builder = SectionBuilder::new(name).sep(c);
+        let mut builder = SectionBuilder::new(name)
+            .sep(c)
+            .sql_params(parse_sql_params(yaml.get(keys::SQL_PARAMS)));
         if let Some(sql_text) = yaml.get_string(keys::SQL) {
             builder = builder.sql(sql_text);
         }
@@ -379,6 +394,51 @@ impl Section {
         }
         .set_affinity(affinity)
         .build()
+    }
+}
+
+/// Parse the `sql_params` mapping of a section entry into
+/// `(name, value)` pairs. Values may reference environment variables
+/// (`$VAR` or `${VAR}`); a parameter whose referenced variable is not set
+/// is skipped with a warning, leaving its `${name}` placeholder unpatched.
+fn parse_sql_params(yaml: &Yaml) -> Vec<(String, String)> {
+    let Some(hash) = yaml.as_hash() else {
+        if !yaml.is_badvalue() {
+            log::error!("sql_params must be a mapping");
+        }
+        return Vec::new();
+    };
+    hash.iter()
+        .filter_map(|(name, value)| {
+            let Some(name) = name.as_str() else {
+                log::error!("sql_params: parameter name must be a string, got {name:?}");
+                return None;
+            };
+            let Some(value) = yaml_scalar_to_string(value) else {
+                log::error!("sql_params: value of parameter '{name}' must be a scalar");
+                return None;
+            };
+            match shellexpand::env(&value) {
+                Ok(expanded) => Some((name.to_string(), expanded.into_owned())),
+                Err(e) => {
+                    log::warn!(
+                        "sql_params: env var '{}' referenced by parameter '{name}' is not set, skipping",
+                        e.var_name
+                    );
+                    None
+                }
+            }
+        })
+        .collect()
+}
+
+fn yaml_scalar_to_string(value: &Yaml) -> Option<String> {
+    match value {
+        Yaml::String(s) => Some(s.clone()),
+        Yaml::Real(r) => Some(r.clone()),
+        Yaml::Integer(i) => Some(i.to_string()),
+        Yaml::Boolean(b) => Some(b.to_string()),
+        _ => None,
     }
 }
 
@@ -764,6 +824,99 @@ custom_metrics:
             .filter(|sec| sec.is_custom_metric())
             .collect();
         assert_eq!(custom[0].pdb_patterns(), &["PDB1", ".*PDB"]);
+    }
+
+    fn parse_custom_metrics(source: &str) -> Vec<Section> {
+        Sections::from_yaml(&create_yaml(source), &Sections::default())
+            .unwrap()
+            .sections()
+            .iter()
+            .filter(|sec| sec.is_custom_metric())
+            .cloned()
+            .collect()
+    }
+
+    #[test]
+    fn test_sql_params_parsed_from_yaml() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - test:
+      sql: "SELECT ${parameter_1} FROM dual"
+      sql_params:
+        parameter_1: "value_1"
+        parameter_2: 42
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        assert_eq!(
+            custom[0].sql_params(),
+            &[
+                ("parameter_1".to_string(), "value_1".to_string()),
+                ("parameter_2".to_string(), "42".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_sql_params_empty_when_absent() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - test:
+      sql: "SELECT 1 FROM dual"
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        assert!(custom[0].sql_params().is_empty());
+    }
+
+    #[test]
+    fn test_sql_params_env_var_resolved() {
+        unsafe { std::env::set_var("_MK_TEST_SQL_PARAM", "from_env") };
+        const SOURCE: &str = r#"
+custom_metrics:
+  - test:
+      sql: "SELECT ${parameter_1} FROM dual"
+      sql_params:
+        parameter_1: "${_MK_TEST_SQL_PARAM}"
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        assert_eq!(
+            custom[0].sql_params(),
+            &[("parameter_1".to_string(), "from_env".to_string())]
+        );
+        unsafe { std::env::remove_var("_MK_TEST_SQL_PARAM") };
+    }
+
+    #[test]
+    fn test_sql_params_unset_env_var_skips_parameter() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - test:
+      sql: "SELECT ${parameter_1} FROM dual"
+      sql_params:
+        parameter_1: "${_MK_TEST_UNDEFINED_VAR_12345}"
+        parameter_2: "kept"
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        assert_eq!(
+            custom[0].sql_params(),
+            &[("parameter_2".to_string(), "kept".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_sql_params_non_scalar_value_skipped() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - test:
+      sql: "SELECT 1 FROM dual"
+      sql_params:
+        parameter_1: [a, b]
+        parameter_2: "ok"
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        assert_eq!(
+            custom[0].sql_params(),
+            &[("parameter_2".to_string(), "ok".to_string())]
+        );
     }
 
     #[test]

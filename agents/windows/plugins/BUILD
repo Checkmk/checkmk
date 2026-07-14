@@ -34,6 +34,13 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# The MSI's Product.wxs also needs the PowerShell plugins, which :plugins excludes.
+filegroup(
+    name = "msi_cmk_plugin_files",
+    srcs = glob(["*.ps1"]),
+    visibility = ["//agents/wnx:__pkg__"],
+)
+
 TO_SIGN_SCRIPTS = [
     "arcserve_backup.ps1",
     "citrix_farm.ps1",

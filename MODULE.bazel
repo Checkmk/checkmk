@@ -218,10 +218,6 @@ local_path_override(
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
-# Artifacts built and published by our own CI jobs, laid out like so:
-# <publisher>/<name>/<version>/<platform>/<arch>/<variant>/<file>
-CI_ARTIFACTS_URL = "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/"
-
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
@@ -257,19 +253,6 @@ http_file(
     urls = [
         "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
         UPSTREAM_MIRROR_URL + "/taplo-linux-x86_64-0.10.0.gz",
-    ],
-)
-
-# A portable Wine build (WoW64: 64-bit, no i386 multilib on the host).
-# The build recipe, source pin and publishing job live in third_party/wine/ and
-# buildscripts/scripts/build-wine-from-source.groovy.
-http_archive(
-    name = "wine_linux_x86_64",
-    build_file = "//third_party/wine:BUILD.wine.bazel",
-    sha256 = "2894e6624bcf8714c5b4c303ca9f125e3ebdd5275e1d62308290aa4feb278e27",
-    strip_prefix = "wine-11.0-amd64-wow64",
-    urls = [
-        CI_ARTIFACTS_URL + "wine/wine/11.0/linux/amd64/wow64/wine-11.0-amd64-wow64.tar.xz",
     ],
 )
 

@@ -1,5 +1,8 @@
 # Build dependencies of the C++ Windows agent (agents/wnx).
 
+wnx_repos = use_extension("//bazel/module:wnx_repositories.bzl", "repos")
+use_repo(wnx_repos, "wine_linux_x86_64", "wine_mono", "wix3")
+
 # Vendored dependencies of the C++ Windows agent; the same
 # tarballs the vcxproj build unpacks into agents/wnx/extlibs.
 vendored_archive = use_repo_rule("//bazel/rules:vendored_archive.bzl", "vendored_archive")

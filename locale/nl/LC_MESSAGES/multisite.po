@@ -3032,11 +3032,27 @@ msgstr "ASM - Algemene instantie status"
 msgid "ASM - Processes"
 msgstr "ASM - Processen"
 
+#, fuzzy
+msgid "ASM Authentication"
+msgstr "SMTP-verificatie"
+
 msgid "ASM Disk Group"
 msgstr "ASM Schijf Groep"
 
 msgid "ASM Disk Group (used space and growth)"
 msgstr "ASM Schijfgroep (gebruikte ruimte en groei)"
+
+#, fuzzy
+msgid "ASM Password"
+msgstr "Wachtwoord"
+
+#, fuzzy
+msgid "ASM Role"
+msgstr "Rol"
+
+#, fuzzy
+msgid "ASM Username"
+msgstr "Gebruikersnaam"
 
 msgid ""
 "ASM calculates the free space depending on free_mb or required mirror free "
@@ -6250,6 +6266,10 @@ msgid "All hosts"
 msgstr "Alle gastheren"
 
 #, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Interval voor het verzamelen van gegevens"
+
+#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -6638,11 +6658,9 @@ msgstr "Toegelaten agent toegang via IP adres"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Toegelaten agent toegang via IP adres (Linux, Windows)"
 
-msgid ""
-"Allowed characters are word characters (letters, digits, underscores), "
-"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
-"and end with a word character or dollar sign."
-msgstr ""
+#, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "Toegestane duur sinds het laatste NTPM-bericht"
@@ -24050,6 +24068,10 @@ msgstr "Grafiekverzameling bewerken"
 msgid "Edit graph tuning"
 msgstr "Grafiek afstemming bewerken"
 
+#, fuzzy
+msgid "Edit host"
+msgstr "Bewerk deze host"
+
 msgid "Edit host attribute"
 msgstr "Bewerk host attribuut"
 
@@ -36607,6 +36629,10 @@ msgstr "In verhouding tot het normale controle-interval"
 
 msgid "In relation to standard deviation"
 msgstr "In verhouding tot standaardafwijking"
+
+#, fuzzy
+msgid "In scheduled downtime"
+msgstr "Negeer geplande downtimes"
 
 #, fuzzy
 msgid "In service details"
@@ -59331,6 +59357,10 @@ msgid ""
 "resources through the Graph API."
 msgstr ""
 
+#, fuzzy
+msgid "Return to standard view"
+msgstr "In verhouding tot standaardafwijking"
+
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
 "cmk-dcd -Bv and cmk-dcd -Cv."
@@ -61934,6 +61964,11 @@ msgstr "Open bulk meldingen"
 
 msgid "Separate check"
 msgstr "Afzonderlijke controle"
+
+msgid ""
+"Separate credentials for accessing ASM. If omitted, the main authentication "
+"above is reused."
+msgstr ""
 
 msgid "Separator"
 msgstr "Scheider"
@@ -79546,6 +79581,10 @@ msgid "This variable is configured in <a href=\"%s\">Global settings</a>."
 msgstr ""
 "Deze variabele is geconfigureerd in <a href=\"%s\">globale instellingen</a>."
 
+#, fuzzy
+msgid "This view"
+msgstr "Deze weergave als PDF"
+
 msgid "This view as PDF"
 msgstr "Deze weergave als PDF"
 
@@ -84148,6 +84187,9 @@ msgstr "Uitproberen"
 #, fuzzy
 msgid "Try pattern match"
 msgstr "Probeer Patroon Overeenstemming"
+
+msgid "Try the new \"All hosts\" view"
+msgstr ""
 
 #, fuzzy
 msgid "Try to detect MSSQL instances present on server"
@@ -96681,6 +96723,14 @@ msgid "Remove element"
 msgstr "Verwijder dit element"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "Regel zoeken"
+
+#, fuzzy
+msgid "Could not load this content."
+msgstr "U kunt deze verbinding niet verwijderen."
+
+#, fuzzy
 msgid "filter"
 msgstr "Filter"
 
@@ -96699,6 +96749,125 @@ msgstr "Afgewerkt"
 #, fuzzy
 msgid "Guided"
 msgstr "Open mode"
+
+#, fuzzy
+msgid "Save date"
+msgstr "Voorbeeld datum"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Kies alle"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Percentage en tijd"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Eindtijd downtime"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Kies alle"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "Is veranderd"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Herindelen volledige staat"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Datum & tijd bereik"
+
+#, fuzzy
+msgid "From date"
+msgstr "Creatie tijd"
+
+#, fuzzy
+msgid "From time"
+msgstr "geen tijd"
+
+#, fuzzy
+msgid "To date"
+msgstr "Geen gegevens"
+
+#, fuzzy
+msgid "To time"
+msgstr "geen tijd"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "TCP Doel Resets"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Start type"
+
+#, fuzzy
+msgid "End time"
+msgstr "geen tijd"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Tijdshorizon"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Actuele gebeurtenissen"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Onbekende gebruiker: %s"
+
+#, fuzzy
+msgid "Previous month"
+msgstr "recycleert"
+
+#, fuzzy
+msgid "Next month"
+msgstr "Vorige maand"
+
+#, fuzzy
+msgid "not set"
+msgstr "niet aanwezig"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Tijdshorizon"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Opslaan en testen"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Ruimtebesparing"
+
+#, fuzzy
+msgid "Open calendar"
+msgstr "OpenVPN-clients"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Empty"
+msgstr "leeg"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " of "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Map Selectie"
 
 #, fuzzy
 msgid "required"
@@ -96769,10 +96938,6 @@ msgstr "Verwijder filter"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d Filter instellingen"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Regel zoeken"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -100064,7 +100229,7 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"A system reboot may be required after installing WSL2 before proceeding."
+"This script requires administrator privileges and will restart the computer "
 msgstr ""
 
 #, fuzzy
@@ -100143,6 +100308,286 @@ msgstr "configuratie"
 msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
+
+#, fuzzy
+msgid "Modes"
+msgstr "Modems"
+
+#, fuzzy
+msgid "Number of services in OK state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services in warning state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services in critical state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services in unknown state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services in pending state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Unhandled Problems"
+msgstr "Onbehandelde host problemen"
+
+msgid "Give feedback on the new view"
+msgstr ""
+
+#, fuzzy
+msgid "Search hosts…"
+msgstr "Zoek hosts"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Algemene fout"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "Hosts verwijderen"
+
+msgid ""
+"An at-a-glance summary of %{host} will appear here, bringing the key host "
+"information together in one place."
+msgstr ""
+
+msgid "Host details (name, alias, primary IP address, site, folder)"
+msgstr ""
+
+#, fuzzy
+msgid "Service summary with a state visualization"
+msgstr "Service hover menu getoond in BI visualisatie"
+
+#, fuzzy
+msgid "Contact groups and tags"
+msgstr "Contactgroepen"
+
+msgid "Labels (discovered and explicit)"
+msgstr ""
+
+#, fuzzy
+msgid "Relations placeholder"
+msgstr "Replicatievertraging"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "%{count} selected host"
+msgid_plural "%{count} selected hosts"
+msgstr[0] "Op geselecteerde hosts"
+msgstr[1] "Op geselecteerde hosts"
+
+#, fuzzy
+msgid "Acknowledged the problem for %{count} host"
+msgid_plural "Acknowledged the problems for %{count} hosts"
+msgstr[0] "Erken problemen"
+msgstr[1] "Erken problemen"
+
+msgid "Could not acknowledge the problems: %{detail}"
+msgstr ""
+
+#, fuzzy
+msgid "Enter a comment…"
+msgstr "Evenement commentaar"
+
+msgid ""
+"Optionally let the acknowledgement expire automatically. Leave empty to keep "
+"it "
+msgstr ""
+
+#, fuzzy
+msgid "Choose an expiry date & time"
+msgstr "Verlooptijd commentaar"
+
+msgid "Ignore status changes until the host recovers (OK/UP)"
+msgstr ""
+
+#, fuzzy
+msgid "Persistent comment"
+msgstr "Persistente verbindingen"
+
+#, fuzzy
+msgid "Notify affected users"
+msgstr "Informeer alle gebruikers"
+
+#, fuzzy
+msgid "Added a comment to %{count} host"
+msgid_plural "Added a comment to %{count} hosts"
+msgstr[0] "Voeg een commentaar toe of beschrijf deze host"
+msgstr[1] "Voeg een commentaar toe of beschrijf deze host"
+
+#, fuzzy
+msgid "Successfully rescheduled the check for %{count} host"
+msgid_plural "Successfully rescheduled the checks for %{count} hosts"
+msgstr[0] "Succesvol verwijderd %d hosts"
+msgstr[1] "Succesvol verwijderd %d hosts"
+
+msgid "Could not reschedule the checks for the selected hosts."
+msgstr ""
+
+msgid "Execution will be spread across a custom time period."
+msgstr ""
+
+msgid ""
+"Distributes the rescheduled checks across the specified number of minutes, "
+msgstr ""
+
+#, fuzzy
+msgid "Schedule host downtime"
+msgstr "Uitvaltijden plannen"
+
+#, fuzzy
+msgid "Please choose a downtime duration greater than zero."
+msgstr "Kies een doel om de terugzetting van uit te voeren."
+
+#, fuzzy
+msgid "Successfully scheduled a downtime for %{count} host"
+msgid_plural "Successfully scheduled a downtime for %{count} hosts"
+msgstr[0] "Plan downtime op host"
+msgstr[1] "Plan downtime op host"
+
+#, fuzzy
+msgid "Could not schedule the downtime for the selected hosts."
+msgstr "De host/service moet een van de geselecteerde contacten hebben."
+
+#, fuzzy
+msgid "Custom time range"
+msgstr "Timerbereik aanpassen"
+
+#, fuzzy
+msgid "Ad hoc"
+msgstr "Gastheer toevoegen"
+
+msgid "4 h"
+msgstr ""
+
+msgid "24 h"
+msgstr ""
+
+msgid "10 d"
+msgstr ""
+
+#, fuzzy
+msgid "Scheduled downtimes set the hosts in planned maintenance."
+msgstr "Plan en verwijder downtimes op hosts en diensten"
+
+#, fuzzy
+msgid "Alerts and notifications will be paused."
+msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Downtime time range"
+msgstr "Actief tijdsverloop"
+
+msgid "From now, for"
+msgstr ""
+
+msgid "Scheduled downtime has a duration of %{duration} starting now."
+msgstr ""
+
+#, fuzzy
+msgid "Advanced option"
+msgstr "Beschikbare opties"
+
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime."
+msgstr "alleen wanneer de host niet in downtime is"
+
+msgid ""
+"Only start downtime if the host goes DOWN/UNREACHABLE during the defined "
+"start "
+msgstr ""
+
+#, fuzzy
+msgid "%{count} host selected"
+msgid_plural "%{count} hosts selected"
+msgstr[0] "Niet geselecteerd"
+msgstr[1] "Niet geselecteerd"
+
+#, fuzzy
+msgid "Actions for selected hosts"
+msgstr "Op geselecteerde hosts"
+
+#, fuzzy
+msgid "More actions"
+msgstr "Montagemogelijkheden"
+
+#, fuzzy
+msgid "Stale state"
+msgstr "alle staten"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Alleen hoofdletters zijn toegestaan"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "De tijd mag niet groter zijn dan %02d:%02d."
+
+#, fuzzy
+msgid "Filter values"
+msgstr "Filter bekijken"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Verwijder alle"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "Geen overeenkomende hostnamen"
+
+#, fuzzy
+msgid "Clear"
+msgstr "Status 'bevestigd'"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Geen (lineair)"
+
+#, fuzzy
+msgid "No results for your combination of search and filter settings."
+msgstr ""
+"Geen gebruikersobject gevonden voor synchronisatie. Controleer uw "
+"filterinstellingen."
+
+#, fuzzy
+msgid "No results found for your active filters."
+msgstr "Geen logs gevonden voor deze host."
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "Geen logs gevonden voor deze host."
+
+#, fuzzy
+msgid "No results found."
+msgstr "Geen regels gevonden."
+
+msgid "Adjust or clear search and filters to start fresh."
+msgstr ""
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Total rows: %{total}"
+msgstr "Stale gastheren"
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Selecteer alle selectievakjes"
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -102415,10 +102860,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Prometheus scraping (Experimental)"
-#~ msgstr "Interval voor het verzamelen van gegevens"
-
-#, fuzzy
-#~ msgid "Prometheus scraping (experimental)"
 #~ msgstr "Interval voor het verzamelen van gegevens"
 
 #~ msgid "Prominent change"

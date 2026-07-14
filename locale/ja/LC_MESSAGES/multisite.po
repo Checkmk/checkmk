@@ -2960,11 +2960,27 @@ msgstr "ASM - 一般的なインスタンスのステータス"
 msgid "ASM - Processes"
 msgstr "ASM - プロセス"
 
+#, fuzzy
+msgid "ASM Authentication"
+msgstr "SMTP認証"
+
 msgid "ASM Disk Group"
 msgstr "ASMディスクグループ"
 
 msgid "ASM Disk Group (used space and growth)"
 msgstr "ASMディスクグループ(使用済みスペースと拡張)"
+
+#, fuzzy
+msgid "ASM Password"
+msgstr "パスワード"
+
+#, fuzzy
+msgid "ASM Role"
+msgstr "役割"
+
+#, fuzzy
+msgid "ASM Username"
+msgstr "ユーザー名"
 
 msgid ""
 "ASM calculates the free space depending on free_mb or required mirror free "
@@ -5985,6 +6001,10 @@ msgstr "すべてのホストおよびサービスのダウンタイム(idを含
 msgid "All hosts"
 msgstr "すべてのホスト"
 
+#, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Prometheusスクレイピング（実験的機能）"
+
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -6362,11 +6382,9 @@ msgstr "IPアドレスを介した許可されたエージェントアクセス"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "IPアドレスを介した許可されたエージェントアクセス(Linux、Windows)"
 
-msgid ""
-"Allowed characters are word characters (letters, digits, underscores), "
-"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
-"and end with a word character or dollar sign."
-msgstr ""
+#, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "最後のNTPメッセージからの許容期間"
@@ -22907,6 +22925,10 @@ msgstr "グラフコレクションを編集する"
 msgid "Edit graph tuning"
 msgstr "グラフチューニングを編集する"
 
+#, fuzzy
+msgid "Edit host"
+msgstr "このホストを編集する"
+
 msgid "Edit host attribute"
 msgstr "ホスト属性を編集する"
 
@@ -34752,6 +34774,10 @@ msgstr "通常のチェック間隔に関連して"
 
 msgid "In relation to standard deviation"
 msgstr "標準偏差に関連して"
+
+#, fuzzy
+msgid "In scheduled downtime"
+msgstr "スケジュールされたダウンタイムを無視する"
 
 msgid "In service details"
 msgstr "サービス詳細"
@@ -56276,6 +56302,10 @@ msgstr ""
 "クライアントID、およびクライアントシークレットを使用してください。Graph API経"
 "由でリソースを監視する場合のみ、サブスクリプションIDは不要です。"
 
+#, fuzzy
+msgid "Return to standard view"
+msgstr "標準偏差に関連して"
+
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
 "cmk-dcd -Bv and cmk-dcd -Cv."
@@ -58765,6 +58795,11 @@ msgstr "一括通知を個別に設定する"
 
 msgid "Separate check"
 msgstr "個別チェック"
+
+msgid ""
+"Separate credentials for accessing ASM. If omitted, the main authentication "
+"above is reused."
+msgstr ""
 
 msgid "Separator"
 msgstr "セパレーター"
@@ -75733,6 +75768,10 @@ msgstr "この変数は工場出荷時の設定です。"
 msgid "This variable is configured in <a href=\"%s\">Global settings</a>."
 msgstr "この変数は、<a href=\"%s\">グローバル設定</a>で構成されます。"
 
+#, fuzzy
+msgid "This view"
+msgstr "このビューをPDFとして"
+
 msgid "This view as PDF"
 msgstr "このビューをPDFとして"
 
@@ -79689,6 +79728,9 @@ msgstr "試してみる"
 
 msgid "Try pattern match"
 msgstr "パターン一致を試す"
+
+msgid "Try the new \"All hosts\" view"
+msgstr ""
 
 #, fuzzy
 msgid "Try to detect MSSQL instances present on server"
@@ -91578,6 +91620,14 @@ msgid "Remove element"
 msgstr "この要素を削除します"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "ルール検索"
+
+#, fuzzy
+msgid "Could not load this content."
+msgstr "この接続を削除することはできません。"
+
+#, fuzzy
 msgid "filter"
 msgstr "フィルタ"
 
@@ -91596,6 +91646,125 @@ msgstr "終了しました"
 #, fuzzy
 msgid "Guided"
 msgstr "ガイドモード"
+
+#, fuzzy
+msgid "Save date"
+msgstr "サンプル日付"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "すべて選択する"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "イベント日時"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "日付と時間"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "すべて選択する"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "ステータス変更"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "完全な状態を再分類します"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "日付と時刻の範囲"
+
+#, fuzzy
+msgid "From date"
+msgstr "作成日"
+
+#, fuzzy
+msgid "From time"
+msgstr "ノータイム"
+
+#, fuzzy
+msgid "To date"
+msgstr "データなし"
+
+#, fuzzy
+msgid "To time"
+msgstr "ノータイム"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "TCPターゲットのリセット"
+
+#, fuzzy
+msgid "Start time"
+msgstr "開始タイプ"
+
+#, fuzzy
+msgid "End time"
+msgstr "ノータイム"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "期間"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "現在のイベント"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "不明なエラー: %s"
+
+#, fuzzy
+msgid "Previous month"
+msgstr "前のサイクル"
+
+#, fuzzy
+msgid "Next month"
+msgstr "先月"
+
+#, fuzzy
+msgid "not set"
+msgstr "現在ではない"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "期間"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "保存してテストする"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "スペースの節約"
+
+#, fuzzy
+msgid "Open calendar"
+msgstr "OpenVPNクライアント"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "ファイル選択"
+
+#, fuzzy
+msgid "Empty"
+msgstr "空の"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " または "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "ファイル選択"
 
 msgid "required"
 msgstr "必須"
@@ -91663,10 +91832,6 @@ msgstr "フィルタを取り外します"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d フィルター設定"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "ルール検索"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -94936,7 +95101,7 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"A system reboot may be required after installing WSL2 before proceeding."
+"This script requires administrator privileges and will restart the computer "
 msgstr ""
 
 #, fuzzy
@@ -95015,6 +95180,284 @@ msgstr "プラン構成"
 msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
+
+#, fuzzy
+msgid "Modes"
+msgstr "モデム"
+
+#, fuzzy
+msgid "Number of services in OK state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services in warning state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services in critical state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services in unknown state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services in pending state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Unhandled Problems"
+msgstr "未処理のホストの問題"
+
+msgid "Give feedback on the new view"
+msgstr ""
+
+#, fuzzy
+msgid "Search hosts…"
+msgstr "ホストを検索"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "一般的なフィルター"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "(ホスト選択)"
+
+msgid ""
+"An at-a-glance summary of %{host} will appear here, bringing the key host "
+"information together in one place."
+msgstr ""
+
+msgid "Host details (name, alias, primary IP address, site, folder)"
+msgstr ""
+
+#, fuzzy
+msgid "Service summary with a state visualization"
+msgstr "BIビジュアライゼーションに表示されるサービスホバーメニュー"
+
+#, fuzzy
+msgid "Contact groups and tags"
+msgstr "連絡先グループ"
+
+msgid "Labels (discovered and explicit)"
+msgstr ""
+
+#, fuzzy
+msgid "Relations placeholder"
+msgstr "レプリケーションラグ"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "%{count} selected host"
+msgid_plural "%{count} selected hosts"
+msgstr[0] "選択したホスト上"
+
+#, fuzzy
+msgid "Acknowledged the problem for %{count} host"
+msgid_plural "Acknowledged the problems for %{count} hosts"
+msgstr[0] "問題を承認する"
+
+msgid "Could not acknowledge the problems: %{detail}"
+msgstr ""
+
+#, fuzzy
+msgid "Enter a comment…"
+msgstr "イベントコメント"
+
+msgid ""
+"Optionally let the acknowledgement expire automatically. Leave empty to keep "
+"it "
+msgstr ""
+
+#, fuzzy
+msgid "Choose an expiry date & time"
+msgstr "コメントの有効期限"
+
+#, fuzzy
+msgid "Ignore status changes until the host recovers (OK/UP)"
+msgstr "状態変化またはリカバリーした場合 （OK/UP）"
+
+#, fuzzy
+msgid "Persistent comment"
+msgstr "持続的接続"
+
+#, fuzzy
+msgid "Notify affected users"
+msgstr "すべてのユーザーに通知する"
+
+#, fuzzy
+msgid "Added a comment to %{count} host"
+msgid_plural "Added a comment to %{count} hosts"
+msgstr[0] "このホストのコメントまたは説明追加"
+
+#, fuzzy
+msgid "Successfully rescheduled the check for %{count} host"
+msgid_plural "Successfully rescheduled the checks for %{count} hosts"
+msgstr[0] "%d ホストが正常に削除されました"
+
+msgid "Could not reschedule the checks for the selected hosts."
+msgstr ""
+
+msgid "Execution will be spread across a custom time period."
+msgstr ""
+
+msgid ""
+"Distributes the rescheduled checks across the specified number of minutes, "
+msgstr ""
+
+#, fuzzy
+msgid "Schedule host downtime"
+msgstr "ダウンタイムをスケジュールしますか?"
+
+#, fuzzy
+msgid "Please choose a downtime duration greater than zero."
+msgstr "復元を実行するターゲットを選択してください。"
+
+#, fuzzy
+msgid "Successfully scheduled a downtime for %{count} host"
+msgid_plural "Successfully scheduled a downtime for %{count} hosts"
+msgstr[0] "ホストでのダウンタイムのスケジュール"
+
+#, fuzzy
+msgid "Could not schedule the downtime for the selected hosts."
+msgstr "ホスト/サービスには、選択した連絡先の1つが必要です。"
+
+#, fuzzy
+msgid "Custom time range"
+msgstr "時間範囲をカスタマイズ"
+
+#, fuzzy
+msgid "Ad hoc"
+msgstr "ホストを追加"
+
+msgid "4 h"
+msgstr ""
+
+msgid "24 h"
+msgstr ""
+
+msgid "10 d"
+msgstr ""
+
+#, fuzzy
+msgid "Scheduled downtimes set the hosts in planned maintenance."
+msgstr "ホストとサービスのダウンタイムのスケジュールと削除"
+
+#, fuzzy
+msgid "Alerts and notifications will be paused."
+msgstr "テスト通知"
+
+#, fuzzy
+msgid "Downtime time range"
+msgstr "アクティブな時間範囲"
+
+msgid "From now, for"
+msgstr ""
+
+msgid "Scheduled downtime has a duration of %{duration} starting now."
+msgstr ""
+
+#, fuzzy
+msgid "Advanced option"
+msgstr "高度なオプション"
+
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime."
+msgstr "ホストのみ：子ホストをダウンタイムに設定する"
+
+#, fuzzy
+msgid ""
+"Only start downtime if the host goes DOWN/UNREACHABLE during the defined "
+"start "
+msgstr ""
+"定義された開始時刻と終了時刻の間にホスト/サービスがダウン／アップした場合の"
+"み、ダウンタイムを開始する（柔軟性あり）"
+
+#, fuzzy
+msgid "%{count} host selected"
+msgid_plural "%{count} hosts selected"
+msgstr[0] "選択されていない"
+
+#, fuzzy
+msgid "Actions for selected hosts"
+msgstr "選択したホスト上"
+
+#, fuzzy
+msgid "More actions"
+msgstr "その他のオプション"
+
+#, fuzzy
+msgid "Stale state"
+msgstr "すべての状態"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "大文字のみ使用できます"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "下限は上限よりも大きいです。"
+
+#, fuzzy
+msgid "Filter values"
+msgstr "フィルタビュー"
+
+#, fuzzy
+msgid "Select all"
+msgstr "すべて削除する"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "一致するホスト名がありません"
+
+#, fuzzy
+msgid "Clear"
+msgstr "クリア"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "なし（リニア）"
+
+#, fuzzy
+msgid "No results for your combination of search and filter settings."
+msgstr ""
+"同期するユーザーオブジェクトが見つかりませんでした。フィルタ設定を確認してく"
+"ださい。"
+
+#, fuzzy
+msgid "No results found for your active filters."
+msgstr "このホストのログは見つかりませんでした。"
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "このホストのログは見つかりませんでした。"
+
+#, fuzzy
+msgid "No results found."
+msgstr "ルールが見つかりません。"
+
+msgid "Adjust or clear search and filters to start fresh."
+msgstr ""
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Total rows: %{total}"
+msgstr "総ホスト数: "
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "すべてのチェックボックスを選択します"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -97372,9 +97815,6 @@ msgstr ""
 
 #~ msgid "Prometheus scraping (Experimental)"
 #~ msgstr "Prometheusスクラッピング（実験的機能）"
-
-#~ msgid "Prometheus scraping (experimental)"
-#~ msgstr "Prometheusスクレイピング（実験的機能）"
 
 #~ msgid "Prominent change"
 #~ msgstr "顕著な変化"

@@ -3060,11 +3060,27 @@ msgstr "ASM - Starea generală al instanței"
 msgid "ASM - Processes"
 msgstr "AȘM - Procese"
 
+#, fuzzy
+msgid "ASM Authentication"
+msgstr "Autentificarea SMTP"
+
 msgid "ASM Disk Group"
 msgstr "Grup de Disk ASM"
 
 msgid "ASM Disk Group (used space and growth)"
 msgstr "Grup de Disk ASM (spațiu folosit și creștere)"
+
+#, fuzzy
+msgid "ASM Password"
+msgstr "Parola"
+
+#, fuzzy
+msgid "ASM Role"
+msgstr "Rol"
+
+#, fuzzy
+msgid "ASM Username"
+msgstr "Nume utilizator"
 
 msgid ""
 "ASM calculates the free space depending on free_mb or required mirror free "
@@ -6257,6 +6273,10 @@ msgid "All hosts"
 msgstr "Toate gazdele"
 
 #, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Intervalul de colectare a datelor"
+
+#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -6652,11 +6672,9 @@ msgstr "Accesul agentului permis prin adresa IP"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Accesul agentului permis prin adresa IP (Linux, Windows)"
 
-msgid ""
-"Allowed characters are word characters (letters, digits, underscores), "
-"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
-"and end with a word character or dollar sign."
-msgstr ""
+#, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "Durata permisă de la ultimul mesaj NTPMessage"
@@ -24120,6 +24138,10 @@ msgstr "Editarea colecției de grafice"
 msgid "Edit graph tuning"
 msgstr "Editarea reglajului grafic"
 
+#, fuzzy
+msgid "Edit host"
+msgstr "Editați această gazdă"
+
 msgid "Edit host attribute"
 msgstr "Editarea atributului gazdă"
 
@@ -36743,6 +36765,10 @@ msgstr "În raport cu intervalul normal de verificare"
 
 msgid "In relation to standard deviation"
 msgstr "În raport cu abaterea standard"
+
+#, fuzzy
+msgid "In scheduled downtime"
+msgstr "Ignorați perioadele de întrerupere programate"
 
 msgid "In service details"
 msgstr "Detalii în serviciu"
@@ -59466,6 +59492,10 @@ msgid ""
 "resources through the Graph API."
 msgstr ""
 
+#, fuzzy
+msgid "Return to standard view"
+msgstr "În raport cu abaterea standard"
+
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
 "cmk-dcd -Bv and cmk-dcd -Cv."
@@ -62097,6 +62127,11 @@ msgstr "Deschideți notificări în masă"
 
 msgid "Separate check"
 msgstr "Control separat"
+
+msgid ""
+"Separate credentials for accessing ASM. If omitted, the main authentication "
+"above is reused."
+msgstr ""
 
 msgid "Separator"
 msgstr "Separator"
@@ -79895,6 +79930,10 @@ msgid "This variable is configured in <a href=\"%s\">Global settings</a>."
 msgstr ""
 "Această variabilă este configurată în <a href=\"%s\">setări globale</a>."
 
+#, fuzzy
+msgid "This view"
+msgstr "Această vizualizare ca PDF"
+
 msgid "This view as PDF"
 msgstr "Această vizualizare ca PDF"
 
@@ -84429,6 +84468,9 @@ msgstr "Testeaza"
 
 msgid "Try pattern match"
 msgstr "Încercați potrivirea modelului"
+
+msgid "Try the new \"All hosts\" view"
+msgstr ""
 
 #, fuzzy
 msgid "Try to detect MSSQL instances present on server"
@@ -96992,6 +97034,14 @@ msgid "Remove element"
 msgstr "Eliminați acest element"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "Căutarea regulilor"
+
+#, fuzzy
+msgid "Could not load this content."
+msgstr "Nu puteți șterge această conexiune."
+
+#, fuzzy
 msgid "filter"
 msgstr "Filtru"
 
@@ -97010,6 +97060,125 @@ msgstr "Finalizat"
 #, fuzzy
 msgid "Guided"
 msgstr "Modul deschis"
+
+#, fuzzy
+msgid "Save date"
+msgstr "Data eșantionului"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Alegeți toate"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Data și ora evenimentului"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Data și ora"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Alegeți toate"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "Schimbare de stare"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Reclasificarea statului complet"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Data & interval de timp"
+
+#, fuzzy
+msgid "From date"
+msgstr "Timp de creare"
+
+#, fuzzy
+msgid "From time"
+msgstr "fără timp"
+
+#, fuzzy
+msgid "To date"
+msgstr "Nu există date"
+
+#, fuzzy
+msgid "To time"
+msgstr "fără timp"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "Resetarea țintei TCP"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Tipul de start"
+
+#, fuzzy
+msgid "End time"
+msgstr "fără timp"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Orizont de timp"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Evenimente curente"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Utilizator necunoscut: %s."
+
+#, fuzzy
+msgid "Previous month"
+msgstr "reciclează"
+
+#, fuzzy
+msgid "Next month"
+msgstr "Luna trecută"
+
+#, fuzzy
+msgid "not set"
+msgstr "nu este prezent"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Orizont de timp"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Salvați și testați"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Economii de spațiu"
+
+#, fuzzy
+msgid "Open calendar"
+msgstr "Clienți OpenVPN"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Empty"
+msgstr "gol"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " sau "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Selecția fișierelor"
 
 #, fuzzy
 msgid "required"
@@ -97080,10 +97249,6 @@ msgstr "Eliminați filtrul"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d setări de Filtrare"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Căutarea regulilor"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -100388,7 +100553,7 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"A system reboot may be required after installing WSL2 before proceeding."
+"This script requires administrator privileges and will restart the computer "
 msgstr ""
 
 #, fuzzy
@@ -100467,6 +100632,297 @@ msgstr "configurare"
 msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
+
+#, fuzzy
+msgid "Modes"
+msgstr "Modemuri"
+
+#, fuzzy
+msgid "Number of services in OK state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services in warning state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services in critical state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services in unknown state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services in pending state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Unhandled Problems"
+msgstr "Probleme de gazde nerezolvate"
+
+msgid "Give feedback on the new view"
+msgstr ""
+
+#, fuzzy
+msgid "Search hosts…"
+msgstr "Căutare gazde"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Eroare generală"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "Ștergeți gazda"
+
+msgid ""
+"An at-a-glance summary of %{host} will appear here, bringing the key host "
+"information together in one place."
+msgstr ""
+
+msgid "Host details (name, alias, primary IP address, site, folder)"
+msgstr ""
+
+#, fuzzy
+msgid "Service summary with a state visualization"
+msgstr "Meniul de navigare a serviciului afișat în vizualizarea BI"
+
+#, fuzzy
+msgid "Contact groups and tags"
+msgstr "Grupuri de contact"
+
+msgid "Labels (discovered and explicit)"
+msgstr ""
+
+#, fuzzy
+msgid "Relations placeholder"
+msgstr "Decalaj de replicare"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "%{count} selected host"
+msgid_plural "%{count} selected hosts"
+msgstr[0] "Pe gazdele selectate"
+msgstr[1] "Pe gazdele selectate"
+msgstr[2] "Pe gazdele selectate"
+
+#, fuzzy
+msgid "Acknowledged the problem for %{count} host"
+msgid_plural "Acknowledged the problems for %{count} hosts"
+msgstr[0] "Recunoașteți problemele"
+msgstr[1] "Recunoașteți problemele"
+msgstr[2] "Recunoașteți problemele"
+
+msgid "Could not acknowledge the problems: %{detail}"
+msgstr ""
+
+#, fuzzy
+msgid "Enter a comment…"
+msgstr "Comentariu la eveniment"
+
+msgid ""
+"Optionally let the acknowledgement expire automatically. Leave empty to keep "
+"it "
+msgstr ""
+
+#, fuzzy
+msgid "Choose an expiry date & time"
+msgstr "Timpul de expirare a comentariilor"
+
+#, fuzzy
+msgid "Ignore status changes until the host recovers (OK/UP)"
+msgstr "Dacă se schimbă starea SAU la revenire (OK/UP)"
+
+#, fuzzy
+msgid "Persistent comment"
+msgstr "Conexiuni persistente"
+
+#, fuzzy
+msgid "Notify affected users"
+msgstr "Notificarea tuturor utilizatorilor"
+
+#, fuzzy
+msgid "Added a comment to %{count} host"
+msgid_plural "Added a comment to %{count} hosts"
+msgstr[0] "Adaugă un comentariu sau descrie această gazdă"
+msgstr[1] "Adaugă un comentariu sau descrie această gazdă"
+msgstr[2] "Adaugă un comentariu sau descrie această gazdă"
+
+#, fuzzy
+msgid "Successfully rescheduled the check for %{count} host"
+msgid_plural "Successfully rescheduled the checks for %{count} hosts"
+msgstr[0] "Ați eliminat cu succes gazdele %d."
+msgstr[1] "Ați eliminat cu succes gazdele %d."
+msgstr[2] "Ați eliminat cu succes gazdele %d."
+
+msgid "Could not reschedule the checks for the selected hosts."
+msgstr ""
+
+msgid "Execution will be spread across a custom time period."
+msgstr ""
+
+msgid ""
+"Distributes the rescheduled checks across the specified number of minutes, "
+msgstr ""
+
+#, fuzzy
+msgid "Schedule host downtime"
+msgstr "Programați o perioadă de pauză?"
+
+#, fuzzy
+msgid "Please choose a downtime duration greater than zero."
+msgstr "Vă rugăm să alegeți o țintă de la care să efectuați restaurarea."
+
+#, fuzzy
+msgid "Successfully scheduled a downtime for %{count} host"
+msgid_plural "Successfully scheduled a downtime for %{count} hosts"
+msgstr[0] "Programarea timpului de oprire pe gazdă"
+msgstr[1] "Programarea timpului de oprire pe gazdă"
+msgstr[2] "Programarea timpului de oprire pe gazdă"
+
+#, fuzzy
+msgid "Could not schedule the downtime for the selected hosts."
+msgstr "Gazda/serviciul trebuie să aibă unul dintre contactele selectate."
+
+#, fuzzy
+msgid "Custom time range"
+msgstr "Personalizați intervalul de timp"
+
+#, fuzzy
+msgid "Ad hoc"
+msgstr "Adăugați gazdă"
+
+msgid "4 h"
+msgstr ""
+
+msgid "24 h"
+msgstr ""
+
+msgid "10 d"
+msgstr ""
+
+#, fuzzy
+msgid "Scheduled downtimes set the hosts in planned maintenance."
+msgstr ""
+"Programarea și eliminarea perioadelor de oprire a gazdelor și serviciilor"
+
+#, fuzzy
+msgid "Alerts and notifications will be paused."
+msgstr "Notificări de testare"
+
+#, fuzzy
+msgid "Downtime time range"
+msgstr "Interval de timp activ"
+
+msgid "From now, for"
+msgstr ""
+
+msgid "Scheduled downtime has a duration of %{duration} starting now."
+msgstr ""
+
+#, fuzzy
+msgid "Advanced option"
+msgstr "Opțiuni avansate"
+
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime."
+msgstr "Numai pentru gazde: Setați gazdele copil în timp de nefuncționare"
+
+#, fuzzy
+msgid ""
+"Only start downtime if the host goes DOWN/UNREACHABLE during the defined "
+"start "
+msgstr ""
+"Începeți timpul de oprire numai dacă gazda/serviciul se oprește în timpul "
+"orelor de început și de sfârșit definite (flexibil)"
+
+#, fuzzy
+msgid "%{count} host selected"
+msgid_plural "%{count} hosts selected"
+msgstr[0] "Nu este selectat"
+msgstr[1] "Nu este selectat"
+msgstr[2] "Nu este selectat"
+
+#, fuzzy
+msgid "Actions for selected hosts"
+msgstr "Pe gazdele selectate"
+
+#, fuzzy
+msgid "More actions"
+msgstr "Mai multe opțiuni"
+
+#, fuzzy
+msgid "Stale state"
+msgstr "toate statele"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Sunt permise doar literele majuscule"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "Timpul nu trebuie să fie mai mare decât %02d:%02d."
+
+#, fuzzy
+msgid "Filter values"
+msgstr "Vizualizare filtru"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Eliminați toate"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "Nu există nume de gazdă corespunzătoare"
+
+#, fuzzy
+msgid "Clear"
+msgstr "Starea \"Liber"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Nici unul (liniar)"
+
+#, fuzzy
+msgid "No results for your combination of search and filter settings."
+msgstr ""
+"Nu s-a găsit niciun obiect utilizator pentru sincronizare. Vă rugăm să "
+"verificați setările de filtrare."
+
+#, fuzzy
+msgid "No results found for your active filters."
+msgstr "Nu s-au găsit jurnale pentru această gazdă."
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "Nu s-au găsit jurnale pentru această gazdă."
+
+#, fuzzy
+msgid "No results found."
+msgstr "Nu s-au găsit reguli."
+
+msgid "Adjust or clear search and filters to start fresh."
+msgstr ""
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Total rows: %{total}"
+msgstr "Gazde învechite"
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Selectați toate casetele de selectare"
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -102763,10 +103219,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Prometheus scraping (Experimental)"
-#~ msgstr "Intervalul de colectare a datelor"
-
-#, fuzzy
-#~ msgid "Prometheus scraping (experimental)"
 #~ msgstr "Intervalul de colectare a datelor"
 
 #~ msgid "Prominent change"

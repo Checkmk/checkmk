@@ -3039,11 +3039,27 @@ msgstr "ASM - Stato generale dell'istanza"
 msgid "ASM - Processes"
 msgstr "ASM - Processi"
 
+#, fuzzy
+msgid "ASM Authentication"
+msgstr "Autenticazione SMTP"
+
 msgid "ASM Disk Group"
 msgstr "Gruppo disco ASM"
 
 msgid "ASM Disk Group (used space and growth)"
 msgstr "Gruppo di dischi ASM (spazio usato e crescita)"
+
+#, fuzzy
+msgid "ASM Password"
+msgstr "Password"
+
+#, fuzzy
+msgid "ASM Role"
+msgstr "Ruolo"
+
+#, fuzzy
+msgid "ASM Username"
+msgstr "Nome utente"
 
 msgid ""
 "ASM calculates the free space depending on free_mb or required mirror free "
@@ -6078,6 +6094,10 @@ msgid "All hosts"
 msgstr "Tutti gli host"
 
 #, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Intervallo per la raccolta dei dati"
+
+#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -6473,11 +6493,9 @@ msgstr "Accesso consentito all'agente tramite indirizzo IP"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Accesso consentito all'agente tramite indirizzo IP (Linux, Windows)"
 
-msgid ""
-"Allowed characters are word characters (letters, digits, underscores), "
-"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
-"and end with a word character or dollar sign."
-msgstr ""
+#, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr "Usa solo lettere minuscole, cifre e caratteri di sottolineatura qui."
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "Durata consentita dall'ultimo messaggio NTP"
@@ -23835,6 +23853,10 @@ msgstr "Modifica collezione di grafici"
 msgid "Edit graph tuning"
 msgstr "Modifica della sintonizzazione del grafico"
 
+#, fuzzy
+msgid "Edit host"
+msgstr "Modifica questo host"
+
 msgid "Edit host attribute"
 msgstr "Modifica attributo host"
 
@@ -36403,6 +36425,10 @@ msgstr "In relazione al normale intervallo di controllo"
 
 msgid "In relation to standard deviation"
 msgstr "In relazione alla deviazione standard"
+
+#, fuzzy
+msgid "In scheduled downtime"
+msgstr "Ignorare i tempi di inattività programmati"
 
 msgid "In service details"
 msgstr "Dettagli in servizio"
@@ -59064,6 +59090,10 @@ msgid ""
 "resources through the Graph API."
 msgstr ""
 
+#, fuzzy
+msgid "Return to standard view"
+msgstr "In relazione alla deviazione standard"
+
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
 "cmk-dcd -Bv and cmk-dcd -Cv."
@@ -61670,6 +61700,11 @@ msgstr "Aprire le notifiche di massa"
 
 msgid "Separate check"
 msgstr "Controllo separato"
+
+msgid ""
+"Separate credentials for accessing ASM. If omitted, the main authentication "
+"above is reused."
+msgstr ""
 
 msgid "Separator"
 msgstr "Separatore"
@@ -79371,6 +79406,10 @@ msgid "This variable is configured in <a href=\"%s\">Global settings</a>."
 msgstr ""
 "Questa variabile è configurata in <a href=\"%s\">impostazioni globali</a>."
 
+#, fuzzy
+msgid "This view"
+msgstr "Questa vista come PDF"
+
 msgid "This view as PDF"
 msgstr "Questa vista come PDF"
 
@@ -83900,6 +83939,9 @@ msgstr "Prova"
 
 msgid "Try pattern match"
 msgstr "Prova il pattern match"
+
+msgid "Try the new \"All hosts\" view"
+msgstr ""
 
 #, fuzzy
 msgid "Try to detect MSSQL instances present on server"
@@ -96440,6 +96482,14 @@ msgid "Remove element"
 msgstr "Rimuovere questo elemento"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "Ricerca delle regole"
+
+#, fuzzy
+msgid "Could not load this content."
+msgstr "Non è possibile eliminare questa connessione."
+
+#, fuzzy
 msgid "filter"
 msgstr "Filtro"
 
@@ -96458,6 +96508,125 @@ msgstr "Finito"
 #, fuzzy
 msgid "Guided"
 msgstr "Modo aperto"
+
+#, fuzzy
+msgid "Save date"
+msgstr "Data del campione"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Scegliere tutti"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Data e ora dell'evento"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Data e ora"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Scegliere tutti"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "Cambiamento di stato"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Riclassificare lo stato completo"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Data e ora"
+
+#, fuzzy
+msgid "From date"
+msgstr "Tempo di creazione"
+
+#, fuzzy
+msgid "From time"
+msgstr "non c'è tempo"
+
+#, fuzzy
+msgid "To date"
+msgstr "Nessun dato"
+
+#, fuzzy
+msgid "To time"
+msgstr "non c'è tempo"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "Reset del target TCP"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Tipo di inizio"
+
+#, fuzzy
+msgid "End time"
+msgstr "non c'è tempo"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Orizzonte temporale"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Eventi attuali"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Utente sconosciuto: %s"
+
+#, fuzzy
+msgid "Previous month"
+msgstr "ricicla"
+
+#, fuzzy
+msgid "Next month"
+msgstr "Il mese scorso"
+
+#, fuzzy
+msgid "not set"
+msgstr "non presente"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Orizzonte temporale"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Salvare e testare"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Risparmio di spazio"
+
+#, fuzzy
+msgid "Open calendar"
+msgstr "Client OpenVPN"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Selezione dei file"
+
+#, fuzzy
+msgid "Empty"
+msgstr "vuoto"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " o "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Selezione dei file"
 
 msgid "required"
 msgstr "(obbligatorio)"
@@ -96527,10 +96696,6 @@ msgstr "Rimuovi filtro"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d Impostazioni del filtro"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Ricerca delle regole"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -99820,7 +99985,7 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"A system reboot may be required after installing WSL2 before proceeding."
+"This script requires administrator privileges and will restart the computer "
 msgstr ""
 
 #, fuzzy
@@ -99899,6 +100064,291 @@ msgstr "configurazione"
 msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
+
+#, fuzzy
+msgid "Modes"
+msgstr "Modem"
+
+#, fuzzy
+msgid "Number of services in OK state"
+msgstr "Numero di servizi nello stato OK"
+
+#, fuzzy
+msgid "Number of services in warning state"
+msgstr "Numero di servizi nello stato OK"
+
+#, fuzzy
+msgid "Number of services in critical state"
+msgstr "Numero di servizi nello stato OK"
+
+#, fuzzy
+msgid "Number of services in unknown state"
+msgstr "Numero di servizi nello stato OK"
+
+#, fuzzy
+msgid "Number of services in pending state"
+msgstr "Numero di servizi nello stato OK"
+
+#, fuzzy
+msgid "Unhandled Problems"
+msgstr "Problemi di host non gestiti"
+
+msgid "Give feedback on the new view"
+msgstr ""
+
+#, fuzzy
+msgid "Search hosts…"
+msgstr "Cerca host"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Errore generale"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "(Seleziona host)"
+
+msgid ""
+"An at-a-glance summary of %{host} will appear here, bringing the key host "
+"information together in one place."
+msgstr ""
+
+msgid "Host details (name, alias, primary IP address, site, folder)"
+msgstr ""
+
+#, fuzzy
+msgid "Service summary with a state visualization"
+msgstr "Menu hover di servizio mostrato nella visualizzazione BI"
+
+#, fuzzy
+msgid "Contact groups and tags"
+msgstr "Gruppi di contatto"
+
+msgid "Labels (discovered and explicit)"
+msgstr ""
+
+#, fuzzy
+msgid "Relations placeholder"
+msgstr "Ritardo nella replica"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "%{count} selected host"
+msgid_plural "%{count} selected hosts"
+msgstr[0] "Su host selezionati"
+msgstr[1] "Su host selezionati"
+
+#, fuzzy
+msgid "Acknowledged the problem for %{count} host"
+msgid_plural "Acknowledged the problems for %{count} hosts"
+msgstr[0] "Riconoscere i problemi"
+msgstr[1] "Riconoscere i problemi"
+
+msgid "Could not acknowledge the problems: %{detail}"
+msgstr ""
+
+#, fuzzy
+msgid "Enter a comment…"
+msgstr "Commento dell'evento"
+
+msgid ""
+"Optionally let the acknowledgement expire automatically. Leave empty to keep "
+"it "
+msgstr ""
+
+#, fuzzy
+msgid "Choose an expiry date & time"
+msgstr "Tempo di scadenza dei commenti"
+
+#, fuzzy
+msgid "Ignore status changes until the host recovers (OK/UP)"
+msgstr ""
+"Quand'ora lo stato cambiasse OPPURE al rientro della segnalazione (OK/UP)"
+
+#, fuzzy
+msgid "Persistent comment"
+msgstr "Connessioni persistenti"
+
+#, fuzzy
+msgid "Notify affected users"
+msgstr "Notifica a tutti gli utenti"
+
+#, fuzzy
+msgid "Added a comment to %{count} host"
+msgid_plural "Added a comment to %{count} hosts"
+msgstr[0] "Aggiungi un commento o descrivi questo host"
+msgstr[1] "Aggiungi un commento o descrivi questo host"
+
+#, fuzzy
+msgid "Successfully rescheduled the check for %{count} host"
+msgid_plural "Successfully rescheduled the checks for %{count} hosts"
+msgstr[0] "Eliminati con successo %d host"
+msgstr[1] "Eliminati con successo %d host"
+
+msgid "Could not reschedule the checks for the selected hosts."
+msgstr ""
+
+msgid "Execution will be spread across a custom time period."
+msgstr ""
+
+msgid ""
+"Distributes the rescheduled checks across the specified number of minutes, "
+msgstr ""
+
+#, fuzzy
+msgid "Schedule host downtime"
+msgstr "Programmare un periodo di inattività?"
+
+#, fuzzy
+msgid "Please choose a downtime duration greater than zero."
+msgstr "Scegliete una destinazione da cui eseguire il ripristino."
+
+#, fuzzy
+msgid "Successfully scheduled a downtime for %{count} host"
+msgid_plural "Successfully scheduled a downtime for %{count} hosts"
+msgstr[0] "Programmare il tempo di inattività sull'host"
+msgstr[1] "Programmare il tempo di inattività sull'host"
+
+#, fuzzy
+msgid "Could not schedule the downtime for the selected hosts."
+msgstr "L'host/servizio deve avere uno dei contatti selezionati."
+
+#, fuzzy
+msgid "Custom time range"
+msgstr "Personalizzare l'intervallo di tempo"
+
+#, fuzzy
+msgid "Ad hoc"
+msgstr "Aggiungere l'host"
+
+msgid "4 h"
+msgstr ""
+
+msgid "24 h"
+msgstr ""
+
+msgid "10 d"
+msgstr ""
+
+#, fuzzy
+msgid "Scheduled downtimes set the hosts in planned maintenance."
+msgstr "Programmare e rimuovere i tempi di inattività di host e servizi"
+
+#, fuzzy
+msgid "Alerts and notifications will be paused."
+msgstr "Notifiche di test"
+
+#, fuzzy
+msgid "Downtime time range"
+msgstr "Intervallo di tempo attivo"
+
+msgid "From now, for"
+msgstr ""
+
+msgid "Scheduled downtime has a duration of %{duration} starting now."
+msgstr ""
+
+#, fuzzy
+msgid "Advanced option"
+msgstr "Opzioni avanzate"
+
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime."
+msgstr "Solo per gli host: Imposta gli host figlio in tempo di inattività"
+
+#, fuzzy
+msgid ""
+"Only start downtime if the host goes DOWN/UNREACHABLE during the defined "
+"start "
+msgstr ""
+"Avvia la manutenzione solamente se lo host o il servizio diventano DOWN/"
+"UNREACH tra l'orario di inizio e di fine definiti (flessibile)"
+
+#, fuzzy
+msgid "%{count} host selected"
+msgid_plural "%{count} hosts selected"
+msgstr[0] "Non selezionato"
+msgstr[1] "Non selezionato"
+
+#, fuzzy
+msgid "Actions for selected hosts"
+msgstr "Su host selezionati"
+
+#, fuzzy
+msgid "More actions"
+msgstr "Altre opzioni"
+
+#, fuzzy
+msgid "Stale state"
+msgstr "tutti gli stati"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Sono ammesse solo lettere maiuscole"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "Il tempo non deve essere maggiore di %02d:%02d."
+
+#, fuzzy
+msgid "Filter values"
+msgstr "Vista del filtro"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Rimuovere tutti"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "Nessun nome host corrispondente"
+
+#, fuzzy
+msgid "Clear"
+msgstr "Stato 'Cleared' (liberato)"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Nessuno (lineare)"
+
+#, fuzzy
+msgid "No results for your combination of search and filter settings."
+msgstr ""
+"Trovato nessun oggetto utente per la sincronizzazione. Per favore controlla "
+"le impostazioni del tuo filtro."
+
+#, fuzzy
+msgid "No results found for your active filters."
+msgstr "Nessun log trovato per questo host."
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "Nessun log trovato per questo host."
+
+#, fuzzy
+msgid "No results found."
+msgstr "Nessuna regola trovata."
+
+msgid "Adjust or clear search and filters to start fresh."
+msgstr ""
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Total rows: %{total}"
+msgstr "Host totali: "
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Seleziona tutte le caselle di controllo"
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -102204,10 +102654,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Prometheus scraping (Experimental)"
-#~ msgstr "Intervallo per la raccolta dei dati"
-
-#, fuzzy
-#~ msgid "Prometheus scraping (experimental)"
 #~ msgstr "Intervallo per la raccolta dei dati"
 
 #~ msgid "Prominent change"

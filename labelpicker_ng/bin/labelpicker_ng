@@ -1,0 +1,320 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+#   _____  __          __  _____
+#  / ____| \ \        / / |  __ \
+# | (___    \ \  /\  / /  | |__) |
+#  \___ \    \ \/  \/ /   |  _  /
+#  ____) |    \  /\  /    | | \ \
+# |_____/      \/  \/     |_|  \_\
+#
+# (c) 2025 SWR
+# @author Frank Baier <frank.baier@swr.de>
+#
+# Based on:
+# SPDX-FileCopyrightText: © 2023 PL Automation Monitoring GmbH <pl@automation-monitoring.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+# This file is part of the Checkmk Labelpicker project (https://labelpicker.mk)
+import argparse, re
+import sys, importlib
+from pprint import pformat
+from labelpicker_ng import (
+    LabelpickerConfig,
+    DataRetention,
+    Config,
+    Labels,
+    HostLabels,
+    logger,
+    init_logger,
+    lpb,
+    cmk,
+)
+
+
+def parse_args():
+    """
+    Parse command-line arguments using argparse module.
+
+    This function defines and processes the list of command-line arguments to be
+    used by the program. It handles various flags and options that control the
+    behavior of the application.
+
+    :return: Parsed arguments as an argparse.Namespace object.
+    :rtype: argparse.Namespace
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-i",
+        "--init",
+        action="store_true",
+        help="Initialize label picker default configuration",
+    )
+    parser.add_argument("-u", "--username", help="Name of the automation user")
+    parser.add_argument("-p", "--password", help="Secret of the automation user")
+    parser.add_argument("-c", "--config", default="", help="Path to config file")
+    parser.add_argument(
+        "-w",
+        "--print_config",
+        action="store_true",
+        help="Print the config file (default: labelpicker.dist.yml) as compressed and Base64 encoded string to cli."
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug mode (overrides the config settings)",
+        default=False
+    )
+    parser.add_argument(
+        "-t",
+        "--testmode",
+        action="store_true",
+        help="Testmode - no config changes will be applied",
+    )
+    parser.add_argument(
+        "--cleanup",
+        nargs="?",
+        const=True,
+        type=int,
+        help="Cleanup all labels set by labelpicker. Optional: pass number for cleanupfile",
+    )
+    parser.add_argument(
+        "--remove",
+        default=None,
+        type=str,
+        help="Path to config file"
+    )
+    return parser.parse_args()
+
+def activate(
+        args: argparse.Namespace,
+        wato: cmk.CMKInstance,
+        config: LabelpickerConfig,
+        all_label_definitions: HostLabels,
+        data_retention: DataRetention
+):
+    try:
+        ret = wato.activate(force=config.activate_foreign_changes)
+        if ret.get("title", "").startswith("Activation"):
+            logger.info(f"🟢 Changes activated: {ret.get('title')}")
+        else:
+            logger.warning(f"🟡 Change activation failed: {ret.get('title')}")
+
+        # save pickle files only if not in cleanup mode
+        if not args.cleanup or args.remove:
+            data_retention.save_pickle_rotating_in_dir(all_label_definitions)
+    except Exception as e:
+        logger.error(f"🔺 Activate changes failed: \n{pformat(e, indent=4)}\n{pformat(e, indent=4)}")
+
+
+def remove_label(
+        args: argparse.Namespace,
+        wato: cmk.CMKInstance,
+        cmk_all_hosts: dict,
+):
+    """
+    Removes a specific label from a collection of hosts. The label is checked against a predefined
+    format and is parsed to determine its components. If a matching label exists on any host,
+    it is removed, and the host is updated with the updated labels.
+
+    :param args: The parsed command-line arguments containing the label to remove and additional
+                 parameters such as test mode.
+    :type args: argparse.Namespace
+    :param wato: An instance of the CMKInstance class that provides methods for managing hosts
+                 and their labels.
+    :type wato: cmk.CMKInstance
+    :param cmk_all_hosts: A dictionary of all hosts with their corresponding attributes and labels.
+                          The dictionary structure is expected to contain each host's label information
+                          under "attributes" -> "labels".
+    :type cmk_all_hosts: dict
+    :return: A boolean indicating whether any changes were made to the labels of the hosts. True
+             if labels were removed for one or more hosts, False otherwise.
+    :rtype: bool
+    :raises SystemExit: If the format of the label provided via the command-line arguments is invalid.
+    """
+    label = args.remove
+    pattern = re.compile(r'^(?=[^/]*\/[^/]*$)(?=[^:]*:[^:]*$)([^:]+):([^:]*)$')
+    m = pattern.match(label)
+    if not m:
+        logger.error("Label for removed not in correct format:")
+        raise SystemExit(1)
+    label, value = m.groups()
+
+    r_label: Labels = {}
+    if label and value:
+        r_label = {label: value}
+    elif label:
+        r_label = {label: ""}
+
+    changes = False
+    for host in cmk_all_hosts:
+        current_labels = cmk_all_hosts.get(host, {}).get("attributes", {}).get("labels", {})
+        updated_labels = wato.remove_label(
+            args=args,
+            host=host,
+            orig_labels=current_labels,
+            labels=r_label,
+        )
+
+        if updated_labels != current_labels and not args.testmode:
+            changes = True
+            wato.edit_host_label(host, labels=updated_labels)
+
+    if not changes:
+        logger.warning(f"No Host with label \'{label}\' found.")
+
+    return changes
+
+
+def main():
+    """
+    Main function to manage the execution flow of the script. This function encompasses the
+    parsing of arguments, initialization, the processing of data sources, and the application
+    of label definitions. Additionally, it handles logging, optional test modes, and the
+    activation of changes within a Checkmk instance.
+
+    :raises ImportError: Raised if a specified datasource module cannot be imported.
+    :return: None
+    """
+    args = parse_args()
+
+    # generate config_string (for internal use to update the self-generated config)
+    if args.print_config:
+        Config.generate_init_cfg(args.config)
+
+    # initialize config class
+    config_inst = Config(args)
+    # generate default config if requested
+    if args.init:
+        config_inst.init_cfg()
+
+    config = config_inst.get_cfg()
+
+    # initialize logging
+    init_logger(config)
+
+    # Change logger headline when testmode is enabled and print headline to logger
+    h1_suffix = " - testmode " if args.testmode else ""
+    logger.info(__file__.split("/")[-1] + h1_suffix, extra={"color": "h1"})
+
+    try:
+        wato = cmk.CMKInstance(config.checkmk)
+    except Exception:
+        logger.error(f"🔴 Error connecting to Checkmk site via REST API!\n --> Site started and apache running?")
+        sys.exit(1)
+
+    all_label_definitions: HostLabels = {}
+
+    # get all checkmk hosts with labels
+    cmk_all_hosts = wato.get_all_hosts()
+    # get holst with the labels from last run of labelpicker
+    data_retention = DataRetention(config.cleanup)
+    old_labels = data_retention.load_data(args.cleanup)
+
+    # write a message for cleanup
+    if args.cleanup:
+        logger.warning(f"🟡 Cleanup: remove all labelpicker labels from all Hosts", extra={"color": "h3"})
+
+    # write a message for testmode
+    if args.testmode:
+        logger.warning(f"🟡 Testmode: No labels will be written to Checkmk!", extra={"color": "h3"})
+
+    # manual remove a defined prefix / of prefix/labelname
+    if args.remove:
+        logger.warning(f"🟡 Remove: remove label {args.remove} from all Hosts!", extra={"color": "h3"})
+        changes = remove_label(
+            args=args,
+            wato=wato,
+            cmk_all_hosts=cmk_all_hosts,
+        )
+        if not args.testmode and changes:
+            activate(args, wato, config, all_label_definitions, data_retention)
+        sys.exit(0)
+
+    # get data from all datasources ans merge the data
+    for strategy in config.datasources:
+        logger.info(f"Datasource: {strategy.name}", extra={"color": "h2"})
+
+        # if the pymodule name is set, use it instead of the strategy name
+        try:
+            # Import & load datasource module
+            datasource_module = importlib.import_module(
+                f"labelpicker_ng.ds_plugins.{strategy.module}"
+            )
+            datasource_class = getattr(datasource_module, strategy.module)
+            label_processor = lpb.LableDataProcessor(datasource_class(
+                config=strategy, wato=wato
+            ))
+        except ImportError:
+            # Handle import error
+            logger.error(f"🔴 Error importing datasource {strategy.module}")
+            continue
+
+        # set strategy parameters from config it the parameters not set in strategy
+        strategy.case_conversion = strategy.case_conversion or config.case_conversion
+        strategy.label_prefix = strategy.label_prefix or config.label_prefix
+
+        # Get source data, return can be different for each strategy, but must be considered in the process algorithm
+        source_data = label_processor.get()
+        logger.debug(f"Source data: {sys.getsizeof(str(source_data))} Bytes")
+        # Process source data and create label definitions
+        strategy_label_definitions = label_processor.process(source_data)
+        logger.debug(f"Label definitions for {len(strategy_label_definitions)} hosts")
+
+        if strategy.case_conversion:
+            strategy_label_definitions = lpb.case_conversion(
+                label_definitions=strategy_label_definitions,
+                params=strategy.case_conversion,
+                label_prefix=strategy.label_prefix,
+            )
+
+        all_label_definitions.update(strategy_label_definitions)
+
+        # reset statistics for strategy
+        statistics = {"hosts_in_cmk": [], "hosts_not_in_cmk": []}
+
+        # Generate statistics for strategy
+        for host, new_labels in strategy_label_definitions.items():
+            if host in cmk_all_hosts:
+                statistics["hosts_in_cmk"].append(host)
+            else:
+                statistics["hosts_not_in_cmk"].append(host)
+
+        # Output statistics for strategy
+        if statistics["hosts_not_in_cmk"]:
+            logger.info(f"🟢 {len(statistics['hosts_in_cmk'])} Hosts in Checkmk")
+            logger.warning(f"🟡 {len(statistics['hosts_not_in_cmk'])} Hosts NOT in Checkmk")
+        else:
+            logger.info(f"🟢 {len(statistics['hosts_in_cmk'])} (all) Hosts in Checkmk")
+
+    # find the difference / what to change
+    changes = False
+    for host, new_labels in all_label_definitions.items():
+        if host in cmk_all_hosts:
+
+            current_labels = cmk_all_hosts.get(host, {}).get("attributes", {}).get("labels", {})
+
+            updated_labels = wato.update_labels(
+                orig_labels=current_labels,
+                new_labels=new_labels,
+                old_labels=old_labels.get(host, {}),
+                cleanup=args.cleanup,
+            )
+
+            if updated_labels != current_labels and not args.testmode:
+                changes = True
+                wato.edit_host_label(host, labels=updated_labels)
+                logger.debug(f"Update labels for {host}: {all_label_definitions.get(host, {})}")
+            elif args.testmode:
+                logger.warning(f"Testmode: Would update labels for {host}: {all_label_definitions.get(host, {})}")
+
+    # activate (if not in testmode and when we have changes
+    if not args.testmode and changes:
+        activate(
+            args=args,
+            wato=wato,
+            config=config,
+            all_label_definitions=all_label_definitions,
+            data_retention=data_retention
+        )
+
+if __name__ == "__main__":
+    main()

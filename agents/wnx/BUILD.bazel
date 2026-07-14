@@ -1,4 +1,108 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
+
+package(features = ["treat_warnings_as_errors"])
+
+# The AdditionalOptions of the vcxproj builds; without /Zc:char8_t- the
+# char8_t-blind formatting code (e.g. common/fmt_ext.h) doesn't compile.
+WNX_COPTS = [
+    "/utf-8",
+    "/Zc:char8_t-",
+]
+
+# Mirrors PreprocessorDefinitions of the vcxproj builds.
+WNX_DEFINES = [
+    "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING",
+    "_LIB",
+    "UNICODE",
+    "_UNICODE",
+    'SOLUTION_DIR=uR\\"(agents/wnx)\\"',
+]
+
+cc_library(
+    name = "wnx_headers",
+    hdrs = glob(["include/**/*.h"]),
+    strip_include_prefix = "include",
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
+cc_library(
+    name = "wnx_common",
+    srcs = glob(["src/common/*.cpp"]) + [
+        "src/engine/stdafx.h",
+    ],
+    copts = WNX_COPTS + [
+        "/Iagents/wnx/src/engine",
+    ],
+    local_defines = WNX_DEFINES,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    deps = [
+        ":wnx_headers",
+        "@asio",
+        "@wnx_fmt//:fmt",
+        "@wnx_yaml_cpp//:yaml-cpp",
+    ],
+)
+
+cc_library(
+    name = "wnx_lwa",
+    srcs = glob([
+        "src/lwa/*.cc",
+        "src/lwa/*.cpp",
+    ]) + ["src/engine/stdafx.h"],
+    copts = WNX_COPTS + [
+        "/Iagents/wnx/src/engine",
+        "/Iagents/wnx/include/lwa",
+    ],
+    local_defines = WNX_DEFINES,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    deps = [
+        ":wnx_headers",
+        "@asio",
+        "@wnx_fmt//:fmt",
+        "@wnx_simpleini//:simpleini",
+        "@wnx_yaml_cpp//:yaml-cpp",
+    ],
+)
+
+cc_library(
+    name = "engine",
+    srcs = glob([
+        "src/engine/*.cpp",
+        "src/engine/*.h",
+        "src/engine/eventlog/*.cpp",
+        "src/engine/providers/*.cpp",
+    ]),
+    copts = WNX_COPTS + [
+        "/Iagents/wnx/src/engine",
+    ],
+    local_defines = WNX_DEFINES,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    deps = [
+        ":wnx_common",
+        ":wnx_headers",
+        ":wnx_lwa",
+        "@asio",
+        "@wnx_fmt//:fmt",
+        "@wnx_yaml_cpp//:yaml-cpp",
+    ],
+)
 
 py_binary(
     name = "patch_windows_agent_version",

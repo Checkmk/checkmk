@@ -44,6 +44,7 @@ cc_toolchain(
         ":parse_showincludes",
         ":strip_all_symbols",
         ":default_cpp_std",
+        ":treat_warnings_as_errors",
         "//bazel/toolchains/cc/clang/args/msvc:features",
         "//bazel/toolchains/cc/clang/xwin/args/mode:features",
     ],
@@ -88,6 +89,21 @@ cc_args(
     actions = ["@rules_cc//cc/toolchains/actions:cpp_compile_actions"],
     args = ["/std:c++latest"],
     requires_not_none = "@rules_cc//cc/toolchains/variables:source_file",
+)
+
+cc_feature(
+    name = "treat_warnings_as_errors",
+    args = [":warnings_as_errors_args"],
+    feature_name = "treat_warnings_as_errors",
+)
+
+cc_args(
+    name = "warnings_as_errors_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:source_compile_actions",
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = ["/WX"],
 )
 
 cc_artifact_name_pattern(

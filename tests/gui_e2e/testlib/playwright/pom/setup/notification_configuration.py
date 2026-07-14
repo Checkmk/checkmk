@@ -89,12 +89,6 @@ class NotificationConfiguration(CmkPage):
             )
         return rule_row_locator
 
-    def is_the_current_page(self) -> bool:
-        return (
-            self.main_area.page_title_locator.is_visible()
-            and self.main_area.page_title_locator.text_content() == self.page_title
-        )
-
     def notification_rule_edit_button(self, rule_id: int | str) -> Locator:
         return self._notification_rule_row(rule_id).get_by_title("Edit this notification rule")
 
@@ -115,6 +109,13 @@ class NotificationConfiguration(CmkPage):
         return self.main_area.locator().get_by_role("region", name="Notification overview")
 
     def collapse_notification_overview(self, collapse: bool = True) -> None:
+        # Make sure the notification overview header is rendered to
+        # be able to use .is_visible() safely for the container
+        expect(
+            self._notification_overview_header,
+            message="The notification overview header is not rendered yet, "
+            "cannot reliably read the container's collapsed state.",
+        ).to_be_visible()
         container = self._notification_overview_container
         is_overview_visible = container.is_visible()
         if (collapse and is_overview_visible) or (not collapse and not is_overview_visible):

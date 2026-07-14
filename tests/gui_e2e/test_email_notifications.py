@@ -197,8 +197,7 @@ def test_filesystem_email_notifications(
 
         logger.info("Delete the created rule")
 
-        if not notification_configuration_page.is_the_current_page():
-            notification_configuration_page.navigate()
+        notification_configuration_page.navigate()
 
         # The scrollbar interrupts the interaction with rule delete button -> collapse overview
         notification_configuration_page.collapse_notification_overview(True)

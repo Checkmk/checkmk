@@ -737,6 +737,7 @@ class ModeEditLDAPConnection(WatoMode):
     def _from_vars(self) -> None:
         self._connection_id = request.get_ascii_input("id")
         self._connection_cfg: LDAPUserConnectionConfig
+        self._action_failed = False
 
         if self._connection_id is None:
             if (clone_id := request.var("clone")) is not None:
@@ -814,8 +815,12 @@ class ModeEditLDAPConnection(WatoMode):
         }
 
         vs = self._valuespec()
-        connection_cfg = cast(LDAPUserConnectionConfig, vs.from_html_vars("connection"))
-        vs.validate_value(dict(connection_cfg), "connection")
+        try:
+            connection_cfg = cast(LDAPUserConnectionConfig, vs.from_html_vars("connection"))
+            vs.validate_value(dict(connection_cfg), "connection")
+        except MKUserError:
+            self._action_failed = True
+            raise
         connection_cfg["type"] = "ldap"
 
         if self._new:
@@ -867,7 +872,7 @@ class ModeEditLDAPConnection(WatoMode):
 
         html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_("Diagnostics"))
-        if not request.var("_test") or not self._connection_id:
+        if not request.var("_test") or not self._connection_id or self._action_failed:
             html.show_message(
                 HTML.without_escaping(
                     "<p>%s</p><p>%s</p>"

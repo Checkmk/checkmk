@@ -155,6 +155,21 @@ class CmkPage(LocatorHelper):
         with self.page.expect_event(event) as _:
             self.page.goto(url)
 
+    def click_and_wait_for_navigation(self, trigger: Locator, frame_url: Pattern[str]) -> None:
+        """Click `trigger` and wait until the 'main' iframe navigates to a URL matching
+        `frame_url`.
+
+        Unlike `Page.wait_for_url` or element-based checks, which the current document already
+        satisfies when a page navigates to itself, the `framenavigated` event only fires for a
+        navigation starting after the click.
+        """
+        with self.page.expect_event(
+            "framenavigated",
+            predicate=lambda frame: frame_url.search(frame.url) is not None,
+        ) as event_info:
+            trigger.click()
+        event_info.value.wait_for_load_state("load")
+
     def check_no_errors(self, timeout: float = TIMEOUT_ACTIVATE_CHANGES_MS / 4) -> None:
         """Check that no errors are present on the page."""
         expect(

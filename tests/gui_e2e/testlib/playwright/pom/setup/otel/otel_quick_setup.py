@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import Literal, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -30,9 +29,9 @@ class OTelQuickSetup(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info(f"Navigate to '{self.page_title}' page")
-        self.main_menu.setup_menu(self.main_menu_name, exact=True).click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=otel_overview")), wait_until="load"
+        self.click_and_wait_for_navigation(
+            self.main_menu.setup_menu(self.main_menu_name, exact=True),
+            frame_url=re.compile("mode=otel_overview"),
         )
         self.validate_page()
 
@@ -92,9 +91,10 @@ class EditOTelConfiguration(CmkPage):
     @override
     def navigate(self) -> None:
         overview = OTelQuickSetup(self.page)
-        overview.edit_configuration_button(self._configuration_name).click()
-        # Don't wait on the parent-frame URL here: its sync with the iframe can break after a
-        # site restart, making wait_for_url flaky. Validate the rendered iframe content instead.
+        self.click_and_wait_for_navigation(
+            overview.edit_configuration_button(self._configuration_name),
+            frame_url=re.compile("mode=edit_otel_config"),
+        )
         self.validate_page()
 
     @override
@@ -135,10 +135,9 @@ class AddOTelConfiguration(CmkPage):
     @override
     def navigate(self) -> None:
         overview = OTelQuickSetup(self.page)
-        overview.add_configuration_button.click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=create_otel_config")),
-            wait_until="load",
+        self.click_and_wait_for_navigation(
+            overview.add_configuration_button,
+            frame_url=re.compile("mode=create_otel_config"),
         )
         self.validate_page()
 
@@ -321,7 +320,6 @@ class AddOTelConfiguration(CmkPage):
         expect(self.finalize_items_list).to_have_attribute("aria-busy", "false", timeout=timeout_ms)
 
     def finish_and_go_to_activate_changes(self) -> None:
-        self.finish_button.click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=otel_overview")), wait_until="load"
+        self.click_and_wait_for_navigation(
+            self.finish_button, frame_url=re.compile("mode=otel_overview")
         )

@@ -2,6 +2,6 @@
   "homepage": "https://llvm.org/",
   "maintainers": [],
   "repository": ["github:llvm/llvm-project"],
-  "versions": ["21.1.8.cmk.1"],
+  "versions": ["21.1.8.cmk.2"],
   "yanked_versions": {}
 }

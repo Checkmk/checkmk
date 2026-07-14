@@ -1787,23 +1787,33 @@ class DiscoveryPageRenderer:
             num_buttons += self.check_parameters_button(entry, self._host.name())
 
         if entry.check_source == DiscoveryState.CHANGED:
-            url_vars: HTTPVariables = [
-                ("checkboxname", checkbox_name),
-                ("hostname", self._host.name()),
-                ("entry", json.dumps(dataclasses.astuple(entry))),
-            ]
             html.popup_trigger(
                 html.render_static_icon(
                     StaticIcon(IconNames.menu), title=_("More options"), css_classes=["iconbutton"]
                 ),
                 f"service_action_menu_{checkbox_name}",
-                MethodAjax(endpoint="service_action_menu", url_vars=url_vars),
+                MethodAjax(
+                    endpoint="service_action_menu",
+                    url_vars=self._action_menu_url_vars(checkbox_name, entry),
+                ),
             )
             num_buttons += 1
 
         while num_buttons < 4:
             html.empty_icon()
             num_buttons += 1
+
+    def _action_menu_url_vars(self, checkbox_name: str, entry: CheckPreviewEntry) -> HTTPVariables:
+        return [
+            ("checkboxname", checkbox_name),
+            ("hostname", self._host.name()),
+            # Preserve the host's folder so that folder_preserving_link() in the AJAX
+            # handler can build valid links. Without it the handler falls back to the
+            # root folder and the target pages fail to find hosts in subfolders with
+            # "The given host does not exist." (CMK-35216).
+            ("folder", self._host.folder().path()),
+            ("entry", json.dumps(dataclasses.astuple(entry))),
+        ]
 
     def _icon_button(
         self,

@@ -24,6 +24,30 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = "msi_cmk_plugin_files",
+    srcs = [
+        "//cmk/plugins/collection/agents:mcafee_av_client.bat",
+        "//cmk/plugins/collection/agents:win_dmidecode.bat",
+        "//cmk/plugins/hyperv/agents:hyperv_vms.ps1",
+        "//cmk/plugins/hyperv/agents:hyperv_vms_guestinfos.ps1",
+        "//cmk/plugins/msexch/agents:msexch_dag.ps1",
+        "//cmk/plugins/msexch/agents:msexch_database.ps1",
+        "//cmk/plugins/printer/agents:win_printers.ps1",
+        "//cmk/plugins/tcp/agents:netstat_an.bat",
+        "//cmk/plugins/veeam/agents:veeam_backup_status.ps1",
+        "//cmk/plugins/windows/agents:ad_replication.bat",
+        "//cmk/plugins/windows/agents:win_dhcp_pools.bat",
+        "//cmk/plugins/windows/agents:win_license.bat",
+        "//cmk/plugins/windows/agents:windows_broadcom_bonding.bat",
+        "//cmk/plugins/windows/agents:windows_multipath.ps1",
+        "//cmk/plugins/windows/agents:windows_tasks.ps1",
+        "//cmk/plugins/windows/agents:windows_updates.ps1",
+        "//packages/cmk-plugins/cmk/plugins/tsm:agents/tsm_checks.bat",
+    ],
+    visibility = ["//agents/wnx:__pkg__"],
+)
+
 # May contain local file target labels, or cross package labels
 # from migrated bakery plugins under cmk/plugins/<family>/
 # In the latter case, the file target must be exposed to this package.

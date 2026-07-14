@@ -1,4 +1,4 @@
-# BUILD file injected into the @wine_linux_x86_64 repository (see MODULE.bazel).
+# BUILD file injected into the @wine_linux_x86_64 repository.
 # Exposes the from-source Wine tree built by third_party/wine/create-archive.
 
 filegroup(

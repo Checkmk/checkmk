@@ -21,12 +21,15 @@ void main() {
 
     // Everything derives from the label (artifact via cquery, -static-crt
     // test), so adding a binary here wires up the whole job.
-    def targets = [
+    def exe_targets = [
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
         "//packages/mk-sql:mk-sql-windows",
         "//packages/mk-oracle:mk-oracle-windows",
         "//agents/wnx/extensions/robotmk_ext:robotmk_ext-windows",
     ];
+    // Built and archived like the binaries, but there is no -static-crt tier
+    // for an MSI to check.
+    def targets = exe_targets + ["//agents/wnx:check_mk_agent_msi"];
     // The Wine unit-test tiers of the targets above (a separate list:
     // not every artifact has one).
     def wine_test_targets = [
@@ -40,7 +43,7 @@ void main() {
         "//bazel/toolchains/cc/clang/xwin/tests:tests",
     ];
     def target_args = targets.join(" ");
-    def crt_test_args = targets.collect { it + "-static-crt" }.join(" ");
+    def crt_test_args = exe_targets.collect { it + "-static-crt" }.join(" ");
     // Fail the build but keep going, so the test results below still get
     // collected and published.
     def fail_and_continue = [buildResult: 'FAILURE', stageResult: 'FAILURE'];
@@ -108,7 +111,7 @@ void main() {
         stage("Archive binaries") {
             dir("artefacts") {
                 archiveArtifacts(
-                    artifacts: "*.exe",
+                    artifacts: "*.exe,*.msi",
                     fingerprint: true,
                 );
             }

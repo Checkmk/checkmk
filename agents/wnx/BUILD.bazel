@@ -1,7 +1,9 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 load("//bazel/toolchains/cc/clang/xwin:rc.bzl", "windows_rc")
+load(":msi.bzl", "wnx_msi")
 
 package(features = ["treat_warnings_as_errors"])
 
@@ -269,6 +271,11 @@ sh_test(
     ],
 )
 
+sh_library(
+    name = "build_msi_sh",
+    srcs = ["install/build_msi.sh"],
+)
+
 py_binary(
     name = "patch_windows_agent_version",
     srcs = ["patch_windows_agent_version.py"],
@@ -287,4 +294,63 @@ filegroup(
         "tests/files/regression/windows_if.ps1",
     ],
     tags = ["lint-with-psscriptanalyzer"],
+)
+
+file_from_flag(
+    name = "cmk_version_flag",
+    out = "cmk_version_flag.txt",
+    content = ["{VERSION}"],
+    replace_labels = {"VERSION": "@cmk//version"},
+    tags = ["manual"],
+)
+
+# Use --cmk_version, with a fallback to the branch version in wnx_version.h if not given.
+genrule(
+    name = "cmk_version",
+    srcs = [
+        ":cmk_version_flag",
+        "include/common/wnx_version.h",
+    ],
+    outs = ["cmk_version.txt"],
+    cmd = """
+        v="$$(cat $(location :cmk_version_flag))"
+        if [ "$$v" = UNSET ]; then
+            v="$$(sed -n 's/^#define CMK_WIN_AGENT_VERSION "\\(.*\\)"/\\1/p' \\
+                $(location include/common/wnx_version.h))"
+            test -n "$$v" || {
+                echo "error: no CMK_WIN_AGENT_VERSION in wnx_version.h" >&2
+                exit 1
+            }
+        fi
+        echo "$$v" >$@
+    """,
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "msi_sources",
+    srcs = glob([
+        "install/*.wxs",
+        "install/*.wxi",
+    ]) + ["install/checkmk.ico"],
+)
+
+filegroup(
+    name = "msi_resources",
+    srcs = glob(["install/resources/**"]),
+)
+
+wnx_msi(
+    name = "check_mk_agent_msi",
+    srcs = [
+        ":msi_resources",
+        ":msi_sources",
+        "//agents/windows/plugins",
+        "//agents/windows/plugins:msi_cmk_plugin_files",
+    ],
+    out = "check_mk_agent.msi",
+    agent_ctl_exe = "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
+    service_exe = ":check_mk_service-windows",
+    tags = ["manual"],
+    version_file = ":cmk_version",
 )

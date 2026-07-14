@@ -1,3 +1,5 @@
-# forced CRLF for some file types
 *.yml text eol=crlf
 *.txt text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+checkmk.dat text eol=crlf

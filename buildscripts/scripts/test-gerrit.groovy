@@ -89,7 +89,7 @@ def main_parallel() {
                     sec_var_list_str = item.SEC_VAR_LIST.join("#");
                 }
                 def independent_command = item.COMMAND.replace("${checkout_dir}", "JOB_SPECIFIC_SPACE_PLACEHOLDER");
-                def relative_job_name = "${branch_base_folder}/cv/test-gerrit-single"
+                def relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-node"
 
                 smart_stage(
                     name: stepName,
@@ -108,7 +108,7 @@ def main_parallel() {
                             ];
                             break;
                         default:
-                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
+                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-node";
                             build_params << [
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                                 CIPARAM_NAME: item.NAME,

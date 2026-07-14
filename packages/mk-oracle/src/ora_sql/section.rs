@@ -43,6 +43,7 @@ pub struct Section {
     section_affinity: SectionAffinity,
     item_value: Option<ItemValue>,
     inline_sql: Option<String>,
+    sql_params: Vec<(String, String)>,
     path: Option<PathBuf>,
     pdb_patterns: Vec<Regex>,
 }
@@ -67,6 +68,7 @@ impl Section {
             section_affinity: section.affinity().clone(),
             item_value: section.item_value().cloned(),
             inline_sql: section.sql().map(str::to_owned),
+            sql_params: section.sql_params().to_vec(),
             path: section.path().map(Path::to_path_buf),
             pdb_patterns: section
                 .pdb_patterns()
@@ -241,7 +243,10 @@ impl Section {
                     .and_then(|s| Self::find_known_query(s, instance_version, tenant))
                     .map(|s| s.to_owned())
             })?;
-        Some(split_into_queries(&body, params))
+        Some(split_into_queries(
+            &apply_sql_params(body, &self.sql_params),
+            params,
+        ))
     }
 
     /// Resolve the SQL body when the section has a user-supplied `path:`.
@@ -340,6 +345,14 @@ impl Section {
             })
             .ok()
     }
+}
+
+/// Substitute the `${name}` placeholders of the section's `sql_params` in the
+/// SQL body.
+fn apply_sql_params(sql: String, sql_params: &[(String, String)]) -> String {
+    sql_params.iter().fold(sql, |body, (name, value)| {
+        body.replace(&format!("${{{name}}}"), value)
+    })
 }
 
 /// Look up a SQL file in `dir` whose name matches `stem` (optionally with a
@@ -696,6 +709,90 @@ oracle:
             overridden.pdb_patterns().is_empty(),
             "override runs against CDB only (no PDB targeting)"
         );
+    }
+
+    #[test]
+    fn test_sql_params_patched_into_inline_sql() {
+        let section_config = section::SectionBuilder::new("test")
+            .sql("SELECT ${parameter_1} FROM dual; SELECT ${parameter_2} FROM dual")
+            .sql_params(vec![
+                ("parameter_1".to_string(), "value_1".to_string()),
+                ("parameter_2".to_string(), "value_2".to_string()),
+            ])
+            .set_item_value(ItemValue::from("test".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        let queries = runtime
+            .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
+            .expect("inline sql should yield queries");
+        assert_eq!(queries.len(), 2);
+        assert_eq!(queries[0].as_str(), "SELECT value_1 FROM dual");
+        assert_eq!(queries[1].as_str(), "SELECT value_2 FROM dual");
+    }
+
+    #[test]
+    fn test_sql_params_unknown_placeholder_left_untouched() {
+        let section_config = section::SectionBuilder::new("test")
+            .sql("SELECT ${parameter_1}, ${no_such_param} FROM dual")
+            .sql_params(vec![("parameter_1".to_string(), "value_1".to_string())])
+            .set_item_value(ItemValue::from("test".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        let queries = runtime
+            .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
+            .expect("inline sql should yield queries");
+        assert_eq!(
+            queries[0].as_str(),
+            "SELECT value_1, ${no_such_param} FROM dual"
+        );
+    }
+
+    #[test]
+    fn test_sql_params_repeated_placeholder_replaced_everywhere() {
+        let section_config = section::SectionBuilder::new("test")
+            .sql("SELECT ${p} FROM t WHERE c = ${p}")
+            .sql_params(vec![("p".to_string(), "42".to_string())])
+            .set_item_value(ItemValue::from("test".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        let queries = runtime
+            .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
+            .expect("inline sql should yield queries");
+        assert_eq!(queries[0].as_str(), "SELECT 42 FROM t WHERE c = 42");
+    }
+
+    // end-to-end: yaml -> config section -> runtime section -> patched queries
+    #[test]
+    fn test_yaml_sql_params_patch_custom_metric_queries() {
+        let config = config::ora_sql::Config::from_string(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - test:
+          sql: "SELECT ${parameter_1} FROM dual; SELECT ${parameter_2} FROM dual"
+          sql_params:
+            parameter_1: "value_1"
+            parameter_2: "value_2"
+"#,
+        )
+        .expect("yaml parses")
+        .expect("oracle config present");
+        let section_config = config
+            .all_sections()
+            .iter()
+            .find(|s| s.is_custom_metric())
+            .expect("custom metric parsed from yaml");
+        let runtime = Section::new(section_config, 0);
+        let queries = runtime
+            .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
+            .expect("custom metric sql should yield queries");
+        assert_eq!(queries.len(), 2);
+        assert_eq!(queries[0].as_str(), "SELECT value_1 FROM dual");
+        assert_eq!(queries[1].as_str(), "SELECT value_2 FROM dual");
     }
 
     #[test]

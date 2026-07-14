@@ -314,6 +314,67 @@ fn test_remote_mini_connection() {
     assert_eq!(rows.len(), 2);
 }
 
+#[test]
+fn test_remote_custom_metric_with_sql_params() {
+    add_runtime_to_path();
+    let endpoint = remote_reference_endpoint();
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{}"
+       password: "{}"
+       type: standard
+    connection:
+       hostname: {}
+       port: {}
+       timeout: 10
+       service_name: {}
+    discovery:
+       detect: no
+    custom_metrics:
+      - params_metric:
+          sql: "select 'details:${{greeting}}' from dual; select ${{column}} from dual"
+          sql_params:
+            greeting: "hello-from-params"
+            column: "dummy"
+"#,
+        endpoint.user, endpoint.pwd, endpoint.host, endpoint.port, endpoint.service_name
+    );
+    let config = Config::from_string(config_str).unwrap().unwrap();
+
+    let custom = config
+        .all_sections()
+        .iter()
+        .find(|s| s.is_custom_metric())
+        .expect("custom metric must be parsed");
+    let runtime = section::Section::new(custom, 0);
+    let queries = runtime
+        .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
+        .expect("custom metric sql must yield queries");
+    assert_eq!(queries.len(), 2);
+    assert_eq!(
+        queries[0].as_str(),
+        "select 'details:hello-from-params' from dual"
+    );
+    assert_eq!(queries[1].as_str(), "select dummy from dual");
+
+    let spot = backend::make_spot(&config.endpoint()).unwrap();
+    let conn = spot.connect(None).unwrap();
+    let rows = conn
+        .query_table(&queries[0])
+        .format("")
+        .expect("patched literal query must execute");
+    assert_eq!(rows, vec!["details:hello-from-params".to_string()]);
+    let rows = conn
+        .query_table(&queries[1])
+        .format("")
+        .expect("patched column-name query must execute");
+    assert_eq!(rows, vec!["X".to_string()], "dual.dummy always holds 'X'");
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_sid_only_connection() {
     add_runtime_to_path();

@@ -28,10 +28,19 @@ logger = logging.getLogger(__name__)
 CLI_ARGUMENT_LOCALE = "--locale"
 CLI_ARGUMENT_LOCAL_RUN = "--local-run"
 CLI_ARGUMENT_GUI_TIMEOUT = "--gui-timeout"
-CLI_ARGUMENT_TRACING = "--tracing"
+CLI_ARGUMENT_TRACING = "--tracing"  # as seen in playwright-plugin
 
 
 PageGetter: t.TypeAlias = Callable[[BrowserContext], Page]
+
+
+def _cli_arg_to_dest(cli_arg: str) -> str:
+    return cli_arg.strip("-").replace("-", "_")
+
+
+_DEST_LOCAL_RUN = _cli_arg_to_dest(CLI_ARGUMENT_LOCAL_RUN)
+_DEST_GUI_TIMEOUT = _cli_arg_to_dest(CLI_ARGUMENT_GUI_TIMEOUT)
+_DEST_TRACING = _cli_arg_to_dest(CLI_ARGUMENT_TRACING)
 
 
 def positive_integer(value: str) -> int:
@@ -132,11 +141,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
     group.addoption(
         CLI_ARGUMENT_LOCAL_RUN,
+        dest=_DEST_LOCAL_RUN,
         action="store_true",
         help="Adapt certain settings for running testsuite locally.\n+ viewport size: 1600 x 900",
     )
     group.addoption(
         CLI_ARGUMENT_GUI_TIMEOUT,
+        dest=_DEST_GUI_TIMEOUT,
         type=positive_integer,
         default=TIMEOUT_ACTIVATE_CHANGES,
         help=(
@@ -149,24 +160,21 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_sessionstart(session: pytest.Session) -> None:
     """Perform operations at the very starting of a testsuite run."""
 
-    def cli_arg_to_attribute(cli_arg: str) -> str:
-        return session.config._opt2dest.get(cli_arg, cli_arg)
-
     def is_cli_arg_used(cli_arg: str) -> bool:
         return any(cli_arg in _.split("=") for _ in session.config.invocation_params.args)
 
     # Override default values of '--gui-timeout' and '--tracing' on '--local-run' usage.
-    if session.config.getoption(CLI_ARGUMENT_LOCAL_RUN):
+    if getattr(session.config.option, _DEST_LOCAL_RUN):
         if not is_cli_arg_used(CLI_ARGUMENT_GUI_TIMEOUT):
             setattr(
                 session.config.option,
-                cli_arg_to_attribute(CLI_ARGUMENT_GUI_TIMEOUT),
+                _DEST_GUI_TIMEOUT,
                 15,  # seconds
             )
 
         if not is_cli_arg_used(CLI_ARGUMENT_TRACING):
             setattr(
                 session.config.option,
-                cli_arg_to_attribute(CLI_ARGUMENT_TRACING),
+                _DEST_TRACING,
                 "retain-on-failure",
             )

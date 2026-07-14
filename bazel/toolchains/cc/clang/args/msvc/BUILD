@@ -297,11 +297,45 @@ cc_nested_args(
 
 cc_nested_args(
     name = "object_file_group",
+    nested = [
+        ":lazy_object_file_group",
+        ":whole_object_file_group",
+    ],
+    requires_equal = "@rules_cc//cc/toolchains/variables:libraries_to_link.type",
+    requires_equal_value = "object_file_group",
+)
+
+cc_nested_args(
+    name = "lazy_object_file_group",
+    nested = [
+        ":start_lib",
+        ":object_file_group_members",
+        ":end_lib",
+    ],
+    requires_false = "@rules_cc//cc/toolchains/variables:libraries_to_link.is_whole_archive",
+)
+
+cc_nested_args(
+    name = "whole_object_file_group",
+    nested = [":object_file_group_members"],
+    requires_true = "@rules_cc//cc/toolchains/variables:libraries_to_link.is_whole_archive",
+)
+
+cc_nested_args(
+    name = "start_lib",
+    args = ["/start-lib"],
+)
+
+cc_nested_args(
+    name = "object_file_group_members",
     args = ["{object}"],
     format = {"object": "@rules_cc//cc/toolchains/variables:libraries_to_link.object_files"},
     iterate_over = "@rules_cc//cc/toolchains/variables:libraries_to_link.object_files",
-    requires_equal = "@rules_cc//cc/toolchains/variables:libraries_to_link.type",
-    requires_equal_value = "object_file_group",
+)
+
+cc_nested_args(
+    name = "end_lib",
+    args = ["/end-lib"],
 )
 
 cc_nested_args(

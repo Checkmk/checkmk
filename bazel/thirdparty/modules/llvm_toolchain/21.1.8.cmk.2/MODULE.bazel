@@ -1,6 +1,6 @@
 module(
     name = "llvm_toolchain",
-    version = "21.1.8.cmk.1",
+    version = "21.1.8.cmk.2",
     compatibility_level = 1,
 )
 

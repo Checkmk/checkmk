@@ -1,5 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
+load("//bazel/toolchains/cc/clang/xwin:rc.bzl", "windows_rc")
 
 package(features = ["treat_warnings_as_errors"])
 
@@ -18,6 +20,87 @@ WNX_DEFINES = [
     "_UNICODE",
     'SOLUTION_DIR=uR\\"(agents/wnx)\\"',
 ]
+
+# The core Win32 import libraries MSBuild links implicitly (the inherited
+# %(AdditionalDependencies) default set); sources request the rest via
+# #pragma comment(lib, ...).
+WNX_DEFAULT_LINKOPTS = [
+    "/DEFAULTLIB:kernel32.lib",
+    "/DEFAULTLIB:user32.lib",
+    "/DEFAULTLIB:gdi32.lib",
+    "/DEFAULTLIB:winspool.lib",
+    "/DEFAULTLIB:comdlg32.lib",
+    "/DEFAULTLIB:advapi32.lib",
+    "/DEFAULTLIB:shell32.lib",
+    "/DEFAULTLIB:ole32.lib",
+    "/DEFAULTLIB:oleaut32.lib",
+    "/DEFAULTLIB:uuid.lib",
+    "/DEFAULTLIB:odbc32.lib",
+    "/DEFAULTLIB:odbccp32.lib",
+]
+
+windows_rc(
+    name = "check_mk_service_res",
+    src = "src/check_mk_service.rc",
+    hdrs = [
+        "include/common/version.h",
+        "include/common/wnx_version.h",
+        "src/resource.h",
+    ],
+    includes = [
+        "include",
+        "src",
+    ],
+    tags = ["manual"],
+)
+
+windows_rc(
+    name = "check_mk_service_manifest_res",
+    src = "src/check_mk_service_manifest.rc",
+    hdrs = ["check_mk.manifest"],
+    includes = ["."],
+    tags = ["manual"],
+)
+
+cc_binary(
+    name = "check_mk_service-windows",
+    srcs = [
+        "src/main/check_mk_service.cpp",
+        "src/main/check_mk_service.h",
+        "src/main/pch.cpp",
+        "src/main/pch.h",
+    ],
+    additional_linker_inputs = [
+        ":check_mk_service_res",
+        ":check_mk_service_manifest_res",
+    ],
+    copts = WNX_COPTS,
+    linkopts = WNX_DEFAULT_LINKOPTS + [
+        "/SUBSYSTEM:CONSOLE",
+        "/DEFAULTLIB:userenv.lib",
+        "$(location :check_mk_service_res)",
+        "$(location :check_mk_service_manifest_res)",
+    ],
+    local_defines = [
+        # Mirrors PreprocessorDefinitions in check_mk_service.vcxproj.
+        'CMK_SERVICE_NAME=\\"check_mk_service\\"',
+        "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING",
+        "_CONSOLE",
+        "UNICODE",
+        "_UNICODE",
+    ],
+    opt = True,
+    platform = "//bazel/platforms:x86_64-windows-msvc",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":engine",
+        ":wnx_headers",
+        "@asio",
+        "@wnx_fmt//:fmt",
+        "@wnx_yaml_cpp//:yaml-cpp",
+    ],
+)
 
 cc_library(
     name = "wnx_headers",

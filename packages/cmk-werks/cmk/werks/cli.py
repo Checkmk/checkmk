@@ -52,6 +52,8 @@ from .in_out_elements import (
 )
 from .parse import WerkV3ParseResult
 from .schemas.werk import (
+    LegacyStash,
+    Stash,
     Werk,
     WerkId,
 )
@@ -1005,14 +1007,22 @@ def _reserve_werk_ids(
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
-    stash = load_legacy_stash_from_file(paths)
+    stash = load_stash_from_file(paths)
 
     if args.count is None:
-        per_project = "\n".join(
-            f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items()
-        )
-        sys.stdout.write(f"You have {stash.count()} reserved IDs:\n{per_project}\n")
+        sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
+        if isinstance(stash, LegacyStash):
+            sys.stdout.write(
+                "\n".join(f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items())
+            )
+            sys.stdout.write("\n")
         sys.exit(0)
+
+    if isinstance(stash, Stash):
+        bail_out(
+            "You already converted to the new workflow, there is no need to reserve Werks. "
+            "Go live your happy life and just create Werks."
+        )
 
     if current_branch() != get_config().branch or current_repo() != get_config().repo:
         bail_out(

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-13 19:00+0000\n"
+"PO-Revision-Date: 2026-07-14 19:01+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -92831,13 +92831,11 @@ msgstr "Starttyp"
 msgid "End time"
 msgstr "keine Zeit"
 
-#, fuzzy
 msgid "Timezone:"
-msgstr "Zeitzone"
+msgstr "Zeitzone:"
 
-#, fuzzy
 msgid "Current server time:"
-msgstr "Aktuelle Ereignisse"
+msgstr "Aktuelle Serverzeit:"
 
 #, fuzzy
 msgid "Unknown Timezone"
@@ -92863,9 +92861,8 @@ msgstr "Zeitzone"
 msgid "Save & apply"
 msgstr "Speichern & bearbeiten"
 
-#, fuzzy
 msgid "Saving…"
-msgstr "Wird gespeichert"
+msgstr "Wird gespeichert…"
 
 #, fuzzy
 msgid "Open calendar"
@@ -96115,9 +96112,8 @@ msgstr "Unbehandelte Hostprobleme"
 msgid "Give feedback on the new view"
 msgstr ""
 
-#, fuzzy
 msgid "Search hosts…"
-msgstr "Suche Hosts"
+msgstr "Hosts suchen…"
 
 #, fuzzy
 msgid "Reset all filters"
@@ -96153,24 +96149,21 @@ msgstr "Replikationsverzögerung"
 msgid "This action runs immediately and has no further options."
 msgstr ""
 
-#, fuzzy
 msgid "%{count} selected host"
 msgid_plural "%{count} selected hosts"
-msgstr[0] "Für ausgewählte Hosts"
-msgstr[1] "Für ausgewählte Hosts"
+msgstr[0] "%{count} ausgewählter Host"
+msgstr[1] "%{count} ausgewählte Hosts"
 
-#, fuzzy
 msgid "Acknowledged the problem for %{count} host"
 msgid_plural "Acknowledged the problems for %{count} hosts"
-msgstr[0] "Probleme quittieren"
-msgstr[1] "Probleme quittieren"
+msgstr[0] "Die Probleme für %{count} Host wurden quittiert"
+msgstr[1] "Die Probleme für %{count} Hosts wurden quittiert"
 
 msgid "Could not acknowledge the problems: %{detail}"
 msgstr ""
 
-#, fuzzy
 msgid "Enter a comment…"
-msgstr "Ereigniskommentar"
+msgstr "Einen Kommentar eingeben…"
 
 msgid ""
 "Optionally let the acknowledgement expire automatically. Leave empty to keep "
@@ -96211,14 +96204,13 @@ msgstr ""
 msgid "Execution will be spread across a custom time period."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Distributes the rescheduled checks across the specified number of minutes, "
-msgstr "Den Momentanwert über die angegebene Anzahl von Minuten mitteln."
+msgstr ""
+"Verteilt die neu eingeplanten Checks auf die angegebene Anzahl von Minuten, "
 
-#, fuzzy
 msgid "Schedule host downtime"
-msgstr "Eine Wartungszeit planen?"
+msgstr "Host-Wartungszeit planen"
 
 #, fuzzy
 msgid "Please choose a downtime duration greater than zero."
@@ -96253,13 +96245,11 @@ msgstr ""
 msgid "10 d"
 msgstr ""
 
-#, fuzzy
 msgid "Scheduled downtimes set the hosts in planned maintenance."
-msgstr "Wartungszeiten von Hosts und Services planen oder entfernen"
+msgstr "Geplante Wartungszeiten führen zu einer planmäßigen Wartung der Hosts."
 
-#, fuzzy
 msgid "Alerts and notifications will be paused."
-msgstr "Alerts & Benachrichtigungen"
+msgstr "Alerts und Benachrichtigungen werden pausiert."
 
 #, fuzzy
 msgid "Downtime time range"
@@ -96275,17 +96265,15 @@ msgstr ""
 msgid "Advanced option"
 msgstr "Erweiterte Optionen"
 
-#, fuzzy
 msgid "Only for hosts: Set child hosts in downtime."
-msgstr "Nur für Hosts: Child Hosts in Wartungszeit setzen"
+msgstr "Nur für Hosts: Child-Hosts in Wartungszeit setzen."
 
-#, fuzzy
 msgid ""
 "Only start downtime if the host goes DOWN/UNREACHABLE during the defined "
 "start "
 msgstr ""
-"Wartungszeit nur starten, wenn der Host/Service zwischen der definierten "
-"Start- und Endzeit auf DOWN/UNREACH geht (flexibel)"
+"Wartungszeit nur starten, wenn der Host auf DOWN/UNREACHABLE geht zwischen "
+"der definierten Start- "
 
 #, fuzzy
 msgid "%{count} host selected"
@@ -96305,13 +96293,11 @@ msgstr "Mehr Optionen"
 msgid "Stale state"
 msgstr "alle Zustände"
 
-#, fuzzy
 msgid "Only number values are allowed."
-msgstr "Es sind nur Großbuchstaben erlaubt"
+msgstr "Es sind nur Zahlen erlaubt."
 
-#, fuzzy
 msgid "The lower bound must not exceed the upper bound."
-msgstr "Die Untergrenze muss kleiner sein als die Obergrenze"
+msgstr "Die Untergrenze muss kleiner sein als die Obergrenze."
 
 #, fuzzy
 msgid "Filter values"
@@ -96342,17 +96328,14 @@ msgstr ""
 "Kein Benutzerobjekt zur Synchronisation gefunden. Bitte prüfen Sie Ihre "
 "Filtereinstellungen."
 
-#, fuzzy
 msgid "No results found for your active filters."
-msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden"
+msgstr "Für Ihre aktiven Filter wurden keine Ergebnisse gefunden."
 
-#, fuzzy
 msgid "No results found for your search."
-msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden"
+msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden."
 
-#, fuzzy
 msgid "No results found."
-msgstr "Keine Ergebnisse gefunden"
+msgstr "Keine Ergebnisse gefunden."
 
 msgid "Adjust or clear search and filters to start fresh."
 msgstr ""
@@ -96363,9 +96346,8 @@ msgstr ""
 msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
 msgstr ""
 
-#, fuzzy
 msgid "Total rows: %{total}"
-msgstr "Gesamte Hosts: "
+msgstr "Gesamtzahl der Zeilen: %{total}"
 
 #, fuzzy
 msgid "Select all rows"

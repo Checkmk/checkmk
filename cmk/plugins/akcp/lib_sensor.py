@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
+from collections.abc import Mapping
+from dataclasses import dataclass
+
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -212,34 +216,104 @@ def check_akcp_sensor_relay(item: str, section: Section) -> CheckResult:
 #   +----------------------------------------------------------------------+
 
 
-def check_akcp_sensor_drycontact(item: str, section: Section) -> CheckResult:
-    # States which are not configurable by user as they are defined in SPAGENT-MIB
-    states = {
-        "1": (2, "no status"),
-        "7": (2, "sensor error"),
-        "8": (2, "output low"),
-        "9": (2, "output high"),
+class SensorStatus(enum.Enum):
+    # Status values as defined in SPAGENT-MIB
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_WARNING = "3"
+    HIGH_CRITICAL = "4"
+    LOW_WARNING = "5"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+    OUTPUT_LOW = "8"
+    OUTPUT_HIGH = "9"
+
+
+@dataclass(frozen=True, kw_only=True)
+class DrycontactSensor:
+    status: SensorStatus
+    online: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class ExpDrycontactSensor:
+    status: SensorStatus
+    online: bool
+    normal_description: str
+    critical_description: str
+
+
+DrycontactSection = Mapping[str, DrycontactSensor]
+ExpDrycontactSection = Mapping[str, ExpDrycontactSensor]
+
+
+def parse_akcp_sensor_drycontact(string_table: StringTable) -> DrycontactSection:
+    return {
+        description: DrycontactSensor(status=SensorStatus(status), online=online == "1")
+        for description, status, online in string_table
     }
 
-    for line in section:
-        if item == line[0]:
-            if len(line) == 5:
-                status, crit_desc, normal_desc, online = line[1:]
-            else:
-                status, online = line[1:]
-                normal_desc = "Drycontact OK"
-                crit_desc = "Drycontact on Error"
 
-            if online != "1":
-                infotext = "Sensor is offline"
-                state = 2
-            elif status == "2":
-                state = 0
-                infotext = normal_desc
-            elif status in ["4", "6"]:
-                state = 2
-                infotext = crit_desc
-            else:
-                state, infotext = states[status]
+def parse_akcp_exp_drycontact(string_table: StringTable) -> ExpDrycontactSection:
+    return {
+        description: ExpDrycontactSensor(
+            status=SensorStatus(status),
+            online=online == "1",
+            normal_description=normal_description,
+            critical_description=critical_description,
+        )
+        for description, status, critical_description, normal_description, online in string_table
+    }
 
-            yield Result(state=State(state), summary=infotext)
+
+def discover_akcp_sensor_drycontact(section: DrycontactSection) -> DiscoveryResult:
+    for description, sensor in section.items():
+        if sensor.online:
+            yield Service(item=description)
+
+
+def discover_akcp_exp_drycontact(section: ExpDrycontactSection) -> DiscoveryResult:
+    for description, sensor in section.items():
+        if sensor.online:
+            yield Service(item=description)
+
+
+def _check_status(
+    status: SensorStatus,
+    online: bool,
+    normal_description: str,
+    critical_description: str,
+) -> CheckResult:
+    # States which are not configurable by user as they are defined in SPAGENT-MIB
+    state_names = {
+        SensorStatus.NO_STATUS: "no status",
+        SensorStatus.SENSOR_ERROR: "sensor error",
+        SensorStatus.OUTPUT_LOW: "output low",
+        SensorStatus.OUTPUT_HIGH: "output high",
+    }
+
+    if not online:
+        yield Result(state=State.CRIT, summary="Sensor is offline")
+    elif status is SensorStatus.NORMAL:
+        yield Result(state=State.OK, summary=normal_description)
+    elif status in (SensorStatus.HIGH_CRITICAL, SensorStatus.LOW_CRITICAL):
+        yield Result(state=State.CRIT, summary=critical_description)
+    else:
+        yield Result(state=State.CRIT, summary=state_names[status])
+
+
+def check_akcp_sensor_drycontact(item: str, section: DrycontactSection) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+    yield from _check_status(sensor.status, sensor.online, "Drycontact OK", "Drycontact on Error")
+
+
+def check_akcp_exp_drycontact(item: str, section: ExpDrycontactSection) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+    yield from _check_status(
+        sensor.status,
+        sensor.online,
+        sensor.normal_description,
+        sensor.critical_description,
+    )

@@ -15,13 +15,13 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.akcp.lib import DETEC_AKCP_SP2PLUS
 from cmk.plugins.akcp.lib_sensor import (
     check_akcp_sensor_drycontact,
-    discover_akcp_sensor_no_params,
-    parse_akcp_sensor,
+    discover_akcp_sensor_drycontact,
+    parse_akcp_sensor_drycontact,
 )
 
 snmp_section_akcp_sensor_drycontact = SimpleSNMPSection(
     name="akcp_sensor_drycontact",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_sensor_drycontact,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
     ),
@@ -38,7 +38,7 @@ snmp_section_akcp_sensor_drycontact = SimpleSNMPSection(
 
 snmp_section_akcp_sensor2plus_drycontact = SimpleSNMPSection(
     name="akcp_sensor2plus_drycontact",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_sensor_drycontact,
     parsed_section_name="akcp_sensor_drycontact",
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(
@@ -56,5 +56,5 @@ check_plugin_akcp_sensor_drycontact = CheckPlugin(
     name="akcp_sensor_drycontact",
     service_name="Dry Contact %s",
     check_function=check_akcp_sensor_drycontact,
-    discovery_function=discover_akcp_sensor_no_params,
+    discovery_function=discover_akcp_sensor_drycontact,
 )

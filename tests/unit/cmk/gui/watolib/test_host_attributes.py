@@ -8,8 +8,11 @@ import pytest
 
 from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
 
+from cmk.utils.hostaddress import HostName
+
 import cmk.gui.watolib.host_attributes as attrs
 from cmk.gui.config import active_config, Config
+from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 from cmk.gui.watolib.host_attributes import all_host_attributes
 
 expected_attributes = {
@@ -575,3 +578,19 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         assert names == topics.get(topic_id, []), (
             "Expected attributes not specified for topic %r" % topic_id
         )
+
+
+@pytest.mark.parametrize(
+    "crit, value, expected",
+    [
+        pytest.param({"dc": "MM"}, {"dc": "MM"}, True, id="exact match"),
+        pytest.param({"dc": "MM"}, {"dc": "MG"}, False, id="same key, different value"),
+        pytest.param({"dc": "MM"}, {"dc": "MM", "os": "linux"}, True, id="superset matches"),
+        pytest.param({"dc": "MM"}, {}, False, id="missing key"),
+        pytest.param({}, {"dc": "MM"}, True, id="empty criteria matches all"),
+    ],
+)
+def test_host_attribute_labels_filter_matches(
+    crit: dict[str, str], value: dict[str, str], expected: bool
+) -> None:
+    assert HostAttributeLabels().filter_matches(crit, value, HostName("host")) is expected

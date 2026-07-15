@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from marshmallow import ValidationError
@@ -1613,5 +1613,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         if ":" in data:
             raise ValidationError(f"Invalid label value: {data!r}")
 
-    def filter_matches(self, crit, value, hostname):
-        return set(value).issuperset(set(crit))
+    def filter_matches(
+        self, crit: Mapping[str, str], value: Mapping[str, str], hostname: HostName
+    ) -> bool:
+        return set(value.items()).issuperset(set(crit.items()))

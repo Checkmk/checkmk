@@ -469,6 +469,53 @@ pub fn obtain_config_credentials(auth: &Authentication) -> Option<Credentials> {
 }
 
 #[cfg(test)]
+pub(crate) mod test_support {
+    //! Fake [`OraDbEngine`] and helpers for tests.
+    use super::*;
+    use crate::ora_sql::sqls::query::internal::{INSTANCE_INFO_SQL_TEXT_NEW, PDB_DISCOVERY_SQL};
+
+    /// A `v$instance` row; parsing reads only columns 0 (name), 2 (version), 4 (cdb).
+    pub fn instance_row(name: &str, version: &str, cdb: &str) -> Vec<String> {
+        vec![
+            name.to_string(),
+            "0".to_string(),
+            version.to_string(),
+            format!("{name}DB"),
+            cdb.to_string(),
+        ]
+    }
+
+    /// Fake engine; answers from the field matching the query (see `query_table`).
+    #[derive(Default)]
+    pub struct MiniOra {
+        pub instance_rows: Vec<Vec<String>>,
+        pub pdb_rows: Vec<Vec<String>>,
+    }
+
+    impl OraDbEngine for MiniOra {
+        fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
+            Ok(())
+        }
+        fn close(&mut self) -> Result<()> {
+            Ok(())
+        }
+        fn query_table(&self, query: &SqlQuery) -> QueryResult {
+            match query.as_str() {
+                INSTANCE_INFO_SQL_TEXT_NEW => QueryResult(Ok(self.instance_rows.clone())),
+                PDB_DISCOVERY_SQL => QueryResult(Ok(self.pdb_rows.clone())),
+                other => QueryResult(Err(anyhow::anyhow!("MiniOra: unexpected query: {other}"))),
+            }
+        }
+        fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
+            Box::new(MiniOra {
+                instance_rows: self.instance_rows.clone(),
+                pdb_rows: self.pdb_rows.clone(),
+            })
+        }
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::config::ora_sql::Config;

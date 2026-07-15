@@ -102,9 +102,8 @@ pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs) -> Vec<PdbNam
 mod tests {
     use super::*;
     use crate::config::ora_sql::Endpoint;
-    use crate::ora_sql::backend::{OraDbEngine, QueryResult, SpotBuilder};
-    use crate::ora_sql::types::Target;
-    use crate::types::InstanceName;
+    use crate::ora_sql::backend::test_support::MiniOra;
+    use crate::ora_sql::backend::SpotBuilder;
 
     fn rows(names: &[&str]) -> Vec<Vec<String>> {
         names
@@ -141,41 +140,14 @@ mod tests {
         assert_eq!(pdbs.len(), 0);
     }
 
-    /// Engine that returns a canned PDB discovery result for the PDB query and
-    /// errors for anything else.
-    struct PdbTestEngine {
-        rows: Vec<Vec<String>>,
-    }
-
-    impl OraDbEngine for PdbTestEngine {
-        fn connect(&mut self, _t: &Target, _i: Option<&InstanceName>) -> Result<()> {
-            Ok(())
-        }
-        fn close(&mut self) -> Result<()> {
-            Ok(())
-        }
-        fn query_table(&self, query: &SqlQuery) -> QueryResult {
-            if query.as_str() == sqls::query::internal::PDB_DISCOVERY_SQL {
-                QueryResult(Ok(self.rows.clone()))
-            } else {
-                QueryResult(Err(anyhow::anyhow!("unexpected query")))
-            }
-        }
-        fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
-            Box::new(PdbTestEngine {
-                rows: self.rows.clone(),
-            })
-        }
-    }
-
     #[test]
     fn test_discover_uses_pdb_query_and_filters() {
-        let engine = PdbTestEngine {
-            rows: rows(&["CDB$ROOT", "PDB$SEED", "PDB1", "PDB2"]),
-        };
         let opened = SpotBuilder::new()
             .endpoint_target(&Endpoint::default())
-            .custom_engine(Box::new(engine))
+            .custom_engine(Box::new(MiniOra {
+                pdb_rows: rows(&["CDB$ROOT", "PDB$SEED", "PDB1", "PDB2"]),
+                ..Default::default()
+            }))
             .build()
             .unwrap()
             .connect(None)

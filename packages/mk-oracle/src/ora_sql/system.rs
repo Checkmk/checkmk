@@ -160,45 +160,17 @@ pub fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVe
 mod tests {
     use super::*;
     use crate::config::ora_sql::Endpoint;
+    use crate::ora_sql::backend::test_support::{instance_row, MiniOra};
     use crate::ora_sql::backend::SpotBuilder;
-    use crate::ora_sql::backend::{OraDbEngine, QueryResult};
-    use crate::ora_sql::sqls::query;
-    use crate::ora_sql::types::Target;
 
-    struct TestOra;
-    impl OraDbEngine for TestOra {
-        fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
-            Ok(())
-        }
-
-        fn close(&mut self) -> Result<()> {
-            Ok(())
-        }
-
-        fn query_table(&self, query: &SqlQuery) -> QueryResult {
-            let result = if query.as_str() == query::internal::INSTANCE_INFO_SQL_TEXT_NEW {
-                Ok(vec![vec![
-                    "free".to_string(),       // instance name
-                    "0".to_string(),          // CON_ID
-                    "22.1.1.6.0".to_string(), // VERSION_FULL
-                    "FREE".to_string(),       // database name
-                    "YES".to_string(),        // cdb
-                ]])
-            } else {
-                Err(anyhow::anyhow!("Query not recognized"))
-            };
-            QueryResult(result)
-        }
-
-        fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
-            Box::new(TestOra)
-        }
-    }
     #[test]
     fn test_get_version() {
         let simulated_spot = SpotBuilder::new()
             .endpoint_target(&Endpoint::default())
-            .custom_engine(Box::new(TestOra))
+            .custom_engine(Box::new(MiniOra {
+                instance_rows: vec![instance_row("free", "22.1.1.6.0", "YES")],
+                ..Default::default()
+            }))
             .build()
             .unwrap();
         let conn = simulated_spot.connect(None).unwrap();

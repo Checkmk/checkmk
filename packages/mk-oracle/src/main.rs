@@ -57,13 +57,13 @@ async fn main() {
 
         if need_execution(args.as_slice()) {
             execute(config, environment).await
-        } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None) {
+        } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None, true) {
             // On Unix before spawning a new process we try to set ORACLE_HOME
             // from the local instances and only if no suitable home is found
             // fall back to the runtime detection over LD_LIBRARY_PATH.
             // On Windows ORACLE_HOME is never set.
             setup::try_add_oracle_home_to_env(&config, None, None);
-            log::info!("Spawn new process");
+            log::info!("Spawn new process {args:?} with runtime path {old_path:?}");
             setup::spawn_new_process(args, old_path)
         } else {
             log::error!("No runtime");

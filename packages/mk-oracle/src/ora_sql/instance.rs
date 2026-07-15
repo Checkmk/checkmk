@@ -48,6 +48,7 @@ impl OracleConfig {
             }
             if environment.find_runtime() {
                 let use_host_client: UseHostClient = ora_sql.options().use_host_client().clone();
+
                 return Ok(detect_runtime(&use_host_client, None)
                     .map(|t| format!("{:?}", t))
                     .unwrap_or_else(|| {

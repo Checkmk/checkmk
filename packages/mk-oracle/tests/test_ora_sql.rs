@@ -1721,6 +1721,10 @@ oracle:
 fn test_add_runtime_to_path() {
     use mk_oracle::platform::get_local_instances;
     use mk_oracle::setup::add_runtime_path_to_env;
+    // log block
+    let spec = flexi_logger::LogSpecification::parse("debug").unwrap();
+    let _ = flexi_logger::Logger::with(spec).log_to_stderr().start();
+
     fn exec_add_runtime_to_path(
         cfg: &OracleConfig,
         mk_lib: &str,
@@ -1729,7 +1733,12 @@ fn test_add_runtime_to_path() {
         unsafe {
             std::env::set_var(mut_env_var.to_str(), "xxx");
         }
-        add_runtime_path_to_env(cfg, Some(mk_lib.to_owned()), Some(mut_env_var.clone()))
+        add_runtime_path_to_env(
+            cfg,
+            Some(mk_lib.to_owned()),
+            Some(mut_env_var.clone()),
+            false,
+        )
     }
     let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
     let mut_env_var = EnvVarName::from("SOME_PATH_TEST_VAR_XXX".to_string());
@@ -1927,20 +1936,19 @@ fn test_create_plugin_async() {
 #[cfg(not(windows))]
 #[test]
 fn test_find_current_instance_runtime() {
-    use mk_oracle::setup::find_default_instance_runtime;
-    let skip_permission_validation = true;
-    assert!(find_default_instance_runtime("HURZ-burz", skip_permission_validation).is_none());
-    assert!(find_default_instance_runtime("PATH", skip_permission_validation).is_none());
+    use mk_oracle::setup::find_env_var_lib_runtime;
+    assert!(find_env_var_lib_runtime("HURZ-burz").is_none());
+    assert!(find_env_var_lib_runtime("PATH").is_none());
     let db_location = tempfile::tempdir().unwrap();
     let temp_var = "ORACLE_HOME_TEST_VAR";
     unsafe {
         std::env::set_var(temp_var, db_location.path());
     }
-    assert!(find_default_instance_runtime(temp_var, skip_permission_validation).is_none());
+    assert!(find_env_var_lib_runtime(temp_var).is_none());
     let lib_path = db_location.path().join("lib");
     std::fs::create_dir_all(&lib_path).unwrap();
     assert_eq!(
-        find_default_instance_runtime(temp_var, skip_permission_validation).unwrap(),
+        find_env_var_lib_runtime(temp_var).unwrap(),
         db_location.path().join("lib")
     );
 }

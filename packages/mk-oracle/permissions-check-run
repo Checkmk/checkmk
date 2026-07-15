@@ -1,0 +1,57 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+set -e
+
+cd -- "${BASH_SOURCE%/*}"
+
+# 1. Build
+bazel build //packages/mk-oracle:mk-oracle
+
+# 2. Download and unpack Oracle instant client
+bazel build //omd/packages/oci:oci_light_lin_x64
+runtime_dir="${PWD}/runtimes/plugins/packages/mk-oracle"
+mkdir -p "${runtime_dir}"
+unzip -uoq "$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip" -d "${runtime_dir}"
+libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
+if [ -e "${libaio}" ]; then
+    ln -sf "${libaio}" "${runtime_dir}/libaio.so.1"
+else
+    echo "libaio absent" >&2
+    exit 1
+fi
+
+# 3. Run mk-oracle and check output
+binary="$(bazel info bazel-bin)/packages/mk-oracle/mk-oracle"
+output=$(MK_LIBDIR=./runtimes "${binary}" -c tests/files/test-mini-one-section.yml 2>&1 || true)
+line_count=$(echo "${output}" | wc -l)
+echo "${output}"
+echo "---"
+echo "Lines: ${line_count}"
+if [ "${line_count}" -lt 3 ]; then
+    echo "FAIL: expected good output, got ${line_count}" >&2
+    exit 1
+fi
+echo "OK: non-root can exec non-root code"
+
+# 4. Run mk-oracle as root — expect empty output (no permissions to read config)
+sudo_output=$(sudo MK_LIBDIR=./runtimes "${binary}" -c tests/files/test-mini-one-section.yml 2>&1 || true)
+if [ -n "${sudo_output}" ]; then
+    echo "FAIL: expected empty output from sudo run, got:" >&2
+    echo "${sudo_output}" >&2
+    exit 1
+fi
+echo "OK: root can't exec non-root code"

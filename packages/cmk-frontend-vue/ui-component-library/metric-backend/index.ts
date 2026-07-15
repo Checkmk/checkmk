@@ -7,8 +7,10 @@ import { Page } from '@ucl/_ucl/types/page'
 
 import UclFormAttributeFilter from './UclFormAttributeFilter.vue'
 import UclFormConsolidation from './UclFormConsolidation.vue'
+import UclFormGroupBy from './UclFormGroupBy.vue'
 
 export const pages = [
   new Page('FormAttributeFilter', UclFormAttributeFilter),
-  new Page('FormConsolidation', UclFormConsolidation)
+  new Page('FormConsolidation', UclFormConsolidation),
+  new Page('FormGroupBy', UclFormGroupBy)
 ]

@@ -802,3 +802,250 @@ oracle:
         );
     }
 }
+
+#[cfg(test)]
+mod yaml_to_output_tests {
+    //! Config YAML -> emitted agent lines, DB faked via `MiniOra`.
+    //! Single-threaded path only, so output order is deterministic.
+    use super::*;
+    use crate::config::ora_sql::Config;
+    use crate::ora_sql::backend::test_support::{instance_row, open_spot, MiniOra};
+
+    fn config_from(yaml: &str) -> Config {
+        Config::from_string(yaml).unwrap().unwrap()
+    }
+
+    /// Runtime sections for the global `custom_metrics:` entries only.
+    fn custom_sections(config: &Config, cache_age: u32) -> Vec<Section> {
+        config
+            .product()
+            .sections()
+            .iter()
+            .filter(|s| s.is_custom_metric())
+            .map(|s| Section::new(s, cache_age))
+            .collect()
+    }
+
+    /// Run the pipeline over `spots`, returning the joined output lines.
+    fn emit(
+        spots: Vec<OpenedSpot>,
+        sections: Vec<Section>,
+        instances: &[CustomInstance],
+        cache_age: u32,
+    ) -> String {
+        let (works, errors) = make_spot_work_results(spots, sections, instances, cache_age, &[]);
+        let error_msgs: Vec<String> = errors.iter().map(|(_, e)| e.to_string()).collect();
+        assert!(
+            error_msgs.is_empty(),
+            "unexpected spot errors: {error_msgs:?}"
+        );
+        process_spot_works(works)
+            .into_iter()
+            .flat_map(|(_, lines)| lines)
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    // TC-ORA-101 (sync, single-tenant): inline SQL -> oracle_sql subsection, rows verbatim.
+    #[test]
+    fn test_inline_custom_sql_emits_oracle_sql_subsection() {
+        let config = config_from(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - product_price:
+          sql: "select payload from custom_metrics_view"
+"#,
+        );
+        let db = MiniOra {
+            instance_rows: vec![instance_row("ORCL", "19.1.0.0", "NO")],
+            pdb_rows: vec![],
+            default_rows: vec![
+                vec!["details:price=5; still ok".to_string()],
+                vec!["perfdata:price=5;10;20;;".to_string()],
+                vec!["long:extended detail".to_string()],
+                vec!["exit:0".to_string()],
+            ],
+        };
+
+        let out = emit(
+            vec![open_spot(db, None)],
+            custom_sections(&config, 600),
+            &[],
+            600,
+        );
+
+        assert_eq!(
+            out,
+            concat!(
+                "<<<oracle_sql:sep(58)>>>\n",
+                "[[[ORCL|product_price]]]\n",
+                "details:price=5; still ok\n",
+                "perfdata:price=5;10;20;;\n",
+                "long:extended detail\n",
+                "exit:0",
+            )
+        );
+    }
+
+    // TC-ORA-101 (Param: async): section header stays plain; cached marker on the subsection.
+    #[test]
+    fn test_async_custom_metric_keeps_plain_section_header() {
+        let config = config_from(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - last_sessions:
+          is_async: true
+          sql: "select payload from v"
+"#,
+        );
+        let out = emit(
+            vec![open_spot(MiniOra::single("ORCL"), None)],
+            custom_sections(&config, 600),
+            &[],
+            600,
+        );
+
+        let lines: Vec<&str> = out.lines().collect();
+        assert_eq!(
+            lines[0], "<<<oracle_sql:sep(58)>>>",
+            "section header must stay plain for async metrics"
+        );
+        assert!(
+            lines[1].starts_with("[[[ORCL|last_sessions|cached("),
+            "subsection must carry the cached marker: {}",
+            lines[1]
+        );
+        assert!(lines[1].ends_with(",600)]]]"), "cached age: {}", lines[1]);
+        assert_eq!(lines[2], "details:ok");
+    }
+
+    // TC-ORA-101 (Param: PDB instance type): `pdbs:` pattern -> [[[<SID>_<PDB>|item]]] via container switch.
+    #[test]
+    fn test_custom_metric_targets_pdb() {
+        let config = config_from(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - product_price:
+          sql: "select payload from v"
+          pdbs:
+            - PDB1
+"#,
+        );
+        let db = MiniOra {
+            instance_rows: vec![instance_row("ORCL", "19.1.0.0", "YES")],
+            pdb_rows: vec![
+                vec!["CDB$ROOT".to_string()],
+                vec!["PDB$SEED".to_string()],
+                vec!["PDB1".to_string()],
+            ],
+            default_rows: vec![vec!["details:ok".to_string()]],
+        };
+
+        let out = emit(
+            vec![open_spot(db, None)],
+            custom_sections(&config, 600),
+            &[],
+            600,
+        );
+
+        assert_eq!(
+            out,
+            "<<<oracle_sql:sep(58)>>>\n[[[ORCL_PDB1|product_price]]]\ndetails:ok"
+        );
+    }
+
+    // TC-ORA-102: one global query -> one subsection per instance (ORACLE_ID = SID).
+    #[test]
+    fn test_global_custom_metric_emitted_per_instance() {
+        let config = config_from(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - product_price:
+          sql: "select payload from v"
+"#,
+        );
+        let spots = vec![
+            open_spot(MiniOra::single("ORCL1"), None),
+            open_spot(MiniOra::single("ORCL2"), None),
+        ];
+
+        let out = emit(spots, custom_sections(&config, 600), &[], 600);
+
+        assert_eq!(
+            out,
+            concat!(
+                "<<<oracle_sql:sep(58)>>>\n[[[ORCL1|product_price]]]\ndetails:ok\n",
+                "<<<oracle_sql:sep(58)>>>\n[[[ORCL2|product_price]]]\ndetails:ok",
+            )
+        );
+    }
+
+    // TC-ORA-102: per-instance custom_metrics add to (don't replace) the global set.
+    #[test]
+    fn test_per_instance_custom_metric_adds_to_global() {
+        let config = config_from(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - global_metric:
+          sql: "select g from v"
+    instances:
+      - service_name: ORCL2
+        custom_metrics:
+          - instance_metric:
+              sql: "select i from v"
+"#,
+        );
+        let instances = config.instances().clone();
+        let spot = open_spot(MiniOra::single("ORCL2"), Some(&instances[0]));
+
+        let out = emit(vec![spot], custom_sections(&config, 600), &instances, 600);
+
+        assert_eq!(
+            out,
+            concat!(
+                "<<<oracle_sql:sep(58)>>>\n[[[ORCL2|global_metric]]]\ndetails:ok\n",
+                "<<<oracle_sql:sep(58)>>>\n[[[ORCL2|instance_metric]]]\ndetails:ok",
+            )
+        );
+    }
+}

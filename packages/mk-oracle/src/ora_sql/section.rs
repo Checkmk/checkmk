@@ -599,6 +599,7 @@ mod tests {
         Section::new(&builder.build(), cache_age)
     }
 
+    // TC-ORA-101 (Param: plain <<<oracle_sql:sep(58)>>> header, sync and async)
     #[test]
     fn test_custom_metric_section_header_uses_sep_58() {
         let sync = make_custom_metric_section("product_price", false, 600);
@@ -610,6 +611,7 @@ mod tests {
         assert_eq!(async_.to_work_header(), "<<<oracle_sql:sep(58)>>>");
     }
 
+    // TC-ORA-101 (Param: subsection header carries the item_name -> [[[<SID>|<item>]]])
     #[test]
     fn test_custom_metric_work_header_for_includes_subsection() {
         let sync = make_custom_metric_section("product_price", false, 600);
@@ -617,6 +619,7 @@ mod tests {
         assert_eq!(header, "<<<oracle_sql:sep(58)>>>\n[[[ORCL|product_price]]]");
     }
 
+    // TC-ORA-101 (Param: PDB instance type -> [[[<SID>_<PDB>|<item>]]])
     #[test]
     fn test_work_header_for_pdb_includes_pdb_in_subsection() {
         let section = make_custom_metric_section("product_price", false, 0);
@@ -628,6 +631,7 @@ mod tests {
         );
     }
 
+    // TC-ORA-101 (Param: PDB instance type + async -> cached marker on the PDB subsection)
     #[test]
     fn test_work_header_for_pdb_async_includes_cached_marker() {
         let section = make_custom_metric_section("last_sessions", true, 600);
@@ -637,6 +641,7 @@ mod tests {
         assert!(header.ends_with(",600)]]]"));
     }
 
+    // TC-ORA-101 (Param: async -> cached marker on subsection, not section header)
     #[test]
     fn test_async_cached_marker_lives_on_subsection_header() {
         let async_ = make_custom_metric_section("last_sessions", true, 600);
@@ -969,6 +974,7 @@ oracle:
         );
     }
 
+    // TC-ORA-101 (Param: SQL containing CHR(59) is not a statement terminator)
     #[test]
     fn test_split_sql_statements_chr59_passes_through() {
         assert_eq!(
@@ -977,6 +983,7 @@ oracle:
         );
     }
 
+    // TC-ORA-101 (Param: embedded semicolons in a SQL string literal preserved)
     #[test]
     fn test_find_queries_keeps_semicolon_in_string_literal() {
         let section_config = section::SectionBuilder::new("product_price")

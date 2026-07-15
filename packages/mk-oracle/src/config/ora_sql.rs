@@ -807,6 +807,7 @@ piggyback:
         assert_eq!(c.mode, Mode::Special);
     }
 
+    // TC-ORA-102 (Param: global + per-instance custom_metrics both parsed)
     #[test]
     fn test_per_instance_custom_metrics_parsed_and_override_globals() {
         const YAML: &str = r#"

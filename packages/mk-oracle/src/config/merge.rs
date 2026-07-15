@@ -415,6 +415,7 @@ oracle:
         assert!(!overrides.iter().any(|o| o.ends_with(".locks")));
     }
 
+    // TC-ORA-102 (Param: YAML-overlay merge of custom_metrics by item_name)
     #[test]
     fn test_custom_metrics_merged_by_name() {
         let (merged, overrides) = merge(

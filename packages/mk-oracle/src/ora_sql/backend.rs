@@ -519,6 +519,32 @@ pub(crate) mod test_support {
             })
         }
     }
+
+    impl MiniOra {
+        /// One non-CDB instance `name`; custom queries return `details:ok`.
+        pub fn single(name: &str) -> Self {
+            Self {
+                instance_rows: vec![instance_row(name, "19.1.0.0", "NO")],
+                default_rows: vec![vec!["details:ok".to_string()]],
+                ..Default::default()
+            }
+        }
+    }
+
+    /// Open a spot on `db`. `target` sets `target_id` to match that instance
+    /// (per-instance `custom_metrics` key on it); `None` uses a default endpoint.
+    pub fn open_spot(db: MiniOra, target: Option<&CustomInstance>) -> OpenedSpot {
+        let builder = SpotBuilder::new().custom_engine(Box::new(db));
+        let builder = match target {
+            Some(ci) => builder.custom_instance_target(ci),
+            None => builder.endpoint_target(&Endpoint::default()),
+        };
+        builder
+            .build()
+            .expect("fake spot builds")
+            .connect(None)
+            .expect("fake spot connects")
+    }
 }
 
 #[cfg(test)]
@@ -616,11 +642,13 @@ oracle:
         );
     }
 
+    // TC-ORA-101 (Param: details/perfdata/long/exit prefixes pass through verbatim)
     #[test]
     fn test_query_result_passthrough_emits_each_cell_as_is() {
         let rows = vec![
             vec!["details:All OK".to_string()],
             vec!["perfdata:cache_hit_ratio=98;90;80;100".to_string()],
+            vec!["long:extended detail line".to_string()],
             vec!["exit:0".to_string()],
         ];
         let lines = QueryResult(Ok(rows)).into_rows_passthrough().unwrap();
@@ -629,6 +657,7 @@ oracle:
             vec![
                 "details:All OK".to_string(),
                 "perfdata:cache_hit_ratio=98;90;80;100".to_string(),
+                "long:extended detail line".to_string(),
                 "exit:0".to_string(),
             ]
         );

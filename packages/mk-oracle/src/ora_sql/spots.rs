@@ -215,3 +215,98 @@ fn _make_work_result_ok(
         .collect::<Vec<InstanceWorks>>();
     (opened, Ok(instance_works))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ora_sql::Config;
+    use crate::ora_sql::backend::test_support::{open_spot, MiniOra};
+
+    const MERGE_YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - shared:
+          sql: "select 'details:g-shared' from dual"
+      - global_only:
+          sql: "select 'details:g-only' from dual"
+    instances:
+      - service_name: ORCL2
+        custom_metrics:
+          - shared:
+              sql: "select 'details:i-shared' from dual"
+          - instance_only:
+              sql: "select 'details:i-only' from dual"
+"#;
+
+    fn config_from(yaml: &str) -> Config {
+        Config::from_string(yaml).unwrap().unwrap()
+    }
+
+    /// Runtime custom-metric sections built from the global `custom_metrics:`.
+    fn global_sections(config: &Config) -> Vec<Section> {
+        config
+            .product()
+            .sections()
+            .iter()
+            .filter(|s| s.is_custom_metric())
+            .map(|s| Section::new(s, 0))
+            .collect()
+    }
+
+    /// Sorted item names of the sections (custom metrics carry an item value).
+    fn item_names(sections: &[Section]) -> Vec<String> {
+        let mut names: Vec<String> = sections
+            .iter()
+            .filter_map(|s| s.item_value().map(|v| v.as_str().to_string()))
+            .collect();
+        names.sort();
+        names
+    }
+
+    // TC-ORA-102 (Param: per-instance + global merge): adds to global, overrides on collision.
+    #[test]
+    fn test_merge_per_instance_adds_and_overrides_by_item_name() {
+        let config = config_from(MERGE_YAML);
+        let global = global_sections(&config);
+        let instances = config.instances().clone();
+        // A spot whose target_id mirrors the configured ORCL2 instance.
+        let spot = open_spot(MiniOra::single("ORCL2"), Some(&instances[0]));
+
+        let merged = merge_per_instance_sections(&global, &spot, &instances, 0);
+
+        // global_only (kept) + shared (folded, not duplicated) + instance_only (added)
+        assert_eq!(
+            item_names(&merged),
+            vec!["global_only", "instance_only", "shared"]
+        );
+        // The surviving `shared` is the per-instance definition (it won the collision).
+        let shared = merged
+            .iter()
+            .find(|s| s.item_value().map(|v| v.as_str()) == Some("shared"))
+            .expect("shared metric present");
+        assert_eq!(
+            shared.inline_sql(),
+            Some("select 'details:i-shared' from dual")
+        );
+    }
+
+    // TC-ORA-102 (Param: no matching per-instance metrics): global unchanged.
+    #[test]
+    fn test_merge_per_instance_without_customs_returns_global() {
+        let config = config_from(MERGE_YAML);
+        let global = global_sections(&config);
+        // No custom instance is passed, so nothing matches the spot's target.
+        let spot = open_spot(MiniOra::single("ORCLX"), None);
+
+        let merged = merge_per_instance_sections(&global, &spot, &[], 0);
+
+        assert_eq!(item_names(&merged), item_names(&global));
+    }
+}

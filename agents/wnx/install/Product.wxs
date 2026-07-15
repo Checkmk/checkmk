@@ -524,7 +524,7 @@ just to signal that real build script was not called -->
                 <File Id="readme.txt" Source="resources\readme.txt" DiskId="1" />
             </Component>
 
-            <!-- not required anybmore -->
+            <!-- used to inform service about state and parameters -->
             <Component Id="RegistryEntries"
                        Guid="{9B5A1A5F-3A59-4608-AF54-EBE04D3F0BD1}"
                  >

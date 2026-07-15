@@ -67,7 +67,8 @@ constexpr std::string_view kFailMarker{"fail: "};
 
 namespace registry {
 // Names are from WIX Msi, please, check that they are in sync
-const std::wstring kMsiInfoPath = L"SOFTWARE\\checkmkservice";
+// Attention. We have exxperimentally discovered that our MSI uses WOW6432Node
+const std::wstring kMsiInfoPath = L"SOFTWARE\\WOW6432Node\\checkmkservice";
 
 const std::wstring kMsiInstallFolder = L"Install_Folder";
 const std::wstring kMsiInstallService = L"Install_Service";

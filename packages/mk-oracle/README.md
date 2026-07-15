@@ -541,6 +541,23 @@ $MK_LIBDIR/plugins/packages/mk-oracle/orasql/
 └── product_price.sql                    # overrides the MK_CONFDIR copy
 ```
 
+#### SQL parameters (`sql_params`)
+
+An entry can declare named parameters that are substituted into the SQL body before execution. Each `${<name>}` placeholder is replaced **textually** by the configured value. This works for inline `sql:` and for files resolved via `path:`.
+
+```yaml
+custom_metrics:
+  - test:
+      sql: 'SELECT ${parameter_1} FROM dual; SELECT ${parameter_2} FROM dual'
+      sql_params:
+        parameter_1: 'value_1'
+        parameter_2: '${ENV_VAR_1}' # resolved from the environment
+```
+
+- **Textual substitution, not bind variables.** Values are pasted verbatim into the statement, so they may name columns or tables — but quoting/escaping is the user's responsibility.
+- **Environment references.** A value may reference environment variables as `$VAR` or `${VAR}`; they are resolved when the config is read. If a referenced variable is not set, the parameter is skipped with a warning and its `${<name>}` placeholder stays in the SQL (the query then fails visibly instead of running with an empty value).
+- **Unused parameters are ignored**; placeholders without a matching parameter are left untouched.
+
 #### SQL contract
 
 Each SQL must produce rows with a single string column whose value starts with one of the recognised prefixes:

@@ -340,6 +340,7 @@ def git_notes_fetch(repo: Repo, notes_ref: str, force: bool = False) -> None:
     except Exception as e:
         local = repo.git.show_ref("--", notes_ref)
         remote = repo.git.ls_remote("origin", f"refs/notes/{notes_ref}")
+        assert isinstance(remote, str)  # default (non-streamed) call always returns str
         raise RuntimeError(
             f"""Could not fetch notes {notes_ref} from remote.
 Maybe there were local changes to refs/notes/{notes_ref}, that were not pushed to the remote, but the

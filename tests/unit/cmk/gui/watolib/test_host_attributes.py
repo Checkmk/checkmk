@@ -7,8 +7,10 @@
 import pytest
 
 import cmk.gui.watolib.host_attributes as attrs
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config, Config
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.rulesets.v1 import Help, Title
 from tests.testlib.common.repo import (
@@ -662,3 +664,19 @@ def test_custom_host_attribute_has_form_spec() -> None:
     fs = attr.form_spec()
     assert fs.title == Title("Custom Attribute")
     assert fs.help_text == Help("Custom attribute for testing")
+
+
+@pytest.mark.parametrize(
+    "crit, value, expected",
+    [
+        pytest.param({"dc": "MM"}, {"dc": "MM"}, True, id="exact match"),
+        pytest.param({"dc": "MM"}, {"dc": "MG"}, False, id="same key, different value"),
+        pytest.param({"dc": "MM"}, {"dc": "MM", "os": "linux"}, True, id="superset matches"),
+        pytest.param({"dc": "MM"}, {}, False, id="missing key"),
+        pytest.param({}, {"dc": "MM"}, True, id="empty criteria matches all"),
+    ],
+)
+def test_host_attribute_labels_filter_matches(
+    crit: dict[str, str], value: dict[str, str], expected: bool
+) -> None:
+    assert HostAttributeLabels().filter_matches(crit, value, HostName("host")) is expected

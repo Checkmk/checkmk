@@ -30,9 +30,7 @@ IF64_BASE_TREE = SNMPTree(
     + [
         "31.1.1.1.15",  # 3 ifHighSpeed, 1000 means 1Gbit
     ]
-    # `[4:-2]` excludes the last two slots of if64.END_OIDS (ifHighSpeed and ifName) so
-    # this plugin's bespoke wire format stays compatible with generic_parse_if64.
-    + if64.END_OIDS[4:-2]
+    + if64.END_OIDS[4:-1]
     + [
         "2.2.1.2",  # -1 ifDescr, used in order to ignore some logical NICs
     ],

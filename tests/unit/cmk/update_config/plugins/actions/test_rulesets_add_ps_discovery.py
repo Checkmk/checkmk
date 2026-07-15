@@ -262,3 +262,40 @@ def test_agent_engine_rule_is_backfilled_on_existing_sites() -> None:
 
 def test_mcp_server_rule_is_backfilled_on_existing_sites() -> None:
     assert MCP_SERVER_RULE_ID in _NEW_DEFAULT_RULE_IDS
+
+
+def _mcp_server_command_line() -> list[str]:
+    # see non-free/packages/cmk-mcp/skel/etc/init.d/mcp-server
+    return [
+        "python3",
+        "/omd/sites/mysite/bin/uvicorn",
+        "--factory",
+        "--uds",
+        "/omd/sites/mysite/tmp/run/mcp.sock",
+        "--log-config",
+        "/omd/sites/mysite/etc/mcp-server/log_config.json",
+        "--timeout-graceful-shutdown",
+        "30",
+        "cmk.mcp.main:serve",
+    ]
+
+
+def test_mcp_server_rule_matches_daemon_command_line() -> None:
+    rule = next(r for r in INVENTORY_PROCESS_DISCOVERY_RULES if r["id"] == MCP_SERVER_RULE_ID)
+    match = rule["value"]["match"]
+    assert isinstance(match, str)
+
+    assert process_matches(_mcp_server_command_line(), match)
+
+
+def test_mcp_server_rule_does_not_overlap_other_rules() -> None:
+    command_line = _mcp_server_command_line()
+
+    for rule in INVENTORY_PROCESS_DISCOVERY_RULES:
+        if rule["id"] == MCP_SERVER_RULE_ID:
+            continue
+        match = rule["value"]["match"]
+        assert isinstance(match, str)
+        assert not process_matches(command_line, match), (
+            f"rule {rule['id']!r} unexpectedly also matches the mcp-server command line"
+        )

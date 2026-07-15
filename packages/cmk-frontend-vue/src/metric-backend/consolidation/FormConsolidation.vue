@@ -13,6 +13,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
+import { useHistogramParams } from '../histogram-params'
 import {
   compactFunction,
   functionLabel,
@@ -128,64 +129,19 @@ const lookbackInput = computed<number | null>({
   }
 })
 
-function setParam(key: keyof ConsolidationModel['params'], value: number | undefined): void {
+function setParam(key: keyof ConsolidationParams, value: number | undefined): void {
   model.value = { ...model.value, params: { ...model.value.params, [key]: value } }
 }
 
-// An emptied number input surfaces as NaN (not undefined); fold every non-finite
-// value to undefined so a blank field never lands as NaN in the model, where it
-// would trip the range/order checks and render as "pNaN" in the chip.
-function normalizeNumber(value: number | undefined): number | undefined {
-  return Number.isFinite(value) ? value : undefined
-}
-
-const quantileInput = computed<number | undefined>({
-  get: () => model.value.params.quantile,
-  set: (value) => setParam('quantile', normalizeNumber(value))
-})
-
-function quantileInRange(value: number): boolean {
-  return value >= 0 && value <= 1
-}
-
-// A value is required, so a blank field fails; a set value must be in range.
-const quantileErrors = computed<string[]>(() => {
-  const { quantile } = model.value.params
-  return quantile !== undefined && quantileInRange(quantile)
-    ? []
-    : [_t('Enter a quantile between 0 and 1')]
-})
-
-const fractionBelowThresholdInput = computed<number | undefined>({
-  get: () => model.value.params.fractionBelowThreshold,
-  set: (value) => setParam('fractionBelowThreshold', normalizeNumber(value))
-})
-
-// A threshold is required, so a blank field fails.
-const fractionBelowThresholdErrors = computed<string[]>(() =>
-  model.value.params.fractionBelowThreshold === undefined ? [_t('Enter a threshold')] : []
-)
-
-const fractionLowerThresholdInput = computed<number | undefined>({
-  get: () => model.value.params.fractionLowerThreshold,
-  set: (value) => setParam('fractionLowerThreshold', normalizeNumber(value))
-})
-
-const fractionUpperThresholdInput = computed<number | undefined>({
-  get: () => model.value.params.fractionUpperThreshold,
-  set: (value) => setParam('fractionUpperThreshold', normalizeNumber(value))
-})
-
-// Cross-field, so it's computed here; a per-input validator would miss the other bound's changes.
-const fractionBetweenErrors = computed<string[]>(() => {
-  const { fractionLowerThreshold, fractionUpperThreshold } = model.value.params
-  if (fractionLowerThreshold === undefined || fractionUpperThreshold === undefined) {
-    return [_t('Enter both thresholds')]
-  }
-  return fractionLowerThreshold < fractionUpperThreshold
-    ? []
-    : [_t('Lower threshold must be below the upper threshold')]
-})
+const {
+  quantileInput,
+  fractionBelowThresholdInput,
+  fractionLowerThresholdInput,
+  fractionUpperThresholdInput,
+  quantileErrors,
+  fractionBelowThresholdErrors,
+  fractionBetweenErrors
+} = useHistogramParams(() => model.value.params, setParam)
 
 const activeErrors = computed<string[]>(() => {
   switch (model.value.function) {

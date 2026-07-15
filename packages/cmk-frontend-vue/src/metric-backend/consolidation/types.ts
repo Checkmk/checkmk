@@ -3,6 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { HistogramParams } from '../histogram-params'
+
+export { DEFAULT_QUANTILE } from '../histogram-params'
 
 export type MetricType = 'gauge' | 'sum' | 'histogram'
 
@@ -38,18 +41,7 @@ export type ConsolidationFunction = {
 
 export type ConsolidationFunctionName = ConsolidationFunction['function']
 
-export const DEFAULT_QUANTILE = 0.95
-
-export interface ConsolidationParams {
-  /** For 'histogram_quantile': the quantile in the range 0–1 (default 0.95). */
-  quantile?: number
-  /** For 'histogram_fraction_below': the upper threshold. */
-  fractionBelowThreshold?: number
-  /** For 'histogram_fraction_between': the lower threshold. */
-  fractionLowerThreshold?: number
-  /** For 'histogram_fraction_between': the upper threshold. */
-  fractionUpperThreshold?: number
-}
+export type ConsolidationParams = HistogramParams
 
 export type ConsolidationModel = ConsolidationFunction & {
   params: ConsolidationParams

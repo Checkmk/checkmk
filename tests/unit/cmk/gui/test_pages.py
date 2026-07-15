@@ -87,6 +87,7 @@ def test_registered_pages() -> None:
         "edit_pagetype_topic",
         "dashboard",
         "download_agent_output",
+        "download_agent_plugin",
         "download_crash_report",
         "download_diagnostics_dump",
         "edit_bookmark_list",

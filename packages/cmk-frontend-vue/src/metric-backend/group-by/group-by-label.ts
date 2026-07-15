@@ -6,6 +6,7 @@
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import { DEFAULT_QUANTILE } from '../histogram-params'
 import type { GroupByFunction, GroupByModel, GroupKey, GroupLevel } from './types'
 
 // Built at call time, not module load, because i18n is not yet set up then.
@@ -43,10 +44,31 @@ export function keyPillLabel(key: GroupKey): string {
   return `[${levelLabel(key.level)}] ${key.key}`
 }
 
+/** Clause-head token for the collapsed chip, e.g. 'p95 by', 'fraction <0.1 by', 'avg by'. */
+export function compactFunctionLabel(model: GroupByModel): string {
+  const { _t } = usei18n()
+  switch (model.function) {
+    case 'percentile': {
+      // Two decimals so high quantiles read 'p99.9', not a rounded 'p100'.
+      const percentile = +((model.params.quantile ?? DEFAULT_QUANTILE) * 100).toFixed(2)
+      return _t('p%{percentile} by', { percentile })
+    }
+    case 'fraction_below':
+      return _t('fraction <%{value} by', { value: model.params.fractionBelowThreshold ?? '?' })
+    case 'fraction_between':
+      return _t('fraction %{lower}–%{upper} by', {
+        lower: model.params.fractionLowerThreshold ?? '?',
+        upper: model.params.fractionUpperThreshold ?? '?'
+      })
+    default:
+      return functionLabel(model.function)
+  }
+}
+
 /** Collapsed-chip summary: 'no grouping', '<function> everything', or '<function> [Level] key, ...'. */
 export function clauseSummary(model: GroupByModel): string {
   const { _t } = usei18n()
-  const fn = functionLabel(model.function)
+  const fn = compactFunctionLabel(model)
   if (model.function === 'none') {
     return fn
   }

@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 
+import type { GroupByInputType } from '@/metric-backend/group-by/types'
+
 import { type PresetName, presetOptions } from './groupByPresets'
 
 export const a11yData = [
@@ -20,6 +22,11 @@ export const a11yData = [
   }
 ]
 
+const INPUT_TYPE_OPTIONS: Array<{ title: string; name: GroupByInputType }> = [
+  { title: 'Float consolidation', name: 'float' },
+  { title: 'Histogram passthrough', name: 'histogram' }
+]
+
 export const panelConfig = {
   preset: {
     type: 'list',
@@ -27,9 +34,17 @@ export const panelConfig = {
     options: presetOptions,
     help: 'UCL demo only: pick an example group-by configuration.',
     initialState: 'avgByService'
+  },
+  inputType: {
+    type: 'list',
+    title: 'Consolidation output',
+    options: INPUT_TYPE_OPTIONS,
+    initialState: 'float',
+    help: 'The consolidation output type on the same graph line; selects the offered functions.'
   }
 } satisfies PanelConfigFor<typeof FormGroupBy, 'modelValue' | 'ariaLabel'> & {
   preset: ListPropDef<PresetName>
+  inputType: ListPropDef<GroupByInputType>
 }
 </script>
 
@@ -47,7 +62,7 @@ import { ref, watch } from 'vue'
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 
-import { groupByPresets } from './groupByPresets'
+import { groupByPresets, presetInputType } from './groupByPresets'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -65,6 +80,7 @@ watch(
   () => propState.value.preset,
   (name) => {
     model.value = clonePreset(name)
+    propState.value.inputType = presetInputType[name]
   }
 )
 </script>
@@ -74,7 +90,7 @@ watch(
     <UclDetailPageHeader>FormGroupBy</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <FormGroupBy v-model="model" />
+      <FormGroupBy v-model="model" :input-type="propState.inputType" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

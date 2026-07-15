@@ -5,16 +5,29 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions/types'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
+import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
-import { clauseSummary } from './group-by-label'
-import type { GroupByModel } from './types'
+import { DEFAULT_QUANTILE, useHistogramParams } from '../histogram-params'
+import { clauseSummary, functionLabel } from './group-by-label'
+import {
+  defaultFunction,
+  functionParamKind,
+  functionsForInputType,
+  isFunctionValidForInputType
+} from './types'
+import type { GroupByFunction, GroupByInputType, GroupByModel, ParamKind } from './types'
 
 const { _t } = usei18n()
 
-defineProps<{
+const props = defineProps<{
+  // The consolidation output type for the same graph line.
+  inputType: GroupByInputType
   ariaLabel?: string | undefined
 }>()
 
@@ -23,34 +36,202 @@ const model = defineModel<GroupByModel>({ required: true })
 const summary = computed(() => clauseSummary(model.value))
 const editAriaLabel = computed(() => `${_t('Edit group by')}: ${summary.value}`)
 
+const functionOptions = computed<Suggestions>(() => ({
+  type: 'fixed',
+  suggestions: functionsForInputType(props.inputType).map((fn) => ({
+    name: fn,
+    title: functionLabel(fn)
+  }))
+}))
+
+function applyFunction(fn: GroupByFunction): void {
+  // Drop the previous function's params, seeding the quantile default so its field isn't blank.
+  const params = functionParamKind(fn) === 'quantile' ? { quantile: DEFAULT_QUANTILE } : {}
+  model.value = { ...model.value, function: fn, params }
+}
+
+function onFunctionUpdate(value: string | null): void {
+  if (value === null) {
+    return
+  }
+  applyFunction(value as GroupByFunction)
+}
+
+// A new output type may no longer offer the current function; reset to its default.
+watch(
+  () => props.inputType,
+  (type) => {
+    if (!isFunctionValidForInputType(type, model.value.function)) {
+      applyFunction(defaultFunction(type))
+    }
+  }
+)
+
+const paramKind = computed<ParamKind>(() => functionParamKind(model.value.function))
+
+function setParam(key: keyof GroupByModel['params'], value: number | undefined): void {
+  model.value = { ...model.value, params: { ...model.value.params, [key]: value } }
+}
+
+const {
+  quantileInput,
+  fractionBelowThresholdInput,
+  fractionLowerThresholdInput,
+  fractionUpperThresholdInput,
+  quantileErrors,
+  fractionBelowThresholdErrors,
+  fractionBetweenErrors
+} = useHistogramParams(() => model.value.params, setParam)
+
+const activeErrors = computed<string[]>(() => {
+  switch (paramKind.value) {
+    case 'quantile':
+      return quantileErrors.value
+    case 'fraction_below':
+      return fractionBelowThresholdErrors.value
+    case 'fraction_between':
+      return fractionBetweenErrors.value
+    default:
+      return []
+  }
+})
+
 const editing = ref(false)
+
+// Hide param errors until the user tries to leave with an invalid one (see canLeaveEdit).
+const showValidationErrors = ref(false)
+
+const validationMessages = computed<string[]>(() =>
+  showValidationErrors.value ? activeErrors.value : []
+)
+
+const functionDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('functionDropdownRef')
+
+function onEdit(): void {
+  editing.value = true
+  showValidationErrors.value = false
+  // "No grouping" leaves nothing else to edit, so open the dropdown, not just focus it.
+  void nextTick(() => {
+    if (model.value.function === 'none') {
+      functionDropdownRef.value?.open()
+    } else {
+      functionDropdownRef.value?.focus()
+    }
+  })
+}
+
+// Veto leaving while the active param is invalid, revealing the error on the first attempt.
+function canLeaveEdit(): boolean {
+  if (activeErrors.value.length > 0) {
+    showValidationErrors.value = true
+    return false
+  }
+  return true
+}
 </script>
 
 <template>
-  <InlineEditPill
-    :editing="editing"
-    :tab-focusable="false"
-    :aria-label="ariaLabel ?? summary"
-    :edit-aria-label="editAriaLabel"
-    scope-marker-attr="data-gb-scope"
-    item-marker-attr="data-gb-item"
-    @edit="editing = true"
-    @done="editing = false"
-  >
-    <template #read-only>
-      <span class="metric-backend-form-group-by__summary">{{ summary }}</span>
-    </template>
-    <template #edit>
-      <!-- Mirrors the summary until the editable controls arrive in a later slice. -->
-      <span class="metric-backend-form-group-by__summary">{{ summary }}</span>
-    </template>
-  </InlineEditPill>
+  <div class="metric-backend-form-group-by">
+    <CmkInlineValidation :validation="validationMessages" />
+    <InlineEditPill
+      :editing="editing"
+      :tab-focusable="false"
+      :can-leave="canLeaveEdit"
+      :aria-label="ariaLabel ?? summary"
+      :edit-aria-label="editAriaLabel"
+      scope-marker-attr="data-gb-scope"
+      item-marker-attr="data-gb-item"
+      @edit="onEdit"
+      @done="editing = false"
+    >
+      <template #read-only>
+        <span class="metric-backend-form-group-by__summary">{{ summary }}</span>
+      </template>
+      <template #edit>
+        <CmkDropdown
+          ref="functionDropdownRef"
+          :model-value="model.function"
+          :options="functionOptions"
+          :label="_t('Grouping function')"
+          @update:model-value="onFunctionUpdate"
+        />
+        <span v-if="paramKind === 'quantile'" class="metric-backend-form-group-by__param">
+          <CmkInput
+            v-model="quantileInput"
+            type="number"
+            inline
+            :external-errors="showValidationErrors ? quantileErrors : []"
+            hide-validation-message
+            :aria-label="_t('Quantile (0 to 1)')"
+            :placeholder="_t('Quantile')"
+          />
+        </span>
+        <span v-if="paramKind === 'fraction_below'" class="metric-backend-form-group-by__param">
+          <CmkInput
+            v-model="fractionBelowThresholdInput"
+            type="number"
+            inline
+            :external-errors="showValidationErrors ? fractionBelowThresholdErrors : []"
+            hide-validation-message
+            :aria-label="_t('Threshold')"
+            :placeholder="_t('Threshold')"
+          />
+        </span>
+        <span v-if="paramKind === 'fraction_between'" class="metric-backend-form-group-by__param">
+          <CmkInput
+            v-model="fractionLowerThresholdInput"
+            type="number"
+            inline
+            :external-errors="showValidationErrors ? fractionBetweenErrors : []"
+            hide-validation-message
+            :aria-label="_t('Lower threshold')"
+            :placeholder="_t('Lower')"
+          />
+          <span class="metric-backend-form-group-by__word">–</span>
+          <CmkInput
+            v-model="fractionUpperThresholdInput"
+            type="number"
+            inline
+            :aria-label="_t('Upper threshold')"
+            :placeholder="_t('Upper')"
+          />
+        </span>
+      </template>
+    </InlineEditPill>
+  </div>
 </template>
 
 <style scoped>
+.metric-backend-form-group-by {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-2);
+}
+
 .metric-backend-form-group-by__summary {
   padding: var(--dimension-2) var(--dimension-3);
   display: inline-flex;
   align-items: center;
+}
+
+.metric-backend-form-group-by__param {
+  display: inline-flex;
+  align-items: center;
+  padding-left: var(--dimension-2);
+}
+
+/* Widen the narrow default number field so the placeholder fits. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.metric-backend-form-group-by__param :deep(.cmk-input--number) {
+  width: 6em;
+}
+
+.metric-backend-form-group-by__word {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--dimension-2);
+  color: var(--font-color-dimmed);
+  white-space: nowrap;
 }
 </style>

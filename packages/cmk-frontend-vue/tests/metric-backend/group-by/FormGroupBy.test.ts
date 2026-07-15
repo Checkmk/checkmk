@@ -4,11 +4,28 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
+import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
 import { defineComponent, ref } from 'vue'
 
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
-import type { GroupByInputType, GroupByModel } from '@/metric-backend/group-by/types'
+import type { GroupByInputType, GroupByModel, GroupLevel } from '@/metric-backend/group-by/types'
+
+const KEY_LEVELS: Record<string, GroupLevel> = {
+  'service.name': 'resource',
+  'http.route': 'datapoint'
+}
+
+function querySuggestions(query: string): Promise<Response> {
+  const matches = Object.keys(KEY_LEVELS)
+    .filter((k) => k.includes(query))
+    .map((k) => ({ name: k, title: k }))
+  return Promise.resolve(new Response(matches))
+}
+
+function resolveLevel(key: string): GroupLevel | null {
+  return KEY_LEVELS[key] ?? null
+}
 
 function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInputType = 'float') {
   const model = ref<GroupByModel>({ function: 'none', params: {}, keys: [], ...initial })
@@ -16,12 +33,17 @@ function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInp
   const wrapper = defineComponent({
     components: { FormGroupBy },
     setup() {
-      return { model, type }
+      return { model, type, querySuggestions, resolveLevel }
     },
     template: `
       <div>
         <button type="button">outside</button>
-        <FormGroupBy v-model="model" :input-type="type" />
+        <FormGroupBy
+          v-model="model"
+          :input-type="type"
+          :query-suggestions="querySuggestions"
+          :resolve-level="resolveLevel"
+        />
       </div>
     `
   })
@@ -38,9 +60,20 @@ async function openFunctionDropdown(): Promise<void> {
   await userEvent.click(screen.getByRole('combobox', { name: 'Grouping function' }))
 }
 
-test('the collapsed chip summarises the clause', () => {
-  renderWidget({ function: 'avg', keys: [{ id: '1', level: 'resource', key: 'service.name' }] })
-  expect(screen.getByText('avg by [Resource] service.name')).toBeVisible()
+test('the collapsed chip summarises the clause with the level shown dimmed', () => {
+  renderWidget({
+    function: 'avg',
+    keys: [
+      { id: '1', level: 'resource', key: 'service.name' },
+      { id: '2', level: 'datapoint', key: 'http.route' }
+    ]
+  })
+  const chip = screen.getByRole('button', { name: /Edit group by/ })
+  expect(chip).toHaveTextContent('avg by')
+  const level = within(chip).getByText('[Resource]')
+  expect(level).toHaveClass('metric-backend-form-group-by__segment--dimmed')
+  expect(within(chip).getByText('service.name,')).toBeVisible()
+  expect(within(chip).getByText('http.route')).toBeVisible()
 })
 
 test.each([
@@ -126,4 +159,91 @@ test.each([
   await userEvent.click(screen.getByRole('button', { name: 'outside' }))
   expect(screen.getByRole('combobox', { name: 'Grouping function' })).toBeVisible()
   expect(screen.getByText(error)).toBeVisible()
+})
+
+test('the "everything" placeholder shows for an active function with no keys and hides once a key is added', async () => {
+  const { model } = renderWidget({ function: 'avg', keys: [] }, 'float')
+  await openPill()
+  expect(screen.getByText('everything')).toBeVisible()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Add group key' }))
+  await waitFor(() => expect(model.value.keys).toHaveLength(1))
+  expect(screen.queryByText('everything')).toBeNull()
+})
+
+test('"no grouping" removes the keys area but retains the keys in the model', async () => {
+  const { model } = renderWidget(
+    { function: 'none', keys: [{ id: '1', level: 'resource', key: 'service.name' }] },
+    'float'
+  )
+  await openPill()
+  expect(screen.queryByTestId('group-by-keys')).toBeNull()
+  expect(screen.queryByRole('button', { name: /Edit group key/ })).toBeNull()
+  expect(model.value.keys).toEqual([{ id: '1', level: 'resource', key: 'service.name' }])
+})
+
+async function selectKey(value: string): Promise<void> {
+  // Let the empty-key auto-open (nextTick) settle so the click cannot re-toggle it.
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const combos = screen.getAllByRole('combobox', { name: 'Attribute key' })
+  const keyCombobox = combos[combos.length - 1]!
+  if (keyCombobox.getAttribute('aria-expanded') !== 'true') {
+    await userEvent.click(keyCombobox)
+  }
+  const filters = screen.getAllByRole('textbox', { name: 'filter' })
+  const filter = filters[filters.length - 1]!
+  await userEvent.clear(filter)
+  await userEvent.type(filter, value)
+  await userEvent.click(await screen.findByRole('option', { name: value }))
+}
+
+test('picking a key applies key and inferred level in one mutation (also for a second key)', async () => {
+  // Two emits (key then level) would race and drop the key; a second key regressed this (CMK-36579).
+  const { model } = renderWidget(
+    { function: 'avg', keys: [{ id: 'k1', level: 'resource', key: 'service.name' }] },
+    'float'
+  )
+  await openPill()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Add group key' }))
+  await waitFor(() => expect(model.value.keys).toHaveLength(2))
+  await selectKey('http.route')
+
+  await waitFor(() => expect(model.value.keys[1]!.key).toBe('http.route'))
+  expect(model.value.keys[1]!.level).toBe('datapoint')
+})
+
+test('entering edit with a single key opens that key pill for editing', async () => {
+  renderWidget(
+    { function: 'avg', keys: [{ id: 'k1', level: 'resource', key: 'service.name' }] },
+    'float'
+  )
+  await openPill()
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Attribute key' })).toBeVisible())
+})
+
+test('entering edit with several keys leaves the key pills collapsed', async () => {
+  renderWidget(
+    {
+      function: 'avg',
+      keys: [
+        { id: 'k1', level: 'resource', key: 'service.name' },
+        { id: 'k2', level: 'datapoint', key: 'http.route' }
+      ]
+    },
+    'float'
+  )
+  await openPill()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(screen.queryByRole('combobox', { name: 'Attribute key' })).toBeNull()
+})
+
+test('a committed key can be removed', async () => {
+  const { model } = renderWidget(
+    { function: 'avg', keys: [{ id: '1', level: 'resource', key: 'service.name' }] },
+    'float'
+  )
+  await openPill()
+  await userEvent.click(await screen.findByRole('button', { name: 'Remove group key' }))
+  await waitFor(() => expect(model.value.keys).toHaveLength(0))
 })

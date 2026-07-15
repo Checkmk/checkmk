@@ -6,28 +6,45 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
-import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions/types'
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import type {
+  QuerySuggestionsFn,
+  Suggestions
+} from 'cmk-ui-library/components/CmkSuggestions/types'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
 import { DEFAULT_QUANTILE, useHistogramParams } from '../histogram-params'
-import { clauseSummary, functionLabel } from './group-by-label'
+import GroupByKeyPill from './GroupByKeyPill.vue'
+import { clauseSummary, compactFunctionLabel, functionLabel, levelLabel } from './group-by-label'
 import {
   defaultFunction,
   functionParamKind,
+  functionTakesKeys,
   functionsForInputType,
-  isFunctionValidForInputType
+  isFunctionValidForInputType,
+  isKeyValid
 } from './types'
-import type { GroupByFunction, GroupByInputType, GroupByModel, ParamKind } from './types'
+import type {
+  GroupByFunction,
+  GroupByInputType,
+  GroupByModel,
+  GroupKey,
+  GroupLevel,
+  ParamKind
+} from './types'
 
 const { _t } = usei18n()
 
 const props = defineProps<{
   // The consolidation output type for the same graph line.
   inputType: GroupByInputType
+  querySuggestions: QuerySuggestionsFn
+  resolveLevel?: ((key: string) => GroupLevel | null) | undefined
   ariaLabel?: string | undefined
 }>()
 
@@ -69,6 +86,9 @@ watch(
 
 const paramKind = computed<ParamKind>(() => functionParamKind(model.value.function))
 
+// "No grouping" takes no keys: the keys area is hidden, though the model keeps them.
+const keysEnabled = computed(() => functionTakesKeys(model.value.function))
+
 function setParam(key: keyof GroupByModel['params'], value: number | undefined): void {
   model.value = { ...model.value, params: { ...model.value.params, [key]: value } }
 }
@@ -107,26 +127,112 @@ const validationMessages = computed<string[]>(() =>
 
 const functionDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('functionDropdownRef')
 
+const editingId = ref<string | null>(null)
+
 function onEdit(): void {
   editing.value = true
   showValidationErrors.value = false
-  // "No grouping" leaves nothing else to edit, so open the dropdown, not just focus it.
   void nextTick(() => {
+    // "No grouping" has nothing else to edit: open the function dropdown directly.
     if (model.value.function === 'none') {
       functionDropdownRef.value?.open()
-    } else {
-      functionDropdownRef.value?.focus()
+      return
     }
+    // A lone key is the obvious target; open it directly.
+    if (model.value.keys.length === 1) {
+      editingId.value = model.value.keys[0]!.id
+      return
+    }
+    functionDropdownRef.value?.focus()
   })
 }
 
-// Veto leaving while the active param is invalid, revealing the error on the first attempt.
+const pillRefs = new Map<string, InstanceType<typeof GroupByKeyPill>>()
+
+// Cache one setter per pill id so :ref does not see a new function every render
+// and re-run the setter on every model mutation.
+const pillRefSetters = new Map<string, (el: unknown) => void>()
+function pillRefSetter(id: string): (el: unknown) => void {
+  let fn = pillRefSetters.get(id)
+  if (!fn) {
+    fn = (el: unknown) => {
+      if (el) {
+        pillRefs.set(id, el as InstanceType<typeof GroupByKeyPill>)
+      } else {
+        pillRefs.delete(id)
+        pillRefSetters.delete(id)
+      }
+    }
+    pillRefSetters.set(id, fn)
+  }
+  return fn
+}
+
+function tryChangeFocus(): boolean {
+  const id = editingId.value
+  if (id === null) {
+    return true
+  }
+  const key = model.value.keys.find((k) => k.id === id)
+  if (!key || isKeyValid(key)) {
+    return true
+  }
+  pillRefs.get(id)?.revealValidationErrors()
+  return false
+}
+
+function addKey(): void {
+  if (!keysEnabled.value || !tryChangeFocus()) {
+    return
+  }
+  const fresh: GroupKey = { id: randomId(), level: 'resource', key: '' }
+  model.value = { ...model.value, keys: [...model.value.keys, fresh] }
+  editingId.value = fresh.id
+}
+
+function removeKey(target: GroupKey): void {
+  if (editingId.value === target.id) {
+    editingId.value = null
+  }
+  model.value = { ...model.value, keys: model.value.keys.filter((k) => k.id !== target.id) }
+}
+
+function mapKeys(fn: (key: GroupKey) => GroupKey): void {
+  model.value = { ...model.value, keys: model.value.keys.map(fn) }
+}
+
+function updateLevel(target: GroupKey, value: GroupLevel): void {
+  mapKeys((k) => (k.id === target.id ? { ...k, level: value } : k))
+}
+
+// Override the level only when the key resolves, so a user-picked level survives free-text edits.
+function updateKey(target: GroupKey, value: string): void {
+  const inferred = value !== '' ? (props.resolveLevel?.(value) ?? null) : null
+  mapKeys((k) =>
+    k.id === target.id ? { ...k, key: value, ...(inferred !== null ? { level: inferred } : {}) } : k
+  )
+}
+
+function startEditing(id: string): void {
+  if (!tryChangeFocus()) {
+    return
+  }
+  editingId.value = id
+}
+
+function onKeyEditDone(id: string): void {
+  if (editingId.value === id) {
+    editingId.value = null
+  }
+}
+
+// Veto closing while a param is invalid or a pending key is empty, revealing the error.
 function canLeaveEdit(): boolean {
   if (activeErrors.value.length > 0) {
     showValidationErrors.value = true
     return false
   }
-  return true
+  return tryChangeFocus()
 }
 </script>
 
@@ -145,16 +251,37 @@ function canLeaveEdit(): boolean {
       @done="editing = false"
     >
       <template #read-only>
-        <span class="metric-backend-form-group-by__summary">{{ summary }}</span>
+        <span class="metric-backend-form-group-by__summary">
+          <span class="metric-backend-form-group-by__segment">{{
+            compactFunctionLabel(model)
+          }}</span>
+          <template v-if="keysEnabled">
+            <span v-if="model.keys.length === 0" class="metric-backend-form-group-by__everything">{{
+              _t('everything')
+            }}</span>
+            <template v-for="(key, index) in model.keys" :key="key.id">
+              <span
+                class="metric-backend-form-group-by__segment metric-backend-form-group-by__segment--dimmed"
+                >[{{ levelLabel(key.level) }}]</span
+              >
+              <!-- Comma hugs the key; the segment's own right padding spaces it from the next term. -->
+              <span class="metric-backend-form-group-by__segment"
+                >{{ key.key }}{{ index < model.keys.length - 1 ? ',' : '' }}</span
+              >
+            </template>
+          </template>
+        </span>
       </template>
       <template #edit>
-        <CmkDropdown
-          ref="functionDropdownRef"
-          :model-value="model.function"
-          :options="functionOptions"
-          :label="_t('Grouping function')"
-          @update:model-value="onFunctionUpdate"
-        />
+        <span class="metric-backend-form-group-by__segment">
+          <CmkDropdown
+            ref="functionDropdownRef"
+            :model-value="model.function"
+            :options="functionOptions"
+            :label="_t('Grouping function')"
+            @update:model-value="onFunctionUpdate"
+          />
+        </span>
         <span v-if="paramKind === 'quantile'" class="metric-backend-form-group-by__param">
           <CmkInput
             v-model="quantileInput"
@@ -196,6 +323,38 @@ function canLeaveEdit(): boolean {
             :placeholder="_t('Upper')"
           />
         </span>
+        <div
+          v-if="keysEnabled"
+          class="metric-backend-form-group-by__keys"
+          data-testid="group-by-keys"
+        >
+          <span v-if="model.keys.length === 0" class="metric-backend-form-group-by__everything">{{
+            _t('everything')
+          }}</span>
+          <GroupByKeyPill
+            v-for="key in model.keys"
+            :key="key.id"
+            :ref="pillRefSetter(key.id)"
+            :condition="key"
+            :query-suggestions="querySuggestions"
+            removable
+            :editing="key.id === editingId"
+            @remove="removeKey(key)"
+            @edit="startEditing(key.id)"
+            @done="onKeyEditDone(key.id)"
+            @update:level="(value) => updateLevel(key, value)"
+            @update:key="(value) => updateKey(key, value)"
+          />
+          <CmkIconButton
+            class="metric-backend-form-group-by__add"
+            name="add"
+            size="large"
+            :title="_t('Add group key')"
+            :aria-label="_t('Add group key')"
+            @mousedown.prevent
+            @click="addKey"
+          />
+        </div>
       </template>
     </InlineEditPill>
   </div>
@@ -210,9 +369,19 @@ function canLeaveEdit(): boolean {
 }
 
 .metric-backend-form-group-by__summary {
+  display: inline-flex;
+  align-items: center;
+}
+
+.metric-backend-form-group-by__segment {
   padding: var(--dimension-2) var(--dimension-3);
   display: inline-flex;
   align-items: center;
+}
+
+.metric-backend-form-group-by__segment--dimmed {
+  color: var(--font-color-dimmed);
+  font-style: italic;
 }
 
 .metric-backend-form-group-by__param {
@@ -233,5 +402,22 @@ function canLeaveEdit(): boolean {
   padding: 0 var(--dimension-2);
   color: var(--font-color-dimmed);
   white-space: nowrap;
+}
+
+.metric-backend-form-group-by__keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3) var(--dimension-4);
+  padding-left: var(--dimension-2);
+}
+
+.metric-backend-form-group-by__everything {
+  color: var(--font-color-dimmed);
+  font-style: italic;
+}
+
+.metric-backend-form-group-by__add:hover {
+  background-color: var(--input-hover-bg-color);
 }
 </style>

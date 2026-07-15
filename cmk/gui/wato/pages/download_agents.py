@@ -10,7 +10,8 @@
 import abc
 import fnmatch
 import os
-from collections.abc import Callable, Collection, Generator, Iterator
+from collections.abc import Callable, Collection, Generator, Iterator, Sequence
+from pathlib import Path
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -37,6 +38,20 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeDownloadAgentsOther)
     mode_registry.register(ModeDownloadAgentsWindows)
     mode_registry.register(ModeDownloadAgentsLinux)
+
+
+def _plugin_family_agent_dirs() -> Sequence[Path]:
+    """Agent plugin directories grouped by plugin family (cmk.bakery.v2).
+
+    These live under lib/python3/cmk/plugins/<family>/agents/ - i.e. outside the
+    statically served share/check_mk/agents tree - so files found here must be
+    downloaded through the GUI handler, not the Apache alias.
+    """
+    return [
+        Path(family_path) / AGENT_PLUGINS_FOLDER
+        for _family, family_paths in sorted(discover_families(raise_errors=False).items())
+        for family_path in family_paths
+    ]
 
 
 class ABCModeDownloadAgents(WatoMode):
@@ -207,11 +222,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             # * general information
             # * a (allow/deny) list of the files that should be exposed for download
             # * description / title for those.
-            *(
-                os.path.join(family_path, AGENT_PLUGINS_FOLDER)
-                for _family, family_paths in sorted(discover_families(raise_errors=False).items())
-                for family_path in family_paths
-            ),
+            *(str(p) for p in _plugin_family_agent_dirs()),
         ]
 
     def _exclude_file_glob_patterns(self) -> list[str]:

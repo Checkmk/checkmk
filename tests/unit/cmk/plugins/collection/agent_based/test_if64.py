@@ -21,8 +21,8 @@ def test_parse_if64adm() -> None:
     }
 
 
-def test_parse_if_name() -> None:
-    assert if64.parse_if_name(
+def test_parse_if_names() -> None:
+    assert if64.parse_if_names(
         [
             ["1", "lo"],
             ["2", "port1.5"],

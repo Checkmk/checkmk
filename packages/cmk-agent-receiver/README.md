@@ -37,7 +37,7 @@ If the configuration file doesn't exist, default values will be used. See `relay
 
 The component tests have two ways to start the agent receiver: use the real process if you are verifying TLS authorization.
 The `TestClient` fixture (default in `conftest.py`) wraps the FastAPI app in-process using Starlette's test client — fast and suitable for most endpoint logic.
-`AgentReceiverRunner` spawns a real Gunicorn process with the `ClientCertWorker`, enabling genuine mTLS handshakes and `verified-uuid` header injection; use it when testing certificate extraction or TLS-gated endpoints.
+`AgentReceiverRunner` spawns a real Gunicorn process with the `ClientCertWorker`, enabling genuine mTLS handshakes and `verified-uuid`/`verified-issuer-cn` header injection; use it when testing certificate extraction or TLS-gated endpoints.
 
 ## Development
 

@@ -8,7 +8,7 @@ from typing import Annotated
 import fastapi
 from pydantic import SecretStr
 
-from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
+from cmk.agent_receiver.lib.mtls_auth_validator import ExpectedCA, mtls_authorization_dependency
 from cmk.agent_receiver.relay.api.routers.relays import dependencies, handlers
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     FailedToSendMonitoringDataError,
@@ -65,7 +65,11 @@ async def register_relay(
 @router.get(
     "/{relay_id}/status",
     status_code=fastapi.status.HTTP_200_OK,
-    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
+    dependencies=[
+        mtls_authorization_dependency(
+            "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
+        )
+    ],
 )
 async def get_relay_status(
     handler: Annotated[
@@ -100,7 +104,11 @@ async def get_relay_status(
 @router.post(
     "/{relay_id}/csr",
     status_code=fastapi.status.HTTP_200_OK,
-    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
+    dependencies=[
+        mtls_authorization_dependency(
+            "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
+        )
+    ],
 )
 async def refresh_cert(
     handler: Annotated[
@@ -126,7 +134,11 @@ async def refresh_cert(
 @router.post(
     "/{relay_id}/monitoring",
     status_code=fastapi.status.HTTP_204_NO_CONTENT,
-    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
+    dependencies=[
+        mtls_authorization_dependency(
+            "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
+        )
+    ],
 )
 async def forward_monitoring_data(
     monitoring_data: MonitoringData,

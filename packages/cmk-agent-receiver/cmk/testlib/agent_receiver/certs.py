@@ -22,6 +22,14 @@ _CERT_EXPIRY = relativedelta(days=365)
 _KEY_SIZE = 2048
 
 
+def agent_ca_common_name(site_name: str) -> str:
+    return f"Site '{site_name}' agent signing CA"
+
+
+def relay_ca_common_name(site_name: str) -> str:
+    return f"Site '{site_name}' relay signing CA"
+
+
 def set_up_site_certs(config: Config) -> None:
     """Mirror the cert layout that omd and the init.d script create at site startup.
 
@@ -39,14 +47,14 @@ def set_up_site_certs(config: Config) -> None:
         is_ca=True,
     )
     agent_ca = CertificateWithPrivateKey.generate_self_signed(
-        common_name=f"Site '{config.site_name}' agent signing CA",
+        common_name=agent_ca_common_name(config.site_name),
         organization=f"Checkmk Site {config.site_name}",
         expiry=_CERT_EXPIRY,
         key_size=_KEY_SIZE,
         is_ca=True,
     )
     relay_ca = CertificateWithPrivateKey.generate_self_signed(
-        common_name=f"Site '{config.site_name}' relay signing CA",
+        common_name=relay_ca_common_name(config.site_name),
         organization=f"Checkmk Site {config.site_name}",
         expiry=_CERT_EXPIRY,
         key_size=_KEY_SIZE,

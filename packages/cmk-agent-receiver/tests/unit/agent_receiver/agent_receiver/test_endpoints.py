@@ -28,8 +28,8 @@ from cmk.agent_receiver.agent_receiver.models import (
 )
 from cmk.agent_receiver.agent_receiver.utils import R4R
 from cmk.agent_receiver.lib.config import get_config
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
-from cmk.testlib.agent_receiver.certs import generate_csr_pair
+from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.testlib.agent_receiver.certs import agent_ca_common_name, generate_csr_pair
 
 
 @pytest.fixture(name="symlink_push_host")
@@ -570,11 +570,16 @@ def test_register_new_ongoing_success(
     }
 
 
+def _agent_ca_common_name() -> str:
+    return agent_ca_common_name(get_config().site_name)
+
+
 @pytest.fixture(name="agent_data_headers")
 def fixture_agent_data_headers(uuid: UUID4) -> dict[str, str]:
     return {
         "compression": "zlib",
         INJECTED_UUID_HEADER: str(uuid),
+        INJECTED_ISSUER_HEADER: _agent_ca_common_name(),
     }
 
 
@@ -697,6 +702,7 @@ def test_agent_data_success(
 def fixture_registration_status_headers(uuid: UUID4) -> dict[str, str]:
     return {
         INJECTED_UUID_HEADER: str(uuid),
+        INJECTED_ISSUER_HEADER: _agent_ca_common_name(),
     }
 
 

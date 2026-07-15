@@ -82,10 +82,10 @@ from cmk.agent_receiver.lib.certs import (
 )
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
-from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
+from cmk.agent_receiver.lib.mtls_auth_validator import ExpectedCA, mtls_authorization_dependency
 
 UUID_VALIDATION_ROUTER = APIRouter(
-    dependencies=[mtls_authorization_dependency("uuid", HTTP_400_BAD_REQUEST)]
+    dependencies=[mtls_authorization_dependency("uuid", HTTP_400_BAD_REQUEST, ExpectedCA.AGENT)]
 )
 AGENT_RECEIVER_ROUTER = APIRouter()
 security = HTTPBasic()

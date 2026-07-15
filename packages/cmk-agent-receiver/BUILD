@@ -211,6 +211,7 @@ py_test(
         ":__component_test__",
         ":cmk-agent-receiver",
         ":testlib",
+        requirement("cryptography"),
         requirement("pytest"),
         requirement("pytest-xdist"),
         requirement("pytest-socket"),

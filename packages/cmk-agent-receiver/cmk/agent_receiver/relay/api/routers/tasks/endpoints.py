@@ -8,7 +8,7 @@ from typing import Annotated
 import fastapi
 
 from cmk.agent_receiver.lib.log import bound_contextvars
-from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
+from cmk.agent_receiver.lib.mtls_auth_validator import ExpectedCA, mtls_authorization_dependency
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_activate_config_handler,
     get_create_task_handler,
@@ -104,7 +104,11 @@ async def create_task_endpoint(
     responses={
         202: {"model": tasks_protocol.TaskResponse},
     },
-    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
+    dependencies=[
+        mtls_authorization_dependency(
+            "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
+        )
+    ],
 )
 async def update_task(
     relay_id: str,
@@ -154,7 +158,11 @@ async def update_task(
 # TODO try to use dependency to check the serial mismatch
 @router.get(
     "/{relay_id}/tasks",
-    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
+    dependencies=[
+        mtls_authorization_dependency(
+            "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
+        )
+    ],
 )
 async def get_tasks_endpoint(
     relay_id: str,

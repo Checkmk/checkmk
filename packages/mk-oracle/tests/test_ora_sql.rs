@@ -20,7 +20,7 @@ extern crate common;
 mod common;
 
 use crate::common::tools::{
-    make_mini_config, make_mini_config_cdb_root, make_mini_config_custom_instance,
+    default_role, make_mini_config, make_mini_config_cdb_root, make_mini_config_custom_instance,
     make_mini_config_pdb, make_mini_config_with_sid, platform::add_runtime_to_path,
     ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
@@ -327,6 +327,7 @@ oracle:
        username: "{}"
        password: "{}"
        type: standard
+       role: {}
     connection:
        hostname: {}
        port: {}
@@ -341,7 +342,12 @@ oracle:
             greeting: "hello-from-params"
             column: "dummy"
 "#,
-        endpoint.user, endpoint.pwd, endpoint.host, endpoint.port, endpoint.service_name
+        endpoint.user,
+        endpoint.pwd,
+        default_role(&endpoint.host),
+        endpoint.host,
+        endpoint.port,
+        endpoint.service_name
     );
     let config = Config::from_string(config_str).unwrap().unwrap();
 

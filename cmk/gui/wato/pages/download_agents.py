@@ -10,7 +10,8 @@
 import abc
 import fnmatch
 import os
-from collections.abc import Callable, Collection, Generator, Iterator, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping, Sequence
+from functools import cached_property
 from pathlib import Path
 
 import cmk.utils.paths
@@ -50,6 +51,21 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register(PageEndpoint(DOWNLOAD_AGENT_PLUGIN_PAGE, PageDownloadAgentPlugin()))
 
 
+def _plugin_family_agent_titles() -> Iterable[tuple[Path, str]]:
+    """Map each plugin family agents directory to a display title.
+
+    ``discover_families`` returns keys like ``cmk.plugins.oracle``; we use the
+    last dotted component ("oracle") as a human readable section title ("Oracle")
+    so that files of different families are not all lumped under one generic
+    "Agents" header on the download page.
+    """
+    return (
+        (Path(family_path, AGENT_PLUGINS_FOLDER), family.split(".")[-1].capitalize())
+        for family, family_paths in sorted(discover_families(raise_errors=False).items())
+        for family_path in family_paths
+    )
+
+
 def _plugin_family_agent_dirs() -> Sequence[Path]:
     """Agent plugin directories grouped by plugin family (cmk.bakery.v2).
 
@@ -57,14 +73,10 @@ def _plugin_family_agent_dirs() -> Sequence[Path]:
     statically served share/check_mk/agents tree - so files found here must be
     downloaded through the GUI handler, not the Apache alias.
     """
-    return [
-        Path(family_path) / AGENT_PLUGINS_FOLDER
-        for _family, family_paths in sorted(discover_families(raise_errors=False).items())
-        for family_path in family_paths
-    ]
+    return [p for p, _t in _plugin_family_agent_titles()]
 
 
-def _download_href(path: str) -> str:
+def download_href(path: str) -> str:
     """Build the download URL for an offered agent file.
 
     Files below share/check_mk/agents are served statically by the Apache alias
@@ -186,7 +198,7 @@ class ABCModeDownloadAgents(WatoMode):
             if relpath in banned_paths:
                 continue
 
-            title = self._TITLES.get(relpath, relpath)
+            title = self._title_for_root(root, relpath)
             for filename in files:
                 rel_file_path = relpath + "/" + filename
                 if rel_file_path in banned_paths:
@@ -207,6 +219,10 @@ class ABCModeDownloadAgents(WatoMode):
                 return True
         return False
 
+    def _title_for_root(self, root: str, relpath: str) -> str:
+        """Section title for the files found directly below ``root``."""
+        return self._TITLES.get(relpath, relpath)
+
     def _download_table(self, title: str, paths: list[str]) -> None:
         forms.header(title)
         forms.container()
@@ -219,7 +235,7 @@ class ABCModeDownloadAgents(WatoMode):
             # FIXME: Rename classes etc. to something generic
             html.open_div(class_="ruleset")
             html.open_div(style="width:300px;", class_="text")
-            html.a(filename, href=_download_href(path), download=filename)
+            html.a(filename, href=download_href(path), download=filename)
             html.span("." * 200, class_="dots")
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
@@ -261,6 +277,19 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             "*.solaris",
             "*robotmk*",
         ]
+
+    @cached_property
+    def _title_map(self) -> Mapping[str, str]:
+        return {str(p): t for p, t in _plugin_family_agent_titles()}
+
+    def _title_for_root(self, root: str, relpath: str) -> str:
+        # Files of a plugin family live in their own agents directory outside the
+        # share tree; title their section by the family instead of the generic
+        # "Agents" that the path based lookup would yield.
+        try:
+            return self._title_map[root]
+        except KeyError:
+            return super()._title_for_root(root, relpath)
 
     def _exclude_paths(self) -> set[str]:
         exclude = super()._exclude_paths()

@@ -15,22 +15,23 @@ from cmk.gui.http import request as global_request
 from cmk.gui.pages import PageContext
 from cmk.gui.wato.pages import download_agents
 from cmk.gui.wato.pages.download_agents import (
-    _download_href,
     DOWNLOAD_AGENT_PLUGIN_PAGE,
+    download_href,
+    ModeDownloadAgentsOther,
     PageDownloadAgentPlugin,
 )
 
 
 def test_download_href_static_file_uses_apache_alias(request_context: None) -> None:
     path = str(cmk.utils.paths.agents_dir / "linux" / "check-mk-agent.rpm")
-    assert _download_href(path) == "agents/linux/check-mk-agent.rpm"
+    assert download_href(path) == "agents/linux/check-mk-agent.rpm"
 
 
 def test_download_href_plugin_family_file_uses_gui_handler(request_context: None) -> None:
     # A plugin family file lives outside share/check_mk/agents and must not be
     # served as a broken relative "agents/<absolute path>" URL.
     path = "/omd/sites/heute/lib/python3/cmk/plugins/oracle/agents/mk-oracle"
-    href = _download_href(path)
+    href = download_href(path)
 
     assert href.startswith(f"{DOWNLOAD_AGENT_PLUGIN_PAGE}.py?")
     assert "agents//omd" not in href
@@ -103,3 +104,21 @@ def test_page_download_rejects_missing_file(
     page_context.request.set_var("path", str(plugin_agents_dir / "does-not-exist"))
     with pytest.raises(MKUserError, match="does not exist"):
         PageDownloadAgentPlugin().page(page_context)
+
+
+def test_other_mode_titles_plugin_family_section_by_family(
+    request_context: None,
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(
+        download_agents,
+        "discover_families",
+        return_value={"cmk.plugins.oracle": ["/opt/plugins/oracle"]},
+    )
+    mode = ModeDownloadAgentsOther()
+
+    # A plugin family agents dir gets a family specific title instead of the
+    # generic "Agents" that the path based fallback would produce for relpath "".
+    assert mode._title_for_root("/opt/plugins/oracle/agents", "") == "Oracle"
+    # Files below the share tree keep their existing label.
+    assert mode._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins") == "Plug-ins"

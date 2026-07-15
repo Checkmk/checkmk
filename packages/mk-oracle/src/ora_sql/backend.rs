@@ -490,6 +490,7 @@ pub(crate) mod test_support {
     pub struct MiniOra {
         pub instance_rows: Vec<Vec<String>>,
         pub pdb_rows: Vec<Vec<String>>,
+        pub default_rows: Vec<Vec<String>>,
     }
 
     impl OraDbEngine for MiniOra {
@@ -499,17 +500,22 @@ pub(crate) mod test_support {
         fn close(&mut self) -> Result<()> {
             Ok(())
         }
+        fn switch_container(&self, _container: &PdbName) -> Result<()> {
+            Ok(())
+        }
         fn query_table(&self, query: &SqlQuery) -> QueryResult {
-            match query.as_str() {
-                INSTANCE_INFO_SQL_TEXT_NEW => QueryResult(Ok(self.instance_rows.clone())),
-                PDB_DISCOVERY_SQL => QueryResult(Ok(self.pdb_rows.clone())),
-                other => QueryResult(Err(anyhow::anyhow!("MiniOra: unexpected query: {other}"))),
-            }
+            let rows = match query.as_str() {
+                INSTANCE_INFO_SQL_TEXT_NEW => &self.instance_rows,
+                PDB_DISCOVERY_SQL => &self.pdb_rows,
+                _ => &self.default_rows,
+            };
+            QueryResult(Ok(rows.clone()))
         }
         fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
             Box::new(MiniOra {
                 instance_rows: self.instance_rows.clone(),
                 pdb_rows: self.pdb_rows.clone(),
+                default_rows: self.default_rows.clone(),
             })
         }
     }

@@ -43,8 +43,12 @@ END_OIDS: list[str | OIDBytes] = [
 
 HAS_ifHCInOctets = exists(".1.3.6.1.2.1.31.1.1.1.6.*")
 
-# Maps the interface index to its ifName (.1.3.6.1.2.1.31.1.1.1.1), provided by the
-# standalone `if_name` SNMP section and merged into the `name` attribute at check time.
+# Maps the ifIndex (.1.3.6.1.2.1.2.2.1.1, i.e. `Attributes.index`) to its ifName
+# (.1.3.6.1.2.1.31.1.1.1.1), provided by the standalone `if_name` SNMP section and merged
+# into the `name` attribute at check time. The key must be the ifIndex *value*, not the raw
+# SNMP table row index: on non-compliant agents (e.g. some Ubiquiti APs) the ifTable/ifXTable
+# are indexed by a plain row number that differs from the ifIndex column, so keying by the
+# row index would join the name onto the wrong interface.
 IfNameSection = Mapping[str, str]
 
 

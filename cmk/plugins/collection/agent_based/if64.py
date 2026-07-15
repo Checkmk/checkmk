@@ -13,7 +13,6 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
-    OIDEnd,
     Result,
     RuleSetType,
     SimpleSNMPSection,
@@ -115,9 +114,9 @@ snmp_section_if64adm = SimpleSNMPSection(
 
 def parse_if_name(string_table: StringTable) -> if64.IfNameSection:
     return {
-        index: interfaces.cleanup_if_strings(name)
-        for index, name in string_table
-        if interfaces.saveint(index) > 0 and name
+        if_index: interfaces.cleanup_if_strings(name)
+        for if_index, name in string_table
+        if interfaces.saveint(if_index) > 0 and name
     }
 
 
@@ -125,14 +124,20 @@ def parse_if_name(string_table: StringTable) -> if64.IfNameSection:
 # SNMP traffic it causes can be disabled independently of the main interface section via the
 # ruleset "Disabled or enabled sections (SNMP)". It is enabled by default; the `name`
 # attribute (and the "Use name" item appearance) is only populated when it is fetched.
+#
+# ifName lives in the ifXTable; we fetch it alongside the ifIndex column from the ifTable in
+# a single walk (just like the main if64 section), so the backend pairs the two per interface
+# row. The result is keyed by the ifIndex *value*, matching how the interface index is
+# derived, so the name joins onto the right interface even on non-compliant agents whose
+# table row index differs from their ifIndex column (e.g. some Ubiquiti APs).
 snmp_section_if_name = SimpleSNMPSection(
     name="if_name",
     parse_function=parse_if_name,
     fetch=SNMPTree(
-        base=f"{if64.BASE_OID}.31.1.1.1",  # IF-MIB::ifXTable
+        base=if64.BASE_OID,
         oids=[
-            OIDEnd(),  # ifIndex
-            "1",  # ifName
+            "2.2.1.1",  # ifIndex (ifTable)
+            "31.1.1.1.1",  # ifName (ifXTable)
         ],
     ),
     detect=if64.HAS_ifHCInOctets,

@@ -5,6 +5,7 @@
 
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.collection.agent_based import if64
+from cmk.plugins.lib import if64 as if64_lib
 from cmk.plugins.lib import interfaces
 
 
@@ -22,6 +23,7 @@ def test_parse_if64adm() -> None:
 
 
 def test_parse_if_name() -> None:
+    # Rows are [ifIndex, ifName]. Empty names and non-positive ifIndex values are dropped.
     assert if64.parse_if_name(
         [
             ["1", "lo"],
@@ -33,6 +35,65 @@ def test_parse_if_name() -> None:
         "1": "lo",
         "2": "port1.5",
     }
+
+
+def test_parse_if_name_keys_by_ifindex_not_table_row() -> None:
+    # Non-compliant agent (e.g. Ubiquiti Wave AP, SUP-27628): the ifTable/ifXTable are indexed
+    # by a plain row number 1..5, while the ifIndex column reports 5, 8, 9, 3, 4. Fetching the
+    # ifIndex column (not OIDEnd) pairs each ifName with its real ifIndex, so the section is
+    # keyed by the ifIndex value and later joins onto the right interface.
+    assert if64.parse_if_name(
+        [
+            ["5", "wlan0"],
+            ["8", "ath0"],
+            ["9", "br0"],
+            ["3", "eth0"],
+            ["4", "eth1"],
+        ]
+    ) == {
+        "5": "wlan0",
+        "8": "ath0",
+        "9": "br0",
+        "3": "eth0",
+        "4": "eth1",
+    }
+
+
+def test_parse_if_name_switch_with_large_indices() -> None:
+    assert if64.parse_if_name(
+        [
+            ["1", "1/1/1"],
+            ["52", "1/1/52"],
+            ["769", "lag1"],
+            ["16777217", "vlan1"],
+            ["268435456", "eth0"],
+        ]
+    ) == {
+        "1": "1/1/1",
+        "52": "1/1/52",
+        "769": "lag1",
+        "16777217": "vlan1",
+        "268435456": "eth0",
+    }
+
+
+def test_add_names_to_ifaces_row_index_differs_from_ifindex() -> None:
+    # The name of the interface with ifIndex 3 must be "eth0", not the name that happens to
+    # sit at table row 3. Getting this wrong cross-assigns names and, during discovery,
+    # inflates the duplicate-item counter so unique aliases gain a spurious index suffix.
+    ifaces = [
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(index=index, descr=descr, alias=descr, type="6"),
+            interfaces.Counters(),
+            123.0,
+        )
+        for index, descr in (("5", "wlan0"), ("8", "ath0"), ("3", "eth0"), ("4", "eth1"))
+    ]
+    if64_lib.add_names_to_ifaces(
+        ifaces,
+        {"5": "wlan0", "8": "ath0", "9": "br0", "3": "eth0", "4": "eth1"},
+    )
+    assert [iface.attributes.name for iface in ifaces] == ["wlan0", "ath0", "eth0", "eth1"]
 
 
 def test_add_admin_status_to_ifaces() -> None:

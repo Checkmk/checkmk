@@ -71,8 +71,8 @@ from ldap import (  # type: ignore[attr-defined,unused-ignore]
     SIZELIMIT_EXCEEDED,
     TIMEOUT,
 )
-from ldap.controls import (
-    SimplePagedResultsControl,  # type: ignore[import-untyped,unused-ignore]
+from ldap.controls import (  # type: ignore[import-untyped,unused-ignore]
+    SimplePagedResultsControl,
 )
 
 import cmk.ccc.version as cmk_version
@@ -240,8 +240,8 @@ def _get_ad_locator() -> Any:
     # "unused-ignore" is needed because rules_mypy and the IDEs behave differently
     # See https://tribe29.slack.com/archives/C01EA6ZBG58/p1753888028549459
     import activedirectory  # type: ignore[import-untyped,unused-ignore]
-    from activedirectory.protocol import (
-        netlogon,  # type: ignore[import-untyped,unused-ignore]
+    from activedirectory.protocol import (  # type: ignore[import-untyped,unused-ignore]
+        netlogon,
     )
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc,name-defined,unused-ignore]
@@ -656,6 +656,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             )
             conn.protocol_version = self._config.get("version", 3)
             conn.network_timeout = self._config.get("connect_timeout", 2.0)
+            conn.timeout = self._config.get("response_timeout", 5)
             conn.retry_delay = 0.5
 
             # When using the domain top level as base-dn, the subtree search stumbles with referral objects.

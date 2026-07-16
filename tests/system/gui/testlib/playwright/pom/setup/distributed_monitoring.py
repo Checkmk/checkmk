@@ -155,6 +155,7 @@ class DistributedMonitoring(CmkPage):
         """
         logger.info("Delete all site connections")
 
+        expect(self.data_table, message="Site connections table is not shown").to_be_visible()
         delete_buttons = self.data_table.get_by_role("link", name="Delete")
 
         number_of_deleted_sites = delete_buttons.count()

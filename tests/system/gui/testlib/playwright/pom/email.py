@@ -8,7 +8,7 @@
 import logging
 from pathlib import Path
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import expect, Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,9 @@ class EmailPage:
 
     def get_field_value(self, field_name: str) -> str:
         """Get the value of the specified field from the rendered HTML email."""
-        value = self._get_row(field_name).inner_text()
-        value = value.replace("\n", "").replace("\t", "")
+        row = self._get_row(field_name)
+        expect(row, f"Field '{field_name}' is not shown in the email").to_be_visible()
+        value = row.inner_text().replace("\n", "").replace("\t", "")
         return value.split(field_name, 1)[1]
 
     def check_table_content(self, expected_content: dict) -> None:

@@ -237,15 +237,31 @@ class MainMenu(LocatorHelper):
         _loc = self.locator().get_by_role(role="link", name=menu)
         if sub_menu:
             _loc.click()
+            # After the click, the popup renders either the sub menu entry directly, or --
+            # if the menu has too many entries -- a "show more" link instead. Guards the
+            # one-shot .count() calls below against racing the popup's render.
+            sub_menu_entry = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+            show_more_locator = self.locator().get_by_role(
+                role="link", name="show more", exact=True
+            )
+            expect(
+                sub_menu_entry.or_(show_more_locator),
+                message=f"The '{menu}' menu popup did not open",
+            ).not_to_have_count(0)
 
-            if show_more:
-                show_more_locator = self.locator().get_by_role(
-                    role="link", name="show more", exact=True
-                )
-                # only try to press if it hasn't already been pressed before
-                if show_more_locator.count():
-                    show_more_locator.click()
-            _loc = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+            # only try to press if it hasn't already been pressed before
+            if show_more and show_more_locator.count():
+                show_more_locator.click()
+                # Clicking "show more" either reveals the sub menu entry directly, or --
+                # if it's still hidden inside an individual topic -- that topic's own
+                # "show all" overflow link. Guards the one-shot .count() call below
+                # against racing the expansion's render.
+                topic_overflow_locator = self.locator().locator(".mm-nav-item-topic__show-all")
+                expect(
+                    sub_menu_entry.or_(topic_overflow_locator),
+                    message="Clicking 'show more' did not expand the categories",
+                ).not_to_have_count(0)
+            _loc = sub_menu_entry
             if not _loc.count():
                 _loc = self._reveal_overflowing_entry(sub_menu, exact)
         self._unique_web_element(_loc)
@@ -261,16 +277,34 @@ class MainMenu(LocatorHelper):
         To stay independent of ordering and entry count, expand each
         overflowing topic in turn until the requested entry shows up.
         """
+        back_button = (
+            self.locator().locator(".mm-nav-item-topic__show-all-back").get_by_role("button")
+        )
         show_all_links = self.locator().locator(".mm-nav-item-topic__show-all")
+        entry = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+        # The requested entry is either already rendered, or hidden behind at least one
+        # topic's "show all" overflow link. Guards the one-shot .count() calls below
+        # against racing the render.
+        expect(
+            show_all_links.first.or_(entry),
+            message=f"Neither '{sub_menu}' nor any overflowing topic is shown",
+        ).not_to_have_count(0)
+
         for index in range(show_all_links.count()):
-            self.locator().locator(".mm-nav-item-topic__show-all").nth(index).click()
-            entry = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+            show_all_links.nth(index).click()
+            expect(
+                back_button, message=f"'Show all' for topic {index} did not expand"
+            ).to_be_visible()
+            # Safe one-shot count: the back button and this topic's full entry
+            # list are driven by the same reactive flag and render in the same
+            # Vue update, so waiting on the button also covers the entries.
             if entry.count():
                 return entry
-            self.locator().locator(".mm-nav-item-topic__show-all-back").get_by_role(
-                "button"
-            ).click()
-        return self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+            back_button.click()
+            expect(
+                back_button, message=f"Collapsing topic {index} via its 'back' button did not work"
+            ).not_to_be_visible()
+        return entry
 
     @property
     def main_page(self) -> Locator:
@@ -506,6 +540,7 @@ class MainArea(LocatorHelper):
         # shared document; popups, dialogs and slide-ins teleport to <body>,
         # so no narrower container than the document itself covers them all.
         _base: FrameLocator | Page
+        self.page.wait_for_load_state("load")
         if self.page.locator("iframe[name='main']").count():
             _base = self.page.frame_locator("iframe[name='main']")
         else:
@@ -761,14 +796,20 @@ class FilterSidebar(LocatorHelper):
             "combobox"
         )
 
+    def _add_filter(self, filter_name: str, exact: bool = False) -> None:
+        """Open `filter_name` in the sidebar's filter list, unless it's already applied."""
+        self.add_filter_button.click()
+        filter_link = self.filter_button(filter_name, exact=exact)
+        expect(
+            filter_link, message=f"The '{filter_name}' filter link did not render"
+        ).to_be_visible()
+        if "disabled" not in (filter_link.get_attribute("class") or ""):
+            filter_link.click()
+
     def apply_last_service_state_change_filter(
         self, from_units: str, from_value: str, until_units: str, until_value: str
     ) -> None:
-        try:
-            expect(self.last_service_state_change_filter).to_be_visible(timeout=3000)
-        except AssertionError:
-            self.add_filter_button.click()
-            self.filter_button("Last service state change").click()
+        self._add_filter("Last service state change")
 
         self.last_service_state_change_from_dropdown.click()
         self.dropdown_option(from_units).click()
@@ -790,20 +831,6 @@ class FilterSidebar(LocatorHelper):
         self.search_text_field.fill(host_filter)
         # TODO: remove 'first' after fixing CMK-19975
         self.dropdown_option(host_filter, exact=True).first.click()
-
-    def apply_filter_by_name(
-        self, filter_name: str, filter_value: str, exact: bool = False
-    ) -> None:
-        filter_combobox = self.filter_combobox(filter_name, check=False)
-
-        if filter_combobox.count() == 0:
-            self.add_filter_button.click()
-            self.filter_button(filter_name, exact=exact).click()
-
-        filter_combobox.click()
-        self.search_text_field.fill(filter_value)
-        # TODO: remove 'first' after fixing CMK-19975
-        self.dropdown_option(filter_value, exact=True).first.click()
 
     def apply_filters(self, expected_locator: Locator) -> None:
         logger.info("Apply filters")

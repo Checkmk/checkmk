@@ -129,6 +129,10 @@ class SetupHost(CmkPage):
         buttons.hover()
         buttons.get_by_role("link", name="Delete this folder").click()
         self.main_area.locator().get_by_role("button", name="Delete").click()
+        expect(
+            self.folder_icon(folder_id),
+            message=f"Folder '{folder_id}' is still present after deletion",
+        ).to_have_count(0)
 
     def check_host_not_present(self, host_name: str) -> None:
         """Check that a host is not present in the list of hosts."""

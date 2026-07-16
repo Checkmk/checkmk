@@ -133,14 +133,22 @@ class NotificationConfiguration(CmkPage):
         return self.main_area.locator().get_by_role("group", name=title).get_by_role("paragraph")
 
     def get_total_sent_notifications_count(self) -> int:
-        return int(self._get_notification_stat_count("Total sent notifications").inner_text())
+        stat_count = self._get_notification_stat_count("Total sent notifications")
+        expect(stat_count, message="'Total sent notifications' count is not shown").to_have_text(
+            re.compile(r"^\d+$")
+        )
+        return int(stat_count.inner_text())
 
     def check_total_sent_notifications_has_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Total sent notifications")
         expect(locator).not_to_have_text(re.compile(rf"^{previous_count}$"))
 
     def get_failed_notifications_count(self) -> int:
-        return int(self._get_notification_stat_count("Failed notifications").inner_text())
+        stat_count = self._get_notification_stat_count("Failed notifications")
+        expect(stat_count, message="'Failed notifications' count is not shown").to_have_text(
+            re.compile(r"^\d+$")
+        )
+        return int(stat_count.inner_text())
 
     def check_failed_notifications_has_not_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Failed notifications")

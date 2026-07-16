@@ -19,34 +19,6 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.humidity import check_humidity, CheckParams
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
-#   .--General-------------------------------------------------------------.
-#   |                                                  _                   |
-#   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
-#   |                  / _` |/ _ \ '_ \ / _ \ '__/ _` | |                  |
-#   |                 | (_| |  __/ | | |  __/ | | (_| | |                  |
-#   |                  \__, |\___|_| |_|\___|_|  \__,_|_|                  |
-#   |                  |___/                                               |
-#   +----------------------------------------------------------------------+
-
-# States for sensors with levels, numbered identically in SPAGENT-MIB and the
-# sensorProbe+ MIB (plusSeries)
-akcp_sensor_level_states = {
-    "1": (2, "no status"),
-    "2": (0, "normal"),
-    "3": (1, "high warning"),
-    "4": (2, "high critical"),
-    "5": (1, "low warning"),
-    "6": (2, "low critical"),
-    "7": (2, "sensor error"),
-}
-
-Section = list[list[str]]
-
-
-def parse_akcp_sensor(string_table: StringTable) -> Section:
-    return string_table
-
-
 # .
 #   .--Humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
@@ -193,15 +165,118 @@ AKCP_TEMP_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def discover_akcp_sensor_temp(section: Section) -> DiscoveryResult:
-    for line in section:
-        # sensorProbeTempOnline or sensorTemperatureGoOffline has to be at last index
-        # "1" means online, "2" offline
-        if line[-1] == "1":
-            yield Service(item=line[0])
+class SensorProbeTempStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorProbeTempStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highWarning(3),
+    #           highCritical(4),
+    #           lowWarning(5),
+    #           lowCritical(6),
+    #           sensorError(7)
+    #        }
+    # HHMSAGENT-MIB defines hhmsSensorArrayTempStatus at the same OID with
+    # identical SYNTAX, so this enum decodes both device generations.
+    # Decodes .1.3.6.1.4.1.3854.1.2.2.1.16.1.4
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_WARNING = "3"
+    HIGH_CRITICAL = "4"
+    LOW_WARNING = "5"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
 
 
-def check_akcp_sensor_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
+class SensorTemperatureStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorTemperatureStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highWarning(3),
+    #           highCritical(4),
+    #           lowWarning(5),
+    #           lowCritical(6),
+    #           sensorError(7)
+    #        }
+    # Same SPAGENT-MIB, plusSeries tree (byte-identical SYNTAX, different table):
+    #     temperatureStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER { <identical to sensorTemperatureStatus above> }
+    # Decodes .1.3.6.1.4.1.3854.2.3.2.1.6 (sensorTemperatureStatus)
+    # and .1.3.6.1.4.1.3854.3.5.2.1.6 (plusSeries temperatureStatus)
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_WARNING = "3"
+    HIGH_CRITICAL = "4"
+    LOW_WARNING = "5"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProbeTempSensor:
+    status: SensorProbeTempStatus
+    temperature: float | None
+    dev_unit: str
+    dev_levels: tuple[float, float]
+    dev_levels_lower: tuple[float, float]
+    online: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class TemperatureSensor:
+    status: SensorTemperatureStatus
+    temperature: float | None
+    dev_unit: str
+    dev_levels: tuple[float, float]
+    dev_levels_lower: tuple[float, float]
+    online: bool
+
+
+TempSection = Mapping[str, ProbeTempSensor] | Mapping[str, TemperatureSensor]
+
+
+def _parse_temp_fields(
+    degree: str,
+    unit: str,
+    low_crit: str,
+    low_warn: str,
+    high_warn: str,
+    high_crit: str,
+    degreeraw: str,
+) -> tuple[float | None, str, tuple[float, float], tuple[float, float]]:
+    # Unit "F" or "0" stands for Fahrenheit and "C" or "1" for Celsius
+    if unit.isdigit():
+        dev_unit = "f" if unit == "0" else "c"
+        low_c, low_w, high_w, high_c = (
+            float(t) for t in (low_crit, low_warn, high_warn, high_crit)
+        )
+    else:
+        dev_unit = unit.lower()
+        if int(high_crit) > 100:
+            # Devices with "F" or "C" have the levels in degrees * 10
+            low_c, low_w, high_w, high_c = (
+                float(t) / 10 for t in (low_crit, low_warn, high_warn, high_crit)
+            )
+        else:
+            low_c, low_w, high_w, high_c = (
+                float(t) for t in (low_crit, low_warn, high_warn, high_crit)
+            )
+
+    if degreeraw and degreeraw != "0":
+        temperature = float(degreeraw) / 10.0
+    elif not degree:
+        temperature = None
+    else:
+        temperature = float(degree)
+
+    return temperature, dev_unit, (high_w, high_c), (low_w, low_c)
+
+
+def parse_akcp_sensor_temp(string_table: StringTable) -> Mapping[str, ProbeTempSensor]:
+    result = {}
     for (
         description,
         degree,
@@ -213,51 +288,85 @@ def check_akcp_sensor_temp(item: str, params: TempParamDict, section: Section) -
         high_crit,
         degreeraw,
         online,
-    ) in section:
-        if description == item:
-            # Online is set to "2" if sensor is offline
-            if online != "1":
-                yield Result(state=State.CRIT, summary="sensor is offline")
+    ) in string_table:
+        temperature, dev_unit, dev_levels, dev_levels_lower = _parse_temp_fields(
+            degree, unit, low_crit, low_warn, high_warn, high_crit, degreeraw
+        )
+        result[description] = ProbeTempSensor(
+            status=SensorProbeTempStatus(status),
+            temperature=temperature,
+            dev_unit=dev_unit,
+            dev_levels=dev_levels,
+            dev_levels_lower=dev_levels_lower,
+            online=online == "1",
+        )
+    return result
 
-            if status in ["1", "7"]:
-                state, state_name = akcp_sensor_level_states[status]
-                yield Result(state=State(state), summary=f"State: {state_name}")
 
-            # Unit "F" or "0" stands for Fahrenheit and "C" or "1" for Celsius
-            if unit.isdigit():
-                unit_normalised = "f" if unit == "0" else "c"
-                low_c, low_w, high_w, high_c = list(
-                    map(float, (low_crit, low_warn, high_warn, high_crit))
-                )
-            else:
-                unit_normalised = unit.lower()
-                if int(high_crit) > 100:
-                    # Devices with "F" or "C" have the levels in degrees * 10
-                    low_c, low_w, high_w, high_c = (
-                        float(t) / 10 for t in (low_crit, low_warn, high_warn, high_crit)
-                    )
-                else:
-                    low_c, low_w, high_w, high_c = (
-                        float(t) for t in (low_crit, low_warn, high_warn, high_crit)
-                    )
+def parse_akcp_temp(string_table: StringTable) -> Mapping[str, TemperatureSensor]:
+    result = {}
+    for (
+        description,
+        degree,
+        unit,
+        status,
+        low_crit,
+        low_warn,
+        high_warn,
+        high_crit,
+        degreeraw,
+        online,
+    ) in string_table:
+        temperature, dev_unit, dev_levels, dev_levels_lower = _parse_temp_fields(
+            degree, unit, low_crit, low_warn, high_warn, high_crit, degreeraw
+        )
+        result[description] = TemperatureSensor(
+            status=SensorTemperatureStatus(status),
+            temperature=temperature,
+            dev_unit=dev_unit,
+            dev_levels=dev_levels,
+            dev_levels_lower=dev_levels_lower,
+            online=online == "1",
+        )
+    return result
 
-            if degreeraw and degreeraw != "0":
-                temperature = float(degreeraw) / 10.0
-            elif not degree:
-                yield Result(state=State.UNKNOWN, summary="Temperature information not found")
-                return
-            else:
-                temperature = float(degree)
 
-            yield from check_temperature(
-                reading=temperature,
-                params=params,
-                unique_name=f"akcp_sensor_temp_{item}",
-                value_store=get_value_store(),
-                dev_unit=unit_normalised,
-                dev_levels=(high_w, high_c),
-                dev_levels_lower=(low_w, low_c),
-            )
+def discover_akcp_sensor_temp(section: TempSection) -> DiscoveryResult:
+    for description, sensor in section.items():
+        if sensor.online:
+            yield Service(item=description)
+
+
+def check_akcp_sensor_temp(item: str, params: TempParamDict, section: TempSection) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+    if not sensor.online:
+        yield Result(state=State.CRIT, summary="sensor is offline")
+
+    if sensor.status in (
+        SensorProbeTempStatus.NO_STATUS,
+        SensorTemperatureStatus.NO_STATUS,
+    ):
+        yield Result(state=State.CRIT, summary="State: no status")
+    elif sensor.status in (
+        SensorProbeTempStatus.SENSOR_ERROR,
+        SensorTemperatureStatus.SENSOR_ERROR,
+    ):
+        yield Result(state=State.CRIT, summary="State: sensor error")
+
+    if sensor.temperature is None:
+        yield Result(state=State.UNKNOWN, summary="Temperature information not found")
+        return
+
+    yield from check_temperature(
+        reading=sensor.temperature,
+        params=params,
+        unique_name=f"akcp_sensor_temp_{item}",
+        value_store=get_value_store(),
+        dev_unit=sensor.dev_unit,
+        dev_levels=sensor.dev_levels,
+        dev_levels_lower=sensor.dev_levels_lower,
+    )
 
 
 # .

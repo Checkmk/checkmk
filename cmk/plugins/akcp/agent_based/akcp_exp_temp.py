@@ -10,16 +10,12 @@ from cmk.plugins.akcp.lib_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
     discover_akcp_sensor_temp,
-    parse_akcp_sensor,
+    parse_akcp_temp,
 )
-
-# Example for contents of info
-#           description         degree unit status low_crit low_warn high_warn high_crit degreeraw online
-# ["Port 8 Temperatur CL Lager", "20", "C",   "5",   "10",    "20",    "30",     "40",      "0",     1]
 
 snmp_section_akcp_exp_temp = SimpleSNMPSection(
     name="akcp_exp_temp",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_temp,
     detect=DETECT_AKCP_EXP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.2.1",

@@ -316,13 +316,19 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     # IDS
     parser_ids = subparsers.add_parser(
         "ids",
-        help="Show the number of reserved werk IDs or reserve new werk IDs",
+        help="Show the number of reserved werk IDs (reserving via 'ids <NR>' is legacy-only, removed start of September 2026)",
     )
     parser_ids.add_argument(
         "count",
         nargs="?",
         type=int,
-        help="number of werks to reserve",
+        help=(
+            "number of werks to reserve. Only supported with the legacy "
+            "reservation mechanism. From the start of August 2026 on, reserving "
+            "werk IDs at or above 22003 is rejected; the mechanism will be "
+            "removed entirely at the start of September 2026, after which IDs "
+            "are reserved automatically."
+        ),
     )
     parser_ids.set_defaults(func=main_fetch_ids)
 

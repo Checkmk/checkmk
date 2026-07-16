@@ -43,16 +43,14 @@ class QuickSetupPage(CmkPage):
 
     @property
     def is_guided_mode(self) -> bool:
-        try:
-            expect(
-                self.guided_mode_button,
-                message="The class of the 'guided mode' button doesn't match "
-                "the pattern '.*selected.*'",
-            ).to_have_class(re.compile(".*selected.*"))
-        except ():
-            return False
-
-        return True
+        selected_mode_button = self.guided_mode_button.or_(self.overview_mode_button).and_(
+            self.main_area.locator("[class*='selected']")
+        )
+        expect(
+            selected_mode_button,
+            message="Neither the 'guided mode' nor the 'overview mode' button is selected",
+        ).to_have_count(1)
+        return "selected" in (self.guided_mode_button.get_attribute("class") or "")
 
     @property
     def is_overview_mode(self) -> bool:

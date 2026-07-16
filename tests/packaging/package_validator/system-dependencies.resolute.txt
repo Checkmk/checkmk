@@ -2,7 +2,6 @@
 libimagequant.so
 liblber.so
 libldap.so
-liblz4.so
 libsystemd.so
 libwebp.so
 libwebpdemux.so

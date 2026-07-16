@@ -664,7 +664,7 @@ allows = ["@ccc", "@trace"]
 allows = ["@ccc"]
 
 [components."cmk.crash_reporting"]
-allows = ["cmk.crash"]
+allows = ["cmk.ccc.site", "cmk.ccc.store", "cmk.ccc.version", "cmk.crash"]
 
 [components."cmk.crypto"]
 allows = ["@ccc"]

@@ -34,6 +34,7 @@ py_library(
     srcs = [
         "cmk/crash_reporting/__init__.py",
         "cmk/crash_reporting/_packaging.py",
+        "cmk/crash_reporting/cli.py",
         "cmk/crash_reporting/upload.py",
     ],
     data = [":crash_reporting_py_typed"],
@@ -41,6 +42,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":crash",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version",
         requirement("requests"),
     ],
 )
@@ -98,7 +102,6 @@ py_wheel(
 # This wheel is only used for providing the entry point "cmk-upload-crashes" from the .venv under
 # .venv/bin. We explicitly need to *not* add dependencies here because venv/IDE would take the
 # static wheels and not the editable sources from the repo which are included via sitecustomize.py.
-# The CLI implementation lands in Epic 2 (CMK-202); the entry point is wired here as a placeholder.
 py_wheel(
     name = "wheel_entrypoint_only",
     distribution = "cmk-crash-entrypoint",

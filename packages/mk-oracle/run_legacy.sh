@@ -18,12 +18,12 @@ mkdir -p "$MK_VARDIR" >/dev/null 2>&1
 # TNS_ADMIN defaults to MK_CONFDIR in the script (for sqlnet.ora)
 export TNS_ADMIN="${MK_CONFDIR}"
 
-export DB_USER="system"
-export DB_PASSWORD="${CI_ORA_TEST_PASSWORD}"
-export DB_HOST="${DB_HOST:-oracle-rocky-ci.lan.checkmk.net}"
-export DB_PORT="${DB_PORT:-1521}"
-export DB_SERVICE_NAME="${DB_SERVICE_NAME:-dbtest23}"
-export DB_SID="${DB_SID:-SID23}"
+# DB_* from the resolved endpoint (CI_ORA2_DB_TEST verbatim if set, else
+# the CI database from CI_ORA_TEST_PASSWORD, see db-endpoint.sh);
+# pre-set DB_* values win.
+. "${SCRIPT_DIR}/db-endpoint.sh"
+resolve_test_endpoint
+export_db_vars_from_endpoint
 export DB_SECTION="${DB_SECTION:-instance}"
 if [[ "${DB_SECTION}" == "all" ]]; then
     export INDIVIDUAL_SECTIONS="#SYNC_SECTIONS"

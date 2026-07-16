@@ -39,13 +39,29 @@ $work_dir = "$pwd"
 $cargo_toolchain = "1.90.0" # to be in sync with rust toolchain/bazel/etc
 $cargo_target = "x86_64-pc-windows-msvc"
 
-# Oracle Test Database Params
-$test_host = "oracle-rocky-ci.lan.checkmk.net"
-$test_port = 1521
-$test_service = "dbtest23"
-$test_instance = "_"
-$test_sid = "SID23"
-$test_user = "system"
+# Test database endpoints: constants shared with the bash runners.
+$db_endpoints = @{}
+Get-Content "$PSScriptRoot/test-db-endpoints.conf" -ErrorAction Stop | ForEach-Object {
+    if ($_ -match '^([a-z0-9_]+)=(.*)$') { $db_endpoints[$Matches[1]] = $Matches[2] }
+}
+
+# Export CI_ORA2_DB_TEST for the component tests: the PowerShell port of
+# resolve_test_endpoint in db-endpoint.sh. A pre-set CI_ORA2_DB_TEST is
+# used verbatim; otherwise the CI endpoint is constructed from
+# CI_ORA_TEST_PASSWORD.
+function Resolve-TestDbEndpoint {
+    if ([string]::IsNullOrEmpty($env:CI_ORA2_DB_TEST)) {
+        if ([string]::IsNullOrEmpty($env:CI_ORA_TEST_PASSWORD)) {
+            throw ("no test database configured; either set CI_ORA2_DB_TEST (full endpoint) " +
+                "or CI_ORA_TEST_PASSWORD (CI database)")
+        }
+        $e = $db_endpoints
+        $env:CI_ORA2_DB_TEST = "$($e.ci_host):$($e.ci_user):$($env:CI_ORA_TEST_PASSWORD):" +
+        "$($e.ci_port):$($e.ci_instance)::$($e.ci_service):$($e.ci_sid):_:"
+    }
+    $endpoint_host = $env:CI_ORA2_DB_TEST.Split(':')[0]
+    Write-Host "component tests use the database at $endpoint_host" -ForegroundColor Green
+}
 
 $packBuild = $false
 $packClippy = $false
@@ -281,14 +297,7 @@ try {
         # for local test you may add this
         # $env:CI_ORA1_DB_TEST="localhost:SYS:Oracle-dba:1521:XE:sysdba::_:_:"
         Write-Host "Component test!" -Foreground White
-        if ([string]::IsNullOrEmpty($env:CI_ORA_TEST_PASSWORD)) {
-            Write-Host "CI_ORA_TEST_PASSWORD is absent, component testing may fail" -ForegroundColor Red
-            exit 1
-        }
-        $pass = $env:CI_ORA_TEST_PASSWORD
-
-        $env:CI_ORA2_DB_TEST = "${test_host}:${test_user}:${pass}:${test_port}:${test_instance}::${test_service}:${test_sid}:_:"
-        Write-Host "CI_ORA2_DB_TEST set from CI_ORA_TEST_PASSWORD" -ForegroundColor Green
+        Resolve-TestDbEndpoint
 
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
     }

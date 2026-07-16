@@ -52,8 +52,10 @@ void main() {
                     variable: "SERVER",
                 ),
             ]) {
+                // The endpoint is constructed by run's resolve_test_endpoint
+                // from CI_ORA_TEST_PASSWORD; constants live in
+                // packages/mk-oracle/test-db-endpoints.conf.
                 sh("""
-                    CI_ORA2_DB_TEST="oracle-rocky-ci.lan.checkmk.net:system:$CI_ORA_TEST_PASSWORD:1521:_::dbtest23:SID23:_:" \
                     ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1 \
                     HOST_ADDRESS="$USER@$SERVER" \
                     TEST_BINARY_LOCAL_PATH=test_ora_sql_test \

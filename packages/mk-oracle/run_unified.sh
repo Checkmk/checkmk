@@ -11,12 +11,12 @@ PKG_DIR="${SCRIPT_DIR}/tests/regression/mk-oracle"
 export MK_CONFDIR="${PKG_DIR}/etc/check_mk"
 export MK_LOGDIR="${PKG_DIR}/var/log/check_mk_agent"
 
-# config setup
-export DB_USER="system"
-export DB_PASSWORD="${CI_ORA_TEST_PASSWORD}"
-export DB_HOST="${DB_HOST:-oracle-rocky-ci.lan.checkmk.net}"
-export DB_PORT="${DB_PORT:-1521}"
-export DB_SERVICE_NAME="${DB_SERVICE_NAME:-dbtest23}"
+# config setup: DB_* from the resolved endpoint (CI_ORA2_DB_TEST verbatim
+# if set, else the CI database from CI_ORA_TEST_PASSWORD, see
+# db-endpoint.sh); pre-set DB_* values win.
+. "${SCRIPT_DIR}/db-endpoint.sh"
+resolve_test_endpoint
+export_db_vars_from_endpoint
 export DB_SECTION="${DB_SECTION:-instance}"
 if [[ "${DB_SECTION}" == "all" ]]; then
     export INDIVIDUAL_SECTIONS="_unused"

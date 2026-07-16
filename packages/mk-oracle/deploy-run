@@ -15,9 +15,9 @@
 # other commands
 # ./deploy-run -l /tmp/plugins ./tests/files/test-local.yml user@machine-with-oracle --detect-sids
 # ./deploy-run ./tests/files/test-local.yml user@machine-with-oracle --version
-# using file with some variables:
-# DB_PORT=1521 DB_SID=SID23 DB_PASSWORD=$CI_ORA_TEST_PASSWORD ./deploy-run -o /opt/oracle23/u01/app/oracle/dbhome1 ./tests/files/test-template.yml rocky@ora-rocktest.dev.checkmk.net
-# DB_PORT=1522 DB_SID=SID19 DB_PASSWORD=$CI_ORA_TEST_PASSWORD ./deploy-run -o /opt/oracle23/u01/app/oracle/dbhome1 ./tests/files/test-template.yml rocky@ora-rocktest.dev.checkmk.net
+# using file with some variables (the target machine's port/SID and the
+# matching password come from your environment):
+# DB_PORT=1521 DB_SID=MYSID DB_PASSWORD=$MY_DB_PASSWORD ./deploy-run -o /opt/oracle23/u01/app/oracle/dbhome1 ./tests/files/test-template.yml user@machine-with-oracle
 
 set -euo pipefail
 

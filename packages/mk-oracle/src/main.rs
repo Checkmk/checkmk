@@ -58,6 +58,11 @@ async fn main() {
         if need_execution(args.as_slice()) {
             execute(config, environment).await
         } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None) {
+            // On Unix before spawning a new process we try to set ORACLE_HOME
+            // from the local instances and only if no suitable home is found
+            // fall back to the runtime detection over LD_LIBRARY_PATH.
+            // On Windows ORACLE_HOME is never set.
+            setup::try_add_oracle_home_to_env(&config, None, None);
             log::info!("Spawn new process");
             setup::spawn_new_process(args, old_path)
         } else {
@@ -86,6 +91,8 @@ async fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
     };
     let env_var_value = std::env::var(env_var).unwrap_or_default();
     log::info!("Current {env_var}={env_var_value}");
+    let oracle_home = std::env::var(setup::ORACLE_HOME_ENV_VAR).unwrap_or_default();
+    log::info!("Current {}={oracle_home}", setup::ORACLE_HOME_ENV_VAR);
     match config.exec(&environment).await {
         Ok(output) => {
             print!("{output}");

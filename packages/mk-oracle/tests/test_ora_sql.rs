@@ -2041,6 +2041,66 @@ mod find_sids {
     }
 }
 
+#[cfg(unix)]
+#[test]
+fn test_add_oracle_home_to_env() {
+    use mk_oracle::setup::try_add_oracle_home_to_env;
+    use mk_oracle::types::EnvVarName;
+
+    let make_env_var = |name: &str| Some(EnvVarName::from(name.to_string()));
+
+    // oratab with two instances: the home of the first doesn't exist,
+    // the home of the second does and contains a lib dir
+    let tmp_dir = tempfile::tempdir().expect("create temp dir");
+    let home = tmp_dir.path().join("dbhome");
+    std::fs::create_dir_all(home.join("lib")).expect("create home/lib");
+    let oratab_path = tmp_dir.path().join("oratab");
+    std::fs::write(
+        &oratab_path,
+        format!("BAD:/nonexistent/oracle/home:N\nXE:{}:Y\n", home.display()),
+    )
+    .expect("write oratab");
+    let oratab = oratab_path.to_str().unwrap().to_string();
+
+    let config_auto = OracleConfig::load_str(&make_config_with_use_host("auto")).unwrap();
+    let config_never = OracleConfig::load_str(&make_config_with_use_host("never")).unwrap();
+
+    // use_host_client "never" -> gated out, variable stays unset
+    let env_var = "_MK_TEST_ORACLE_HOME_GATED";
+    let result =
+        try_add_oracle_home_to_env(&config_never, Some(oratab.clone()), make_env_var(env_var));
+    assert!(result.is_none());
+    assert!(std::env::var(env_var).is_err());
+
+    // variable already set -> untouched, fall back to runtime detection
+    let env_var = "_MK_TEST_ORACLE_HOME_PRESET";
+    unsafe {
+        std::env::set_var(env_var, "/already/set");
+    }
+    let result =
+        try_add_oracle_home_to_env(&config_auto, Some(oratab.clone()), make_env_var(env_var));
+    assert!(result.is_none());
+    assert_eq!(std::env::var(env_var).unwrap(), "/already/set");
+
+    // "auto" -> the first suitable home is set: BAD doesn't exist, XE wins
+    let env_var = "_MK_TEST_ORACLE_HOME_SET";
+    let result = try_add_oracle_home_to_env(&config_auto, Some(oratab), make_env_var(env_var));
+    assert!(result.is_some());
+    assert_eq!(std::env::var(env_var).unwrap(), home.to_str().unwrap());
+
+    // no suitable home at all -> nothing set
+    let bad_oratab_path = tmp_dir.path().join("oratab_bad");
+    std::fs::write(&bad_oratab_path, "BAD:/nonexistent/oracle/home:N\n").expect("write oratab");
+    let env_var = "_MK_TEST_ORACLE_HOME_NO_HOME";
+    let result = try_add_oracle_home_to_env(
+        &config_auto,
+        Some(bad_oratab_path.to_str().unwrap().to_string()),
+        make_env_var(env_var),
+    );
+    assert!(result.is_none());
+    assert!(std::env::var(env_var).is_err());
+}
+
 // NOTE: Test mutates a process-wide environment variable. The unique prefix
 // `_MK_TEST_OCI_DIR` is to minimise collision risk with other parallel tests.
 #[test]

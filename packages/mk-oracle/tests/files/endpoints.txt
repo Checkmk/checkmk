@@ -5,24 +5,26 @@
 # 3. Environment variable like in 2., but with "CREDENTIALS_ONLY:" prefix. This will use the credentials
 #    part of the connection string for following endpoints, but not consider the connection for testing.
 #
-# Connection string format:
-# <hostname>:<user>:<password>:<port>:<instance>:<role>:<service_name>:<reserved>:<reserved>
+# Connection string format (CMK-23904; "_" marks an unset field, custom3 is reserved):
+# <hostname>:<user>:<password>:<port>:<instance>:<role>:<service_name>:<sid>:<custom3>
 #
 # You can also omit username and password. In this case, the username/password from the previous
 # connection will be reused.
-# <hostname>:::<port>:<instance>:<role>:<instance_name>:<reserved>:<service_name>:_:_:
+# <hostname>:::<port>:<instance>:<role>:<service_name>:<sid>:<custom3>
 #           ^^^ will be replaced with the user and password
 #
 # CI_ORA1_DB_TEST is used optionally.
-# It should follow to the rules above. It is assuned as a local connection endpoint.
-# Typically contains localhost:SYS:<password>:1521:XE::XE:_:_
+# It should follow to the rules above. It is assumed as a local connection endpoint.
+# Typically contains localhost:SYS:<password>:1521:XE:sysdba:XE:_:_
+# (SYS needs the sysdba role - Oracle refuses the connection with
+# ORA-28009 otherwise)
 #
 # Notes:
 # * Currently, CI_ORA2_DB_TEST must be constructed, since CI delivers only password.
 # * In case of specifying a string directly, DO NOT submit to git with credentials.
 # * service_name is mandatory for connection
-# * instance_name is required to check whether test correctly identifies the database
-# * service_name and instance_name can be the same
-# * you may set CI_ORA2_DB_TEST manually too#
+# * sid is required to check whether the test correctly identifies the database
+# * service_name and sid can be the same
+# * you may set CI_ORA2_DB_TEST manually too
 #
-$CI_ORA2_DB_TEST # typically "oracle-rocky-ci.lan.checkmk.net:<user>:<password>:1521:dbtest23::SID23:_:_"
+$CI_ORA2_DB_TEST # typically "oracle-rocky-ci.lan.checkmk.net:<user>:<password>:1521:_::dbtest23:SID23:_:"

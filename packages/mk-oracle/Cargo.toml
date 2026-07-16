@@ -46,8 +46,12 @@ is_elevated.workspace = true
 winapi = { workspace = true, features = [
   "accctrl",
   "aclapi",
+  "basetsd",
   "fileapi",
   "handleapi",
+  "lmaccess",
+  "lmapibuf",
+  "lmcons",
   "minwindef",
   "sddl",
   "securitybaseapi",

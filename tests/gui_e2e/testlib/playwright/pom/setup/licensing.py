@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+from re import Pattern
 from typing import override
 
-from playwright.sync_api import expect, Page
-from playwright.sync_api import TimeoutError as PWTimeoutError
+from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, url_suffix_regex
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
@@ -50,10 +50,20 @@ class Licensing(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
-    def get_named_value(self, key: str, default: str = "") -> str:
-        try:
-            key_element = self.main_area.locator(f'table th:has-text("{key}")')
-            value_element = key_element.locator("xpath=..").locator("td").first
-            return value_element.text_content() or default
-        except PWTimeoutError:
-            return default
+    def named_value(self, key: str) -> Locator:
+        """The value cell shown next to the `key` header."""
+        return self.main_area.locator(f'table tr:has(th:has-text("{key}"))').locator("td").first
+
+    def get_named_value(self, key: str) -> str:
+        """Read the value shown next to the `key` header."""
+        value_element = self.named_value(key)
+        expect(value_element, f"The '{key}' row is not shown on the licensing page").to_be_visible()
+        return value_element.text_content() or ""
+
+    def check_named_value(
+        self, key: str, expected: str | Pattern[str], ignore_case: bool = False
+    ) -> None:
+        """Wait until the value shown next to the `key` header matches `expected`."""
+        expect(self.named_value(key), f"Unexpected value of '{key}'").to_have_text(
+            expected, ignore_case=ignore_case
+        )

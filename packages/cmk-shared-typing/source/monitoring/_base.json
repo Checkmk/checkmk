@@ -17,6 +17,10 @@
       "items": { "$ref": "#/$defs/row_action" },
       "default": []
     },
+    "may_ignore_hard_limit": {
+      "type": "boolean",
+      "default": false
+    },
     "legacy_view_button": { "$ref": "page_link_button.json" }
   },
   "$defs": {

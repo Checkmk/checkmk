@@ -6,7 +6,9 @@
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
+from ._action_menu import ENDPOINT_GET_HOST_ACTION_MENU
 from ._family import MONITOR_HOSTS_FAMILY
+from ._host_overview import ENDPOINT_GET_HOST_OVERVIEW
 from ._list_hosts import ENDPOINT_LIST_HOSTS
 from ._reschedule import ENDPOINT_RESCHEDULE_CHECKS
 
@@ -14,6 +16,7 @@ from ._reschedule import ENDPOINT_RESCHEDULE_CHECKS
 def register_endpoints(
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
     endpoint_family_registry.register(
@@ -22,6 +25,12 @@ def register_endpoints(
 
     versioned_endpoint_registry.register(
         ENDPOINT_LIST_HOSTS, ignore_duplicates=ignore_duplicate_endpoints
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_GET_HOST_OVERVIEW, ignore_duplicates=ignore_duplicate_endpoints
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_GET_HOST_ACTION_MENU, ignore_duplicates=ignore_duplicate_endpoints
     )
     versioned_endpoint_registry.register(
         ENDPOINT_RESCHEDULE_CHECKS, ignore_duplicates=ignore_duplicate_endpoints

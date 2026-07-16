@@ -10,7 +10,9 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
+import datetime as dt
 from collections.abc import Sequence
+from pathlib import PurePosixPath
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -21,9 +23,19 @@ from cmk.livestatus_client import (
 )
 from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
-from cmk.livestatus_client.tables import Hosts, Status
+from cmk.livestatus_client.tables import Hosts
 
-from ._models import Host, HostFilter, HostSort, HostState, RescheduleTarget, ServiceCounts
+from ._exceptions import HostNotFoundError
+from ._models import (
+    Host,
+    HostFilter,
+    HostLabelValue,
+    HostOverview,
+    HostSort,
+    HostState,
+    RescheduleTarget,
+    ServiceCounts,
+)
 from ._sorting import host_sorter
 
 
@@ -34,12 +46,18 @@ class LiveStatusHostRepository:
     def fetch(
         self,
         *,
-        limit: int,
+        limit: int | None,
         query: str,
         sorters: Sequence[HostSort],
         filters: HostFilter,
     ) -> Sequence[Host]:
         query_ = _sanitize_query(query)
+        extra_headers = [
+            *filters.splitlines(),
+            _build_primary_sort(sorters),
+        ]
+        if limit is not None:
+            extra_headers.append(f"Limit: {limit}")
         q = Query(
             [
                 Hosts.name,
@@ -56,11 +74,7 @@ class LiveStatusHostRepository:
                 Hosts.scheduled_downtime_depth,
             ],
             _build_query_filter(query_),
-            extra_headers=[
-                *filters.splitlines(),
-                _build_primary_sort(sorters),
-                f"Limit: {limit}",
-            ],
+            extra_headers=extra_headers,
         )
 
         with detailed_connection(self._connection) as conn:
@@ -88,27 +102,85 @@ class LiveStatusHostRepository:
                 key=host_sorter(sorters),
             )
 
+    def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:
+        q = Query(
+            [
+                Hosts.name,
+                Hosts.alias,
+                Hosts.address,
+                Hosts.state,
+                Hosts.num_services,
+                Hosts.num_services_ok,
+                Hosts.num_services_warn,
+                Hosts.num_services_crit,
+                Hosts.num_services_unknown,
+                Hosts.num_services_pending,
+                Hosts.acknowledged,
+                Hosts.scheduled_downtime_depth,
+                Hosts.last_check,
+                Hosts.last_state_change,
+                Hosts.contact_groups,
+                Hosts.tags,
+                Hosts.labels,
+                Hosts.label_sources,
+                Hosts.custom_variables,
+                Hosts.filename,
+            ],
+            Hosts.name == hostname,
+        )
+        try:
+            row = q.fetchone(self._connection, True, only_site=SiteId(site_id))
+        except ValueError:
+            raise HostNotFoundError(f"Host {hostname!r} not found on site {site_id!r}") from None
+        return HostOverview(
+            name=row["name"],
+            alias=row["alias"],
+            address=row["address"],
+            state=HostState(row["state"]),
+            site_id=row["site"],
+            service_counts=ServiceCounts(
+                total=row["num_services"],
+                ok=row["num_services_ok"],
+                warn=row["num_services_warn"],
+                crit=row["num_services_crit"],
+                unknown=row["num_services_unknown"],
+                pending=row["num_services_pending"],
+            ),
+            acknowledged=bool(row["acknowledged"]),
+            in_downtime=row["scheduled_downtime_depth"] > 0,
+            last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
+            last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
+            customer=row["custom_variables"].get("CUSTOMER"),
+            folder=_wato_folder_from_filename(row["filename"]),
+            contact_groups=list(row["contact_groups"]),
+            tags=dict(row["tags"]),
+            labels={
+                key: HostLabelValue(value=value, source=row["label_sources"][key])
+                for key, value in row["labels"].items()
+            },
+        )
+
     def count_total(self) -> int:
-        q = Query([Status.num_hosts])
-        with detailed_connection(self._connection) as conn:
-            return sum(row["num_hosts"] for row in q.iterate(conn))
+        # Counted via ``Stats`` on the hosts table rather than the global ``status.num_hosts``
+        # counter so the ``AuthUser`` filter applies: a user without "see all" counts only the hosts
+        # they may see, while an unrestricted user still counts every host.
+        return self._count_hosts()
 
     def count_matched(self, *, query: str, filters: HostFilter) -> int:
-        # A filtered total can't be read from the ``status`` table. Count the matches server-side
-        # via ``Stats`` instead of transferring and counting every matching row. The ``Query`` class
-        # can't emit ``Stats`` headers yet, so the query is assembled by hand from the shared filter.
-        # The ``Stats`` count is the trailing column of each returned row; summing it across rows
-        # adds up the per-site counts.
-        query_ = _sanitize_query(query)
-        query_filter = (": ".join(line) for line in _build_query_filter(query_).render())
-        stats_query = "\n".join(
-            [
-                f"GET {Hosts.__tablename__}",
-                "Stats: state >= 0",
-                *query_filter,
-                *filters.splitlines(),
-            ]
+        # A filtered total can't be read from the ``status`` table, so the matches are counted
+        # server-side via ``Stats`` instead of transferring and counting every matching row. The
+        # ``Query`` class can't emit ``Stats`` headers yet, so the filter is assembled by hand.
+        query_filter = (
+            ": ".join(line) for line in _build_query_filter(_sanitize_query(query)).render()
         )
+        return self._count_hosts(extra_lines=[*query_filter, *filters.splitlines()])
+
+    def _count_hosts(self, *, extra_lines: Sequence[str] = ()) -> int:
+        # A ``Stats`` count on the hosts table. Runs under the connection's ``AuthUser`` filter, so a
+        # user without "see all" counts only the hosts they may see. The count is the trailing column
+        # of each returned row; summing across rows adds up the per-site counts. A raw ``Stats`` query
+        # returns untyped (string) columns, hence the explicit ``int`` conversion.
+        stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *extra_lines])
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
 
@@ -126,6 +198,15 @@ class LiveStatusHostActions:
                 ),
                 SiteId(target.site_id),
             )
+
+
+def _wato_folder_from_filename(filename: str) -> str | None:
+    path = PurePosixPath(filename)
+    if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
+        # Not managed via Setup, e.g. added directly to the monitoring core.
+        return None
+    folder = path.relative_to("/wato").parent
+    return "/" if folder == PurePosixPath(".") else f"/{folder}"
 
 
 def _sanitize_query(q: str) -> str:

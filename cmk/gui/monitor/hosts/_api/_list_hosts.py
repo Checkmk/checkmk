@@ -4,17 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from typing import Annotated, Self
-from urllib.parse import urlencode
 
 from annotated_types import Interval
 from pydantic import PlainValidator
 
 from cmk.gui import sites
-from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.versioned_endpoint import (
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -35,27 +34,16 @@ from .._models import (
 from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import FilterNode, parse_as_livestatus_filter
+from ._modes import build_host_modes, ModeInfo
 from ._validators import parse_host_search_query, parse_host_sort_options
 
-# NOTE: currently hardcoding these constraints. It's to be determined where these should come from,
-# e.g. global settings.
+# View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
+# never affect the legacy views.
 _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
 _DEFAULT_LIMIT = 1_000
 
 _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
-
-
-@api_model
-class ModeInfo:
-    icon_name: str = api_field(description="Icon to render for this mode", example="downtime")
-    link: str = api_field(
-        description="URL the mode icon links to",
-        example="view.py?view_name=downtimes_of_host&host=web-server-01",
-    )
-    title: str = api_field(
-        description="Tooltip shown for the mode icon", example="In scheduled downtime"
-    )
 
 
 @api_model
@@ -100,40 +88,16 @@ class HostEntry:
             num_services_crit=host.service_counts.crit,
             num_services_unknown=host.service_counts.unknown,
             num_services_pending=host.service_counts.pending,
-            modes=_build_host_modes(host),
+            modes=build_host_modes(host),
         )
-
-
-def _host_view_link(view_name: str, host: Host) -> str:
-    return "view.py?" + urlencode(
-        [("view_name", view_name), ("site", host.site_id), ("host", host.name)]
-    )
-
-
-def _build_host_modes(host: Host) -> list[ModeInfo]:
-    modes: list[ModeInfo] = []
-    if host.in_downtime:
-        modes.append(
-            ModeInfo(
-                icon_name="downtime",
-                link=_host_view_link("downtimes_of_host", host),
-                title=_("In scheduled downtime"),
-            )
-        )
-    if host.acknowledged:
-        modes.append(
-            ModeInfo(
-                icon_name="ack",
-                link=_host_view_link("host", host),
-                title=_("Problem acknowledged"),
-            )
-        )
-    return modes
 
 
 @api_model
 class HostsPageMeta:
-    limit: int = api_field(description="Requested page size", example=1000)
+    limit: int = api_field(
+        description="Applied row limit. 0 means no limit was applied (unlimited).",
+        example=1000,
+    )
     matched: int = api_field(description="Total matched hosts", example=42)
     total: int = api_field(description="Total number of hosts", example=1234)
 
@@ -146,10 +110,16 @@ class HostsResponse:
 
 @api_model
 class HostsRequestBody:
-    limit: Annotated[int, Interval(ge=_MIN_NUMBER_OF_HOSTS, le=_MAX_NUMBER_OF_HOSTS)] = api_field(
-        description="Number of hosts to return",
-        example=_DEFAULT_LIMIT,
-        default=_DEFAULT_LIMIT,
+    limit: Annotated[int, Interval(ge=_MIN_NUMBER_OF_HOSTS, le=_MAX_NUMBER_OF_HOSTS)] | None = (
+        api_field(
+            description=(
+                "Number of hosts to return. Pass null to remove the limit entirely; this requires "
+                "the 'general.ignore_hard_limit' permission and otherwise falls back to the maximum "
+                f"of {_MAX_NUMBER_OF_HOSTS}."
+            ),
+            example=_DEFAULT_LIMIT,
+            default=_DEFAULT_LIMIT,
+        )
     )
     sort: Annotated[
         list[HostSort] | ApiOmitted,
@@ -181,8 +151,6 @@ class HostsRequestBody:
 
 def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
-    user.need_permission("general.see_all")
-
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
     parsed_filters = (
@@ -193,17 +161,29 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
 
     return _handle_list_hosts(
         host_repo,
-        limit=body.limit,
+        limit=_resolve_limit(body.limit, may_remove_limit=user.may("general.ignore_hard_limit")),
         query="" if isinstance(body.q, ApiOmitted) else body.q,
         sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         filters=parsed_filters,
     )
 
 
+def _resolve_limit(requested: int | None, *, may_remove_limit: bool) -> int | None:
+    """Resolve the requested row limit into the one to actually apply.
+
+    A ``None`` request means "remove the limit". We only honor that for users allowed to ignore the
+    hard limit; everyone else is clamped to the safety ceiling. Numeric requests are already bounded
+    to the ceiling by the request schema, so they pass through unchanged.
+    """
+    if requested is None:
+        return None if may_remove_limit else _MAX_NUMBER_OF_HOSTS
+    return requested
+
+
 def _handle_list_hosts(
     host_repo: HostRepository,
     *,
-    limit: int = _DEFAULT_LIMIT,
+    limit: int | None = _DEFAULT_LIMIT,
     query: str = "",
     sorters: Sequence[HostSort] = _DEFAULT_SORT,
     filters: HostFilter = HostFilter(""),
@@ -215,16 +195,17 @@ def _handle_list_hosts(
         filters=filters,
     )
     total_host_count = host_repo.count_total()
-    matched_host_count = (
-        host_repo.count_matched(query=query, filters=filters)
-        if query or filters
-        else total_host_count
-    )
+    if limit is None:
+        matched_host_count = len(hosts)
+    elif query or filters:
+        matched_host_count = host_repo.count_matched(query=query, filters=filters)
+    else:
+        matched_host_count = total_host_count
 
     return HostsResponse(
         hosts=[HostEntry.from_domain(host) for host in hosts],
         meta=HostsPageMeta(
-            limit=limit,
+            limit=limit if limit is not None else 0,
             matched=matched_host_count,
             total=total_host_count,
         ),
@@ -238,18 +219,20 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
         method="post",
     ),
     permissions=EndpointPermissions(
+        # Declared for the permission tracker: inspected via user.may() during the request, but
+        # none is required.
         required=permissions.Undocumented(
             permissions.AnyPerm(
                 [
-                    permissions.Perm("general.see_all"),
-                    # NOTE: these two need to be included in order to make the REST API framework
-                    # happy. The "see_all" permission is the only one that is required to check.
+                    permissions.OkayToIgnorePerm("general.see_all"),
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                    permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
                 ]
             )
         )
     ),
     doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_hosts)},
 )

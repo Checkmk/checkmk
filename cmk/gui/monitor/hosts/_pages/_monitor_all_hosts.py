@@ -61,15 +61,6 @@ def _row_actions(config: Config) -> list[RowAction]:
                 url="wato.py?mode=object_parameters&host={host}",
             )
         )
-    if user.may("wato.download_agent_output"):
-        actions.append(
-            RowAction(
-                ident="download_agent_output",
-                title=_("Download agent output"),
-                icon="download",
-                url="fetch_agent_output.py?host={host}&type=agent&_start=1",
-            )
-        )
     return actions
 
 
@@ -112,8 +103,8 @@ class MonitorAllHostsPage(Page):
 
         make_header(
             html,
-            str(_PAGE_TITLE),
-            breadcrumb,
+            title=str(_PAGE_TITLE),
+            breadcrumb=breadcrumb,
             page_menu=_build_page_menu(breadcrumb),
             enable_main_page_scrollbar=False,
         )
@@ -127,11 +118,12 @@ class MonitorAllHostsPage(Page):
                         self._commands, user, _SUPPORTED_ACTIONS
                     ).as_models(),
                     row_actions=_row_actions(ctx.config),
+                    may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request, vars_=[("view_name", "allhosts")], filename="view.py"
                         ),
-                        title=_("Return to standard view"),
+                        title=_("Return to classic view"),
                     ),
                 )
             ),

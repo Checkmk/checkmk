@@ -204,6 +204,7 @@ CmkEndpointName = Literal[
     "cmk/edit_quick_setup",
     "cmk/delete_quick_setup",
     "cmk/list_filter_groups",
+    "cmk/host_action_menu",
 ]
 
 RestfulEndpointName = Literal[

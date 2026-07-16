@@ -19,10 +19,13 @@ def register(
     versioned_endpoint_registry: VersionedEndpointRegistry,
     page_registry: PageRegistry,
     command_registry: CommandRegistry,
+    *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
     register_endpoints(
-        endpoint_family_registry, versioned_endpoint_registry, ignore_duplicate_endpoints
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     register_pages(page_registry, command_registry)
     register_builtin("experimental_view_button", show_all_hosts_link_button)

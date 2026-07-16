@@ -2,43 +2,15 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
 
-from collections.abc import Sequence
+from cmk.gui.monitor.hosts._api._list_hosts import (
+    _handle_list_hosts,
+    _MAX_NUMBER_OF_HOSTS,
+    _resolve_limit,
+)
 
-from polyfactory.factories import DataclassFactory
-
-from cmk.gui.monitor.hosts._api._list_hosts import _build_host_modes, _handle_list_hosts
-from cmk.gui.monitor.hosts._models import Host, HostFilter, HostSort
-from cmk.gui.monitor.hosts._repositories import HostRepository
-
-
-class HostFactory(DataclassFactory[Host]):
-    __check_model__ = False
-
-
-def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
-    class HostFakeRepository:
-        def __init__(self) -> None:
-            self._hosts = [HostFactory.build() for _ in range(n_hosts)]
-
-        def fetch(
-            self,
-            *,
-            limit: int,
-            query: str,
-            sorters: Sequence[HostSort],
-            filters: HostFilter,
-        ) -> Sequence[Host]:
-            return self._hosts[:limit]
-
-        def count_total(self) -> int:
-            return len(self._hosts)
-
-        def count_matched(self, *, query: str, filters: HostFilter) -> int:
-            # Not implementing this as we don't need to test a fake implementation of this.
-            return self.count_total()
-
-    return HostFakeRepository()
+from .testlib import get_fake_host_repository
 
 
 def test_handle_list_hosts_limit_handling() -> None:
@@ -51,35 +23,32 @@ def test_handle_list_hosts_limit_handling() -> None:
     assert response.meta.matched == 10
 
 
+def test_handle_list_hosts_without_limit_returns_all() -> None:
+    host_repo = get_fake_host_repository(n_hosts=10)
+    response = _handle_list_hosts(host_repo, limit=None)
+
+    assert len(response.hosts) == 10
+    assert response.meta.limit == 0
+    assert response.meta.total == 10
+    assert response.meta.matched == 10
+
+
+@pytest.mark.parametrize(
+    ["requested", "may_remove_limit", "expected"],
+    [
+        pytest.param(1000, False, 1000, id="numeric passes through without permission"),
+        pytest.param(1000, True, 1000, id="numeric passes through with permission"),
+        pytest.param(None, True, None, id="no limit honored with permission"),
+        pytest.param(None, False, _MAX_NUMBER_OF_HOSTS, id="no limit clamped without permission"),
+    ],
+)
+def test_resolve_limit(requested: int | None, may_remove_limit: bool, expected: int | None) -> None:
+    assert _resolve_limit(requested, may_remove_limit=may_remove_limit) == expected
+
+
 def test_handle_list_hosts_state_label_conversion() -> None:
     host_repo = get_fake_host_repository(n_hosts=100)
     response = _handle_list_hosts(host_repo)
     host_states = [host.state for host in response.hosts]
 
     assert all(state in {"UP", "DOWN", "UNREACHABLE"} for state in host_states)
-
-
-def test_build_host_modes_none() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=False)
-    assert _build_host_modes(host) == []
-
-
-def test_build_host_modes_downtime() -> None:
-    host = HostFactory.build(in_downtime=True, acknowledged=False)
-    modes = _build_host_modes(host)
-
-    assert [mode.icon_name for mode in modes] == ["downtime"]
-    assert modes[0].link.startswith("view.py?")
-    assert "downtimes_of_host" in modes[0].link
-
-
-def test_build_host_modes_acknowledged() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=True)
-
-    assert [mode.icon_name for mode in _build_host_modes(host)] == ["ack"]
-
-
-def test_build_host_modes_downtime_and_acknowledged() -> None:
-    host = HostFactory.build(in_downtime=True, acknowledged=True)
-
-    assert [mode.icon_name for mode in _build_host_modes(host)] == ["downtime", "ack"]

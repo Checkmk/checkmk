@@ -13,6 +13,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.versioned_endpoint import (
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -109,5 +110,6 @@ ENDPOINT_RESCHEDULE_CHECKS = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=reschedule_checks)},
 )

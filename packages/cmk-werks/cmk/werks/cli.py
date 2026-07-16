@@ -1186,7 +1186,8 @@ def main_init() -> None:
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     while True:
         secret = getpass.getpass("Secret: ")
-        with paths.secret_file.open("w") as fp:
+        fd = os.open(paths.secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as fp:
             fp.write(secret)
 
         # Only migrate the legacy file once the secret is confirmed correct. A wrong

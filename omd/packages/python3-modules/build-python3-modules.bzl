@@ -98,6 +98,14 @@ build_cmd = """
 
     export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
 
+    # Force python-lz4 to compile its vendored lz4 sources statically instead of
+    # linking a system liblz4. python-lz4's setup.py links the system library when
+    # pkg-config finds one, so the shipped extension would otherwise depend on
+    # whatever liblz4 happens to be present in the build image (non-hermetic) -- and
+    # the resulting liblz4.so.1 runtime dependency is neither shipped nor declared in
+    # the package. Keeping lz4 self-contained avoids that. Only affects the lz4 module.
+    export PYLZ4_USE_SYSTEM_LZ4=0
+
     # rust-openssl uses pkg-config to find the openssl libraries (good idea). But pkg-config is broken in the bazel build environment.
     # Therefore we need to give it some pointers. Here is the logic to find the openssl libaries to link against.
     # https://github.com/sfackler/rust-openssl/blob/10cee24f49cd3f37da1dbf663ba67bca6728db1f/openssl-sys/build/find_normal.rs#L8

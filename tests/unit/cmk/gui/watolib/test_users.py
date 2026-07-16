@@ -21,6 +21,7 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser
 from cmk.gui.session_context import _UserContext, SuperUserContext
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
+from cmk.gui.userdb.userdata import UserDataDiff
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.site_changes import SiteChanges
@@ -29,6 +30,7 @@ from cmk.gui.watolib.users import (
     default_sites,
     delete_users,
     edit_user,
+    make_user_diff_text,
     remove_custom_attribute_from_all_users,
 )
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
@@ -452,3 +454,21 @@ def test_remove_custom_attribute_requires_permissions(sites: list[SiteId]) -> No
             use_git=False,
             pprint_value=False,
         )
+
+
+def test_audit_text_appends_changed_credentials() -> None:
+    diff = UserDataDiff('Value of "alias" changed.', credentials_changed=True)
+
+    assert make_user_diff_text(diff) == 'Value of "alias" changed.\nCredentials were changed.'
+
+
+def test_audit_text_reports_changed_credentials_alone() -> None:
+    diff = UserDataDiff("", credentials_changed=True)
+
+    assert make_user_diff_text(diff) == "Credentials were changed."
+
+
+def test_audit_text_reports_an_empty_diff_as_nothing_changed() -> None:
+    diff = UserDataDiff("", credentials_changed=False)
+
+    assert make_user_diff_text(diff) == "Nothing was changed."

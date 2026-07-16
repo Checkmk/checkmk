@@ -23,7 +23,13 @@ from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, Users, UserSp
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import add_internal_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
-from cmk.gui.userdb.userdata import UserAlreadyExistsError, UserData, UserDB, UserNotFoundError
+from cmk.gui.userdb.userdata import (
+    UserAlreadyExistsError,
+    UserData,
+    UserDataDiff,
+    UserDB,
+    UserNotFoundError,
+)
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
 from cmk.gui.watolib.audit_log import log_audit
@@ -182,7 +188,7 @@ def edit_user(
                 message="Modified user: %s" % user_id,
                 user_id=acting_user.id,
                 use_git=use_git,
-                diff_text=diff,
+                diff_text=make_user_diff_text(diff),
                 object_ref=make_user_object_ref(user_id),
             )
 
@@ -351,6 +357,14 @@ def remove_custom_attribute_from_all_users(
             pprint_value=pprint_value,
             call_users_saved_hook=True,
         )
+
+
+def make_user_diff_text(diff: UserDataDiff) -> str:
+    """Render a UserData diff for the audit log"""
+    messages = [diff.attribute_changes] if diff.attribute_changes else []
+    if diff.credentials_changed:
+        messages.append(_("Credentials were changed."))
+    return "\n".join(messages) or _("Nothing was changed.")
 
 
 def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:

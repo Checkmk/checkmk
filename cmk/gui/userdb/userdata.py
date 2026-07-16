@@ -5,9 +5,9 @@
 
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, fields
+from dataclasses import dataclass, fields
 from datetime import datetime
-from typing import Any, Literal, Self
+from typing import Any, ClassVar, Literal, Self
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -15,7 +15,7 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.gui.type_defs import LastLoginInfo, SessionId, SessionInfo, TwoFactorCredentials, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
-from cmk.utils.object_diff import make_diff_text
+from cmk.utils.object_diff import make_diff
 
 from ._user_attribute import UserAttribute
 from .store import load_users, update_user
@@ -34,8 +34,73 @@ class _MissingValueSentinel:
     None.
     """
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _MissingValueSentinel)
+
+    def __hash__(self) -> int:
+        return hash(type(self))
+
 
 MISSING = _MissingValueSentinel()
+
+
+@dataclass(frozen=True)
+class UserDataDiff:
+    """Stringified diff of two UserData objects.
+
+    `attribute_changes` describes the changed attributes and is empty if none changed. Changed
+    secrets, if any, are stripped from the diff. `credentials_changed` indicates if this happened.
+    """
+
+    _REDACTED_KEYS: ClassVar[tuple[str, ...]] = (
+        "password_hash",
+        "automation_secret",
+        "two_factor_credentials",
+    )
+    _HIDDEN_KEYS: ClassVar[tuple[str, ...]] = (
+        "session_info",
+        "user_scheme_serial",
+    )
+
+    attribute_changes: str
+    credentials_changed: bool
+
+    @classmethod
+    def between(cls, old: "UserData", new: "UserData") -> "UserDataDiff":
+        """Diff two userdata objects."""
+        return cls(
+            attribute_changes=make_diff(cls._diff_dict(old), cls._diff_dict(new)),
+            credentials_changed=any(
+                getattr(old, key) != getattr(new, key) for key in cls._REDACTED_KEYS
+            ),
+        )
+
+    @classmethod
+    def _diff_dict(cls, user: "UserData") -> dict[str, object]:
+        """Flat representation of the user data to diff on.
+
+        - omits MISSING sentinel fields
+        - omits secrets and internal values (_REDACTED_KEYS / _HIDDEN_KEYS)
+        - flattens CustomAttributes object
+        """
+        excluded = cls._REDACTED_KEYS + cls._HIDDEN_KEYS + ("custom_user_attributes",)
+        explicit_fields = {f.name for f in fields(user)}
+
+        result: dict[str, object] = {}
+        for field in fields(user):
+            if field.name in excluded:
+                continue
+            value = getattr(user, field.name)
+            if isinstance(value, _MissingValueSentinel):
+                continue
+            result[field.name] = value
+
+        for name, value in user.custom_user_attributes.attributes.items():
+            if name not in explicit_fields:
+                result[name] = value
+
+        return result
+
 
 type ShowModeType = Literal["default_show_less", "default_show_more", "enforce_show_more"]
 
@@ -55,7 +120,6 @@ class CustomAttributes:
         self.attributes[name] = value
 
     def __repr__(self) -> str:
-        # TODO: is this well behaved with the diff?
         return f"{self.attributes}"
 
     def __eq__(self, other: object) -> bool:
@@ -247,7 +311,7 @@ class UserData:
         user_attribute_specs: Sequence[tuple[str, UserAttribute]],
     ) -> Self:
         attrs = CustomAttributes(dict(user_attribute_specs))
-        for name, _ in user_attribute_specs:
+        for name, _attr in user_attribute_specs:
             attrs[name] = userspec.get(name)
 
         return cls(
@@ -299,13 +363,9 @@ class UserData:
             user_scheme_serial=userspec.get("user_scheme_serial", 1),
         )
 
-    def diff_text(self, other: Self) -> str:
-        """Diff to another userdata object. `other` is the new one."""
-        return make_diff_text(asdict(self), asdict(other))
-
-    def update_from(self, other: Self) -> str:
-        """Update self from another userdata object."""
-        diff = self.diff_text(other)
+    def update_from(self, other: Self) -> UserDataDiff:
+        """Update self from another userdata object, reporting what changed."""
+        diff = UserDataDiff.between(self, other)
         for field in fields(other):
             setattr(self, field.name, getattr(other, field.name))
         return diff
@@ -314,7 +374,7 @@ class UserData:
         self,
         userspec: UserSpec,
         user_attribute_specs: Sequence[tuple[str, UserAttribute]],
-    ) -> str:
+    ) -> UserDataDiff:
         """Update self from a userspec."""
         other = self.from_userspec(self.user_id, userspec, user_attribute_specs)
         return self.update_from(other)

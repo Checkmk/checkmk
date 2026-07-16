@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from itertools import chain
 
 from cmk.agent_based.v2 import (
@@ -25,33 +26,45 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType
 
 
-def discover_akcp_daisy_temp(section: Sequence[StringTable]) -> DiscoveryResult:
-    for _port, subport, name, _temp in chain.from_iterable(section):
+@dataclass(frozen=True, kw_only=True)
+class DaisyTempSensor:
+    subport: str
+    temperature: float
+
+
+DaisyTempSection = Mapping[str, DaisyTempSensor]
+
+
+def parse_akcp_daisy_temp(string_table: Sequence[StringTable]) -> DaisyTempSection:
+    return {
+        name: DaisyTempSensor(subport=subport, temperature=float(degreeraw) / 10)
+        for _oid_end, subport, name, degreeraw in chain.from_iterable(string_table)
+    }
+
+
+def discover_akcp_daisy_temp(section: DaisyTempSection) -> DiscoveryResult:
+    for name, sensor in section.items():
         # Ignore sensors that are found by the non-daisychaining-version of
         # this check (akcp_sensor_temp)
-        if subport not in ["-1", "0"]:
+        if sensor.subport not in ["-1", "0"]:
             yield Service(item=name)
 
 
 def check_akcp_daisy_temp(
-    item: str, params: TempParamType, section: Sequence[StringTable]
+    item: str, params: TempParamType, section: DaisyTempSection
 ) -> CheckResult:
-    for _port, _subport, name, rawtemp in chain.from_iterable(section):
-        if name == item:
-            temp = float(rawtemp) / 10
-            yield from check_temperature(
-                reading=temp,
-                params=params,
-                unique_name=item,
-                value_store=get_value_store(),
-            )
-
-
-def parse_akcp_daisy_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+    if (sensor := section.get(item)) is None:
+        return
+    yield from check_temperature(
+        reading=sensor.temperature,
+        params=params,
+        unique_name=item,
+        value_store=get_value_store(),
+    )
 
 
 snmp_section_akcp_daisy_temp = SNMPSection(
+    # SPAGENT-MIB sensorProbeTemperatureArrayPort<N> tables
     name="akcp_daisy_temp",
     detect=all_of(
         any_of(

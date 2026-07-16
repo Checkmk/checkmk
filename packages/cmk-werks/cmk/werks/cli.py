@@ -1202,6 +1202,11 @@ def main_init() -> None:
             migrate_werk_ids_file(paths)
             break
 
+    sys.stdout.write(
+        "Successfully migrated werk IDs. From now on the manual reservation of werk IDs is not "
+        "needed anymore, using 'werk new' is enough.\n"
+    )
+
 
 def main_blame(args: argparse.Namespace) -> None:
     wid = get_werk_arg(WerkId(args.id))

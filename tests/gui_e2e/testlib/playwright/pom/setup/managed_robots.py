@@ -128,7 +128,7 @@ class CreateManagedRobot(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
-        ManagedRobotsOverview(self.page).create_robot_button.click(timeout=5000)
+        ManagedRobotsOverview(self.page).create_robot_button.click()
         self.validate_page()
 
     @override

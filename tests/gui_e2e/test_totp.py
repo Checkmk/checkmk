@@ -15,7 +15,6 @@ from playwright.sync_api import BrowserContext, expect, Page
 from cmk.crypto.totp import TOTP
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
-from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
@@ -101,7 +100,7 @@ def test_totp_fail_login(
 
     wait_until(
         _validate_num_of_failed_login_mk,
-        timeout=TIMEOUT_ACTIVATE_CHANGES / 2,
+        timeout=60,
         interval=1,
         condition_name=f"Is '{Path(failed_logins_file).name}' updated?",
     )

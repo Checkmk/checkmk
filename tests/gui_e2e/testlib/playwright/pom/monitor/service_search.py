@@ -49,7 +49,7 @@ class ServiceSearchPage(CmkPage):
     def validate_page(self) -> None:
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(self.filter_sidebar.locator()).to_be_visible(timeout=5000)
+        expect(self.filter_sidebar.locator()).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:

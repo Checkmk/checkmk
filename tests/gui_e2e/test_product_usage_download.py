@@ -33,9 +33,9 @@ def test_product_usage_download(dashboard_page: MainDashboard) -> None:
     dashboard_page.page.wait_for_load_state("networkidle")
 
     download_link = global_settings.main_area.locator("a[href*='download_product_usage']")
-    download_link.wait_for(state="visible", timeout=10000)
+    download_link.wait_for(state="visible")
 
-    with dashboard_page.page.expect_download(timeout=30000) as download_info:
+    with dashboard_page.page.expect_download() as download_info:
         download_link.click()
 
     download = download_info.value

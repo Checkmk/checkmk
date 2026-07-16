@@ -67,7 +67,7 @@ def test_session_expiry_warning_and_logout(
         expect(
             session_page.session_warning_message,
             "Session expiration warning was not shown after 1 minute",
-        ).to_be_visible(timeout=5_000)
+        ).to_be_visible()
 
         logger.info("Waiting another minute for session to expire...")
         time.sleep(62)

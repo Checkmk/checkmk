@@ -8,18 +8,13 @@ from cmk.plugins.lib.akcp import DETECT_AKCP_EXP
 from cmk.plugins.lib.akcp_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
-    inventory_akcp_humidity,
-    parse_akcp_sensor,
+    discover_akcp_humidity,
+    parse_akcp_humidity,
 )
-
-# Example for contents of info
-#           description         percent  status  online
-# ["Port 8 Feuchte USV Raum A",  "38",    "5",    "1"]
-
 
 snmp_section_akcp_exp_humidity = SimpleSNMPSection(
     name="akcp_exp_humidity",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_humidity,
     detect=DETECT_AKCP_EXP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.3.1",
@@ -32,7 +27,7 @@ check_plugin_akcp_exp_humidity = CheckPlugin(
     name="akcp_exp_humidity",
     service_name="Humidity %s",
     check_function=check_akcp_humidity,
-    discovery_function=inventory_akcp_humidity,
+    discovery_function=discover_akcp_humidity,
     check_ruleset_name="humidity",
     check_default_parameters=AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
 )

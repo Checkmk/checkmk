@@ -185,11 +185,11 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
     def finish_button(self) -> Locator:
         return self.active_step.get_by_role("button", name=self.finish_button_label)
 
-    def wait_for_finalize_success(self, timeout_ms: int = 30_000) -> None:
-        expect(self.finish_button).to_be_visible(timeout=timeout_ms)
-        expect(self.finish_button).to_be_enabled(timeout=timeout_ms)
-        expect(self.success_alert).to_be_visible(timeout=timeout_ms)
-        expect(self.finalize_items_list).to_have_attribute("aria-busy", "false", timeout=timeout_ms)
+    def wait_for_finalize_success(self) -> None:
+        expect(self.finish_button).to_be_visible()
+        expect(self.finish_button).to_be_enabled()
+        expect(self.success_alert).to_be_visible()
+        expect(self.finalize_items_list).to_have_attribute("aria-busy", "false")
 
     def finish_and_go_to_activate_changes(self) -> None:
         self.click_and_wait_for_navigation(

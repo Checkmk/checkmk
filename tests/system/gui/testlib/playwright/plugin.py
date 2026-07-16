@@ -22,7 +22,7 @@ from playwright._impl._api_structures import StorageState
 from playwright.sync_api import BrowserContext, expect, Page
 from pytest_playwright import CreateContextCallback
 
-from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES
+from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES
 
 logger = logging.getLogger(__name__)
 
@@ -150,10 +150,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         CLI_ARGUMENT_GUI_TIMEOUT,
         dest=_DEST_GUI_TIMEOUT,
         type=positive_integer,
-        default=TIMEOUT_ACTIVATE_CHANGES,
+        default=TIMEOUT_EXPECT_CHANGES,
         help=(
             "Set the timeout for Playwright actions (in seconds)."
-            f" Default is {TIMEOUT_ACTIVATE_CHANGES}."
+            f" Default is {TIMEOUT_EXPECT_CHANGES}."
         ),
     )
 

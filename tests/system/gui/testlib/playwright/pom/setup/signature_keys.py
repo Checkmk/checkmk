@@ -14,7 +14,7 @@ from playwright.sync_api import expect, FilePayload, Locator
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
-from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES
+from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES
 from tests.testlib.common.utils import wait_until
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class SignatureKeysPage(CmkPage):
                 self.menu_agents_content.is_visible(),
             )[2],
             interval=1,
-            timeout=TIMEOUT_ACTIVATE_CHANGES,
+            timeout=TIMEOUT_EXPECT_CHANGES,
         )
 
     def _navigate_to_signature_keys(self) -> None:

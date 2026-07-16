@@ -13,7 +13,7 @@ from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
-from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
+from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES_MS
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -176,7 +176,7 @@ class CmkPage(LocatorHelper):
             trigger.click()
         event_info.value.wait_for_load_state("load")
 
-    def check_no_errors(self, timeout: float = TIMEOUT_ACTIVATE_CHANGES_MS / 4) -> None:
+    def check_no_errors(self, timeout: float = TIMEOUT_EXPECT_CHANGES_MS / 4) -> None:
         """Check that no errors are present on the page."""
         expect(
             self.main_area.locator("div.error"), message="Some errors are present on the page!"

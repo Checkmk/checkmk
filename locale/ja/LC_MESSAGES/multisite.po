@@ -63247,6 +63247,45 @@ msgstr "残りのスペースの正確な量が不明な場合、受容器の状
 msgid "State for specific bonding modes"
 msgstr "特定のボンディングモードの状態"
 
+#, fuzzy
+msgid "State for storcli2 status <i>Bad</i>"
+msgstr "<i>JBOD</i>の状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Failed</i>"
+msgstr "リンクの状態が変更された場合に通知する"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Good</i>"
+msgstr "<i>未構成の商品</i>の状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Missing</i>"
+msgstr "<i>残りの一部</i>の状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Offline</i>"
+msgstr "<i>オフライン</i>の状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Online</i>"
+msgstr "<i>オンライン</i>の状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Replace</i>"
+msgstr "<i>回復</i>状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Unknown</i>"
+msgstr "haローカル状態が不明な場合の状態"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Unusable</i>"
+msgstr "haローカル状態が無効な場合の状態"
+
+msgid "State for storcli2 status <i>Various</i>"
+msgstr ""
+
 msgid "State for unexpected number of interfaces"
 msgstr "予期しないインターフェイス数に関する状態"
 
@@ -69515,15 +69554,8 @@ msgstr ""
 "おいてピギーバック・ハブを有効化することはできません"
 
 #, fuzzy
-msgid ""
-"The placeholder <tt></tt> will be replaced by the original text of this "
-"field to match. Note that as an alternative, you may also use the rule "
-"<tt>Host name translation</tt> for incoming messages in the global settings "
-"of the EC to accomplish your task."
-msgstr ""
-"プレースホルダー<tt> \\0 </tt>は、一致するようにこのフィールド元のテキストに"
-"置き換えられます。別の方法として、ECのグローバル設定で受信メッセージのホスト"
-"名変換ルールを使用してタスクを実行することもできます。"
+msgid "The placeholder <tt>"
+msgstr "レプリケーションラグ"
 
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original message text. "
@@ -96369,6 +96401,17 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid ""
+#~ "The placeholder <tt></tt> will be replaced by the original text of this "
+#~ "field to match. Note that as an alternative, you may also use the rule "
+#~ "<tt>Host name translation</tt> for incoming messages in the global "
+#~ "settings of the EC to accomplish your task."
+#~ msgstr ""
+#~ "プレースホルダー<tt> \\0 </tt>は、一致するようにこのフィールド元のテキスト"
+#~ "に置き換えられます。別の方法として、ECのグローバル設定で受信メッセージのホ"
+#~ "スト名変換ルールを使用してタスクを実行することもできます。"
+
+#, fuzzy
 #~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 #~ msgstr "Aerohive HiveManager NG"
 
@@ -99793,9 +99836,6 @@ msgstr ""
 #, python-format
 #~ msgid "Started activate changes: %s"
 #~ msgstr "変更の有効化を開始しました: %s"
-
-#~ msgid "State for <i>some remaining</i>"
-#~ msgstr "<i>残りの一部</i>の状態"
 
 #~ msgid "State or Province Name"
 #~ msgstr "州または県の名前"

@@ -66619,6 +66619,45 @@ msgid "State for specific bonding modes"
 msgstr "Staat voor verwachte string mismatch"
 
 #, fuzzy
+msgid "State for storcli2 status <i>Bad</i>"
+msgstr "Staat voor <i>Online</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Failed</i>"
+msgstr "Laatste wijziging van de hoststatus"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Good</i>"
+msgstr "Staat voor <i>Niet-geconfigureerd goed</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Missing</i>"
+msgstr "Staat voor <i>sommige overgeblevenen</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Offline</i>"
+msgstr "Staat voor <i>Offline</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Online</i>"
+msgstr "Staat voor <i>Online</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Replace</i>"
+msgstr "Staat voor <i>herstel</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Unknown</i>"
+msgstr "Staat indien ha lokale staat onbekend is"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Unusable</i>"
+msgstr "State if ha local State is Disabled"
+
+msgid "State for storcli2 status <i>Various</i>"
+msgstr ""
+
+#, fuzzy
 msgid "State for unexpected number of interfaces"
 msgstr "Waarschuwing voor onverwachte actieve interface"
 
@@ -73177,16 +73216,8 @@ msgstr ""
 "voor uw master site"
 
 #, fuzzy
-msgid ""
-"The placeholder <tt></tt> will be replaced by the original text of this "
-"field to match. Note that as an alternative, you may also use the rule "
-"<tt>Host name translation</tt> for incoming messages in the global settings "
-"of the EC to accomplish your task."
-msgstr ""
-"De plaatsaanduiding <tt>0</tt> wordt vervangen door de oorspronkelijke tekst "
-"die overeenkomt. Merk op dat u als alternatief ook de regel "
-"Hostnaamvertaling voor Inkomende Berichten in de Globale Instellingen van de "
-"EC kunt gebruiken om uw taak te volbrengen."
+msgid "The placeholder <tt>"
+msgstr "Replicatievertraging"
 
 #, fuzzy
 msgid ""
@@ -101483,6 +101514,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid ""
+#~ "The placeholder <tt></tt> will be replaced by the original text of this "
+#~ "field to match. Note that as an alternative, you may also use the rule "
+#~ "<tt>Host name translation</tt> for incoming messages in the global "
+#~ "settings of the EC to accomplish your task."
+#~ msgstr ""
+#~ "De plaatsaanduiding <tt>0</tt> wordt vervangen door de oorspronkelijke "
+#~ "tekst die overeenkomt. Merk op dat u als alternatief ook de regel "
+#~ "Hostnaamvertaling voor Inkomende Berichten in de Globale Instellingen van "
+#~ "de EC kunt gebruiken om uw taak te volbrengen."
+
+#, fuzzy
 #~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 #~ msgstr "Aerohive HiveManager NG"
 
@@ -104745,9 +104788,6 @@ msgstr ""
 #, python-format
 #~ msgid "Started activate changes: %s"
 #~ msgstr "Begonnen met het activeren van veranderingen: %s"
-
-#~ msgid "State for <i>some remaining</i>"
-#~ msgstr "Staat voor <i>sommige overgeblevenen</i>"
 
 #~ msgid "State or Province Name"
 #~ msgstr "Staat of provincie Naam"

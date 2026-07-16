@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-14 19:01+0000\n"
+"PO-Revision-Date: 2026-07-15 13:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -3069,9 +3069,8 @@ msgstr "ASM - Genereller Instanzstatus"
 msgid "ASM - Processes"
 msgstr "ASM - Prozesse"
 
-#, fuzzy
 msgid "ASM Authentication"
-msgstr "SMTP-Authentifizierung"
+msgstr "ASM-Authentifizierung"
 
 msgid "ASM Disk Group"
 msgstr "ASM Festplattengruppe"
@@ -3079,17 +3078,14 @@ msgstr "ASM Festplattengruppe"
 msgid "ASM Disk Group (used space and growth)"
 msgstr "ASM Festplattengruppe (belegter Platz und Wachstum)"
 
-#, fuzzy
 msgid "ASM Password"
-msgstr "Passwort"
+msgstr "ASM-Passwort"
 
-#, fuzzy
 msgid "ASM Role"
-msgstr "Rolle"
+msgstr "ASM-Rolle"
 
-#, fuzzy
 msgid "ASM Username"
-msgstr "Benutzername"
+msgstr "ASM-Benutzername"
 
 msgid ""
 "ASM calculates the free space depending on free_mb or required mirror free "
@@ -6140,9 +6136,8 @@ msgstr "Alle Host- und Service-Wartungszeiten (einschließlich IDs)"
 msgid "All hosts"
 msgstr "Alle Hosts"
 
-#, fuzzy
 msgid "All hosts (experimental)"
-msgstr "Prometheus-Scraping (experimentell)"
+msgstr "Alle Hosts (experimentell)"
 
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
@@ -6544,9 +6539,9 @@ msgstr "Agentenzugriff über IP-Adressen beschränken"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Agentenzugriff über IP-Adressen beschränken (Linux, Windows)"
 
-#, fuzzy
 msgid "Allowed characters are letters, digits, underscores, and hyphens."
-msgstr "Hier nur Kleinbuchstaben, Ziffern und Unterstriche verwenden."
+msgstr ""
+"Zulässige Zeichen sind Buchstaben, Ziffern, Unterstriche und Bindestriche."
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "Erlaubte Dauer seit der letzten NTPMessage"
@@ -23073,9 +23068,8 @@ msgstr "Graphensammlung bearbeiten"
 msgid "Edit graph tuning"
 msgstr "Graph-Tuning bearbeiten"
 
-#, fuzzy
 msgid "Edit host"
-msgstr "Diesen Host bearbeiten"
+msgstr "Host bearbeiten"
 
 msgid "Edit host attribute"
 msgstr "Host-Attribute bearbeiten"
@@ -35081,9 +35075,8 @@ msgstr "Im Verhältnis zum normalen Checkintervall"
 msgid "In relation to standard deviation"
 msgstr "im Verhältnis zur Standardabweichung"
 
-#, fuzzy
 msgid "In scheduled downtime"
-msgstr "Wartungszeiten ignorieren"
+msgstr "In Wartungszeit"
 
 msgid "In service details"
 msgstr "In den Service-Details"
@@ -56441,9 +56434,8 @@ msgstr ""
 "Subskriptions-ID nicht benötigt wird, wenn Sie nur Ressourcen über die Graph-"
 "API überwachen wollen."
 
-#, fuzzy
 msgid "Return to standard view"
-msgstr "im Verhältnis zur Standardabweichung"
+msgstr "Zurück zur Standardansicht"
 
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
@@ -63517,6 +63509,45 @@ msgstr ""
 msgid "State for specific bonding modes"
 msgstr "Zustand für spezifische Bindungsarten"
 
+#, fuzzy
+msgid "State for storcli2 status <i>Bad</i>"
+msgstr "Zustand für <i>JBOD</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Failed</i>"
+msgstr "Zustand, wenn der Link-Status sich geändert hat"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Good</i>"
+msgstr "Zustand bei <i>Unconfigured Good</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Missing</i>"
+msgstr "Status bei <i>some remaining</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Offline</i>"
+msgstr "Zustand bei <i>Offline</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Online</i>"
+msgstr "Zustand bei <i>Online</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Replace</i>"
+msgstr "Zustand bei <i>Recovery</i>"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Unknown</i>"
+msgstr "Zustand, wenn HA-Local-Zustand unbekannt ist"
+
+#, fuzzy
+msgid "State for storcli2 status <i>Unusable</i>"
+msgstr "Zustand, wenn HA-Local-Zustand deaktiviert ist"
+
+msgid "State for storcli2 status <i>Various</i>"
+msgstr ""
+
 msgid "State for unexpected number of interfaces"
 msgstr "Zustand für unerwartete Anzahl an Schnittstellen"
 
@@ -70085,16 +70116,9 @@ msgstr ""
 "Der Piggyback-Hub kann nicht für eine Remote-Instanz aktiviert werden, wenn "
 "er für die Zentralinstanz deaktiviert ist"
 
-msgid ""
-"The placeholder <tt></tt> will be replaced by the original text of this "
-"field to match. Note that as an alternative, you may also use the rule "
-"<tt>Host name translation</tt> for incoming messages in the global settings "
-"of the EC to accomplish your task."
-msgstr ""
-"Der Platzhalter <tt></tt> wird durch den für dieses Feld ursprünglich "
-"zutreffenden Text ersetzt. Beachten Sie, dass Sie alternativ auch die Regel "
-"<tt>Host-Namenübersetzung</tt> für eingehende Meldungen in den globalen "
-"Einstellungen der EC verwenden können, um Ihre Aufgabe zu erfüllen."
+#, fuzzy
+msgid "The placeholder <tt>"
+msgstr "Platzhalter für Beziehungen"
 
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original message text. "
@@ -76652,9 +76676,8 @@ msgstr ""
 "Diese Variable ist in den <a href=\"%s\">Globalen Einstellungen</a> "
 "konfiguriert."
 
-#, fuzzy
 msgid "This view"
-msgstr "Diese Ansicht als PDF"
+msgstr "Diese Ansicht"
 
 msgid "This view as PDF"
 msgstr "Diese Ansicht als PDF"
@@ -92749,9 +92772,8 @@ msgstr "Element entfernen"
 msgid "Clear search"
 msgstr "Suche leeren"
 
-#, fuzzy
 msgid "Could not load this content."
-msgstr "Sie können diese Verbindung nicht löschen."
+msgstr "Dieser Inhalt konnte nicht geladen werden."
 
 msgid "filter"
 msgstr "Filter"
@@ -92768,68 +92790,53 @@ msgstr "Fertigstellen"
 msgid "Guided"
 msgstr "Geführt"
 
-#, fuzzy
 msgid "Save date"
-msgstr "Beispiel-Datum"
+msgstr "Datum speichern"
 
-#, fuzzy
 msgid "Choose a date"
-msgstr "Alle auswählen"
+msgstr "Ein Datum auswählen"
 
-#, fuzzy
 msgid "Save date & time"
-msgstr "Tag und Zeit des Ereignisses"
+msgstr "Tag & Zeit speichern"
 
-#, fuzzy
 msgid "Choose date & time"
-msgstr "Tag und Zeit anzeigen"
+msgstr "Tag & Zeit auswählen"
 
-#, fuzzy
 msgid "Choose a time"
-msgstr "Alle auswählen"
+msgstr "Eine Zeit auswählen"
 
 msgid "Range reordered: start %{start}, end %{end}"
 msgstr ""
 
-#, fuzzy
 msgid "Save range"
-msgstr "Änderungen speichern"
+msgstr "Bereich speichern"
 
-#, fuzzy
 msgid "Enter a complete start and end"
-msgstr "Reklassifizierung des kompletten Zustands"
+msgstr ""
 
-#, fuzzy
 msgid "Choose a date & time range"
-msgstr "Datums- & Zeitraum"
+msgstr "Datum & Zeitraum auswählen"
 
-#, fuzzy
 msgid "From date"
-msgstr "Erstelldatum"
+msgstr "Ab dem Datum"
 
-#, fuzzy
 msgid "From time"
-msgstr "keine Zeit"
+msgstr "Ab der Zeit"
 
-#, fuzzy
 msgid "To date"
-msgstr "Keine Daten"
+msgstr "Bis zum Datum"
 
-#, fuzzy
 msgid "To time"
-msgstr "keine Zeit"
+msgstr "Bis zur Zeit"
 
-#, fuzzy
 msgid "Quick range presets"
-msgstr "TCP-Ziel-Resets"
+msgstr ""
 
-#, fuzzy
 msgid "Start time"
-msgstr "Starttyp"
+msgstr "Startzeit"
 
-#, fuzzy
 msgid "End time"
-msgstr "keine Zeit"
+msgstr "Endzeit"
 
 msgid "Timezone:"
 msgstr "Zeitzone:"
@@ -92837,52 +92844,41 @@ msgstr "Zeitzone:"
 msgid "Current server time:"
 msgstr "Aktuelle Serverzeit:"
 
-#, fuzzy
 msgid "Unknown Timezone"
-msgstr "Unbekannter Fehler"
+msgstr "Unbekannte Zeitzone"
 
-#, fuzzy
 msgid "Previous month"
-msgstr "Vorheriger Schritt"
+msgstr "Vorheriger Monat"
 
-#, fuzzy
 msgid "Next month"
-msgstr "Letzter Monat"
+msgstr "Nächster Monat"
 
-#, fuzzy
 msgid "not set"
-msgstr "nicht vorhanden"
+msgstr "nicht festgelegt"
 
-#, fuzzy
 msgid "Timezone"
 msgstr "Zeitzone"
 
-#, fuzzy
 msgid "Save & apply"
-msgstr "Speichern & bearbeiten"
+msgstr "Speichern & anwenden"
 
 msgid "Saving…"
 msgstr "Wird gespeichert…"
 
-#, fuzzy
 msgid "Open calendar"
-msgstr "OpenVPN-Klienten"
+msgstr "Kalender öffnen"
 
-#, fuzzy
 msgid "Open time selector"
-msgstr "Ereignis-Auswahl"
+msgstr "Zeit-Auswahl öffnen"
 
-#, fuzzy
 msgid "Empty"
-msgstr "leer"
+msgstr "Leer"
 
-#, fuzzy
 msgid "AM or PM"
-msgstr " oder "
+msgstr ""
 
-#, fuzzy
 msgid "Time selection"
-msgstr "Dateiauswahl"
+msgstr "Zeitauswahl"
 
 msgid "required"
 msgstr "erforderlich"
@@ -96081,33 +96077,26 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
-#, fuzzy
 msgid "Modes"
-msgstr "Modems"
+msgstr "Modi"
 
-#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Anzahl von Services im Zustand OK"
 
-#, fuzzy
 msgid "Number of services in warning state"
-msgstr "Anzahl von Services im Zustand OK"
+msgstr "Anzahl von Services im Zustand WARNING"
 
-#, fuzzy
 msgid "Number of services in critical state"
-msgstr "Anzahl von Services im Zustand OK"
+msgstr "Anzahl von Services im Zustand CRITICAL"
 
-#, fuzzy
 msgid "Number of services in unknown state"
-msgstr "Anzahl von Services im Zustand OK"
+msgstr "Anzahl von Services im Zustand UNKNOWN"
 
-#, fuzzy
 msgid "Number of services in pending state"
-msgstr "Anzahl von Services im Zustand OK"
+msgstr "Anzahl von Services im Zustand PENDING"
 
-#, fuzzy
 msgid "Unhandled Problems"
-msgstr "Unbehandelte Hostprobleme"
+msgstr "Unbehandelte Probleme"
 
 msgid "Give feedback on the new view"
 msgstr ""
@@ -96115,13 +96104,11 @@ msgstr ""
 msgid "Search hosts…"
 msgstr "Hosts suchen…"
 
-#, fuzzy
 msgid "Reset all filters"
-msgstr "Generelle Filter"
+msgstr "Alle Filter zurücksetzen"
 
-#, fuzzy
 msgid "Select host %{name}"
-msgstr "(Host auswählen)"
+msgstr "Host %{name} auswählen"
 
 msgid ""
 "An at-a-glance summary of %{host} will appear here, bringing the key host "
@@ -96131,20 +96118,17 @@ msgstr ""
 msgid "Host details (name, alias, primary IP address, site, folder)"
 msgstr ""
 
-#, fuzzy
 msgid "Service summary with a state visualization"
-msgstr "In der BI-Visualisierung angezeigtes Service-Hover-Menü"
+msgstr "Serviceübersicht mit Visualisierung des Zustands"
 
-#, fuzzy
 msgid "Contact groups and tags"
-msgstr "Kontaktgruppen"
+msgstr "Kontaktgruppen und -merkmale"
 
 msgid "Labels (discovered and explicit)"
 msgstr ""
 
-#, fuzzy
 msgid "Relations placeholder"
-msgstr "Replikationsverzögerung"
+msgstr "Platzhalter für Beziehungen"
 
 msgid "This action runs immediately and has no further options."
 msgstr ""
@@ -96170,33 +96154,27 @@ msgid ""
 "it "
 msgstr ""
 
-#, fuzzy
 msgid "Choose an expiry date & time"
-msgstr "Kommentarablaufzeit"
+msgstr "Wählen Sie ein Ablaufdatum und eine Ablaufzeit aus"
 
-#, fuzzy
 msgid "Ignore status changes until the host recovers (OK/UP)"
-msgstr "Wenn sich der Zustand ändert ODER beim Recovery (OK/UP)"
+msgstr "Statusänderungen ignorieren, bis der Host wieder verfügbar ist (OK/UP)"
 
-#, fuzzy
 msgid "Persistent comment"
-msgstr "Persistente Verbindung"
+msgstr "Dauerhafter Kommentar"
 
-#, fuzzy
 msgid "Notify affected users"
-msgstr "Alle Benutzer alarmieren"
+msgstr "Betroffene Benutzer benachrichtigen"
 
-#, fuzzy
 msgid "Added a comment to %{count} host"
 msgid_plural "Added a comment to %{count} hosts"
-msgstr[0] "Kommentar/Beschreibung für Host hinzufügen"
-msgstr[1] "Kommentar/Beschreibung für Host hinzufügen"
+msgstr[0] "Einen Kommentar für %{count} Host hinzugefügt"
+msgstr[1] "Einen Kommentar für %{count} Hosts hinzugefügt"
 
-#, fuzzy
 msgid "Successfully rescheduled the check for %{count} host"
 msgid_plural "Successfully rescheduled the checks for %{count} hosts"
-msgstr[0] "%d Hosts wurden erfolgreich entfernt"
-msgstr[1] "%d Hosts wurden erfolgreich entfernt"
+msgstr[0] "Der Check für %{count} Host wurde erfolgreich neu eingeplant"
+msgstr[1] "Die Checks für %{count} Hosts wurden erfolgreich neu eingeplant"
 
 msgid "Could not reschedule the checks for the selected hosts."
 msgstr ""
@@ -96212,29 +96190,23 @@ msgstr ""
 msgid "Schedule host downtime"
 msgstr "Host-Wartungszeit planen"
 
-#, fuzzy
 msgid "Please choose a downtime duration greater than zero."
-msgstr ""
-"Bitte wählen Sie die Quelle von der Sie die Wiederherstellung ausführen "
-"wollen."
+msgstr "Bitte wählen Sie eine Wartungszeitdauer größer als Null."
 
-#, fuzzy
 msgid "Successfully scheduled a downtime for %{count} host"
 msgid_plural "Successfully scheduled a downtime for %{count} hosts"
-msgstr[0] "Wartungszeit für Host planen"
-msgstr[1] "Wartungszeit für Host planen"
+msgstr[0] "Eine Wartungszeit für %{count} Host wurde erfolgreich eingeplant"
+msgstr[1] "Eine Wartungszeit für %{count} Hosts wurde erfolgreich eingeplant"
 
-#, fuzzy
 msgid "Could not schedule the downtime for the selected hosts."
-msgstr "Der Host bzw. Service muss einen der ausgewählten Kontakte haben."
+msgstr ""
+"Die Wartungszeit für die ausgewählten Hosts konnte nicht geplant werden."
 
-#, fuzzy
 msgid "Custom time range"
-msgstr "Zeitraum anpassen"
+msgstr "Benutzerdefinierter Zeitraum"
 
-#, fuzzy
 msgid "Ad hoc"
-msgstr "Host hinzufügen"
+msgstr "Ad hoc"
 
 msgid "4 h"
 msgstr ""
@@ -96251,9 +96223,8 @@ msgstr "Geplante Wartungszeiten führen zu einer planmäßigen Wartung der Hosts
 msgid "Alerts and notifications will be paused."
 msgstr "Alerts und Benachrichtigungen werden pausiert."
 
-#, fuzzy
 msgid "Downtime time range"
-msgstr "Aktiver Zeitraum"
+msgstr "Zeitraum der Wartungszeit"
 
 msgid "From now, for"
 msgstr ""
@@ -96261,9 +96232,8 @@ msgstr ""
 msgid "Scheduled downtime has a duration of %{duration} starting now."
 msgstr ""
 
-#, fuzzy
 msgid "Advanced option"
-msgstr "Erweiterte Optionen"
+msgstr "Erweiterte Option"
 
 msgid "Only for hosts: Set child hosts in downtime."
 msgstr "Nur für Hosts: Child-Hosts in Wartungszeit setzen."
@@ -96275,23 +96245,19 @@ msgstr ""
 "Wartungszeit nur starten, wenn der Host auf DOWN/UNREACHABLE geht zwischen "
 "der definierten Start- "
 
-#, fuzzy
 msgid "%{count} host selected"
 msgid_plural "%{count} hosts selected"
-msgstr[0] "Nicht ausgewählt"
-msgstr[1] "Nicht ausgewählt"
+msgstr[0] "%{count} Host wurde ausgewählt"
+msgstr[1] "%{count} Hosts wurden ausgewählt"
 
-#, fuzzy
 msgid "Actions for selected hosts"
-msgstr "Für ausgewählte Hosts"
+msgstr "Aktionen für ausgewählte Hosts"
 
-#, fuzzy
 msgid "More actions"
-msgstr "Mehr Optionen"
+msgstr "Mehr Aktionen"
 
-#, fuzzy
 msgid "Stale state"
-msgstr "alle Zustände"
+msgstr "Veralteter Zustand"
 
 msgid "Only number values are allowed."
 msgstr "Es sind nur Zahlen erlaubt."
@@ -96299,34 +96265,27 @@ msgstr "Es sind nur Zahlen erlaubt."
 msgid "The lower bound must not exceed the upper bound."
 msgstr "Die Untergrenze muss kleiner sein als die Obergrenze."
 
-#, fuzzy
 msgid "Filter values"
-msgstr "Filter Ansicht"
+msgstr "Werte filtern"
 
-#, fuzzy
 msgid "Select all"
-msgstr "Alle ansehen"
+msgstr "Alle auswählen"
 
-#, fuzzy
 msgid "No matching values"
-msgstr "Keine passenden Host-Namen"
+msgstr "Keine passenden Werte"
 
-#, fuzzy
 msgid "Clear"
-msgstr "Bereinigt"
+msgstr "Leeren"
 
 msgid "Any (>0)"
 msgstr ""
 
-#, fuzzy
 msgid "None (=0)"
-msgstr "Keine (linear)"
+msgstr "Keine (=0)"
 
-#, fuzzy
 msgid "No results for your combination of search and filter settings."
 msgstr ""
-"Kein Benutzerobjekt zur Synchronisation gefunden. Bitte prüfen Sie Ihre "
-"Filtereinstellungen."
+"Keine Ergebnisse für Ihre Kombination aus Such- und Filtereinstellungen."
 
 msgid "No results found for your active filters."
 msgstr "Für Ihre aktiven Filter wurden keine Ergebnisse gefunden."
@@ -96349,9 +96308,8 @@ msgstr ""
 msgid "Total rows: %{total}"
 msgstr "Gesamtzahl der Zeilen: %{total}"
 
-#, fuzzy
 msgid "Select all rows"
-msgstr "Alle Checkboxen auswählen"
+msgstr "Alle Zeilen auswählen"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -97332,6 +97290,18 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid ""
+#~ "The placeholder <tt></tt> will be replaced by the original text of this "
+#~ "field to match. Note that as an alternative, you may also use the rule "
+#~ "<tt>Host name translation</tt> for incoming messages in the global "
+#~ "settings of the EC to accomplish your task."
+#~ msgstr ""
+#~ "Der Platzhalter <tt></tt> wird durch den für dieses Feld ursprünglich "
+#~ "zutreffenden Text ersetzt. Beachten Sie, dass Sie alternativ auch die "
+#~ "Regel <tt>Host-Namenübersetzung</tt> für eingehende Meldungen in den "
+#~ "globalen Einstellungen der EC verwenden können, um Ihre Aufgabe zu "
+#~ "erfüllen."
 
 #~ msgid ""
 #~ "Allowed characters are word characters (letters, digits, underscores), "
@@ -100862,9 +100832,6 @@ msgstr ""
 #, python-format
 #~ msgid "Started activate changes: %s"
 #~ msgstr "Änderungen aktivieren begonnen: %s"
-
-#~ msgid "State for <i>some remaining</i>"
-#~ msgstr "Status bei <i>some remaining</i>"
 
 #~ msgid "State or Province Name"
 #~ msgstr "Staat oder Provinz"

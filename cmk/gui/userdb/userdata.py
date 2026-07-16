@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Generator, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
 from datetime import datetime
@@ -20,7 +20,7 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.utils.object_diff import make_diff
 
 from ._user_attribute import UserAttribute
-from .store import load_users, update_user
+from .store import load_users, save_users, update_user
 
 
 class UserNotFoundError(KeyError): ...
@@ -438,3 +438,35 @@ class UserDB:
             datetime.now(),
             pprint_value=self.pprint_value,
         )
+
+    def delete_users(self, user_ids: Sequence[UserId]) -> Mapping[UserId, UserData]:
+        """Delete the given users from the database.
+
+        Returns the data of the deleted users (e.g. for logging purposes).
+        Raises UserNotFoundError if any of the users doesn't exist.
+        """
+        if not user_ids:
+            return {}
+
+        users: dict[UserId, UserSpec] = load_users(lock=True)
+        if missing := set(user_ids) - users.keys():
+            raise UserNotFoundError(f"Unknown users: {', '.join(sorted(missing))}")
+
+        deleted = {
+            user_id: UserData.from_userspec(user_id, users[user_id], self.custom_user_attributes)
+            for user_id in user_ids
+        }
+
+        # use `deleted`, as `user_ids` could contain duplicates
+        for user_id in deleted:
+            del users[user_id]
+
+        save_users(
+            users,
+            self.custom_user_attributes,
+            self.user_connections,
+            datetime.now(),
+            pprint_value=self.pprint_value,
+            call_users_saved_hook=True,
+        )
+        return deleted

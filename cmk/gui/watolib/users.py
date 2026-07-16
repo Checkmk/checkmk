@@ -87,64 +87,56 @@ def delete_users(
 ) -> tuple[list[UserId], dict[UserId, list[EventRule]]]:
     acting_user.need_permission("wato.users")
     acting_user.need_permission("wato.edit")
+
     if user.id in users_to_delete:
         raise MKUserError(None, _("You cannot delete your own account!"))
 
-    all_users = userdb.load_users(lock=True)
+    try:
+        userdb = UserDB(user_attributes, user_connections, pprint_value=pprint_value)
+        deleted = userdb.delete_users(users_to_delete)
+    except UserNotFoundError as e:
+        raise MKUserError(None, _("Cannot delete unknown user")) from e
 
-    deleted_users = []
     affected_sites: _AffectedSites = set()
     all_rules = NotificationRuleConfigFile().load_for_reading()
     users_used_in_notification_rule: dict[UserId, list[EventRule]] = {}
-    for entry in users_to_delete:
-        if entry in all_users:  # Silently ignore not existing users
-            if used_in_rules := _user_used_in_notification_rule(all_rules, entry):
-                users_used_in_notification_rule.setdefault(entry, used_in_rules)
-            deleted_users.append(entry)
-            affected_sites = _update_affected_sites(affected_sites, sites(all_users[entry]))
-            connection_id = all_users[entry].get("connector", None)
-            connection = get_connection(connection_id)
-            log_security_event(
-                UserManagementEvent(
-                    event="user deleted",
-                    affected_user=entry,
-                    acting_user=acting_user.id,
-                    connector=connection.type() if connection else None,
-                    connection_id=connection_id,
-                )
-            )
-            del all_users[entry]
-        else:
-            raise MKUserError(None, _("Unknown user: %(entry)s") % {"entry": entry})
+    for user_id, user_data in deleted.items():
+        affected_sites = _update_affected_sites(affected_sites, sites(user_data.to_userspec()))
 
-    if deleted_users:
-        for user_id in deleted_users:
-            log_audit(
-                action="edit-user",
-                message="Deleted user: %s" % user_id,
-                user_id=acting_user.id,
-                use_git=use_git,
-                object_ref=make_user_object_ref(user_id),
+        if used_in_rules := _user_used_in_notification_rule(all_rules, user_id):
+            users_used_in_notification_rule[user_id] = used_in_rules
+
+        connection = get_connection(user_data.connection_id)
+        log_security_event(
+            UserManagementEvent(
+                event="user deleted",
+                affected_user=user_id,
+                acting_user=acting_user.id,
+                connector=connection.type() if connection else None,
+                connection_id=user_data.connection_id,
             )
+        )
+
+        log_audit(
+            action="edit-user",
+            message="Deleted user: %s" % user_id,
+            user_id=acting_user.id,
+            use_git=use_git,
+            object_ref=make_user_object_ref(user_id),
+        )
+
+    if deleted:
         pending_changes.add(
             Change(
                 action_name="edit-users",
-                text=_l("Deleted user: %(users)s") % {"users": ", ".join(deleted_users)},
+                text=_l("Deleted user: %(users)s") % {"users": ", ".join(deleted)},
                 domains=[CORE],
             ),
             ChangeScope.all_activation_sites()
             if affected_sites == "all"
             else ChangeScope.sites(list(affected_sites)),
         )
-        userdb.save_users(
-            all_users,
-            user_attributes,
-            user_connections,
-            now=datetime.now(),
-            pprint_value=pprint_value,
-            call_users_saved_hook=True,
-        )
-    return deleted_users, users_used_in_notification_rule
+    return list(deleted), users_used_in_notification_rule
 
 
 def _user_used_in_notification_rule(all_rules: list[EventRule], user_id: UserId) -> list[EventRule]:

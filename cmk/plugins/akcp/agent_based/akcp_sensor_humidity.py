@@ -4,11 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# Example for contents of info
-#      description       percent  status  online
-# ["Humdity1 Description", "0",    "0",    "2"]
-
-
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -22,12 +17,13 @@ from cmk.plugins.akcp.lib_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
     discover_akcp_humidity,
-    parse_akcp_sensor,
+    parse_akcp_humidity,
+    parse_akcp_sensor_humidity,
 )
 
 snmp_section_akcp_sensor_humidity = SimpleSNMPSection(
     name="akcp_sensor_humidity",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_sensor_humidity,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
     ),
@@ -45,7 +41,7 @@ snmp_section_akcp_sensor_humidity = SimpleSNMPSection(
 
 snmp_section_akcp_sensor2plus_humidity = SimpleSNMPSection(
     name="akcp_sensor2plus_humidity",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_humidity,
     parsed_section_name="akcp_sensor_humidity",
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(

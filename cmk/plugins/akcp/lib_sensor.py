@@ -63,25 +63,119 @@ AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def discover_akcp_humidity(section: Section) -> DiscoveryResult:
-    for description, _percent, _status, online in section:
-        if online == "1":
+class SensorProbeHumidityStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorProbeHumidityStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highWarning(3),
+    #           highCritical(4),
+    #           lowWarning(5),
+    #           lowCritical(6),
+    #           sensorError(7)
+    #        }
+    # HHMSAGENT-MIB defines hhmsSensorArrayHumidityStatus at the same OID with
+    # identical SYNTAX, so this enum decodes both device generations.
+    # Decodes .1.3.6.1.4.1.3854.1.2.2.1.17.1.4
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_WARNING = "3"
+    HIGH_CRITICAL = "4"
+    LOW_WARNING = "5"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+
+
+class SensorHumidityStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorHumidityStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highWarning(3),
+    #           highCritical(4),
+    #           lowWarning(5),
+    #           lowCritical(6),
+    #           sensorError(7)
+    #        }
+    #     humidityStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER { <identical to sensorHumidityStatus above> }
+    # Decodes .1.3.6.1.4.1.3854.2.3.3.1.6 (sensorHumidityStatus)
+    # and .1.3.6.1.4.1.3854.3.5.3.1.6 (plusSeries humidityStatus)
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_WARNING = "3"
+    HIGH_CRITICAL = "4"
+    LOW_WARNING = "5"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProbeHumiditySensor:
+    status: SensorProbeHumidityStatus
+    percent: int | None
+    online: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class HumiditySensor:
+    status: SensorHumidityStatus
+    percent: int | None
+    online: bool
+
+
+HumiditySection = Mapping[str, ProbeHumiditySensor] | Mapping[str, HumiditySensor]
+
+
+def parse_akcp_sensor_humidity(string_table: StringTable) -> Mapping[str, ProbeHumiditySensor]:
+    return {
+        description: ProbeHumiditySensor(
+            status=SensorProbeHumidityStatus(status),
+            percent=int(percent) if percent else None,
+            online=online == "1",
+        )
+        for description, percent, status, online in string_table
+    }
+
+
+def parse_akcp_humidity(string_table: StringTable) -> Mapping[str, HumiditySensor]:
+    return {
+        description: HumiditySensor(
+            status=SensorHumidityStatus(status),
+            percent=int(percent) if percent else None,
+            online=online == "1",
+        )
+        for description, percent, status, online in string_table
+    }
+
+
+def discover_akcp_humidity(section: HumiditySection) -> DiscoveryResult:
+    for description, sensor in section.items():
+        if sensor.online:
             yield Service(item=description)
 
 
-def check_akcp_humidity(item: str, params: CheckParams, section: Section) -> CheckResult:
-    for description, percent, status, online in section:
-        if description == item:
-            # Online is set to "2" if sensor is offline
-            if online != "1":
-                yield Result(state=State.CRIT, summary="sensor is offline")
+def check_akcp_humidity(item: str, params: CheckParams, section: HumiditySection) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+    if not sensor.online:
+        yield Result(state=State.CRIT, summary="sensor is offline")
 
-            if status in ["1", "7"]:
-                state, state_name = akcp_sensor_level_states[status]
-                yield Result(state=State(state), summary=f"State: {state_name}")
+    if sensor.status in (
+        SensorProbeHumidityStatus.NO_STATUS,
+        SensorHumidityStatus.NO_STATUS,
+    ):
+        yield Result(state=State.CRIT, summary="State: no status")
+    elif sensor.status in (
+        SensorProbeHumidityStatus.SENSOR_ERROR,
+        SensorHumidityStatus.SENSOR_ERROR,
+    ):
+        yield Result(state=State.CRIT, summary="State: sensor error")
 
-            if percent:
-                yield from check_humidity(int(percent), params)
+    if sensor.percent is not None:
+        yield from check_humidity(sensor.percent, params)
 
 
 # .

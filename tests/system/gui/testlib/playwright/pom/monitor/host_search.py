@@ -78,11 +78,12 @@ class HostSearch(CmkPage):
         Check that label name and logical operator are correct at the expected position.
         """
         # example of returned result - ['is', 'test_label:foo', 'and', '(Select label)']
-        labels_text = self._labels_table.get_by_role("textbox").all_inner_texts()
-
-        assert labels_text[expected_position * 2] == logical_operator, (
-            "Logical operator used to filter hosts using labels is incorrect."
-        )
-        assert labels_text[expected_position * 2 + 1] == label, (
-            "Label used to filter hosts is incorrect."
-        )
+        label_textboxes = self._labels_table.get_by_role("textbox")
+        expect(
+            label_textboxes.nth(expected_position * 2),
+            "Logical operator used to filter hosts using labels is incorrect.",
+        ).to_have_text(logical_operator)
+        expect(
+            label_textboxes.nth(expected_position * 2 + 1),
+            "Label used to filter hosts is incorrect.",
+        ).to_have_accessible_name(label)

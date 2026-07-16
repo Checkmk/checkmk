@@ -220,7 +220,11 @@ class BaseDashboard(CmkPage):
 
     def get_chart_widget_total_value(self, widget_title: str) -> int:
         widget = self.get_widget(widget_title)
-        return int(widget.get_by_role("row", name="Total").locator("a.count").inner_text())
+        total_count = widget.get_by_role("row", name="Total").locator("a.count")
+        expect(
+            total_count, message=f"Total count of chart widget '{widget_title}' is not shown"
+        ).to_have_text(re.compile(r"\d+"))
+        return int(total_count.inner_text())
 
 
 class MainDashboard(BaseDashboard):

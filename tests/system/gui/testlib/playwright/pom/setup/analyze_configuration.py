@@ -50,34 +50,25 @@ class AnalyzeConfiguration(CmkPage):
         return self.main_area.locator("table[class*='analyze_config']")
 
     @property
-    def status_column_values(self) -> Locator:
-        return self.main_area.locator("span[class*='state']")
-
-    @property
     def title_column_values(self) -> Locator:
         return self.main_area.locator("td[class*='buttons'] + td")
 
     def verify_all_expected_checks_are_present(self, expected_checks: list[str]) -> None:
         """Verify that all expected checks are present in the analyze configuration table."""
+        expect(
+            self.title_column_values,
+            f"Expected {len(expected_checks)} checks in the analyze configuration table.",
+        ).to_have_count(len(expected_checks))
         titles = self.title_column_values.all_inner_texts()
-        assert len(expected_checks) == len(titles), (
-            f"Expected {len(expected_checks)} checks, but got {len(titles)} checks."
-        )
         for expected_check in expected_checks:
             assert expected_check in titles, (
                 f"Expected check '{expected_check}' not found in the analyze configuration table."
             )
 
     def verify_checks_statuses(self, expected_statues: dict[str, str]) -> None:
-        titles = self.title_column_values.all_inner_texts()
-        statuses = self.status_column_values.all_inner_texts()
-        actual_statuses = dict(zip(titles, statuses))
-        assert len(titles) == len(actual_statuses), (
-            f"Expected {len(expected_statues)} checks, but got {len(actual_statuses)} checks."
-        )
         for title, expected_status in expected_statues.items():
-            actual_status = actual_statuses.get(title)
-            assert actual_status == expected_status, (
-                f"Expected status '{expected_status}' for check '{title}', "
-                f"but got '{actual_status}'."
-            )
+            check_row = self.main_area.locator(f"tr:has(td:text-is('{title}'))")
+            expect(
+                check_row.locator("span[class*='state']"),
+                f"Unexpected status of the check '{title}'.",
+            ).to_have_text(expected_status)

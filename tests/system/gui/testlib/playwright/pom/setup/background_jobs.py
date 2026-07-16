@@ -53,11 +53,6 @@ class BackgroundJobDetails(CmkPage):
         return self._detail_row("Progress info").get_by_role("link", name="Download")
 
     @property
-    def job_state(self) -> str:
-        """Return the state of the job as text."""
-        return self.job_state_locator.inner_text()
-
-    @property
     def job_state_locator(self) -> Locator:
         return self._detail_row("State", exact=True).locator("td")
 

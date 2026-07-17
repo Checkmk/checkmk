@@ -1,0 +1,6 @@
+type = "Component"
+display_name = "Livestatus Client"
+members_required = 2
+description = """
+- Livestatus client library (packages/cmk-livestatus-client)
+"""

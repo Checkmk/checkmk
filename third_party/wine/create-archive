@@ -1,0 +1,159 @@
+#!/bin/bash
+# Build Wine from source and repackage it as the tarball pinned by the
+# @wine_linux_x86_64 Bazel module (see MODULE.bazel).
+#
+# This builds Wine ourselves rather than pinning a third-party prebuilt binary.
+# The amd64-wow64 approach is informed by Kron4ek's Wine-Builds
+# (github.com/Kron4ek/Wine-Builds, MIT), but this is our own script: it builds
+# from upstream WineHQ source directly and produces a genuine new-style WoW64
+# build via --enable-archs (no 32-bit host multilib). No Kron4ek code is used.
+#
+# It MUST run in an environment whose glibc is <= the target floor (AlmaLinux 8
+# / glibc 2.28). Building on a newer host raises the floor and yields an
+# artifact that will not run on our oldest supported distro. It also needs the
+# Wine build toolchain present (clang, lld, llvm-dlltool, the mingw-w64 sysroot,
+# Wine's X11/font/TLS dev libs). In CI, build_wine.sh installs that toolchain
+# and runs this inside a pinned AlmaLinux 8 image; see
+# buildscripts/scripts/build-wine-from-source.groovy.
+#
+# Output (in the current working directory):
+#   wine-11.0-amd64-wow64.tar.xz    the built binary (its sha256 is printed, to
+#                                   be pinned in MODULE.bazel)
+#   wine-11.0.tar.xz                the corresponding LGPL source, retained so
+#                                   build_wine.sh can publish it alongside the
+#                                   binary
+set -e
+
+VERSION=11.0
+SRC=wine-${VERSION}
+# The top-level directory name is the http_archive strip_prefix; keep in sync
+# with MODULE.bazel.
+OUT=wine-${VERSION}-amd64-wow64
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+fetch_source() {
+    curl --silent \
+        --show-error \
+        --fail \
+        --location \
+        --output "${SRC}.tar.xz" \
+        "https://dl.winehq.org/wine/source/${VERSION}/${SRC}.tar.xz"
+    # Provenance gate: the sha256 is pinned in wine.sha256.
+    sha256sum --check <(sed "s|  .*|  ${SRC}.tar.xz|" "${SCRIPT_DIR}/wine.sha256")
+}
+
+unpack_and_patch() {
+    tar xf "${SRC}.tar.xz"
+    for PATCH in "${SCRIPT_DIR}"/patches/*.dif; do
+        [ -e "${PATCH}" ] || continue
+        echo "Applying patch: ${PATCH}"
+        patch --strip=1 --directory="${SRC}" <"${PATCH}"
+    done
+}
+
+# New-style WoW64: --enable-archs builds a single 64-bit prefix that also
+# carries the 32-bit PE DLLs, without any i386 Unix libraries or a 32-bit host
+# toolchain. The remaining flags match Kron4ek's WINE_BUILD_OPTIONS.
+#
+# The PE side is cross-compiled with clang + lld (configure auto-selects clang
+# when no mingw-w64 GCC is on PATH); the AlmaLinux 8 mingw-w64 GCC is too old
+# for Wine 11's PE code. clang uses the mingw-w64 headers/crt as its sysroot.
+build_wow64() {
+    mkdir build
+    (
+        cd build
+        "../${SRC}/configure" \
+            --enable-archs=i386,x86_64 \
+            --without-oss \
+            --disable-winemenubuilder \
+            --disable-tests \
+            --prefix="${PWD}/../${OUT}"
+        make -j"$(nproc)"
+        make install
+    )
+}
+
+# Match the layout of the prebuilt tarball the pin expects: a 64-bit `bin/wine`
+# loader, no wine-preloader, no i386-unix tree.
+prune_to_shipped_tree() {
+    rm -f "${OUT}/bin/wine-preloader"
+    rm -rf "${OUT}/lib/wine/i386-unix"
+    if [ ! -f "${OUT}/bin/wine" ] && [ -f "${OUT}/bin/wine64" ]; then
+        cp "${OUT}/bin/wine64" "${OUT}/bin/wine"
+    fi
+}
+
+# Wine builds with -g; leaving it in triples the artifact and bloats every test
+# sandbox that unpacks it. The ELF side (loader + unix libs) takes the host
+# strip, the PE side (WoW64 DLLs/EXEs) llvm-strip (understands COFF). Per-file
+# with error suppression so non-binaries (e.g. helper scripts in bin/) are
+# skipped without needing `file`.
+strip_debug_info() {
+    find "${OUT}/bin" "${OUT}/lib/wine/x86_64-unix" -type f | while read -r f; do
+        strip --strip-unneeded "$f" 2>/dev/null || true
+    done
+    find "${OUT}/lib/wine/x86_64-windows" "${OUT}/lib/wine/i386-windows" -type f | while read -r f; do
+        llvm-strip --strip-all "$f" 2>/dev/null || true
+    done
+}
+
+# Wine is LGPL-2.1-or-later. Ship its licence, the LGPL text and the authorship
+# list alongside the binaries so the distributed artifact carries its own
+# licence and copyright notices (as the LGPL requires when the binary is
+# conveyed). The corresponding source is the checksum-pinned upstream tarball
+# recorded in BUILDINFO, built by this script.
+bundle_licence() {
+    cp "${SRC}/LICENSE" "${SRC}/COPYING.LIB" "${SRC}/AUTHORS" "${OUT}/"
+}
+
+write_provenance_record() {
+    {
+        echo "wine_version=${VERSION}"
+        echo "license=LGPL-2.1-or-later (see LICENSE, COPYING.LIB)"
+        echo "source_url=https://dl.winehq.org/wine/source/${VERSION}/${SRC}.tar.xz"
+        echo "source_sha256=$(cut -d' ' -f1 "${SCRIPT_DIR}/wine.sha256")"
+        echo "configure_args=--enable-archs=i386,x86_64 --without-oss --disable-winemenubuilder --disable-tests"
+        echo "host_cc=$(gcc -dumpfullversion 2>/dev/null || gcc -dumpversion)"
+        echo "pe_cc=$(clang --version 2>/dev/null | head -1 || echo unknown)"
+        echo "glibc=$(getconf GNU_LIBC_VERSION 2>/dev/null || echo unknown)"
+    } >"${OUT}/BUILDINFO"
+}
+
+# SOURCE_DATE_EPOCH + sorted, owner-stripped tar make the archive as
+# reproducible as Wine's non-deterministic build allows. The pinned contract is
+# still the sha256 of the published artifact, not byte-for-byte rebuildability.
+repackage_deterministically() {
+    SOURCE_DATE_EPOCH="$(stat -c %Y "${SRC}.tar.xz")"
+    export SOURCE_DATE_EPOCH
+    XZ_OPT="-9 -T0" tar \
+        --sort=name \
+        --mtime="@${SOURCE_DATE_EPOCH}" \
+        --owner=0 --group=0 --numeric-owner \
+        -Jcf "${OUT}.tar.xz" "${OUT}"
+}
+
+# Report the binary sha256 for pinning in MODULE.bazel. No sidecar files are
+# written or published: Bazel verifies the download against that inline pin,
+# and S3 stores its own checksum on upload. The LGPL source (${SRC}.tar.xz) is
+# retained so build_wine.sh can publish it from the same place as the binary.
+report() {
+    echo "Built ${OUT}.tar.xz"
+    sha256sum "${OUT}.tar.xz"
+}
+
+main() {
+    rm -rf "${SRC}.tar.xz" "${SRC}" build "${OUT}" "${OUT}.tar.xz"
+    fetch_source
+    unpack_and_patch
+    build_wow64
+    prune_to_shipped_tree
+    strip_debug_info
+    bundle_licence
+    write_provenance_record
+    repackage_deterministically
+    report
+    rm -rf "${SRC}" build "${OUT}"
+}
+
+main "$@"

@@ -1,0 +1,18 @@
+# BUILD file injected into the @wine_linux_x86_64 repository (see MODULE.bazel).
+# Exposes the from-source Wine tree built by third_party/wine/create-archive.
+
+filegroup(
+    name = "wine",
+    srcs = glob(
+        ["**"],
+        exclude = ["BUILD.bazel"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+# The loader entrypoint; the rest of the tree must sit beside it in runfiles.
+filegroup(
+    name = "wine_bin",
+    srcs = ["bin/wine"],
+    visibility = ["//visibility:public"],
+)

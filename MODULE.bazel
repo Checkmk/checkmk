@@ -264,6 +264,19 @@ http_file(
     ],
 )
 
+# A portable Wine build (WoW64: 64-bit, no i386 multilib on the host).
+# The build recipe, source pin and publishing job live in third_party/wine/ and
+# buildscripts/scripts/build-wine-from-source.groovy.
+http_archive(
+    name = "wine_linux_x86_64",
+    build_file = "//third_party/wine:BUILD.wine.bazel",
+    sha256 = "7b3206350129231255f307b0902b46d46364e02de3487a43f3eb994964504e72",
+    strip_prefix = "wine-11.0-amd64-wow64",
+    urls = [
+        UPSTREAM_MIRROR_URL + "wine-11.0-amd64-wow64.tar.xz",
+    ],
+)
+
 http_archive(
     name = "gcc-linux-x86_64",
     build_file = "//bazel/toolchains/cc/gcc/bootlin:BUILD.bootlin.bazel",

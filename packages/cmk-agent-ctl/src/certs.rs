@@ -100,29 +100,52 @@ impl std::convert::TryFrom<&CertificateDer<'_>> for CNCheckerUUID {
     }
 }
 
+/// How [`ServerCertChecker`] validates the peer certificate chain. The
+/// handshake-signature checks (proving the peer holds the key) are identical
+/// for every policy — only the chain validation differs.
 #[derive(Debug)]
-struct CnIsNoUuidAcceptAnyHostname {
-    crypto_provider: Arc<CryptoProvider>,
-    verifier: Arc<dyn ServerCertVerifier>,
+enum ServerCertPolicy {
+    /// Accept any certificate, emulating openssl's `SslVerifyMode::NONE`: the
+    /// chain is not validated at all (the handshake signatures still are). Used
+    /// for the trust-on-first-use certificate fetch.
+    AcceptAny,
+    /// Full WebPKI verification against the configured roots, with hostname
+    /// checking bypassed, plus rejection of certificates whose CN is a UUID.
+    CnIsNoUuidAcceptAnyHostname(Arc<dyn ServerCertVerifier>),
 }
 
-impl CnIsNoUuidAcceptAnyHostname {
-    pub fn from_roots_and_crypto_provider(
+#[derive(Debug)]
+struct ServerCertChecker {
+    crypto_provider: Arc<CryptoProvider>,
+    policy: ServerCertPolicy,
+}
+
+impl ServerCertChecker {
+    fn accept_any(crypto_provider: &Arc<CryptoProvider>) -> Self {
+        Self {
+            crypto_provider: crypto_provider.clone(),
+            policy: ServerCertPolicy::AcceptAny,
+        }
+    }
+
+    fn cn_is_no_uuid_accept_any_hostname(
         roots: RootCertStore,
         crypto_provider: &Arc<CryptoProvider>,
     ) -> AnyhowResult<Self> {
         Ok(Self {
             crypto_provider: crypto_provider.clone(),
-            verifier: WebPkiServerVerifier::builder_with_provider(
-                Arc::new(roots),
-                crypto_provider.clone(),
-            )
-            .build()?,
+            policy: ServerCertPolicy::CnIsNoUuidAcceptAnyHostname(
+                WebPkiServerVerifier::builder_with_provider(
+                    Arc::new(roots),
+                    crypto_provider.clone(),
+                )
+                .build()?,
+            ),
         })
     }
 }
 
-impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
+impl ServerCertVerifier for ServerCertChecker {
     fn verify_server_cert(
         &self,
         end_entity: &CertificateDer,
@@ -131,6 +154,11 @@ impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
         ocsp_response: &[u8],
         now: UnixTime,
     ) -> Result<ServerCertVerified, RusttlsError> {
+        let verifier = match &self.policy {
+            ServerCertPolicy::AcceptAny => return Ok(ServerCertVerified::assertion()),
+            ServerCertPolicy::CnIsNoUuidAcceptAnyHostname(verifier) => verifier,
+        };
+
         let cn_checker = CNCheckerUUID::try_from(end_entity)?;
         if cn_checker.cn_is_uuid() {
             return Err(RusttlsError::General(format!(
@@ -138,7 +166,7 @@ impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
                 cn_checker.cn()
             )));
         }
-        self.verifier.verify_server_cert(
+        verifier.verify_server_cert(
             end_entity,
             intermediates,
             // emulate reqwest::ClientBuilder::danger_accept_invalid_hostnames
@@ -165,6 +193,7 @@ impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
             &self.crypto_provider.signature_verification_algorithms,
         )
     }
+
     fn verify_tls13_signature(
         &self,
         message: &[u8],
@@ -204,7 +233,7 @@ fn tls_config(
         cfg: ClientConfig::builder(),
     }
     .with_custom_certificate_verifier(Arc::new(
-        CnIsNoUuidAcceptAnyHostname::from_roots_and_crypto_provider(
+        ServerCertChecker::cn_is_no_uuid_accept_any_hostname(
             root_cert_store([handshake_credentials.server_root_cert].into_iter())?,
             crypto_provider,
         )?,
@@ -237,69 +266,13 @@ pub fn client(
     Ok(client_builder.build()?)
 }
 
-// emulate openssl::ssl::SslVerifyMode::NONE: accept any certificate, but still
-// verify the handshake signatures so we know the peer actually holds the key
-#[derive(Debug)]
-struct AcceptAnyServerCert {
-    crypto_provider: Arc<CryptoProvider>,
-}
-
-impl ServerCertVerifier for AcceptAnyServerCert {
-    fn verify_server_cert(
-        &self,
-        _end_entity: &CertificateDer,
-        _intermediates: &[CertificateDer],
-        _server_name: &ServerName,
-        _ocsp_response: &[u8],
-        _now: UnixTime,
-    ) -> Result<ServerCertVerified, RusttlsError> {
-        Ok(ServerCertVerified::assertion())
-    }
-
-    fn verify_tls12_signature(
-        &self,
-        message: &[u8],
-        cert: &CertificateDer<'_>,
-        dss: &DigitallySignedStruct,
-    ) -> Result<HandshakeSignatureValid, RusttlsError> {
-        verify_tls12_signature(
-            message,
-            cert,
-            dss,
-            &self.crypto_provider.signature_verification_algorithms,
-        )
-    }
-
-    fn verify_tls13_signature(
-        &self,
-        message: &[u8],
-        cert: &CertificateDer<'_>,
-        dss: &DigitallySignedStruct,
-    ) -> Result<HandshakeSignatureValid, RusttlsError> {
-        verify_tls13_signature(
-            message,
-            cert,
-            dss,
-            &self.crypto_provider.signature_verification_algorithms,
-        )
-    }
-
-    fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
-        self.crypto_provider
-            .signature_verification_algorithms
-            .supported_schemes()
-    }
-}
-
 pub fn fetch_server_cert_pem(server: &str, port: &u16) -> AnyhowResult<String> {
     let crypto_provider =
         CryptoProvider::get_default().ok_or(anyhow!("No default crypto provider set"))?;
     let config = DangerousClientConfigBuilder {
         cfg: ClientConfig::builder(),
     }
-    .with_custom_certificate_verifier(Arc::new(AcceptAnyServerCert {
-        crypto_provider: crypto_provider.clone(),
-    }))
+    .with_custom_certificate_verifier(Arc::new(ServerCertChecker::accept_any(crypto_provider)))
     .with_no_client_auth();
 
     let mut connection = rustls::ClientConnection::new(
@@ -426,8 +399,8 @@ mod test_cn_no_uuid {
         assert!(cn_checker.cn_is_uuid());
     }
 
-    fn verifier() -> AnyhowResult<CnIsNoUuidAcceptAnyHostname> {
-        CnIsNoUuidAcceptAnyHostname::from_roots_and_crypto_provider(
+    fn verifier() -> AnyhowResult<ServerCertChecker> {
+        ServerCertChecker::cn_is_no_uuid_accept_any_hostname(
             root_cert_store([constants::TEST_ROOT_CERT].into_iter())?,
             &Arc::new(default_provider()),
         )
@@ -480,5 +453,22 @@ mod test_cn_no_uuid {
                 UnixTime::now(),
             )
             .is_err());
+    }
+
+    #[test]
+    fn test_accept_any_accepts_untrusted_cert() {
+        // The accept-any policy must accept a certificate the verifying policy
+        // rejects (untrusted / invalid signature); only the handshake-signature
+        // check remains, which this static certificate does not exercise.
+        let checker = ServerCertChecker::accept_any(&Arc::new(default_provider()));
+        assert!(checker
+            .verify_server_cert(
+                &rustls_certificate(constants::TEST_CERT_INVALID_SIGNATURE).unwrap(),
+                &[],
+                &ServerName::try_from("whatever").unwrap(),
+                &[],
+                UnixTime::now(),
+            )
+            .is_ok());
     }
 }

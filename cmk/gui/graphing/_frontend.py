@@ -98,6 +98,7 @@ _DEFAULT_INTERACTION = Interaction(
     zoom="enabled",
     panning="enabled",
     hover="enabled",
+    brush="enabled",
 )
 
 

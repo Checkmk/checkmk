@@ -227,7 +227,13 @@ const calculationDelete = useDeleteWithDependents(store)
       show-timestamp
       :figure-width="figureWidth"
       :show-legend="false"
-      :show-brush="mode === 'view'"
+      :interaction="{
+        brush: mode === 'view' ? 'enabled' : 'disabled',
+        burger: 'disabled',
+        hover: 'enabled',
+        panning: 'disabled',
+        zoom: 'disabled'
+      }"
       :overview="drawnOverview"
       @update:requested-time-range="requestedTimeRange = $event"
     />

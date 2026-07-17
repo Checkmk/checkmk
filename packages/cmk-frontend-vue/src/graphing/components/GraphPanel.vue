@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import { loadMenu } from '../api/burgerMenu'
 import { useGraphInteraction } from '../composables/useGraphInteraction'
@@ -34,7 +34,6 @@ import GraphLegend from './legend/GraphLegend.vue'
 const { _t } = usei18n()
 
 const props = withDefaults(defineProps<GraphPanelProps>(), {
-  interactive: true,
   figureWidth: 800,
   figureHeight: 300,
   legendPosition: 'bottom'
@@ -94,7 +93,7 @@ function updateConsolidationFunction(val: ConsolidationFn) {
 
 const yAxis = computed(() => deriveYAxis(props.metrics))
 
-const showBurgerMenu = computed(() => !!props.addTo)
+const showBurgerMenu = computed(() => !!props.addTo && props.interaction.burger === 'enabled')
 const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
 
 if (showBurgerMenu.value) {
@@ -117,6 +116,19 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
     consolidationFunction: activeConsolidationFunction.value
   })
 }
+
+const zoomControlsEnabled: Ref<boolean> = computed(
+  () => props.interaction.zoom === 'enabled' || props.interaction.panning === 'enabled'
+)
+
+const showGraphHeader: Ref<boolean> = computed(
+  () =>
+    props.showTitle ||
+    props.showTimestamp ||
+    props.interaction.burger === 'enabled' ||
+    zoomControlsEnabled.value ||
+    props.showConsolidation
+)
 </script>
 
 <template>
@@ -128,14 +140,14 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
       <div class="graphing-graph-panel__canvas-area">
         <!-- TODO: wire the remaining header interactions (consolidation dropdown) into the panel state -->
         <GraphHeader
-          v-if="showTitle || showTimestamp || showBurgerMenu || interactive"
+          v-if="showGraphHeader"
           v-model:zoom-mode="zoomMode"
           class="graphing-graph-panel__header"
           :title="title"
           :show-title="showTitle"
           :time-range="dataTimeRange"
           :show-timestamp="showTimestamp"
-          :show-controls="interactive"
+          :show-controls="zoomControlsEnabled"
           :show-consolidation="showConsolidation"
           :show-burger-menu="showBurgerMenu"
           :burger-menu-groups="burgerMenuGroups"
@@ -161,7 +173,8 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
           :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
           :min-value-range="null"
           :inspecting="inspectionActive"
-          :pan-enabled="interactive"
+          :pan-enabled="interaction.panning === 'enabled'"
+          :zoom-enabled="interaction.zoom === 'enabled'"
           :options="{
             header: { title: title ?? null, show_graph_time: false },
             name: title ?? '',
@@ -186,7 +199,7 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
           CANVAS_MARGIN_HORIZONTAL) so it aligns under the plot.
         -->
         <GraphBrush
-          v-if="showBrush && overview && dataTimeRange"
+          v-if="interaction.brush === 'enabled' && overview && dataTimeRange"
           class="graphing-graph-panel__brush"
           :metrics="overview.metrics"
           :domain="overview.timeRange"

@@ -78,9 +78,10 @@
         "burger": { "type": "string", "enum": ["enabled", "disabled"] },
         "zoom": { "type": "string", "enum": ["enabled", "disabled"] },
         "panning": { "type": "string", "enum": ["enabled", "disabled"] },
-        "hover": { "type": "string", "enum": ["enabled", "disabled"] }
+        "hover": { "type": "string", "enum": ["enabled", "disabled"] },
+        "brush": { "type": "string", "enum": ["enabled", "disabled"] }
       },
-      "required": ["burger", "zoom", "panning", "hover"]
+      "required": ["burger", "zoom", "panning", "hover", "brush"]
     },
     "time_range": {
       "title": "TimeRange",

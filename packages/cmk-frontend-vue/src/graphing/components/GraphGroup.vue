@@ -108,7 +108,7 @@ const overviews = computed(() =>
         :show-timestamp="true"
         :show-consolidation="true"
         :show-legend="true"
-        :show-brush="true"
+        :interaction="props.graphs[i]!.interaction"
         :overview="overviews[i]"
         :horizontal-lines="graph.horizontalLines"
         :figure-width="figure_width"

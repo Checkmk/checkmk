@@ -10,7 +10,7 @@ import { loadMenu } from '@/graphing/api/burgerMenu.ts'
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
-import type { BurgerMenuCallable, RequestedTimeRange } from '@/graphing/types'
+import type { BurgerMenuCallable, GraphPanelProps, RequestedTimeRange } from '@/graphing/types'
 
 vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 
@@ -75,6 +75,16 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
 const TIME_RANGE: TimeRange = { start: 1_781_524_800, end: 1_781_528_400, step: 300 }
 const REQUESTED: RequestedTimeRange = { start: 1_781_524_800, end: 1_781_528_400 }
 
+// All-disabled default keeps the "panel renders no button" assertions meaningful (zoom/pan
+// controls and the burger all contribute buttons); tests opt into single capabilities.
+const INTERACTION_NONE: GraphPanelProps['interaction'] = {
+  burger: 'disabled',
+  zoom: 'disabled',
+  panning: 'disabled',
+  hover: 'disabled',
+  brush: 'disabled'
+}
+
 function makeMetric(name: string, title: string): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000' },
@@ -92,6 +102,7 @@ function renderPanelWithLegend(metrics: Metric[], hiddenMetricNames: string[] = 
       metrics,
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       hiddenMetricNames,
       showLegend: true
     }
@@ -121,7 +132,12 @@ afterEach(() => {
 
 test('does not render the legend when showLegend is not set', () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
   expect(document.querySelector('.graphing-graph-panel__legend')).not.toBeInTheDocument()
 })
@@ -132,6 +148,7 @@ test('renders the legend when showLegend is true', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       showLegend: true
     }
   })
@@ -144,7 +161,7 @@ test('renders the context view when showBrush is set and an overview is supplied
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      showBrush: true,
+      interaction: { ...INTERACTION_NONE, brush: 'enabled' },
       overview: { metrics: [CPU], timeRange: TIME_RANGE }
     }
   })
@@ -157,6 +174,7 @@ test('does not render the context view when showBrush is not set', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       overview: { metrics: [CPU], timeRange: TIME_RANGE }
     }
   })
@@ -165,18 +183,37 @@ test('does not render the context view when showBrush is not set', () => {
 
 test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
   expect(screen.queryByRole('button')).not.toBeInTheDocument()
 })
 
-test('renders GraphBurgerMenu when showBurgerMenu is true', () => {
+test('does not render GraphBurgerMenu when the burger interaction is disabled', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification: {} }
+      addTo: { type: 'test', specification: {} },
+      interaction: INTERACTION_NONE
+    }
+  })
+  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+})
+
+test('renders GraphBurgerMenu when the burger interaction is enabled', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      addTo: { type: 'test', specification: {} },
+      interaction: { ...INTERACTION_NONE, burger: 'enabled' }
     }
   })
   expect(screen.getByRole('button')).toBeInTheDocument()
@@ -197,7 +234,8 @@ test('a do-action from the header runs the callback with the graph the backends 
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification }
+      addTo: { type: 'test', specification },
+      interaction: { ...INTERACTION_NONE, burger: 'enabled' }
     }
   })
 
@@ -219,6 +257,7 @@ test('renders title when showTitle is true', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       title: 'Panel Title',
       showTitle: true
     }
@@ -232,6 +271,7 @@ test('applies legend-right modifier class when legendPosition is "right"', () =>
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       legendPosition: 'right'
     }
   })
@@ -246,6 +286,7 @@ test('does not apply legend-right modifier class when legendPosition is "bottom"
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       legendPosition: 'bottom'
     }
   })
@@ -256,7 +297,12 @@ test('does not apply legend-right modifier class when legendPosition is "bottom"
 
 test('the renderer receives the baseline view without inspection', () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   expect(screen.getByTestId('view-start')).toHaveTextContent(String(TIME_RANGE.start))
@@ -265,7 +311,12 @@ test('the renderer receives the baseline view without inspection', () => {
 
 test('a zoom intent from the renderer overlays the view and activates inspection', async () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   await fireEvent.click(screen.getByTestId('emit-time-zoom'))
@@ -276,7 +327,12 @@ test('a zoom intent from the renderer overlays the view and activates inspection
 
 test('a zoom intent from the renderer also publishes a requested time range update', async () => {
   const { emitted } = render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   await fireEvent.click(screen.getByTestId('emit-time-zoom'))
@@ -288,7 +344,12 @@ test('a zoom intent from the renderer also publishes a requested time range upda
 
 test('a value-zoom intent from the renderer does not publish a requested time range update', async () => {
   const { emitted } = render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   await fireEvent.click(screen.getByTestId('emit-value-zoom'))
@@ -298,7 +359,12 @@ test('a value-zoom intent from the renderer does not publish a requested time ra
 
 test('a pan intent from the renderer also publishes a requested time range update', async () => {
   const { emitted } = render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   await fireEvent.click(screen.getByTestId('emit-pan'))
@@ -310,7 +376,12 @@ test('a pan intent from the renderer also publishes a requested time range updat
 
 test('a reset intent from the renderer also publishes a requested time range update', async () => {
   const { emitted } = render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
   await fireEvent.click(screen.getByTestId('emit-time-zoom'))
 
@@ -324,7 +395,12 @@ test('a reset intent from the renderer also publishes a requested time range upd
 
 test('a reset intent from the renderer restores the baseline view', async () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
   await fireEvent.click(screen.getByTestId('emit-time-zoom'))
 
@@ -336,7 +412,12 @@ test('a reset intent from the renderer restores the baseline view', async () => 
 
 test('the renderer receives every metric when none are hidden', () => {
   render(GraphPanel, {
-    props: { metrics: [CPU, MEM], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   expect(screen.getByTestId('time-series-graph')).toHaveTextContent('CPU,Memory')
@@ -348,6 +429,7 @@ test('hiding a metric via the legend eye removes it from what TimeSeriesGraph re
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       showLegend: true
     }
   })
@@ -365,7 +447,8 @@ test('a metric hidden via the hiddenMetricNames model is filtered from the rende
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      hiddenMetricNames: ['cpu']
+      hiddenMetricNames: ['cpu'],
+      interaction: INTERACTION_NONE
     }
   })
 
@@ -379,6 +462,7 @@ test('toggling a metric requests no new data', async () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       showLegend: true
     }
   })
@@ -393,6 +477,7 @@ test('un-hiding a metric restores it to the renderer, and so to the tooltip', as
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu'],
       showLegend: true
     }
@@ -415,6 +500,7 @@ test('toggling two of five metrics hides exactly those two', async () => {
       metrics,
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       showLegend: true
     }
   })
@@ -450,6 +536,7 @@ test('hiding every metric replaces the graph with an empty state', () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu', 'mem'],
       showLegend: true
     }
@@ -465,6 +552,7 @@ test('bringing one metric back clears the empty state', async () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu', 'mem'],
       showLegend: true
     }
@@ -479,7 +567,12 @@ test('bringing one metric back clears the empty state', async () => {
 // Without this the persisted pin is loaded but never drawn.
 test('the renderer is told to offer the pin affordance', () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   expect(screen.getByTestId('show-pin')).toHaveTextContent('true')
@@ -487,7 +580,12 @@ test('the renderer is told to offer the pin affordance', () => {
 
 test('a pin intent from the renderer stores the pinned time', async () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
 
   await fireEvent.click(screen.getByTestId('emit-pin-create'))
@@ -497,7 +595,12 @@ test('a pin intent from the renderer stores the pinned time', async () => {
 
 test('acting on an existing pin removes it', async () => {
   render(GraphPanel, {
-    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
   })
   await fireEvent.click(screen.getByTestId('emit-pin-create'))
 

@@ -59,7 +59,13 @@ function makeGraphDefinition(title: string): CmkTimeSeriesGraph {
       show_pin: true,
       font_size_pt: 8
     },
-    interaction: { burger: 'enabled', zoom: 'enabled', panning: 'enabled', hover: 'enabled' },
+    interaction: {
+      brush: 'enabled',
+      burger: 'enabled',
+      zoom: 'enabled',
+      panning: 'enabled',
+      hover: 'enabled'
+    },
     internal: '{"graphs": []}'
   }
 }

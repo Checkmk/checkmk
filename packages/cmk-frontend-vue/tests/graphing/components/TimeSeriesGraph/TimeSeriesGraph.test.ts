@@ -89,6 +89,7 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
   minValueRange: null,
   inspecting: false,
   panEnabled: false,
+  zoomEnabled: false,
   highlightedMetricName: null
 }
 

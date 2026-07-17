@@ -193,6 +193,7 @@ onBeforeUnmount(() => {
           :min-value-range="null"
           :inspecting="inspectionActive"
           :pan-enabled="true"
+          :zoom-enabled="true"
           :consolidation-function="CONSOLIDATION_FUNCTION"
           :options="graphOptions"
           :highlighted-metric-name="highlightedMetricName"

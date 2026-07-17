@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { AddTo } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { AddTo, Interaction } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 
 import type { HorizontalLine, Metric, TimeRange } from './components/TimeSeriesGraph'
@@ -56,7 +56,7 @@ export interface GraphPanelProps {
   // so that parent components can forward their own optional range prop directly.
   dataTimeRange?: TimeRange | undefined
   requestedTimeRange: RequestedTimeRange
-  interactive?: boolean
+  interaction: Interaction
   title?: string
   showTitle?: boolean
   showTimestamp?: boolean
@@ -68,7 +68,6 @@ export interface GraphPanelProps {
   showConsolidation?: boolean
   showLegend?: boolean
   legendPosition?: 'bottom' | 'right'
-  showBrush?: boolean
   // Coarse, wider, end-anchored dataset for the navigator brush (separate fetch / mock).
   overview?: { metrics: Metric[]; timeRange: TimeRange } | undefined
   addTo?: AddTo | null | undefined

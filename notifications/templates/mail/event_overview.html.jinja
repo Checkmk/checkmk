@@ -62,6 +62,16 @@
             {% endif %}
         </td>
     </tr>
+    {% if data.get('NOTIFICATIONTYPE', '').startswith('ALERTHANDLER') %}
+        <tr>
+            <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Name of alert handler:</td>
+            <td style="padding:5px 0;line-height:1.4;">{{ data.get('ALERTHANDLERNAME', '') }}</td>
+        </tr>
+        <tr>
+            <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Output of alert handler:</td>
+            <td style="padding:5px 0;line-height:1.4;">{{ data.get('ALERTHANDLEROUTPUT', '') }}</td>
+        </tr>
+    {% endif %}
     {% if service_notification %}
         <tr>
             <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Service details:</td>

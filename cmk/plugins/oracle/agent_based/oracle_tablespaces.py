@@ -280,6 +280,10 @@ def check_oracle_tablespaces(
                 name="max_size",
                 value=stats.max_size,
             )
+            yield Metric(
+                name="used_perc",
+                value=100.0 * stats.used_size / stats.max_size,
+            )
 
             # Check increment size, should not be set to default (1)
             if params.get("defaultincrement"):

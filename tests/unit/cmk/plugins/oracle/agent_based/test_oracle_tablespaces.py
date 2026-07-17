@@ -414,6 +414,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 176160768.0),
                 Metric("max_size", 34359721984.0),
+                Metric("used_perc", 0.5126955569722924),
                 Result(state=State.OK, summary="autoextend"),
             ],
         ),
@@ -437,6 +438,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 176160768.0),
                 Metric("max_size", 34359721984.0),
+                Metric("used_perc", 0.5126955569722924),
                 Result(state=State.OK, summary="autoextend"),
                 Result(
                     state=State.WARN,
@@ -462,6 +464,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 176160768.0),
                 Metric("max_size", 741343232.0),
+                Metric("used_perc", 23.762376237623762),
                 Result(state=State.OK, summary="no autoextend"),
                 Result(
                     state=State.OK,
@@ -487,6 +490,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 11141120000.0),
                 Metric("max_size", 20971520000.0),
+                Metric("used_perc", 53.125),
                 Result(state=State.OK, summary="autoextend"),
                 Result(
                     state=State.CRIT,
@@ -513,6 +517,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 11141120000.0),
                 Metric("max_size", 20971520000.0),
+                Metric("used_perc", 53.125),
                 Result(state=State.OK, summary="autoextend"),
                 Result(
                     state=State.CRIT,
@@ -539,6 +544,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 22271754240.0),
                 Metric("max_size", 41943040000.0),
+                Metric("used_perc", 53.1),
                 Result(state=State.OK, summary="autoextend"),
                 Result(
                     state=State.OK,
@@ -595,6 +601,7 @@ def test_check_cluster() -> None:
         ),
         Metric("used", 22271754240.0),
         Metric("max_size", 41943040000.0),
+        Metric("used_perc", 53.1),
         Result(state=State.OK, summary="autoextend"),
         Result(
             state=State.OK,
@@ -747,6 +754,7 @@ def test_undo_table_spaces__sup_11158() -> None:
         ),
         Metric("used", 17580032.0),
         Metric("max_size", 10737418240.0),
+        Metric("used_perc", 0.163726806640625),
         Result(state=State.OK, summary="autoextend"),
         Result(
             state=State.WARN, summary="Space left: 9.98 GiB (warn/crit below 10.00 GiB/1.00 GiB)"

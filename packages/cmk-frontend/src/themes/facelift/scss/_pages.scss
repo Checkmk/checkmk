@@ -604,14 +604,17 @@ table.data {
     background-color: $odd-tr-bg-color;
   }
 
-  /* When group headers are present, table headers need to stick below them */
-  &:has(tr.groupheader) th,
-  tr.groupheader ~ tr th {
+  /* When group headers are present, table headers need to stick below them.
+     Restrict this to the table's own header cells (direct rows) so the sticky
+     offset does not leak into nested tables such as the graph legend, whose
+     sticky header would otherwise be pushed down over the first data row. */
+  &:has(tr.groupheader) > tbody > tr > th,
+  tr.groupheader ~ tr > th {
     top: var(--group-header-height);
   }
 
   /* When preceded by a separate group header table, adjust table header position */
-  table.groupheader + & th {
+  table.groupheader + & > tbody > tr > th {
     top: var(--group-header-height);
   }
 

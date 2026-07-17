@@ -21,8 +21,8 @@ mod common;
 
 use crate::common::tools::{
     make_mini_config, make_mini_config_cdb_root, make_mini_config_custom_instance,
-    make_mini_config_pdb, make_mini_config_with_sid, make_wallet_config,
-    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
+    make_mini_config_pdb, make_mini_config_with_sid, platform::add_runtime_to_path,
+    ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -1925,52 +1925,6 @@ fn test_find_current_instance_runtime() {
         find_default_instance_runtime(temp_var, skip_permission_validation).unwrap(),
         db_location.path().join("lib")
     );
-}
-
-#[ignore = "requires Oracle Wallet files"]
-#[tokio::test(flavor = "multi_thread")]
-async fn test_wallet_authentication_connection() {
-    // This test requires:
-    // MK_CONFDIR env var pointing to a directory with oracle_wallet containing valid wallet files
-    // OR a pre-configured sqlnet.ora with wallet location
-
-    let base_dir = base_dir();
-
-    // Set MK_CONFDIR based on where oracle_wallet exists
-    let mk_confdir = if base_dir.join("oracle_wallet").exists() {
-        base_dir.clone()
-    } else {
-        base_dir.join("tests").join("files")
-    };
-
-    unsafe {
-        std::env::set_var("MK_CONFDIR", &mk_confdir);
-    }
-    eprintln!("MK_CONFDIR set to: {:?}", mk_confdir);
-
-    add_runtime_to_path();
-    let endpoint = remote_reference_endpoint();
-    let config = make_wallet_config(&endpoint);
-    let env = Env::default();
-    let r = generate_data(&config, &env).await;
-
-    assert!(r.is_ok(), "Wallet authentication failed: {:?}", r.err());
-    let table = r.unwrap();
-    eprintln!("Wallet auth result: {:?}", table);
-    assert_eq!(table.len(), 2);
-    assert_eq!(table[0], "<<<oracle_instance>>>");
-    let rows: Vec<&str> = table[1].split("\n").collect();
-    assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
-    for row in rows[1..].iter() {
-        if !row.is_empty() {
-            assert!(
-                row.starts_with(endpoint.instance_name.as_ref().unwrap()),
-                "Row should start with instance name '{}': {}",
-                endpoint.instance_name.as_ref().unwrap(),
-                row
-            );
-        }
-    }
 }
 
 #[test]

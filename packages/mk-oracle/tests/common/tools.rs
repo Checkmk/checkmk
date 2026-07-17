@@ -267,28 +267,6 @@ pub fn make_mini_config_with_sid(endpoint: &SqlDbEndpoint, sid: &str) -> Config 
     )
 }
 
-pub fn make_wallet_config(endpoint: &SqlDbEndpoint) -> Config {
-    let config_str = format!(
-        r#"
----
-oracle:
-  main:
-    authentication:
-       type: wallet
-    connection:
-       hostname: {}
-       service_name: {}
-       instance_name: FREE
-    discovery:
-       detect: no
-    sections:
-      - instance:
-"#,
-        endpoint.host, endpoint.service_name
-    );
-    Config::from_string(config_str).unwrap().unwrap()
-}
-
 pub fn make_mini_config_pdb(endpoint: &SqlDbEndpoint, pdbs: &[&str]) -> Config {
     let pdbs_yaml = pdbs
         .iter()

@@ -1,3 +1,5 @@
+load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@windows_python_wheels//:requirements.bzl", "REQUIREMENTS")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
@@ -120,4 +122,18 @@ python_cab(
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
     wheels = ["@windows_python_wheels//:wheels"],
+)
+
+py_test(
+    name = "cab_contents_test",
+    srcs = ["cab_contents_test.py"],
+    args = ["--import-mode=importlib"],
+    data = [":python_3_cab"],
+    env = {"PYTHON_CAB": "$(rootpath :python_3_cab)"},
+    pytest_main = True,
+    deps = [
+        "@cabarchive",
+        requirement("coverage"),
+        requirement("pytest"),
+    ],
 )

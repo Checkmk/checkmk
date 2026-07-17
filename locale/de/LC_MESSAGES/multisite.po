@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-15 13:34+0000\n"
+"PO-Revision-Date: 2026-07-16 19:21+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -58932,6 +58932,8 @@ msgid ""
 "Separate credentials for accessing ASM. If omitted, the main authentication "
 "above is reused."
 msgstr ""
+"Separate Anmeldedaten für den Zugriff auf ASM. Falls diese Angaben fehlen, "
+"werden die oben genannten Hauptanmeldedaten wiederverwendet."
 
 msgid "Separator"
 msgstr "Trenner"
@@ -63509,44 +63511,35 @@ msgstr ""
 msgid "State for specific bonding modes"
 msgstr "Zustand für spezifische Bindungsarten"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Bad</i>"
-msgstr "Zustand für <i>JBOD</i>"
+msgstr "Zustand für StorCLI2-Status <i>Bad</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Failed</i>"
-msgstr "Zustand, wenn der Link-Status sich geändert hat"
+msgstr "Zustand für StorCLI2-Status <i>Failed</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Good</i>"
-msgstr "Zustand bei <i>Unconfigured Good</i>"
+msgstr "Zustand für StorCLI2-Status <i>Good</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Missing</i>"
-msgstr "Status bei <i>some remaining</i>"
+msgstr "Zustand für StorCLI2-Status <i>Missing</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Offline</i>"
-msgstr "Zustand bei <i>Offline</i>"
+msgstr "Zustand für StorCLI2-Status <i>Offline</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Online</i>"
-msgstr "Zustand bei <i>Online</i>"
+msgstr "Zustand für StorCLI2-Status <i>Online</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Replace</i>"
-msgstr "Zustand bei <i>Recovery</i>"
+msgstr "Zustand für StorCLI2-Status <i>Replace</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Unknown</i>"
-msgstr "Zustand, wenn HA-Local-Zustand unbekannt ist"
+msgstr "Zustand für StorCLI2-Status <i>Unknown</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Unusable</i>"
-msgstr "Zustand, wenn HA-Local-Zustand deaktiviert ist"
+msgstr "Zustand für StorCLI2-Status <i>Unusable</i>"
 
 msgid "State for storcli2 status <i>Various</i>"
-msgstr ""
+msgstr "Zustand für StorCLI2-Status <i>Various</i>"
 
 msgid "State for unexpected number of interfaces"
 msgstr "Zustand für unerwartete Anzahl an Schnittstellen"
@@ -70116,9 +70109,8 @@ msgstr ""
 "Der Piggyback-Hub kann nicht für eine Remote-Instanz aktiviert werden, wenn "
 "er für die Zentralinstanz deaktiviert ist"
 
-#, fuzzy
 msgid "The placeholder <tt>"
-msgstr "Platzhalter für Beziehungen"
+msgstr "Der Platzhalter <tt>"
 
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original message text. "
@@ -80635,7 +80627,7 @@ msgid "Try pattern match"
 msgstr "Teste Pattern Match"
 
 msgid "Try the new \"All hosts\" view"
-msgstr ""
+msgstr "Die neue \"Alle Hosts\"-Ansicht testen"
 
 msgid "Try to detect MSSQL instances present on server"
 msgstr "Versuche, die auf dem Server vorhandenen MSSQL-Instanzen zu ermitteln"

@@ -43,7 +43,6 @@ export interface SparklineBands {
 
 // Coarse sparkline composition that mirrors the graph renderer's
 export function computeSparklineBands(metrics: Metric[]): SparklineBands {
-  // TODO: need to take into account hidden property for stack and metric
   const sampleCount = (metrics[0]?.data_points ?? []).length
   if (sampleCount === 0) {
     return { bands: [], sampleCount: 0, yMin: 0, yMax: 0 }
@@ -51,7 +50,8 @@ export function computeSparklineBands(metrics: Metric[]): SparklineBands {
   const groupSums = new Map<string, number[]>()
   let domainMin = 0
   let domainMax = 0
-  const bands = metrics.map((metric) => {
+  const bands: SparklineBand[] = []
+  for (const metric of metrics) {
     const raw = metric.data_points ?? []
     const sign = metric.render.inverse ? -1 : 1
     const lower = new Array<number>(sampleCount)
@@ -59,6 +59,9 @@ export function computeSparklineBands(metrics: Metric[]): SparklineBands {
     const stack = metric.render.stack
     const groupSum =
       stack === null ? null : (groupSums.get(stack) ?? new Array<number>(sampleCount).fill(0))
+    // Hidden metrics (stack references) advance the stack base but draw no band of their
+    // own and do not widen the value domain.
+    const hidden = metric.render.hidden
     for (let i = 0; i < sampleCount; i++) {
       const base = groupSum ? groupSum[i]! : 0
       lower[i] = base
@@ -66,16 +69,20 @@ export function computeSparklineBands(metrics: Metric[]): SparklineBands {
       if (groupSum) {
         groupSum[i] = upper[i]!
       }
-      domainMin = Math.min(domainMin, lower[i]!, upper[i]!)
-      domainMax = Math.max(domainMax, lower[i]!, upper[i]!)
+      if (!hidden) {
+        domainMin = Math.min(domainMin, lower[i]!, upper[i]!)
+        domainMax = Math.max(domainMax, lower[i]!, upper[i]!)
+      }
     }
     if (stack !== null && groupSum) {
       groupSums.set(stack, groupSum)
     }
-    return { lower, upper, color: metric.metadata.color }
-  })
+    if (!hidden) {
+      bands.push({ lower, upper, color: metric.metadata.color })
+    }
+  }
 
-  const anyInverse = metrics.some((metric) => metric.render.inverse)
+  const anyInverse = metrics.some((metric) => !metric.render.hidden && metric.render.inverse)
   let yMin = domainMin
   let yMax = domainMax
   if (anyInverse) {

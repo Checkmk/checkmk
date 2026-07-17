@@ -25,6 +25,10 @@ export function drawData(
   highlightedMetricName: string | null
 ): void {
   for (let i = 0; i < metrics.length; i++) {
+    // Hidden metrics (stack references) shape the stacking sums but are never painted.
+    if (metrics[i]!.render.hidden) {
+      continue
+    }
     if (stacks[i]!.kind === 'area-stacked') {
       ctx.globalAlpha =
         highlightedMetricName !== null && metrics[i]!.metadata.name !== highlightedMetricName
@@ -34,6 +38,9 @@ export function drawData(
     }
   }
   for (let i = 0; i < metrics.length; i++) {
+    if (metrics[i]!.render.hidden) {
+      continue
+    }
     if (stacks[i]!.kind === 'line') {
       ctx.globalAlpha =
         highlightedMetricName !== null && metrics[i]!.metadata.name !== highlightedMetricName

@@ -91,6 +91,11 @@ function updateConsolidationFunction(val: ConsolidationFn) {
   emit('update:consolidationFn', val)
 }
 
+// Backend-hidden metrics (stack references, render.hidden) are structural: they feed the
+// stacking baseline in the renderer but are never listed, counted, or toggled by the user.
+const legendMetrics = computed(() => props.metrics.filter((metric) => !metric.render.hidden))
+const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !metric.render.hidden))
+
 const yAxis = computed(() => deriveYAxis(props.metrics))
 
 const showBurgerMenu = computed(() => !!props.addTo && props.interaction.burger === 'enabled')
@@ -155,7 +160,7 @@ const showGraphHeader: Ref<boolean> = computed(
         />
 
         <div
-          v-if="dataTimeRange && visibleMetrics.length === 0"
+          v-if="dataTimeRange && !anyMetricShown"
           class="graphing-graph-panel__empty-state"
           :style="{ height: `${figureHeight}px` }"
         >
@@ -215,7 +220,7 @@ const showGraphHeader: Ref<boolean> = computed(
       <GraphLegend
         v-if="showLegend"
         class="graphing-graph-panel__legend"
-        :metrics="metrics"
+        :metrics="legendMetrics"
         :horizontal-lines="horizontalLines ?? []"
         :consolidation-fn="activeConsolidationFunction"
         :hidden-metric-names="hiddenMetricNames"

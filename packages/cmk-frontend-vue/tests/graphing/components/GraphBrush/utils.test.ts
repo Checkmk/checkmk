@@ -8,14 +8,18 @@ import { describe, expect, test } from 'vitest'
 import { computeSparklineBands, formatOverviewExtent } from '@/graphing/components/GraphBrush/utils'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
 
-// computeSparklineBands only reads data_points, render.stack/inverse, and metadata.color.
+// computeSparklineBands only reads data_points, render.stack/inverse/hidden, and metadata.color.
 function makeMetric(
   dataPoints: (number | null)[],
-  options: { stack?: string | null; inverse?: boolean; color?: string } = {}
+  options: { stack?: string | null; inverse?: boolean; color?: string; hidden?: boolean } = {}
 ): Metric {
   return {
     data_points: dataPoints,
-    render: { stack: options.stack ?? null, inverse: options.inverse ?? false },
+    render: {
+      stack: options.stack ?? null,
+      inverse: options.inverse ?? false,
+      hidden: options.hidden ?? false
+    },
     metadata: { color: options.color ?? '#3366cc' }
   } as unknown as Metric
 }
@@ -64,6 +68,20 @@ describe('computeSparklineBands', () => {
 
     expect(bands[1]!.lower).toEqual([10])
     expect(bands[1]!.upper).toEqual([15])
+    expect(yMax).toBe(15)
+  })
+
+  test('a hidden stack reference advances the stack base but draws no band of its own', () => {
+    const metrics = [
+      makeMetric([10], { stack: 'g1', hidden: true }),
+      makeMetric([5], { stack: 'g1' })
+    ]
+
+    const { bands, yMax } = computeSparklineBands(metrics)
+
+    expect(bands).toHaveLength(1)
+    expect(bands[0]!.lower).toEqual([10])
+    expect(bands[0]!.upper).toEqual([15])
     expect(yMax).toBe(15)
   })
 

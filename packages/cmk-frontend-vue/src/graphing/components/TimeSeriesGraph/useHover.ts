@@ -73,7 +73,8 @@ export function useHover(options: HoverOptions) {
 
     const hitDistances: Array<number | null> = []
 
-    const samples: HoverSample[] = options.metrics().map((metric, i) => {
+    const metricsList = options.metrics()
+    const samples: HoverSample[] = metricsList.map((metric, i) => {
       const buckets = drawnBuckets[i] ?? []
       const bands = drawnStacks[i]?.bands ?? []
       const filled = drawnStacks[i]?.kind === 'area-stacked'
@@ -89,7 +90,8 @@ export function useHover(options: HoverOptions) {
         pixelY: null,
         snapTime: null
       }
-      if (!coversTime(buckets, cursorTime)) {
+      // Hidden metrics (stack references) are structural: no tooltip row, never "closest".
+      if (metric.render.hidden || !coversTime(buckets, cursorTime)) {
         hitDistances.push(null)
         return sampleWithoutValue
       }
@@ -130,7 +132,10 @@ export function useHover(options: HoverOptions) {
       closestSample.isClosest = true
     }
 
-    const snapSample = closestSample ?? samples.find((sample) => sample.snapTime !== null)
+    // Drop the placeholder samples of hidden metrics; index alignment with hitDistances
+    // is no longer needed past this point.
+    const visibleSamples = samples.filter((_, i) => !metricsList[i]!.render.hidden)
+    const snapSample = closestSample ?? visibleSamples.find((sample) => sample.snapTime !== null)
     const snapTime = snapSample?.snapTime ?? cursorTime
     const snapX = options.xScale(new Date(snapTime * 1000))
 
@@ -141,7 +146,7 @@ export function useHover(options: HoverOptions) {
       clientY: point.clientY,
       snapX,
       snapTime,
-      samples
+      samples: visibleSamples
     }
   }
 

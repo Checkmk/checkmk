@@ -14,7 +14,6 @@ from tests.gui_e2e.testlib.api_helpers import create_and_delete_hosts, LOCALHOST
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
 from tests.gui_e2e.testlib.playwright.pom.monitor.bi_all_aggregations import AllAggregations
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
@@ -37,10 +36,13 @@ def fixture_enable_bi(test_site: Site) -> Iterator[None]:
         aggregation["computation_options"]["disabled"] = False
         test_site.openapi.bi_aggregation.update(aggregation_id=aggr_id, body=aggregation)
         # Verify that the module is enabled
-        updated_aggregation = test_site.openapi.bi_aggregation.get(aggregation_id=aggr_id)
         wait_until(
-            lambda: not updated_aggregation["computation_options"]["disabled"],
-            timeout=TIMEOUT_ACTIVATE_CHANGES,
+            lambda: (
+                not test_site.openapi.bi_aggregation.get(aggregation_id=aggr_id)[
+                    "computation_options"
+                ]["disabled"]
+            ),
+            timeout=60,
             interval=1,
         )
         logger.info("BI module has been enabled successfully.")

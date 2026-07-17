@@ -55,6 +55,7 @@ _BASE_LIB_STRIP = [
     "tkinter",
     "venv",
     "ensurepip",
+    "sqlite3",
 ]
 
 # Loose files at the install root that production strips.
@@ -246,6 +247,8 @@ cp "$PY_DIR/pythonw.exe" "$VENV/Scripts/pythonw3.exe"
 [ -f "$PY_DIR/python3.dll" ] && cp "$PY_DIR/python3.dll" "$VENV/Scripts/"
 [ -f "$PY_DIR/vcruntime140.dll" ] && cp "$PY_DIR/vcruntime140.dll" "$VENV/Scripts/"
 [ -f "$PY_DIR/vcruntime140_1.dll" ] && cp "$PY_DIR/vcruntime140_1.dll" "$VENV/Scripts/"
+rm "$PY_DIR"/DLLs/sqlite3.dll
+rm "$PY_DIR"/DLLs/_sqlite3.pyd
 cp "$PY_DIR"/DLLs/*.pyd "$PY_DIR"/DLLs/*.dll "$VENV/Scripts/"
 
 # The venv (re)launchers; lib.msi ships them under Lib/venv/scripts/nt

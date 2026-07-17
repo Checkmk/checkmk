@@ -772,6 +772,6 @@ def _migrate_auth_section(params):
         return params
     username = params.pop("username")
     password = params.pop("password")
-    params["auth"] = ("auth_basic", {"username": username, "password": ("password", password[1])})
+    params["auth"] = ("auth_basic", {"username": username, "password": password})
 
     return params

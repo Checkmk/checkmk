@@ -759,6 +759,70 @@ def test_migrate_servicenow_notification_plugin() -> None:
     assert all(got == want for got, want in zip(value, expected))
 
 
+# Legacy 2.3 on-disk shape: username/password on the top level (no "auth" key), with the
+# password referencing an entry from the password store via ("store", <id>).
+SERVICENOW_LEGACY_STORE_RULE_CONFIG: Final = [
+    EventRuleFactory.build(
+        notify_plugin=(
+            "servicenow",
+            {
+                "url": "url",
+                "username": "username",
+                "password": ("store", PW_STORE_KEY),
+                "proxy_url": ("no_proxy", None),
+                "mgmt_type": (
+                    "case",
+                    {
+                        "priority": "low",
+                        "recovery_state": {"start": ("predefined", "closed")},
+                    },
+                ),
+                "use_site_id": True,
+            },
+        ),
+    )
+]
+
+
+def test_migrate_servicenow_legacy_password_store_notification_parameter() -> None:
+    value = migrate_parameters(SERVICENOW_LEGACY_STORE_RULE_CONFIG)
+    expected = {
+        "servicenow": {
+            "<uuid-1>": {
+                "general": {
+                    "description": "Migrated from notification rule #0",
+                    "comment": "Auto migrated on update",
+                    "docu_url": "",
+                },
+                "parameter_properties": {
+                    "url": "url",
+                    "auth": (
+                        "auth_basic",
+                        {
+                            "username": "username",
+                            "password": (
+                                "cmk_postprocessed",
+                                "stored_password",
+                                (PW_STORE_KEY, ""),
+                            ),
+                        },
+                    ),
+                    "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                    "mgmt_type": (
+                        "case",
+                        {
+                            "priority": "low",
+                            "recovery_state": {"start": ("predefined", "closed")},
+                        },
+                    ),
+                    "use_site_id": "use_site_id",
+                },
+            }
+        }
+    }
+    assert value == expected
+
+
 SIGNL4_RULE_CONFIG: Final = [
     EventRuleFactory.build(
         notify_plugin=(

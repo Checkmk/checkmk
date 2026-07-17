@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type CSSProperties, computed, inject, useSlots } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import {
   COLUMN_LAYOUT_KEY,
@@ -23,12 +24,21 @@ export interface CellLink {
   variant?: 'inline' | 'icon' | undefined
 }
 
+export type CellVerticalAlign = 'top' | 'middle'
+
 const props = defineProps<{
   columnId?: string | undefined
   breakpoints?: CellBreakpoints | undefined
   linkedTo?: CellLink | undefined
   highlight?: CellHighlight | undefined
   justify?: ColumnJustify | undefined
+  button?: boolean | undefined
+  verticalAlign?: CellVerticalAlign | undefined
+  noWrap?: boolean | undefined
+}>()
+
+const emit = defineEmits<{
+  (event: 'click', payload: MouseEvent): void
 }>()
 
 const slots = useSlots()
@@ -101,12 +111,33 @@ const highlightStyle = computed<CSSProperties>(() =>
     :class="{
       'monitoring-base-cell--pinned': pinnedLeft !== null || pinnedRight !== null,
       'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned,
-      'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight
+      'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight,
+      'monitoring-base-cell--vertical-middle': verticalAlign === 'middle',
+      'monitoring-base-cell--no-wrap': noWrap === true
     }"
     :style="pinnedStyle"
   >
+    <button
+      v-if="button"
+      type="button"
+      class="monitoring-base-cell__button"
+      @click="emit('click', $event)"
+    >
+      <div v-if="highlight" :class="highlightClasses" :style="highlightStyle">
+        <slot :name="activeSlot" />
+      </div>
+      <div v-else class="monitoring-base-cell__plain">
+        <slot :name="activeSlot" />
+      </div>
+      <CmkMultitoneIcon
+        class="monitoring-base-cell__chevron"
+        name="chevron-right"
+        primary-color="font"
+        size="small"
+      />
+    </button>
     <a
-      v-if="linkedTo && linkedTo.variant !== 'icon'"
+      v-else-if="linkedTo && linkedTo.variant !== 'icon'"
       class="monitoring-base-cell__link"
       :href="linkedTo.href"
       :target="linkedTo.target"
@@ -173,9 +204,59 @@ const highlightStyle = computed<CSSProperties>(() =>
     }
   }
 
+  .monitoring-base-cell__button {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    width: 100%;
+    min-height: 31px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--ux-theme-3);
+    }
+
+    &:focus-visible {
+      outline: 1px solid var(--success);
+      outline-offset: -1px;
+    }
+
+    .monitoring-base-cell__chevron {
+      flex: 0 0 auto;
+      align-self: center;
+      margin-left: auto;
+      margin-top: calc(-1 * var(--dimension-2));
+      margin-right: var(--dimension-3);
+      height: 16px;
+    }
+  }
+
   .monitoring-base-cell__plain {
     padding: 5px var(--dimension-4);
   }
+}
+
+.monitoring-base-cell--vertical-middle {
+  vertical-align: middle;
+
+  /* stylelint-disable no-descending-specificity */
+  .monitoring-base-cell__link,
+  .monitoring-base-cell__wrapper,
+  .monitoring-base-cell__button {
+    align-items: center;
+  }
+  /* stylelint-enable no-descending-specificity */
+}
+
+.monitoring-base-cell--no-wrap {
+  white-space: nowrap;
 }
 
 .monitoring-base-cell--pinned {

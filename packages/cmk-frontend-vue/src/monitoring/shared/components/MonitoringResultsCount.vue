@@ -14,6 +14,12 @@ const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE)
 
+const truncated = computed(
+  () =>
+    (monitoringService?.resultsTruncated.value ?? false) &&
+    monitoringService?.fetchState.value !== 'foreground'
+)
+
 const visible = computed(() => (monitoringService?.matched.value ?? 0) > 0)
 
 const label = computed(() => {
@@ -29,7 +35,9 @@ const label = computed(() => {
 </script>
 
 <template>
-  <p class="monitoring-results-count" aria-live="polite">{{ visible ? label : '\xa0' }}</p>
+  <p v-if="!truncated" class="monitoring-results-count" aria-live="polite">
+    {{ visible ? label : '\xa0' }}
+  </p>
 </template>
 
 <style scoped>

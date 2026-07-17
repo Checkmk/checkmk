@@ -35,7 +35,10 @@ const hint = computed(() => {
     return _t('Adjust or clear search and filters to start fresh.')
   }
   if (hasSearchQuery.value) {
-    return _t('Check for typing errors or try a broader term.')
+    return _t('Check for typing errors, try using wildcards or a broader term.')
+  }
+  if (hasActiveFilter.value) {
+    return _t('Remove one or more filters to widen the result.')
   }
   return null
 })

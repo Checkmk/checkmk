@@ -95,44 +95,70 @@ watch(activeTab, (id) => {
       <slot name="above-tabs" />
     </div>
 
-    <CmkTabs v-model="activeTab" class="cmk-slide-in-tabbed__tabs">
-      <template #tabs>
-        <CmkTab
-          v-for="tab in tabs"
-          :id="tab.id"
-          :key="tab.id"
-          :variant="tab.variant"
-          :disabled="tab.disabled"
-        >
-          {{ tab.title }}
-        </CmkTab>
-      </template>
-      <template #tab-contents>
-        <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
-          <div
-            v-if="!tabState[tab.id] || tabState[tab.id]?.status === 'loading'"
-            class="cmk-slide-in-tabbed__loading"
+    <div v-if="overrideActive" class="cmk-slide-in-tabbed__override">
+      <slot name="override" />
+    </div>
+
+    <template v-else>
+      <div v-if="$slots.actions" class="cmk-slide-in-tabbed__actions">
+        <slot name="actions" />
+      </div>
+
+      <CmkTabs v-model="activeTab" class="cmk-slide-in-tabbed__tabs">
+        <template #tabs>
+          <CmkTab
+            v-for="tab in tabs"
+            :id="tab.id"
+            :key="tab.id"
+            :variant="tab.variant"
+            :disabled="tab.disabled"
           >
-            <CmkLoading />
-          </div>
-          <div v-else-if="tabState[tab.id]?.status === 'error'" class="cmk-slide-in-tabbed__error">
-            <CmkParagraph>
-              {{ _t('Could not load this content.') }}
-            </CmkParagraph>
-            <CmkButton variant="secondary" size="small" @click="retry(tab.id)">
-              {{ _t('Retry') }}
-            </CmkButton>
-          </div>
-          <component :is="tab.component" v-else :data="tabState[tab.id]?.data" v-bind="tab.props" />
-        </CmkTabContent>
-      </template>
-    </CmkTabs>
+            {{ tab.title }}
+          </CmkTab>
+        </template>
+        <template #tab-contents>
+          <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
+            <component
+              :is="tab.skeleton"
+              v-if="(!tabState[tab.id] || tabState[tab.id]?.status === 'loading') && tab.skeleton"
+            />
+            <div
+              v-else-if="!tabState[tab.id] || tabState[tab.id]?.status === 'loading'"
+              class="cmk-slide-in-tabbed__loading"
+            >
+              <CmkLoading />
+            </div>
+            <div
+              v-else-if="tabState[tab.id]?.status === 'error'"
+              class="cmk-slide-in-tabbed__error"
+            >
+              <CmkParagraph>
+                {{ _t('Could not load this content.') }}
+              </CmkParagraph>
+              <CmkButton variant="secondary" size="small" @click="retry(tab.id)">
+                {{ _t('Retry') }}
+              </CmkButton>
+            </div>
+            <component
+              :is="tab.component"
+              v-else
+              :data="tabState[tab.id]?.data"
+              v-bind="tab.props"
+            />
+          </CmkTabContent>
+        </template>
+      </CmkTabs>
+    </template>
   </CmkSlideInDialog>
 </template>
 
 <style scoped>
 .cmk-slide-in-tabbed__above-tabs {
   margin-bottom: var(--spacing);
+}
+
+.cmk-slide-in-tabbed__actions {
+  margin-bottom: var(--spacing-double);
 }
 
 .cmk-slide-in-tabbed__above-tabs:empty {

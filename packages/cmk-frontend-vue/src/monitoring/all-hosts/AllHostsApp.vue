@@ -34,12 +34,17 @@ import type {
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
+import MonitoringLimitSelector from '../shared/components/MonitoringLimitSelector.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
+import MonitoringTruncationNotice from '../shared/components/MonitoringTruncationNotice.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
-import ActionFeedback from '../shared/components/action/ActionFeedback.vue'
+import ActionFeedback, {
+  type ActionFeedback as ActionFeedbackResult
+} from '../shared/components/action/ActionFeedback.vue'
 import MonitoringActionBar from '../shared/components/action/MonitoringActionBar.vue'
 import MonitoringActionPane from '../shared/components/action/MonitoringActionPane.vue'
 import {
@@ -56,9 +61,12 @@ import {
 } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { useMonitoringActions } from '../shared/services/useMonitoringActions'
+import { HostActionMenuApi } from './api/actionMenu'
 import { HostApi } from './api/hosts'
 import HostRow from './components/HostRow.vue'
+import HostOverviewSkeleton from './components/slide-in/HostOverviewSkeleton.vue'
 import HostOverviewTab from './components/slide-in/HostOverviewTab.vue'
+import HostSlideInActions from './components/slide-in/HostSlideInActions.vue'
 import HostSlideInHeader from './components/slide-in/HostSlideInHeader.vue'
 import { HostService } from './services/HostService'
 
@@ -78,13 +86,48 @@ const hostActions: CellAction[] = (props.actions ?? []).map((action) => ({
   icon: ACTION_ICONS[action.ident] ?? 'action'
 }))
 
-const rowActions: CellAction[] = (props.row_actions ?? []).map((action) => ({
+// Always-visible inline buttons (edit host, parameters). Their url keeps the {host} placeholder,
+// resolved per row in HostRow.
+const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) => ({
   id: action.ident,
   label: action.title as TranslatedString,
-  icon: action.icon as SimpleIcons
+  icon: action.icon as SimpleIcons,
+  url: action.url
 }))
 
-const rowActionUrls = new Map((props.row_actions ?? []).map((action) => [action.ident, action.url]))
+// Command entries the row dropdown runs immediately with their default values (no form), acting on
+// that single host to mirror the legacy per-row action menu. Only list actions that are safe
+// without user input — form-based ones (acknowledge, downtime) carry essential per-host input and
+// must go through the action pane, not here. They carry no url, so ActionsCell emits `select`.
+const IMMEDIATE_ROW_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_ID]
+
+const rowCommands: CellAction[] = (props.actions ?? [])
+  .filter((action) => IMMEDIATE_ROW_COMMAND_IDS.includes(action.ident))
+  .map((action) => ({
+    id: action.ident,
+    label: action.title as TranslatedString,
+    icon: ACTION_ICONS[action.ident] ?? 'action'
+  }))
+
+const hasRowActions = rowActionButtons.length > 0 || rowCommands.length > 0
+
+const actionMenuApi = new HostActionMenuApi()
+
+// Overflow-menu entries for a host: the immediate commands (reschedule) followed by the fetched
+// legacy action-menu links (inventory, notes, topology, download, ...).
+async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
+  const items = await actionMenuApi.fetchActionMenu(host)
+  return [
+    ...rowCommands,
+    ...items.map((item) => ({
+      id: `${item.title}|${item.url}`,
+      label: item.title as TranslatedString,
+      icon: item.icon_name as SimpleIcons,
+      url: item.url,
+      target: item.target
+    }))
+  ]
+}
 
 const stateFilter: CheckboxListFilter<'state'> = {
   type: 'checkbox-list',
@@ -157,16 +200,16 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'state',
     header: _t('State'),
     sortDescFirst: true,
-    minSize: 60,
-    maxSize: 130,
+    minSize: 74,
+    maxSize: 100,
     meta: { filter: stateFilter }
   },
   {
     accessorKey: 'modes',
-    header: _t('Modes'),
+    header: _t('Mode'),
     enableSorting: false,
     minSize: 80,
-    maxSize: 120,
+    maxSize: 80,
     meta: { justify: 'left', filter: modesFilter }
   },
   {
@@ -181,19 +224,20 @@ const columns: ColumnDef<HostEntry>[] = [
     header: _t('IP address'),
     sortDescFirst: false,
     minSize: 100,
+    maxSize: 300,
     meta: { filter: addressFilter }
   },
   {
     accessorKey: 'num_services',
-    header: _t('Total'),
+    header: _t('All services'),
     sortDescFirst: true,
     meta: {
       justify: 'right',
       filter: totalServicesFilter,
       headerTitle: _t('Total number of services')
     },
-    minSize: 64,
-    maxSize: 90
+    minSize: 70,
+    maxSize: 130
   },
   {
     accessorKey: 'num_services_ok',
@@ -204,8 +248,8 @@ const columns: ColumnDef<HostEntry>[] = [
       filter: okServicesFilter,
       headerTitle: _t('Number of services in OK state')
     },
-    minSize: 64,
-    maxSize: 90
+    minSize: 70,
+    maxSize: 70
   },
   {
     accessorKey: 'num_services_warn',
@@ -216,8 +260,8 @@ const columns: ColumnDef<HostEntry>[] = [
       filter: warnServicesFilter,
       headerTitle: _t('Number of services in warning state')
     },
-    minSize: 64,
-    maxSize: 90
+    minSize: 70,
+    maxSize: 70
   },
   {
     accessorKey: 'num_services_crit',
@@ -228,8 +272,8 @@ const columns: ColumnDef<HostEntry>[] = [
       filter: critServicesFilter,
       headerTitle: _t('Number of services in critical state')
     },
-    minSize: 64,
-    maxSize: 90
+    minSize: 70,
+    maxSize: 70
   },
   {
     accessorKey: 'num_services_unknown',
@@ -240,8 +284,8 @@ const columns: ColumnDef<HostEntry>[] = [
       filter: unknownServicesFilter,
       headerTitle: _t('Number of services in unknown state')
     },
-    minSize: 64,
-    maxSize: 90
+    minSize: 70,
+    maxSize: 70
   },
   {
     accessorKey: 'num_services_pending',
@@ -252,17 +296,17 @@ const columns: ColumnDef<HostEntry>[] = [
       filter: pendingServicesFilter,
       headerTitle: _t('Number of services in pending state')
     },
-    minSize: 64,
-    maxSize: 90
+    minSize: 70,
+    maxSize: 70
   },
-  ...(rowActions.length > 0
+  ...(hasRowActions
     ? [
         {
           id: 'actions',
-          header: 'Actions',
+          header: _t('Actions'),
           enableSorting: false,
-          minSize: 96,
-          maxSize: 120,
+          minSize: 75,
+          maxSize: 75,
           meta: { justify: 'right' }
         } satisfies ColumnDef<HostEntry>
       ]
@@ -271,15 +315,19 @@ const columns: ColumnDef<HostEntry>[] = [
 
 const columnPinning: ColumnPinningState = {
   left: ['select', 'state', 'modes', 'name'],
-  ...(rowActions.length > 0 ? { right: ['actions'] } : {})
+  ...(hasRowActions ? { right: ['actions'] } : {})
 }
 
-const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance(), {
+const hostApi = new HostApi()
+
+const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms,
+  limitTiers: HOST_LIMIT_TIERS,
+  mayRemoveLimit: props.may_ignore_hard_limit ?? false,
   columns,
   quickFilters: [
     {
-      label: _t('Unhandled Problems'),
+      label: _t('Unhandled host problems'),
       filter: {
         type: 'and',
         children: [
@@ -336,34 +384,71 @@ function rowKey(row: HostEntry): string {
   return `${row.site_id}/${row.name}`
 }
 
-function onHostAction(payload: { action: CellAction; host: HostEntry }): void {
-  const urlTemplate = rowActionUrls.get(payload.action.id)
-  if (urlTemplate) {
-    window.location.href = urlTemplate.replace('{host}', encodeURIComponent(payload.host.name))
-  }
-}
-
 const slideInHost = ref<HostEntry | null>(null)
 const slideInOpen = computed(() => slideInHost.value !== null)
+const slideInActionId = ref<string | null>(null)
+
+const slideInTargets = computed<HostRef[]>(() =>
+  slideInHost.value ? [{ site_id: slideInHost.value.site_id, name: slideInHost.value.name }] : []
+)
 
 const slideInTabs = computed<SlideInTab[]>(() => {
   const host = slideInHost.value
   if (!host) {
     return []
   }
-  const hostRef: HostRef = { site_id: host.site_id, name: host.name }
   return [
     {
       id: 'overview',
       title: _t('Overview'),
       component: markRaw(HostOverviewTab),
-      props: { host: hostRef }
+      skeleton: markRaw(HostOverviewSkeleton),
+      load: () => hostApi.fetchHostOverview({ site_id: host.site_id, name: host.name }),
+      props: { host }
     }
   ]
 })
 
+function openSlideIn(host: HostEntry): void {
+  if (slideInHost.value === null) {
+    hostService.beginAutoPause()
+  }
+  slideInActionId.value = null
+  slideInHost.value = host
+}
+
 function closeSlideIn(): void {
+  if (slideInHost.value !== null) {
+    hostService.endAutoPause()
+  }
   slideInHost.value = null
+  slideInActionId.value = null
+}
+
+function openSlideInAction(actionId: string): void {
+  if (actionId in actionRegistry) {
+    slideInActionId.value = actionId
+  }
+}
+
+function closeSlideInAction(): void {
+  slideInActionId.value = null
+}
+
+function onSlideInActionFeedback(result: ActionFeedbackResult): void {
+  feedback.value = result
+  feedbackOpen.value = true
+  slideInActionId.value = null
+  if (result.variant === 'success') {
+    hostService.refresh(ACTION_REFRESH_DELAY_MS)
+  }
+}
+
+function onBulkActionFeedback(result: ActionFeedbackResult): void {
+  applyFeedback(result)
+  if (result.variant === 'success') {
+    hostService.refresh(ACTION_REFRESH_DELAY_MS)
+  }
 }
 
 function onBulkAction(action: CellAction): void {
@@ -371,6 +456,16 @@ function onBulkAction(action: CellAction): void {
     return
   }
   openAction(action.id)
+}
+
+async function onRowCommand(payload: { id: string; host: HostRef }): Promise<void> {
+  const action = actionRegistry[payload.id]
+  if (!action) {
+    return
+  }
+  applyFeedback(await action.perform([payload.host], action.defaultValues()), {
+    clearSelection: false
+  })
 }
 
 function onRightPaneCollapse(collapsed: boolean): void {
@@ -432,25 +527,30 @@ function navigateToLegacy() {
           {{ _t('Reset all filters') }}
         </button>
       </div>
-      <RefreshCountdown
-        :remaining="hostService.secondsRemaining.value"
-        :interval="hostService.pollIntervalSeconds"
-        :paused="hostService.paused.value"
-        :manual-paused="hostService.manualPaused.value"
-        size="small"
-        @toggle="hostService.togglePause()"
-      />
+      <div class="monitoring-all-hosts-app__header-end">
+        <MonitoringLimitSelector />
+        <RefreshCountdown
+          :remaining="hostService.secondsRemaining.value"
+          :interval="hostService.pollIntervalSeconds"
+          :paused="hostService.paused.value"
+          :manual-paused="hostService.manualPaused.value"
+          size="small"
+          @toggle="hostService.togglePause()"
+        />
+      </div>
     </div>
     <CmkSplitPane
       :collapsed="!activeAction"
       :right-min-size="30"
       :right-max-size="50"
+      :collapsible-on-resize="false"
       class="monitoring-all-hosts-app__split"
       @update:collapsed="onRightPaneCollapse($event as boolean)"
     >
       <template #left>
         <div class="monitoring-all-hosts-app__left-pane">
           <MonitoringResultsCount class="monitoring-all-hosts-app__results-count" />
+          <MonitoringTruncationNotice class="monitoring-all-hosts-app__truncation-notice" />
           <ActionFeedback
             v-if="feedback"
             v-model:open="feedbackOpen"
@@ -479,8 +579,10 @@ function navigateToLegacy() {
               <HostRow
                 :row="row"
                 :table-row="tableRow"
-                :actions="rowActions"
-                @action="onHostAction"
+                :row-actions="rowActionButtons"
+                :load-action-menu="loadActionMenu"
+                @open="openSlideIn"
+                @command="onRowCommand"
               />
             </template>
             <template #empty-state>
@@ -495,7 +597,7 @@ function navigateToLegacy() {
           :action-id="activeAction"
           :actions="actionRegistry"
           :targets="selectedHosts"
-          @feedback="applyFeedback"
+          @feedback="onBulkActionFeedback"
           @cancel="closeAction"
         />
       </template>
@@ -503,11 +605,29 @@ function navigateToLegacy() {
     <CmkSlideInTabbed
       :open="slideInOpen"
       :tabs="slideInTabs"
-      :header="{ title: slideInHost?.name ?? '', closeButton: true }"
+      :override-active="slideInActionId !== null"
+      :header="{ title: _t('Host details'), closeButton: true }"
       @close="closeSlideIn"
     >
       <template #above-tabs>
         <HostSlideInHeader v-if="slideInHost" :host="slideInHost" />
+      </template>
+      <template #actions>
+        <HostSlideInActions @select="openSlideInAction" />
+      </template>
+      <template #override>
+        <MonitoringActionPane
+          v-if="slideInActionId"
+          :action-id="slideInActionId"
+          :actions="actionRegistry"
+          :targets="slideInTargets"
+          back-button
+          indent
+          :show-count="false"
+          @back="closeSlideInAction"
+          @cancel="closeSlideInAction"
+          @feedback="onSlideInActionFeedback"
+        />
       </template>
     </CmkSlideInTabbed>
   </div>
@@ -553,6 +673,13 @@ function navigateToLegacy() {
   gap: var(--spacing);
 }
 
+.monitoring-all-hosts-app__header-end {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--spacing);
+}
+
 .monitoring-all-hosts-app__search {
   flex: 1;
   max-width: 360px;
@@ -594,6 +721,11 @@ function navigateToLegacy() {
 }
 
 .monitoring-all-hosts-app__results-count {
+  flex: 0 0 auto;
+  margin: var(--spacing-half) 0 var(--spacing);
+}
+
+.monitoring-all-hosts-app__truncation-notice {
   flex: 0 0 auto;
   margin: var(--spacing-half) 0 var(--spacing);
 }

@@ -13,15 +13,22 @@ import type { ActionFeedback } from './ActionFeedback.vue'
 import ActionFormPane from './ActionFormPane.vue'
 import type { MonitoringActionRegistry } from './registry'
 
-const props = defineProps<{
-  actionId: string
-  actions: MonitoringActionRegistry
-  targets: HostRef[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    actionId: string
+    actions: MonitoringActionRegistry
+    targets: HostRef[]
+    backButton?: boolean | undefined
+    indent?: boolean | undefined
+    showCount?: boolean | undefined
+  }>(),
+  { showCount: true }
+)
 
 const emit = defineEmits<{
   (event: 'feedback', result: ActionFeedback): void
   (event: 'cancel'): void
+  (event: 'back'): void
 }>()
 
 const action = computed(() => props.actions[props.actionId])
@@ -41,11 +48,14 @@ async function onSubmit(values: unknown): Promise<void> {
     v-if="action"
     :key="actionId"
     :title="action.title"
-    :subtitle="action.subtitle(targets.length)"
+    :subtitle="showCount ? action.subtitle(targets.length) : undefined"
     :submit-label="action.submitLabel"
     :form="action.form"
     :initial-values="initialValues"
+    :back-button="backButton"
+    :indent="indent"
     @submit="onSubmit"
     @cancel="emit('cancel')"
+    @back="emit('back')"
   />
 </template>

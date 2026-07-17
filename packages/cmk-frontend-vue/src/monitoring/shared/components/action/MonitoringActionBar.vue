@@ -96,6 +96,6 @@ function select(action: CellAction): void {
 }
 
 .monitoring-action-bar__button {
-  gap: var(--dimension-2);
+  gap: var(--dimension-4);
 }
 </style>

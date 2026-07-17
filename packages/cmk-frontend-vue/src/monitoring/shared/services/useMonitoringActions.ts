@@ -15,7 +15,7 @@ export interface MonitoringActions<Id extends string = string> {
   feedbackOpen: Ref<boolean>
   openAction: (id: Id) => void
   closeAction: () => void
-  applyFeedback: (result: ActionFeedback) => void
+  applyFeedback: (result: ActionFeedback, options?: { clearSelection?: boolean }) => void
 }
 
 export function useMonitoringActions<Id extends string = string>(
@@ -35,8 +35,9 @@ export function useMonitoringActions<Id extends string = string>(
     activeAction.value = null
   }
 
-  function applyFeedback(result: ActionFeedback): void {
-    if (result.variant === 'success') {
+  function applyFeedback(result: ActionFeedback, options: { clearSelection?: boolean } = {}): void {
+    // Row-level actions act on a single host and must not touch the (independent) bulk selection.
+    if (result.variant === 'success' && (options.clearSelection ?? true)) {
       rowSelection.value = {}
     }
     feedback.value = result

@@ -29,7 +29,7 @@ defineProps<StateCellProps>()
   <BaseCell :column-id="columnId">
     <template #default>
       <div class="monitoring-state-cell">
-        <HostStateDisplay :state="state" :pending="pending" class="monitoring-state-cell__tag" />
+        <HostStateDisplay :state="state" :pending="pending" />
         <CmkMultitoneIcon
           v-if="stale"
           name="stale"
@@ -47,16 +47,6 @@ defineProps<StateCellProps>()
   flex-direction: row;
   gap: var(--dimension-4);
   align-items: center;
-  justify-content: center;
-}
-
-.monitoring-state-cell__tag {
-  margin: 0;
-  display: flex;
-  box-sizing: border-box;
-  height: 21px;
-  align-items: center;
-  min-width: 60px;
   justify-content: center;
 }
 </style>

@@ -16,19 +16,23 @@ import type { HostApi } from '../api/hosts'
 
 export class HostService extends MonitoringService<HostEntry> {
   constructor(
-    private readonly api: HostApi,
+    private readonly api: Pick<HostApi, 'fetchHosts'>,
     shortCutService: KeyShortcutService,
     options: MonitoringServiceOptions<HostEntry> = {}
   ) {
     super('host-service', shortCutService, options)
   }
 
-  protected async fetchBatch(): Promise<PagedResponse<HostEntry>> {
-    const response = await this.api.fetchHosts({
-      sort: this.sortState.value,
-      searchQuery: this.searchQuery.value,
-      filter: this.filterState.value
-    })
+  protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostEntry>> {
+    const response = await this.api.fetchHosts(
+      {
+        limit: this.requestedLimit.value,
+        sort: this.sortState.value,
+        searchQuery: this.searchQuery.value,
+        filter: this.filterState.value
+      },
+      signal
+    )
     return { items: response.hosts, meta: response.meta }
   }
 }

@@ -20,7 +20,10 @@ const propsCva = cva('', {
       success: 'cmk-tag--color-success',
       warning: 'cmk-tag--color-warning',
       unknown: 'cmk-tag--color-unknown',
-      danger: 'cmk-tag--color-danger'
+      danger: 'cmk-tag--color-danger',
+      discovered: 'cmk-tag--color-discovered',
+      explicit: 'cmk-tag--color-explicit',
+      ruleset: 'cmk-tag--color-ruleset'
     },
     variant: {
       fill: 'cmk-tag--variant-fill',
@@ -98,6 +101,18 @@ defineProps<CmkTagProps>()
   --tag-fill-color: var(--color-midnight-grey-50);
 }
 
+.cmk-tag--color-discovered {
+  --tag-color: var(--tag-discovered-color);
+}
+
+.cmk-tag--color-explicit {
+  --tag-color: var(--tag-explicit-color);
+}
+
+.cmk-tag--color-ruleset {
+  --tag-color: var(--tag-ruleset-color);
+}
+
 /* weighted variant: success -> danger gets more recognizable in color and contrast */
 .cmk-tag--variant-weighted.cmk-tag--color-default {
   --tag-color: var(--font-color);
@@ -129,6 +144,24 @@ defineProps<CmkTagProps>()
   --tag-fill-color: var(--color-dark-red-70);
 }
 
+.cmk-tag--variant-weighted.cmk-tag--color-discovered {
+  --tag-color: var(--color-orange-0);
+  --tag-border-color: var(--color-orange-40);
+  --tag-fill-color: var(--color-orange-90);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-explicit {
+  --tag-color: var(--color-purple-0);
+  --tag-border-color: var(--color-purple-40);
+  --tag-fill-color: var(--color-purple-90);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-ruleset {
+  --tag-color: var(--color-pink-0);
+  --tag-border-color: var(--color-pink-40);
+  --tag-fill-color: var(--color-pink-90);
+}
+
 .cmk-tag--variant-fill {
   background: var(--tag-fill-color, var(--tag-color));
   border: 1px solid var(--tag-fill-color, var(--tag-color));
@@ -153,6 +186,10 @@ defineProps<CmkTagProps>()
 }
 
 .cmk-tag--variant-fill.cmk-tag--color-warning {
+  color: var(--black);
+}
+
+.cmk-tag--variant-fill.cmk-tag--color-discovered {
   color: var(--black);
 }
 

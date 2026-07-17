@@ -11,6 +11,8 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from '@/components/CmkButton/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkIndent from '@/components/CmkIndent.vue'
 
 const props = defineProps<{
   title: TranslatedString
@@ -18,11 +20,14 @@ const props = defineProps<{
   submitLabel?: TranslatedString | undefined
   form?: Component | undefined
   initialValues?: unknown
+  backButton?: boolean | undefined
+  indent?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
   (event: 'submit', values: unknown): void
   (event: 'cancel'): void
+  (event: 'back'): void
 }>()
 
 const { _t } = usei18n()
@@ -44,24 +49,39 @@ function cancel(): void {
 
 <template>
   <div class="monitoring-action-form-pane">
-    <header class="monitoring-action-form-pane__header">
-      <h2 class="monitoring-action-form-pane__title">{{ title }}</h2>
-      <p v-if="subtitle" class="monitoring-action-form-pane__subtitle">{{ subtitle }}</p>
-    </header>
+    <component :is="indent ? CmkIndent : 'div'" class="monitoring-action-form-pane__group">
+      <header class="monitoring-action-form-pane__header">
+        <div class="monitoring-action-form-pane__title-row">
+          <CmkButton
+            v-if="backButton"
+            size="iconOnly"
+            variant="optional"
+            :title="_t('Back')"
+            :aria-label="_t('Back')"
+            class="monitoring-action-form-pane__back"
+            @click="emit('back')"
+          >
+            <CmkIcon name="back" size="small" />
+          </CmkButton>
+          <h2 class="monitoring-action-form-pane__title">{{ title }}</h2>
+        </div>
+        <p v-if="subtitle" class="monitoring-action-form-pane__subtitle">{{ subtitle }}</p>
+      </header>
 
-    <div class="monitoring-action-form-pane__body">
-      <component :is="form" v-if="form" v-model="draft" @update:valid="isValid = $event" />
-      <p v-else class="monitoring-action-form-pane__confirm">
-        {{ _t('This action runs immediately and has no further options.') }}
-      </p>
-    </div>
+      <div class="monitoring-action-form-pane__actions">
+        <CmkButton variant="primary" size="medium" :disabled="!isValid" @click="submit">
+          {{ submitLabel ?? _t('Apply') }}
+        </CmkButton>
+        <CmkButton size="medium" @click="cancel">{{ _t('Cancel') }}</CmkButton>
+      </div>
 
-    <div class="monitoring-action-form-pane__footer">
-      <CmkButton variant="primary" size="small" :disabled="!isValid" @click="submit">
-        {{ submitLabel ?? _t('Apply') }}
-      </CmkButton>
-      <CmkButton size="small" @click="cancel">{{ _t('Cancel') }}</CmkButton>
-    </div>
+      <div class="monitoring-action-form-pane__body">
+        <component :is="form" v-if="form" v-model="draft" @update:valid="isValid = $event" />
+        <p v-else class="monitoring-action-form-pane__confirm">
+          {{ _t('This action runs immediately and has no further options.') }}
+        </p>
+      </div>
+    </component>
   </div>
 </template>
 
@@ -78,6 +98,12 @@ function cancel(): void {
 
 .monitoring-action-form-pane__header {
   flex: 0 0 auto;
+}
+
+.monitoring-action-form-pane__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 
 .monitoring-action-form-pane__title {
@@ -102,12 +128,18 @@ function cancel(): void {
   color: var(--font-color-dimmed);
 }
 
-.monitoring-action-form-pane__footer {
+.monitoring-action-form-pane__group {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing);
+  min-height: 0;
+}
+
+.monitoring-action-form-pane__actions {
   display: flex;
   flex: 0 0 auto;
   gap: var(--dimension-4);
   align-items: center;
-  padding-top: var(--dimension-4);
-  border-top: 1px solid var(--ux-theme-4);
 }
 </style>

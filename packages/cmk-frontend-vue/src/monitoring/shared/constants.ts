@@ -5,3 +5,6 @@
  */
 export const DEFAULT_BATCH_SIZE = 1000
 export const POLL_INTERVAL_MS = 30_000
+
+export const HOST_LIMIT_TIERS = [DEFAULT_BATCH_SIZE, 5000]
+export const ACTION_REFRESH_DELAY_MS = 1000

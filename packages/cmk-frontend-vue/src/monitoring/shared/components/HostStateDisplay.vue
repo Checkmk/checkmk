@@ -48,5 +48,26 @@ const stateColor = computed<Colors>(() => {
 </script>
 
 <template>
-  <CmkTag :color="stateColor" variant="weighted" :content="stateLabel" size="small" />
+  <CmkTag
+    class="monitoring-host-state-display"
+    :color="stateColor"
+    variant="weighted"
+    :content="stateLabel"
+    size="small"
+  />
 </template>
+
+<style scoped>
+.monitoring-host-state-display {
+  --host-state-display-height: 21px;
+  --host-state-display-min-width: 60px;
+
+  margin: 0;
+  display: flex;
+  box-sizing: border-box;
+  height: var(--host-state-display-height);
+  min-width: var(--host-state-display-min-width);
+  align-items: center;
+  justify-content: center;
+}
+</style>

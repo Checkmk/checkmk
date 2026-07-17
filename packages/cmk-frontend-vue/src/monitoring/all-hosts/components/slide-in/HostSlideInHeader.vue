@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
@@ -15,9 +15,9 @@ defineProps<{ host: HostEntry }>()
 <template>
   <div class="monitoring-host-slide-in-header">
     <HostStateDisplay :state="host.state" />
-    <CmkParagraph v-if="host.address" class="monitoring-host-slide-in-header__address">
-      {{ host.address }}
-    </CmkParagraph>
+    <CmkHeading type="h2" class="monitoring-host-slide-in-header__name">
+      {{ host.name }}
+    </CmkHeading>
   </div>
 </template>
 
@@ -29,7 +29,7 @@ defineProps<{ host: HostEntry }>()
   gap: var(--spacing);
 }
 
-.monitoring-host-slide-in-header__address {
-  color: var(--font-color-dimmed);
+.monitoring-host-slide-in-header__name {
+  margin: 0;
 }
 </style>

@@ -754,6 +754,7 @@ export const oneColorIcons = [
   'broken-chain',
   'share',
   'chevron-down',
+  'chevron-right',
   'chevron-up',
   'filter',
   'more-actions',

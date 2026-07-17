@@ -5,11 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Row } from '@tanstack/vue-table'
-import { inject } from 'vue'
+import { computed, inject } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
@@ -22,21 +22,34 @@ const props = withDefaults(
   defineProps<{
     row: HostEntry
     tableRow: Row<HostEntry>
-    actions?: CellAction[]
+    // Always-visible inline buttons; their url may contain a {host} placeholder resolved per row.
+    rowActions?: CellAction[]
+    // Lazy loader for the overflow menu entries of this host.
+    loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
   }>(),
-  { actions: () => [] }
+  { rowActions: () => [], loadActionMenu: undefined }
 )
 
 const emit = defineEmits<{
-  (event: 'action', payload: { action: CellAction; host: HostEntry }): void
+  (event: 'open', host: HostEntry): void
+  (event: 'command', payload: { id: string; host: HostRef }): void
 }>()
 
 const { _t } = usei18n()
 
 const SERVICE_COUNT_MIN_WIDTH = 35
 
+const hostRef = computed<HostRef>(() => ({ site_id: props.row.site_id, name: props.row.name }))
+
+const actionButtons = computed<CellAction[]>(() =>
+  props.rowActions.map((action) => ({
+    ...action,
+    url: action.url?.replace('{host}', encodeURIComponent(props.row.name))
+  }))
+)
+
 function onActionSelect(action: CellAction): void {
-  emit('action', { action, host: props.row })
+  emit('command', { id: action.id, host: hostRef.value })
 }
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
@@ -60,7 +73,13 @@ function toggleSelected(selected: boolean): void {
   />
   <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
   <ModesCell v-if="hasColumn('modes')" column-id="modes" :modes="row.modes ?? []" />
-  <StringCell v-if="hasColumn('name')" column-id="name" :value="row.name" />
+  <StringCell
+    v-if="hasColumn('name')"
+    column-id="name"
+    :value="row.name"
+    :button="true"
+    @click="emit('open', row)"
+  />
   <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
   <NumberCell
     v-if="hasColumn('num_services')"
@@ -196,9 +215,11 @@ function toggleSelected(selected: boolean): void {
   />
 
   <ActionsCell
-    v-if="actions.length > 0 && hasColumn('actions')"
+    v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"
     column-id="actions"
-    :actions="actions"
+    :actions="actionButtons"
+    :max-visible="2"
+    :load="loadActionMenu ? () => loadActionMenu!(hostRef) : undefined"
     @select="onActionSelect"
   />
 </template>

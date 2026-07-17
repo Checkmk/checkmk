@@ -488,3 +488,39 @@ def test_event_overview_shows_site_when_selected() -> None:
     assert "Site:" in html
     assert "heute" in html
     assert "Address:" not in html
+
+
+def _render_event_overview_for_notification(notification_type: str) -> str:
+    # Render the "Event overview" template for a specific notification type. The
+    # alert handler name and output are only shown for alert handler notifications.
+    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), autoescape=True)
+    env.filters["timestamp"] = mail.TemplateRenderer.format_timestamp
+    macros = env.get_template("macros.html").module
+    data = {
+        "WHAT": "HOST",
+        "NOTIFICATIONTYPE": notification_type,
+        "HOSTOUTPUT_HTML": "Packet received via smart PING",
+        "LASTHOSTSTATECHANGE": "1552482625",
+        "ALERTHANDLERNAME": "My handler",
+        "ALERTHANDLEROUTPUT": "Handler finished successfully",
+    }
+    return env.get_template("event_overview.html").render(
+        data=data,
+        elements=["graph"],
+        service_notification=False,
+        macros=macros,
+    )
+
+
+def test_event_overview_shows_alert_handler_details_for_alert_handler_notification() -> None:
+    html = _render_event_overview_for_notification("ALERTHANDLER (0)")
+    assert "Name of alert handler:" in html
+    assert "My handler" in html
+    assert "Output of alert handler:" in html
+    assert "Handler finished successfully" in html
+
+
+def test_event_overview_omits_alert_handler_details_for_regular_notification() -> None:
+    html = _render_event_overview_for_notification("PROBLEM")
+    assert "Name of alert handler:" not in html
+    assert "Output of alert handler:" not in html

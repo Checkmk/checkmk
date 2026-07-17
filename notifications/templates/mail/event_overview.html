@@ -93,6 +93,32 @@
             {% endif %}
         </td>
     </tr>
+    {% if data.get('NOTIFICATIONTYPE', '').startswith('ALERTHANDLER') %}
+    <tr>
+        <td width="100"
+            style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly;
+                   font-weight: 600">Name of alert handler:</td>
+        <td style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly">{{ data.get('ALERTHANDLERNAME', '') }}</td>
+    </tr>
+    <tr>
+        <td width="100"
+            style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly;
+                   font-weight: 600">Output of alert handler:</td>
+        <td style="padding: 5px 0;
+                   margin: 0;
+                   line-height: 1.4;
+                   mso-line-height-rule: exactly">{{ data.get('ALERTHANDLEROUTPUT', '') }}</td>
+    </tr>
+    {% endif %}
     {% if service_notification %}
         <tr>
             <td width="100"

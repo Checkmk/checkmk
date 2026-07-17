@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -171,3 +172,35 @@ def test_check_prism_protection_domains_async_dr_without_usage_stats() -> None:
     assert isinstance(final, Result)
     assert final.state == State.OK
     assert "Type: Async DR" in final.summary
+
+
+def test_check_prism_protection_domains_next_snapshot_time_in_seconds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The Prism API reports next_snapshot_time_usecs in microseconds. It must be
+    # converted to seconds before rendering, otherwise the timestamp lands tens
+    # of millions of years in the future (the value below would render as year
+    # 56299726). Pin the timezone so the rendered literal is stable everywhere.
+    monkeypatch.setenv("TZ", "UTC")
+    time.tzset()
+    section = {
+        "PD": {
+            "active": True,
+            "name": "PD",
+            "metro_avail": None,
+            "next_snapshot_time_usecs": 1776585600000000,
+            "remote_site_names": ["remote"],
+            "vms": [],
+        },
+    }
+    result = list(check_prism_protection_domains(item="PD", params={}, section=section))
+    assert result[-1] == Result(
+        state=State.OK,
+        summary=(
+            "Type: Async DR, "
+            "Exclusive Snapshot Usage: 0 B, "
+            "Next Snapshot scheduled at: 2026-04-19 08:00:00, "
+            "Total entities: 0, "
+            "Remote Site: remote"
+        ),
+    )

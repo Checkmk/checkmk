@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -79,7 +78,8 @@ def check_prism_protection_domains(
         if not date:
             date = "N/A"
         else:
-            date = time.strftime("%a %d-%m-%Y %H:%M:%S", time.localtime(float(date)))
+            # The API reports this in microseconds; render.datetime expects seconds.
+            date = render.datetime(float(date) / 1_000_000)
 
         remotes = data.get("remote_site_names", [])
         if not remotes:

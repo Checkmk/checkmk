@@ -249,6 +249,14 @@ class FileCache(Generic[_TRawData], abc.ABC):
         except Exception as e:
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 
+    def delete(self, mode: Mode) -> None:
+        # Guarded like write() so it is a no-op for disabled caches and non-cacheable modes.
+        if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
+            return
+        path = self._make_path(mode)
+        self._logger.debug("Delete cache file %(path)s", {"path": path})
+        path.unlink(missing_ok=True)
+
 
 class NoCache(FileCache[_TRawData]):
     def __init__(self, *_args: object, **_kw: object) -> None:

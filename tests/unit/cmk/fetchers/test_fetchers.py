@@ -16,7 +16,7 @@ import socket
 import time
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
-from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
+from typing import Any, Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
 
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
@@ -224,6 +224,45 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert path.exists()
         assert file_cache.read(mode) is None
 
+    def test_delete(self, file_cache: FileCache[Sized], path: Path, raw_data: Sized) -> None:
+        mode = Mode.DISCOVERY
+        file_cache.file_cache_mode = FileCacheMode.READ_WRITE
+
+        file_cache.write(raw_data, mode)
+        assert path.exists()
+
+        file_cache.delete(mode)
+        assert not path.exists()
+
+    def test_delete_missing_is_noop(self, file_cache: FileCache[Sized], path: Path) -> None:
+        file_cache.file_cache_mode = FileCacheMode.READ_WRITE
+
+        assert not path.exists()
+        file_cache.delete(Mode.DISCOVERY)  # must not raise
+        assert not path.exists()
+
+    def test_delete_disabled_keeps_file(
+        self, file_cache: FileCache[Sized], path: Path, raw_data: Sized
+    ) -> None:
+        file_cache.file_cache_mode = FileCacheMode.READ_WRITE
+        file_cache.write(raw_data, Mode.DISCOVERY)
+        assert path.exists()
+
+        file_cache.file_cache_mode = FileCacheMode.DISABLED
+        file_cache.delete(Mode.DISCOVERY)
+        assert path.exists()
+
+    def test_delete_non_cacheable_mode_keeps_file(
+        self, file_cache: FileCache[Sized], path: Path, raw_data: Sized
+    ) -> None:
+        file_cache.file_cache_mode = FileCacheMode.READ_WRITE
+        file_cache.write(raw_data, Mode.DISCOVERY)
+        assert path.exists()
+
+        # FORCE_SECTIONS is not cached, so delete() must be a no-op for it.
+        file_cache.delete(Mode.FORCE_SECTIONS)
+        assert path.exists()
+
 
 _TRawData = TypeVar("_TRawData", bound=Sized)
 
@@ -248,6 +287,64 @@ class StubFileCache(Generic[_TRawData], FileCache[_TRawData]):
 
     def read(self, mode: Mode) -> _TRawData | None:
         return self.cache
+
+
+class CannedFetcherTrigger(PlainFetcherTrigger):
+    """A trigger whose fetch result is provided up front, ignoring the fetcher."""
+
+    def __init__(self, omd_root: Path, canned: result.Result[Any, Exception]) -> None:
+        super().__init__(omd_root)
+        self._canned = canned
+
+    def _trigger(
+        self, _fetcher: Fetcher[Any], _mode: Mode, _secrets: Any
+    ) -> result.Result[Any, Exception]:
+        return self._canned
+
+
+class TestFetcherTriggerCacheHandling:
+    @pytest.fixture
+    def path(self, tmp_path: Path) -> Path:
+        return tmp_path / "database"
+
+    @pytest.fixture
+    def file_cache(self, path: Path) -> AgentFileCache:
+        # MaxAge.zero() makes read() ignore any existing file (as a rescan does),
+        # so get_raw_data() always reaches the fetch-and-cache step.
+        return AgentFileCache(
+            base_path=Path("/"),
+            relative_path_template=str(path),
+            max_age=MaxAge.zero(),
+            simulation=False,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.READ_WRITE,
+        )
+
+    def test_successful_fetch_is_cached(self, file_cache: AgentFileCache, path: Path) -> None:
+        trigger = CannedFetcherTrigger(Path("/"), result.OK(AgentRawData(b"<<<check_mk>>>\nfresh")))
+
+        out = trigger.get_raw_data(
+            file_cache, PiggybackFetcher(), Mode.DISCOVERY, ActivatedSecrets()
+        )
+
+        assert out.is_ok()
+        assert path.exists()
+
+    def test_failed_fetch_deletes_stale_cache(self, file_cache: AgentFileCache, path: Path) -> None:
+        # A previous successful fetch left populated data on disk.
+        file_cache.write(AgentRawData(b"<<<check_mk>>>\nstale"), Mode.DISCOVERY)
+        assert path.exists()
+
+        trigger = CannedFetcherTrigger(Path("/"), result.Error(FetcherError("Got no data")))
+
+        out = trigger.get_raw_data(
+            file_cache, PiggybackFetcher(), Mode.DISCOVERY, ActivatedSecrets()
+        )
+
+        assert not out.is_ok()
+        # The stale cache must be gone so a later cache-only read reports the failure
+        # instead of resurrecting the outdated data.
+        assert not path.exists()
 
 
 class TestIPMISensor:

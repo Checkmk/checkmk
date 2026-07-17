@@ -52,12 +52,20 @@ class FetcherTrigger(abc.ABC):
                 FetcherError("unknown error")
             )
             fetched = self._trigger(fetcher, mode, secrets)
-            fetched.map(partial(file_cache.write, mode=mode))
+            fetched.fold(
+                ok=partial(file_cache.write, mode=mode),
+                # Remove a stale cache file so a failed fetch does not leave outdated data
+                # behind for the next (cache-only) read. (See: CMK-31896)
+                error=lambda _exc: file_cache.delete(mode),
+            )
             return fetched
 
         except (MKTimeout, TimeoutError):
             raise
         except FetcherError as exc:
+            # Remove a stale cache file so a failed fetch does not leave outdated data
+            # behind for the next (cache-only) read. (See: CMK-31896)
+            file_cache.delete(mode)
             # These are intentionally raised exceptions for which we don't need crash reports
             return result.Error(exc)
         except Exception as exc:

@@ -34357,13 +34357,24 @@ msgstr ""
 "deze vlag aanzetten om het bestand vanaf het begin te verwerken en alle "
 "berichten te zien die mogelijk al aanwezig zijn."
 
+#, fuzzy
 msgid ""
 "If a node has any of these roles, then it is considered a control plane node "
-"by Checkmk. Otherwise, it is considered a worker node."
+"by Checkmk. A control plane might in some cases also be a worker node."
 msgstr ""
 "Als een knooppunt een van deze rollen heeft, dan wordt het door Checkmk "
 "beschouwd als een control plane knooppunt. Anders wordt het beschouwd als "
 "een worker node."
+
+msgid ""
+"If a node has any of these roles, then it is considered a worker node by "
+"Checkmk. A worker node might in some cases also be a control plane node. "
+"Some Kubernetes distributions automatically assign a role such as 'worker' "
+"to worker nodes. If yours does not and you have nodes that are both control "
+"plane and worker nodes, you can assign them a role and ensure it is in this "
+"list to make Checkmk count the node as both roles. Nodes without a control "
+"plane role (specified above) are automatically counted as worker nodes."
+msgstr ""
 
 msgid ""
 "If a reboot is required, the selected status will be displayed. Default is "
@@ -37941,6 +37952,10 @@ msgstr "Ongeldige bestandsnaam"
 
 msgid "Invalid file name for tarfile_name given."
 msgstr "Ongeldige bestandsnaam voor tarfile_name gegeven."
+
+#, fuzzy
+msgid "Invalid file name."
+msgstr "Ongeldige bestandsnaam"
 
 #, fuzzy, python-format
 msgid "Invalid file type expected %s received '%s'"
@@ -65745,6 +65760,10 @@ msgid "Specify roles of a control plane node"
 msgstr "De rollen van een knooppunt van het besturingsvlak specificeren"
 
 #, fuzzy
+msgid "Specify roles of a worker node"
+msgstr "De rollen van een knooppunt van het besturingsvlak specificeren"
+
+#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
@@ -73472,6 +73491,14 @@ msgstr "De gevraagde verbinding bestaat niet."
 
 msgid "The requested connection does not exist."
 msgstr "De gevraagde verbinding bestaat niet."
+
+#, fuzzy
+msgid "The requested file does not exist."
+msgstr "De gevraagde site bestaat niet"
+
+#, fuzzy
+msgid "The requested file is not available for download."
+msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
 
 msgid "The requested global setting does not exist."
 msgstr "De gevraagde globale instelling bestaat niet."

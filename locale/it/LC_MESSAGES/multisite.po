@@ -34116,12 +34116,23 @@ msgstr ""
 "per iniziare ad elaborare il file dall'inizio e vedere tutti i messaggi che "
 "potrebbero essere già presenti."
 
+#, fuzzy
 msgid ""
 "If a node has any of these roles, then it is considered a control plane node "
-"by Checkmk. Otherwise, it is considered a worker node."
+"by Checkmk. A control plane might in some cases also be a worker node."
 msgstr ""
 "Se un nodo ha uno di questi ruoli, è considerato da Checkmk un nodo del "
 "piano di controllo. Altrimenti, è considerato un nodo lavoratore."
+
+msgid ""
+"If a node has any of these roles, then it is considered a worker node by "
+"Checkmk. A worker node might in some cases also be a control plane node. "
+"Some Kubernetes distributions automatically assign a role such as 'worker' "
+"to worker nodes. If yours does not and you have nodes that are both control "
+"plane and worker nodes, you can assign them a role and ensure it is in this "
+"list to make Checkmk count the node as both roles. Nodes without a control "
+"plane role (specified above) are automatically counted as worker nodes."
+msgstr ""
 
 msgid ""
 "If a reboot is required, the selected status will be displayed. Default is "
@@ -37737,6 +37748,10 @@ msgstr "Nome del file non valido"
 
 msgid "Invalid file name for tarfile_name given."
 msgstr "Nome di file non valido per tarfile_name dato."
+
+#, fuzzy
+msgid "Invalid file name."
+msgstr "Nome del file non valido"
 
 #, python-format
 msgid "Invalid file type expected %s received '%s'"
@@ -65496,6 +65511,10 @@ msgstr "Specificare i nomi delle code a cui applicare la regola"
 msgid "Specify roles of a control plane node"
 msgstr "Specificare i ruoli di un nodo del piano di controllo"
 
+#, fuzzy
+msgid "Specify roles of a worker node"
+msgstr "Specificare i ruoli di un nodo del piano di controllo"
+
 msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Specifica i siti sui quali questo collettore OpenTelemetry dovrebbe essere "
@@ -73229,6 +73248,14 @@ msgstr "La connessione richiesta non esiste."
 
 msgid "The requested connection does not exist."
 msgstr "La connessione richiesta non esiste."
+
+#, fuzzy
+msgid "The requested file does not exist."
+msgstr "Il sito richiesto non esiste"
+
+#, fuzzy
+msgid "The requested file is not available for download."
+msgstr "Il file non sembra un file chiave valido."
 
 msgid "The requested global setting does not exist."
 msgstr "L'impostazione globale richiesta non esiste."

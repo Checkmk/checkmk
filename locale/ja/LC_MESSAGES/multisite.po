@@ -32565,13 +32565,24 @@ msgstr ""
 "から開始して、すでに存在している可能性のあるすべてのメッセージを表示できま"
 "す。"
 
+#, fuzzy
 msgid ""
 "If a node has any of these roles, then it is considered a control plane node "
-"by Checkmk. Otherwise, it is considered a worker node."
+"by Checkmk. A control plane might in some cases also be a worker node."
 msgstr ""
 "ノードがこれらの役割のいずれかを持っている場合、Checkmkはそのノードをコント"
 "ロールプレーンノードと見なします。そうでない場合は、ワーカーノードとみなされ"
 "ます。"
+
+msgid ""
+"If a node has any of these roles, then it is considered a worker node by "
+"Checkmk. A worker node might in some cases also be a control plane node. "
+"Some Kubernetes distributions automatically assign a role such as 'worker' "
+"to worker nodes. If yours does not and you have nodes that are both control "
+"plane and worker nodes, you can assign them a role and ensure it is in this "
+"list to make Checkmk count the node as both roles. Nodes without a control "
+"plane role (specified above) are automatically counted as worker nodes."
+msgstr ""
 
 msgid ""
 "If a reboot is required, the selected status will be displayed. Default is "
@@ -36045,6 +36056,10 @@ msgstr "無効なファイル名"
 
 msgid "Invalid file name for tarfile_name given."
 msgstr "指定されたtarfile_nameのファイル名が無効です。"
+
+#, fuzzy
+msgid "Invalid file name."
+msgstr "無効なファイル名"
 
 #, python-format
 msgid "Invalid file type expected %s received '%s'"
@@ -62442,6 +62457,10 @@ msgstr "ルールを適用するキュー名を指定します"
 msgid "Specify roles of a control plane node"
 msgstr "コントロールプレーンノードの役割の指定"
 
+#, fuzzy
+msgid "Specify roles of a worker node"
+msgstr "コントロールプレーンノードの役割の指定"
+
 msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr "OpenTelemetry コレクターを実行するサイトを指定してください "
 
@@ -69814,6 +69833,14 @@ msgstr "要求された接続%sは存在しません"
 
 msgid "The requested connection does not exist."
 msgstr "要求された接続は存在しません。"
+
+#, fuzzy
+msgid "The requested file does not exist."
+msgstr "リクエストされたサイトは存在しません"
+
+#, fuzzy
+msgid "The requested file is not available for download."
+msgstr "アップロードされたファイルは有効なtar.gzファイルではありません。"
 
 msgid "The requested global setting does not exist."
 msgstr "要求されたグローバル設定は存在しません。"

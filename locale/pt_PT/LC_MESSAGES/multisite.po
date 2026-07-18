@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-15 20:31+0000\n"
+"PO-Revision-Date: 2026-07-18 13:24+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -34360,12 +34360,23 @@ msgstr ""
 "pode ativar essa marcação para iniciar o processamento do arquivo desde o "
 "início e ver todas as mensagens que já possam estar presentes."
 
+#, fuzzy
 msgid ""
 "If a node has any of these roles, then it is considered a control plane node "
-"by Checkmk. Otherwise, it is considered a worker node."
+"by Checkmk. A control plane might in some cases also be a worker node."
 msgstr ""
 "Se um nó tiver qualquer uma destas funções, é considerado um nó do plano de "
 "controlo pelo Checkmk. Caso contrário, é considerado um nó de trabalho."
+
+msgid ""
+"If a node has any of these roles, then it is considered a worker node by "
+"Checkmk. A worker node might in some cases also be a control plane node. "
+"Some Kubernetes distributions automatically assign a role such as 'worker' "
+"to worker nodes. If yours does not and you have nodes that are both control "
+"plane and worker nodes, you can assign them a role and ensure it is in this "
+"list to make Checkmk count the node as both roles. Nodes without a control "
+"plane role (specified above) are automatically counted as worker nodes."
+msgstr ""
 
 msgid ""
 "If a reboot is required, the selected status will be displayed. Default is "
@@ -37941,6 +37952,10 @@ msgstr "Nome de arquivo inválido"
 
 msgid "Invalid file name for tarfile_name given."
 msgstr "Nome de ficheiro inválido para tarfile_name dado."
+
+#, fuzzy
+msgid "Invalid file name."
+msgstr "Nome de arquivo inválido"
 
 #, fuzzy, python-format
 msgid "Invalid file type expected %s received '%s'"
@@ -65749,6 +65764,10 @@ msgid "Specify roles of a control plane node"
 msgstr "Especificar as funções de um nó do plano de controlo"
 
 #, fuzzy
+msgid "Specify roles of a worker node"
+msgstr "Especificar as funções de um nó do plano de controlo"
+
+#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Especifique um, vários ou todos os sítios em que esta ligação deve ser "
@@ -73440,6 +73459,14 @@ msgstr "A conexão solicitada não existe."
 
 msgid "The requested connection does not exist."
 msgstr "A conexão solicitada não existe."
+
+#, fuzzy
+msgid "The requested file does not exist."
+msgstr "O site solicitado não existe"
+
+#, fuzzy
+msgid "The requested file is not available for download."
+msgstr "O arquivo não se parece com um arquivo chave válido."
 
 msgid "The requested global setting does not exist."
 msgstr "O cenário global solicitado não existe."

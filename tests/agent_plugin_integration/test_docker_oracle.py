@@ -9,7 +9,12 @@ from typing import Final, Literal
 
 import pytest
 
+from tests.agent_plugin_integration.comparison import ComparisonResult, PluginOutput
 from tests.agent_plugin_integration.conftest import OracleDatabase
+from tests.agent_plugin_integration.test_plugin_comparison import (
+    KNOWN_DEVIATIONS,
+    run_old_plugin,
+)
 from tests.testlib.docker import copy_to_container
 
 _SECTION_HEADER_RE = re.compile(r"^<<<([^>:]+)")
@@ -475,6 +480,155 @@ def test_docker_oracle(
 
 
 # ---------------------------------------------------------------------------
+# TC-ORA-700: legacy → new configuration migration
+# ---------------------------------------------------------------------------
+
+_MIGRATION_METRIC: Final[str] = "migrationtest"
+_MIGRATION_SQL_FILE: Final[str] = "migration_check.sql"
+# One constant row: the harness compares custom-SQL rows by full line, so the
+# query must produce identical text under sqlplus (old) and the Rust driver (new).
+_MIGRATION_SQL: Final[str] = "SELECT 'mig_marker' || ':' || 'const_value' FROM dual;\n"
+
+
+def _migration_sql_dir(oracle: OracleDatabase) -> Path:
+    return oracle.cmk_cfg_dir / "custom_sqls"
+
+
+def _legacy_migration_cfg(oracle: OracleDatabase) -> str:
+    """A minimal legacy mk_oracle.cfg plus one custom SQL section."""
+    return "\n".join(
+        [
+            "MAX_TASKS=10",
+            f"DBUSER='{oracle.cmk_username}:{oracle.cmk_password}"
+            f"::localhost:{oracle.PORT}:{oracle.SID}'",
+            f"TNS_ADMIN={oracle.tns_admin_dir.as_posix()}",
+            "",
+            f'SQLS_SECTIONS="{_MIGRATION_METRIC}"',
+            f"{_MIGRATION_METRIC}() {{",
+            f"    SQLS_DIR={_migration_sql_dir(oracle).as_posix()}",
+            f"    SQLS_SQL={_MIGRATION_SQL_FILE}",
+            f'    SQLS_SIDS="{oracle.SID}"',
+            # Align the [[[<sid>|<item>]]] marker: the legacy default item is the
+            # SQL *file name*, while the converter names the metric after the
+            # section function.
+            f"    SQLS_ITEM_NAME={_MIGRATION_METRIC}",
+            "}",
+        ]
+    )
+
+
+def _install_legacy_migration_setup(oracle: OracleDatabase) -> None:
+    """Install the custom SQL file and activate the legacy config in the container."""
+    sql_dir = _migration_sql_dir(oracle)
+    rc, output = oracle.container.exec_run(rf'mkdir -p "{sql_dir.as_posix()}"', user="root")
+    assert rc == 0, f'Could not create "{sql_dir}"! Reason: {output!r}'
+
+    sql_host_path = oracle.ORAENV / _MIGRATION_SQL_FILE
+    sql_host_path.write_text(_MIGRATION_SQL, encoding="UTF-8")
+    assert copy_to_container(oracle.container, sql_host_path, sql_dir), (
+        f'Failed to copy "{_MIGRATION_SQL_FILE}" to container'
+    )
+
+    cfg_host_path = oracle.ORAENV / "mk_oracle.migration.cfg"
+    cfg_host_path.write_text(_legacy_migration_cfg(oracle), encoding="UTF-8")
+    assert copy_to_container(oracle.container, cfg_host_path, oracle.cmk_cfg_dir), (
+        "Failed to copy the legacy migration config to container"
+    )
+    rc, output = oracle.container.exec_run(
+        rf'cp "{(oracle.cmk_cfg_dir / cfg_host_path.name).as_posix()}" "{oracle.cmk_cfg.as_posix()}"',
+        user="root",
+    )
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    assert rc == 0, f"Failed to activate legacy config: {output.decode('UTF-8')}"
+
+
+def _migrate_legacy_config(oracle: OracleDatabase) -> Path:
+    """Convert the legacy config with the mk-oracle converter; assert a clean run."""
+    migrated_path = oracle.cmk_cfg_dir / "mk-oracle.migrated.yml"
+    rc, output = oracle.container.exec_run(
+        [
+            oracle.new_plugin.as_posix(),
+            "--migrate-config",
+            oracle.cmk_cfg.as_posix(),
+            "--migrate-output",
+            migrated_path.as_posix(),
+        ],
+        user="root",
+    )
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    text = output.decode("utf-8")
+    # "No silent errors during conversion": clean exit and no converter warnings
+    # (the SQL file contains no sqlplus-only directives).
+    assert rc == 0, f"Migration failed (rc={rc})!\n{text}"
+    assert "WARNING" not in text, f"Migration produced warnings:\n{text}"
+
+    rc, output = oracle.container.exec_run(["cat", migrated_path.as_posix()])
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    yml = output.decode("utf-8")
+    assert rc == 0, f"Cannot read migrated config: {yml}"
+    assert "# WARNING" not in yml, f"Migrated config carries warnings:\n{yml}"
+    assert f"- sid: {oracle.SID}" in yml, f"Missing instance entry:\n{yml}"
+    assert f"- {_MIGRATION_METRIC}:" in yml, f"Missing custom metric entry:\n{yml}"
+    assert f"path: {(_migration_sql_dir(oracle) / _MIGRATION_SQL_FILE).as_posix()}" in yml, (
+        f"Missing custom metric SQL path:\n{yml}"
+    )
+    return migrated_path
+
+
+def _strip_elapsed_rows(output: str) -> str:
+    """Drop the ``elapsed:<seconds>`` rows the old plugin appends to custom SQL sections.
+
+    Its value is volatile between runs, so it can never compare
+    equal and is removed from the old output before comparison.
+    """
+    return "\n".join(line for line in output.splitlines() if not line.startswith("elapsed:"))
+
+
+def _assert_migration_drop_in(oracle: OracleDatabase) -> None:
+    """TC-ORA-700 harness: legacy run vs migrated-config run must be drop-in compatible."""
+    oracle.use_credentials()  # baseline sqlnet.ora (no wallet override)
+    _install_legacy_migration_setup(oracle)
+
+    old_output = _strip_elapsed_rows(run_old_plugin(oracle))
+    custom_marker = f"[[[{oracle.SID}|{_MIGRATION_METRIC}]]]"
+    assert custom_marker in old_output, (
+        f"Old plugin did not emit the custom SQL section:\n{old_output}"
+    )
+
+    migrated_path = _migrate_legacy_config(oracle)
+    new_output = _run_new_plugin(oracle, migrated_path)
+    assert custom_marker in new_output, (
+        f"New plugin did not emit the migrated custom metric:\n{new_output}"
+    )
+
+    # Drop-in bar: the TC-ORA-002 per-section comparison (section set, per-section
+    # row-key set and per-key column count; values beyond the key are ignored).
+    # No migration-specific deviations are accepted beyond the TC-ORA-002 baseline.
+    comparison = ComparisonResult(PluginOutput(old_output), PluginOutput(new_output))
+    # Printed output is captured by pytest and only shown on failure.
+    comparison.print_summary()
+    comparison.print_detailed(show_diff=True)
+
+    unexpected_only_in_old = sorted(set(comparison.only_in_old) - KNOWN_DEVIATIONS["only_in_old"])
+    unexpected_only_in_new = sorted(set(comparison.only_in_new) - KNOWN_DEVIATIONS["only_in_new"])
+    unexpected_different = sorted(set(comparison.different) - KNOWN_DEVIATIONS["different"])
+
+    assert not (unexpected_only_in_old or unexpected_only_in_new or unexpected_different), (
+        "Unexpected pre- vs post-migration differences (not in the accepted deviations):\n"
+        f"  only in old (mk_oracle): {unexpected_only_in_old}\n"
+        f"  only in new (mk-oracle): {unexpected_only_in_new}\n"
+        f"  differing content:       {unexpected_different}\n"
+        "See the captured comparison output above for the section-level diff."
+    )
+
+
+def test_legacy_config_migration(oracle: OracleDatabase) -> None:
+    """TC-ORA-700 (single-instance CDB): migrate a legacy mk_oracle.cfg with one
+    custom SQL section and compare pre- vs post-migration agent output."""
+    _assert_migration_drop_in(oracle)
+
+
+# ---------------------------------------------------------------------------
 # PDB filtering tests — require extra PDBs created in the container
 # ---------------------------------------------------------------------------
 
@@ -562,3 +716,9 @@ def test_pdb_regex_matches_only_test_pdbs(oracle_with_pdbs: OracleDatabase) -> N
     assert f"{oracle.SID}_TESTPDB2|container_identity" in output, f"missing TESTPDB2: {output}"
     assert f"{oracle.SID}_DEVPDB1" not in output, f"DEVPDB1 must not appear: {output}"
     assert f"{oracle.SID}_FREEPDB1" not in output, f"FREEPDB1 must not appear: {output}"
+
+
+def test_legacy_config_migration_multi_pdb(oracle_with_pdbs: OracleDatabase) -> None:
+    """TC-ORA-700 (multi-PDB CDB): the same legacy → new migration comparison
+    against a CDB that carries several extra PDBs."""
+    _assert_migration_drop_in(oracle_with_pdbs)

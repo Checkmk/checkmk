@@ -52,7 +52,7 @@ KNOWN_DEVIATIONS: dict[str, set[str]] = {
 }
 
 
-def _run_old_plugin(oracle: OracleDatabase) -> str:
+def run_old_plugin(oracle: OracleDatabase) -> str:
     """Run the old bash mk_oracle in the container and return its stdout."""
     rc, output = oracle.container.exec_run(
         f"""bash -c '{oracle.cmk_plugin.as_posix()}'""", user="root"
@@ -76,7 +76,7 @@ def _run_new_plugin(oracle: OracleDatabase) -> str:
 
 def test_old_vs_new_plugin_section_equivalence(oracle: OracleDatabase) -> None:
     oracle.use_credentials()
-    old_output = _run_old_plugin(oracle)
+    old_output = run_old_plugin(oracle)
 
     oracle.use_new_plugin_credentials()
     new_output = _run_new_plugin(oracle)

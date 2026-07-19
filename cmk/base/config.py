@@ -47,6 +47,7 @@ from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_mod
 from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
+from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.logwatch import set_global_logwatch_config
@@ -1285,7 +1286,6 @@ class ConfigCache:
         self.__is_piggyback_host: dict[HostName, bool] = {}
         self.__is_waiting_for_discovery_host: dict[HostName, bool] = {}
         self.__snmp_config: dict[tuple[HostName, HostAddress, SourceType], SNMPHostConfig] = {}
-        self.__hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
@@ -1348,6 +1348,12 @@ class ConfigCache:
             self.ruleset_matcher,
             self.label_manager.labels_of_host,
             parser=str,
+        )
+        self.inventory_config = make_inventory_config(
+            self._loaded_config,
+            self.ruleset_matcher,
+            self.label_manager,
+            self._hosts_config,
         )
         return self
 
@@ -1634,7 +1640,6 @@ class ConfigCache:
         self.__enforced_services_table.clear()
         self.__is_piggyback_host.clear()
         self.__snmp_config.clear()
-        self.__hwsw_inventory_parameters.clear()
         self.__explicit_host_attributes.clear()
         self.__computed_datasources.clear()
         self.__discovery_check_parameters.clear()
@@ -1643,6 +1648,10 @@ class ConfigCache:
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
         self.__snmp_backend.clear()
+        # `inventory_config` is (re)built at the end of `initialize`, which calls
+        # this first; guard for that initial call where it does not exist yet.
+        if (inventory_config := getattr(self, "inventory_config", None)) is not None:
+            inventory_config.invalidate()
 
     def check_table(
         self,
@@ -1752,33 +1761,7 @@ class ConfigCache:
         return resolved
 
     def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
-        def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
-            if host_name in self._hosts_config.clusters:
-                return HWSWInventoryParameters.from_raw({})
-
-            # 'get_host_values' is already cached thus we can
-            # use it after every check cycle.
-            if not (
-                entries := self.ruleset_matcher.get_host_values_all(
-                    host_name,
-                    self._loaded_config.active_checks.get("cmk_inv") or (),
-                    self.label_manager.labels_of_host,
-                )
-            ):
-                return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
-
-            # Convert legacy rules to current dict format (just like the valuespec)
-            # we can only have None or a dict here, but mypy doesn't know that
-            return HWSWInventoryParameters.from_raw(
-                entries[0] if isinstance(entries[0], dict) else {}
-            )
-
-        with contextlib.suppress(KeyError):
-            return self.__hwsw_inventory_parameters[host_name]
-
-        return self.__hwsw_inventory_parameters.setdefault(
-            host_name, get_hwsw_inventory_parameters()
-        )
+        return self.inventory_config.hwsw_parameters(host_name)
 
     def management_protocol(self, host_name: HostName) -> Literal["snmp", "ipmi"] | None:
         return self._loaded_config.management_protocol.get(host_name)
@@ -2079,16 +2062,7 @@ class ConfigCache:
     def inventory_parameters(
         self, host_name: HostName, plugin: InventoryPlugin
     ) -> Mapping[str, object]:
-        if plugin.ruleset_name is None:
-            raise ValueError(plugin)
-        return {
-            **plugin.defaults,
-            **self.ruleset_matcher.get_host_values_merged(
-                host_name,
-                self._loaded_config.inv_parameters.get(str(plugin.ruleset_name), []),
-                self.label_manager.labels_of_host,
-            ),
-        }
+        return self.inventory_config.plugin_parameters(host_name, plugin)
 
     def active_checks(self, host_name: HostName) -> Sequence[SSCRules]:
         """Returns active checks configured for this host
@@ -2480,15 +2454,7 @@ class ConfigCache:
         return merged_spec
 
     def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
-        return [
-            raw
-            for entry in self.ruleset_matcher.get_host_values_all(
-                hostname,
-                self._loaded_config.inv_retention_intervals,
-                self.label_manager.labels_of_host,
-            )
-            for raw in entry
-        ]
+        return self.inventory_config.retention_intervals(hostname)
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values_all(

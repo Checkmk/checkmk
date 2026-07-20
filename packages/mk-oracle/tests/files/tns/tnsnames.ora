@@ -1,10 +1,13 @@
+# ora_local: a local Oracle on localhost. This is what the Docker tier runs
+# (Oracle Database 23ai Free, SID FREE) but is not Docker-specific: on Windows
+# there is no Docker, yet a directly-installed local Oracle Free may be present.
 ora_local =
  (DESCRIPTION =
  (ADDRESS_LIST =
  (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
  )
  (CONNECT_DATA =
- (SID = XE)
+ (SID = FREE)
  (SERVER = DEDICATED)
  )
  )
@@ -20,16 +23,4 @@ ora_remote =
   (SERVER = DEDICATED)
   )
   )
-
-
-ora_docker =
- (DESCRIPTION =
- (ADDRESS_LIST =
- (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
- )
- (CONNECT_DATA =
- (SID = FREE)
- (SERVER = DEDICATED)
- )
- )
 

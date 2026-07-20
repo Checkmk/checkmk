@@ -36,6 +36,7 @@ OS_PACKAGES    += xinetd
 OS_PACKAGES    += freeradius-utils
 OS_PACKAGES    += bc # Needed by some third-party check plugins
 OS_PACKAGES    += file # Needed by some third-party check plugins
+OS_PACKAGES    += procps # needed for having pgrep available
 #
 # Checkmk build specific packages below
 #

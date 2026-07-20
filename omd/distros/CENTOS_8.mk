@@ -43,6 +43,7 @@ OS_PACKAGES       += libffi # needed for pyOpenSSL and dependant
 OS_PACKAGES      += libpq
 OS_PACKAGES      += bc # Needed by some third-party check plugins
 OS_PACKAGES      += file # Needed by some third-party check plugins
+OS_PACKAGES      += procps # needed for having pgrep available
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install

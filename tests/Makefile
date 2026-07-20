@@ -203,6 +203,7 @@ test-integration-agent-plugin-docker:
 test-integration-agent-plugin:
 	$(PYTEST) -x $(realpath agent_plugin_integration) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600 \
+	$(if $(RESULT_PATH),--junitxml="$(RESULT_PATH)/junit.xml") \
 	$(MK_ORACLE_BINARY_PATH)
 
 test-relay-integration-docker:

@@ -49,7 +49,7 @@ console_logger.setLevel(LOG_LEVEL)
 
 def setup_metrics():
     console_logger.info("Setting up OpenTelemetry Metrics")
-    metric_exporter = OTLPMetricExporter(endpoint=f"{ENDPOINT}/v1/metrics", insecure=True)
+    metric_exporter = OTLPMetricExporter(endpoint=ENDPOINT, insecure=True)
     metrics_reader = PeriodicExportingMetricReader(
         exporter=metric_exporter,
     )
@@ -60,7 +60,7 @@ def setup_metrics():
 
 def setup_logging():
     console_logger.info("Setting up OpenTelemetry Logging")
-    log_exporter = OTLPLogExporter(endpoint=f"{ENDPOINT}/v1/logs", insecure=True)
+    log_exporter = OTLPLogExporter(endpoint=ENDPOINT, insecure=True)
     log_processor = BatchLogRecordProcessor(log_exporter)
     logger_provider = LoggerProvider(resource=RESOURCE)
     logger_provider.add_log_record_processor(log_processor)

@@ -28,7 +28,11 @@ snapin_width = 240
 
 
 def render_link(
-    text: str | HTML, url: str, target: str = "main", onclick: str | None = None
+    text: str | HTML,
+    url: str,
+    target: str = "main",
+    onclick: str | None = None,
+    title: str | None = None,
 ) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
@@ -44,11 +48,18 @@ def render_link(
         target=target or "",
         onfocus="if (this.blur) this.blur();",
         onclick=onclick or None,
+        title=title,
     )
 
 
-def link(text: str | HTML, url: str, target: str = "main", onclick: str | None = None) -> None:
-    html.write_html(render_link(text, url, target=target, onclick=onclick))
+def link(
+    text: str | HTML,
+    url: str,
+    target: str = "main",
+    onclick: str | None = None,
+    title: str | None = None,
+) -> None:
+    html.write_html(render_link(text, url, target=target, onclick=onclick, title=title))
 
 
 def bulletlink(text: str, url: str, target: str = "main", onclick: str | None = None) -> None:

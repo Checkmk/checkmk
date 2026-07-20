@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-24TIvP4hA5/JwzbhhKRvdNu+eajsoFEeicfj+UPF24U=",
+  "strip_prefix": "include",
+  "url": "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/llvm/clang-resource-headers/19.1.7/linux/amd64/static/clang-resource-headers.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-X5gaLtZ3/ELIIVO/coxOVXr6wed0KgMTCUdmjhoxxNs=",
+    "MODULE.bazel": "sha256-5mDaSal6RMBZGi0AMspRw4MARMn5Sa515hfzrUJuQO0="
+  }
+}

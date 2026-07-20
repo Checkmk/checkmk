@@ -1,0 +1,15 @@
+load("@bazel_skylib//rules/directory:directory.bzl", "directory")
+
+package(default_visibility = ["//visibility:public"])
+
+# Clang's resource-dir headers (stddef.h, mmintrin.h, ...), extracted from the upstream LLVM
+# release by buildscripts/scripts/extract_llvm.sh.
+directory(
+    name = "include",
+    srcs = glob(["**"]),
+)
+
+alias(
+    name = "clang-resource-headers",
+    actual = ":include",
+)

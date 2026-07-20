@@ -127,6 +127,10 @@ archive_override(
     urls = ["https://github.com/hedronvision/bazel-compile-commands-extractor/archive/1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93.tar.gz"],
 )
 
+# Clang's resource-dir headers (stddef.h, mmintrin.h, ...), extracted from the upstream LLVM
+# release by buildscripts/scripts/extract_llvm.sh.
+bazel_dep(name = "clang-resource-headers", version = "19.1.7.cmk.1", dev_dependency = True)
+
 single_version_override(
     module_name = "rules_go",
     patch_strip = 1,

@@ -25,13 +25,47 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
 
 
-class SensorStatus(enum.Enum):
-    # Status values as defined in SPAGENT-MIB
+class SensorProbeSwitchStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorProbeSwitchStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highCritical(4),
+    #           lowCritical(6),
+    #           sensorError(7),
+    #           relayOn(8),
+    #           relayOff(9)
+    #        }
+    # Decodes .1.3.6.1.4.1.3854.1.2.2.1.18.1.3
     NO_STATUS = "1"
     NORMAL = "2"
-    HIGH_WARNING = "3"
     HIGH_CRITICAL = "4"
-    LOW_WARNING = "5"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+    RELAY_ON = "8"
+    RELAY_OFF = "9"
+
+
+class SensorDryContactStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorDryContactStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highCritical(4),
+    #           lowCritical(6),
+    #           sensorError(7),
+    #           outputLow(8),
+    #           outputHigh(9)
+    #        }
+    #     drycontactStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER { <identical to sensorDryContactStatus above> }
+    # Decodes .1.3.6.1.4.1.3854.2.3.4.1.6 (sensorDryContactStatus)
+    # and .1.3.6.1.4.1.3854.3.5.4.1.6 (plusSeries drycontactStatus)
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_CRITICAL = "4"
     LOW_CRITICAL = "6"
     SENSOR_ERROR = "7"
     OUTPUT_LOW = "8"
@@ -39,41 +73,62 @@ class SensorStatus(enum.Enum):
 
 
 def _check_status(
-    status: SensorStatus,
+    status: SensorDryContactStatus | SensorProbeSwitchStatus,
     online: bool,
     normal_description: str,
     critical_description: str,
 ) -> CheckResult:
-    # States which are not configurable by user as they are defined in SPAGENT-MIB
     state_names = {
-        SensorStatus.NO_STATUS: "no status",
-        SensorStatus.SENSOR_ERROR: "sensor error",
-        SensorStatus.OUTPUT_LOW: "output low",
-        SensorStatus.OUTPUT_HIGH: "output high",
+        SensorDryContactStatus.NO_STATUS: "no status",
+        SensorDryContactStatus.SENSOR_ERROR: "sensor error",
+        SensorDryContactStatus.OUTPUT_LOW: "output low",
+        SensorDryContactStatus.OUTPUT_HIGH: "output high",
+        SensorProbeSwitchStatus.NO_STATUS: "no status",
+        SensorProbeSwitchStatus.SENSOR_ERROR: "sensor error",
+        SensorProbeSwitchStatus.RELAY_ON: "output low",
+        SensorProbeSwitchStatus.RELAY_OFF: "output high",
     }
 
     if not online:
         yield Result(state=State.CRIT, summary="Sensor is offline")
-    elif status is SensorStatus.NORMAL:
+    elif status in (SensorDryContactStatus.NORMAL, SensorProbeSwitchStatus.NORMAL):
         yield Result(state=State.OK, summary=normal_description)
-    elif status in (SensorStatus.HIGH_CRITICAL, SensorStatus.LOW_CRITICAL):
+    elif status in (
+        SensorDryContactStatus.HIGH_CRITICAL,
+        SensorDryContactStatus.LOW_CRITICAL,
+        SensorProbeSwitchStatus.HIGH_CRITICAL,
+        SensorProbeSwitchStatus.LOW_CRITICAL,
+    ):
         yield Result(state=State.CRIT, summary=critical_description)
     else:
         yield Result(state=State.CRIT, summary=state_names[status])
 
 
 @dataclass(frozen=True, kw_only=True)
-class DrycontactSensor:
-    status: SensorStatus
+class ProbeSwitchSensor:
+    status: SensorProbeSwitchStatus
     online: bool
 
 
-DrycontactSection = Mapping[str, DrycontactSensor]
+@dataclass(frozen=True, kw_only=True)
+class DrycontactSensor:
+    status: SensorDryContactStatus
+    online: bool
 
 
-def parse_akcp_sensor_drycontact(string_table: StringTable) -> DrycontactSection:
+DrycontactSection = Mapping[str, ProbeSwitchSensor] | Mapping[str, DrycontactSensor]
+
+
+def parse_akcp_sensor_drycontact(string_table: StringTable) -> Mapping[str, ProbeSwitchSensor]:
     return {
-        description: DrycontactSensor(status=SensorStatus(status), online=online == "1")
+        description: ProbeSwitchSensor(status=SensorProbeSwitchStatus(status), online=online == "1")
+        for description, status, online in string_table
+    }
+
+
+def parse_akcp_sensor2plus_drycontact(string_table: StringTable) -> Mapping[str, DrycontactSensor]:
+    return {
+        description: DrycontactSensor(status=SensorDryContactStatus(status), online=online == "1")
         for description, status, online in string_table
     }
 
@@ -97,7 +152,7 @@ snmp_section_akcp_sensor_drycontact = SimpleSNMPSection(
 
 snmp_section_akcp_sensor2plus_drycontact = SimpleSNMPSection(
     name="akcp_sensor2plus_drycontact",
-    parse_function=parse_akcp_sensor_drycontact,
+    parse_function=parse_akcp_sensor2plus_drycontact,
     parsed_section_name="akcp_sensor_drycontact",
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(
@@ -133,7 +188,7 @@ check_plugin_akcp_sensor_drycontact = CheckPlugin(
 
 @dataclass(frozen=True, kw_only=True)
 class ExpDrycontactSensor:
-    status: SensorStatus
+    status: SensorDryContactStatus
     online: bool
     normal_description: str
     critical_description: str
@@ -145,7 +200,7 @@ ExpDrycontactSection = Mapping[str, ExpDrycontactSensor]
 def parse_akcp_exp_drycontact(string_table: StringTable) -> ExpDrycontactSection:
     return {
         description: ExpDrycontactSensor(
-            status=SensorStatus(status),
+            status=SensorDryContactStatus(status),
             online=online == "1",
             normal_description=normal_description,
             critical_description=critical_description,

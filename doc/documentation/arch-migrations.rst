@@ -118,7 +118,7 @@ GUI: global proxies to explicit dependencies
 ============================================
 
 :Phase: in progress
-:Owner: Component "UI Framework"
+:Owner: Component "Web Application Framework"
 :Old: request-local global proxies reached for anywhere in the call stack (``active_config``, and the other ``request_local_attr`` proxies such as ``html``, ``response``, ``theme``, ``user_errors``)
 :New: the objects a mode or page needs are passed in explicitly, the way REST API v1 endpoints receive an ``ApiContext``
 :References: ``cmk/gui/ctx_stack.py`` (``request_local_attr``); ``cmk/gui/config.py`` (``active_config``); ``ApiContext`` in ``cmk/gui/openapi/framework/`` as the target pattern

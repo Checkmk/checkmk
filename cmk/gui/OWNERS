@@ -12,13 +12,13 @@ per-file session.py=set noparent
 per-file search_menu.py=file:/component_owners/global_search/OWNERS_DEFINITION
 per-file search_menu.py=set noparent
 
-per-file pages.py=file:/component_owners/ui_framework/OWNERS_DEFINITION
+per-file pages.py=file:/component_owners/web_application_framework/OWNERS_DEFINITION
 per-file pages.py=set noparent
 
-per-file main_menu.py=file:/component_owners/ui_navigation/OWNERS_DEFINITION
+per-file main_menu.py=file:/component_owners/navigation_and_sidebar/OWNERS_DEFINITION
 per-file main_menu.py=set noparent
 
-per-file main_menu_types.py=file:/component_owners/ui_navigation/OWNERS_DEFINITION
+per-file main_menu_types.py=file:/component_owners/navigation_and_sidebar/OWNERS_DEFINITION
 per-file main_menu_types.py=set noparent
 
 # Please

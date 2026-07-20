@@ -1,0 +1,25 @@
+type = "Component"
+display_name = "Basic Vue Functionality"
+previous_name = "Vue Framework"
+has_support_component = true
+members_required = 2
+product_managers = ["cedric.archenoul@checkmk.com"]
+description = """
+The technical plumbing that makes Checkmk's modern (>= 2.5.0) user interface run,
+everything needed to build, load and connect modern pages, as opposed to the
+visible controls on them.
+
+Belongs here:
+- Developer-facing infrastructure of the modern UI codebase: dependency management,
+  packaging, linting, testing
+- The data exchange between browser and server on modern pages: valid input being
+  rejected or arriving mangled on the server
+- Modern pages failing to render at all (blank page area, errors in the browser's
+  JavaScript console) while the rest of the interface still works
+
+Goes elsewhere:
+- A visible control itself (button, dropdown, dialog, icon, ...) looking or
+  behaving wrong → UI Component Library
+- The same problem on one page only → the component owning that page
+- Older interface parts with the classic look → Legacy Javascript
+"""

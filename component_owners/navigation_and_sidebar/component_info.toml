@@ -1,0 +1,20 @@
+type = "Component"
+display_name = "Navigation & Sidebar"
+previous_name = "UI - Navigation & Sidebar"
+has_support_component = true
+members_required = 2
+description = """
+How users get around in Checkmk: the main navigation menus and the sidebar.
+
+Belongs here:
+- The main menus (Monitor, Customize, Setup, Help, User): entries missing, wrong
+  or in the wrong place, menus not opening, keyboard shortcuts
+- The sidebar and its elements ("snapins"): Views, Bookmarks, Tactical overview,
+  Master control, Site status, Speedometer, Server time, ...
+- The Quick search element in the sidebar
+
+Goes elsewhere:
+- Wrong or missing *results* in the search of the Monitor/Setup menus
+  → Global Search
+- A page that a menu entry leads to is broken → the component owning that page
+"""

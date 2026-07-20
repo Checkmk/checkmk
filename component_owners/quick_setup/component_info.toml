@@ -1,0 +1,21 @@
+type = "Component"
+display_name = "Quick Setup"
+previous_name = "UI - Quick Setup"
+has_support_component = true
+members_required = 2
+product_managers = ["mathieu.sobrero@checkmk.com"]
+description = """
+The guided, wizard-style configuration flows ("Quick Setup") that set up a whole
+integration in a few steps.
+
+Belongs here:
+- The wizard flow itself: moving between stages, per-stage validation and error
+  messages, the connection test, saving and switching to advanced/rule-based mode
+- A wizard failing to create its resulting configuration (rules, passwords, hosts)
+  even though all inputs were accepted
+
+Goes elsewhere:
+- Monitoring data is wrong *after* the wizard completed successfully (e.g. AWS
+  services missing or wrong) → the component owning that integration
+- Regular configuration pages outside a wizard → UI - Setup
+"""

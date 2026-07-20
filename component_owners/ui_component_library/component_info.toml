@@ -4,7 +4,21 @@ has_support_component = true
 members_required = 2
 product_managers = ["cedric.archenoul@checkmk.com"]
 description = """
-- The UI Component Library is a collection of feature-independent, reusable UI components.
-- Part of the Design System and changes need to be aligned with both Development and UX.
-- Live demo available at https://devdocs.lan.checkmk.net/ui-component-library/.
+The catalog of feature-independent, reusable controls that Checkmk's modern user
+interface is built from. It's part of the Design System, so changes need to be aligned
+with both Development and UX. Live demo: https://devdocs.lan.checkmk.net/ui-component-library/
+
+Belongs here:
+- A basic control looking or behaving wrong the same way on several modern pages:
+  buttons, dropdowns, dialogs and slide-ins, accordions, badges and chips, icons,
+  date/time pickers, color pickers, search inputs, alert boxes, ...
+- Look & feel of these controls: spacing, colors in light/dark theme, keyboard
+  operation and accessibility
+- The component demo/catalog site itself
+
+Goes elsewhere:
+- The same control broken on one page only → the component owning that page
+- Whole configuration forms misrendered or values lost on save (the form engine
+  around the controls) → UI - Setup
+- Classic (pre-2.5) pages → Legacy Javascript
 """

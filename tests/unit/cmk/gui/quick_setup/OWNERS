@@ -1,6 +1,6 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/ui_quick_setup/OWNERS_DEFINITION
+file:/component_owners/quick_setup/OWNERS_DEFINITION
 
 per-file test_notification_params.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file test_notification_params.py=set noparent

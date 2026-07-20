@@ -1,0 +1,24 @@
+type = "Component"
+display_name = "Web Application Framework"
+previous_name = "UI Framework"
+has_support_component = true
+members_required = 2
+description = """
+The technical foundation every page of the Checkmk web interface runs on, not any
+single feature, but the machinery that serves them all.
+
+Belongs here:
+- Problems with the developer-facing framework that feature packages use to wire
+  their pages into the GUI, server-side counterpart of Basic Vue Functionality:
+  page registration, URL routing, hooks into the application.
+- Problems affecting the web interface (WSGI) as a whole: pages not loading,
+  generic "Internal error" or HTTP 404/500 responses on many unrelated pages.
+- Crashes whose traceback points at page dispatch, request handling or HTML
+  rendering rather than at one specific feature
+- Background jobs and their scheduling: jobs that hang, never start or pile up
+  (Setup > Maintenance > Background jobs)
+
+Goes elsewhere:
+- Login, sessions, LDAP/SAML/2FA → User Management & Authentication
+- One specific page or feature misbehaving → the component owning that feature
+"""

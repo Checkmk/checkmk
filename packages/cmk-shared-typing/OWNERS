@@ -1,8 +1,8 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/vue_framework/OWNERS_DEFINITION
+file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
 
-per-file BUILD=file:/component_owners/ui_framework/OWNERS_DEFINITION
+per-file BUILD=file:/component_owners/web_application_framework/OWNERS_DEFINITION
 per-file BUILD=set noparent
 
 # Please

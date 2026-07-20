@@ -1,0 +1,16 @@
+type = "Component"
+display_name = "Legacy Javascript"
+previous_name = "UI - Legacy"
+has_support_component = true
+members_required = 1
+description = """
+The look and browser-side behavior of the older, classic parts of the Checkmk
+web interface.
+
+Belongs here:
+- JavaScript errors or broken interactions on pages existing before 2.5
+
+Goes elsewhere:
+- Modern pages (e.g. Notification setup, Quick Setup wizards, new dashboards)
+  → UI component library or the component owning the feature
+"""

@@ -151,6 +151,8 @@ single_version_override(
         "//bazel/patches:rules_lint-include-files-with-bazel-extension.patch",
         # https://github.com/aspect-build/rules_lint/issues/690
         "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",
+        # Carried locally — no upstream PR yet.
+        "//bazel/patches:rules_lint-clang_tidy_builtin_include_dir.patch",
     ],
     version = "2.0.0-beta.0",
 )

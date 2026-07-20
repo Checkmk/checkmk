@@ -1,0 +1,45 @@
+diff --git a/lint/clang_tidy.bzl b/lint/clang_tidy.bzl
+index 3be72a9..25e0745 100644
+--- a/lint/clang_tidy.bzl
++++ b/lint/clang_tidy.bzl
+@@ -274,6 +274,11 @@ def _get_compiler_args(ctx, compilation_context, srcs):
+         for dir in gcc_install_dir:
+             args.append("--gcc-install-dir=" + dir.path)
+ 
++    if len(ctx.attr._builtin_include_dir) > 1:
++        fail("builtin_include_dir must contain at most one directory")
++    for dir in ctx.attr._builtin_include_dir:
++        args.extend(["-isystem", dir[DirectoryInfo].path])
++
+     rule_flags = list(getattr(ctx.rule.attr, "copts", [])) + list(getattr(ctx.rule.attr, "cxxopts", []))
+     sources_are_cxx = _is_cxx(srcs[0])
+     if (sources_are_cxx):
+@@ -421,6 +426,7 @@ def lint_clang_tidy_aspect(
+         configs = [],
+         global_config = [],
+         gcc_install_dir = [],
++        builtin_include_dir = [],
+         deps = [],
+         header_filter = "",
+         lint_target_headers = False,
+@@ -447,6 +453,9 @@ def lint_clang_tidy_aspect(
+         deps: labels of additional dependencies used during the clang-tidy run.
+         gcc_install_dir: optional, label of a `Directory` from the skylib library pointing to the gcc install
+             directory.  The argument is passed to the underlying clang as `--gcc-install-dir`.
++        builtin_include_dir: optional, label of a `Directory` from the skylib library pointing to the compiler's
++            builtin headers (e.g. stddef.h). Passed to the underlying clang as `-isystem`. Needed when the
++            clang-tidy binary has no `lib/clang/<version>/include` of its own to fall back to.
+         header_filter: optional, set to a posix regex to supply to clang-tidy with the -header-filter option
+         lint_target_headers: optional, set to True to pass a pattern that includes all headers with the target's
+             directory prefix. This crude control may include headers from the linted target in the results. If
+@@ -482,6 +491,10 @@ def lint_clang_tidy_aspect(
+                 default = gcc_install_dir,
+                 providers = [DirectoryInfo],
+             ),
++            "_builtin_include_dir": attr.label_list(
++                default = builtin_include_dir,
++                providers = [DirectoryInfo],
++            ),
+             "_lint_target_headers": attr.bool(
+                 default = lint_target_headers,
+             ),

@@ -8,17 +8,13 @@ from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree
 from cmk.plugins.akcp.lib import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
 from cmk.plugins.akcp.lib_sensor import (
     check_akcp_sensor_relay,
-    discover_akcp_sensor_no_params,
-    parse_akcp_sensor,
+    discover_akcp_sensor_relay,
+    parse_akcp_smoke,
 )
-
-# Example for contents of info
-#           description                 state  online
-# ["Port 4 Rauchmelder USV Raum A",      "2",   "1"]
 
 snmp_section_akcp_exp_smoke = SimpleSNMPSection(
     name="akcp_exp_smoke",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_smoke,
     detect=DETECT_AKCP_EXP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.14.1",
@@ -34,7 +30,7 @@ snmp_section_akcp_exp_smoke = SimpleSNMPSection(
 snmp_section_akcp_sensor2plus_smoke = SimpleSNMPSection(
     name="akcp_sensor2plus_smoke",
     parsed_section_name="akcp_exp_smoke",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_smoke,
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.3.5.14.1",
@@ -51,5 +47,5 @@ check_plugin_akcp_exp_smoke = CheckPlugin(
     name="akcp_exp_smoke",
     service_name="Smoke %s",
     check_function=check_akcp_sensor_relay,
-    discovery_function=discover_akcp_sensor_no_params,
+    discovery_function=discover_akcp_sensor_relay,
 )

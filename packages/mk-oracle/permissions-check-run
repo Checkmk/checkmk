@@ -55,3 +55,23 @@ if [ -n "${sudo_output}" ]; then
     exit 1
 fi
 echo "OK: root can't exec non-root code"
+
+# 5. Create the custom-metric SQL file and run as non-root — expect it is read and executed
+sql_output=$(MK_LIBDIR=./runtimes "${binary}" -c tests/files/test-custom-metric.yml 2>&1 || true)
+echo "${sql_output}"
+echo "---"
+if ! echo "${sql_output}" | grep -q "details:hello"; then
+    echo "FAIL: expected custom SQL file output 'details:hello', got:" >&2
+    echo "${sql_output}" >&2
+    exit 1
+fi
+echo "OK: non-root reads and executes custom SQL file"
+
+# 6. Run the custom-metric config as root — expect empty output (no permissions to read the runtime)
+sudo_sql_output=$(sudo MK_LIBDIR=./runtimes "${binary}" -c tests/files/test-custom-metric.yml 2>&1 || true)
+if [ -n "${sudo_sql_output}" ]; then
+    echo "FAIL: expected empty output from sudo run with custom SQL file, got:" >&2
+    echo "${sudo_sql_output}" >&2
+    exit 1
+fi
+echo "OK: root can't read non-root custom SQL file"

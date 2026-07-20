@@ -1,0 +1,20 @@
+---
+oracle:
+  main: # mandatory, to be used if no specific config
+    connection: # mandatory
+      hostname: oracle-rocky-ci.lan.checkmk.net
+      port: 1521
+      service_name: dbtest23
+    authentication: # mandatory
+      username: system
+      password: $CI_ORA_TEST_PASSWORD
+      type: standard
+    sections:
+      - dummy:
+    custom_metrics: # additional queries: <<<oracle_sql:sep(58)>>> + [[[SID|item_name]]]
+      - simple_custom_metric: # item name (mandatory); becomes the subsection item
+          path: simple_custom_metric.sql # relative to <MK_LIBDIR>/plugins/packages/mk-oracle/orasql
+          sql_params: # ${name} placeholders replaced textually in the SQL body read from path
+            prefix: "details"
+    discovery:
+      detect: no

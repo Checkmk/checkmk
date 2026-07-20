@@ -18,6 +18,7 @@ use crate::config::{self, section, section::names};
 use crate::emit::{header, signaling_header};
 use crate::ora_sql::custom;
 use crate::ora_sql::sqls;
+use crate::setup::validate_permissions;
 use crate::types::{InstanceName, InstanceNumVersion, ItemValue, PdbName, SectionName, Tenant};
 use crate::types::{SectionAffinity, SqlBindParam, SqlQuery};
 use crate::{constants, utils};
@@ -368,6 +369,10 @@ fn read_versioned_query(
         .into_iter()
         .find(|(min_version, _)| instance_version >= InstanceNumVersion::from(*min_version))
         .and_then(|(_, sql_file)| {
+            if !validate_permissions(&sql_file) {
+                log::warn!("SQL file {:?} rejected: wrong permissions", &sql_file);
+                return None;
+            }
             read_to_string(&sql_file)
                 .inspect_err(|e| {
                     log::error!("Can't read file {:?} {}", &sql_file, &e);

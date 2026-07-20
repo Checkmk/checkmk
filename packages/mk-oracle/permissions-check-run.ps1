@@ -77,17 +77,32 @@ try {
     }
     Write-Host "OK: non-root can exec non-root code" -ForegroundColor Green
 
+    # 3b. Create the custom-metric SQL file and run as current user — expect it is read and executed
+    Write-Host "Step 3b: running custom-metric config as current user..." -ForegroundColor White
+    $orasql_dir = "$temp_dir/runtimes/plugins/packages/mk-oracle/orasql"
+    New-Item -ItemType Directory -Path $orasql_dir -Force | Out-Null
+    Copy-Item -Path "runtimes/plugins/packages/mk-oracle/orasql/simple_custom_metric.sql" -Destination (Join-Path $orasql_dir "simple_custom_metric.sql") -Force
+    $sql_output = & $binary -c tests/files/test-custom-metric.yml 2>&1 | Out-String
+    Write-Host $sql_output
+    Write-Host "---"
+    if ($sql_output -notmatch "details:hello") {
+        Write-Error "FAIL: expected custom SQL file output 'details:hello'"
+    }
+    Write-Host "OK: non-root reads and executes custom SQL file" -ForegroundColor Green
+
     # 5+6. Single elevated session: verify the Users-writable dir is refused,
     # restrict it to Administrators-only (elevated, so the ACL reset itself
     # isn't fighting a UAC-filtered token), then verify it's trusted again.
     Write-Host "Step 4: running elevated checks..." -ForegroundColor White
     $admin_out_before = "$env:TEMP\perms-check-stdout-before.txt"
     $admin_out_after = "$env:TEMP\perms-check-stdout-after.txt"
+    $admin_sql_out_before = "$env:TEMP\perms-check-sql-stdout-before.txt"
     $admin_script = Join-Path $temp_dir "admin-check.ps1"
     @"
 Set-Location '$PSScriptRoot'
 `$env:MK_LIBDIR = '$temp_dir/runtimes'
 & '$binary' -c tests/files/test-mini-one-section.yml *> '$admin_out_before'
+& '$binary' -c tests/files/test-custom-metric.yml *> '$admin_sql_out_before'
 icacls '$runtime_path' /inheritance:r /remove:g '*S-1-5-32-545' /grant:r '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' /T /C | Out-Null
 & '$binary' -c tests/files/test-mini-one-section.yml *> '$admin_out_after'
 "@ | Set-Content -Path $admin_script -Encoding utf8
@@ -100,6 +115,14 @@ icacls '$runtime_path' /inheritance:r /remove:g '*S-1-5-32-545' /grant:r '*S-1-5
         Write-Error "FAIL: expected empty output from admin run before restricting permissions"
     }
     Write-Host "OK: root can't exec non-root code" -ForegroundColor Green
+
+    $sql_output_before = Get-Content $admin_sql_out_before -Raw -ErrorAction SilentlyContinue
+    Remove-Item $admin_sql_out_before -ErrorAction SilentlyContinue
+    if ($sql_output_before -and $sql_output_before.Trim() -ne "") {
+        Write-Host $sql_output_before -ForegroundColor Red
+        Write-Error "FAIL: expected empty output from admin run with custom SQL file"
+    }
+    Write-Host "OK: root can't read non-root custom SQL file" -ForegroundColor Green
 
     $output_after = Get-Content $admin_out_after -Raw -ErrorAction SilentlyContinue
     Remove-Item $admin_out_after -ErrorAction SilentlyContinue

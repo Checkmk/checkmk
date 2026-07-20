@@ -247,7 +247,7 @@ class OracleAdditionalOptions(BaseModel):
 
 
 class OracleDiscovery(BaseModel):
-    enabled: bool
+    detect: bool
     include: list[str] | None = None
     exclude: list[str] | None = None
 
@@ -456,7 +456,7 @@ def _get_oracle_discovery(discovery: GuiDiscoveryConf | None) -> OracleDiscovery
         return None
 
     return OracleDiscovery(
-        enabled=discovery.enabled,
+        detect=discovery.enabled,
         include=discovery.include or None,
         exclude=discovery.exclude or None,
     )

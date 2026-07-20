@@ -44,6 +44,7 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache, handle_ip_lookup_failure
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
+from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
@@ -2827,6 +2828,9 @@ def run_checking(
     service_configurer = config_cache.make_service_configurer(
         plugins.check_plugins, service_name_config
     )
+    inventory_config = make_inventory_config(
+        loaded_config, ruleset_matcher, label_manager, hosts_config
+    )
     enforced_service_table = config.EnforcedServicesTable(
         BundledHostRulesetMatcher(
             loaded_config.static_checks,
@@ -2962,8 +2966,8 @@ def run_checking(
                 ),
                 check_plugins=check_plugins,
                 inventory_plugins=plugins.inventory_plugins,
-                inventory_parameters=config_cache.inventory_parameters,
-                params=config_cache.hwsw_inventory_parameters(hostname),
+                inventory_parameters=inventory_config.plugin_parameters,
+                params=inventory_config.hwsw_parameters(hostname),
                 services=config_cache.configured_services(
                     hostname,
                     plugins.check_plugins,

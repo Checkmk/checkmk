@@ -46,6 +46,7 @@ OS_PACKAGES    += libxslt1 # Needed for lxml etree processing
 OS_PACKAGES    += which # no longer delivered with apache2
 OS_PACKAGES    += bc # Needed by some third-party check plugins
 OS_PACKAGES    += file # Needed by some third-party check plugins
+OS_PACKAGES    += procps # needed for having pgrep available
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 APACHE_CONF_DIR   = /etc/apache2/conf.d

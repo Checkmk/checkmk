@@ -46,7 +46,10 @@ from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.configlib.servicename import make_final_service_name_config
+from cmk.base.configlib.servicename import (
+    make_final_service_name_config,
+    make_passive_service_name_config,
+)
 from cmk.base.core import interface as core_interface
 from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_SECRETS,
@@ -2822,11 +2825,14 @@ def run_checking(
         CheckPluginName,
     )
 
-    service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(loaded_config, ruleset_matcher)
+    service_name_config = make_passive_service_name_config(
+        loaded_config, ruleset_matcher, label_manager
     )
     service_configurer = config_cache.make_service_configurer(
         plugins.check_plugins, service_name_config
+    )
+    clustering = config.make_clustering_config(
+        loaded_config, hosts_config, ruleset_matcher, label_manager
     )
     inventory_config = make_inventory_config(
         loaded_config, ruleset_matcher, label_manager, hosts_config
@@ -2894,8 +2900,8 @@ def run_checking(
     parser = CMKParser(
         config.make_parser_config(
             loaded_config,
-            config_cache.ruleset_matcher,
-            config_cache.label_manager,
+            ruleset_matcher,
+            label_manager,
             ip_address_of=config_cache.primary_ip_address_of,
         ),
         selected_sections=selected_sections,
@@ -2904,9 +2910,9 @@ def run_checking(
     checker_config = CheckerConfig(
         only_from=config_cache.only_from,
         effective_service_level=config_cache.effective_service_level,
-        get_clustered_service_configuration=config_cache.clustering.get_clustered_service_configuration,
+        get_clustered_service_configuration=clustering.get_clustered_service_configuration,
         nodes=lambda hn: hosts_config.clusters.get(hn, ()),
-        effective_host=config_cache.clustering.effective_host,
+        effective_host=clustering.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, logger.warning

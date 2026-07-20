@@ -468,3 +468,37 @@ def test_event_overview_omits_alert_handler_details_for_regular_notification() -
     html = _render_event_overview_for_notification("PROBLEM")
     assert "Name of alert handler:" not in html
     assert "Output of alert handler:" not in html
+
+
+def _render_additional(elements: list[str], service_notification: bool) -> str:
+    # Render the "Additional details" template in isolation. The selected
+    # ``elements`` are passed via PARAMETER_ELEMENTSS, mirroring how the mail
+    # plug-in feeds the rule's "HTML email parameters" into the template.
+    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), autoescape=True)
+    env.filters["timestamp"] = mail.TemplateRenderer.format_timestamp
+    macros = env.get_template("macros.html.jinja").module
+    data = {
+        "PARAMETER_ELEMENTSS": " ".join(elements),
+        "HOSTNOTESURL": "http://host-notes",
+        "SERVICENOTESURL": "http://service-notes",
+    }
+    return env.get_template("additional.html.jinja").render(
+        data=data,
+        service_notification=service_notification,
+        macros=macros,
+    )
+
+
+def test_additional_shows_host_notes_url_for_host_notification() -> None:
+    html = _render_additional(["notesurl"], service_notification=False)
+    assert "Custom host notes URL:" in html
+    assert "http://host-notes" in html
+    assert "Custom service notes URL:" not in html
+
+
+def test_additional_shows_both_notes_urls_for_service_notification() -> None:
+    html = _render_additional(["notesurl"], service_notification=True)
+    assert "Custom host notes URL:" in html
+    assert "http://host-notes" in html
+    assert "Custom service notes URL:" in html
+    assert "http://service-notes" in html

@@ -64,10 +64,9 @@
                             {{ additional_tr(data, "Host metrics", "HOSTPERFDATA") }}
                         {% endif %}
                     {% elif element == "notesurl" %}
+                        {{ additional_tr(data, "Custom host notes URL", "HOSTNOTESURL") }}
                         {% if service_notification %}
                             {{ additional_tr(data, "Custom service notes URL", "SERVICENOTESURL") }}
-                        {% else %}
-                            {{ additional_tr(data, "Custom host notes URL", "HOSTNOTESURL") }}
                         {% endif %}
                     {% elif element == "context" %}
                         <tr>

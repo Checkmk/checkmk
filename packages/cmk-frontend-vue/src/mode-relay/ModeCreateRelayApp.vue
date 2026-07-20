@@ -81,13 +81,7 @@ const openRelayOverviewPage = () => {
           :index="1"
           :is-completed="() => currentStep > 1"
         />
-        <NameRelay
-          v-model="relayAlias"
-          :index="2"
-          :is-completed="() => currentStep > 2"
-          :alias-validation-regex="props.alias_validation.regex"
-          :alias-validation-regex-help="props.alias_validation.regex_help"
-        />
+        <NameRelay v-model="relayAlias" :index="2" :is-completed="() => currentStep > 2" />
         <InstallPodman :index="3" :is-completed="() => currentStep > 3" />
         <ExecuteInstallationScript
           :relay-alias="relayAlias"
@@ -119,13 +113,7 @@ const openRelayOverviewPage = () => {
           :index="2"
           :is-completed="() => currentStep > 2"
         />
-        <NameRelay
-          v-model="relayAlias"
-          :index="3"
-          :is-completed="() => currentStep > 3"
-          :alias-validation-regex="props.alias_validation.regex"
-          :alias-validation-regex-help="props.alias_validation.regex_help"
-        />
+        <NameRelay v-model="relayAlias" :index="3" :is-completed="() => currentStep > 3" />
         <RunMsiInstaller
           :relay-alias="relayAlias"
           :site-name="props.site_name"

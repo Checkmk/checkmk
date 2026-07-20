@@ -21,9 +21,9 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<
-  CmkWizardStepProps & { aliasValidationRegex: string; aliasValidationRegexHelp: string }
->()
+defineProps<CmkWizardStepProps>()
+
+const RELAY_ALIAS_REGEX = /^[a-zA-Z0-9_-]+$/
 
 const relayAlias = defineModel<string>({ default: '' })
 const savedRelays = ref<Relay[]>([])
@@ -35,8 +35,8 @@ const getAliasErrors = () => {
   const alias = relayAlias.value.trim()
   if (alias.length === 0) {
     errors.push(_t('A relay alias is required'))
-  } else if (!new RegExp(props.aliasValidationRegex).test(alias)) {
-    errors.push(props.aliasValidationRegexHelp)
+  } else if (!RELAY_ALIAS_REGEX.test(alias)) {
+    errors.push(_t('Allowed characters are letters, digits, underscores, and hyphens.'))
   }
   return errors
 }

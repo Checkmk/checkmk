@@ -3,18 +3,6 @@
   "type": "object",
   "title": "Create relay",
   "properties": {
-    "alias_validation": {
-      "type": "object",
-      "properties": {
-        "regex": {
-          "type": "string"
-        },
-        "regex_help": {
-          "type": "string"
-        }
-      },
-      "required": ["regex", "regex_help"]
-    },
     "urls": {
       "type": "object",
       "properties": {
@@ -56,13 +44,5 @@
       "description": "When true, show the OS selector to allow registering a Windows relay."
     }
   },
-  "required": [
-    "alias_validation",
-    "urls",
-    "site_name",
-    "domain",
-    "agent_receiver_port",
-    "site_version",
-    "supported_os"
-  ]
+  "required": ["urls", "site_name", "domain", "agent_receiver_port", "site_version", "supported_os"]
 }

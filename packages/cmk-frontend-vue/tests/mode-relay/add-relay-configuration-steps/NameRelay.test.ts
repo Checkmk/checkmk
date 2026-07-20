@@ -14,9 +14,7 @@ import { mountWithWizardContext } from '../helpers'
 
 const baseProps = {
   index: 1,
-  isCompleted: () => false,
-  aliasValidationRegex: '^[a-zA-Z0-9_-]+$',
-  aliasValidationRegexHelp: 'Alias must contain only letters, numbers, underscores, and hyphens'
+  isCompleted: () => false
 }
 
 beforeEach(() => {
@@ -54,7 +52,21 @@ describe('NameRelay', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Alias must contain only letters, numbers, underscores, and hyphens')
+        screen.getByText('Allowed characters are letters, digits, underscores, and hyphens.')
+      ).toBeInTheDocument()
+    })
+    expect(navigation.next).not.toHaveBeenCalled()
+  })
+
+  test('alias containing $ is rejected by the wizard', async () => {
+    const { navigation } = mountWithWizardContext(NameRelay, baseProps)
+
+    await userEvent.type(screen.getByRole('textbox'), 'relay$backup')
+    await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Allowed characters are letters, digits, underscores, and hyphens.')
       ).toBeInTheDocument()
     })
     expect(navigation.next).not.toHaveBeenCalled()

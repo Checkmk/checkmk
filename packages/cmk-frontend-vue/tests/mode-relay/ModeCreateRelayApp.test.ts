@@ -10,10 +10,6 @@ import type { CreateRelay } from 'cmk-shared-typing/typescript/create_relay'
 import ModeCreateRelayApp from '@/mode-relay/ModeCreateRelayApp.vue'
 
 const mockProps: CreateRelay = {
-  alias_validation: {
-    regex: '^[a-zA-Z0-9_-]+$',
-    regex_help: 'Alias must contain only letters, numbers, underscores, and hyphens'
-  },
   urls: {
     create_host: '/wato.py?mode=newhost',
     relay_overview: '/wato.py?mode=relay_overview',

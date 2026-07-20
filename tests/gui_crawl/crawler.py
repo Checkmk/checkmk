@@ -164,6 +164,7 @@ class Crawler:
         self.requests_session = requests.Session()
         self._ignored_content_types: set[str] = {
             "application/json",
+            "application/octet-stream",
             "application/pdf",
             "application/x-deb",
             "application/x-debian-package",

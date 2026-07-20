@@ -3232,8 +3232,8 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
                 rtc_package=None,
             )
 
-        parameters = config_cache.hwsw_inventory_parameters(hostname)
-        raw_intervals_from_config = config_cache.inv_retention_intervals(hostname)
+        parameters = config_cache.inventory_config.hwsw_parameters(hostname)
+        raw_intervals_from_config = config_cache.inventory_config.retention_intervals(hostname)
         summarizer = CMKSummarizer(
             hostname,
             config_cache.summary_config,
@@ -3257,7 +3257,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
                     fetcher=fetcher,
                     parser=parser,
                     summarizer=summarizer,
-                    inventory_parameters=config_cache.inventory_parameters,
+                    inventory_parameters=config_cache.inventory_config.plugin_parameters,
                     section_plugins=section_plugins,
                     section_error_handling=section_error_handling,
                     inventory_plugins=inventory_plugins,
@@ -3532,7 +3532,9 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
         return CMKSummarizer(
             host_name,
             config_cache.summary_config,
-            override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
+            override_non_ok_state=config_cache.inventory_config.hwsw_parameters(
+                host_name
+            ).fail_status,
         )
 
     all_hosts = frozenset(
@@ -3579,9 +3581,11 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
                     summarizer=summarizer(host_name),
                     section_plugins=section_plugins,
                     inventory_plugins=plugins.inventory_plugins,
-                    inventory_parameters=config_cache.inventory_parameters,
-                    parameters=config_cache.hwsw_inventory_parameters(host_name),
-                    raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
+                    inventory_parameters=config_cache.inventory_config.plugin_parameters,
+                    parameters=config_cache.inventory_config.hwsw_parameters(host_name),
+                    raw_intervals_from_config=config_cache.inventory_config.retention_intervals(
+                        host_name
+                    ),
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))

@@ -316,7 +316,7 @@ def _get_needed_plugins(
         ),
         *(
             agent_based_plugins.inventory_plugins.values()
-            if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory
+            if config_cache.inventory_config.hwsw_parameters(host_name).status_data_inventory
             else ()
         ),
     ]

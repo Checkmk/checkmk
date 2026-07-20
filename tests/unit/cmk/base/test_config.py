@@ -1165,7 +1165,10 @@ def test_host_config_inventory_parameters(
         defaults={},
         location=PluginLocation("foo", "bar"),
     )
-    assert ts.apply(monkeypatch).config_cache.inventory_parameters(hostname, plugin) == result
+    assert (
+        ts.apply(monkeypatch).config_cache.inventory_config.plugin_parameters(hostname, plugin)
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -2579,7 +2582,7 @@ def test_config_cache_status_data_inventory(
         },
     )
     config_cache = ts.apply(monkeypatch).config_cache
-    assert config_cache.hwsw_inventory_parameters(abc_host).status_data_inventory == result
+    assert config_cache.inventory_config.hwsw_parameters(abc_host).status_data_inventory == result
 
 
 @pytest.mark.parametrize(

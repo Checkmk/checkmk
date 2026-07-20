@@ -265,9 +265,11 @@ def _inventory_as_check(
                     {**plugins.agent_sections, **plugins.snmp_sections}
                 ),
                 inventory_plugins=plugins.inventory_plugins,
-                inventory_parameters=config_cache.inventory_parameters,
+                inventory_parameters=config_cache.inventory_config.plugin_parameters,
                 parameters=parameters,
-                raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
+                raw_intervals_from_config=config_cache.inventory_config.retention_intervals(
+                    hostname
+                ),
             )
         check_results = [
             *check_results,

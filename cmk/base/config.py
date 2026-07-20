@@ -76,7 +76,6 @@ from cmk.checkengine.fetchers.ipmi import IPMICredentials
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
-from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import ParserConfig, SectionStore
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import (
@@ -88,7 +87,6 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
-    InventoryPlugin,
     SectionName,
     ServiceID,
     SNMPSectionPlugin,
@@ -107,7 +105,6 @@ from cmk.checkengine.source_abc import SourceConfig
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
-from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher
@@ -1434,7 +1431,7 @@ class ConfigCache:
                 self.label_manager.labels_of_host,
             ),
             status_data_inventory=lambda host_name: (
-                self.hwsw_inventory_parameters(host_name).status_data_inventory
+                self.inventory_config.hwsw_parameters(host_name).status_data_inventory
             ),
             management_credentials=lambda host_name: self.management_credentials(host_name, "ipmi"),
             program_commandline=lambda host_name, host_ip_family, ip_address, program: (
@@ -1760,9 +1757,6 @@ class ConfigCache:
 
         return resolved
 
-    def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
-        return self.inventory_config.hwsw_parameters(host_name)
-
     def management_protocol(self, host_name: HostName) -> Literal["snmp", "ipmi"] | None:
         return self._loaded_config.management_protocol.get(host_name)
 
@@ -2058,11 +2052,6 @@ class ConfigCache:
         return self.__discovery_check_parameters.setdefault(
             host_name, make_discovery_check_parameters()
         )
-
-    def inventory_parameters(
-        self, host_name: HostName, plugin: InventoryPlugin
-    ) -> Mapping[str, object]:
-        return self.inventory_config.plugin_parameters(host_name, plugin)
 
     def active_checks(self, host_name: HostName) -> Sequence[SSCRules]:
         """Returns active checks configured for this host
@@ -2452,9 +2441,6 @@ class ConfigCache:
         if (value := spec.get("legacy_pull_mode")) is not None:
             merged_spec["legacy_pull_mode"] = value
         return merged_spec
-
-    def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
-        return self.inventory_config.retention_intervals(hostname)
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values_all(

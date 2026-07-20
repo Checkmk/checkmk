@@ -18,7 +18,6 @@ const props = withDefaults(
     actionId: string
     actions: MonitoringActionRegistry
     targets: HostRef[]
-    backButton?: boolean | undefined
     indent?: boolean | undefined
     showCount?: boolean | undefined
   }>(),
@@ -28,7 +27,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   (event: 'feedback', result: ActionFeedback): void
   (event: 'cancel'): void
-  (event: 'back'): void
 }>()
 
 const action = computed(() => props.actions[props.actionId])
@@ -52,10 +50,8 @@ async function onSubmit(values: unknown): Promise<void> {
     :submit-label="action.submitLabel"
     :form="action.form"
     :initial-values="initialValues"
-    :back-button="backButton"
     :indent="indent"
     @submit="onSubmit"
     @cancel="emit('cancel')"
-    @back="emit('back')"
   />
 </template>

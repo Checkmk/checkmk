@@ -11,7 +11,6 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from '@/components/CmkButton/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 
 const props = defineProps<{
@@ -20,14 +19,12 @@ const props = defineProps<{
   submitLabel?: TranslatedString | undefined
   form?: Component | undefined
   initialValues?: unknown
-  backButton?: boolean | undefined
   indent?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
   (event: 'submit', values: unknown): void
   (event: 'cancel'): void
-  (event: 'back'): void
 }>()
 
 const { _t } = usei18n()
@@ -52,17 +49,6 @@ function cancel(): void {
     <component :is="indent ? CmkIndent : 'div'" class="monitoring-action-form-pane__group">
       <header class="monitoring-action-form-pane__header">
         <div class="monitoring-action-form-pane__title-row">
-          <CmkButton
-            v-if="backButton"
-            size="iconOnly"
-            variant="optional"
-            :title="_t('Back')"
-            :aria-label="_t('Back')"
-            class="monitoring-action-form-pane__back"
-            @click="emit('back')"
-          >
-            <CmkIcon name="back" size="small" />
-          </CmkButton>
           <h2 class="monitoring-action-form-pane__title">{{ title }}</h2>
         </div>
         <p v-if="subtitle" class="monitoring-action-form-pane__subtitle">{{ subtitle }}</p>

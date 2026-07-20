@@ -616,15 +616,21 @@ function navigateToLegacy() {
         <HostSlideInActions @select="openSlideInAction" />
       </template>
       <template #override>
+        <CmkButton
+          variant="optional"
+          class="monitoring-all-hosts-app__slide-in-back"
+          @click="closeSlideInAction"
+        >
+          <CmkIcon name="back" size="small" />
+          {{ _t('Back to host detail view') }}
+        </CmkButton>
         <MonitoringActionPane
           v-if="slideInActionId"
           :action-id="slideInActionId"
           :actions="actionRegistry"
           :targets="slideInTargets"
-          back-button
           indent
           :show-count="false"
-          @back="closeSlideInAction"
           @cancel="closeSlideInAction"
           @feedback="onSlideInActionFeedback"
         />
@@ -737,6 +743,11 @@ function navigateToLegacy() {
 
 .monitoring-all-hosts-app__action-bar {
   flex: 0 0 auto;
+  margin-bottom: var(--spacing);
+}
+
+.monitoring-all-hosts-app__slide-in-back {
+  gap: var(--dimension-3);
   margin-bottom: var(--spacing);
 }
 </style>

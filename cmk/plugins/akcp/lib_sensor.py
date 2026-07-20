@@ -11,6 +11,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
+    IgnoreResults,
     Result,
     Service,
     State,
@@ -50,6 +51,9 @@ class SensorProbeHumidityStatus(enum.Enum):
     # HHMSAGENT-MIB defines hhmsSensorArrayHumidityStatus at the same OID with
     # identical SYNTAX, so this enum decodes both device generations.
     # Decodes .1.3.6.1.4.1.3854.1.2.2.1.17.1.4
+    # "0" is not defined in either MIB, but real devices have been observed
+    # to report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_WARNING = "3"
@@ -75,6 +79,9 @@ class SensorHumidityStatus(enum.Enum):
     #        SYNTAX  INTEGER { <identical to sensorHumidityStatus above> }
     # Decodes .1.3.6.1.4.1.3854.2.3.3.1.6 (sensorHumidityStatus)
     # and .1.3.6.1.4.1.3854.3.5.3.1.6 (plusSeries humidityStatus)
+    # "0" is not defined in the MIB, but real devices have been observed to
+    # report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_WARNING = "3"
@@ -132,6 +139,12 @@ def discover_akcp_humidity(section: HumiditySection) -> DiscoveryResult:
 def check_akcp_humidity(item: str, params: CheckParams, section: HumiditySection) -> CheckResult:
     if (sensor := section.get(item)) is None:
         return
+    if sensor.status in (
+        SensorProbeHumidityStatus.NO_VALUE,
+        SensorHumidityStatus.NO_VALUE,
+    ):
+        yield IgnoreResults("Sensor did not report a status")
+        return
     if not sensor.online:
         yield Result(state=State.CRIT, summary="sensor is offline")
 
@@ -180,6 +193,9 @@ class SensorProbeTempStatus(enum.Enum):
     # HHMSAGENT-MIB defines hhmsSensorArrayTempStatus at the same OID with
     # identical SYNTAX, so this enum decodes both device generations.
     # Decodes .1.3.6.1.4.1.3854.1.2.2.1.16.1.4
+    # "0" is not defined in either MIB, but real devices have been observed
+    # to report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_WARNING = "3"
@@ -206,6 +222,9 @@ class SensorTemperatureStatus(enum.Enum):
     #        SYNTAX  INTEGER { <identical to sensorTemperatureStatus above> }
     # Decodes .1.3.6.1.4.1.3854.2.3.2.1.6 (sensorTemperatureStatus)
     # and .1.3.6.1.4.1.3854.3.5.2.1.6 (plusSeries temperatureStatus)
+    # "0" is not defined in the MIB, but real devices have been observed to
+    # report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_WARNING = "3"
@@ -340,6 +359,12 @@ def discover_akcp_sensor_temp(section: TempSection) -> DiscoveryResult:
 def check_akcp_sensor_temp(item: str, params: TempParamDict, section: TempSection) -> CheckResult:
     if (sensor := section.get(item)) is None:
         return
+    if sensor.status in (
+        SensorProbeTempStatus.NO_VALUE,
+        SensorTemperatureStatus.NO_VALUE,
+    ):
+        yield IgnoreResults("Sensor did not report a status")
+        return
     if not sensor.online:
         yield Result(state=State.CRIT, summary="sensor is offline")
 
@@ -396,6 +421,9 @@ class SensorWaterStatus(enum.Enum):
     #        SYNTAX  INTEGER { <identical to sensorWaterStatus above> }
     # Decodes .1.3.6.1.4.1.3854.2.3.9.1.6 (sensorWaterStatus)
     # and .1.3.6.1.4.1.3854.3.5.9.1.6 (plusSeries waterStatus)
+    # "0" is not defined in the MIB, but real devices have been observed to
+    # report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_CRITICAL = "4"
@@ -421,6 +449,9 @@ class SensorSmokeStatus(enum.Enum):
     #        SYNTAX  INTEGER { <identical to sensorSmokeStatus above> }
     # Decodes .1.3.6.1.4.1.3854.2.3.14.1.6 (sensorSmokeStatus)
     # and .1.3.6.1.4.1.3854.3.5.14.1.6 (plusSeries smokeStatus)
+    # "0" is not defined in the MIB, but real devices have been observed to
+    # report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_CRITICAL = "4"
@@ -484,6 +515,9 @@ def check_akcp_sensor_relay(item: str, section: RelaySection) -> CheckResult:
     }
 
     if (sensor := section.get(item)) is None:
+        return
+    if sensor.status in (SensorWaterStatus.NO_VALUE, SensorSmokeStatus.NO_VALUE):
+        yield IgnoreResults("Sensor did not report a status")
         return
     if not sensor.online:
         yield Result(state=State.CRIT, summary="sensor is offline")

@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    IgnoreResults,
     not_exists,
     Result,
     Service,
@@ -38,6 +39,9 @@ class SensorProbeSwitchStatus(enum.Enum):
     #           relayOff(9)
     #        }
     # Decodes .1.3.6.1.4.1.3854.1.2.2.1.18.1.3
+    # "0" is not defined in the MIB, but real devices have been observed to
+    # report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_CRITICAL = "4"
@@ -63,6 +67,9 @@ class SensorDryContactStatus(enum.Enum):
     #        SYNTAX  INTEGER { <identical to sensorDryContactStatus above> }
     # Decodes .1.3.6.1.4.1.3854.2.3.4.1.6 (sensorDryContactStatus)
     # and .1.3.6.1.4.1.3854.3.5.4.1.6 (plusSeries drycontactStatus)
+    # "0" is not defined in the MIB, but real devices have been observed to
+    # report it, both online and offline.
+    NO_VALUE = "0"
     NO_STATUS = "1"
     NORMAL = "2"
     HIGH_CRITICAL = "4"
@@ -78,6 +85,10 @@ def _check_status(
     normal_description: str,
     critical_description: str,
 ) -> CheckResult:
+    if status in (SensorDryContactStatus.NO_VALUE, SensorProbeSwitchStatus.NO_VALUE):
+        yield IgnoreResults("Sensor did not report a status")
+        return
+
     state_names = {
         SensorDryContactStatus.NO_STATUS: "no status",
         SensorDryContactStatus.SENSOR_ERROR: "sensor error",

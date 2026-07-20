@@ -43,6 +43,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import ConfigCache, handle_ip_lookup_failure
 from cmk.base.configlib.checkengine import DiscoveryConfig
+from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.loaded_config import BaseConfig
@@ -2836,6 +2837,7 @@ def run_checking(
         loaded_config, hosts_config, ruleset_matcher, label_manager
     )
     service_level_config = make_service_level_config(loaded_config, ruleset_matcher, label_manager)
+    exit_code_spec = make_exit_code_spec(loaded_config, ruleset_matcher, label_manager)
     inventory_config = make_inventory_config(
         loaded_config, ruleset_matcher, label_manager, hosts_config
     )
@@ -2927,7 +2929,7 @@ def run_checking(
     )
     dry_run = options.get("no-submit", False)
     error_handler = CheckResultErrorHandler(
-        config_cache.exit_code_spec(hostname),
+        exit_code_spec(hostname),
         host_name=hostname,
         service_name="Check_MK",
         plugin_name="mk",
@@ -2998,7 +3000,7 @@ def run_checking(
                     perfdata_format=loaded_config.perfdata_format,
                     show_perfdata=options.get("perfdata", False),
                 ),
-                exit_spec=config_cache.exit_code_spec(hostname),
+                exit_spec=exit_code_spec(hostname),
                 timeperiods_active=checker_config.timeperiods_active,
             )
 

@@ -46,6 +46,7 @@ from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
 from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
+from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.labels import LabelConfig
@@ -103,7 +104,6 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
     SNMPVersion,
 )
 from cmk.checkengine.source_abc import SourceConfig
-from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.password_store.v1_unstable import Secret
@@ -527,11 +527,6 @@ PingLevels = dict[str, int | tuple[float, float]]
 ObjectAttributes = dict[str, Any]
 
 GroupDefinitions = dict[str, str]
-
-
-class _NestedExitSpec(ExitSpec, total=False):
-    overall: ExitSpec
-    individual: dict[str, ExitSpec]
 
 
 def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
@@ -1354,6 +1349,9 @@ class ConfigCache:
             self._hosts_config,
         )
         self.service_level_config = make_service_level_config(
+            self._loaded_config, self.ruleset_matcher, self.label_manager
+        )
+        self.exit_code_spec = make_exit_code_spec(
             self._loaded_config, self.ruleset_matcher, self.label_manager
         )
         return self
@@ -2407,44 +2405,6 @@ class ConfigCache:
             discovery=1.5 * check_interval,
             inventory=1.5 * check_interval,
         )
-
-    def exit_code_spec(self, hostname: HostName, data_source_id: str | None = None) -> ExitSpec:
-        spec: _NestedExitSpec = {}
-        # TODO: Can we use get_host_merged_dict?
-        specs = self.ruleset_matcher.get_host_values_all(
-            hostname, self._loaded_config.check_mk_exit_status, self.label_manager.labels_of_host
-        )
-        for entry in specs[::-1]:
-            spec.update(entry)
-
-        merged_spec = ConfigCache._extract_data_source_exit_code_spec(spec, data_source_id)
-        return ConfigCache._merge_with_optional_exit_code_parameters(spec, merged_spec)
-
-    @staticmethod
-    def _extract_data_source_exit_code_spec(
-        spec: _NestedExitSpec,
-        data_source_id: str | None,
-    ) -> ExitSpec:
-        if data_source_id is not None:
-            with contextlib.suppress(KeyError):
-                return spec["individual"][data_source_id]
-        with contextlib.suppress(KeyError):
-            return spec["overall"]
-        # Old configuration format
-        return spec
-
-    @staticmethod
-    def _merge_with_optional_exit_code_parameters(
-        spec: _NestedExitSpec,
-        merged_spec: ExitSpec,
-    ) -> ExitSpec:
-        # Additional optional parameters which are not part of individual
-        # or overall parameters
-        if (value := spec.get("restricted_address_mismatch")) is not None:
-            merged_spec["restricted_address_mismatch"] = value
-        if (value := spec.get("legacy_pull_mode")) is not None:
-            merged_spec["legacy_pull_mode"] = value
-        return merged_spec
 
     def _snmp_credentials(self, host_name: HostAddress) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host

@@ -53,6 +53,7 @@ from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
 from cmk.base.configlib.scheduling import make_check_interval_config
+from cmk.base.configlib.servicelevel import make_service_level_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.ccc import tty
@@ -1352,6 +1353,9 @@ class ConfigCache:
             self.label_manager,
             self._hosts_config,
         )
+        self.service_level_config = make_service_level_config(
+            self._loaded_config, self.ruleset_matcher, self.label_manager
+        )
         return self
 
     @property
@@ -2443,12 +2447,7 @@ class ConfigCache:
         return merged_spec
 
     def service_level(self, hostname: HostName) -> int | None:
-        entries = self.ruleset_matcher.get_host_values_all(
-            hostname,
-            self._loaded_config.extra_host_conf.get("_ec_sl", []),
-            self.label_manager.labels_of_host,
-        )
-        return entries[0] if entries else None
+        return self.service_level_config.of_host(hostname)
 
     def effective_service_level(
         self,
@@ -2457,11 +2456,7 @@ class ConfigCache:
         service_labels: Labels,
     ) -> int:
         """Get the service level that applies to the current service."""
-        service_level = self.service_level_of_service(host_name, service_name, service_labels)
-        if service_level is not None:
-            return service_level
-
-        return self.service_level(host_name) or 0
+        return self.service_level_config.effective(host_name, service_name, service_labels)
 
     def _snmp_credentials(self, host_name: HostAddress) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host
@@ -2705,14 +2700,7 @@ class ConfigCache:
     def service_level_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> int | None:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            self._loaded_config.extra_service_conf.get("_ec_sl", []),
-            self.label_manager.labels_of_host,
-        )
-        return _parse(out[0], int) if out else None
+        return self.service_level_config.of_service(host_name, service_name, service_labels)
 
     def section_name_of(self, section: str) -> str:
         try:
@@ -3499,7 +3487,3 @@ def make_parser_config(
             ).max_cache_age
         ),
     )
-
-
-def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
-    return type_(raw)

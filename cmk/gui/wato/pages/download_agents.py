@@ -19,11 +19,8 @@ from cmk.discover_plugins import AGENT_PLUGINS_FOLDER, discover_families
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -31,23 +28,16 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils import agent
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
-# Page name of the GUI handler that streams agent plugin files which live outside
-# the statically served share/check_mk/agents tree (e.g. cmk/plugins/<family>/agents/).
-DOWNLOAD_AGENT_PLUGIN_PAGE = "download_agent_plugin"
 
-
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeDownloadAgentsOther)
     mode_registry.register(ModeDownloadAgentsWindows)
     mode_registry.register(ModeDownloadAgentsLinux)
-    page_registry.register(PageEndpoint(DOWNLOAD_AGENT_PLUGIN_PAGE, PageDownloadAgentPlugin()))
 
 
 def _plugin_family_agent_dirs() -> Sequence[Path]:
@@ -62,24 +52,6 @@ def _plugin_family_agent_dirs() -> Sequence[Path]:
         for _family, family_paths in sorted(discover_families(raise_errors=False).items())
         for family_path in family_paths
     ]
-
-
-def _download_href(path: str) -> str:
-    """Build the download URL for an offered agent file.
-
-    Files below share/check_mk/agents are served statically by the Apache alias
-    "check_mk/agents", so a relative URL resolves against the current page. Plugin
-    family agent files live outside that tree (e.g. lib/python3/cmk/plugins/<family>/
-    agents/) and are streamed through the GUI handler instead.
-    """
-    agents_dir_prefix = str(cmk.utils.paths.agents_dir) + "/"
-    if path.startswith(agents_dir_prefix):
-        return "agents/%s" % path[len(agents_dir_prefix) :]
-    return makeuri_contextless(
-        request,
-        [("path", path)],
-        filename=f"{DOWNLOAD_AGENT_PLUGIN_PAGE}.py",
-    )
 
 
 class ABCModeDownloadAgents(WatoMode):
@@ -212,6 +184,7 @@ class ABCModeDownloadAgents(WatoMode):
         forms.container()
         for path in paths:
             os_path = path
+            relpath = path.replace(str(cmk.utils.paths.agents_dir) + "/", "")
             filename = path.split("/")[-1]
 
             file_size = os.stat(os_path).st_size
@@ -219,7 +192,7 @@ class ABCModeDownloadAgents(WatoMode):
             # FIXME: Rename classes etc. to something generic
             html.open_div(class_="ruleset")
             html.open_div(style="width:300px;", class_="text")
-            html.a(filename, href=_download_href(path), download=filename)
+            html.a(filename, href="agents/%s" % relpath, download=filename)
             html.span("." * 200, class_="dots")
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
@@ -334,35 +307,3 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
         exclude.add("/windows/ohm")
         exclude.add("/windows/plugins")
         return exclude
-
-
-class PageDownloadAgentPlugin(Page):
-    """Stream an agent plugin file that lives outside the statically served agents tree.
-
-    Files grouped by plugin family (cmk/plugins/<family>/agents/) are not reachable
-    through the "check_mk/agents" Apache alias, so ``ModeDownloadAgentsOther`` links
-    them here. The requested path is validated against the set of plugin family agent
-    directories before serving to prevent reading arbitrary files.
-    """
-
-    def page(self, ctx: PageContext) -> None:
-        user.need_permission("wato.download_agents")
-
-        try:
-            requested = Path(ctx.request.get_str_input_mandatory("path")).resolve(strict=True)
-        except (MKUserError, OSError):
-            raise MKUserError("path", _("The requested file does not exist."))
-
-        allowed_dirs = [
-            family_agents_dir.resolve() for family_agents_dir in _plugin_family_agent_dirs()
-        ]
-        if not (requested.is_file() and any(requested.is_relative_to(d) for d in allowed_dirs)):
-            raise MKUserError("path", _("The requested file is not available for download."))
-
-        filename = requested.name
-        if '"' in filename or "\\" in filename:
-            raise MKUserError("path", _("Invalid file name."))
-
-        response.set_content_type("application/octet-stream")
-        response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
-        response.set_data(requested.read_bytes())

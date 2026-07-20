@@ -291,10 +291,13 @@ table.tacticaloverview td a,
 table.tacticaloverview td a.link,
 table.tacticaloverview td a:hover,
 table.tacticaloverview td span {
-  padding: 4px;
+  padding: 4px 2px;
+  overflow: hidden;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
   color: $font-color;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 div.tacticalalert,

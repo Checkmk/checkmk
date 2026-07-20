@@ -27,13 +27,9 @@ STRING_TABLE_2 = [["Humidity1 Description", "", "7", "1"], ["Humidity2 Descripti
             STRING_TABLE_1,
             [Service(item="Dual Humidity Port 1")],
         ),
-        pytest.param(
+        (
             STRING_TABLE_2,
             [Service(item="Humidity1 Description")],
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Prexisting crash, not subject of this refactor",
-            ),
         ),
     ],
 )
@@ -58,14 +54,10 @@ def test_akcp_humidity_discover(
                 Metric("humidity", 30.0, levels=(60.0, 65.0), boundaries=(0.0, 100.0)),
             ],
         ),
-        pytest.param(
+        (
             STRING_TABLE_2,
             "Humidity1 Description",
             [Result(state=State.CRIT, summary="State: sensor error")],
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Prexisting crash, not subject of this refactor",
-            ),
         ),
     ],
 )

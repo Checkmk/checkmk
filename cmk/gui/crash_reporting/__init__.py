@@ -19,7 +19,11 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, Conf
 
 from . import pages as crash_reporting_pages
 from ._consolidation import consolidate_crash_reports
-from ._settings import ConfigVariableCrashReportTarget, ConfigVariableCrashReportURL
+from ._settings import (
+    ConfigVariableAutomaticCrashReportUpload,
+    ConfigVariableCrashReportTarget,
+    ConfigVariableCrashReportURL,
+)
 from .views import (
     CommandDeleteCrashReports,
     DataSourceCrashReports,
@@ -107,6 +111,7 @@ def register(
     painter_registry.register(PainterCrashVersion)
     config_variable_registry.register(ConfigVariableCrashReportTarget)
     config_variable_registry.register(ConfigVariableCrashReportURL)
+    config_variable_registry.register(ConfigVariableAutomaticCrashReportUpload)
     filter_registry.register(FilterCrashCheckType)
     filter_registry.register(FilterCrashException)
     filter_registry.register(FilterCrashHost)

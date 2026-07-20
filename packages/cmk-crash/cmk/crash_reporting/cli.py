@@ -72,9 +72,12 @@ def main() -> int:
     settings = load_mk_file(
         omd_root / "etc/check_mk/multisite.d/wato/global.mk", default={}, lock=False
     )
-    mail = str(settings.get("crash_report_contact_email", ""))
-    if not settings.get("automatic_crash_report_upload", False) or not mail:
-        logger.info("Automatic crash report upload is disabled or unconfigured - nothing to do.")
+    # global.mk is hand-editable and not owned by this CLI, so the GUI's valuespec is
+    # the only thing keeping this a string. A stray truthy non-string would otherwise
+    # pass as an address; anything but a non-empty string counts as "off".
+    mail = settings.get("automatic_crash_report_upload")
+    if not isinstance(mail, str) or not mail:
+        logger.info("Automatic crash report upload is disabled - nothing to do.")
         return 0
 
     run_batch(

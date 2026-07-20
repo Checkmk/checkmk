@@ -94,6 +94,7 @@ def test_registered_configvars() -> None:
         "apache_process_tuning",
         "archive_orphans",
         "auth_by_http_header",
+        "automatic_crash_report_upload",
         "builtin_icon_visibility",
         "bulk_discovery_default_settings",
         "check_mk_perfdata_with_times",

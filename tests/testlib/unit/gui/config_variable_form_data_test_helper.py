@@ -618,6 +618,10 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
     },
+    "automatic_crash_report_upload": {
+        # The prefill is the logged-in user's address, and no user is logged in here.
+        "[enable]": "",
+    },
     "builtin_icon_visibility": {
         "[add]": ("parent_child_topology", {}),
         "[add].1.sort_index": 0,
@@ -991,6 +995,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "alert_handler_event_types": [],
     "apache_process_tuning": {"number_of_processes": 5},
     "auth_by_http_header": None,
+    "automatic_crash_report_upload": None,
     "builtin_icon_visibility": {},
     "bulk_discovery_default_settings": {
         "mode": (
@@ -1396,6 +1401,13 @@ CASES: Mapping[str, list[Case]] = {
         CasePass("disabled", None),
         CasePass("configured", "X-Remote-User"),
         CaseFail("not-a-string", 123),
+    ],
+    "automatic_crash_report_upload": [
+        CasePass("disabled", None),
+        CasePass("configured", "admin@example.com"),
+        # The address is the toggle, so "enabled without one" must not be storable.
+        CaseFail("empty-address", ""),
+        CaseFail("not-an-email-address", "not-an-email"),
     ],
     "bake_agents_on_restart": CHECKBOX_CASES,
     "builtin_icon_visibility": [

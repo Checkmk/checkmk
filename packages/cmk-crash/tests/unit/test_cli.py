@@ -41,7 +41,9 @@ def _global_mk_path(tmp_path: Path) -> Path:
     "settings",
     [
         pytest.param(None, id="no-settings-file"),
-        pytest.param({"automatic_crash_report_upload": True}, id="enabled-but-no-email"),
+        pytest.param({"automatic_crash_report_upload": None}, id="explicitly-disabled"),
+        pytest.param({"automatic_crash_report_upload": ""}, id="empty-address"),
+        pytest.param({"automatic_crash_report_upload": True}, id="non-string-value"),
     ],
 )
 def test_gate_blocks_upload_is_silent_noop(
@@ -65,8 +67,7 @@ def test_toggle_on_with_email_calls_run_batch(
 ) -> None:
     _write_global_mk(
         _global_mk_path(tmp_path),
-        automatic_crash_report_upload=True,
-        crash_report_contact_email="admin@example.com",
+        automatic_crash_report_upload="admin@example.com",
     )
     captured: dict[str, object] = {}
 
@@ -86,8 +87,7 @@ def test_crash_report_url_override_is_honored(
 ) -> None:
     _write_global_mk(
         _global_mk_path(tmp_path),
-        automatic_crash_report_upload=True,
-        crash_report_contact_email="admin@example.com",
+        automatic_crash_report_upload="admin@example.com",
         crash_report_url="https://crash.example.com",
     )
     captured: dict[str, object] = {}
@@ -99,8 +99,7 @@ def test_crash_report_url_override_is_honored(
 def test_dry_run_flag_passed_through(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _write_global_mk(
         _global_mk_path(tmp_path),
-        automatic_crash_report_upload=True,
-        crash_report_contact_email="admin@example.com",
+        automatic_crash_report_upload="admin@example.com",
     )
     captured: dict[str, object] = {}
     monkeypatch.setattr(cli, "run_batch", lambda **kwargs: captured.update(kwargs))
@@ -113,8 +112,7 @@ def test_dry_run_flag_passed_through(tmp_path: Path, monkeypatch: pytest.MonkeyP
 def test_end_to_end_uploads_via_real_run_batch(tmp_path: Path) -> None:
     _write_global_mk(
         _global_mk_path(tmp_path),
-        automatic_crash_report_upload=True,
-        crash_report_contact_email="admin@example.com",
+        automatic_crash_report_upload="admin@example.com",
     )
     crash_dir = tmp_path / "var/check_mk/crashes/check/11111111-1111-1111-1111-111111111111"
     crash_dir.mkdir(parents=True)

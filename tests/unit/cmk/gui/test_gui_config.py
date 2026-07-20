@@ -72,6 +72,7 @@ def test_default_config_from_plugins() -> None:
         "virtual_host_trees",
         "crash_report_url",
         "crash_report_target",
+        "automatic_crash_report_upload",
         "guitests_enabled",
         "bulk_discovery_default_settings",
         "use_siteicons",

@@ -377,6 +377,9 @@ class GeneralConfig:
     crash_report_url: str = "https://crash.checkmk.com"
     # Target email address for "Crashed Check" page
     crash_report_target: str = "feedback@checkmk.com"
+    # Automatic crash report upload (opt-in; read by the cmk-upload-crashes CLI).
+    # None is off; a value is the contact address sent with every report.
+    automatic_crash_report_upload: str | None = None
 
     # GUI Tests (see cmk-guitest)
     guitests_enabled: bool = False

@@ -74,7 +74,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecWrapper,
     Widget,
 )
-from cmk.gui.user_sites import get_activation_site_choices
+from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato.pages.notifications.migrate import (
@@ -1093,7 +1093,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 name=name,
                                                 title=Title("%s") % title,
                                             )
-                                            for name, title in get_activation_site_choices()
+                                            for name, title in get_configured_site_choices()
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,

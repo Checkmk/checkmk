@@ -320,6 +320,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             )
             conn.protocol_version = self._config.get("version", 3)
             conn.network_timeout = self._config.get("connect_timeout", 2.0)
+            conn.timeout = self._config.get("response_timeout", 5)
             conn.retry_delay = 0.5
 
             # When using the domain top level as base-dn, the subtree search stumbles with referral objects.

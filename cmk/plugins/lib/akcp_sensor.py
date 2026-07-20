@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
+from collections.abc import Mapping
+from dataclasses import dataclass
+
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, get_value_store, Result, Service, State
 
@@ -18,7 +22,8 @@ from .temperature import check_temperature, TempParamDict
 #   |                  |___/                                               |
 #   +----------------------------------------------------------------------+
 
-# States for sensors with levels as they are defined in SPAGENT-MIB
+# States for sensors with levels, numbered identically in SPAGENT-MIB and the
+# sensorProbe+ MIB (plusSeries)
 akcp_sensor_level_states = {
     "1": (2, "no status"),
     "2": (0, "normal"),
@@ -30,13 +35,6 @@ akcp_sensor_level_states = {
 }
 
 Section = list[list[str]]
-
-
-def inventory_akcp_sensor_no_params(section: Section) -> DiscoveryResult:
-    for line in section:
-        # "1" means online, "2" offline
-        if line[-1] == "1":
-            yield Service(item=line[0])
 
 
 def parse_akcp_sensor(string_table: StringTable) -> Section:
@@ -173,23 +171,112 @@ def check_akcp_sensor_temp(item: str, params: TempParamDict, section: Section) -
 #   +----------------------------------------------------------------------+
 
 
-def check_akcp_sensor_relay(item: str, section: Section) -> CheckResult:
-    # States for sensors with relays as they are defined in SPAGENT-MIB
-    relay_states = {
-        "1": (2, "no status"),
-        "2": (0, "normal"),
-        "4": (2, "high critical"),
-        "6": (2, "low critical"),
-        "7": (2, "sensor error"),
-        "8": (2, "relay on"),
-        "9": (0, "relay off"),
+class SensorWaterStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorWaterStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highCritical(4),
+    #           lowCritical(6),
+    #           sensorError(7),
+    #           relayOn(8),
+    #           relayOff(9)
+    #        }
+    #     waterStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER { <identical to sensorWaterStatus above> }
+    # Decodes .1.3.6.1.4.1.3854.2.3.9.1.6 (sensorWaterStatus)
+    # and .1.3.6.1.4.1.3854.3.5.9.1.6 (plusSeries waterStatus)
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_CRITICAL = "4"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+    RELAY_ON = "8"
+    RELAY_OFF = "9"
+
+
+class SensorSmokeStatus(enum.Enum):
+    # SPAGENT-MIB:
+    #     sensorSmokeStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER {
+    #           noStatus(1),
+    #           normal(2),
+    #           highCritical(4),
+    #           lowCritical(6),
+    #           sensorError(7),
+    #           relayOn(8),
+    #           relayOff(9)
+    #        }
+    #     smokeStatus OBJECT-TYPE
+    #        SYNTAX  INTEGER { <identical to sensorSmokeStatus above> }
+    # Decodes .1.3.6.1.4.1.3854.2.3.14.1.6 (sensorSmokeStatus)
+    # and .1.3.6.1.4.1.3854.3.5.14.1.6 (plusSeries smokeStatus)
+    NO_STATUS = "1"
+    NORMAL = "2"
+    HIGH_CRITICAL = "4"
+    LOW_CRITICAL = "6"
+    SENSOR_ERROR = "7"
+    RELAY_ON = "8"
+    RELAY_OFF = "9"
+
+
+@dataclass(frozen=True, kw_only=True)
+class WaterSensor:
+    status: SensorWaterStatus
+    online: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmokeSensor:
+    status: SensorSmokeStatus
+    online: bool
+
+
+RelaySection = Mapping[str, WaterSensor] | Mapping[str, SmokeSensor]
+
+
+def parse_akcp_water(string_table: StringTable) -> Mapping[str, WaterSensor]:
+    return {
+        description: WaterSensor(status=SensorWaterStatus(status), online=online == "1")
+        for description, status, online in string_table
     }
 
-    for description, status, online in section:
-        if description == item:
-            # Online is set to "2" if sensor is offline
-            if online != "1":
-                yield Result(state=State.CRIT, summary="sensor is offline")
 
-            state, state_name = relay_states[status]
-            yield Result(state=State(state), summary=f"State: {state_name}")
+def parse_akcp_smoke(string_table: StringTable) -> Mapping[str, SmokeSensor]:
+    return {
+        description: SmokeSensor(status=SensorSmokeStatus(status), online=online == "1")
+        for description, status, online in string_table
+    }
+
+
+def discover_akcp_sensor_relay(section: RelaySection) -> DiscoveryResult:
+    for description, sensor in section.items():
+        if sensor.online:
+            yield Service(item=description)
+
+
+def check_akcp_sensor_relay(item: str, section: RelaySection) -> CheckResult:
+    relay_states = {
+        SensorWaterStatus.NO_STATUS: (State.CRIT, "no status"),
+        SensorWaterStatus.NORMAL: (State.OK, "normal"),
+        SensorWaterStatus.HIGH_CRITICAL: (State.CRIT, "high critical"),
+        SensorWaterStatus.LOW_CRITICAL: (State.CRIT, "low critical"),
+        SensorWaterStatus.SENSOR_ERROR: (State.CRIT, "sensor error"),
+        SensorWaterStatus.RELAY_ON: (State.CRIT, "relay on"),
+        SensorWaterStatus.RELAY_OFF: (State.OK, "relay off"),
+        SensorSmokeStatus.NO_STATUS: (State.CRIT, "no status"),
+        SensorSmokeStatus.NORMAL: (State.OK, "normal"),
+        SensorSmokeStatus.HIGH_CRITICAL: (State.CRIT, "high critical"),
+        SensorSmokeStatus.LOW_CRITICAL: (State.CRIT, "low critical"),
+        SensorSmokeStatus.SENSOR_ERROR: (State.CRIT, "sensor error"),
+        SensorSmokeStatus.RELAY_ON: (State.CRIT, "relay on"),
+        SensorSmokeStatus.RELAY_OFF: (State.OK, "relay off"),
+    }
+
+    if (sensor := section.get(item)) is None:
+        return
+    if not sensor.online:
+        yield Result(state=State.CRIT, summary="sensor is offline")
+    state, state_name = relay_states[sensor.status]
+    yield Result(state=state, summary=f"State: {state_name}")

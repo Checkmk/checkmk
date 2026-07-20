@@ -8,18 +8,13 @@ from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree
 from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
 from cmk.plugins.lib.akcp_sensor import (
     check_akcp_sensor_relay,
-    inventory_akcp_sensor_no_params,
-    parse_akcp_sensor,
+    discover_akcp_sensor_relay,
+    parse_akcp_water,
 )
-
-# Example for contents of info
-#           description              state   online
-# ["Port 1 Wassermelder BE Lager",    "2",    "1"]
-
 
 snmp_section_akcp_exp_water = SimpleSNMPSection(
     name="akcp_exp_water",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_water,
     detect=DETECT_AKCP_EXP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.9.1",
@@ -34,7 +29,7 @@ snmp_section_akcp_exp_water = SimpleSNMPSection(
 snmp_section_akcp_sensor2plus_water = SimpleSNMPSection(
     name="akcp_sensor2plus_water",
     parsed_section_name="akcp_exp_water",
-    parse_function=parse_akcp_sensor,
+    parse_function=parse_akcp_water,
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.3.5.9.1",
@@ -51,5 +46,5 @@ check_plugin_akcp_exp_water = CheckPlugin(
     name="akcp_exp_water",
     service_name="Water %s",
     check_function=check_akcp_sensor_relay,
-    discovery_function=inventory_akcp_sensor_no_params,
+    discovery_function=discover_akcp_sensor_relay,
 )

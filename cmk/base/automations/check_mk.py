@@ -855,7 +855,7 @@ def _execute_discovery(
     )
     checker_config = CheckerConfig(
         only_from=config_cache.only_from,
-        effective_service_level=config_cache.effective_service_level,
+        effective_service_level=config_cache.service_level_config.effective,
         get_clustered_service_configuration=config_cache.clustering.get_clustered_service_configuration,
         nodes=lambda host_name: hosts_config.clusters.get(host_name, ()),
         effective_host=config_cache.clustering.effective_host,

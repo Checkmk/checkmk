@@ -46,6 +46,7 @@ from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.base.configlib.servicelevel import make_service_level_config
 from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     make_passive_service_name_config,
@@ -2834,6 +2835,7 @@ def run_checking(
     clustering = config.make_clustering_config(
         loaded_config, hosts_config, ruleset_matcher, label_manager
     )
+    service_level_config = make_service_level_config(loaded_config, ruleset_matcher, label_manager)
     inventory_config = make_inventory_config(
         loaded_config, ruleset_matcher, label_manager, hosts_config
     )
@@ -2909,7 +2911,7 @@ def run_checking(
     )
     checker_config = CheckerConfig(
         only_from=config_cache.only_from,
-        effective_service_level=config_cache.effective_service_level,
+        effective_service_level=service_level_config.effective,
         get_clustered_service_configuration=clustering.get_clustered_service_configuration,
         nodes=lambda hn: hosts_config.clusters.get(hn, ()),
         effective_host=clustering.effective_host,

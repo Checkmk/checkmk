@@ -2437,7 +2437,7 @@ def test_config_cache_service_level_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch).config_cache
-    assert config_cache.service_level_of_service(hostname, "CPU load", {}) == result
+    assert config_cache.service_level_config.of_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2614,7 +2614,7 @@ def test_host_config_service_level(
         ],
     )
     config_cache = ts.apply(monkeypatch).config_cache
-    assert config_cache.service_level(hostname) == result
+    assert config_cache.service_level_config.of_host(hostname) == result
 
 
 def _rule_val(check_interval: int) -> _PeriodicDiscovery:

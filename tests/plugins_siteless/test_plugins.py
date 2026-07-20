@@ -153,7 +153,7 @@ def test_checks_executor(
         check_plugins = CheckerPluginMapper(
             CheckerConfig(
                 only_from=config_cache.only_from,
-                effective_service_level=config_cache.effective_service_level,
+                effective_service_level=config_cache.service_level_config.effective,
                 get_clustered_service_configuration=config_cache.clustering.get_clustered_service_configuration,
                 nodes=lambda hn: hosts_config.clusters.get(hn, ()),
                 effective_host=config_cache.clustering.effective_host,

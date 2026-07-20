@@ -2446,18 +2446,6 @@ class ConfigCache:
             merged_spec["legacy_pull_mode"] = value
         return merged_spec
 
-    def service_level(self, hostname: HostName) -> int | None:
-        return self.service_level_config.of_host(hostname)
-
-    def effective_service_level(
-        self,
-        host_name: HostName,
-        service_name: ServiceName,
-        service_labels: Labels,
-    ) -> int:
-        """Get the service level that applies to the current service."""
-        return self.service_level_config.effective(host_name, service_name, service_labels)
-
     def _snmp_credentials(self, host_name: HostAddress) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host
 
@@ -2696,11 +2684,6 @@ class ConfigCache:
             for identifier in identifiers
             for msg in piggyback_backend.get_messages_for(identifier, cmk.utils.paths.omd_root)
         )
-
-    def service_level_of_service(
-        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> int | None:
-        return self.service_level_config.of_service(host_name, service_name, service_labels)
 
     def section_name_of(self, section: str) -> str:
         try:

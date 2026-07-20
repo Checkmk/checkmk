@@ -1,9 +1,10 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:xcomp/rust.bzl", "rust_binary")
 
 rust_library(
     name = "check-http-lib",
@@ -60,23 +61,18 @@ rust_binary(
     aliases = aliases(),
     crate_name = "check_http",
     edition = "2021",
+    opt = True,
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
+    strip = True,
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":check-http-lib"],
 )
 
-genrule(
-    name = "check-http-strip",
-    srcs = [":check-http"],
-    outs = ["check-http.strip"],
-    cmd = "strip -s $< -o $@",
-)
-
 set_runpath(
     name = "check_http_runpath",
-    srcs = [":check-http-strip"],
+    srcs = [":check-http"],
     rpaths = ["$ORIGIN/../../../lib"],
     tags = ["manual"],
 )

@@ -1,0 +1,16 @@
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# Opt into an optimized build for the targets that select() on it.
+# Off by default so local dev builds stay debuggable and can still switch modes
+# from the command line; CI turns it on (see .bazelrc).
+bool_flag(
+    name = "optimize",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "enabled",
+    flag_values = {":optimize": "True"},
+)

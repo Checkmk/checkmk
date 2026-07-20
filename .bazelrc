@@ -100,6 +100,12 @@ common:ci --remote_upload_local_results=true
 
 common:ci --@cmk//distro=UNSET
 
+# Ship optimized, stripped binaries from CI.
+# Scoped per-target via select() so only the shipped binaries are affected
+# See bazel/cmk/optimize and bazel/cmk/strip.
+common:ci --@cmk//optimize=True
+common:ci --@cmk//strip=True
+
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always
 # For more correct typechecks - honor the setting of `skipLibCheck` in the tsconfig.json file

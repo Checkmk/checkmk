@@ -1,6 +1,7 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@tools_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("//bazel/rules:xcomp/rust.bzl", "rust_binary")
 
 rust_library(
     name = "package_validator_lib",
@@ -23,6 +24,7 @@ rust_binary(
     ],
     aliases = aliases(),
     edition = "2021",
+    opt = True,
     proc_macro_deps = all_crate_deps(proc_macro = True),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":package_validator_lib"],

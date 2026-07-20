@@ -2,16 +2,9 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
 
-genrule(
-    name = "check-cert-strip",
-    srcs = ["//packages/check-cert"],
-    outs = ["check-cert.strip"],
-    cmd = "strip -s $< -o $@",
-)
-
 set_runpath(
     name = "check_cert_runpath",
-    srcs = [":check-cert-strip"],
+    srcs = ["//packages/check-cert"],
     rpaths = ["$ORIGIN/../../../lib"],
     tags = ["manual"],
 )

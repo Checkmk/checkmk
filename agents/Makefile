@@ -131,7 +131,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 
 .PHONY: $(AGENT_CTL_AARCH64)
 $(AGENT_CTL_AARCH64):
-	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl-aarch64 --compilation_mode=opt --cmk_version=$(NEW_VERSION)
+	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl-aarch64 --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/cmk-agent-ctl/cmk-agent-ctl-musl-aarch64 $(AGENT_CTL_AARCH64)
 

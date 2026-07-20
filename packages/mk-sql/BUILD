@@ -65,10 +65,12 @@ rust_binary(
     aliases = aliases(),
     crate_name = "mk_sql",
     edition = "2021",
+    opt = True,
     platform = "//bazel/platforms:x86_64-linux-musl",
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
+    strip = True,
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":mk-sql-lib"],
 )
@@ -79,10 +81,12 @@ rust_binary(
     aliases = aliases(),
     crate_name = "mk_sql",
     edition = "2021",
+    opt = True,
     platform = "//bazel/platforms:aarch64-linux-musl",
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
+    strip = True,
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":mk-sql-lib"],
 )

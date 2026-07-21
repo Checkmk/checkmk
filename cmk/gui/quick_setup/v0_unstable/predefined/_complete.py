@@ -339,6 +339,7 @@ def _create_and_save_special_agent_bundle(
     )
     user_permissions = UserPermissions.from_config(active_config, permission_registry)
     create_config_bundle(
+        tree,
         bundle_id=bundle_id,
         bundle=ConfigBundle(
             title=f"{bundle_id}_config",
@@ -401,6 +402,7 @@ def _create_and_save_special_agent_bundle(
 
             progress_logger.log_new_progress_step("delete_config_bundle", "Revert changes")
             delete_config_bundle(
+                tree,
                 BundleId(bundle_id),
                 user_permissions=user_permissions,
                 pprint_value=active_config.wato_pprint_config,

@@ -68,7 +68,12 @@ from cmk.gui.watolib.configuration_bundles import (
     identify_bundle_references,
     valid_special_agent_bundle,
 )
-from cmk.gui.watolib.hosts_and_folders import make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_tree,
+    FolderTree,
+    make_action_link,
+    make_folder_tree,
+)
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     MainModuleRegistry,
@@ -294,10 +299,11 @@ class ModeEditConfigurationBundles(WatoMode):
             )
             html.div(display_varname, class_="varname")
 
-        self._bundles_listing(self._name)
+        self._bundles_listing(make_folder_tree(config), self._name)
 
     def _delete_bundle(
         self,
+        tree: FolderTree,
         bundle_id: BundleId,
         *,
         user_permissions: UserPermissions,
@@ -314,6 +320,7 @@ class ModeEditConfigurationBundles(WatoMode):
             raise MKGeneralException("Not implemented")
 
         delete_config_bundle(
+            tree,
             bundle_id,
             user_permissions=user_permissions,
             pprint_value=pprint_value,
@@ -330,13 +337,13 @@ class ModeEditConfigurationBundles(WatoMode):
             ChangeScope.all_activation_sites(),
         )
 
-    def _bundles_listing(self, group_name: str) -> None:
+    def _bundles_listing(self, tree: FolderTree, group_name: str) -> None:
         bundle_ids = set(load_group_bundles(group_name).keys())
         if not bundle_ids:
             self._no_bundles()
             return
 
-        bundles_with_references = identify_bundle_references(group_name, bundle_ids)
+        bundles_with_references = identify_bundle_references(tree, group_name, bundle_ids)
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             self._special_agent_bundles_listing(group_name, bundles_with_references)
             return
@@ -385,6 +392,7 @@ class ModeEditConfigurationBundles(WatoMode):
         action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
             self._delete_bundle(
+                make_folder_tree(config),
                 bundle_id,
                 user_permissions=UserPermissions.from_config(config, permission_registry),
                 pprint_value=config.wato_pprint_config,
@@ -793,9 +801,9 @@ class ModeConfigurationBundle(WatoMode):
 
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
-        self._bundle_references = identify_bundle_references(self._bundle_group, {self._bundle_id})[
-            self._bundle_id
-        ]
+        self._bundle_references = identify_bundle_references(
+            folder_tree(), self._bundle_group, {self._bundle_id}
+        )[self._bundle_id]
 
         self._rule_group_type = RuleGroupType(self._bundle_group.split(":")[0])
         match self._rule_group_type:
@@ -971,8 +979,10 @@ class ModeConfigurationBundle(WatoMode):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
         if request.has_var("_clean_up"):
-            references = identify_bundle_references(None, {self._bundle_id})[self._bundle_id]
+            tree = make_folder_tree(config)
+            references = identify_bundle_references(tree, None, {self._bundle_id})[self._bundle_id]
             delete_config_bundle_objects(
+                tree,
                 references,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,

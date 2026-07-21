@@ -21,7 +21,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
 from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
@@ -178,6 +178,7 @@ def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
 
 
 def identify_bundle_references(
+    tree: FolderTree,
     bundle_group: str | None,
     bundle_ids: set[BundleId],
     *,
@@ -192,7 +193,7 @@ def identify_bundle_references(
 
     bundle_rule_ids = (
         _collect_many(
-            _collect_rules(finder=bundle_id_finder, rules=_iter_all_rules(rulespecs_hint))
+            _collect_rules(finder=bundle_id_finder, rules=_iter_all_rules(tree, rulespecs_hint))
         )
         if "rule" in affected_entities
         else {}
@@ -203,9 +204,7 @@ def identify_bundle_references(
         else {}
     )
     bundle_hosts = (
-        _collect_many(
-            _collect_hosts(finder=bundle_id_finder, hosts=folder_tree().all_hosts().values())
-        )
+        _collect_many(_collect_hosts(finder=bundle_id_finder, hosts=tree.all_hosts().values()))
         if "host" in affected_entities
         else {}
     )
@@ -242,12 +241,12 @@ def identify_bundle_references(
 
 
 def identify_single_bundle_references(
-    bundle_id: BundleId, bundle_group: str | None = None
+    tree: FolderTree, bundle_id: BundleId, bundle_group: str | None = None
 ) -> BundleReferences:
     """Get references for a single bundle.
     If the bundle group is unknown, the bundle will be loaded first."""
     group = bundle_group or read_config_bundle(bundle_id)["group"]
-    references = identify_bundle_references(group, {bundle_id})
+    references = identify_bundle_references(tree, group, {bundle_id})
     return references[bundle_id]
 
 
@@ -272,6 +271,7 @@ def edit_config_bundle_configuration(
 
 
 def _validate_and_prepare_create_calls(
+    tree: FolderTree,
     bundle_ident: GlobalIdent,
     entities: CreateBundleEntities,
     *,
@@ -302,6 +302,7 @@ def _validate_and_prepare_create_calls(
     if entities.rules:
         create_functions.append(
             _prepare_create_rules(
+                tree,
                 bundle_ident,
                 entities.rules,
                 pprint_value=pprint_value,
@@ -322,6 +323,7 @@ def _validate_and_prepare_create_calls(
 
 
 def create_config_bundle(
+    tree: FolderTree,
     bundle_id: BundleId,
     bundle: ConfigBundle,
     entities: CreateBundleEntities,
@@ -341,6 +343,7 @@ def create_config_bundle(
 
     try:
         create_functions = _validate_and_prepare_create_calls(
+            tree,
             bundle_ident,
             entities,
             pprint_value=pprint_value,
@@ -359,6 +362,7 @@ def create_config_bundle(
             create_function()
     except Exception as e:
         delete_config_bundle(
+            tree,
             bundle_id,
             user_permissions=user_permissions,
             pprint_value=pprint_value,
@@ -403,6 +407,7 @@ def create_quick_setup_bundle(
 
 
 def delete_config_bundle(
+    tree: FolderTree,
     bundle_id: BundleId,
     *,
     user_permissions: UserPermissions,
@@ -415,14 +420,15 @@ def delete_config_bundle(
     if (bundle := all_bundles.pop(bundle_id, None)) is None:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
-    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    references = identify_bundle_references(tree, bundle["group"], {bundle_id})[bundle_id]
     # First check permissions for all the needed deletions
-    _user_may_delete_config_bundle_objects(bundle_id, references, user_permissions)
+    _user_may_delete_config_bundle_objects(tree, bundle_id, references, user_permissions)
 
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
     store.save(all_bundles, pprint_value)
     delete_config_bundle_objects(
+        tree,
         references,
         pprint_value=pprint_value,
         debug=debug,
@@ -431,6 +437,7 @@ def delete_config_bundle(
 
 
 def _user_may_delete_config_bundle_objects(
+    tree: FolderTree,
     bundle_id: BundleId,
     references: BundleReferences,
     user_permissions: UserPermissions,
@@ -467,13 +474,14 @@ def _user_may_delete_config_bundle_objects(
                         PROGRAM_ID_DCD,
                         {dcd_id for dcd_id, _spec in references.dcd_connections},
                     ),
-                    folder_tree().all_hosts().values(),
+                    tree.all_hosts().values(),
                 )
             )
         )
 
 
 def delete_config_bundle_objects(
+    tree: FolderTree,
     references: BundleReferences,
     *,
     pprint_value: bool,
@@ -503,6 +511,7 @@ def delete_config_bundle_objects(
         )
     if references.dcd_connections:
         _delete_dcd_connections(
+            tree,
             references.dcd_connections,
             pprint_value=pprint_value,
             debug=debug,
@@ -681,16 +690,18 @@ def _delete_passwords(
         )
 
 
-def _iter_all_rules(rulespecs: set[str] | None) -> Iterable[tuple[Folder, int, Rule]]:
+def _iter_all_rules(
+    tree: FolderTree, rulespecs: set[str] | None
+) -> Iterable[tuple[Folder, int, Rule]]:
     if rulespecs:
         for rulespec in rulespecs:
-            ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-                folder_tree(), rulespec
-            ).get(rulespec)
+            ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(tree, rulespec).get(
+                rulespec
+            )
             yield from ruleset.get_rules()
 
     else:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(tree)
         for ruleset in all_rulesets.get_rulesets().values():
             yield from ruleset.get_rules()
 
@@ -704,6 +715,7 @@ def _collect_rules(
 
 
 def _prepare_create_rules(
+    tree: FolderTree,
     bundle_ident: GlobalIdent,
     rules: Iterable[CreateRule],
     *,
@@ -715,7 +727,7 @@ def _prepare_create_rules(
     # sort by folder, then ruleset
     sorted_rules = sorted(rules, key=itemgetter("folder", "ruleset"))
     for folder_name, rule_iter_outer in groupby(sorted_rules, key=itemgetter("folder")):  # type: str, Iterable[CreateRule]
-        folder = folder_tree().folder(folder_name)
+        folder = tree.folder(folder_name)
         folder_rulesets = FolderRulesets.load_folder_rulesets(folder)
         folder_rules = []
 
@@ -799,6 +811,7 @@ def _prepare_create_dcd_connections(
 
 
 def _delete_dcd_connections(
+    tree: FolderTree,
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]],
     *,
     pprint_value: bool,
@@ -813,7 +826,7 @@ def _delete_dcd_connections(
             host
             for _dcd_id, host in _collect_hosts(
                 _prepare_id_finder(PROGRAM_ID_DCD, {dcd_id for dcd_id, _spec in dcd_connections}),
-                folder_tree().all_hosts().values(),
+                tree.all_hosts().values(),
             )
         ),
         pprint_value=pprint_value,

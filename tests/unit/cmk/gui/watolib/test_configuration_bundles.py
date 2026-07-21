@@ -92,6 +92,7 @@ def _make_bundle(
 def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(
+        folder_tree(),
         bundle_id,
         bundle,
         CreateBundleEntities(),
@@ -100,7 +101,7 @@ def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
-    references = identify_single_bundle_references(bundle_id, bundle["group"])
+    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
 
     assert references.hosts is None
     assert references.rules is None
@@ -111,6 +112,7 @@ def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
 def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(
+        folder_tree(),
         bundle_id,
         bundle,
         CreateBundleEntities(),
@@ -122,6 +124,7 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
 
     with pytest.raises(MKGeneralException, match="already exists"):
         create_config_bundle(
+            folder_tree(),
             bundle_id,
             bundle,
             CreateBundleEntities(),
@@ -136,6 +139,7 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
 def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(
+        folder_tree(),
         bundle_id,
         bundle,
         CreateBundleEntities(),
@@ -145,6 +149,7 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
         pending_changes=_pending_changes(with_admin_login),
     )
     delete_config_bundle(
+        folder_tree(),
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
@@ -157,6 +162,7 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
 def test_delete_config_bundle_unknown_id() -> None:
     with pytest.raises(MKGeneralException, match="does not exist"):
         delete_config_bundle(
+            folder_tree(),
             BundleId("unknown"),
             user_permissions=UserPermissions({}, {}, {}, []),
             pprint_value=False,
@@ -211,6 +217,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
     ]
     before_create_host_count = len(folder_tree().all_hosts())
     create_config_bundle(
+        folder_tree(),
         bundle_id,
         bundle,
         CreateBundleEntities(hosts=hosts),
@@ -220,20 +227,23 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         pending_changes=_pending_changes(with_admin_login),
     )
 
-    references = identify_single_bundle_references(bundle_id, bundle["group"])
+    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
 
     assert references.hosts is not None
     assert len(references.hosts) == 2
     assert len(folder_tree().all_hosts()) - before_create_host_count == 2
 
     delete_config_bundle(
+        folder_tree(),
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
-    references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
+    references_after_delete = identify_single_bundle_references(
+        folder_tree(), bundle_id, bundle["group"]
+    )
     assert references_after_delete.hosts is None
     assert len(folder_tree().all_hosts()) == before_create_host_count, (
         "Expected created hosts to be deleted"
@@ -259,6 +269,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
     ]
     before_create_password_count = len(load_passwords())
     create_config_bundle(
+        folder_tree(),
         bundle_id,
         bundle,
         CreateBundleEntities(passwords=passwords),
@@ -267,20 +278,23 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
-    references = identify_single_bundle_references(bundle_id, bundle["group"])
+    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
 
     assert references.passwords is not None
     assert len(references.passwords) == 2
     assert len(load_passwords()) - before_create_password_count == 2
 
     delete_config_bundle(
+        folder_tree(),
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
-    references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
+    references_after_delete = identify_single_bundle_references(
+        folder_tree(), bundle_id, bundle["group"]
+    )
     assert references_after_delete.passwords is None
     assert len(load_passwords()) == before_create_password_count, (
         "Expected created passwords to be deleted"
@@ -349,6 +363,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
         with login.TransactionIdContext(user_id, user_permissions):
             # Create the bundle – bundle password gets owned_by = user.id = "bundleuser".
             create_config_bundle(
+                folder_tree(),
                 bundle_id,
                 bundle,
                 CreateBundleEntities(
@@ -383,6 +398,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
             # Before the fix, remove_password() saved only the filtered (editable) subset
             # back to disk, wiping the standalone admin password.
             delete_config_bundle(
+                folder_tree(),
                 bundle_id,
                 user_permissions=user_permissions,
                 pprint_value=False,
@@ -434,6 +450,7 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
 
     before_create_rules_count = _len_rules()
     create_config_bundle(
+        folder_tree(),
         bundle_id,
         bundle,
         CreateBundleEntities(rules=rules),
@@ -442,20 +459,23 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
-    references = identify_single_bundle_references(bundle_id, bundle["group"])
+    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
 
     assert references.rules is not None
     assert len(references.rules) == 2
     assert _len_rules() - before_create_rules_count == 2
 
     delete_config_bundle(
+        folder_tree(),
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
-    references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
+    references_after_delete = identify_single_bundle_references(
+        folder_tree(), bundle_id, bundle["group"]
+    )
 
     assert references_after_delete.rules is None
     assert _len_rules() == before_create_rules_count, "Expected created rules to be deleted"

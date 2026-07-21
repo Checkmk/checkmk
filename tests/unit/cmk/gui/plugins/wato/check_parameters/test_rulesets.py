@@ -17,36 +17,33 @@
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 
 import pytest
 
 from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
+from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.logged_in import user
-from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
-from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import (
-    index_update_change_hook,
     NoopPendingChangesStore,
     PendingChanges,
-    PendingChangesStore,
 )
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RuleOptionsSpec, RulesetName, RuleSpec
+from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.redis import disable_redis
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -57,6 +54,19 @@ def _noop_pending_changes() -> PendingChanges:
         store=NoopPendingChangesStore(),
         hooks=(),
     )
+
+
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    raw_config = get_default_config()
+    raw_config["tags"] = get_effective_tag_config(raw_config["wato_tags"])
+    return make_config_object(raw_config)
+
+
+@pytest.fixture(name="tree")
+def fixture_tree(patch_omd_site: None, config: Config) -> Iterator[FolderTree]:
+    with disable_redis():
+        yield make_folder_tree(config)
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -77,19 +87,19 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
     monkeypatch.setattr(gui_rulesets_module, "gen_id", _gen_id)
 
 
-def test_rule_from_config_unhandled_format():
+def test_rule_from_config_unhandled_format(tree: FolderTree):
     ruleset = _ruleset(RuleGroup.DiscoveryParameters("inventory_processes_rules"))
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rulesets.Rule.from_config(
-            folder_tree().root_folder(),
+            tree.root_folder(),
             ruleset,
             [],
         )
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rulesets.Rule.from_config(
-            folder_tree().root_folder(),
+            tree.root_folder(),
             ruleset,
             (None,),
         )
@@ -326,6 +336,7 @@ def test_rule_from_config_unhandled_format():
     ],
 )
 def test_rule_from_config_dict(
+    tree: FolderTree,
     ruleset_name: str,
     rule_spec: RuleSpec,
     expected_attributes: Mapping[str, object],
@@ -336,7 +347,7 @@ def test_rule_from_config_dict(
         rule_spec["options"] = rule_options
 
     rule = rulesets.Rule.from_config(
-        folder_tree().root_folder(),
+        tree.root_folder(),
         _ruleset(ruleset_name),
         rule_spec,
     )
@@ -401,12 +412,13 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config(
+    tree: FolderTree,
     wato_use_git: bool,
     expected_result: str,
 ) -> None:
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
     ruleset.replace_folder_config(
-        folder_tree().root_folder(),
+        tree.root_folder(),
         [
             {
                 "id": "1",
@@ -426,9 +438,7 @@ def test_ruleset_to_config(
             },
         ],
     )
-    assert (
-        ruleset.to_config(folder_tree().root_folder(), pprint_value=wato_use_git) == expected_result
-    )
+    assert ruleset.to_config(tree.root_folder(), pprint_value=wato_use_git) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -459,16 +469,17 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config_sub_folder(
+    tree: FolderTree,
     with_admin_login: UserId,
     wato_use_git: bool,
     expected_result: str,
 ) -> None:
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 
-    folder_tree().create_missing_folders(
+    tree.create_missing_folders(
         "abc", pprint_value=False, pending_changes=_noop_pending_changes(), acting_user=user
     )
-    folder = folder_tree().folder("abc")
+    folder = tree.folder("abc")
 
     ruleset.replace_folder_config(
         folder,
@@ -494,11 +505,14 @@ def test_ruleset_to_config_sub_folder(
     assert ruleset.to_config(folder, pprint_value=wato_use_git) == expected_result
 
 
-def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Folder, Rule]:
+def _setup_rules(
+    tree: FolderTree, rule_a_locked: bool, rule_b_locked: bool
+) -> tuple[Ruleset, Folder, Rule]:
     ruleset = _ruleset(RuleGroup.CheckgroupParameters("local"))
     bundle_id = BundleId("bundle_id")
     program_id = PROGRAM_ID_QUICK_SETUP
     create_config_bundle(
+        tree,
         bundle_id=bundle_id,
         bundle={
             "title": "bundle_title",
@@ -511,20 +525,10 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=PendingChanges(
-            activation_sites=activation_sites(active_config.sites),
-            local_site=omd_site(),
-            acting_user=user.id,
-            store=PendingChangesStore(),
-            hooks=(
-                make_audit_log_change_hook(use_git=False),
-                sidebar_reload_change_hook,
-                index_update_change_hook,
-            ),
-        ),
+        pending_changes=_noop_pending_changes(),
     )
 
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     ruleset.append_rule(
         folder,
         Rule.from_config(
@@ -583,9 +587,9 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
     ],
 )
 def test_ruleset_get_index_for_move(
-    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+    tree: FolderTree, rule_a_locked: bool, rule_b_locked: bool, expected_index: int
 ) -> None:
-    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset, folder, rule = _setup_rules(tree, rule_a_locked, rule_b_locked)
     ruleset.append_rule(folder, rule)
     assert ruleset.get_index_for_move(folder, rule, 0) == expected_index
 
@@ -600,9 +604,9 @@ def test_ruleset_get_index_for_move(
     ],
 )
 def test_ruleset_ordering_prepend(
-    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+    tree: FolderTree, rule_a_locked: bool, rule_b_locked: bool, expected_index: int
 ) -> None:
-    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset, folder, rule = _setup_rules(tree, rule_a_locked, rule_b_locked)
     ruleset.prepend_rule(folder, rule)
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
@@ -617,9 +621,9 @@ def test_ruleset_ordering_prepend(
     ],
 )
 def test_ruleset_ordering_append(
-    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+    tree: FolderTree, rule_a_locked: bool, rule_b_locked: bool, expected_index: int
 ) -> None:
-    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset, folder, rule = _setup_rules(tree, rule_a_locked, rule_b_locked)
     ruleset.append_rule(folder, rule)
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
@@ -634,9 +638,9 @@ def test_ruleset_ordering_append(
     ],
 )
 def test_ruleset_ordering_move_to(
-    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+    tree: FolderTree, rule_a_locked: bool, rule_b_locked: bool, expected_index: int
 ) -> None:
-    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset, folder, rule = _setup_rules(tree, rule_a_locked, rule_b_locked)
     ruleset.append_rule(folder, rule)
     ruleset.move_rule_to(rule, index=0, pending_changes=_noop_pending_changes())
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
@@ -652,8 +656,8 @@ def test_ruleset_ordering_move_to(
     ],
 )
 def test_ruleset_ordering_insert_after(
-    rule_a_locked: bool, rule_b_locked: bool, expected_index: int
+    tree: FolderTree, rule_a_locked: bool, rule_b_locked: bool, expected_index: int
 ) -> None:
-    ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
+    ruleset, folder, rule = _setup_rules(tree, rule_a_locked, rule_b_locked)
     ruleset.insert_rule_after(rule, ruleset.get_folder_rules(folder)[0])
     assert ruleset.get_folder_rules(folder)[expected_index] == rule

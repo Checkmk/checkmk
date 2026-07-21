@@ -77,6 +77,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
     bundle_id = BundleId("bundle_id")
     program_id = PROGRAM_ID_QUICK_SETUP
     create_config_bundle(
+        folder_tree(),
         bundle_id=bundle_id,
         bundle={
             "title": "bundle_title",

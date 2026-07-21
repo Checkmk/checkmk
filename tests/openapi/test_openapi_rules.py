@@ -22,6 +22,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -593,6 +594,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
     bundle_id = BundleId("bundle_id")
     program_id = PROGRAM_ID_QUICK_SETUP
     create_config_bundle(
+        folder_tree(),
         bundle_id=bundle_id,
         bundle={
             "title": "bundle_title",

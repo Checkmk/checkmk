@@ -27,7 +27,7 @@ defineProps<{
           class="monitoring-modes-cell__link"
           :href="mode.link"
           :title="mode.title"
-          target="_top"
+          target="main"
         >
           <CmkIcon :name="mode.icon_name as SimpleIcons" :title="mode.title" size="medium" />
         </a>

@@ -50,8 +50,8 @@ type _NamedOption = Mapping[str, object]
 
 class SectionOptions(BaseModel):
     section: str
-    title: str
-    help_text: str | None = None
+    title: Title
+    help_text: Help | None = None
     # use full name because GUI throws error if `async` name is used
     mode: Literal["synchronous", "asynchronous", "disabled"]
 
@@ -59,99 +59,101 @@ class SectionOptions(BaseModel):
 SECTIONS: Sequence[SectionOptions] = (
     SectionOptions(
         section="instance",
-        title="General instance status",
+        title=Title("General instance status"),
         mode="synchronous",
     ),
     SectionOptions(
         section="asm_instance",
-        title="ASM - General instance status",
+        title=Title("ASM - General instance status"),
         mode="synchronous",
     ),
     SectionOptions(
         section="asm_diskgroup",
-        title="ASM - Disk groups",
+        title=Title("ASM - Disk groups"),
         mode="asynchronous",
     ),
     SectionOptions(
         section="dataguard_stats",
-        title="Dataguard statistics",
+        title=Title("Dataguard statistics"),
         mode="synchronous",
     ),
     SectionOptions(
         section="locks",
-        title="Locks",
+        title=Title("Locks"),
         mode="synchronous",
     ),
     SectionOptions(
         section="logswitches",
-        title="Logswitches",
+        title=Title("Logswitches"),
         mode="synchronous",
     ),
     SectionOptions(
         section="longactivesessions",
-        title="Long active sessions",
+        title=Title("Long active sessions"),
         mode="synchronous",
     ),
     SectionOptions(
         section="performance",
-        title="Performance",
+        title=Title("Performance"),
         mode="synchronous",
     ),
     SectionOptions(
         section="processes",
-        title="Current number of processes",
+        title=Title("Current number of processes"),
         mode="synchronous",
     ),
     SectionOptions(
         section="recovery_area",
-        title="Recovery area",
+        title=Title("Recovery area"),
         mode="synchronous",
     ),
     SectionOptions(
         section="recovery_status",
-        title="Recovery status",
+        title=Title("Recovery status"),
         mode="synchronous",
     ),
     SectionOptions(
         section="sessions",
-        title="Current number of sessions",
+        title=Title("Current number of sessions"),
         mode="synchronous",
     ),
     SectionOptions(
         section="systemparameter",
-        title="System parameters",
+        title=Title("System parameters"),
         mode="synchronous",
     ),
     SectionOptions(
         section="undostat",
-        title="Undo statistics",
+        title=Title("Undo statistics"),
         mode="synchronous",
     ),
     SectionOptions(
         section="iostats",
-        title="Performance: IO stats",
-        help_text="WARNING: This section will increase the load of your Checkmk server and "
-        "may increase load of your Database.",
+        title=Title("Performance: IO stats"),
+        help_text=Help(
+            "WARNING: This section will increase the load of your Checkmk server and "
+            "may increase load of your Database."
+        ),
         mode="asynchronous",
     ),
     SectionOptions(
         section="jobs",
-        title="Scheduled jobs",
+        title=Title("Scheduled jobs"),
         mode="asynchronous",
     ),
     SectionOptions(
         section="resumable",
-        title="Resumables",
+        title=Title("Resumables"),
         mode="asynchronous",
     ),
     SectionOptions(
         section="rman",
-        title="RMAN backups",
+        title=Title("RMAN backups"),
         mode="asynchronous",
     ),
     SectionOptions(
         section="tablespaces",
-        title="Tablespaces",
+        title=Title("Tablespaces"),
         mode="asynchronous",
     ),
 )
@@ -489,10 +491,8 @@ def _sections() -> Dictionary:
         elements={
             section.section: DictElement(
                 parameter_form=_section_options(
-                    title=Title("%s") % section.title,
-                    help_text=Help("%s") % section.help_text
-                    if section.help_text is not None
-                    else None,
+                    title=section.title,
+                    help_text=section.help_text,
                     mode=section.mode,
                 ),
                 required=True,

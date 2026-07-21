@@ -107,7 +107,7 @@ const ariaLabel = computed<string>(() =>
 
 .cmk-state-count-bar__segment--unknown,
 .cmk-state-count-bar__legend-swatch--unknown {
-  background-color: var(--color-unknown);
+  background-color: var(--color-orange-50);
 }
 
 /* PENDING and the empty track both use the neutral grey — there is no --color-pending. */

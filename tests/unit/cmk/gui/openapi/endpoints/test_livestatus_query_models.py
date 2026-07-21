@@ -12,6 +12,11 @@ from cmk.gui.openapi.api_endpoints.livestatus_query.models.request_models import
     _MAX_ROW_LIMIT,
     LivestatusQueryBody,
 )
+from cmk.gui.openapi.api_endpoints.livestatus_query.models.response_models import (
+    LivestatusQueryResponse,
+)
+from cmk.gui.openapi.framework.model.common_fields import BinaryBase64
+from cmk.livestatus_client.queries import ResultRow
 
 
 def test_valid_body_compiles_expected_lql() -> None:
@@ -205,3 +210,21 @@ def test_body_rejects_excessive_and_or_nesting() -> None:
             nested = {"op": op, "expr": [nested, {"op": "=", "left": "name", "right": "x"}]}
         with pytest.raises(ValidationError, match=str(_MAX_QUERY_DEPTH)):
             adapter.validate_python({"table": "hosts", "columns": ["name"], "query": nested})
+
+
+def test_from_result_serializes_wire_shape() -> None:
+    row = ResultRow({"name": "heute", "blob": b"\x00\x01"})
+    response = LivestatusQueryResponse.from_result("hosts", ["name", "blob"], [row])
+    adapter = TypeAdapter(LivestatusQueryResponse)  # astrein: disable=pydantic-type-adapter
+    dumped = adapter.dump_python(response, mode="json")
+    # The wrapping decision under test: the bytes cell becomes whatever the shared
+    # BinaryBase64 codec emits (its base64 mechanics are covered in test_common_fields),
+    # while the str cell passes through and the shape stays the flat three-key contract.
+    expected_blob = TypeAdapter(BinaryBase64).dump_python(  # astrein: disable=pydantic-type-adapter
+        BinaryBase64(b"\x00\x01"), mode="json"
+    )
+    assert dumped == {
+        "table": "hosts",
+        "columns": ["name", "blob"],
+        "rows": [{"name": "heute", "blob": expected_blob}],
+    }

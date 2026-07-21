@@ -188,6 +188,11 @@ def write_statistics(file: IO, all_stats: bool = False, close: bool = False) -> 
 
 
 def _init_resources_file(task_name: str) -> Path:
+    if bazel_outputs_dir := os.environ.get("TEST_UNDECLARED_OUTPUTS_DIR"):
+        resource_statistics_json = Path(bazel_outputs_dir) / f"{task_name}.resources.json"
+        resource_statistics_json.unlink(missing_ok=True)
+        return resource_statistics_json
+
     version_directory = CMKPackageInfo(version_from_env(), edition_from_env()).version_directory()
     result_dir = Path(os.getenv("RESULT_PATH", Path(__file__).parent.parent.parent / "results"))
     report_dir = result_dir / "performance" / version_directory

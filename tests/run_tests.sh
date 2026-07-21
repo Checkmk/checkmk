@@ -109,6 +109,8 @@ OTHER TESTS
   test-docker-docker                      Run docker tests in docker
   test-performance                        Run performance tests
   test-performance-docker                 Run performance tests in docker
+  test-performance-all                    Run all Bazel-based performance suites
+  test-performance-all-docker             Run all Bazel-based performance suites in docker
   test-doctest                            Run doctests via bazel
   test-unit-shell                         No-op (placeholder)
   test-tidy-core                          (placeholder)
@@ -236,6 +238,17 @@ test-performance() {
 
 test-performance-docker() {
     RESULT_PATH="$(realpath "$SCRIPT_DIR/..")" $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "test-performance"
+}
+
+test-performance-all() {
+    local rc=0
+    bazel test --test_output=streamed //tests/performance:bazel_performance || rc=$?
+    $UVENV "$(realpath "$SCRIPT_DIR/performance/perftest_upload.sh")" || return "$?"
+    return "$rc"
+}
+
+test-performance-all-docker() {
+    RESULT_PATH="$(realpath "$SCRIPT_DIR/..")" $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "test-performance-all"
 }
 
 test-system-gui-crawl() {

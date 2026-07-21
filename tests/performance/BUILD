@@ -48,11 +48,24 @@ py_library(
     ],
 )
 
+# Registry of the Bazel-based performance suites: CI runs this suite via
+# `bazel test` and perftest_upload.sh collects every listed test's results
+# from bazel-testlogs, so a new component suite only needs an entry in this
+# list instead of its own CI job.
+test_suite(
+    name = "bazel_performance",
+    tags = ["manual"],
+    tests = [
+        "//non-free/packages/cmk-metric-backend:performance",
+    ],
+)
+
 sh_library(
     name = "performance_sh",
     srcs = [
         "database/mk_client_cert.sh",
         "database/mk_server_cert.sh",
         "perftest.sh",
+        "perftest_upload.sh",
     ],
 )

@@ -333,6 +333,7 @@ py_requirements_test(
     name = "requirements-test",
     libs = [
         ":cmk_shared_typing_formatter",
+        ":cmk_shared_typing_py",
     ],
     requirements_in = "requirements.in",
 )

@@ -553,10 +553,12 @@ py_requirements_test(
         ":inventory",
         ":snmplib",
         ":specs",
+        ":sources",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/checking",
     ],
     requirements_in = "requirements.in",
 )

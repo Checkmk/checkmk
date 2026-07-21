@@ -12,6 +12,7 @@ py_binary(
         "no-deballast",  # deps are imported at runtime by sphinx autodoc, not in srcs
         "no-mypy",
     ],
+    visibility = ["//packages/cmk-plugin-apis:__pkg__"],
     deps = [
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:bakery",

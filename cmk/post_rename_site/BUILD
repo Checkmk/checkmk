@@ -6,6 +6,7 @@ py_binary(
     name = "post-rename-site",
     srcs = ["post-rename-site.py"],
     main = "post-rename-site.py",
+    visibility = ["//cmk:__pkg__"],
     deps = [":post_rename_site"],
 )
 

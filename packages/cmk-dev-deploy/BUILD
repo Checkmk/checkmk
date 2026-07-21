@@ -102,6 +102,9 @@ build_test(
 
 py_requirements_test(
     name = "requirements-test",
-    libs = [":cmk-dev-deploy"],
+    libs = [
+        ":cmk-dev-deploy",
+        ":cmk-dev-deploy-bin",
+    ],
     requirements_in = "requirements.in",
 )

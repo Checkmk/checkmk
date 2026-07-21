@@ -230,7 +230,12 @@ py_binary(
 py_requirements_test(
     name = "requirements-test",
     libs = [
+        ":site",
         ":tool",
+        ":utils-bin",
+        ":web",
+        ":werk",
+        ":werk-ids-server-deploy",
     ],
     requirements_in = "requirements.in",
 )

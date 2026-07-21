@@ -128,6 +128,7 @@ STAGES:
               --path "packages" \
               --path "non-free/packages" \
               >> ${RESULTS}/results.txt || make_rc=$?
+          ./scripts/check_requirements_test_coverage.sh >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/in_bazel.sh ".ps1" "filegroup" \
               >> ${RESULTS}/results.txt || make_rc=$?
           ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?

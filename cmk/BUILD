@@ -235,12 +235,12 @@ py_requirements_test(
         "bson",  # cmk/plugins/mongodb/agents/mk_mongodb.py
         "pyrfc",  # cmk/plugins/sap/agents/mk_sap.py
         "rrdtool",  # is built as part of the project
+        "git",  # cmk/utils/werks/mail/__init__.py, dev-only werks tooling
     ],
     known_unused = [
         "setuptools",  # pinned transitive dependency
         "setuptools-scm",
         "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
-        "apispec-oneofschema",  # only imported by build-time spec generator
         "openapi-spec-validator",  # only imported by tests
     ],
     libs = [
@@ -248,6 +248,15 @@ py_requirements_test(
         # so together they cover every edition's library code.
         "//cmk/editions/nonfree:cloud",
         "//cmk/editions/nonfree:ultimatemt",
+        "//cmk/gui/openapi/spec/editions/community:generate_api_spec",
+        "//cmk/gui/openapi/spec/editions/nonfree/pro:generate_api_spec",
+        "//cmk/gui/openapi/spec/editions/nonfree/ultimate:generate_api_spec",
+        "//cmk/gui/openapi/spec/editions/nonfree/cloud:generate_api_spec",
+        "//cmk/gui/openapi/spec/editions/nonfree/ultimatemt:generate_api_spec",
+        "//cmk/gui/openapi/spec/spec_generator:merge_api_specs",
+        "//cmk/post_rename_site:post-rename-site",
+        "//cmk/update_config:cmk-update-config",
+        "//cmk/utils:werks_bin",
     ],
     requirements_in = "requirements.in",
     target_compatible_with = select({

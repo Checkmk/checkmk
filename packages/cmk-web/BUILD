@@ -48,6 +48,7 @@ py_doc_test(
 py_requirements_test(
     name = "requirements-test",
     libs = [
+        ":cmk-web",
         ":pages",
         "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",

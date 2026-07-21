@@ -415,6 +415,6 @@ sh_library(
 
 py_requirements_test(
     name = "requirements-test",
-    libs = _ALL,
+    libs = _ALL + [":wheel_only_files"],
     requirements_in = "requirements.in",
 )

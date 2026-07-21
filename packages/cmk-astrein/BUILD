@@ -88,6 +88,10 @@ py_cmk_test(
 
 py_requirements_test(
     name = "requirements-test",
-    libs = ":library",
+    libs = [
+        ":astrein_bin",
+        ":astrein_lsp_bin",
+        ":library",
+    ],
     requirements_in = "requirements.in",
 )

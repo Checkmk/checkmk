@@ -7,6 +7,7 @@ py_binary(
     name = "cmk-update-config",
     srcs = ["cmk-update-config.py"],
     main = "cmk-update-config.py",
+    visibility = ["//cmk:__pkg__"],
     deps = [":update_config"],
 )
 

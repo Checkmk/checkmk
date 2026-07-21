@@ -217,6 +217,9 @@ py_requirements_test(
         "gunicorn",  # deploys the agent receiver via a bash script, not a Python import
         "python-multipart",  # needed by fastapi but not imported directly
     ],
-    libs = ":cmk-agent-receiver",
+    libs = [
+        ":cmk-agent-receiver",
+        ":gunicorn_conf",
+    ],
     requirements_in = "requirements.in",
 )

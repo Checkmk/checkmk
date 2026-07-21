@@ -479,6 +479,7 @@ py_requirements_test(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        "//packages/cmk-plugin-apis/doc:sphinx_build",
     ],
     requirements_in = "requirements.in",
 )

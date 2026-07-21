@@ -9,6 +9,7 @@ from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
 from cmk.livestatus_client.tables.eventconsolehistory import Eventconsolehistory
 from cmk.livestatus_client.tables.hostgroups import Hostgroups
 from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.tables.log import Log
 from cmk.livestatus_client.tables.servicegroups import Servicegroups
 from cmk.livestatus_client.tables.services import Services
 from cmk.livestatus_client.tables.status import Status
@@ -28,6 +29,7 @@ __all__ = [
     "Eventconsolehistory",
     "Hostgroups",
     "Hosts",
+    "Log",
     "Servicegroups",
     "Services",
     "Status",

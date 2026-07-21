@@ -56,6 +56,7 @@ STATE_TRANSLATIONS: dict[str, ConnectionState] = {
     "ESTAB": ConnectionState.ESTABLISHED,
     "FIN_WAIT_1": ConnectionState.FIN_WAIT1,
     "FIN_WAIT_2": ConnectionState.FIN_WAIT2,
+    "UNCONN": ConnectionState.CLOSED,  # iproute2 [SS_CLOSE] = "UNCONN",
 }
 
 

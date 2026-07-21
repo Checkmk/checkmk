@@ -115,6 +115,8 @@ from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Section, Spl
                 ["tcp", "ESTAB", "0", "0", "10.230.254.109:8280", "172.17.0.3:39484"],
                 ["tcp", "CLOSED", "0", "0", "10.230.254.109:8280", "172.17.0.3:39484"],
                 ["tcp", "CLOSE-WAIT", "0", "0", "10.230.254.109:8280", "172.17.0.3:39484"],
+                # SUP-29809: iproute2 reports [SS_CLOSE] as "UNCONN"
+                ["tcp", "UNCONN", "0", "0", "*:11111", "*:*"],
                 ["udp", "UNCONN", "0", "0", "127.0.0.1:778", "0.0.0.0:*"],
             ],
             [
@@ -153,6 +155,12 @@ from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Section, Spl
                     local_address=SplitIP("10.230.254.109", "8280"),
                     remote_address=SplitIP("172.17.0.3", "39484"),
                     state=ConnectionState.CLOSE_WAIT,
+                ),
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("*", "11111"),
+                    remote_address=SplitIP("*", "*"),
+                    state=ConnectionState.CLOSED,
                 ),
                 Connection(
                     proto="UDP",

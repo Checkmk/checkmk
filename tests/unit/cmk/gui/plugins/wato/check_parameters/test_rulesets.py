@@ -27,7 +27,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config, get_default_config, make_config_object
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
@@ -522,6 +522,7 @@ def _setup_rules(
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,

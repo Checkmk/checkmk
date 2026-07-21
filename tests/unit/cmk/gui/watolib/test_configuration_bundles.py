@@ -12,15 +12,13 @@ import cmk.gui.watolib.check_mk_automations
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import login
-from cmk.gui.config import active_config, Config
-from cmk.gui.logged_in import user
+from cmk.gui.config import Config, get_default_config, make_config_object
+from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
     create_config_bundle,
@@ -31,21 +29,21 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle,
     identify_single_bundle_references,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree, make_folder_tree
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
-    index_update_change_hook,
     NoopPendingChangesStore,
     PendingChanges,
     PendingChangesStore,
 )
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.password_store import PasswordConfig
 from tests.testlib.gui.users import create_and_destroy_user
+from tests.unit.cmk.gui.watolib.test_automatic_host_removal import default_site_config
 from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F401
     mock_update_passwords_merged_file,
 )
@@ -55,15 +53,11 @@ logger = logging.getLogger(__name__)
 
 def _pending_changes(user_id: UserId | None) -> PendingChanges:
     return PendingChanges(
-        activation_sites=activation_sites(active_config.sites),
-        local_site=omd_site(),
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
         acting_user=user_id,
         store=PendingChangesStore(),
-        hooks=(
-            make_audit_log_change_hook(use_git=False),
-            sidebar_reload_change_hook,
-            index_update_change_hook,
-        ),
+        hooks=(),
     )
 
 
@@ -88,82 +82,100 @@ def _make_bundle(
     return BundleId(bundle_id), bundle
 
 
-@pytest.mark.usefixtures("request_context")
-def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    raw_config = get_default_config()
+    raw_config["tags"] = get_effective_tag_config(raw_config["wato_tags"])
+    config = make_config_object(raw_config)
+    config.sites = SiteConfigurations({SiteId("NO_SITE"): default_site_config()})
+    return config
+
+
+@pytest.fixture(name="tree")
+def fixture_tree(patch_omd_site: None, config: Config) -> FolderTree:
+    return make_folder_tree(config)
+
+
+def test_create_config_bundle_empty(tree: FolderTree) -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
         bundle,
         CreateBundleEntities(),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
-    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
+    references = identify_single_bundle_references(
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
+    )
 
     assert references.hosts is None
     assert references.rules is None
     assert references.passwords is None
 
 
-@pytest.mark.usefixtures("request_context")
-def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
+def test_create_config_bundle_duplicate_id(tree: FolderTree) -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
         bundle,
         CreateBundleEntities(),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
 
     with pytest.raises(MKGeneralException, match="already exists"):
         create_config_bundle(
-            folder_tree(),
+            tree,
             bundle_id,
             bundle,
             CreateBundleEntities(),
+            acting_user=LoggedInSuperUser(),
             user_permissions=UserPermissions({}, {}, {}, []),
             pprint_value=False,
             debug=False,
-            pending_changes=_pending_changes(with_admin_login),
+            pending_changes=_pending_changes(UserId("cmkadmin")),
         )
 
 
-@pytest.mark.usefixtures("request_context")
-def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
+def test_delete_config_bundle_empty(tree: FolderTree) -> None:
     bundle_id, bundle = _make_bundle()
     create_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
         bundle,
         CreateBundleEntities(),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     delete_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
 
 
-@pytest.mark.usefixtures("request_context")
-def test_delete_config_bundle_unknown_id() -> None:
+def test_delete_config_bundle_unknown_id(tree: FolderTree) -> None:
     with pytest.raises(MKGeneralException, match="does not exist"):
         delete_config_bundle(
-            folder_tree(),
+            tree,
             BundleId("unknown"),
+            acting_user=LoggedInSuperUser(),
             user_permissions=UserPermissions({}, {}, {}, []),
             pprint_value=False,
             debug=False,
@@ -174,10 +186,13 @@ def test_delete_config_bundle_unknown_id() -> None:
 @pytest.fixture(
     name="other_folder",
 )
-def fixture_other_folder(request_context: None, with_admin_login: UserId) -> str:
+def fixture_other_folder(tree: FolderTree) -> str:
     path = "subfolder"
-    folder_tree().create_missing_folders(
-        path, pprint_value=False, pending_changes=_noop_pending_changes(), acting_user=user
+    tree.create_missing_folders(
+        path,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     return path
 
@@ -192,10 +207,9 @@ def mock_delete_host_automation(monkeypatch: pytest.MonkeyPatch) -> Iterable[Non
     yield
 
 
-@pytest.mark.usefixtures("request_context", "mock_delete_host_automation")
-def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("mock_delete_host_automation")
+def test_create_and_delete_config_bundle_hosts(tree: FolderTree, other_folder: str) -> None:
     bundle_id, bundle = _make_bundle()
-    tree = folder_tree()
     hosts = [
         CreateHost(
             folder=tree.root_folder(),
@@ -209,49 +223,51 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
                 attributes={},
                 pprint_value=False,
                 pending_changes=_noop_pending_changes(),
-                acting_user=user,
+                acting_user=LoggedInSuperUser(),
             ),
             name=HostName("test-host-2"),
             attributes={},
         ),
     ]
-    before_create_host_count = len(folder_tree().all_hosts())
+    before_create_host_count = len(tree.all_hosts())
     create_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
         bundle,
         CreateBundleEntities(hosts=hosts),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
 
-    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
+    references = identify_single_bundle_references(
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
+    )
 
     assert references.hosts is not None
     assert len(references.hosts) == 2
-    assert len(folder_tree().all_hosts()) - before_create_host_count == 2
+    assert len(tree.all_hosts()) - before_create_host_count == 2
 
     delete_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     references_after_delete = identify_single_bundle_references(
-        folder_tree(), bundle_id, bundle["group"]
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
     )
     assert references_after_delete.hosts is None
-    assert len(folder_tree().all_hosts()) == before_create_host_count, (
-        "Expected created hosts to be deleted"
-    )
+    assert len(tree.all_hosts()) == before_create_host_count, "Expected created hosts to be deleted"
 
 
-@pytest.mark.usefixtures("request_context", "mock_update_passwords_merged_file")
-def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> None:
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_create_and_delete_config_bundle_passwords(tree: FolderTree) -> None:
     bundle_id, bundle = _make_bundle()
     passwords = [
         CreatePassword(
@@ -267,36 +283,40 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
             ),
         ),
     ]
-    before_create_password_count = len(load_passwords(user))
+    before_create_password_count = len(load_passwords(LoggedInSuperUser()))
     create_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
         bundle,
         CreateBundleEntities(passwords=passwords),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
-    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
+    references = identify_single_bundle_references(
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
+    )
 
     assert references.passwords is not None
     assert len(references.passwords) == 2
-    assert len(load_passwords(user)) - before_create_password_count == 2
+    assert len(load_passwords(LoggedInSuperUser())) - before_create_password_count == 2
 
     delete_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     references_after_delete = identify_single_bundle_references(
-        folder_tree(), bundle_id, bundle["group"]
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
     )
     assert references_after_delete.passwords is None
-    assert len(load_passwords(user)) == before_create_password_count, (
+    assert len(load_passwords(LoggedInSuperUser())) == before_create_password_count, (
         "Expected created passwords to be deleted"
     )
 
@@ -381,6 +401,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
                         )
                     ]
                 ),
+                acting_user=user,
                 user_permissions=user_permissions,
                 pprint_value=False,
                 debug=False,
@@ -400,6 +421,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
             delete_config_bundle(
                 folder_tree(),
                 bundle_id,
+                acting_user=user,
                 user_permissions=user_permissions,
                 pprint_value=False,
                 debug=False,
@@ -416,8 +438,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
     )
 
 
-@pytest.mark.usefixtures("request_context")
-def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_login: UserId) -> None:
+def test_create_and_delete_config_bundle_rules(tree: FolderTree, other_folder: str) -> None:
     bundle_id, bundle = _make_bundle()
     ruleset_name = "host_contactgroups"
     rules = [
@@ -443,38 +464,42 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
 
     def _len_rules() -> int:
         return len(
-            SingleRulesetRecursively.load_single_ruleset_recursively(folder_tree(), ruleset_name)
+            SingleRulesetRecursively.load_single_ruleset_recursively(tree, ruleset_name)
             .get(ruleset_name)
             .get_rules()
         )
 
     before_create_rules_count = _len_rules()
     create_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
         bundle,
         CreateBundleEntities(rules=rules),
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
-    references = identify_single_bundle_references(folder_tree(), bundle_id, bundle["group"])
+    references = identify_single_bundle_references(
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
+    )
 
     assert references.rules is not None
     assert len(references.rules) == 2
     assert _len_rules() - before_create_rules_count == 2
 
     delete_config_bundle(
-        folder_tree(),
+        tree,
         bundle_id,
+        acting_user=LoggedInSuperUser(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
         debug=False,
-        pending_changes=_pending_changes(with_admin_login),
+        pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     references_after_delete = identify_single_bundle_references(
-        folder_tree(), bundle_id, bundle["group"]
+        tree, bundle_id, bundle["group"], acting_user=LoggedInSuperUser()
     )
 
     assert references_after_delete.rules is None

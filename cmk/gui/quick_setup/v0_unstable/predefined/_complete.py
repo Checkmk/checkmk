@@ -340,6 +340,7 @@ def _create_and_save_special_agent_bundle(
     user_permissions = UserPermissions.from_config(active_config, permission_registry)
     create_config_bundle(
         tree,
+        acting_user=user,
         bundle_id=bundle_id,
         bundle=ConfigBundle(
             title=f"{bundle_id}_config",
@@ -404,6 +405,7 @@ def _create_and_save_special_agent_bundle(
             delete_config_bundle(
                 tree,
                 BundleId(bundle_id),
+                acting_user=user,
                 user_permissions=user_permissions,
                 pprint_value=active_config.wato_pprint_config,
                 debug=active_config.debug,

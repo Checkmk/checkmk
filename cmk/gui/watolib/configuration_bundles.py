@@ -16,7 +16,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
@@ -182,6 +182,7 @@ def identify_bundle_references(
     bundle_group: str | None,
     bundle_ids: set[BundleId],
     *,
+    acting_user: LoggedInUser,
     rulespecs_hint: set[str] | None = None,
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles.
@@ -199,7 +200,9 @@ def identify_bundle_references(
         else {}
     )
     bundle_password_ids = (
-        _collect_many(_collect_passwords(finder=bundle_id_finder, passwords=load_passwords(user)))
+        _collect_many(
+            _collect_passwords(finder=bundle_id_finder, passwords=load_passwords(acting_user))
+        )
         if "password" in affected_entities
         else {}
     )
@@ -241,12 +244,16 @@ def identify_bundle_references(
 
 
 def identify_single_bundle_references(
-    tree: FolderTree, bundle_id: BundleId, bundle_group: str | None = None
+    tree: FolderTree,
+    bundle_id: BundleId,
+    bundle_group: str | None = None,
+    *,
+    acting_user: LoggedInUser,
 ) -> BundleReferences:
     """Get references for a single bundle.
     If the bundle group is unknown, the bundle will be loaded first."""
     group = bundle_group or read_config_bundle(bundle_id)["group"]
-    references = identify_bundle_references(tree, group, {bundle_id})
+    references = identify_bundle_references(tree, group, {bundle_id}, acting_user=acting_user)
     return references[bundle_id]
 
 
@@ -275,6 +282,7 @@ def _validate_and_prepare_create_calls(
     bundle_ident: GlobalIdent,
     entities: CreateBundleEntities,
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     debug: bool,
     pending_changes: PendingChanges,
@@ -285,7 +293,8 @@ def _validate_and_prepare_create_calls(
             _prepare_create_passwords(
                 bundle_ident,
                 entities.passwords,
-                load_passwords(user),
+                load_passwords(acting_user),
+                acting_user=acting_user,
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
             )
@@ -295,6 +304,7 @@ def _validate_and_prepare_create_calls(
             _prepare_create_hosts(
                 bundle_ident,
                 entities.hosts,
+                acting_user=acting_user,
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
             )
@@ -328,6 +338,7 @@ def create_config_bundle(
     bundle: ConfigBundle,
     entities: CreateBundleEntities,
     *,
+    acting_user: LoggedInUser,
     user_permissions: UserPermissions,
     pprint_value: bool,
     debug: bool,
@@ -346,6 +357,7 @@ def create_config_bundle(
             tree,
             bundle_ident,
             entities,
+            acting_user=acting_user,
             pprint_value=pprint_value,
             debug=debug,
             pending_changes=pending_changes,
@@ -364,6 +376,7 @@ def create_config_bundle(
         delete_config_bundle(
             tree,
             bundle_id,
+            acting_user=acting_user,
             user_permissions=user_permissions,
             pprint_value=pprint_value,
             debug=debug,
@@ -410,6 +423,7 @@ def delete_config_bundle(
     tree: FolderTree,
     bundle_id: BundleId,
     *,
+    acting_user: LoggedInUser,
     user_permissions: UserPermissions,
     pprint_value: bool,
     debug: bool,
@@ -420,9 +434,13 @@ def delete_config_bundle(
     if (bundle := all_bundles.pop(bundle_id, None)) is None:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
-    references = identify_bundle_references(tree, bundle["group"], {bundle_id})[bundle_id]
+    references = identify_bundle_references(
+        tree, bundle["group"], {bundle_id}, acting_user=acting_user
+    )[bundle_id]
     # First check permissions for all the needed deletions
-    _user_may_delete_config_bundle_objects(tree, bundle_id, references, user_permissions)
+    _user_may_delete_config_bundle_objects(
+        tree, bundle_id, references, acting_user, user_permissions
+    )
 
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
@@ -430,6 +448,7 @@ def delete_config_bundle(
     delete_config_bundle_objects(
         tree,
         references,
+        acting_user=acting_user,
         pprint_value=pprint_value,
         debug=debug,
         pending_changes=pending_changes,
@@ -440,6 +459,7 @@ def _user_may_delete_config_bundle_objects(
     tree: FolderTree,
     bundle_id: BundleId,
     references: BundleReferences,
+    acting_user: LoggedInUser,
     user_permissions: UserPermissions,
 ) -> None:
     bundle = read_config_bundle(bundle_id)
@@ -449,7 +469,7 @@ def _user_may_delete_config_bundle_objects(
     if (
         owned_by
         and "admin" in user_permissions.roles_of_user(UserId(owned_by))
-        and "admin" not in user.role_ids
+        and "admin" not in acting_user.role_ids
     ):
         raise MKAuthException(
             _(
@@ -462,9 +482,9 @@ def _user_may_delete_config_bundle_objects(
     if references.rules:
         pass
     if references.hosts:
-        _user_may_delete_hosts(references.hosts)
+        _user_may_delete_hosts(references.hosts, acting_user)
     if references.passwords:
-        _user_may_delete_passwords(owned_by)
+        _user_may_delete_passwords(owned_by, acting_user)
     if references.dcd_connections:
         _user_may_delete_hosts(
             (
@@ -476,7 +496,8 @@ def _user_may_delete_config_bundle_objects(
                     ),
                     tree.all_hosts().values(),
                 )
-            )
+            ),
+            acting_user,
         )
 
 
@@ -484,6 +505,7 @@ def delete_config_bundle_objects(
     tree: FolderTree,
     references: BundleReferences,
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     debug: bool,
     pending_changes: PendingChanges,
@@ -499,6 +521,7 @@ def delete_config_bundle_objects(
     if references.hosts:
         _delete_hosts(
             references.hosts,
+            acting_user=acting_user,
             pprint_value=pprint_value,
             debug=debug,
             pending_changes=pending_changes,
@@ -506,6 +529,7 @@ def delete_config_bundle_objects(
     if references.passwords:
         _delete_passwords(
             references.passwords,
+            acting_user=acting_user,
             pprint_value=pprint_value,
             pending_changes=pending_changes,
         )
@@ -513,6 +537,7 @@ def delete_config_bundle_objects(
         _delete_dcd_connections(
             tree,
             references.dcd_connections,
+            acting_user=acting_user,
             pprint_value=pprint_value,
             debug=debug,
             pending_changes=pending_changes,
@@ -553,6 +578,7 @@ def _prepare_create_hosts(
     bundle_ident: GlobalIdent,
     hosts: Iterable[CreateHost],
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> CreateFunction:
@@ -562,14 +588,14 @@ def _prepare_create_hosts(
 
     folder: Folder
     for folder, hosts_iter in groupby(hosts_sorted_by_folder, key=folder_getter):
-        folder.prepare_create_hosts(acting_user=user)
+        folder.prepare_create_hosts(acting_user=acting_user)
         valid_hosts = [
             (
                 host["name"],
                 folder.verify_and_update_host_details(
                     host["name"],
                     _get_host_attributes(bundle_ident, host),
-                    acting_user=user,
+                    acting_user=acting_user,
                 ),
                 host.get("cluster_nodes"),
             )
@@ -584,13 +610,13 @@ def _prepare_create_hosts(
                 validated_hosts,
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
-                acting_user=user,
+                acting_user=acting_user,
             )
 
     return create
 
 
-def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
+def _user_may_delete_hosts(hosts: Iterable[Host], acting_user: LoggedInUser) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
         ((host.folder(), host) for host in hosts),
@@ -601,13 +627,14 @@ def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
         folder.user_may_delete_hosts(
             host_names,
             allow_locked_deletion=True,
-            acting_user=user,
+            acting_user=acting_user,
         )
 
 
 def _delete_hosts(
     hosts: Iterable[Host],
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     debug: bool,
     pending_changes: PendingChanges,
@@ -626,7 +653,7 @@ def _delete_hosts(
             pprint_value=pprint_value,
             debug=debug,
             pending_changes=pending_changes,
-            acting_user=user,
+            acting_user=acting_user,
         )
 
 
@@ -643,6 +670,7 @@ def _prepare_create_passwords(
     create_passwords: Collection[CreatePassword],
     all_passwords: Mapping[str, PasswordConfig],
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> CreateFunction:
@@ -654,7 +682,7 @@ def _prepare_create_passwords(
         for pw in create_passwords:
             spec = pw["spec"]
             spec["locked_by"] = bundle_ident
-            spec["owned_by"] = user.id
+            spec["owned_by"] = acting_user.id
             save_password(
                 pw["id"],
                 spec,
@@ -668,24 +696,26 @@ def _prepare_create_passwords(
 
 def _user_may_delete_passwords(
     owned_by: str | None,
+    acting_user: LoggedInUser,
 ) -> None:
     # If the current user is different from the one who created the bundle, they need
     # permission to edit all passwords in order to (find and) delete the password.
-    if not user.may("wato.edit_all_passwords"):
-        if owned_by and owned_by != user.id:
+    if not acting_user.may("wato.edit_all_passwords"):
+        if owned_by and owned_by != acting_user.id:
             raise MKAuthException(_("You are not permitted to perform this action."))
 
 
 def _delete_passwords(
     passwords: Iterable[tuple[str, PasswordConfig]],
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
     for password_id, _password in passwords:
         remove_password(
             password_id,
-            acting_user=user,
+            acting_user=acting_user,
             pprint_value=pprint_value,
             pending_changes=pending_changes,
         )
@@ -815,6 +845,7 @@ def _delete_dcd_connections(
     tree: FolderTree,
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]],
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     debug: bool,
     pending_changes: PendingChanges,
@@ -830,6 +861,7 @@ def _delete_dcd_connections(
                 tree.all_hosts().values(),
             )
         ),
+        acting_user=acting_user,
         pprint_value=pprint_value,
         debug=debug,
         pending_changes=pending_changes,

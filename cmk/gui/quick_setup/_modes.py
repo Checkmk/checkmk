@@ -322,6 +322,7 @@ class ModeEditConfigurationBundles(WatoMode):
         delete_config_bundle(
             tree,
             bundle_id,
+            acting_user=user,
             user_permissions=user_permissions,
             pprint_value=pprint_value,
             debug=debug,
@@ -343,7 +344,9 @@ class ModeEditConfigurationBundles(WatoMode):
             self._no_bundles()
             return
 
-        bundles_with_references = identify_bundle_references(tree, group_name, bundle_ids)
+        bundles_with_references = identify_bundle_references(
+            tree, group_name, bundle_ids, acting_user=user
+        )
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             self._special_agent_bundles_listing(group_name, bundles_with_references)
             return
@@ -802,7 +805,7 @@ class ModeConfigurationBundle(WatoMode):
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(
-            folder_tree(), self._bundle_group, {self._bundle_id}
+            folder_tree(), self._bundle_group, {self._bundle_id}, acting_user=user
         )[self._bundle_id]
 
         self._rule_group_type = RuleGroupType(self._bundle_group.split(":")[0])
@@ -980,10 +983,13 @@ class ModeConfigurationBundle(WatoMode):
 
         if request.has_var("_clean_up"):
             tree = make_folder_tree(config)
-            references = identify_bundle_references(tree, None, {self._bundle_id})[self._bundle_id]
+            references = identify_bundle_references(
+                tree, None, {self._bundle_id}, acting_user=user
+            )[self._bundle_id]
             delete_config_bundle_objects(
                 tree,
                 references,
+                acting_user=user,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
                 pending_changes=PendingChanges(

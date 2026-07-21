@@ -7,7 +7,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui.config import active_config
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -26,20 +26,22 @@ EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"
 class UpdatePSDiscovery(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        tree = make_folder_tree(active_config)
+        all_rulesets = AllRulesets.load_all_rulesets(tree)
 
         if ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME):
-            add_ps_discovery_rules(logger, ps_discovery_rules)
+            add_ps_discovery_rules(tree, logger, ps_discovery_rules)
             overwrite_default_ec_rule(logger, ps_discovery_rules)
 
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
 def add_ps_discovery_rules(
+    tree: FolderTree,
     logger: Logger,
     ps_discovery_rules: Ruleset,
 ) -> None:
-    root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     if _some_shipped_rules_present(ps_discovery_rules):
         # a new default rule was added since the previous batch was added
         add_new_default_rules(logger, ps_discovery_rules, root_folder)

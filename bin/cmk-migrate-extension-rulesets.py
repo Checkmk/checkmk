@@ -24,7 +24,7 @@ from cmk.gui.rule_specs.loader import (
 from cmk.gui.rule_specs.types import RuleSpec
 from cmk.gui.rulespec import register_plugins
 from cmk.gui.session_context import SuperUserContext
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
@@ -223,9 +223,10 @@ def _load_and_transform_rulesets(
         )
 
     with disable_redis(), gui_context(), SuperUserContext():
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        tree = make_folder_tree(active_config)
+        all_rulesets = AllRulesets.load_all_rulesets(tree)
 
-        transform_replaced_wato_rulesets(logger, all_rulesets, renames)
+        transform_replaced_wato_rulesets(tree, logger, all_rulesets, renames)
 
         discovered_rulesets = {
             ruleset_name: ruleset

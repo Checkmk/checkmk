@@ -10,7 +10,9 @@ from typing import override
 
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import CheckPluginName
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.update_config.plugins.pre_actions.utils import (
     AUTOCHECK_REWRITE_PREACTION_SORT_INDEX,
     ConflictMode,
@@ -40,7 +42,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         plugin_errors: dict[CheckPluginName, dict[HostName, list[str]]] = {}
 
-        for error in rewrite_yielding_errors(write=False):
+        for error in rewrite_yielding_errors(make_folder_tree(active_config), write=False):
             if error.plugin is None:
                 logger.error(
                     "%(host_name)s: %(message)s.",

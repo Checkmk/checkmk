@@ -10,7 +10,7 @@ from logging import getLogger
 import pytest
 
 from cmk.gui.valuespec import Dictionary, TextInput
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
@@ -56,7 +56,7 @@ def _unknown_rule_spec(value: object) -> RuleSpec[object]:
     )
 
 
-@pytest.mark.usefixtures("request_context", "registered_discovery_rulespec")
+@pytest.mark.usefixtures("registered_discovery_rulespec")
 def test_discovery_parameter_renames_picks_up_registered_rulespec(
     legacy_name: str, new_name: str
 ) -> None:
@@ -64,7 +64,7 @@ def test_discovery_parameter_renames_picks_up_registered_rulespec(
     assert renames[legacy_name] == new_name
 
 
-@pytest.mark.usefixtures("request_context", "registered_discovery_rulespec")
+@pytest.mark.usefixtures("registered_discovery_rulespec")
 def test_discovery_parameter_renames_skips_unrelated_rulespecs() -> None:
     renames = rulesets_updater._discovery_parameter_renames()
     # All resulting keys must come from rulespecs with the discovery_parameters: prefix
@@ -73,18 +73,17 @@ def test_discovery_parameter_renames_skips_unrelated_rulespecs() -> None:
         assert new.split(":", 1)[1] == old
 
 
-@pytest.mark.usefixtures("request_context")
 def test_transform_migrates_unknown_inventory_ruleset_to_discovery_parameters(
-    discovery_rulespec: Rulespec, legacy_name: str, new_name: str
+    tree: FolderTree, discovery_rulespec: Rulespec, legacy_name: str, new_name: str
 ) -> None:
     all_rulesets = RulesetCollection({new_name: Ruleset(new_name, rulespec=discovery_rulespec)})
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     all_rulesets._unknown_rulesets[folder.path()] = {
         legacy_name: [_unknown_rule_spec({"mount": "/var"})],
     }
 
     rulesets_updater.transform_replaced_wato_rulesets(
-        getLogger(), all_rulesets, {legacy_name: new_name}
+        tree, getLogger(), all_rulesets, {legacy_name: new_name}
     )
 
     assert legacy_name not in all_rulesets.get_unknown_rulesets().get(folder.path(), {})
@@ -93,19 +92,18 @@ def test_transform_migrates_unknown_inventory_ruleset_to_discovery_parameters(
     assert rules[0][2].value == {"mount": "/var"}
 
 
-@pytest.mark.usefixtures("request_context")
 def test_transform_preserves_unrelated_unknown_rulesets(
-    discovery_rulespec: Rulespec, legacy_name: str, new_name: str
+    tree: FolderTree, discovery_rulespec: Rulespec, legacy_name: str, new_name: str
 ) -> None:
     all_rulesets = RulesetCollection({new_name: Ruleset(new_name, rulespec=discovery_rulespec)})
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     all_rulesets._unknown_rulesets[folder.path()] = {
         legacy_name: [_unknown_rule_spec({"mount": "/var"})],
         "some_local_plugin_rules": [_unknown_rule_spec({"foo": 42})],
     }
 
     rulesets_updater.transform_replaced_wato_rulesets(
-        getLogger(), all_rulesets, {legacy_name: new_name}
+        tree, getLogger(), all_rulesets, {legacy_name: new_name}
     )
 
     surviving = all_rulesets.get_unknown_rulesets()[folder.path()]
@@ -113,21 +111,20 @@ def test_transform_preserves_unrelated_unknown_rulesets(
     assert surviving["some_local_plugin_rules"][0]["value"] == {"foo": 42}
 
 
-@pytest.mark.usefixtures("request_context")
 def test_transform_is_idempotent_on_already_migrated_configs(
-    discovery_rulespec: Rulespec, legacy_name: str, new_name: str
+    tree: FolderTree, discovery_rulespec: Rulespec, legacy_name: str, new_name: str
 ) -> None:
     all_rulesets = RulesetCollection({new_name: Ruleset(new_name, rulespec=discovery_rulespec)})
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     all_rulesets._unknown_rulesets[folder.path()] = {
         legacy_name: [_unknown_rule_spec({"mount": "/var"})],
     }
 
     rulesets_updater.transform_replaced_wato_rulesets(
-        getLogger(), all_rulesets, {legacy_name: new_name}
+        tree, getLogger(), all_rulesets, {legacy_name: new_name}
     )
     rulesets_updater.transform_replaced_wato_rulesets(
-        getLogger(), all_rulesets, {legacy_name: new_name}
+        tree, getLogger(), all_rulesets, {legacy_name: new_name}
     )
 
     rules = all_rulesets.get(new_name).get_rules()

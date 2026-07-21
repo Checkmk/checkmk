@@ -6,6 +6,8 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.autochecks import rewrite_yielding_errors
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -15,7 +17,7 @@ class UpdateAutochecks(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         # just consume to trigger rewriting. We already warned in pre-action.
-        for _error in rewrite_yielding_errors(write=True):
+        for _error in rewrite_yielding_errors(make_folder_tree(active_config), write=True):
             pass
 
 

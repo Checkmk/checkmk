@@ -13,7 +13,7 @@ from typing import Final
 
 from cmk.ccc import debug
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -66,12 +66,13 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
 
 
 def load_and_transform(
+    tree: FolderTree,
     logger: Logger,
     *,
     pending_changes: PendingChanges,
     use_new_descriptions_for: Mapping[str, bool],
 ) -> AllRulesets:
-    all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+    all_rulesets = AllRulesets.load_all_rulesets(tree)
 
     if not use_new_descriptions_for.get("http", False):
         _force_old_http_service_description(all_rulesets)
@@ -92,6 +93,7 @@ def load_and_transform(
         RULESETS_LOOSING_THEIR_ITEM,
     )
     transform_replaced_wato_rulesets(
+        tree,
         logger,
         all_rulesets,
         {**REPLACED_RULESETS, **_discovery_parameter_renames()},
@@ -197,11 +199,12 @@ def _force_old_http_service_description(all_rulesets: RulesetCollection) -> None
 
 
 def transform_replaced_wato_rulesets(
+    tree: FolderTree,
     logger: Logger,
     all_rulesets: RulesetCollection,
     replaced_rulesets: Mapping[RulesetName, RulesetName],
 ) -> None:
-    _transform_replaced_unknown_rulesets(logger, all_rulesets, replaced_rulesets)
+    _transform_replaced_unknown_rulesets(tree, logger, all_rulesets, replaced_rulesets)
     _transform_replaced_known_rulesets(logger, all_rulesets, replaced_rulesets)
 
 
@@ -231,13 +234,14 @@ def _transform_replaced_known_rulesets(
 
 
 def _transform_replaced_unknown_rulesets(
+    tree: FolderTree,
     logger: Logger,
     all_rulesets: RulesetCollection,
     replaced_rulesets: Mapping[RulesetName, RulesetName],
 ) -> None:
     deprecated_unknown_ruleset_names_per_folder: dict[FolderPath, set[RulesetName]] = {}
     for folder_path, ruleset_configs in all_rulesets.get_unknown_rulesets().items():
-        folder = folder_tree().folder(folder_path)
+        folder = tree.folder(folder_path)
         deprecated_unknown_ruleset_names_per_folder[folder_path] = set()
         for ruleset_name, rule_specs in ruleset_configs.items():
             if ruleset_name not in replaced_rulesets:

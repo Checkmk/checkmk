@@ -21,7 +21,7 @@ from cmk.checkengine.plugins._check import CheckPlugin, CheckPluginName
 from cmk.config_anonymizer.interface import AnonInterface, AnonymizationError
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, make_folder_tree
 from cmk.gui.watolib.rulesets import (
     _FOLDER_PATH_MACRO,
     AllRulesets,
@@ -413,10 +413,10 @@ def _anonymize_rule(
 
 
 def _prepare_anonymized_service_descriptions(
-    anon_interface: AnonInterface, autochecks_config: AutochecksConfigurer
+    tree: FolderTree, anon_interface: AnonInterface, autochecks_config: AutochecksConfigurer
 ) -> dict[str, tuple[str, AutocheckEntry, HostName]]:
     all_service_descriptions = {}
-    for folder_rel_path, folder in folder_tree().all_folders().items():
+    for folder_rel_path, folder in tree.all_folders().items():
         for host in folder.hosts():
             for entry in AutochecksStore(host, paths.autochecks_dir).read():
                 discovered_service_description = autochecks_config.service_description(host, entry)
@@ -450,7 +450,8 @@ class RulesStep(AnonymizeStep):
     ) -> None:
         logger.warning("Processing rules")
 
-        anonymized_all_rulesets = AnonymizedAllRulesets(anon_interface, folder_tree())
+        tree = make_folder_tree(active_config)
+        anonymized_all_rulesets = AnonymizedAllRulesets(anon_interface, tree)
 
         builtin_ids = BuiltinTagConfig()
 
@@ -471,7 +472,7 @@ class RulesStep(AnonymizeStep):
             passive_service_name_config,
         )
         anonymized_service_descriptions = _prepare_anonymized_service_descriptions(
-            anon_interface, autochecks_config
+            tree, anon_interface, autochecks_config
         )
 
         for ruleset_name, ruleset in list(anonymized_all_rulesets.get_rulesets().items()):

@@ -13,9 +13,8 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import omd_site
-from cmk.gui.user_sites import activation_sites
 from cmk.gui.valuespec import Dictionary, Float, Migrate
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
@@ -89,13 +88,14 @@ def fixture_replaced_rulespec() -> Rulespec:
 
 
 def _instantiate_ruleset(
+    tree: FolderTree,
     ruleset_name: str,
     param_value: object,
     rulespec: Rulespec | None = None,
     conditions: Mapping[str, Any] | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, rulespec=rulespec)
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
     rule.value = param_value
     if conditions:
@@ -114,13 +114,14 @@ def _instantiate_ruleset(
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_transform_wato_rulesets_params(
+    tree: FolderTree,
     rulespec_with_migration: Rulespec,
     param_value: object,
     transformed_param_value: object,
 ) -> None:
     ruleset = _instantiate_ruleset(
+        tree,
         rulespec_with_migration.name,
         param_value,
         rulespec=rulespec_with_migration,
@@ -142,8 +143,8 @@ def test_transform_wato_rulesets_params(
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_transform_replaced_wato_rulesets_and_params(
+    tree: FolderTree,
     rulespec_with_migration: Rulespec,
     replaced_rulespec: Rulespec,
     param_value: object,
@@ -152,6 +153,7 @@ def test_transform_replaced_wato_rulesets_and_params(
     all_rulesets = RulesetCollection(
         {
             replaced_rulespec.name: _instantiate_ruleset(
+                tree,
                 replaced_rulespec.name,
                 param_value,
                 rulespec=replaced_rulespec,
@@ -164,6 +166,7 @@ def test_transform_replaced_wato_rulesets_and_params(
     )
 
     rulesets_updater.transform_replaced_wato_rulesets(
+        tree,
         getLogger(),
         all_rulesets,
         {replaced_rulespec.name: rulespec_with_migration.name},
@@ -183,8 +186,8 @@ def test_transform_replaced_wato_rulesets_and_params(
     assert rule[2].value == transformed_param_value
 
 
-@pytest.mark.usefixtures("request_context")
 def test_transform_remove_null_host_tag_conditions_from_rulesets(
+    tree: FolderTree,
     rulespec_with_migration: Rulespec,
 ) -> None:
     conditions = {
@@ -202,6 +205,7 @@ def test_transform_remove_null_host_tag_conditions_from_rulesets(
         }
     }
     ruleset = _instantiate_ruleset(
+        tree,
         rulespec_with_migration.name,
         {"key": 1},
         rulespec=rulespec_with_migration,
@@ -213,7 +217,7 @@ def test_transform_remove_null_host_tag_conditions_from_rulesets(
     expected_keys_after = {"a", "b", "c", "d"}
 
     pending_changes = PendingChanges(
-        activation_sites=activation_sites(SiteConfigurations({})),
+        activation_sites=SiteConfigurations({}),
         local_site=omd_site(),
         acting_user=None,
         store=NoopPendingChangesStore(),

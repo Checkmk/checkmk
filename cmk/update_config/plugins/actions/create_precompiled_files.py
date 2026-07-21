@@ -7,7 +7,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -23,8 +23,9 @@ class CreatePrecompiledFiles(UpdateAction):
     def __call__(self, _logger: Logger) -> None:
         #  Note: We do not use folder.save here, as this always invalidates all caches and reloads
         #  the folder tree afterwards
-        folder_tree().invalidate_caches()
-        for folder in folder_tree().root_folder().subfolders_recursively():
+        tree = make_folder_tree(active_config)
+        tree.invalidate_caches()
+        for folder in tree.root_folder().subfolders_recursively():
             folder.save_folder_attributes()
             folder.save_hosts(pprint_value=active_config.wato_pprint_config, acting_user=user)
 

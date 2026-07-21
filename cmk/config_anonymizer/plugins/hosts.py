@@ -16,7 +16,7 @@ from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
 from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_tree,
+    make_folder_tree,
     StandardWATOInfoStorage,
     WATOFolderInfo,
 )
@@ -614,7 +614,7 @@ class HostsSteps(AnonymizeStep):
     ) -> None:
         logger.warning("Process hosts")
 
-        for folder_rel_path, folder in folder_tree().all_folders().items():
+        for folder_rel_path, folder in make_folder_tree(active_config).all_folders().items():
             folder._save_hosts_file(
                 storage_list=[AnonHostsStorage(anon_interface)],
                 pprint_value=False,

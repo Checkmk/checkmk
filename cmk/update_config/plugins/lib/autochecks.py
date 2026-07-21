@@ -14,7 +14,7 @@ from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.update_config.plugins.lib.replaced_check_plugins import ALL_REPLACED_CHECK_PLUGINS
@@ -63,13 +63,13 @@ class RewriteError:
     plugin: CheckPluginName | None = None
 
 
-def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
+def rewrite_yielding_errors(tree: FolderTree, *, write: bool) -> Iterable[RewriteError]:
     """Rewrite autochecks and yield errors
 
     This function is used by both the pre- and the regular update_config plug-in,
     to ensure consistency.
     """
-    all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+    all_rulesets = AllRulesets.load_all_rulesets(tree)
     plugins = load_all_plugins()
     for hostname in _autocheck_hosts():
         fixed_autochecks = yield from _get_fixed_autochecks(

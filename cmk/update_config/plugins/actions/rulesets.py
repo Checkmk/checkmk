@@ -15,7 +15,7 @@ from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.site_config import all_activation_sites
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     NoopPendingChangesStore,
     PendingChanges,
@@ -42,6 +42,7 @@ class UpdateRulesets(UpdateAction):
             hooks=(),
         )
         all_rulesets = load_and_transform(
+            make_folder_tree(active_config),
             logger,
             pending_changes=pending_changes,
             use_new_descriptions_for=loading_result.loaded_config.use_new_descriptions_for,

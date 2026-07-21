@@ -7,7 +7,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui.config import active_config
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import CMK_INV_RULES
 from cmk.update_config.lib import ExpiryVersion
@@ -19,16 +19,17 @@ CMK_INV_RULESET_NAME = "active_checks:cmk_inv"
 class UpdateInventoryRules(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
-        add_cmk_inv_rules(logger, all_rulesets)
+        tree = make_folder_tree(active_config)
+        all_rulesets = AllRulesets.load_all_rulesets(tree)
+        add_cmk_inv_rules(tree, logger, all_rulesets)
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
-def add_cmk_inv_rules(logger: Logger, all_rulesets: RulesetCollection) -> None:
+def add_cmk_inv_rules(tree: FolderTree, logger: Logger, all_rulesets: RulesetCollection) -> None:
     if (cmk_inv_rules := all_rulesets.get_rulesets().get(CMK_INV_RULESET_NAME)) is None:
         return
 
-    root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     for rule_config in reversed(CMK_INV_RULES):
         if _rule_present(cmk_inv_rules, rule_config["id"]):
             continue

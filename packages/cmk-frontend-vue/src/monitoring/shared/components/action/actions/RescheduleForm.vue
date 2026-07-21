@@ -40,26 +40,28 @@ watch(
       {{ _t('Execution will be spread across a custom time period.') }}
     </p>
 
-    <label class="monitoring-reschedule-form__field">
-      <span class="monitoring-reschedule-form__label">
-        {{ _t('Spread over') }}<CmkLabelRequired :show="true" space="before" />
-        <CmkHelpText
-          :help="
-            _t(
-              'Distributes the rescheduled checks across the specified number of minutes, ' +
-                'preventing a load spike on your monitoring server. Enter the number of minutes ' +
-                'over which the checks should be spread.'
-            )
-          "
+    <div class="monitoring-reschedule-form__section">
+      <label class="monitoring-reschedule-form__field">
+        <span class="monitoring-reschedule-form__label">
+          {{ _t('Spread over') }}<CmkLabelRequired :show="true" space="before" />
+          <CmkHelpText
+            :help="
+              _t(
+                'Distributes the rescheduled checks across the specified number of minutes, ' +
+                  'preventing a load spike on your monitoring server. Enter the number of minutes ' +
+                  'over which the checks should be spread.'
+              )
+            "
+          />
+        </span>
+        <CmkInput
+          v-model="model.spreadMinutes"
+          type="number"
+          field-size="SMALL"
+          :unit="_t('minutes')"
         />
-      </span>
-      <CmkInput
-        v-model="model.spreadMinutes"
-        type="number"
-        field-size="SMALL"
-        :unit="_t('minutes')"
-      />
-    </label>
+      </label>
+    </div>
   </div>
 </template>
 
@@ -73,6 +75,15 @@ watch(
 .monitoring-reschedule-form__intro {
   margin: 0;
   color: var(--font-color-dimmed);
+}
+
+.monitoring-reschedule-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+  padding: var(--spacing);
+  border-radius: var(--border-radius);
+  background: var(--ux-theme-3);
 }
 
 .monitoring-reschedule-form__field {

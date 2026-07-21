@@ -28,10 +28,12 @@ def build(Map args) {
                 "agents/modules/windows",
                 "call build_the_module.cmd cached ${args.CREDS} ${args.CACHE_URL}",
                 "python-3.cab"] :
-            (args.TARGET == "agent_with_sign") ? [
+            (args.TARGET == "agent_with_sign") || (args.TARGET == "agent_with_sign_azure") ? [
                 "agents/wnx",
                 // The deprecated_unused_param's have to be present or the script will fail.
-                "call run.cmd --all --sign deprecated_unused_param1 deprecated_unused_param2",
+                "call run.cmd --all " +
+                    "${args.TARGET == 'agent_with_sign_azure' ? '--sign-azure' : '--sign'} " +
+                    "deprecated_unused_param1 deprecated_unused_param2",
                 [
                     "cmk-agent-ctl.exe",
                     "check_mk_agent-64.exe",

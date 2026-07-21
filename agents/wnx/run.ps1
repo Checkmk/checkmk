@@ -19,6 +19,7 @@ $argBuildOnly = $false
 $argClean = $false
 $argCtl = $false
 $argSign = $false
+$argSignAzure = $false
 $argMsi = $false
 $argOhm = $false
 $argExt = $false
@@ -73,7 +74,8 @@ function Write-Help() {
     Write-Host "  -E, --extensions        make extensions"
     Write-Host "  -S, --skip-sql-test     skip sql test to be able to build msi in case sql is not configured"
     Write-Host "  --detach                detach USB before running"
-    Write-Host "  --sign                  sign controller using Yubikey based Code Certificate"
+    Write-Host "  --sign                  sign using local YubiKey and scsigntool.exe"
+    Write-Host "  --sign-azure            sign using Azure Artifact Signing"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
@@ -109,6 +111,7 @@ else {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
             "--sign" { $argSign = $true }
+            "--sign-azure" { $argSignAzure = $true }
         }
     }
 }
@@ -414,7 +417,7 @@ function Invoke-TestSigning($usbip) {
 }
 
 function Start-MsiControlBuild {
-    if ($argSign -ne $true) {
+    if (-not ($argSign -or $argSignAzure)) {
         Write-Host "Skipping MSI Control Build..." -ForegroundColor Yellow
         return
     }
@@ -426,8 +429,18 @@ function Start-MsiControlBuild {
     }
 }
 
+function Invoke-SignFile([string]$FilePath) {
+    if ($argSignAzure) {
+        pwsh -ExecutionPolicy Bypass -File ./scripts/sign_code_azure.ps1 $FilePath
+    }
+    else {
+        & ./scripts/sign_code.cmd $FilePath
+    }
+    return $LASTEXITCODE
+}
+
 function Start-BinarySigning {
-    if ($argSign -ne $true) {
+    if (-not ($argSign -or $argSignAzure)) {
         Write-Host "Skipping Signing..." -ForegroundColor Yellow
         return
     }
@@ -446,7 +459,7 @@ function Start-BinarySigning {
 
     foreach ($file in $files_to_sign) {
         Write-Host "Signing $file" -ForegroundColor White
-        & ./scripts/sign_code.cmd $file
+        Invoke-SignFile $file
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
             throw
@@ -581,13 +594,13 @@ function Invoke-Detach($argFlag) {
 
 
 function Start-MsiSigning {
-    if ($argSign -ne $true) {
+    if (-not ($argSign -or $argSignAzure)) {
         Write-Host "Skipping MSI signing..." -ForegroundColor Yellow
         return
     }
 
     Write-Host "MSI signing..." -ForegroundColor White
-    & ./scripts/sign_code.cmd $results_dir\check_mk_agent.msi
+    Invoke-SignFile $results_dir\check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         throw
@@ -646,7 +659,7 @@ function Update-ArtefactDirs() {
 }
 
 function Test-MsiSigning($file) {
-    if ($argSign -ne $true) {
+    if (-not ($argSign -or $argSignAzure)) {
         Write-Host "Skipping Validate signing..." -ForegroundColor Yellow
         return
     }

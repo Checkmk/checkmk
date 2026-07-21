@@ -88,6 +88,11 @@ def provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
             retry: 3,
+            // Select Azure Artifact Signing for the Windows agent (winagt-build reads
+            // SIGN_METHOD; "azure" picks the in-process Azure path over YubiKey).
+            additional_build_params: [
+                SIGN_METHOD: "azure",
+            ],
             dependency_paths: [
                 "agents",
                 "packages/host/cmk-agent-ctl",
@@ -180,7 +185,7 @@ def provide_agent_binaries(Map args) {
                             CIPARAM_PATH_HASH: all_directory_hash,
                             VERSION: args.version,
                             DISABLE_CACHE: args.disable_cache,
-                        ],
+                        ] + (details.additional_build_params ?: [:]),
                         build_params_no_check: [
                             CUSTOM_GIT_REF: effective_git_ref,
                             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
@@ -193,7 +198,7 @@ def provide_agent_binaries(Map args) {
                             CUSTOM_GIT_REF: effective_git_ref,
                             VERSION: args.version,
                             DISABLE_CACHE: args.disable_cache,
-                        ],
+                        ] + (details.additional_build_params ?: [:]),
                         build_params_no_check: [
                             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                             CIPARAM_BISECT_COMMENT: args.bisect_comment,

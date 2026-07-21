@@ -7,7 +7,11 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.tcp.agent_based.netstat import parse_netstat
+from cmk.plugins.tcp.agent_based.netstat import (
+    parse_connection_state,
+    parse_netstat,
+    STATE_TRANSLATIONS,
+)
 from cmk.plugins.tcp.agent_based.win_netstat import parse_win_netstat
 from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Section, SplitIP
 
@@ -305,3 +309,26 @@ def test_parse_netstat(info: StringTable, expected_parsed: Section) -> None:
 )
 def test_parse_win_netstat(info: StringTable, expected_parsed: Section) -> None:
     assert parse_win_netstat(info) == expected_parsed
+
+
+@pytest.mark.parametrize("raw_state, expected", list(STATE_TRANSLATIONS.items()))
+def test_parse_connection_state_translations(raw_state: str, expected: ConnectionState) -> None:
+    assert parse_connection_state(raw_state) == expected
+
+
+@pytest.mark.parametrize(
+    "raw_state, expected",
+    [
+        ("TIME-WAIT", ConnectionState.TIME_WAIT),
+        ("CLOSE-WAIT", ConnectionState.CLOSE_WAIT),
+    ],
+)
+def test_parse_connection_state_normalizes_dashes(
+    raw_state: str, expected: ConnectionState
+) -> None:
+    assert parse_connection_state(raw_state) == expected
+
+
+def test_parse_connection_state_raises_on_unknown_state() -> None:
+    with pytest.raises(ValueError, match="Unknown connection state 'NOPE'"):
+        parse_connection_state("NOPE")

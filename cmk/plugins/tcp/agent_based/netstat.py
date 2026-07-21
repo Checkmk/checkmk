@@ -50,12 +50,22 @@ from cmk.plugins.tcp.lib.netstat import (
 
 # Example Output for AIX:
 # tcp4  0   0   127.0.0.1.1234  127.0.0.1.5678  ESTABLISHED
-STATE_TRANSLATIONS: dict[str, str] = {
-    "LISTEN": "LISTENING",  # for Ubuntu
-    "ESTAB": "ESTABLISHED",  # for Ubuntu
-    "FIN-WAIT-1": "FIN-WAIT1",  # for ss
-    "FIN-WAIT-2": "FIN-WAIT2",  # for ss
+
+STATE_TRANSLATIONS: dict[str, ConnectionState] = {
+    "LISTEN": ConnectionState.LISTENING,
+    "ESTAB": ConnectionState.ESTABLISHED,
+    "FIN_WAIT_1": ConnectionState.FIN_WAIT1,
+    "FIN_WAIT_2": ConnectionState.FIN_WAIT2,
 }
+
+
+def parse_connection_state(raw_state: str) -> ConnectionState:
+    raw_state = raw_state.replace("-", "_")
+    if (state := ConnectionState.__members__.get(raw_state)) is not None:
+        return state
+    if (state := STATE_TRANSLATIONS.get(raw_state)) is not None:
+        return state
+    raise ValueError(f"Unknown connection state {raw_state!r}")
 
 
 def parse_netstat(string_table: StringTable) -> Section:
@@ -77,11 +87,6 @@ def parse_netstat(string_table: StringTable) -> Section:
             elif proto.startswith("udp"):
                 proto = "UDP"
                 connstate = "LISTENING"
-            # Ubuntu recently deviced to use "LISTEN" instead of "LISTENING"
-            if connstate == "LISTEN":
-                connstate = "LISTENING"
-            if connstate == "ESTAB":
-                connstate = "ESTABLISHED"
 
         if len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
@@ -95,17 +100,12 @@ def parse_netstat(string_table: StringTable) -> Section:
             proto = "UDP"
             connstate = "LISTENING"
 
-        # Translate special representations of state strings (e.g. abbreviations into full length)
-        connstate = STATE_TRANSLATIONS.get(connstate, connstate)
-        # The output of `ss` contains a "-" instead of "_" in state strings.
-        connstate = connstate.replace("-", "_")
-
         connections.append(
             Connection(
                 proto=cast(Protocol, proto),
                 local_address=split_ip_address(local),
                 remote_address=split_ip_address(remote),
-                state=ConnectionState[connstate],
+                state=parse_connection_state(connstate),
             )
         )
     return connections

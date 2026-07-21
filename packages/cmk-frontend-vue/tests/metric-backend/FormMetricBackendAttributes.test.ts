@@ -152,7 +152,9 @@ test('selecting a key writes it to the matching attribute list', async () => {
 
   const filterInput = await openKeyFilter()
   await userEvent.type(filterInput, 'service')
-  await userEvent.click(await screen.findByRole('option', { name: 'service.name' }))
+  // Wait for the debounce to settle: un-keyed <li>s mean clicking mid-re-render hits the wrong option.
+  await screen.findByRole('option', { name: 'service' })
+  await userEvent.click(screen.getByRole('option', { name: 'service.name' }))
 
   await waitFor(() => {
     expect(models.resource.value).toEqual([{ key: 'service.name', value: '' }])

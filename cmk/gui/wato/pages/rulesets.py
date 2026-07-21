@@ -2496,7 +2496,7 @@ class ABCEditRuleMode(WatoMode):
             raw_explicit["host_tags"] = self._rule.conditions.host_tags
         if self._rule.conditions.host_label_groups:
             raw_explicit["host_label_groups"] = self._rule.conditions.host_label_groups
-        if self._rule.conditions.host_name:
+        if self._rule.conditions.host_name is not None:
             raw_explicit["explicit_hosts"] = parse_explicit_hosts_for_vue(
                 self._rule.conditions.host_name
             )

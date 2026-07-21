@@ -21,10 +21,12 @@ void build(Map args) {
         // No job should exceed 3*5 = 15 minutes
 
         def (subdir, command, artifacts) = (
-            (args.TARGET == "agent_with_sign") ? [
+            (args.TARGET == "agent_with_sign") || (args.TARGET == "agent_with_sign_azure") ? [
                 "agents/wnx",
                 // The deprecated_unused_param's have to be present or the script will fail.
-                "call run.cmd --all --skip-sql-test --sign deprecated_unused_param1 deprecated_unused_param2",
+                "call run.cmd --all --skip-sql-test " +
+                    "${args.TARGET == 'agent_with_sign_azure' ? '--sign-azure' : '--sign'} " +
+                    "deprecated_unused_param1 deprecated_unused_param2",
                 [
                     "cmk-agent-ctl.exe",
                     "check_mk_agent.exe",
@@ -70,9 +72,11 @@ void build(Map args) {
                 "pwsh -File build-msi.ps1 -ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir}",
                 "CheckmkRelayInstaller.msi"] :
 
-            (args.TARGET == "relay_msi_with_sign") ? [
+            (args.TARGET == "relay_msi_with_sign") || (args.TARGET == "relay_msi_with_sign_azure") ? [
                 "non-free/packages/cmk-relay-engine/windows-installer",
-                "pwsh -File build-msi.ps1 -ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir} -Sign",
+                "pwsh -File build-msi.ps1 " +
+                    "-ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir} " +
+                    "${args.TARGET == 'relay_msi_with_sign_azure' ? '-SignAzure' : '-Sign'}",
                 "CheckmkRelayInstaller.msi"] :
 
             (args.TARGET == "relay_msi_test") ? [

@@ -7,6 +7,11 @@
 /// This file gathers the magic to accomplish this, in orde to make it re-usable
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import groovy.transform.Field
+
+/// Build parameters selecting Azure-based signing for the Windows agent/relay jobs.
+@Field
+final Map AZURE_SIGN_METHOD = [SIGN_METHOD: "azure"]
 
 /// Returns the Jenkins 'branch folder' of the currently running job, either with or without
 /// the 'Testing/..' prefix
@@ -165,7 +170,7 @@ void provide_agent_binaries(Map args) {
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
             condition: ! test_binaries_only,
             retry: 3,
-            additional_build_params: [],
+            additional_build_params: AZURE_SIGN_METHOD,
             install_cmd: """\
                 cp \
                     mk-oracle.exe \
@@ -208,7 +213,7 @@ void provide_agent_binaries(Map args) {
             dependency_paths_hash: all_dependency_paths_hashes["relay-msi"],
             condition: ! test_binaries_only && (args.edition in ["cloud", "ultimate", "ultimatemt"]),
             retry: 3,
-            additional_build_params: [],
+            additional_build_params: AZURE_SIGN_METHOD,
             // Forward the edition so the relay-msi job's edition guard can validate
             // it. Passed via the no-check channel on purpose: the MSI is identical
             // across editions, so EDITION must NOT enter the cache identity - that

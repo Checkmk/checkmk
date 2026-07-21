@@ -1,3 +1,4 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 # Sign all PowerShell scripts in the current directory.
@@ -82,4 +83,29 @@ pkg_tar(
     tags = ["manual"],
     target_compatible_with = ["@platforms//os:windows"],
     visibility = ["//visibility:public"],
+)
+
+# Unsigned collection of the same plugins, flattened to basenames. Used by the Azure
+# signing path, which signs in the run.ps1 process (full environment + credentials)
+# instead of inside Bazel actions. Bazel only gathers the files here - including the
+# cross-package bakery-migrated plugins - and run.ps1 signs them and repacks the tar.
+pkg_files(
+    name = "unsigned_plugin_files",
+    srcs = TO_SIGN_SCRIPTS,
+    strip_prefix = strip_prefix.files_only(),
+)
+
+pkg_tar(
+    name = "unsigned_plugins",
+    srcs = [":unsigned_plugin_files"],
+    tags = ["manual"],
+    target_compatible_with = ["@platforms//os:windows"],
+    visibility = ["//visibility:public"],
+)
+
+sh_library(
+    name = "agents_windows_plugins_sh",
+    srcs = [
+        ".f12",
+    ],
 )

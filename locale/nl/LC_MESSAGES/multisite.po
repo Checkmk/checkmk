@@ -6658,9 +6658,11 @@ msgstr "Toegelaten agent toegang via IP adres"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Toegelaten agent toegang via IP adres (Linux, Windows)"
 
-#, fuzzy
-msgid "Allowed characters are letters, digits, underscores, and hyphens."
-msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
+msgid ""
+"Allowed characters are word characters (letters, digits, underscores), "
+"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
+"and end with a word character or dollar sign."
+msgstr ""
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "Toegestane duur sinds het laatste NTPM-bericht"
@@ -10190,6 +10192,10 @@ msgstr "Basis URL (OMD site)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "Basis URL voor docker API engine"
+
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26740,6 +26746,17 @@ msgid ""
 msgstr ""
 "Extraheert SGA-prestatiegegevens in een afzonderlijke dienst en geeft "
 "daarnaast PGA-prestatiegegevens weer"
+
+msgid "Extreme Networks ExtremeCloud IQ"
+msgstr ""
+
+#, fuzzy
+msgid "ExtremeCloud IQ password"
+msgstr "Voer gebruikerswachtwoord in"
+
+#, fuzzy
+msgid "ExtremeCloud IQ username"
+msgstr "Voer gebruikersnaam in"
 
 msgid "Extremes only"
 msgstr "Alleen extremen"
@@ -59373,7 +59390,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Return to standard view"
+msgid "Return to classic view"
 msgstr "In verhouding tot standaardafwijking"
 
 msgid ""
@@ -96789,6 +96806,13 @@ msgid "Could not load this content."
 msgstr "U kunt deze verbinding niet verwijderen."
 
 #, fuzzy
+msgid "No services"
+msgstr "diensten"
+
+msgid "%{count} %{label}"
+msgstr ""
+
+#, fuzzy
 msgid "filter"
 msgstr "Filter"
 
@@ -100295,6 +100319,10 @@ msgid "A relay alias is required"
 msgstr "Reguliere uitdrukking te verwachten in de inhoud"
 
 #, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
+
+#, fuzzy
 msgid "This relay alias is already in use"
 msgstr "Deze regel ID wordt al gebruikt."
 
@@ -100368,10 +100396,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Modes"
-msgstr "Modems"
-
-#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Aantal diensten in staat OK"
 
@@ -100391,10 +100415,6 @@ msgstr "Aantal diensten in staat OK"
 msgid "Number of services in pending state"
 msgstr "Aantal diensten in staat OK"
 
-#, fuzzy
-msgid "Unhandled Problems"
-msgstr "Onbehandelde host problemen"
-
 msgid "Give feedback on the new view"
 msgstr ""
 
@@ -100407,31 +100427,52 @@ msgid "Reset all filters"
 msgstr "Algemene fout"
 
 #, fuzzy
+msgid "Back to host detail view"
+msgstr "Ntop host details"
+
+#, fuzzy
 msgid "Select host %{name}"
 msgstr "Hosts verwijderen"
 
-msgid ""
-"An at-a-glance summary of %{host} will appear here, bringing the key host "
-"information together in one place."
-msgstr ""
-
-msgid "Host details (name, alias, primary IP address, site, folder)"
-msgstr ""
+#, fuzzy
+msgid "PENDING"
+msgstr "PEND"
 
 #, fuzzy
-msgid "Service summary with a state visualization"
-msgstr "Service hover menu getoond in BI visualisatie"
+msgid "%{count} sec"
+msgstr "Op geselecteerde hosts"
 
 #, fuzzy
-msgid "Contact groups and tags"
-msgstr "Contactgroepen"
-
-msgid "Labels (discovered and explicit)"
-msgstr ""
+msgid "%{count} min"
+msgstr "tellen"
 
 #, fuzzy
-msgid "Relations placeholder"
-msgstr "Replicatievertraging"
+msgid "%{count} h"
+msgstr "tel"
+
+#, fuzzy
+msgid "%{count} d"
+msgstr "tel"
+
+#, fuzzy
+msgid "Show full host status"
+msgstr "Toon host status"
+
+#, fuzzy
+msgid "Last check"
+msgstr "Laatste host check"
+
+#, fuzzy
+msgid "Service summary"
+msgstr "Systemd diensten samenvatting"
+
+#, fuzzy
+msgid "Acknowledge problem"
+msgstr "Erken problemen"
+
+#, fuzzy
+msgid "Schedule downtime"
+msgstr "Uitvaltijden plannen"
 
 msgid "This action runs immediately and has no further options."
 msgstr ""
@@ -100578,6 +100619,18 @@ msgid "More actions"
 msgstr "Montagemogelijkheden"
 
 #, fuzzy
+msgid "Could not load actions."
+msgstr "U kunt deze verbinding niet verwijderen."
+
+#, fuzzy
+msgid "Could not load more actions."
+msgstr "U kunt deze verbinding niet verwijderen."
+
+#, fuzzy
+msgid "No actions available"
+msgstr "Geen informatie beschikbaar"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "alle staten"
 
@@ -100633,8 +100686,19 @@ msgstr "Geen regels gevonden."
 msgid "Adjust or clear search and filters to start fresh."
 msgstr ""
 
-msgid "Check for typing errors or try a broader term."
+msgid "Check for typing errors, try using wildcards or a broader term."
 msgstr ""
+
+msgid "Remove one or more filters to widen the result."
+msgstr ""
+
+#, fuzzy
+msgid "Show:"
+msgstr "Toon"
+
+#, fuzzy
+msgid "Row limit"
+msgstr "ondergrens"
 
 msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
 msgstr ""
@@ -100646,6 +100710,31 @@ msgstr "Stale gastheren"
 #, fuzzy
 msgid "Select all rows"
 msgstr "Selecteer alle selectievakjes"
+
+msgid ""
+"Showing %{limit} of %{matched} matching hosts. Narrow your search, or raise "
+"the row limit above."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} matching hosts. Narrow your search to see the "
+"rest."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} hosts. Narrow your search, or raise the row "
+"limit above."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} hosts. Narrow your search to see the rest."
+msgstr ""
+
+msgid ""
+"The row limit is applied before sorting, so the hidden rows aren't "
+"necessarily the lowest-ranked. Narrow your search for a complete, sorted "
+"list."
+msgstr ""
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -101541,6 +101630,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Modes"
+#~ msgstr "Modems"
+
+#, fuzzy
+#~ msgid "Unhandled Problems"
+#~ msgstr "Onbehandelde host problemen"
+
+#, fuzzy
+#~ msgid "Service summary with a state visualization"
+#~ msgstr "Service hover menu getoond in BI visualisatie"
+
+#, fuzzy
+#~ msgid "Contact groups and tags"
+#~ msgstr "Contactgroepen"
+
+#, fuzzy
+#~ msgid "Relations placeholder"
+#~ msgstr "Replicatievertraging"
+
+#, fuzzy
 #~ msgid ""
 #~ "The placeholder <tt></tt> will be replaced by the original text of this "
 #~ "field to match. Note that as an alternative, you may also use the rule "
@@ -101555,14 +101664,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 #~ msgstr "Aerohive HiveManager NG"
-
-#, fuzzy
-#~ msgid "ExtremeCloud IQ password"
-#~ msgstr "Voer gebruikerswachtwoord in"
-
-#, fuzzy
-#~ msgid "ExtremeCloud IQ username"
-#~ msgstr "Voer gebruikersnaam in"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"
@@ -103153,9 +103254,6 @@ msgstr ""
 
 #~ msgid "Show header with highlighted background"
 #~ msgstr "Toon koptekst met gemarkeerde achtergrond"
-
-#~ msgid "Show host status"
-#~ msgstr "Toon host status"
 
 #, fuzzy
 #~ msgid "Show notification bulks"

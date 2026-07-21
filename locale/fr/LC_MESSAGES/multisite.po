@@ -6714,11 +6714,11 @@ msgstr "Accès autorisé à l'agent via l'adresse IP"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Accès autorisé à l'agent via l'adresse IP (Linux, Windows)"
 
-#, fuzzy
-msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgid ""
+"Allowed characters are word characters (letters, digits, underscores), "
+"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
+"and end with a word character or dollar sign."
 msgstr ""
-"N'utilisez ici que des lettres minuscules, des chiffres et des caractères de "
-"soulignement."
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "Durée autorisée depuis le dernier NTPMessage"
@@ -10261,6 +10261,10 @@ msgstr "URL de base (site OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL de base pour le moteur API de Docker"
+
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -26967,6 +26971,17 @@ msgid ""
 msgstr ""
 "Extrait les données de performance de la SGA dans un service séparé et "
 "affiche en plus les données de performance de la PGA"
+
+msgid "Extreme Networks ExtremeCloud IQ"
+msgstr ""
+
+#, fuzzy
+msgid "ExtremeCloud IQ password"
+msgstr "Entrez le mot de passe de l'utilisateur"
+
+#, fuzzy
+msgid "ExtremeCloud IQ username"
+msgstr "Entrer le nom de l'utilisateur"
 
 msgid "Extremes only"
 msgstr "Les extrêmes seulement"
@@ -59874,7 +59889,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Return to standard view"
+msgid "Return to classic view"
 msgstr "Par rapport à l'écart-type"
 
 msgid ""
@@ -97684,6 +97699,13 @@ msgid "Could not load this content."
 msgstr "Vous ne pouvez pas supprimer cette connexion."
 
 #, fuzzy
+msgid "No services"
+msgstr "services"
+
+msgid "%{count} %{label}"
+msgstr ""
+
+#, fuzzy
 msgid "filter"
 msgstr "Filtre"
 
@@ -101200,6 +101222,12 @@ msgid "A relay alias is required"
 msgstr "Expression régulière à attendre dans le contenu"
 
 #, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr ""
+"N'utilisez ici que des lettres minuscules, des chiffres et des caractères de "
+"soulignement."
+
+#, fuzzy
 msgid "This relay alias is already in use"
 msgstr "Cet ID de règle est déjà utilisé."
 
@@ -101273,10 +101301,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Modes"
-msgstr "Modems"
-
-#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Nombre de services dans l'État OK"
 
@@ -101296,10 +101320,6 @@ msgstr "Nombre de services dans l'État OK"
 msgid "Number of services in pending state"
 msgstr "Nombre de services dans l'État OK"
 
-#, fuzzy
-msgid "Unhandled Problems"
-msgstr "Problèmes d'hôte non gérés"
-
 msgid "Give feedback on the new view"
 msgstr ""
 
@@ -101312,31 +101332,52 @@ msgid "Reset all filters"
 msgstr "Erreur générale"
 
 #, fuzzy
+msgid "Back to host detail view"
+msgstr "Détails de l'hôte Ntop"
+
+#, fuzzy
 msgid "Select host %{name}"
 msgstr "Supprimer l'hôte"
 
-msgid ""
-"An at-a-glance summary of %{host} will appear here, bringing the key host "
-"information together in one place."
-msgstr ""
-
-msgid "Host details (name, alias, primary IP address, site, folder)"
-msgstr ""
+#, fuzzy
+msgid "PENDING"
+msgstr "PEND"
 
 #, fuzzy
-msgid "Service summary with a state visualization"
-msgstr "Menu de survol du service affiché dans la visualisation BI"
+msgid "%{count} sec"
+msgstr "Sur les hôtes sélectionnés"
 
 #, fuzzy
-msgid "Contact groups and tags"
-msgstr "Groupes de contact"
-
-msgid "Labels (discovered and explicit)"
-msgstr ""
+msgid "%{count} min"
+msgstr "en comptant"
 
 #, fuzzy
-msgid "Relations placeholder"
-msgstr "Retard de réplication"
+msgid "%{count} h"
+msgstr "compter"
+
+#, fuzzy
+msgid "%{count} d"
+msgstr "compter"
+
+#, fuzzy
+msgid "Show full host status"
+msgstr "Afficher l'état de l'hôte"
+
+#, fuzzy
+msgid "Last check"
+msgstr "Dernier contrôle de l'hôte"
+
+#, fuzzy
+msgid "Service summary"
+msgstr "Résumé des services Systemd"
+
+#, fuzzy
+msgid "Acknowledge problem"
+msgstr "Reconnaître les problèmes"
+
+#, fuzzy
+msgid "Schedule downtime"
+msgstr "Planifier les temps d'arrêt"
 
 msgid "This action runs immediately and has no further options."
 msgstr ""
@@ -101484,6 +101525,18 @@ msgid "More actions"
 msgstr "Options de montage"
 
 #, fuzzy
+msgid "Could not load actions."
+msgstr "Vous ne pouvez pas supprimer cette connexion."
+
+#, fuzzy
+msgid "Could not load more actions."
+msgstr "Vous ne pouvez pas supprimer cette connexion."
+
+#, fuzzy
+msgid "No actions available"
+msgstr "Aucune information disponible"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "tous les États"
 
@@ -101539,8 +101592,19 @@ msgstr "Aucune règle trouvée."
 msgid "Adjust or clear search and filters to start fresh."
 msgstr ""
 
-msgid "Check for typing errors or try a broader term."
+msgid "Check for typing errors, try using wildcards or a broader term."
 msgstr ""
+
+msgid "Remove one or more filters to widen the result."
+msgstr ""
+
+#, fuzzy
+msgid "Show:"
+msgstr "Afficher"
+
+#, fuzzy
+msgid "Row limit"
+msgstr "limite inférieure"
 
 msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
 msgstr ""
@@ -101552,6 +101616,31 @@ msgstr "Hôtes rassis"
 #, fuzzy
 msgid "Select all rows"
 msgstr "Sélectionner toutes les cases à cocher"
+
+msgid ""
+"Showing %{limit} of %{matched} matching hosts. Narrow your search, or raise "
+"the row limit above."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} matching hosts. Narrow your search to see the "
+"rest."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} hosts. Narrow your search, or raise the row "
+"limit above."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} hosts. Narrow your search to see the rest."
+msgstr ""
+
+msgid ""
+"The row limit is applied before sorting, so the hidden rows aren't "
+"necessarily the lowest-ranked. Narrow your search for a complete, sorted "
+"list."
+msgstr ""
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -102449,6 +102538,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Modes"
+#~ msgstr "Modems"
+
+#, fuzzy
+#~ msgid "Unhandled Problems"
+#~ msgstr "Problèmes d'hôte non gérés"
+
+#, fuzzy
+#~ msgid "Service summary with a state visualization"
+#~ msgstr "Menu de survol du service affiché dans la visualisation BI"
+
+#, fuzzy
+#~ msgid "Contact groups and tags"
+#~ msgstr "Groupes de contact"
+
+#, fuzzy
+#~ msgid "Relations placeholder"
+#~ msgstr "Retard de réplication"
+
+#, fuzzy
 #~ msgid ""
 #~ "The placeholder <tt></tt> will be replaced by the original text of this "
 #~ "field to match. Note that as an alternative, you may also use the rule "
@@ -102463,14 +102572,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 #~ msgstr "Aerohive HiveManager NG"
-
-#, fuzzy
-#~ msgid "ExtremeCloud IQ password"
-#~ msgstr "Entrez le mot de passe de l'utilisateur"
-
-#, fuzzy
-#~ msgid "ExtremeCloud IQ username"
-#~ msgstr "Entrer le nom de l'utilisateur"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"
@@ -104085,9 +104186,6 @@ msgstr ""
 
 #~ msgid "Show header with highlighted background"
 #~ msgstr "Afficher l'en-tête avec un arrière-plan en surbrillance"
-
-#~ msgid "Show host status"
-#~ msgstr "Afficher l'état de l'hôte"
 
 #, fuzzy
 #~ msgid "Show notification bulks"

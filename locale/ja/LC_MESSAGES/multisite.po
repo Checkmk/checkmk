@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-23 09:29+0000\n"
+"PO-Revision-Date: 2026-07-21 13:38+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -1635,15 +1635,14 @@ msgstr ""
 msgid "<br><br>"
 msgstr "<br><br>"
 
-#, fuzzy
 msgid ""
 "<br><br><b>Important note</b>: When changing this option, the services need "
 "to be removed and rediscovered to apply the changes. Otherwise there is a "
 "risk of mismatch between the discovered and checked services."
 msgstr ""
-"<br> <br>  <b>重要な注意事項</b>: このオプションを変更する場合、変更を適用す"
-"るためにサービスを削除し、再検出する必要がある。そのようにしない場合、発見さ"
-"れたサービスとチェックされたサービスの間に不一致が生じる危険性があります。"
+"<br><br><b>重要な注意事項</b>: このオプションを変更する場合、変更を適用するた"
+"めにサービスを削除し、再検出する必要があります。そうしない場合、検出された"
+"サービスと確認されたサービスの間に不一致が生じる危険性があります。"
 
 #, python-format
 msgid "<br><br><b>Note</b>: this key was created by user <b>%s</b>"
@@ -1750,15 +1749,15 @@ msgid ""
 "matching rule, then <b>all</b> matching rules will be used for defining "
 "pattern - not just the  first one.</p>"
 msgstr ""
-"<p>ここでは、エージェントが送信するファイル名パターンのリストを  "
-"<tt>fileinfo(ファイル情報)</tt>セクションで指定します。ここではグロビングパ"
-"ターンを含むUNCパスが使用されます。e.g. <tt>\\\\hostname\\share "
-"name\\*\\foo\\*.log</tt> ホスト名や共有名にはワイルドカードを使用できません。"
-"デフォルトでは、見つかった各ファイルは、サイズと経過年数を監視します。グルー"
-"プを作成することで、ファイルのコレクションを実体として監視し、カウント、合計"
-"サイズ、最大、最小、最古、または最新のファイルを監視することもできます。注"
-"意: 複数のマッチングルールを指定した場合、最初のものだけでなく、<b>すべての</"
-"b>マッチングルールがパターン定義に使用されます。</p>"
+"<p>ここでは、セクション <tt>fileinfo</tt> 内で、エージェントが送信する"
+"ファイル名のパターン一覧を指定できます。ここではグロブパターンを含むUNCパスが"
+"使用されます。例：<tt>\\\\hostname\\share name\\*\\foo\\*.log</tt> 。ホスト名"
+"や共有名にはワイルドカードを使用できません。デフォルトでは、検出された各"
+"ファイルのサイズと経過時間が監視されます。グループを作成することで、ファイル"
+"の集合を1つの単位として監視し、ファイル数、合計サイズ、最大サイズ、最小サイズ"
+"、最も古いファイル、または最も新しいファイルを監視することも可能です。注：一"
+"致するルールを複数指定した場合、<b>all</b> すべての一致ルールがパターンの定義"
+"に使用されます。最初のルールだけではありません。</p>"
 
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
@@ -6382,9 +6381,11 @@ msgstr "IPアドレスを介した許可されたエージェントアクセス"
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "IPアドレスを介した許可されたエージェントアクセス(Linux、Windows)"
 
-#, fuzzy
-msgid "Allowed characters are letters, digits, underscores, and hyphens."
-msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
+msgid ""
+"Allowed characters are word characters (letters, digits, underscores), "
+"dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
+"and end with a word character or dollar sign."
+msgstr ""
 
 msgid "Allowed duration since last NTPMessage"
 msgstr "最後のNTPメッセージからの許容期間"
@@ -9662,6 +9663,10 @@ msgstr "ベースURL(OMDサイト)"
 
 msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
+
+msgid ""
+"Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
+msgstr ""
 
 #, fuzzy
 msgid "Base directory"
@@ -13432,7 +13437,7 @@ msgid "Checkmk: Search: Secs"
 msgstr "Checkmk: Setup: Secs"
 
 msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
-msgstr ""
+msgstr "Checkmk: サービスリスクアドバイザリ - エージェント署名キーの有効期限切れ"
 
 msgid "Checkmk: Setup: Bytes"
 msgstr "Checkmk: Setup: Bytes"
@@ -21813,9 +21818,8 @@ msgstr "可用性レベルの凡例を表示しない"
 msgid "Do not display plug-in output in timeline"
 msgstr "プラグインの出力をタイムラインに表示しない"
 
-#, fuzzy
 msgid "Do not display reboot required state"
-msgstr "日付を表示しない"
+msgstr "再起動が必要な状態を表示しない"
 
 msgid "Do not display the host name"
 msgstr "ホスト名を表示しない"
@@ -25530,6 +25534,17 @@ msgid ""
 msgstr ""
 "SGAパフォーマンスデータを別のサービスに抽出し、さらにPGAパフォーマンスデータ"
 "を表示します"
+
+msgid "Extreme Networks ExtremeCloud IQ"
+msgstr ""
+
+#, fuzzy
+msgid "ExtremeCloud IQ password"
+msgstr "ユーザーパスワードを入力"
+
+#, fuzzy
+msgid "ExtremeCloud IQ username"
+msgstr "ユーザーネームを入力してください"
 
 msgid "Extremes only"
 msgstr "極端な場合のみ"
@@ -31549,7 +31564,7 @@ msgid "Hostalias"
 msgstr "ホストエイリアス"
 
 msgid "Hostalias (regex)"
-msgstr "ホストのエイリアス(正規表現)"
+msgstr "ホストエイリアス(正規表現)"
 
 msgid "Hostbustadapters"
 msgstr "Hostbustadapters"
@@ -32588,6 +32603,8 @@ msgid ""
 "If a reboot is required, the selected status will be displayed. Default is "
 "warning."
 msgstr ""
+"再起動が必要な場合は、選択されたステータスが表示されます。デフォルトは警告で"
+"す。"
 
 #, fuzzy
 msgid ""
@@ -34328,7 +34345,7 @@ msgid "Ignore wait types"
 msgstr "待機タイプを無視する"
 
 msgid "Ignored autostart services"
-msgstr "無視された自動開始サービス"
+msgstr "無視された自動起動サービス"
 
 msgid "Image"
 msgstr "画像"
@@ -35794,7 +35811,7 @@ msgid "Internal user"
 msgstr "内部ユーザー"
 
 msgid "Interpretation of Config Sync Status"
-msgstr "構成同期ステータスの解釈"
+msgstr "コンフィグ同期ステータスの解釈"
 
 msgid "Interpretation of Registration States"
 msgstr "登録状態の解釈"
@@ -41695,17 +41712,17 @@ msgstr ""
 "制限を60%、スパイク制限を25%に設定した場合、ハード制限は600MiB、ソフト制限は"
 "350MiB（スパイク制限は250MiBに相当）となります"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
 "maximum spike value. The soft limit value will be equal to (limit - spike "
 "limit). The recommended value for spike limit is about 20% limit."
 msgstr ""
-"メモリ使用量の測定値間で許容される最大メモリスパイク値。この値は制限値未満で"
-"なければなりません。このオプションは、最大スパイク値を算出するために使用され"
-"ます。ソフト（制限値）は、制限値 － スパイク制限値）と等しくなります。スパイ"
-"ク制限値の推奨値は、制限値の約20%です。"
+"メモリ使用量の測定値間で許容される最大メモリ使用量のスパイク値。この値は制限"
+"値未満でなければなりません。このオプションは、最大スパイク値の最大値を算出す"
+"るために使用されます。ソフトリミット値は、（制限値 － スパイク制限値）と等し"
+"くなります。スパイク制限値の推奨値は、制限値の約20%です。"
 
 msgid "Maximum messages per save interval"
 msgstr "保存間隔あたりの最大メッセージ数"
@@ -51699,7 +51716,6 @@ msgid "Please note that your site will be deleted when the trial period ends. "
 msgstr ""
 "トライアル期間が終了すると、ご登録のサイトは削除されますのでご注意ください。 "
 
-#, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
@@ -51710,9 +51726,9 @@ msgid ""
 msgstr ""
 "エージェントはサービス名のスペースをアンダースコアに置き換えることに注意して"
 "ください。名前の正しいスペルがわからない場合は、エージェントの出力(cmk -d "
-"HOSTNAME)を確認してください。サービス名は、セクション&lt;&lt;&lt; "
-"services&gt;&gt;&gt;の最初の列にあります。サービス名とサービスの表示名を混同"
-"しないでください。後者は詳細情報として表示されているだけです。"
+"HOSTNAME)をご確認ください。サービス名は、「services」セクションの最初の列にあ"
+"ります。サービス名とサービスの表示名を混同しないでください。後者はあくまで参"
+"考情報として表示されているものです。"
 
 #, fuzzy, python-format
 msgid ""
@@ -56318,7 +56334,7 @@ msgstr ""
 "由でリソースを監視する場合のみ、サブスクリプションIDは不要です。"
 
 #, fuzzy
-msgid "Return to standard view"
+msgid "Return to classic view"
 msgstr "標準偏差に関連して"
 
 msgid ""
@@ -63266,44 +63282,35 @@ msgstr "残りのスペースの正確な量が不明な場合、受容器の状
 msgid "State for specific bonding modes"
 msgstr "特定のボンディングモードの状態"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Bad</i>"
-msgstr "<i>JBOD</i>の状態"
+msgstr "storcli2 のステータス状態 <i> Bad </i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Failed</i>"
-msgstr "リンクの状態が変更された場合に通知する"
+msgstr "storcli2 のステータス状態 <i> Failed</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Good</i>"
-msgstr "<i>未構成の商品</i>の状態"
+msgstr "storcli2 のステータス状態 <i> Good</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Missing</i>"
-msgstr "<i>残りの一部</i>の状態"
+msgstr "storcli2 のステータス状態 <i> Missing</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Offline</i>"
-msgstr "<i>オフライン</i>の状態"
+msgstr "storcli2 のステータス状態 <i> Offline</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Online</i>"
-msgstr "<i>オンライン</i>の状態"
+msgstr "storcli2 のステータス状態 <i> Online</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Replace</i>"
-msgstr "<i>回復</i>状態"
+msgstr "storcli2 のステータス状態 <i> Replace</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Unknown</i>"
-msgstr "haローカル状態が不明な場合の状態"
+msgstr "storcli2 のステータス状態 <i> Unknown</i>"
 
-#, fuzzy
 msgid "State for storcli2 status <i>Unusable</i>"
-msgstr "haローカル状態が無効な場合の状態"
+msgstr "storcli2 のステータス状態 <i> Unusable</i>"
 
 msgid "State for storcli2 status <i>Various</i>"
-msgstr ""
+msgstr "storcli2 のステータス状態 <i> Various</i>"
 
 msgid "State for unexpected number of interfaces"
 msgstr "予期しないインターフェイス数に関する状態"
@@ -91611,6 +91618,9 @@ msgid ""
 "answer. High means all key fields are present; Medium that some data might "
 "be missing; Low that the data is insufficient or unavailable."
 msgstr ""
+"この回答の生成に使用されたデータの完全性と信頼性を示します。「高」はすべての"
+"主要フィールドが存在することを意味し、「中」は一部のデータが欠落している可能"
+"性があることを、「低」はデータが不十分または利用できないことを示します。"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -91687,6 +91697,13 @@ msgid "Could not load this content."
 msgstr "この接続を削除することはできません。"
 
 #, fuzzy
+msgid "No services"
+msgstr "サービス"
+
+msgid "%{count} %{label}"
+msgstr ""
+
+#, fuzzy
 msgid "filter"
 msgstr "フィルタ"
 
@@ -91733,9 +91750,8 @@ msgstr ""
 msgid "Save range"
 msgstr "ステータス変更"
 
-#, fuzzy
 msgid "Enter a complete start and end"
-msgstr "完全な状態を再分類します"
+msgstr "開始日と終了日を完全に入力してください"
 
 #, fuzzy
 msgid "Choose a date & time range"
@@ -94479,6 +94495,10 @@ msgid ""
 "authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
 "identity provider or single sign-on connection."
 msgstr ""
+"ここで設定される接続は、アクティブチェック「Checkm Eメール」、「Check E"
+"メールデリバリー」、「Check mailboxes」がMicrosoft 365ボックスに対してに認証"
+"する際に使用するOAuth2トークンを生成するたけです。これは、汎用的なID"
+"プロバイダーやシングルサインオン接続ではありません。"
 
 #, fuzzy
 msgid "Tenant ID is required."
@@ -95168,6 +95188,10 @@ msgid "A relay alias is required"
 msgstr "正規表現が必要"
 
 #, fuzzy
+msgid "Allowed characters are letters, digits, underscores, and hyphens."
+msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
+
+#, fuzzy
 msgid "This relay alias is already in use"
 msgstr "このルールIDはすでに使用されています。"
 
@@ -95241,32 +95265,20 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Modes"
-msgstr "モデム"
-
-#, fuzzy
 msgid "Number of services in OK state"
 msgstr "OK状態のサービスの数"
 
-#, fuzzy
 msgid "Number of services in warning state"
-msgstr "OK状態のサービスの数"
+msgstr "警告状態にあるサービスの数"
 
-#, fuzzy
 msgid "Number of services in critical state"
-msgstr "OK状態のサービスの数"
+msgstr "クリティカル状態のサービス数"
 
-#, fuzzy
 msgid "Number of services in unknown state"
-msgstr "OK状態のサービスの数"
+msgstr "Unknown状態のサービス数"
 
-#, fuzzy
 msgid "Number of services in pending state"
-msgstr "OK状態のサービスの数"
-
-#, fuzzy
-msgid "Unhandled Problems"
-msgstr "未処理のホストの問題"
+msgstr "ペンディング状態のサービス数"
 
 msgid "Give feedback on the new view"
 msgstr ""
@@ -95280,31 +95292,52 @@ msgid "Reset all filters"
 msgstr "一般的なフィルター"
 
 #, fuzzy
+msgid "Back to host detail view"
+msgstr "Ntopホストの詳細"
+
+#, fuzzy
 msgid "Select host %{name}"
 msgstr "(ホスト選択)"
 
-msgid ""
-"An at-a-glance summary of %{host} will appear here, bringing the key host "
-"information together in one place."
-msgstr ""
-
-msgid "Host details (name, alias, primary IP address, site, folder)"
-msgstr ""
+#, fuzzy
+msgid "PENDING"
+msgstr "PEND"
 
 #, fuzzy
-msgid "Service summary with a state visualization"
-msgstr "BIビジュアライゼーションに表示されるサービスホバーメニュー"
+msgid "%{count} sec"
+msgstr "選択したホスト上"
 
 #, fuzzy
-msgid "Contact groups and tags"
-msgstr "連絡先グループ"
-
-msgid "Labels (discovered and explicit)"
-msgstr ""
+msgid "%{count} min"
+msgstr "カウント"
 
 #, fuzzy
-msgid "Relations placeholder"
-msgstr "レプリケーションラグ"
+msgid "%{count} h"
+msgstr "カウント"
+
+#, fuzzy
+msgid "%{count} d"
+msgstr "カウント"
+
+#, fuzzy
+msgid "Show full host status"
+msgstr "ホストステータスを表示する"
+
+#, fuzzy
+msgid "Last check"
+msgstr "最終ホストチェック"
+
+#, fuzzy
+msgid "Service summary"
+msgstr "サービス概要"
+
+#, fuzzy
+msgid "Acknowledge problem"
+msgstr "問題を承認する"
+
+#, fuzzy
+msgid "Schedule downtime"
+msgstr "ダウンタイムをスケジュールする"
 
 msgid "This action runs immediately and has no further options."
 msgstr ""
@@ -95449,6 +95482,18 @@ msgid "More actions"
 msgstr "その他のオプション"
 
 #, fuzzy
+msgid "Could not load actions."
+msgstr "この接続を削除することはできません。"
+
+#, fuzzy
+msgid "Could not load more actions."
+msgstr "この接続を削除することはできません。"
+
+#, fuzzy
+msgid "No actions available"
+msgstr "利用可能なオプションはありません"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "すべての状態"
 
@@ -95504,8 +95549,19 @@ msgstr "ルールが見つかりません。"
 msgid "Adjust or clear search and filters to start fresh."
 msgstr ""
 
-msgid "Check for typing errors or try a broader term."
+msgid "Check for typing errors, try using wildcards or a broader term."
 msgstr ""
+
+msgid "Remove one or more filters to widen the result."
+msgstr ""
+
+#, fuzzy
+msgid "Show:"
+msgstr "見せる"
+
+#, fuzzy
+msgid "Row limit"
+msgstr "下限"
 
 msgid "Rows matching your criteria: %{count} | Total rows: %{total}"
 msgstr ""
@@ -95517,6 +95573,31 @@ msgstr "総ホスト数: "
 #, fuzzy
 msgid "Select all rows"
 msgstr "すべてのチェックボックスを選択します"
+
+msgid ""
+"Showing %{limit} of %{matched} matching hosts. Narrow your search, or raise "
+"the row limit above."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} matching hosts. Narrow your search to see the "
+"rest."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} hosts. Narrow your search, or raise the row "
+"limit above."
+msgstr ""
+
+msgid ""
+"Showing %{limit} of %{matched} hosts. Narrow your search to see the rest."
+msgstr ""
+
+msgid ""
+"The row limit is applied before sorting, so the hidden rows aren't "
+"necessarily the lowest-ranked. Narrow your search for a complete, sorted "
+"list."
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -96428,6 +96509,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Modes"
+#~ msgstr "モデム"
+
+#, fuzzy
+#~ msgid "Unhandled Problems"
+#~ msgstr "未処理のホストの問題"
+
+#, fuzzy
+#~ msgid "Service summary with a state visualization"
+#~ msgstr "BIビジュアライゼーションに表示されるサービスホバーメニュー"
+
+#, fuzzy
+#~ msgid "Contact groups and tags"
+#~ msgstr "連絡先グループ"
+
+#, fuzzy
+#~ msgid "Relations placeholder"
+#~ msgstr "レプリケーションラグ"
+
+#, fuzzy
 #~ msgid ""
 #~ "The placeholder <tt></tt> will be replaced by the original text of this "
 #~ "field to match. Note that as an alternative, you may also use the rule "
@@ -96441,14 +96542,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Aerohive HiveManager NG / ExtremeCloud IQ"
 #~ msgstr "Aerohive HiveManager NG"
-
-#, fuzzy
-#~ msgid "ExtremeCloud IQ password"
-#~ msgstr "ユーザーパスワードを入力"
-
-#, fuzzy
-#~ msgid "ExtremeCloud IQ username"
-#~ msgstr "ユーザーネームを入力してください"
 
 #, fuzzy
 #~ msgid "Aggregation lookback"
@@ -98110,9 +98203,6 @@ msgstr ""
 
 #~ msgid "Show header with highlighted background"
 #~ msgstr "背景が強調表示されたヘッダーを表示する"
-
-#~ msgid "Show host status"
-#~ msgstr "ホストステータスを表示する"
 
 #~ msgid "Show notification bulks"
 #~ msgstr "一括通知ルールを表示"

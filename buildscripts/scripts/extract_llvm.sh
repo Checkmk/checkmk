@@ -1,7 +1,8 @@
 #!/bin/sh
 #
-# Download LLVM from upstream, upload clang-tidy, clang-format, and clang's
-# resource-dir headers to our S3 bucket.
+# Download LLVM from upstream, upload clang-tidy, clang-format, clang's
+# resource-dir headers, and the toolchain bundle consumed by the hermetic
+# cc toolchains to our S3 bucket.
 #
 #
 # Schema on S3
@@ -21,6 +22,7 @@
 # dl/llvm/clang-tidy/21.1.8/linux/amd64/static/bin
 # dl/llvm/clang-format/21.1.8/linux/amd64/static/bin
 # dl/llvm/clang-resource-headers/21.1.8/linux/amd64/static/clang-resource-headers.tar.gz
+# dl/llvm/llvm-toolchain/21.1.8/linux/amd64/static/llvm-toolchain.tar.gz
 
 set -eu
 
@@ -42,6 +44,31 @@ SHA256="4a5ec53951a584ed36f80240f6fbf8fdd46b4cf6c7ee87cc2d5018dc37caf679"
 CLANG_TIDY="${LLVM_ARCHIVE_BASE}/bin/$CLANG_TIDY_BIN"
 CLANG_FORMAT="${LLVM_ARCHIVE_BASE}/bin/$CLANG_FORMAT_BIN"
 CLANG_RESOURCE_HEADERS="${LLVM_ARCHIVE_BASE}/lib/clang/${CLANG_RESOURCE_VERSION}/include"
+
+TOOLCHAIN_NAME="llvm-toolchain"
+TOOLCHAIN_ARCHIVE="llvm-toolchain.tar.gz"
+TOOLCHAIN_PATHS="
+    bin/clang
+    bin/clang++
+    bin/clang-21
+    bin/clang-cl
+    bin/ld.lld
+    bin/ld64.lld
+    bin/lld
+    bin/lld-link
+    bin/llvm-ar
+    bin/llvm-lib
+    bin/llvm-objcopy
+    bin/llvm-objdump
+    bin/llvm-rc
+    bin/llvm-readobj
+    bin/llvm-strip
+    include/c++
+    include/x86_64-unknown-linux-gnu
+    lib/clang/$CLANG_RESOURCE_VERSION/include
+    lib/clang/$CLANG_RESOURCE_VERSION/lib/x86_64-unknown-linux-gnu
+    lib/x86_64-unknown-linux-gnu
+"
 
 if [ -n "${WORKDIR:-}" ]; then
     # For local debugging, won't clean-up after itself.
@@ -75,6 +102,26 @@ extract() {
     mkdir -p "$DESTDIR"
     strip_components=$(printf '%s\n' "$2" | tr -cd '/' | wc -c)
     tar -xf "$1" --strip-components="$strip_components" -C "$DESTDIR" "$2"
+}
+
+extract_toolchain() {
+    printf "Extract: %s toolchain paths -> $DESTDIR/toolchain\n" "$1"
+    mkdir -p "$DESTDIR/toolchain"
+    for path in $TOOLCHAIN_PATHS; do
+        printf '%s/%s\n' "$LLVM_ARCHIVE_BASE" "$path"
+    done | tar -xf "$1" -C "$DESTDIR/toolchain" --strip-components=1 --files-from=-
+}
+
+# Deterministic archive
+pack() {
+    out="$1"
+    dir="$2"
+    shift 2
+    printf "Pack: %s -> %s\n" "$dir" "$out"
+    tar -C "$dir" \
+        --sort=name --owner=0 --group=0 --numeric-owner --mtime=@0 \
+        -cf - "$@" | gzip -n >"$out"
+    sha256sum "$out"
 }
 
 _aws_path() {
@@ -112,6 +159,7 @@ all_uploaded() {
         _aws_exists "$(_aws_path "$name" bin)" || return 1
     done
     _aws_exists "$(_aws_path "$CLANG_RESOURCE_HEADERS_NAME" "$CLANG_RESOURCE_HEADERS_ARCHIVE")" || return 1
+    _aws_exists "$(_aws_path "$TOOLCHAIN_NAME" "$TOOLCHAIN_ARCHIVE")" || return 1
 }
 
 upload() {
@@ -147,8 +195,12 @@ main() {
     upload "$DESTDIR/$CLANG_FORMAT_BIN" "$CLANG_FORMAT_BIN" "bin"
 
     extract "$LLVM_ARCHIVE" "$CLANG_RESOURCE_HEADERS"
-    tar -C "$DESTDIR" -czf "$WORKDIR/$CLANG_RESOURCE_HEADERS_ARCHIVE" include
+    pack "$WORKDIR/$CLANG_RESOURCE_HEADERS_ARCHIVE" "$DESTDIR" include
     upload "$WORKDIR/$CLANG_RESOURCE_HEADERS_ARCHIVE" "$CLANG_RESOURCE_HEADERS_NAME" "$CLANG_RESOURCE_HEADERS_ARCHIVE"
+
+    extract_toolchain "$LLVM_ARCHIVE"
+    pack "$WORKDIR/$TOOLCHAIN_ARCHIVE" "$DESTDIR/toolchain" bin include lib
+    upload "$WORKDIR/$TOOLCHAIN_ARCHIVE" "$TOOLCHAIN_NAME" "$TOOLCHAIN_ARCHIVE"
 }
 
 main "$@"

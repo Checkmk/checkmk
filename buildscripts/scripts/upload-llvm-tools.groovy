@@ -2,9 +2,11 @@
 
 /// file: upload-llvm-tools.groovy
 
-/// Extract clang-tidy and clang-format from the upstream LLVM release and
-/// upload them, standalone, to the CI binary-artifacts S3 bucket. This lets
-/// the build fetch just the two binaries instead of the full LLVM archive.
+/// Extract clang-tidy, clang-format and the hermetic cc toolchains' bundle
+/// (clang, lld, the llvm bin-utils, headers and runtime libraries) from the
+/// upstream LLVM release and upload them, standalone, to the CI
+/// binary-artifacts S3 bucket. This lets the build fetch just what it uses
+/// instead of the full LLVM archive.
 ///
 /// The LLVM version and its checksum are pinned in
 /// buildscripts/scripts/extract_llvm.sh. Bump them there in a commit, then

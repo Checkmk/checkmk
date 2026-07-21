@@ -806,6 +806,26 @@ class InputConditions(Conditions):
                 "Please provide the field 'service_labels' OR 'service_label_groups', not both."
             )
 
+    @validates_schema
+    def _validate_no_empty_match_on(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Reject an empty match_on list, matching the GUI's own validation.
+
+        By this point `host_name`/`service_description` have already been converted to
+        their internal representation by `HostOrServiceConditionSchema.convert_to_checkmk`
+        - an empty one_of list becomes a bare `[]` (checked here), while an empty
+        none_of list becomes `{"$nor": []}`, which legitimately means "matches
+        everything" and must not be rejected. An empty `[]` must still be
+        representable on the response side (it is a valid, existing condition meaning
+        "matches no host/service"), so this is enforced here on input, not as a field
+        constraint on the shared schema itself.
+        """
+        if data.get("host_name") == []:
+            raise ValidationError("Please add at least one host.", field_name="host_name")
+        if data.get("service_description") == []:
+            raise ValidationError(
+                "Please add at least one service pattern.", field_name="service_description"
+            )
+
 
 class RuleExtensions(base.BaseSchema):
     """Serializes the 'extensions' part of the Rule Domain Object.

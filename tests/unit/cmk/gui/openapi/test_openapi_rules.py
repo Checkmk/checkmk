@@ -450,6 +450,48 @@ def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
     resp.assert_status_code(400)
 
 
+def test_create_rule_empty_match_on_list_host_name(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {
+        "host_name": {
+            "operator": "one_of",
+            "match_on": [],
+        }
+    }
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["conditions"]["host_name"] == ["Please add at least one host."]
+
+
+def test_create_rule_empty_match_on_list_service_description(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {
+        "service_description": {
+            "operator": "one_of",
+            "match_on": [],
+        }
+    }
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["conditions"]["service_description"] == [
+        "Please add at least one service pattern."
+    ]
+
+
 def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
         ruleset="active_checks:http",

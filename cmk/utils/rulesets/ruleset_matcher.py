@@ -857,8 +857,13 @@ def matches_host_tags(
 
 
 def matches_host_name(host_entries: HostOrServiceConditions | None, hostname: HostName) -> bool:
-    if not host_entries:
+    if host_entries is None:
         return True
+    if len(host_entries) == 0:
+        # An empty one_of list is a deliberate, meaningful condition ("matches no
+        # host") - distinct from no condition at all. Don't conflate the two: a bare
+        # `not host_entries` check would also be True here since `[]` is falsy.
+        return False
 
     negate, host_entries = parse_negated_condition_list(host_entries)
     if hostname == "":  # -> generic agent host

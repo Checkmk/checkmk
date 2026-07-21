@@ -22,7 +22,8 @@ def register_plugin(rulespec_registry: RulespecRegistry, loaded_rule_spec: Loade
         )
         if legacy_rulespec.name in rulespec_registry:
             logger.debug(
-                "Duplicate rule_spec '%s', overriding legacy rulespec", legacy_rulespec.name
+                "Duplicate rule_spec '%(rulespec_name)s', overriding legacy rulespec",
+                {"rulespec_name": legacy_rulespec.name},
             )
 
         rulespec_registry.register(legacy_rulespec)
@@ -30,7 +31,8 @@ def register_plugin(rulespec_registry: RulespecRegistry, loaded_rule_spec: Loade
         if debug_enabled():
             raise e
         logger.error(
-            "Error converting to legacy rulespec '%s' : %s", loaded_rule_spec.rule_spec.name, e
+            "Error converting to legacy rulespec '%(rulespec_name)s' : %(error)s",
+            {"rulespec_name": loaded_rule_spec.rule_spec.name, "error": e},
         )
         add_failed_plugin(
             Path(traceback.extract_tb(e.__traceback__)[-1].filename),

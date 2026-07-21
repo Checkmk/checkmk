@@ -51,7 +51,7 @@ def transmit_data(
 def _transmit_single_file(
     file_path: Path, proxy_config: HTTPProxyConfig, logger: logging.Logger
 ) -> bool:
-    logger.info("Tansmitting %s", file_path)
+    logger.info("Tansmitting %(file_path)s", {"file_path": file_path})
 
     with file_path.open("r", encoding="utf-8") as f:
         json_data = json.load(f)
@@ -64,7 +64,10 @@ def _transmit_single_file(
     )
 
     if not response.ok:
-        logger.error("Error during transmission: status %s %s", response.status_code, response.text)
+        logger.error(
+            "Error during transmission: status %(status_code)s %(response_text)s",
+            {"status_code": response.status_code, "response_text": response.text},
+        )
 
     return response.ok
 

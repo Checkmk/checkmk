@@ -40,7 +40,9 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
     Also add a changes for the connected sites, so that the definitions file is
     created with the new names.
     """
-    logger.debug("Deleting broker certificates of site %s", old_site_id)
+    logger.debug(
+        "Deleting broker certificates of site %(old_site_id)s", {"old_site_id": old_site_id}
+    )
     messaging.site_cert_file(paths.omd_root).unlink(missing_ok=True)
     logger.debug("Deleting broker certificates of replicated sites")
     clean_remote_sites_certs(kept_sites=[])

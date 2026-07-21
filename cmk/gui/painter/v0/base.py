@@ -546,7 +546,10 @@ class Cell:
             tdclass, content = self.render_content(row, user=user)
             assert isinstance(content, str | HTML)
         except Exception:
-            logger.exception("Failed to render painter '%s' (Row: %r)", self._painter_name, row)
+            logger.exception(
+                "Failed to render painter '%(painter_name)s' (Row: %(row)r)",
+                {"painter_name": self._painter_name, "row": row},
+            )
             raise
 
         if tdclass is None:

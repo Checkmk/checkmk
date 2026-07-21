@@ -72,13 +72,14 @@ _INCLUDED_PATHS = (
     "cmk/update_config",
     "cmk/base",
     "cmk/utils",
-    "cmk/gui/nonfree",
-    "cmk/gui/watolib",
-    "cmk/gui/background_job",
-    "cmk/gui/userdb",
     "cmk/special_agents",
-    "cmk/gui/ldap_integration",
-    "cmk/gui/wato",
+    "cmk/automations",
+    "cmk/bi",
+    "cmk/config_anonymizer",
+    "cmk/gui",
+    "cmk/inventory",
+    "cmk/post_rename_site",
+    "cmk/product_usage",
 )
 
 

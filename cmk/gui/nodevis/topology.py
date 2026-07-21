@@ -1204,7 +1204,7 @@ class Topology:
             if layer:
                 computed_layers[layer_id] = layer
             else:
-                logger.warning("Found no layer class for %s", layer_id)
+                logger.warning("Found no layer class for %(layer_id)s", {"layer_id": layer_id})
         return computed_layers
 
     def _combine_results(

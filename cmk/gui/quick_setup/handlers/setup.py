@@ -393,7 +393,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 )
             except Exception as e:
                 job_interface.get_logger().debug(
-                    "Exception raised while the Quick setup stage action: %s", e
+                    "Exception raised while the Quick setup stage action: %(error)s", {"error": e}
                 )
                 exception_message = str(e)
                 job_interface.send_exception(exception_message)

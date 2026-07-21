@@ -126,10 +126,8 @@ def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
             return live().query_value(query)
         except Exception as e:
             logger.warning(
-                "Could not determine alias of host %s on site %s: %s",
-                host_name,
-                site_id,
-                e,
+                "Could not determine alias of host %(host_name)s on site %(site_id)s: %(error)s",
+                {"host_name": host_name, "site_id": site_id, "error": e},
             )
             if active_config.debug:
                 raise
@@ -174,9 +172,8 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
         )
 
     logger.debug(
-        "Initializing livestatus connections as user %s (forced auth user: %s)",
-        user.id,
-        force_authuser,
+        "Initializing livestatus connections as user %(user_id)s (forced auth user: %(force_authuser)s)",
+        {"user_id": user.id, "force_authuser": force_authuser},
     )
 
     g.site_status = {}
@@ -184,8 +181,8 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
     _set_livestatus_auth(user, force_authuser)
 
     logger.debug(
-        "Site states: %r",
-        _redacted_site_states_for_logging(),
+        "Site states: %(site_states)r",
+        {"site_states": _redacted_site_states_for_logging()},
     )
 
 

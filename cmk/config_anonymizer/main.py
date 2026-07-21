@@ -113,11 +113,13 @@ def _warn_about_modifications(
         after = mtimes_after[root]
 
         added_removed = set(after).symmetric_difference(before)
-        logger.warning("Files were added or removed: %s", added_removed)
+        logger.warning(
+            "Files were added or removed: %(added_removed)s", {"added_removed": added_removed}
+        )
 
         modified = sorted(path for path, mtime in after.items() if before.get(path) != mtime)
         for path in modified:
-            logger.warning("File modified outside target directory: %s", path)
+            logger.warning("File modified outside target directory: %(path)s", {"path": path})
 
 
 def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeStep]:
@@ -130,20 +132,25 @@ def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeSt
             for key, value in vars(module).items():
                 if key.startswith("anonymize_step") and isinstance(value, AnonymizeStep):
                     plugins[key] = value
-    logger.debug("Loaded step plugins: %s", plugins.keys())
+    logger.debug("Loaded step plugins: %(plugin_names)s", {"plugin_names": plugins.keys()})
     return list(plugins.values())
 
 
 def main(argv: Sequence[str]) -> None:
     args = parse_arguments(argv)
     init_logging()
-    logger.info("Anonymizing configuration to %s...", args.target_dirname)
+    logger.info(
+        "Anonymizing configuration to %(target_dir)s...", {"target_dir": args.target_dirname}
+    )
 
     try:
         main_modules.register(edition(paths.omd_root))
 
         if errors := main_modules.get_failed_plugins():
-            logger.error("The following errors occurred during plug-in loading: %r", errors)
+            logger.error(
+                "The following errors occurred during plug-in loading: %(errors)r",
+                {"errors": errors},
+            )
             return
 
         with disable_redis(), gui_context(), SuperUserContext():

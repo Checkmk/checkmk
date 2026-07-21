@@ -56,7 +56,9 @@ def _run_scheduler(
                 run_scheduled_jobs(list(cron_job_registry.values()), state, crash_report_callback)
             except Exception as exc:
                 crash_msg = crash_report_callback(exc)
-                logger.exception("Exception in scheduler (Crash ID: %s)", crash_msg)
+                logger.exception(
+                    "Exception in scheduler (Crash ID: %(crash_id)s)", {"crash_id": crash_msg}
+                )
 
             if (sleep_time := 5 - (time.time() - cycle_start)) > 0:
                 state.next_cycle_start = int(time.time() + sleep_time)
@@ -123,7 +125,9 @@ def _run_scheduled_jobs(
     for job in _jobs_to_run(jobs, job_runs):
         try:
             if job.name in state.running_jobs:
-                logger.debug("Skipping [%s] as it is already running", job.name)
+                logger.debug(
+                    "Skipping [%(job_name)s] as it is already running", {"job_name": job.name}
+                )
                 continue
 
             with tracer.span(
@@ -136,7 +140,7 @@ def _run_scheduled_jobs(
             ) as span:
                 state.job_executions[job.name] += 1
                 if job.run_in_thread:
-                    logger.debug("Starting [%s] in thread", job.name)
+                    logger.debug("Starting [%(job_name)s] in thread", {"job_name": job.name})
                     state.running_jobs[job.name] = ScheduledJob(
                         started_at=int(time.time()),
                         thread=(
@@ -152,18 +156,17 @@ def _run_scheduled_jobs(
                         ),
                     )
                     thread.start()
-                    logger.debug("Started [%s]", job.name)
+                    logger.debug("Started [%(job_name)s]", {"job_name": job.name})
                 else:
-                    logger.debug("Starting [%s] unthreaded", job.name)
+                    logger.debug("Starting [%(job_name)s] unthreaded", {"job_name": job.name})
                     with gui_context(), SuperUserContext():
                         job.callable(active_config)
-                    logger.debug("Finished [%s]", job.name)
+                    logger.debug("Finished [%(job_name)s]", {"job_name": job.name})
         except Exception as exc:
             crash_msg = crash_report_callback(exc)
             logger.exception(
-                "Exception in cron job (Job: %s Crash ID: %s)",
-                job.name,
-                crash_msg,
+                "Exception in cron job (Job: %(job_name)s Crash ID: %(crash_id)s)",
+                {"job_name": job.name, "crash_id": crash_msg},
             )
         job_runs[job.name] = datetime.datetime.now()
 
@@ -201,9 +204,8 @@ def job_thread_main(
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
         logger.exception(
-            "Exception in cron job thread (Job: %s Crash ID: %s)",
-            job.name,
-            crash_msg,
+            "Exception in cron job thread (Job: %(job_name)s Crash ID: %(crash_id)s)",
+            {"job_name": job.name, "crash_id": crash_msg},
         )
     finally:
         # The UI code does not clean up locks properly in all cases, so we need to do it here
@@ -222,7 +224,7 @@ def _wait_for_job_threads(running_jobs: dict[str, ScheduledJob]) -> None:
 def _collect_finished_threads(running_jobs: dict[str, ScheduledJob]) -> None:
     for job_name, job in list(running_jobs.items()):
         if not job.thread.is_alive():
-            logger.debug("Removing finished thread [%s]", job_name)
+            logger.debug("Removing finished thread [%(job_name)s]", {"job_name": job_name})
             del running_jobs[job_name]
 
 

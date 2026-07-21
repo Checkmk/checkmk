@@ -753,7 +753,7 @@ class SidebarRenderer:
                     f'cmk.ajax.get_url("{refresh_url}", cmk.utils.update_contents, "snapin_{name}")'
                 )
         except Exception as e:
-            logger.exception("error rendering snapin %s", name)
+            logger.exception("error rendering snapin %(snapin_name)s", {"snapin_name": name})
             write_snapin_exception(e)
         html.close_div()
         if may_configure:
@@ -859,10 +859,12 @@ def ajax_snapin(ctx: PageContext) -> None:
                     "type_name": snapin_instance.type_name()
                 }
                 logger.error(
-                    "%s %s: %s",
-                    request.requested_url,
-                    e_message,
-                    traceback.format_exc(),
+                    "%(url)s %(message)s: %(traceback)s",
+                    {
+                        "url": request.requested_url,
+                        "message": e_message,
+                        "traceback": traceback.format_exc(),
+                    },
                 )
             finally:
                 snapin_code.append(output_funnel.drain())
@@ -1054,10 +1056,12 @@ class AjaxGetAvialableSnapins(AjaxPage):
                         "name": name
                     }
                     logger.error(
-                        "%s %s: %s",
-                        request.requested_url,
-                        e_message,
-                        traceback.format_exc(),
+                        "%(url)s %(message)s: %(traceback)s",
+                        {
+                            "url": request.requested_url,
+                            "message": e_message,
+                            "traceback": traceback.format_exc(),
+                        },
                     )
                 return output_funnel.drain()
 

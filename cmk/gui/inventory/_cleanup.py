@@ -516,28 +516,30 @@ def _compute_classified_history_files(
 def _cleanup_bundle(bundle: _File | _ArchiveBundle) -> None:
     match bundle:
         case _File():
-            logger.warning("Remove single delta cache file %r", bundle.path)
+            logger.warning("Remove single delta cache file %(path)r", {"path": bundle.path})
             bundle.path.unlink(missing_ok=True)
         case _ArchiveBundle():
-            logger.warning("Remove archive file %r", bundle.previous)
+            logger.warning("Remove archive file %(path)r", {"path": bundle.previous})
             # We never remove the current path because it may belong to the previous bundle
             bundle.previous.unlink(missing_ok=True)
             if bundle.delta_cache is not None:
-                logger.warning("Remove delta cache file of bundle %r", bundle.delta_cache.path)
+                logger.warning(
+                    "Remove delta cache file of bundle %(path)r", {"path": bundle.delta_cache.path}
+                )
                 bundle.delta_cache.path.unlink(missing_ok=True)
 
 
 def _cleanup_abandoned_files_of_host(abandoned_files_of_host: _AbandonedFilesOfHost) -> None:
     for folder, files in abandoned_files_of_host.folders_and_files.items():
         for file in files:
-            logger.warning("Remove abandoned host file %r", file.path)
+            logger.warning("Remove abandoned host file %(path)r", {"path": file.path})
             file.path.unlink(missing_ok=True)
         with contextlib.suppress(OSError):
             # Folder not empty
             folder.rmdir()
 
     for file in abandoned_files_of_host.files:
-        logger.warning("Remove abandoned host file %r", file.path)
+        logger.warning("Remove abandoned host file %(path)r", {"path": file.path})
         file.path.unlink(missing_ok=True)
 
 
@@ -571,7 +573,9 @@ class InventoryCleanup:
 
             for archive_file in classified_history_files.single_archive_files:
                 if params.file_is_too_old(now, archive_file.timestamp):
-                    logger.warning("Remove too old archive file %r", archive_file.path)
+                    logger.warning(
+                        "Remove too old archive file %(path)r", {"path": archive_file.path}
+                    )
                     archive_file.path.unlink(missing_ok=True)
 
         for abandoned_files_of_host in classified_file_paths.abandoned_host_files:
@@ -582,7 +586,7 @@ class InventoryCleanup:
 
         for file in classified_file_paths.abandoned_files:
             if abandoned_params.file_is_too_old(now, file.timestamp):
-                logger.warning("Remove abandoned file %r", file.path)
+                logger.warning("Remove abandoned file %(path)r", {"path": file.path})
                 file.path.unlink(missing_ok=True)
 
     def __call__(self, config: Config) -> None:

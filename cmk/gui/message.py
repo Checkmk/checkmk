@@ -673,10 +673,13 @@ def _execute_user_messages_spool_job(config: Config) -> None:
     ):
         try:
             message = to_message(_SPOOLED_MESSAGE_ADAPTER.validate_json(path.read_text()))
-            logger.debug("unspooled user message from %s: %s", path, message)
+            logger.debug(
+                "unspooled user message from %(path)s: %(message)s",
+                {"path": path, "message": message},
+            )
             send_message(message, config.multisite_users.keys())
         except Exception as exc:
             logger.warning(f"ignoring spooled user message at {path}: {exc}")
         finally:
-            logger.debug("removing spooled user message at %s", path)
+            logger.debug("removing spooled user message at %(path)s", {"path": path})
             path.unlink()

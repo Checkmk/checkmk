@@ -412,7 +412,10 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
 def _check_multi_tenancy_login(user_id: UserId) -> None:
     """In multi-tenancy sites, check that the customer is allowed to log in to this site"""
     if not userdb.is_customer_user_allowed_to_login(user_id, load_user(user_id)):
-        auth_logger.debug("User '%s' is not allowed to authenticate: Invalid customer", user_id)
+        auth_logger.debug(
+            "User '%(user_id)s' is not allowed to authenticate: Invalid customer",
+            {"user_id": user_id},
+        )
         raise MKAuthException("Unknown customer. Can't log in.")
 
 

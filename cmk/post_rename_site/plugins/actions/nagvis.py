@@ -45,13 +45,19 @@ def update_nagvis_maps(
         try:
             content = map_file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logger.warning("NagVis map %s: skipping, file is not valid UTF-8", map_file.name)
+            logger.warning(
+                "NagVis map %(map_name)s: skipping, file is not valid UTF-8",
+                {"map_name": map_file.name},
+            )
             continue
         new_content, count = pattern.subn(
             lambda m: m.group(1) + str(new_site_id) + m.group(2), content
         )
         if count:
-            logger.debug("NagVis map %s: Updated %d backend reference(s)", map_file.name, count)
+            logger.debug(
+                "NagVis map %(map_name)s: Updated %(count)d backend reference(s)",
+                {"map_name": map_file.name, "count": count},
+            )
             store.save_text_to_file(map_file, new_content)
 
 

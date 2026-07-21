@@ -57,18 +57,26 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
     for folder in make_folder_tree(config).all_folders().values():
         # 1. Update explicitly set site in folders
         if folder.attributes.get("site") == old_site_id:
-            logger.debug("Folder %s: Update explicitly set site", folder.alias_path())
+            logger.debug(
+                "Folder %(folder_path)s: Update explicitly set site",
+                {"folder_path": folder.alias_path()},
+            )
             folder.attributes["site"] = new_site_id
 
         for host in folder.hosts().values():
             # 2. Update explicitly set site in hosts
             if host.attributes.get("site") == old_site_id:
-                logger.debug("Host %s: Update explicitly set site", host.name())
+                logger.debug(
+                    "Host %(host_name)s: Update explicitly set site", {"host_name": host.name()}
+                )
                 host.attributes["site"] = new_site_id
 
             # 3. Update the locked_by attribute in hosts
             if locked_by := _update_locked_by(old_site_id, new_site_id, host.locked_by()):
-                logger.debug("Host %s: Update dynamic site configuration", host.name())
+                logger.debug(
+                    "Host %(host_name)s: Update dynamic site configuration",
+                    {"host_name": host.name()},
+                )
                 host.update_attributes(
                     {"locked_by": locked_by},
                     pprint_value=config.wato_pprint_config,
@@ -79,7 +87,7 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no
         # site_id explicitly set. Just to be sure everything is fine we also rewrite the folder
         # config
-        logger.debug("Folder %s: Saving config", folder.alias_path())
+        logger.debug("Folder %(folder_path)s: Saving config", {"folder_path": folder.alias_path()})
         folder.save(pprint_value=config.wato_pprint_config, acting_user=acting_user)
 
 

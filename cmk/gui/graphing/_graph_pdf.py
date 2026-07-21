@@ -42,7 +42,7 @@ def render_graph_pdf(
     total_width: SizeMM | None = None,
     total_height: SizeMM | None = None,
 ) -> None:
-    logger.debug("  Render graph %r", title)
+    logger.debug("  Render graph %(title)r", {"title": title})
 
     if pos_left is None:  # floating element
         pdf_document.margin(2.5)

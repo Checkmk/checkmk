@@ -47,24 +47,34 @@ def show_autocomplete_v1(
     function = autocompleter_registry.get(internal_autocompleter)
 
     if function is None:
-        logger.error("Autocompleter %r not found", autocomplete_id)
+        logger.error(
+            "Autocompleter %(autocomplete_id)r not found", {"autocomplete_id": autocomplete_id}
+        )
         raise ProblemException(status=404, title=f"Autocompleter {autocomplete_id} not found.")
 
     try:
         choices = function(active_config, body.value, body.parameters)
     except AutocompleterBackendWarning as e:
         logger.warning(
-            "Autocompleter %r backend unavailable", internal_autocompleter, exc_info=True
+            "Autocompleter %(internal_autocompleter)r backend unavailable",
+            {"internal_autocompleter": internal_autocompleter},
+            exc_info=True,
         )
         return AutocompleteResponseModel(
             choices=[AutocompleteChoiceModel(id=k, value=v) for k, v in e.choices if k is not None],
             warning=str(e),
         )
     except ValueError as e:
-        logger.exception("Autocompleter %r received invalid input", internal_autocompleter)
+        logger.exception(
+            "Autocompleter %(internal_autocompleter)r received invalid input",
+            {"internal_autocompleter": internal_autocompleter},
+        )
         raise ProblemException(status=400, title="Invalid input", detail=str(e))
     except KeyError as e:
-        logger.exception("Autocompleter %r missing field", internal_autocompleter)
+        logger.exception(
+            "Autocompleter %(internal_autocompleter)r missing field",
+            {"internal_autocompleter": internal_autocompleter},
+        )
         raise ProblemException(status=400, title="Missing field", detail=f"Missing field: {e}")
 
     return AutocompleteResponseModel(

@@ -338,10 +338,12 @@ def _make_projection(
 
     if lower_x >= upper_x:
         logger.debug(
-            "Cannot compute the range from %s and %s of the perfometer %s",
-            lower_x,
-            upper_x,
-            perfometer_name,
+            "Cannot compute the range from %(lower_x)s and %(upper_x)s of the perfometer %(perfometer_name)s",
+            {
+                "lower_x": lower_x,
+                "upper_x": upper_x,
+                "perfometer_name": perfometer_name,
+            },
         )
         return _ProjectionFromMetricValueToPerfFillLevel(
             start_of_focus_range=float("nan"),

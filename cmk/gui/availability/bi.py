@@ -381,10 +381,14 @@ def compute_bi_timelines(
     bi_manager = BIManager()
 
     logger.debug(
-        "Computing timelines for range %r. %d phases and %d timeline containers",
-        tuple(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)) for x in time_range),
-        len(phases_list),
-        len(timeline_containers),
+        "Computing timelines for range %(time_range)r. %(phase_count)d phases and %(timeline_container_count)d timeline containers",
+        {
+            "time_range": tuple(
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)) for x in time_range
+            ),
+            "phase_count": len(phases_list),
+            "timeline_container_count": len(timeline_containers),
+        },
     )
     computed_aggregations = 0
     for from_time, phase_hst_svc in phases_list:
@@ -438,7 +442,10 @@ def compute_bi_timelines(
             )
         )
 
-    logger.debug("Timeline generation finished. Computed %d aggregations", computed_aggregations)
+    logger.debug(
+        "Timeline generation finished. Computed %(computed_aggregations)d aggregations",
+        {"computed_aggregations": computed_aggregations},
+    )
     return timeline_containers
 
 

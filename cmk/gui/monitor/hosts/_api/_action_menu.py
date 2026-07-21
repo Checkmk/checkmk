@@ -135,11 +135,15 @@ def get_host_action_menu(
         # raw-HTML icons cannot be represented as one and are dropped; log them so a missing
         # action that still shows in the legacy view is diagnosable.
         if not isinstance(entry, IconEntry):
-            logger.debug("action menu: dropping non-link icon entry for host %r", hostname)
+            logger.debug(
+                "action menu: dropping non-link icon entry for host %(hostname)r",
+                {"hostname": hostname},
+            )
             continue
         if (item := _serialize_entry(entry, row)) is None:
             logger.debug(
-                "action menu: dropping command/link-less icon %r for host %r", entry.title, hostname
+                "action menu: dropping command/link-less icon %(entry_title)r for host %(hostname)r",
+                {"entry_title": entry.title, "hostname": hostname},
             )
             continue
         items.append(item)

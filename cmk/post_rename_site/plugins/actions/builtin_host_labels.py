@@ -20,7 +20,9 @@ def update_builtin_host_labels_site(
     old_site_id: SiteId, new_site_id: SiteId, logger: Logger
 ) -> None:
     """Refresh the ``cmk/site`` builtin host label to the new site id"""
-    logger.debug("Updating cmk/site builtin host label to %r", new_site_id)
+    logger.debug(
+        "Updating cmk/site builtin host label to %(new_site_id)r", {"new_site_id": new_site_id}
+    )
     update_builtin_host_labels(
         cmk.utils.paths.builtin_host_labels_file, {BuiltinLabelsKey.SITE: str(new_site_id)}
     )

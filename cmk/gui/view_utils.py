@@ -97,7 +97,7 @@ def determine_must_escape(sites_config: SiteConfigurations, row: Row) -> bool:
         return True
 
     if (siteid := row["site"]) not in sites_config:
-        logger.warning("Unknown siteid in row: %r", siteid)
+        logger.warning("Unknown siteid in row: %(site_id)r", {"site_id": siteid})
         return True
 
     return not sites_config[row["site"]]["is_trusted"]

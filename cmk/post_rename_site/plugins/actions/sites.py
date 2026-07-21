@@ -64,7 +64,7 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger)
     for this_site_id, site_cfg in all_sites.items():
         status_host = site_cfg.get("status_host")
         if status_host and status_host[0] == old_site_id:
-            logger.debug("Update status host of site %s", this_site_id)
+            logger.debug("Update status host of site %(site_id)s", {"site_id": this_site_id})
             changed = True
             site_cfg["status_host"] = (new_site_id, status_host[1])
 

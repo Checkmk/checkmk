@@ -156,7 +156,7 @@ class SitesSteps(AnonymizeStep):
         sites_config = sites_config_file.load_for_reading()
         anon_sites_config: SiteConfigurations = SiteConfigurations({})
         for site_id, site_config in sites_config.items():
-            logger.info("Anonymizing site %s", site_id)
+            logger.info("Anonymizing site %(site_id)s", {"site_id": site_id})
 
             anon_site_config = SiteConfiguration(
                 alias=anon_interface.get_site_alias(site_config["alias"]),

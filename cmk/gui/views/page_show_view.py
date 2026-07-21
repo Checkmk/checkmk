@@ -132,26 +132,40 @@ def _may_create_slow_view_log_entry(
     logger = log.logger.getChild("slow-views")
     logger.debug(
         (
-            "View name: %s, User: %s, Row limit: %s, Limit type: %s, URL variables: %s"
-            ", View context: %s, Unfiltered rows: %s, Filtered rows: %s, Rows after limit: %s"
-            ", Duration fetching rows: %s, Duration filtering rows: %s, Duration rendering view: %s"
-            ", Rendering page exceeds %ss: %s"
+            "View name: %(view_name)s, User: %(user_id)s, Row limit: %(row_limit)s"
+            ", Limit type: %(limit_type)s, URL variables: %(url_variables)s"
+            ", View context: %(view_context)s, Unfiltered rows: %(unfiltered_rows)s"
+            ", Filtered rows: %(filtered_rows)s, Rows after limit: %(rows_after_limit)s"
+            ", Duration fetching rows: %(duration_fetch_rows)s"
+            ", Duration filtering rows: %(duration_filter_rows)s"
+            ", Duration rendering view: %(duration_view_render)s"
+            ", Rendering page exceeds %(duration_threshold)ss: %(page_duration)s"
         ),
-        view.name,
-        user.id,
-        view.row_limit,
-        # as in get_limit()
-        request.var("limit", "soft"),
-        [f"{k}={v}" for k, v in request.itervars() if k != "selection" and v != ""],
-        view.context,
-        view.process_tracking.amount_unfiltered_rows,
-        view.process_tracking.amount_filtered_rows,
-        view.process_tracking.amount_rows_after_limit,
-        _format_snapshot_duration(view.process_tracking.duration_fetch_rows),
-        _format_snapshot_duration(view.process_tracking.duration_filter_rows),
-        _format_snapshot_duration(view.process_tracking.duration_view_render),
-        duration_threshold,
-        _format_snapshot_duration(page_view_tracker.duration),
+        {
+            "view_name": view.name,
+            "user_id": user.id,
+            "row_limit": view.row_limit,
+            # as in get_limit()
+            "limit_type": request.var("limit", "soft"),
+            "url_variables": [
+                f"{k}={v}" for k, v in request.itervars() if k != "selection" and v != ""
+            ],
+            "view_context": view.context,
+            "unfiltered_rows": view.process_tracking.amount_unfiltered_rows,
+            "filtered_rows": view.process_tracking.amount_filtered_rows,
+            "rows_after_limit": view.process_tracking.amount_rows_after_limit,
+            "duration_fetch_rows": _format_snapshot_duration(
+                view.process_tracking.duration_fetch_rows
+            ),
+            "duration_filter_rows": _format_snapshot_duration(
+                view.process_tracking.duration_filter_rows
+            ),
+            "duration_view_render": _format_snapshot_duration(
+                view.process_tracking.duration_view_render
+            ),
+            "duration_threshold": duration_threshold,
+            "page_duration": _format_snapshot_duration(page_view_tracker.duration),
+        },
     )
 
 

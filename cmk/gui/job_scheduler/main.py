@@ -81,7 +81,10 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
         _setup_file_logging(log_path / "ui-job-scheduler.log")
         logger = logging.getLogger("cmk.web.ui-job-scheduler")
-        logger.info("--- Starting ui-job-scheduler (Checkmk %s) ---", cmk_version.__version__)
+        logger.info(
+            "--- Starting ui-job-scheduler (Checkmk %(version)s) ---",
+            {"version": cmk_version.__version__},
+        )
 
         with pid_file_lock(_pid_file(omd_root)):
             init_span_processor(
@@ -105,7 +108,10 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
             main_modules.register(edition(omd_root))
 
             if errors := main_modules.get_failed_plugins():
-                logger.error("The following errors occurred during plug-in loading: %r", errors)
+                logger.error(
+                    "The following errors occurred during plug-in loading: %(errors)r",
+                    {"errors": errors},
+                )
 
             scheduler_thread = run_scheduler_threaded(
                 crash_report_callback,
@@ -127,7 +133,9 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                     logger,
                 )
             except SystemExit as exc:
-                logger.info("Process terminated (Exit code: %d)", exc.code)
+                logger.info(
+                    "Process terminated (Exit code: %(exit_code)d)", {"exit_code": exc.code}
+                )
                 raise
             finally:
                 logger.info("Stopping application")
@@ -135,13 +143,13 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                 scheduler_thread.join()
     except MKGeneralException as exc:
         # Expected error, the traceback adds no value here.
-        logger.error("ERROR: %s", exc)  # noqa: TRY400
+        logger.error("ERROR: %(error)s", {"error": exc})  # noqa: TRY400
         return 1
     except SystemExit:
         raise
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
-        logger.exception("Unhandled exception (Crash ID: %s)", crash_msg)
+        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})
         return 1
     return 0
 

@@ -106,10 +106,17 @@ def render_form_spec[T](
     )
     if active_config.load_frontend_vue == "inject":
         logger.warning(
-            "Vue app config:\n%s", pprint.pformat(asdict(vue_app_config), width=220, indent=2)
+            "Vue app config:\n%(vue_app_config)s",
+            {"vue_app_config": pprint.pformat(asdict(vue_app_config), width=220, indent=2)},
         )
-        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
-        logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
+        logger.warning(
+            "Vue value:\n%(vue_value)s",
+            {"vue_value": pprint.pformat(vue_app_config.data, width=220)},
+        )
+        logger.warning(
+            "Vue validation:\n%(vue_validation)s",
+            {"vue_validation": pprint.pformat(vue_app_config.validation, width=220)},
+        )
     html.vue_component(component_name="cmk-form-spec", data=asdict(vue_app_config))
     html.form_vars.append(field_id)
 

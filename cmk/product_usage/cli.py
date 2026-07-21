@@ -77,8 +77,8 @@ def main(args: Sequence[str]) -> int:
             if not get_next_run_ts(next_run_fp):
                 next_scheduled_run_at = create_next_random_ts(now)
                 logger.info(
-                    "First scheduled execution, planning the next execution at %s",
-                    next_scheduled_run_at,
+                    "First scheduled execution, planning the next execution at %(next_run)s",
+                    {"next_run": next_scheduled_run_at},
                 )
                 store_next_run_ts(next_run_fp, next_scheduled_run_at)
                 return 0
@@ -107,7 +107,9 @@ def main(args: Sequence[str]) -> int:
 
         if request.schedule:
             next_scheduled_run_at = create_next_ts(now)
-            logger.info("Planning the next execution at %s", next_scheduled_run_at)
+            logger.info(
+                "Planning the next execution at %(next_run)s", {"next_run": next_scheduled_run_at}
+            )
             store_next_run_ts(next_run_fp, next_scheduled_run_at)
 
     except Exception as e:

@@ -385,11 +385,13 @@ class ResponseValidator:
         declared_permissions = permissions_required
 
         _logger.error(
-            "Permission mismatch: %r Params: %s Required: %s Declared: %s",
-            endpoint,
-            params,
-            required_permissions,
-            declared_permissions,
+            "Permission mismatch: %(endpoint)r Params: %(params)s Required: %(required_permissions)s Declared: %(declared_permissions)s",
+            {
+                "endpoint": endpoint,
+                "params": params,
+                "required_permissions": required_permissions,
+                "declared_permissions": declared_permissions,
+            },
         )
 
         if is_testing:
@@ -559,9 +561,8 @@ class PermissionValidator:
 
             if required_permissions is None or pname not in required_permissions:
                 _logger.error(
-                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
-                    endpoint_repr,
-                    pname,
+                    "Permission mismatch: Endpoint %(endpoint_repr)r Use of undeclared permission %(permission)s",
+                    {"endpoint_repr": endpoint_repr, "permission": pname},
                 )
 
                 if is_testing:

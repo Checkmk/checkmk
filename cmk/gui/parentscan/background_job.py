@@ -142,7 +142,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 ("Gateway hosts created", self._num_gateway_hosts_created),
                 ("Errors", self._num_errors),
             ]:
-                self._logger.info("  %s: %d", title, value)
+                self._logger.info("  %(title)s: %(value)d", {"title": title, "value": value})
 
             job_interface.send_result_message(_("Parent scan finished"))
 
@@ -288,7 +288,8 @@ class ParentScanBackgroundJob(BackgroundJob):
 
         if host.effective_attributes().get("parents") == parents:
             self._logger.info(
-                "Parents unchanged at %s", (",".join(parents) if parents else _("none"))
+                "Parents unchanged at %(parents)s",
+                {"parents": (",".join(parents) if parents else _("none"))},
             )
             return
 
@@ -312,7 +313,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             )
 
         if parents:
-            self._logger.info("Set parents to %s", ",".join(parents))
+            self._logger.info("Set parents to %(parents)s", {"parents": ",".join(parents)})
         else:
             self._logger.info("Removed parents")
 

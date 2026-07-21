@@ -152,7 +152,9 @@ def handle_exception_as_gui_crash_report(
     screenshotmode: bool,
 ) -> GUICrashReport:
     crash = create_gui_crash_report(details)
-    logger.exception("Unhandled exception (Crash ID: %s)", crash.ident_to_text())
+    logger.exception(
+        "Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash.ident_to_text()}
+    )
     _show_crash_dump_message(
         crash,
         plain_error,

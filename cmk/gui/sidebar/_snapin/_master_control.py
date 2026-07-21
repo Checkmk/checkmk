@@ -84,7 +84,9 @@ class MasterControlSnapin(SidebarSnapin):
                 try:
                     self._show_master_control_site(site_id, site_status_info, items)
                 except Exception as e:
-                    logger.exception("error rendering master control for site %s", site_id)
+                    logger.exception(
+                        "error rendering master control for site %(site_id)s", {"site_id": site_id}
+                    )
                     write_snapin_exception(e)
 
     @classmethod

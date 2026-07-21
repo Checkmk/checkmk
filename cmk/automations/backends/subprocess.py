@@ -33,10 +33,10 @@ class SubprocessExecutor(AutomationExecutor):
         cmd = _automation_command(command, args, timeout)
         cmd_descr = self.command_description(command, args, timeout)
 
-        logger.info("RUN: %s", cmd_descr)
+        logger.info("RUN: %(command)s", {"command": cmd_descr})
         span = trace.get_current_span()
         span.set_attribute("cmk.automation.command", cmd_descr)
-        logger.info("STDIN: %r", stdin)
+        logger.info("STDIN: %(stdin)r", {"stdin": stdin})
 
         completed_process = subprocess.run(
             cmd,
@@ -50,7 +50,10 @@ class SubprocessExecutor(AutomationExecutor):
         )
 
         if completed_process.stderr:
-            logger.warning("'%s' returned stderr: '%s'", cmd_descr, completed_process.stderr)
+            logger.warning(
+                "'%(command)s' returned stderr: '%(stderr)s'",
+                {"command": cmd_descr, "stderr": completed_process.stderr},
+            )
 
         return LocalAutomationResult(
             exit_code=completed_process.returncode,

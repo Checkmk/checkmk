@@ -111,10 +111,12 @@ def _answer_graph_image_request(
         rows = graph_specification.fetch_graph_rows(env)
     except livestatus.MKLivestatusNotFoundError:
         logger.debug(
-            "Cannot fetch graph data: site: %s, host %s, service %s",
-            site_id,
-            host_name,
-            service_description,
+            "Cannot fetch graph data: site: %(site_id)s, host %(host_name)s, service %(service_description)s",
+            {
+                "site_id": site_id,
+                "host_name": host_name,
+                "service_description": service_description,
+            },
         )
         if env.debug:
             raise

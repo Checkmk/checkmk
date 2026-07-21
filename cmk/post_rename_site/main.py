@@ -55,7 +55,7 @@ def main(args: Sequence[str]) -> int:
 
     if arguments.debug:
         cmk.ccc.debug.enable()
-    logger.debug("parsed arguments: %s", arguments)
+    logger.debug("parsed arguments: %(arguments)s", {"arguments": arguments})
 
     new_site_id = omd_site()
     if arguments.old_site_id == new_site_id:
@@ -93,7 +93,7 @@ def load_plugins() -> Iterable[RenameAction]:
         raise_errors=cmk.ccc.debug.enabled(),
     )
     for exc in discovered_actions.errors:
-        logger.error("Error in action plug-in: %s\n", exc)
+        logger.error("Error in action plug-in: %(exc)s\n", {"exc": exc})
     return discovered_actions.plugins.values()
 
 
@@ -105,12 +105,20 @@ def run(
     actions = sorted(plugins, key=lambda a: a.sort_index)
     total = len(actions)
     for count, rename_action in enumerate(actions, start=1):
-        logger.log(VERBOSE, " %i/%i %s...", count, total, rename_action.title.localize(localizer))
+        logger.log(
+            VERBOSE,
+            " %(count)i/%(total)i %(title)s...",
+            {
+                "count": count,
+                "total": total,
+                "title": rename_action.title.localize(localizer),
+            },
+        )
         try:
             rename_action.run(old_site_id, new_site_id, logger)
         except Exception:
             has_errors = True
-            logger.exception(' + "%s" failed', rename_action.title)
+            logger.exception(' + "%(title)s" failed', {"title": rename_action.title})
             if debug:
                 raise
 

@@ -394,9 +394,8 @@ class Endpoint:
         )
         if permission_not_declared:
             _logger.error(
-                "Permission mismatch: Endpoint %r Use of undeclared permission %s",
-                self,
-                pname,
+                "Permission mismatch: Endpoint %(endpoint)r Use of undeclared permission %(permission)s",
+                {"endpoint": self, "permission": pname},
             )
 
             if request.environ.get("paste.testing"):

@@ -939,7 +939,8 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
                 instance = cls.deserialize(raw_page_dict)
             except ValidationError:
                 logger.exception(
-                    "Skipping invalid %s %r of user %r", cls.type_name(), name, user_id
+                    "Skipping invalid %(type_name)s %(name)r of user %(user_id)r",
+                    {"type_name": cls.type_name(), "name": name, "user_id": user_id},
                 )
                 continue
             instances.add_instance((user_id, name), instance)

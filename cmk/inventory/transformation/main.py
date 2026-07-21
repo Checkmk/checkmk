@@ -244,7 +244,7 @@ def transform_inventory_trees(
         new_transformation_results.append(_transform_host_tree_path(host_tree_path))
 
     if len_results := len(new_transformation_results):
-        logger.info("Transformed %s inventory trees", len_results)
+        logger.info("Transformed %(tree_count)s inventory trees", {"tree_count": len_results})
     transformation_results_store.save(list(transformation_results) + new_transformation_results)
 
     return 0

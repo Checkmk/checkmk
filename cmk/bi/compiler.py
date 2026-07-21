@@ -89,7 +89,10 @@ class BICompiler:
     def _load_compiled_aggregations(self) -> None:
         for identifier in self._get_vanished_aggregation_identifiers():
             aggregation = self._aggregation_store.get_by_identifier(identifier)
-            LOGGER.debug("Loaded cached aggregation result: %s", aggregation.id)
+            LOGGER.debug(
+                "Loaded cached aggregation result: %(aggregation_id)s",
+                {"aggregation_id": aggregation.id},
+            )
             self._compiled_aggregations[aggregation.id] = aggregation
 
         self._compiled_aggregations = self._frozen_manager.update(self._compiled_aggregations)
@@ -268,5 +271,8 @@ def _process_compilation(aggregation: BIAggregation) -> BICompiledAggregation:
     start = time.perf_counter()
     compiled_aggregation = aggregation.compile(_process_compilation.searcher)  # type: ignore[attr-defined]
     end = time.perf_counter()
-    LOGGER.debug("Compilation of %s took: %fs", aggregation.id, end - start)
+    LOGGER.debug(
+        "Compilation of %(aggregation_id)s took: %(duration)fs",
+        {"aggregation_id": aggregation.id, "duration": end - start},
+    )
     return compiled_aggregation

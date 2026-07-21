@@ -46,7 +46,11 @@ def register() -> None:
 
 def _load_plugins(plugin_namespace: str) -> None:
     for plugin_name, exc in load_plugins_with_exceptions(f"cmk.gui.plugins.{plugin_namespace}"):
-        logger.error("  Error in %s plug-in '%s'\n", plugin_namespace, plugin_name, exc_info=exc)
+        logger.error(
+            "  Error in %(plugin_namespace)s plug-in '%(plugin_name)s'\n",
+            {"plugin_namespace": plugin_namespace, "plugin_name": plugin_name},
+            exc_info=exc,
+        )
         add_failed_plugin(
             Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
             plugin_namespace,

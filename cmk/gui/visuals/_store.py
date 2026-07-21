@@ -313,7 +313,8 @@ def _get_packaged_visuals[TVisual: Visual](
                 local_visuals[(UserId.builtin(), name)] = visual
         except Exception:
             logger.exception(
-                "Error on loading packaged visuals from file %s. Skipping it...", dirpath
+                "Error on loading packaged visuals from file %(dirpath)s. Skipping it...",
+                {"dirpath": dirpath},
             )
     return local_visuals
 
@@ -440,7 +441,8 @@ def declare_custom_permissions(what: VisualTypeName) -> None:
                     declare_visual_permission(what, name, visual)
         except Exception:
             logger.exception(
-                "Error on declaring permissions for customized visuals in file %s", dirpath
+                "Error on declaring permissions for customized visuals in file %(dirpath)s",
+                {"dirpath": dirpath},
             )
             if active_config.debug:
                 raise
@@ -462,7 +464,8 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
                 declare_packaged_visual_permission(what, name, visual)
         except Exception:
             logger.exception(
-                "Error on declaring permissions for packaged visuals in file %s", dirpath
+                "Error on declaring permissions for packaged visuals in file %(dirpath)s",
+                {"dirpath": dirpath},
             )
             if active_config.debug:
                 raise

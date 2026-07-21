@@ -407,7 +407,10 @@ def _parse_perf_data(
                 maximum=_float_or_int(value_parts[3]),
             )
         except Exception as exc:
-            logger.exception("Failed to parse perfdata '%s'", perf_data_string)
+            logger.exception(
+                "Failed to parse perfdata '%(perf_data_string)s'",
+                {"perf_data_string": perf_data_string},
+            )
             if debug:
                 raise exc
     return raw_perf_data, check_command

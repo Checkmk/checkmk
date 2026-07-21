@@ -77,7 +77,7 @@ class _MarkerFileStore:
                 try:
                     path.rmdir()
                 except OSError:
-                    logger.error("Cannot remove %r", path)
+                    logger.error("Cannot remove %(path)r", {"path": path})
 
 
 def _filter_ac_test_results(
@@ -546,4 +546,4 @@ def reset_scheduling() -> None:
         {"job_id": "execute_deprecation_tests_and_notify_users"},
     )
     if response.is_error():
-        logger.error("Cannot reset scheduler: %r", response.error)
+        logger.error("Cannot reset scheduler: %(error)r", {"error": response.error})

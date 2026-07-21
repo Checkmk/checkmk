@@ -28,7 +28,7 @@ def register(
         agent_bakery_enabled=agent_bakery_enabled,
     )
     if errors:
-        logger.error("Error loading rulespecs: %s", errors)
+        logger.error("Error loading rulespecs: %(errors)s", {"errors": errors})
         for error in errors:
             module_path = str(error).split(":", maxsplit=1)[0]
             add_failed_plugin(

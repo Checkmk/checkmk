@@ -443,7 +443,7 @@ test('FormDictionary renders inline help of inactive optional element', async ()
     }
   })
 
-  expect(screen.queryByText('barHelp')).toBeNull()
+  expect(screen.getAllByText('barHelp')).toHaveLength(1)
 
   await fireEvent.click(screen.getByRole('checkbox', { name: 'barTitle' }))
 

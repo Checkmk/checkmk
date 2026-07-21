@@ -79,33 +79,33 @@ def parse_netstat(string_table: StringTable) -> Section:
     for line in string_table:
         if len(line) == 6:
             if is_netstat_format:
-                proto, _recv_q, _send_q, local, remote, connstate = line
+                proto, _recv_q, _send_q, local, remote, connection_state = line
             else:
-                proto, connstate, _recv_q, _send_q, local, remote = line
+                proto, connection_state, _recv_q, _send_q, local, remote = line
             if proto.startswith("tcp"):  # also tcp4 and tcp6
                 proto = "TCP"
             elif proto.startswith("udp"):
                 proto = "UDP"
-                connstate = "LISTENING"
+                connection_state = "LISTENING"
 
         if len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
             proto = "UDP"
-            connstate = "LISTENING"
+            connection_state = "LISTENING"
 
         if len(line) == 3:
             # Solaris systems output a different format for udp (3 elements instead 5)
             proto, local, remote = line
             _recv_q, _send_q = "0", "0"
             proto = "UDP"
-            connstate = "LISTENING"
+            connection_state = "LISTENING"
 
         connections.append(
             Connection(
                 proto=cast(Protocol, proto),
                 local_address=split_ip_address(local),
                 remote_address=split_ip_address(remote),
-                state=parse_connection_state(connstate),
+                state=parse_connection_state(connection_state),
             )
         )
     return connections

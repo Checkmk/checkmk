@@ -2684,7 +2684,7 @@ def get_rule_conditions_from_catalog_value(raw_value: object) -> RuleConditions:
     match raw_value:
         case {"conditions": {"type": ("predefined", str() as predef_id)}}:
             pre_store = PredefinedConditionStore()
-            store_entries = pre_store.filter_usable_entries(pre_store.load_for_reading())
+            store_entries = pre_store.filter_usable_entries(pre_store.load_for_reading(), user)
             return RuleConditions(**store_entries[predef_id]["conditions"])
         case {"conditions": {"type": ("explicit", dict() as raw_conditions)}}:
             return RuleConditions(

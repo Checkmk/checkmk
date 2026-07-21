@@ -14,7 +14,7 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.form_specs.unstable import Catalog, CommentTextArea, Topic, TopicElement
 from cmk.gui.form_specs.unstable.validators import not_empty
-from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.watolib.passwords import (
     load_passwords,
     password_exists,
@@ -42,7 +42,7 @@ INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
 
 
 def _password_id_exists_validator(password_id: str) -> None:
-    if password_exists(password_id):
+    if password_exists(password_id, user):
         raise ValidationError(Message("This ID is already in use. Please choose another one."))
 
 
@@ -244,7 +244,7 @@ def save_password_from_slidein_schema(
     parsed_data = _parse_fs(disk_data)
 
     # should already be validated by the form spec, but make sure here
-    if password_exists(parsed_data.general_props.id):
+    if password_exists(parsed_data.general_props.id, user):
         raise ValueError(_("This ID is already in use. Please choose another one."))
 
     owned_by = None
@@ -279,5 +279,6 @@ def list_passwords(user: LoggedInUser) -> list[PasswordDescription]:
     """List passwords visible to the given user."""
     user.need_permission("wato.passwords")
     return [
-        PasswordDescription(id=ident, title=pw["title"]) for ident, pw in load_passwords().items()
+        PasswordDescription(id=ident, title=pw["title"])
+        for ident, pw in load_passwords(user).items()
     ]

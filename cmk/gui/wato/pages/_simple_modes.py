@@ -296,7 +296,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 _("This %(name)s does not exist.") % {"name": self._mode_type.name_singular()},
             )
 
-        if ident not in self._store.filter_editable_entries(entries):
+        if ident not in self._store.filter_editable_entries(entries, user):
             raise MKUserError(
                 "_delete",
                 _("You are not allowed to delete this %(name)s.")
@@ -329,7 +329,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 
     def page(self, config: Config) -> None:
         self._show_table(
-            self._store.filter_editable_entries(self._store.load_for_reading()),
+            self._store.filter_editable_entries(self._store.load_for_reading(), user),
             table_row_limit=config.table_row_limit,
         )
 
@@ -441,7 +441,9 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         ident = request.get_ascii_input(ident_var)
         if ident is not None:
             try:
-                entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
+                entry = self._store.filter_editable_entries(self._store.load_for_reading(), user)[
+                    ident
+                ]
             except KeyError:
                 raise MKUserError(
                     "ident",
@@ -456,7 +458,9 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         clone = request.get_ascii_input("clone")
         if clone is not None:
             try:
-                entry = self._store.filter_editable_entries(self._store.load_for_reading())[clone]
+                entry = self._store.filter_editable_entries(self._store.load_for_reading(), user)[
+                    clone
+                ]
             except KeyError:
                 raise MKUserError(
                     "clone",
@@ -813,7 +817,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         if self._new and self._ident in entries:
             raise MKUserError("ident", _("This ID is already in use. Please choose another one."))
 
-        if not self._new and self._ident not in self._store.filter_editable_entries(entries):
+        if not self._new and self._ident not in self._store.filter_editable_entries(entries, user):
             raise MKUserError(
                 "ident",
                 _("You are not allowed to edit this %(name)s.")

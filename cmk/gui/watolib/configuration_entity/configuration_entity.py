@@ -336,8 +336,8 @@ def get_list_of_configuration_entities(
                 ]
             config_file = OAuth2ConnectionsConfigFile()
             entries = config_file.load_for_reading()
-            usable = config_file.filter_usable_entries(entries)
-            editable = config_file.filter_editable_entries(entries)
+            usable = config_file.filter_usable_entries(entries, user)
+            editable = config_file.filter_editable_entries(entries, user)
             return [
                 ConfigurationEntityDescription(
                     ident=EntityId(ident),

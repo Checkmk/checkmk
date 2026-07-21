@@ -270,7 +270,7 @@ def _extract_explicit_password_entities(
     """Extracts the explicit passwords from the form data and creates password entities for them."""
     collected_passwords = collect_passwords_from_form_data(all_stages_form_data, parameter_form)
 
-    stored_passwords = load_passwords()
+    stored_passwords = load_passwords(user)
     # We need to filter out the passwords that are already stored in the password store since
     # they should be independent of the configuration bundle
     explicit_passwords = {

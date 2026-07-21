@@ -19,6 +19,7 @@ from cmk.gui.form_specs import (
     serialize_data_for_frontend,
     VisitorOptions,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
@@ -60,7 +61,7 @@ def collect_passwords_from_form_data(
         form_spec_value[2][0]: Secret(
             form_spec_value[2][1]
             if form_spec_value[1] == "explicit_password"
-            else load_passwords()[form_spec_value[2][0]]["password"]
+            else load_passwords(user)[form_spec_value[2][0]]["password"]
         )
         for form_data in all_stages_form_data.values()
         if isinstance(form_data, dict)

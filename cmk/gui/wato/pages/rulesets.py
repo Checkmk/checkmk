@@ -926,7 +926,7 @@ class ModeEditRuleset(WatoMode):
     def __init__(self, edition: Edition) -> None:
         super().__init__(edition)
         store = PredefinedConditionStore()
-        self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
+        self._predefined_conditions = store.filter_usable_entries(store.load_for_reading(), user)
 
     def _from_vars(self) -> None:
         tree = folder_tree()

@@ -16,6 +16,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.validation_utils import ConfigValidationError
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.utils import paths
@@ -157,10 +158,14 @@ class WatoSimpleConfigFile[T](WatoSingleConfigFile[dict[str, T]]):
     def __init__(self, config_file_path: Path, config_variable: str, spec_class: TypeAlias) -> None:
         super().__init__(config_file_path, config_variable, dict[str, spec_class])
 
-    def filter_usable_entries(self, entries: dict[str, T]) -> dict[str, T]:
+    def filter_usable_entries(
+        self, entries: dict[str, T], acting_user: LoggedInUser
+    ) -> dict[str, T]:
         return entries
 
-    def filter_editable_entries(self, entries: dict[str, T]) -> dict[str, T]:
+    def filter_editable_entries(
+        self, entries: dict[str, T], acting_user: LoggedInUser
+    ) -> dict[str, T]:
         return entries
 
 

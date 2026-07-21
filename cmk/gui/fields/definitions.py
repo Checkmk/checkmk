@@ -1160,7 +1160,7 @@ class PasswordIdent(base.String):
         if pattern.match(value) is None:
             raise self.make_error("pattern", name=value)
 
-        exists = password_exists(value)
+        exists = password_exists(value, user)
         if self._should_exist and not exists:
             raise self.make_error("should_exist", name=value)
 

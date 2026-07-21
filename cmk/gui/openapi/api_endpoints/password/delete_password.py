@@ -52,7 +52,7 @@ def delete_password_v1(
     """Delete a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
-    password = load_password_to_modify(name)
+    password = load_password_to_modify(api_context.user, name)
     if api_context.etag.enabled:
         api_context.etag.verify(password_etag(name, password))
 
@@ -72,6 +72,7 @@ def delete_password_v1(
 
     remove_password(
         name,
+        acting_user=api_context.user,
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=PendingChanges(
             activation_sites=activation_sites(api_context.config.sites),

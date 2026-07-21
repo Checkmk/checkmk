@@ -53,7 +53,7 @@ def update_password_v1(
     """Update a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
-    original_config = load_password_to_modify(name)
+    original_config = load_password_to_modify(api_context.user, name)
     if api_context.etag.enabled:
         api_context.etag.verify(password_etag(name, original_config))
 
@@ -75,7 +75,7 @@ def update_password_v1(
             ),
         ),
     )
-    password = load_password(name)
+    password = load_password(api_context.user, name)
     return ApiResponse(
         status_code=200,
         body=serialize_password(name, password),

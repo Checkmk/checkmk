@@ -5,6 +5,7 @@
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -21,13 +22,16 @@ from .models.response_models import PasswordCollection
 from .utils import PERMISSIONS, serialize_password
 
 
-def list_passwords_v1() -> PasswordCollection:
+def list_passwords_v1(api_context: ApiContext) -> PasswordCollection:
     """Show all passwords"""
     user.need_permission("wato.passwords")
     return PasswordCollection(
         id="password",
         domainType="password",
-        value=[serialize_password(ident, details) for ident, details in load_passwords().items()],
+        value=[
+            serialize_password(ident, details)
+            for ident, details in load_passwords(api_context.user).items()
+        ],
         links=[LinkModel.create("self", collection_href("password"))],
     )
 

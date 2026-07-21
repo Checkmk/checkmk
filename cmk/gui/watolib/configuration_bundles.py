@@ -199,7 +199,7 @@ def identify_bundle_references(
         else {}
     )
     bundle_password_ids = (
-        _collect_many(_collect_passwords(finder=bundle_id_finder, passwords=load_passwords()))
+        _collect_many(_collect_passwords(finder=bundle_id_finder, passwords=load_passwords(user)))
         if "password" in affected_entities
         else {}
     )
@@ -285,7 +285,7 @@ def _validate_and_prepare_create_calls(
             _prepare_create_passwords(
                 bundle_ident,
                 entities.passwords,
-                load_passwords(),
+                load_passwords(user),
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
             )
@@ -685,6 +685,7 @@ def _delete_passwords(
     for password_id, _password in passwords:
         remove_password(
             password_id,
+            acting_user=user,
             pprint_value=pprint_value,
             pending_changes=pending_changes,
         )

@@ -9,6 +9,7 @@ import pytest
 
 import cmk.gui.watolib.password_store
 from cmk.gui import userdb
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.password_store import join_password_specs, PasswordStore, split_password_specs
 from cmk.utils.password_store import PasswordConfig
 
@@ -142,7 +143,7 @@ def fixture_test_store(store: PasswordStore) -> PasswordStore:
 def test_password_store_filter_usable_entries_by_permission(
     test_store: PasswordStore,
 ) -> None:
-    assert test_store.filter_usable_entries(test_store.load_for_reading()) != {}
+    assert test_store.filter_usable_entries(test_store.load_for_reading(), user) != {}
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -150,7 +151,7 @@ def test_password_store_filter_usable_entries_by_permission(
 def test_password_store_filter_usable_entries_not_permitted(
     test_store: PasswordStore,
 ) -> None:
-    assert test_store.filter_usable_entries(test_store.load_for_reading()) == {}
+    assert test_store.filter_usable_entries(test_store.load_for_reading(), user) == {}
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -159,7 +160,7 @@ def test_password_store_filter_usable_entries_shared_with_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
-    assert test_store.filter_usable_entries(test_store.load_for_reading()) != {}
+    assert test_store.filter_usable_entries(test_store.load_for_reading(), user) != {}
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -168,7 +169,7 @@ def test_password_store_filter_usable_entries_owned_by_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])
-    assert test_store.filter_usable_entries(test_store.load_for_reading()) != {}
+    assert test_store.filter_usable_entries(test_store.load_for_reading(), user) != {}
 
 
 @pytest.mark.usefixtures("with_admin_login")
@@ -176,7 +177,7 @@ def test_password_store_filter_usable_entries_owned_by_user_group(
 def test_password_store_filter_editable_entries_by_permission(
     test_store: PasswordStore,
 ) -> None:
-    assert test_store.filter_editable_entries(test_store.load_for_reading()) != {}
+    assert test_store.filter_editable_entries(test_store.load_for_reading(), user) != {}
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -184,7 +185,7 @@ def test_password_store_filter_editable_entries_by_permission(
 def test_password_store_filter_editable_entries_not_permitted(
     test_store: PasswordStore,
 ) -> None:
-    assert test_store.filter_editable_entries(test_store.load_for_reading()) == {}
+    assert test_store.filter_editable_entries(test_store.load_for_reading(), user) == {}
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -193,7 +194,7 @@ def test_password_store_filter_editable_entries_shared_with_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
-    assert test_store.filter_editable_entries(test_store.load_for_reading()) == {}
+    assert test_store.filter_editable_entries(test_store.load_for_reading(), user) == {}
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -202,4 +203,4 @@ def test_password_store_filter_editable_entries_owned_by_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])
-    assert test_store.filter_editable_entries(test_store.load_for_reading()) != {}
+    assert test_store.filter_editable_entries(test_store.load_for_reading(), user) != {}

@@ -17,6 +17,7 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import (
     extract_password_store_entry,
     load_oauth2_connections,
@@ -83,11 +84,12 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
             )
 
     save_tokens_to_passwordstore(
+        acting_user=user,
         ident=disk_data["ident"],
         title=disk_data["title"],
-        client_secret=extract_password_store_entry(disk_data["client_secret"]),
-        access_token=extract_password_store_entry(disk_data["access_token"]),
-        refresh_token=extract_password_store_entry(disk_data["refresh_token"]),
+        client_secret=extract_password_store_entry(user, disk_data["client_secret"]),
+        access_token=extract_password_store_entry(user, disk_data["access_token"]),
+        refresh_token=extract_password_store_entry(user, disk_data["refresh_token"]),
         owned_by=owned_by,
         shared_with=disk_data.get("shared_with", []),
         pprint_value=pprint_value,
@@ -141,11 +143,12 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
             raise ValidationError(message=_("Invalid value for 'owned_by'."), field_name="data")
 
     save_tokens_to_passwordstore(
+        acting_user=user,
         ident=disk_data["ident"],
         title=disk_data["title"],
-        client_secret=extract_password_store_entry(disk_data["client_secret"]),
-        access_token=extract_password_store_entry(disk_data["access_token"]),
-        refresh_token=extract_password_store_entry(disk_data["refresh_token"]),
+        client_secret=extract_password_store_entry(user, disk_data["client_secret"]),
+        access_token=extract_password_store_entry(user, disk_data["access_token"]),
+        refresh_token=extract_password_store_entry(user, disk_data["refresh_token"]),
         owned_by=owned_by,
         shared_with=disk_data.get("shared_with", []),
         pprint_value=pprint_value,
@@ -173,7 +176,7 @@ class OAuth2ConnectionData(NamedTuple):
 def get_oauth2_connection(
     oauth2_connection_id: str,
 ) -> OAuth2ConnectionData:
-    usable_oauth2_connections = load_usable_oauth2_connections()
+    usable_oauth2_connections = load_usable_oauth2_connections(user)
     oauth2_connections = load_oauth2_connections()
     if oauth2_connection_id not in oauth2_connections:
         raise KeyError(f"OAuth2 connection with ident '{oauth2_connection_id}' does not exist")
@@ -184,7 +187,7 @@ def get_oauth2_connection(
         )
 
     connection = usable_oauth2_connections[oauth2_connection_id]
-    client_secret = load_passwords()[connection["client_secret"][2][0]]
+    client_secret = load_passwords(user)[connection["client_secret"][2][0]]
     editable_by = client_secret["owned_by"]
     form_spec = OAuth2ConnectionSetup(connector_type=connection["connector_type"])
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))

@@ -427,13 +427,13 @@ class PasswordConverter:
 
     @staticmethod
     def not_exists(ident: str) -> str:
-        if ident in load_passwords():
+        if ident in load_passwords(user):
             raise ValueError(f'Password "{ident}" already exists.')
         return ident
 
     @staticmethod
     def exists(ident: str) -> str:
-        if ident not in load_passwords():
+        if ident not in load_passwords(user):
             raise ValueError(f'Password "{ident}" is not known.')
         return ident
 

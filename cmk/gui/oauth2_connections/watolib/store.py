@@ -6,6 +6,7 @@ from typing import Literal, TypeGuard
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.passwords import load_passwords, load_passwords_to_modify, save_password
 from cmk.gui.watolib.pending_changes import (
@@ -49,14 +50,14 @@ class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):
         }
 
     def filter_usable_entries(
-        self, entries: dict[str, OAuth2Connection]
+        self, entries: dict[str, OAuth2Connection], acting_user: LoggedInUser
     ) -> dict[str, OAuth2Connection]:
-        return self.filter_by_passwords(entries, load_passwords())
+        return self.filter_by_passwords(entries, load_passwords(acting_user))
 
     def filter_editable_entries(
-        self, entries: dict[str, OAuth2Connection]
+        self, entries: dict[str, OAuth2Connection], acting_user: LoggedInUser
     ) -> dict[str, OAuth2Connection]:
-        return self.filter_by_passwords(entries, load_passwords_to_modify())
+        return self.filter_by_passwords(entries, load_passwords_to_modify(acting_user))
 
 
 def _scope_from_affected_sites(affected_sites: list[SiteId] | None) -> ChangeScope:
@@ -87,10 +88,10 @@ def save_oauth2_connection(
     oauth2_connections_config_file.save(entries, pprint_value)
 
 
-def load_usable_oauth2_connections() -> dict[str, OAuth2Connection]:
+def load_usable_oauth2_connections(acting_user: LoggedInUser) -> dict[str, OAuth2Connection]:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_reading()
-    return oauth2_connections_config_file.filter_usable_entries(entries)
+    return oauth2_connections_config_file.filter_usable_entries(entries, acting_user)
 
 
 def load_oauth2_connections() -> dict[str, OAuth2Connection]:
@@ -165,12 +166,13 @@ def save_tokens_to_passwordstore(
     refresh_token: str,
     owned_by: str | None,
     shared_with: list[str],
+    acting_user: LoggedInUser,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
     # TODO Think site_id should be in data above
     site_id = omd_site()
-    password_entries = load_passwords()
+    password_entries = load_passwords(acting_user)
     for pw_title, entry, password in [
         ("Client secret", "client_secret", client_secret),
         ("Access token", "access_token", access_token),
@@ -283,6 +285,7 @@ def save_new_reference_to_config_file(
 
 
 def extract_password_store_entry(
+    acting_user: LoggedInUser,
     value: tuple[
         Literal["cmk_postprocessed"],
         Literal["explicit_password", "stored_password"],
@@ -291,7 +294,7 @@ def extract_password_store_entry(
 ) -> str:
     match value:
         case ("cmk_postprocessed", "stored_password", (password_id, str())):
-            password_entries = load_passwords()
+            password_entries = load_passwords(acting_user)
             password_entry = password_entries[password_id]
             if not password_entry:
                 raise MKUserError("client_secret", f"Password with ID '{password_id}' not found")

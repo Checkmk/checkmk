@@ -13,7 +13,7 @@ from cmk.ccc import store
 from cmk.gui import userdb, valuespec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import DropdownChoice, Transform, ValueSpecValidateFunc
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
@@ -31,28 +31,28 @@ class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
         )
 
     def filter_usable_entries(
-        self, entries: dict[str, PasswordConfig]
+        self, entries: dict[str, PasswordConfig], acting_user: LoggedInUser
     ) -> dict[str, PasswordConfig]:
-        if user.may("wato.edit_all_passwords"):
+        if acting_user.may("wato.edit_all_passwords"):
             return entries
 
-        assert user.id is not None
-        user_groups = set(userdb.contactgroups_of_user(user.id))
+        assert acting_user.id is not None
+        user_groups = set(userdb.contactgroups_of_user(acting_user.id))
 
-        passwords = self.filter_editable_entries(entries)
+        passwords = self.filter_editable_entries(entries, acting_user)
         passwords.update(
             {k: v for k, v in entries.items() if set(v["shared_with"]).intersection(user_groups)}
         )
         return passwords
 
     def filter_editable_entries(
-        self, entries: dict[str, PasswordConfig]
+        self, entries: dict[str, PasswordConfig], acting_user: LoggedInUser
     ) -> dict[str, PasswordConfig]:
-        if user.may("wato.edit_all_passwords"):
+        if acting_user.may("wato.edit_all_passwords"):
             return entries
 
-        assert user.id is not None
-        user_groups = userdb.contactgroups_of_user(user.id)
+        assert acting_user.id is not None
+        user_groups = userdb.contactgroups_of_user(acting_user.id)
         return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}
 
     @override
@@ -116,7 +116,7 @@ def passwordstore_choices() -> Choices:
     pw_store = PasswordStore()
     return [
         (ident, pw["title"])
-        for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
+        for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading(), user).items()
     ]
 
 

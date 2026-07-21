@@ -478,7 +478,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     def page(self, config: Config) -> None:
         self._show_table(
             self._filter_for_connector_type(
-                self._store.filter_editable_entries(self._store.load_for_reading())
+                self._store.filter_editable_entries(self._store.load_for_reading(), user)
             ),
             table_row_limit=config.table_row_limit,
         )
@@ -638,6 +638,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         for key in ("client_secret", "access_token", "refresh_token"):
             remove_password(
                 entry[key][2][0],
+                acting_user=user,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=pending_changes,
             )
@@ -750,7 +751,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
             )
             return
 
-        client_secret = load_passwords()[self._entry["client_secret"][2][0]]
+        client_secret = load_passwords(user)[self._entry["client_secret"][2][0]]
         editable_by = client_secret["owned_by"]
         self._check_connection_permissions(editable_by)
 

@@ -69,7 +69,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         if not (authority := data.get("authority")):
             return {"status": "error", "message": f"Authority missing in request data: {data}"}
 
-        client_secret = extract_password_store_entry(client_secret_raw)
+        client_secret = extract_password_store_entry(user, client_secret_raw)
         post_data = data | {
             "scope": ".default offline_access",
             "grant_type": "authorization_code",

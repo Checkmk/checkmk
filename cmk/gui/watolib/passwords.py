@@ -9,7 +9,7 @@ from typing import Literal
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.utils.password_store import PasswordConfig
 
 from .config_domain_name import (
@@ -120,12 +120,13 @@ def save_password(
 def remove_password(
     ident: str,
     *,
+    acting_user: LoggedInUser,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
-    editable_entries = password_store.filter_editable_entries(entries)
+    editable_entries = password_store.filter_editable_entries(entries, acting_user)
     if ident not in editable_entries:
         raise MKUserError(
             ident,
@@ -148,24 +149,26 @@ def remove_password(
     )
 
 
-def password_exists(ident: str) -> bool:
-    return ident in load_passwords()
+def password_exists(ident: str, acting_user: LoggedInUser) -> bool:
+    return ident in load_passwords(acting_user)
 
 
-def load_passwords() -> dict[str, PasswordConfig]:
+def load_passwords(acting_user: LoggedInUser) -> dict[str, PasswordConfig]:
     password_store = PasswordStore()
-    return password_store.filter_usable_entries(password_store.load_for_reading())
+    return password_store.filter_usable_entries(password_store.load_for_reading(), acting_user)
 
 
-def load_password(password_id: str) -> PasswordConfig:
-    return load_passwords()[password_id]
+def load_password(acting_user: LoggedInUser, password_id: str) -> PasswordConfig:
+    return load_passwords(acting_user)[password_id]
 
 
-def load_passwords_to_modify() -> dict[str, PasswordConfig]:
+def load_passwords_to_modify(acting_user: LoggedInUser) -> dict[str, PasswordConfig]:
     password_store = PasswordStore()
-    return password_store.filter_editable_entries(password_store.load_for_modification())
+    return password_store.filter_editable_entries(
+        password_store.load_for_modification(), acting_user
+    )
 
 
-def load_password_to_modify(ident: str) -> PasswordConfig:
-    passwords = load_passwords_to_modify()
+def load_password_to_modify(acting_user: LoggedInUser, ident: str) -> PasswordConfig:
+    passwords = load_passwords_to_modify(acting_user)
     return passwords[ident]

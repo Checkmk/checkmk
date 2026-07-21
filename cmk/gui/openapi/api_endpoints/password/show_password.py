@@ -8,6 +8,7 @@ from pydantic import AfterValidator
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -28,6 +29,7 @@ from .utils import password_etag, PERMISSIONS, serialize_password
 
 
 def show_password_v1(
+    api_context: ApiContext,
     name: Annotated[
         str,
         AfterValidator(PasswordConverter.exists),
@@ -44,7 +46,7 @@ def show_password_v1(
     never returned by this endpoint.
     """
     user.need_permission("wato.passwords")
-    password_config = load_password(name)
+    password_config = load_password(api_context.user, name)
     return ApiResponse(
         status_code=200,
         body=serialize_password(name, password_config),

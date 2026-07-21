@@ -87,7 +87,7 @@ def _validate_non_quick_setup_password(
             ):
                 continue
 
-            pw_from_store = load_passwords()[form_spec_value[2][0]]
+            pw_from_store = load_passwords(user)[form_spec_value[2][0]]
             if ("locked_by" in pw_from_store) and (
                 is_locked_by_quick_setup(pw_from_store["locked_by"])
             ):

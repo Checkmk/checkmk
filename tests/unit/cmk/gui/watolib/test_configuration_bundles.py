@@ -267,7 +267,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
             ),
         ),
     ]
-    before_create_password_count = len(load_passwords())
+    before_create_password_count = len(load_passwords(user))
     create_config_bundle(
         folder_tree(),
         bundle_id,
@@ -282,7 +282,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
 
     assert references.passwords is not None
     assert len(references.passwords) == 2
-    assert len(load_passwords()) - before_create_password_count == 2
+    assert len(load_passwords(user)) - before_create_password_count == 2
 
     delete_config_bundle(
         folder_tree(),
@@ -296,7 +296,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         folder_tree(), bundle_id, bundle["group"]
     )
     assert references_after_delete.passwords is None
-    assert len(load_passwords()) == before_create_password_count, (
+    assert len(load_passwords(user)) == before_create_password_count, (
         "Expected created passwords to be deleted"
     )
 

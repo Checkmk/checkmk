@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { cleanup, fireEvent, screen } from '@testing-library/vue'
+import { cleanup, screen } from '@testing-library/vue'
 
 import InstallWSL2 from '@/mode-relay/add-relay-configuration-steps/InstallWSL2.vue'
 
@@ -14,24 +14,17 @@ const baseProps = { index: 1, isCompleted: () => false }
 afterEach(cleanup)
 
 describe('InstallWSL2', () => {
-  test('shows the WSL2 installation script', async () => {
+  test('shows the WSL2 installation command', () => {
     mountWithWizardContext(InstallWSL2, baseProps)
 
     expect(screen.getByTestId('install-wsl2-command').textContent).toContain(
-      'Enable-WindowsOptionalFeature'
-    )
-
-    // The script is longer than CmkCode's collapsed preview, so expand it first.
-    await fireEvent.click(screen.getByText('Show more'))
-
-    expect(screen.getByTestId('install-wsl2-command').textContent).toContain(
-      'Restart-Computer -Force'
+      'wsl --install --web-download --no-distribution'
     )
   })
 
-  test('shows automatic reboot warning', () => {
+  test('shows manual restart warning', () => {
     mountWithWizardContext(InstallWSL2, baseProps)
 
-    expect(screen.getByText(/will restart the computer/)).toBeInTheDocument()
+    expect(screen.getByText(/restart the computer manually/)).toBeInTheDocument()
   })
 })

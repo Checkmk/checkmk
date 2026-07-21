@@ -25,7 +25,7 @@ from cmk.gui.watolib.builtin_attributes import (
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 
-from .host_attribute_schemas import BaseHostTagGroup
+from .host_attribute_schemas import BaseHostTagGroup, MetricsAssociationField
 
 
 class BaseFolderTagGroup(BaseHostTagGroup):
@@ -46,6 +46,9 @@ class BaseFolderAttribute(BaseSchema):
     bake_agent_package = gui_fields.bake_agent_field()
     cmk_agent_connection = CONNECTION_MODE_FIELD
     snmp_community = HostAttributeSNMPCommunity().openapi_field()
+    metrics_association = MetricsAssociationField(
+        allow_none=True, description="Configuration for metrics association backend"
+    )
 
     labels = HostAttributeLabels().openapi_field()
 

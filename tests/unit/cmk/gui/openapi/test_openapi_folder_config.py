@@ -1119,3 +1119,61 @@ def test_cmk_agent_connection_attribute_regression(
         attributes={"cmk_agent_connection": field_value},
         expect_ok=status_code == 200,
     ).assert_status_code(status_code)
+
+
+@pytest.mark.skipif(
+    version.edition(paths.omd_root)
+    not in {
+        version.Edition.ULTIMATEMT,
+        version.Edition.ULTIMATE,
+        version.Edition.CLOUD,
+    },
+    reason="Tested attribute is available in ULTIMATEMT, ULTIMATE, and CLOUD editions.",
+)
+def test_metrics_association_attribute_regression(clients: ClientRegistry) -> None:
+    enabled = [
+        "enabled",
+        {
+            "attribute_filters": {
+                "resource_attributes": [{"key": "key1", "value": "val1"}],
+                "scope_attributes": [{"key": "key2", "value": "val2"}],
+                "data_point_attributes": [{"key": "key3", "value": "val3"}],
+            },
+            "host_name_resource_attribute_key": "service.name",
+        },
+    ]
+
+    # "disabled" is the exact case from the customer crash report.
+    clients.Folder.create(
+        folder_name="metrics_disabled",
+        title="metrics_disabled",
+        parent="~",
+        attributes={"metrics_association": ["disabled", None]},
+    ).assert_status_code(200)
+
+    resp = clients.Folder.get(folder_name="~metrics_disabled")
+    resp.assert_status_code(200)
+    assert resp.json["extensions"]["attributes"]["metrics_association"] == ["disabled", None]
+
+    # "enabled" round-trip through create -> get.
+    clients.Folder.create(
+        folder_name="metrics_enabled",
+        title="metrics_enabled",
+        parent="~",
+        attributes={"metrics_association": enabled},
+    ).assert_status_code(200)
+
+    resp = clients.Folder.get(folder_name="~metrics_enabled")
+    resp.assert_status_code(200)
+    assert resp.json["extensions"]["attributes"]["metrics_association"] == enabled
+
+    # update path (PUT) must also round-trip.
+    clients.Folder.edit(
+        folder_name="~metrics_enabled",
+        update_attributes={"metrics_association": ["disabled", None]},
+    ).assert_status_code(200)
+    resp = clients.Folder.get(folder_name="~metrics_enabled")
+    assert resp.json["extensions"]["attributes"]["metrics_association"] == ["disabled", None]
+
+    # the collection serialization path (get_all) must not 500 either.
+    clients.Folder.get_all().assert_status_code(200)

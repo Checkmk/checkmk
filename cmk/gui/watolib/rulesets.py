@@ -2232,6 +2232,10 @@ def _create_rule_properties_catalog_topic(
         "description": TopicElement(
             parameter_form=StringAPI(
                 title=Title("Description"),
+                help_text=Help(
+                    "This field is intended for a brief description of the rule's purpose. "
+                    "This description will be visible on the overview page of this rule set."
+                ),
                 field_size=FieldSizeAPI.LARGE,
             ),
             required=True,
@@ -2239,12 +2243,29 @@ def _create_rule_properties_catalog_topic(
         "comment": TopicElement(
             parameter_form=CommentTextArea(
                 title=Title("Comment"),
+                help_text=Help(
+                    "This field is intended for additional information that may help other "
+                    "users (and your future self) to understand the rule's purpose and the "
+                    "configured attributes. This comment is only visible in this dialog."
+                ),
             ),
             required=True,
         ),
         "docu_url": TopicElement(
             parameter_form=StringAPI(
                 title=Title("Documentation URL"),
+                help_text=Help(
+                    "In this field you can add a URL linking to a page with related, useful "
+                    "information. You can use:<br><ul><li>an absolute URL starting with the "
+                    "protocol (<tt>http(s)://</tt>)</li>"
+                    "<li>or a relative URL either starting with a slash (<tt>/something</tt> "
+                    "will be resolved to <tt>https://mycheckmkserver/something</tt>) or without "
+                    "a slash (<tt>somethingelse</tt> will be resolved to "
+                    "<tt>https://mycheckmkserver/mysite/check_mk/somethingelse</tt>)</li>"
+                    "</ul>"
+                    "The link will be displayed as an icon in the description on the "
+                    "overview page of the related rule set."
+                ),
                 field_size=FieldSizeAPI.LARGE,
             ),
             required=True,
@@ -2252,6 +2273,10 @@ def _create_rule_properties_catalog_topic(
         "disabled": TopicElement(
             parameter_form=BooleanChoiceAPI(
                 title=Title("Rule activation"),
+                help_text=Help(
+                    "A deactivated rule is not effective. However, it remains "
+                    "in place so that it can be reactivated later, for example."
+                ),
                 label=Label("Do not apply this rule"),
             ),
             required=True,

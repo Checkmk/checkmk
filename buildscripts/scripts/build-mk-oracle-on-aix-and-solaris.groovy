@@ -50,7 +50,7 @@ void main() {
                                     checkout_dir=${checkout_dir} \
                                     REMOTE_USER=jenkins \
                                     CMK_VERSION=${cmk_version} \
-                                    packages/mk-oracle/ssh-run-ci ${distro} -bu
+                                    packages/mk-oracle/ssh-run-ci ${distro} -buB
                                 """)
                             }
                         }
@@ -61,7 +61,9 @@ void main() {
 
     stage("Archive artifacts") {
         dir("${checkout_dir}/packages/mk-oracle") {
-            archiveArtifacts(fingerprint: true, artifacts: "mk-oracle.*");
+            // mk-oracle.* goes into the Checkmk packages
+            // test_ora_no_db_test.* only comsumed by the mk-oracle component test job.
+            archiveArtifacts(fingerprint: true, artifacts: "mk-oracle.*, test_ora_no_db_test.*");
         }
     }
 }

@@ -35,7 +35,7 @@ void main() {
         )
     }
 
-    stage("Run mk-oracle component tests") {
+    stage("Run mk-oracle component tests (Linux)") {
         inside_container() {
             withCredentials([
                 sshUserPrivateKey(
@@ -56,6 +56,30 @@ void main() {
                     ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1 \
                     ${checkout_dir}/packages/mk-oracle/run --remote-host
                 """)
+            }
+        }
+    }
+
+    stage("Run mk-oracle component tests (Solaris + AIX)") {
+        inside_container() {
+            withCredentials([
+                sshUserPrivateKey(
+                    credentialsId: 'jenkins-aix-build-ssh-key',
+                    keyFileVariable: 'SSH_KEYFILE',
+                ),
+            ]) {
+                // Runs only the no_db tests.
+                parallel(["solaris", "aix"].collectEntries { distro ->
+                    [(distro): {
+                        def distro_uc = distro.toUpperCase();
+                        sh("""
+                            . ${checkout_dir}/packages/mk-oracle/ssh-run.conf
+                            HOST_ADDRESS="jenkins@\${REMOTE_HOST_${distro_uc}}" \
+                            TEST_BINARIES=test_ora_no_db_test.${distro} \
+                            ${checkout_dir}/packages/mk-oracle/run --remote-host
+                        """)
+                    }]
+                })
             }
         }
     }

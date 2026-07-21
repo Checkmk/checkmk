@@ -159,6 +159,16 @@ void provide_agent_binaries(Map args) {
                 cp test_ora_no_db_test test_ora_discovery_test test_ora_with_db_test ${checkout_dir}/packages/mk-oracle/
                 """.stripIndent(),
         ],
+        "build-mk-oracle-aix-solaris-component-test": [
+            relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
+            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
+            additional_build_params: [],
+            skip: ! test_binaries_only,
+            retry: 1,
+            install_cmd: """\
+                cp test_ora_no_db_test.aix test_ora_no_db_test.solaris ${checkout_dir}/packages/mk-oracle/
+                """.stripIndent(),
+        ],
         "winagt-build": [
             // NOTE: We're stripping of "Testing/..." if present, because
             //       Windows can't handle long folder names so we take the absolute

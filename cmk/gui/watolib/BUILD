@@ -43,6 +43,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:rulesets",
         requirement("flask"),
         requirement("pydantic"),
     ],

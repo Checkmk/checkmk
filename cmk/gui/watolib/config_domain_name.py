@@ -34,6 +34,7 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.config_warnings import ConfigurationWarnings
 
 ConfigDomainName = str
@@ -304,7 +305,8 @@ class ConfigVariable:
         group: ConfigVariableGroup,
         primary_domain: type[ABCConfigDomain],
         ident: str,
-        valuespec: Callable[[GlobalSettingsContext], ValueSpec],
+        valuespec: Callable[[GlobalSettingsContext], ValueSpec] | None = None,
+        form_spec: Callable[[GlobalSettingsContext], FormSpec] | None = None,
         need_restart: bool | None = None,
         need_apache_reload: bool = False,
         allow_reset: bool = True,
@@ -312,10 +314,14 @@ class ConfigVariable:
         hint: Callable[[], HTML] = HTML.empty,
         domain_hint: HTML | None = None,
     ) -> None:
+        if (valuespec is None) == (form_spec is None):
+            raise ValueError("Exactly one of valuespec or form_spec must be provided")
+
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
         self._ident = ident
         self._valuespec_func = valuespec
+        self._form_spec_func = form_spec
         self._need_restart = need_restart
         self._need_apache_reload = need_apache_reload
         self._allow_reset = allow_reset
@@ -332,8 +338,29 @@ class ConfigVariable:
         """Returns the internal identifier of this configuration variable"""
         return self._ident
 
+    def value_model(self, context: GlobalSettingsContext) -> ValueSpec | FormSpec[Any]:
+        """Returns the ValueSpec or FormSpec representing the value model of this
+        configuration variable. The ValueSpec will be removed over time.
+
+        Callers should branch on ``isinstance(model, FormSpec)`` to handle both
+        backends. This mirrors ``Rulespec.value_model``."""
+        if self._form_spec_func is not None:
+            return self._form_spec_func(context)
+        assert self._valuespec_func is not None  # guaranteed by __init__
+        return self._valuespec_func(context)
+
     def valuespec(self, context: GlobalSettingsContext) -> ValueSpec:
-        """Returns the valuespec object of this configuration variable"""
+        """Returns the valuespec of this configuration variable.
+
+        Only valid for variables declared with ``valuespec=``. Variables declared
+        with ``form_spec=`` have no valuespec - call ``value_model()`` and branch
+        on ``isinstance(model, FormSpec)`` to handle both backends."""
+        if self._valuespec_func is None:
+            raise RuntimeError(
+                f"Config variable {self._ident!r} is declared with a form spec, not a "
+                f"valuespec. Call value_model() and handle the FormSpec case instead of "
+                f"valuespec()."
+            )
         return self._valuespec_func(context)
 
     def primary_domain(self) -> ABCConfigDomain:

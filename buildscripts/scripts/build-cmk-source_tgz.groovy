@@ -85,8 +85,7 @@ void main() {
     package_helper.cleanup_provided_agent_binaries("tmp_artifacts");
 
     // groovylint-disable-next-line DuplicateMapLiteral
-    def container_safe_branch_name = safe_branch_name.replace(".", "-");
-    container("ubuntu-2404-${container_safe_branch_name}-latest") {
+    inside_container(ulimit_nofile: 2048) {
         def source_package_name = {
             dir("${checkout_dir}") {
                 stage("Create source package") {

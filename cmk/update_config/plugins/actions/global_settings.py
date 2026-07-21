@@ -11,6 +11,7 @@ import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 from cmk.gui.config import active_config, Config
+from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.wato.pages.global_settings import make_global_settings_context
@@ -27,6 +28,7 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
@@ -211,9 +213,11 @@ def _transform_global_config_value(
         config_variable = config_variable_registry[global_settings_var]
     except KeyError:
         return global_settings_val
-    return config_variable.valuespec(
-        make_global_settings_context(edition(cmk.utils.paths.omd_root), omd_site(), ui_config)
-    ).transform_value(global_settings_val)
+    context = make_global_settings_context(edition(cmk.utils.paths.omd_root), omd_site(), ui_config)
+    value_model = config_variable.value_model(context)
+    if isinstance(value_model, FormSpec):
+        return migrate_form_spec_disk_value(value_model, global_settings_val)
+    return value_model.transform_value(global_settings_val)
 
 
 def _transform_global_config_values(

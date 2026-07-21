@@ -26,6 +26,7 @@ from .visitors import (
     FormSpecValidationError,
     get_visitor,
     IncomingData,
+    RawDiskData,
     RawFrontendData,
     VisitorOptions,
 )
@@ -136,6 +137,11 @@ def parse_and_validate_frontend_data[T](form_spec: FormSpec[T], data: RawFronten
 def parse_data_from_field_id[T](form_spec: FormSpec[T], field_id: str) -> object:
     """Computes/validates the value from a vue formular field"""
     return parse_and_validate_frontend_data(form_spec, read_data_from_frontend(field_id))
+
+
+def migrate_form_spec_disk_value[T](form_spec: FormSpec[T], value: object) -> object:
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
+    return visitor.to_disk(RawDiskData(value))
 
 
 def validate_value_from_frontend[T](

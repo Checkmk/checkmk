@@ -2153,8 +2153,8 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _show_global_setting(self) -> None:
         forms.section(_("Global setting"))
-        html.write_text_permissive(
-            self._valuespec.value_to_html(self._global_settings[self._varname])
+        self._render_readonly_value(
+            "_vue_global_settings_global", self._global_settings[self._varname]
         )
 
     def _back_url(self) -> str:

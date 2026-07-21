@@ -14,7 +14,7 @@ import abc
 import contextlib
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from copy import deepcopy
-from typing import Any, Final, override
+from typing import Any, Final, NamedTuple, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
@@ -24,6 +24,17 @@ from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.form_specs import (
+    DisplayMode,
+    get_visitor,
+    IncomingData,
+    localize,
+    parse_data_from_field_id,
+    RawDiskData,
+    read_data_from_frontend,
+    render_form_spec,
+    VisitorOptions,
+)
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -96,7 +107,13 @@ from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.paths import log_dir, var_dir
+
+
+class SubmittedValue(NamedTuple):
+    value: Any
+    change_log_text: str | HTML
 
 
 def register(
@@ -227,16 +244,21 @@ class ABCGlobalSettingsMode(WatoMode):
 
             for config_variable in config_variables:
                 varname = config_variable.ident()
-                valuespec = config_variable.valuespec(self.make_global_settings_context(config))
+                context = self.make_global_settings_context(config)
+                value_model = config_variable.value_model(context)
+                help_text: str | HTML
+                if isinstance(value_model, FormSpec):
+                    help_text = localize(value_model.help_text)
+                    title_text = localize(value_model.title)
+                else:
+                    help_text = value_model.help() or ""
+                    title_text = value_model.title() or ""
 
                 if not global_config.global_settings.is_activated(varname):
                     continue
 
                 if self._show_only_modified and varname not in self._current_settings:
                     continue
-
-                help_text = valuespec.help() or ""
-                title_text = valuespec.title() or ""
 
                 if (
                     search
@@ -280,8 +302,31 @@ class ABCGlobalSettingsMode(WatoMode):
                 else:
                     value = default_value
 
+                if varname in self._current_settings:
+                    modified_cls = ["modified"]
+                    value_title: str | None = _("This option has been modified.")
+                elif varname in self._global_settings:
+                    modified_cls = ["modified globally"]
+                    value_title = _("This option has been modified in the global settings.")
+                else:
+                    modified_cls = []
+                    value_title = None
+
+                if isinstance(value_model, FormSpec):
+                    forms.section(title, simple=True)
+                    html.open_a(href=edit_url, class_=modified_cls, title=value_title)
+                    render_form_spec(
+                        value_model,
+                        f"_vue_gs_{varname}",
+                        RawDiskData(value),
+                        do_validate=False,
+                        display_mode=DisplayMode.READONLY,
+                    )
+                    html.close_a()
+                    continue
+
                 try:
-                    to_text = valuespec.value_to_html(value)
+                    to_text = value_model.value_to_html(value)
                 except Exception:
                     logger.exception("error converting %(value)r to text", {"value": value})
                     to_text = html.render_error(
@@ -294,17 +339,7 @@ class ABCGlobalSettingsMode(WatoMode):
                     simple = False
                 forms.section(title, simple=simple)
 
-                if varname in self._current_settings:
-                    modified_cls = ["modified"]
-                    value_title: str | None = _("This option has been modified.")
-                elif varname in self._global_settings:
-                    modified_cls = ["modified globally"]
-                    value_title = _("This option has been modified in the global settings.")
-                else:
-                    modified_cls = []
-                    value_title = None
-
-                if is_a_checkbox(valuespec):
+                if is_a_checkbox(value_model):
                     html.open_div(
                         class_=["toggle_switch_container"]
                         + modified_cls
@@ -339,9 +374,8 @@ class ABCEditGlobalSettingMode(WatoMode):
         super().__init__(edition)
         # Don't call this in _from_vars. make_global_settings_context might rely on the object
         # being fully initialized.
-        self._valuespec = self._config_variable.valuespec(
-            self.make_global_settings_context(active_config)
-        )
+        context = self.make_global_settings_context(active_config)
+        self._value_model: ValueSpec | FormSpec[Any] = self._config_variable.value_model(context)
 
     def _from_vars(self) -> None:
         self._varname = request.get_ascii_input_mandatory("varname")
@@ -399,7 +433,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         check_csrf_token()
 
         current = self._current_settings.get(self._varname)
-        new_value = None
+        new_value: Any = None
         if request.var("_reset"):
             if not transactions.check_transaction():
                 return None
@@ -420,8 +454,8 @@ class ABCEditGlobalSettingMode(WatoMode):
                 % {"varname": self._varname}
             )
         else:
-            new_value = self._valuespec.from_html_vars("ve")
-            self._valuespec.validate_value(new_value, "ve")
+            submitted = self._parse_submitted_value()
+            new_value = submitted.value
 
             if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
                 self._validate_update_piggyback_hub_config(
@@ -433,7 +467,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 _("Changed global configuration variable %(varname)s to %(value)s.")
                 % {
                     "varname": escaping.escape_attribute(self._varname),
-                    "value": escaping.escape_attribute(self._valuespec.value_to_html(new_value)),
+                    "value": escaping.escape_attribute(submitted.change_log_text),
                 }
             )
 
@@ -509,6 +543,52 @@ class ABCEditGlobalSettingMode(WatoMode):
         # Non _ vars are always added as hidden vars into a form
         return "_vue_global_settings"
 
+    def _title(self) -> str:
+        if isinstance(self._value_model, FormSpec):
+            return localize(self._value_model.title)
+        title = self._value_model.title()
+        assert isinstance(title, str)
+        return title
+
+    def _parse_submitted_value(self) -> SubmittedValue:
+        """Parse and validate the submitted value, returning it together with a
+        human-readable representation for the change log."""
+        if isinstance(self._value_model, FormSpec):
+            new_value = parse_data_from_field_id(self._value_model, self._vue_field_id())
+            masked_value = get_visitor(
+                self._value_model, VisitorOptions(migrate_values=False, mask_values=True)
+            ).to_disk(RawDiskData(new_value))
+            return SubmittedValue(new_value, str(masked_value))
+        new_value = self._value_model.from_html_vars("ve")
+        self._value_model.validate_value(new_value, "ve")
+        return SubmittedValue(new_value, self._value_model.value_to_html(new_value))
+
+    def _render_editable_value(self, value: object) -> None:
+        if isinstance(self._value_model, FormSpec):
+            if request.has_var(self._vue_field_id()):
+                value_incoming: IncomingData = read_data_from_frontend(self._vue_field_id())
+            else:
+                value_incoming = RawDiskData(value)
+            render_form_spec(
+                self._value_model, self._vue_field_id(), value_incoming, do_validate=True
+            )
+            return
+        self._value_model.render_input("ve", value)
+        self._value_model.set_focus("ve")
+        html.help(self._value_model.help())
+
+    def _render_readonly_value(self, field_id: str, value: object) -> None:
+        if isinstance(self._value_model, FormSpec):
+            render_form_spec(
+                self._value_model,
+                field_id,
+                RawDiskData(value),
+                do_validate=False,
+                display_mode=DisplayMode.READONLY,
+            )
+            return
+        html.write_text_permissive(self._value_model.value_to_html(value))
+
     def page(self, config: Config) -> None:
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
@@ -528,23 +608,19 @@ class ABCEditGlobalSettingMode(WatoMode):
             html.show_warning(hint)
 
         with html.form_context("value_editor", method="POST"):
-            title = self._valuespec.title()
-            assert isinstance(title, str)
-            forms.header(title)
+            forms.header(self._title())
             if not config.wato_hide_varnames:
                 forms.section(_("Configuration variable:"))
                 html.tt(self._varname)
 
             forms.section(_("Current setting"))
-            self._valuespec.render_input("ve", value)
-            self._valuespec.set_focus("ve")
-            html.help(self._valuespec.help())
+            self._render_editable_value(value)
 
             if is_configured_globally:
                 self._show_global_setting()
 
             forms.section(_("Factory setting"))
-            html.write_text_permissive(self._valuespec.value_to_html(defvalue))
+            self._render_readonly_value("_vue_global_settings_factory", defvalue)
 
             forms.section(_("Current state"))
             if is_configured_globally:
@@ -563,7 +639,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                         _("Your setting and factory settings are identical.")
                     )
                 else:
-                    html.write_text_permissive(self._valuespec.value_to_html(curvalue))
+                    self._render_readonly_value("_vue_global_settings_current", curvalue)
 
             forms.end()
             html.hidden_fields()
@@ -751,7 +827,11 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         edit_mode_name: str,
         global_settings_context: GlobalSettingsContext,
     ) -> MatchItem:
-        title = config_variable.valuespec(global_settings_context).title() or _("Untitled setting")
+        value_model = config_variable.value_model(global_settings_context)
+        if isinstance(value_model, FormSpec):
+            title = localize(value_model.title) or _("Untitled setting")
+        else:
+            title = value_model.title() or _("Untitled setting")
         ident = config_variable.ident()
         return MatchItem(
             title=title,

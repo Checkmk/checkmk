@@ -903,12 +903,12 @@ div.filter_buttons {
   }
 
   td.simple a.modified,
-  td.simple div.toggle_switch_container.modified,
-  td.content a.modified > table {
+  td.simple div.toggle_switch_container.modified {
     padding: 2px;
     margin-left: -2px;
     border: 1px solid $font-color-dimmed;
     border-radius: $spacing;
+    display: inline-block;
 
     &.on {
       border: 1px solid $success;

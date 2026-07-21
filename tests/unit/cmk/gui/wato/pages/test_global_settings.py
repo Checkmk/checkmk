@@ -3,18 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from collections.abc import Iterable
 
+import pytest
 from pytest import MonkeyPatch
 
 from cmk.ccc.version import Edition
+from cmk.gui.http import request
 from cmk.gui.i18n import _l
+from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import TextInput
+from cmk.gui.wato.pages import global_settings
 from cmk.gui.wato.pages.global_settings import DefaultModeEditGlobals, MatchItemGeneratorSettings
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable, ConfigVariableGroup
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    ConfigVariable,
+    ConfigVariableGroup,
+    ConfigVariableRegistry,
+)
+from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import Password
 
 
 def test_match_item_generator_settings(
@@ -61,3 +73,32 @@ def test_match_item_generator_settings(
             match_texts=["title", "ident"],
         ),
     ]
+
+
+@pytest.mark.usefixtures("load_config")
+def test_parse_submitted_value_masks_password(
+    monkeypatch: MonkeyPatch,
+    test_edition: Edition,
+) -> None:
+    registry = ConfigVariableRegistry()
+    registry.register(
+        ConfigVariable(
+            group=ConfigVariableGroupUserInterface,
+            primary_domain=ConfigDomainGUI,
+            ident="test_secret",
+            form_spec=lambda context: Password(title=Title("Secret")),
+        )
+    )
+    monkeypatch.setattr(global_settings, "config_variable_registry", registry)
+
+    request.set_var("varname", "test_secret")
+    # PasswordVisitor frontend model: (type, password_id, password, encrypted)
+    request.set_var("_vue_global_settings", json.dumps(["explicit_password", "", "hunter2", False]))
+
+    submitted = global_settings.ModeEditGlobalSetting(test_edition)._parse_submitted_value()
+
+    # The value that gets stored keeps the cleartext password ...
+    assert submitted.value[2][1] == "hunter2"
+    # ... but the text written to the audit log does not.
+    assert "hunter2" not in submitted.change_log_text
+    assert "******" in submitted.change_log_text

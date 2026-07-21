@@ -44,38 +44,46 @@ watch(
 
 <template>
   <div class="monitoring-acknowledge-form">
-    <label class="monitoring-acknowledge-form__field">
-      <span class="monitoring-acknowledge-form__label">
-        {{ _t('Comment') }}<CmkLabelRequired :show="true" space="before" />
-      </span>
-      <CmkInput v-model="model.comment" field-size="LARGE" :placeholder="_t('Enter a comment…')" />
-    </label>
-
-    <div class="monitoring-acknowledge-form__field">
-      <span class="monitoring-acknowledge-form__label">
-        {{ _t('Expire on') }}
-        <CmkHelpText
-          :help="
-            _t(
-              'Optionally let the acknowledgement expire automatically. Leave empty to keep it ' +
-                'until the host recovers or it is removed manually.'
-            )
-          "
+    <div class="monitoring-acknowledge-form__section">
+      <label class="monitoring-acknowledge-form__field">
+        <span class="monitoring-acknowledge-form__label">
+          {{ _t('Comment') }}<CmkLabelRequired :show="true" space="before" />
+        </span>
+        <CmkInput
+          v-model="model.comment"
+          field-size="LARGE"
+          :placeholder="_t('Enter a comment…')"
         />
-      </span>
-      <CmkDateTimePicker
-        v-model="model.expireOn"
-        :nullable="true"
-        :label="_t('Choose an expiry date & time')"
-      />
+      </label>
     </div>
 
-    <CmkCheckbox
-      v-model="model.sticky"
-      :label="_t('Ignore status changes until the host recovers (OK/UP)')"
-    />
-    <CmkCheckbox v-model="model.persistent" :label="_t('Persistent comment')" />
-    <CmkCheckbox v-model="model.notify" :label="_t('Notify affected users')" />
+    <div class="monitoring-acknowledge-form__section">
+      <div class="monitoring-acknowledge-form__field">
+        <span class="monitoring-acknowledge-form__label">
+          {{ _t('Expire on') }}
+          <CmkHelpText
+            :help="
+              _t(
+                'Optionally let the acknowledgement expire automatically. Leave empty to keep it ' +
+                  'until the host recovers or it is removed manually.'
+              )
+            "
+          />
+        </span>
+        <CmkDateTimePicker
+          v-model="model.expireOn"
+          :nullable="true"
+          :label="_t('Choose an expiry date & time')"
+        />
+      </div>
+
+      <CmkCheckbox
+        v-model="model.sticky"
+        :label="_t('Ignore status changes until the host recovers (OK/UP)')"
+      />
+      <CmkCheckbox v-model="model.persistent" :label="_t('Persistent comment')" />
+      <CmkCheckbox v-model="model.notify" :label="_t('Notify affected users')" />
+    </div>
   </div>
 </template>
 
@@ -84,6 +92,15 @@ watch(
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
+}
+
+.monitoring-acknowledge-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+  padding: var(--spacing);
+  border-radius: var(--border-radius);
+  background: var(--ux-theme-3);
 }
 
 .monitoring-acknowledge-form__field {

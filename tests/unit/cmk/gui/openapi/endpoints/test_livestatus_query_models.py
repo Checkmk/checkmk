@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import cast
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
@@ -15,8 +17,12 @@ from cmk.gui.openapi.api_endpoints.livestatus_query.models.request_models import
 from cmk.gui.openapi.api_endpoints.livestatus_query.models.response_models import (
     LivestatusQueryResponse,
 )
+from cmk.gui.openapi.api_endpoints.livestatus_query.query_table import _query_rows
 from cmk.gui.openapi.framework.model.common_fields import BinaryBase64
-from cmk.livestatus_client.queries import ResultRow
+from cmk.gui.openapi.utils import ProblemException
+from cmk.livestatus_client import MKLivestatusQueryError, MultiSiteConnection
+from cmk.livestatus_client.queries import Query, ResultRow
+from cmk.livestatus_client.tables import Hosts
 
 
 def test_valid_body_compiles_expected_lql() -> None:
@@ -228,3 +234,23 @@ def test_from_result_serializes_wire_shape() -> None:
         "columns": ["name", "blob"],
         "rows": [{"name": "heute", "blob": expected_blob}],
     }
+
+
+def test_query_rows_does_not_leak_livestatus_internals() -> None:
+    internal_marker = "/omd/sites/heute"
+
+    class _RaisingConnection:
+        prepend_site = False
+
+        def query(self, query: str) -> object:
+            raise MKLivestatusQueryError(f"Invalid GET query at {internal_marker}/tmp/run/live")
+
+    live = cast(MultiSiteConnection, _RaisingConnection())
+    with pytest.raises(ProblemException) as exc_info:
+        _query_rows(live, Query([Hosts.name]))
+    problem = exc_info.value
+    assert problem.code == 400
+    assert internal_marker not in (problem.description + problem.detail), (
+        "livestatus internals leaked into the API error response: "
+        f"title={problem.description!r} detail={problem.detail!r}"
+    )

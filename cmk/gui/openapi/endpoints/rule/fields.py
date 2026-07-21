@@ -513,11 +513,14 @@ class HostOrServiceConditionSchema(base.BaseSchema):
     @pre_dump(pass_many=False)
     def convert_to_api(
         self,
-        data: HostOrServiceConditions,
+        data: HostOrServiceConditions | None,
         many: bool = False,
         partial: bool = False,
     ) -> ApiMatchExpression | None:
-        if not data:
+        if data is None:
+            # An empty match_on list is a deliberate, meaningful condition ("matches no
+            # host/service") - distinct from no condition at all (`None`). Don't conflate
+            # the two: a bare `not data` check would also be True for an empty list.
             return None
 
         def _remove_regex_dict(_entry):

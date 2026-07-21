@@ -2898,6 +2898,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "robotmk_ext"
+version = "0.1.0"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "rpassword"
 version = "7.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

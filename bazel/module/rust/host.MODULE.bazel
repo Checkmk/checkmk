@@ -6,6 +6,7 @@ host_crates.from_cargo(
     lockfile = "//requirements/rust/host:Cargo.lock.bazel",
     manifests = [
         "//requirements/rust/host:Cargo.toml",
+        "//agents/wnx/extensions/robotmk_ext:Cargo.toml",
         "//packages/cmk-agent-ctl:Cargo.toml",
         "//packages/mk-sql:Cargo.toml",
         "//packages/mk-oracle:Cargo.toml",

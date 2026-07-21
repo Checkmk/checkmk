@@ -25,7 +25,6 @@ fn main() {
         },
         Mode::WithLogInC => loop {
             let mut f = OpenOptions::new()
-                .write(true)
                 .create(true)
                 .append(true)
                 .open("c:\\robot_mk_ext.log")

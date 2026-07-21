@@ -27,17 +27,24 @@ set cur_dir=%cd%
 set output_dir=%cur_dir%\..\..\..\..\artefacts
 set target=x86_64-pc-windows-msvc
 set exe_name=robotmk_ext.exe
-set exe=target\%target%\release\%exe_name%
+:: The crate is a member of the host Cargo workspace at
+:: requirements/rust/host, so its build output lands in that workspace's
+:: target directory.
+set workspace_dir=%cur_dir%\..\..\..\..\requirements\rust\host
+set exe=%workspace_dir%\target\%target%\release\%exe_name%
 rustup toolchain list
-rustup default 1.72.0
-rustup target add %target%
-rustup update 1.72.0
+:: The toolchain comes from this crate's rust-toolchain.toml (pinned to
+:: 1.94.1); rustup installs it on demand. Build from this crate's own
+:: directory so that pin governs -- the host workspace directory has no
+:: rust-toolchain.toml and would fall back to rustup's stale global default.
 
 :: Build
 powershell Write-Host "Building Rust executables" -Foreground White
-cargo build --release --target %target% 2>&1
+:: The host workspace .cargo/config.toml (static CRT linking) is not on the
+:: config discovery path from this directory, so load it explicitly.
+cargo build --release --target %target% --config "%workspace_dir%\.cargo\config.toml" 2>&1
 if ERRORLEVEL 1 (
-        powershell Write-Host "Failed cargo build" -Foreground Red 
+        powershell Write-Host "Failed cargo build" -Foreground Red
         exit /b 18
 )
 powershell Write-Host "Building Rust SUCCESS" -Foreground Green

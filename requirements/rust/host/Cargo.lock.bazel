@@ -1,5 +1,5 @@
 {
-  "checksum": "2754b5818b685f3d788a46bd8b316c6a24e3ca281dfda2fd63fbc67d8c32bbde",
+  "checksum": "02349cd368e073d7cb4c7090f53ce1bc318f8e9e32aa14a368ee410a9d6c1c1c",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -17520,6 +17520,33 @@
       ],
       "license_file": "LICENSE"
     },
+    "robotmk_ext 0.1.0": {
+      "name": "robotmk_ext",
+      "version": "0.1.0",
+      "package_url": null,
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "clap 4.5.45",
+              "target": "clap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": null
+    },
     "rpassword 7.4.0": {
       "name": "rpassword",
       "version": "7.4.0",
@@ -29236,7 +29263,8 @@
   "workspace_members": {
     "cmk-agent-ctl 1.0.0": "packages/cmk-agent-ctl",
     "mk-oracle 0.1.0": "packages/mk-oracle",
-    "mk-sql 0.1.0": "packages/mk-sql"
+    "mk-sql 0.1.0": "packages/mk-sql",
+    "robotmk_ext 0.1.0": "agents/wnx/extensions/robotmk_ext"
   },
   "conditions": {
     "aarch64-pc-windows-gnullvm": [],

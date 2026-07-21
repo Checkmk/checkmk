@@ -5,6 +5,7 @@
 
 [workspace]
 members = [
+  "../../../agents/wnx/extensions/robotmk_ext",
   "../../../packages/cmk-agent-ctl",
   "../../../packages/mk-sql",
   "../../../packages/mk-oracle",

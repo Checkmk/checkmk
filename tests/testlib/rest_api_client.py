@@ -4855,6 +4855,36 @@ class DisabledEndpointStubClient(RestApiClient):
         return self.request("get", "/test-disabled-versioned-stub", expect_ok=expect_ok)
 
 
+class LivestatusQueryClient(RestApiClient):
+    domain: DomainType = "livestatus_query"
+    default_version = APIVersion.INTERNAL
+
+    def query(
+        self,
+        table: str,
+        columns: Sequence[str],
+        query: Mapping[str, object] | None = None,
+        sites: Sequence[str] | None = None,
+        limit: int | None = None,
+        api_version: APIVersion | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"table": table, "columns": list(columns)}
+        if query is not None:
+            body["query"] = query
+        if sites is not None:
+            body["sites"] = list(sites)
+        if limit is not None:
+            body["limit"] = limit
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            api_version=api_version,
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -4930,6 +4960,7 @@ class ClientRegistry:
     ServiceAvailability: ServiceAvailabilityClient
     DisabledEndpointStub: DisabledEndpointStubClient
     MonitorHosts: MonitorHostsClient
+    LivestatusQuery: LivestatusQueryClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -4997,4 +5028,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
         DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
+        LivestatusQuery=LivestatusQueryClient(request_handler, url_prefix),
     )

@@ -1,5 +1,6 @@
 #!groovy
 
+/// TODO: rename
 /// file: test-integration-redfish.groovy
 
 void main() {
@@ -22,7 +23,7 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def download_dir = "package_download";
-    def make_target = "test-integration-redfish";
+    def make_target = "test-system-redfish";
     def test_results_dir = "test-results";
 
     def setup_values = single_tests.common_prepare(

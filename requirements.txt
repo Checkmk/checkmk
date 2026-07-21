@@ -1551,7 +1551,7 @@ greenlet==3.5.3 \
 grequests==0.7.0 \
     --hash=sha256:4733edfcece027de25ae8eff86a87f563d7e829fdacbf3ce8b3aeea507694287 \
     --hash=sha256:5c33f14268df5b8fa1107d8537815be6febbad6ec560524d6a404b7778cf6ba6
-    # via -r tests/dev-requirements.in
+    # via -r tests/system/redfish/dev-requirements.in
 grpc-google-iam-v1==0.14.4 \
     --hash=sha256:392b3796947ed6334e61171d9ab06bf7eb357f554e5fc7556ad7aab6d0e17038 \
     --hash=sha256:412facc320fcbd94034b4df3d557662051d4d8adfa86e0ddb4dca70a3f739964
@@ -2870,7 +2870,7 @@ multidict==6.7.1 \
 multipart==2.0.0 \
     --hash=sha256:b3d4d473c4b96bb43e0d54b76fcc3b89b904df28387daf54e08405eb2123a081 \
     --hash=sha256:d6076567b489270271d9ec103d404745da1501ad5b70e3a7f1f07f5623d82850
-    # via -r tests/dev-requirements.in
+    # via -r tests/system/redfish/dev-requirements.in
 mypy==2.3.0 \
     --hash=sha256:04e617030eca5221909c8b7d8d7fd1c637948199aa2100b2ad9813feb07e1491 \
     --hash=sha256:094af99f92638aa92852326188b85a89e50f4a472f44827c03362228482f0762 \
@@ -4221,6 +4221,7 @@ pytest==9.1.1 \
     #   -r packages/cmk-web/dev-requirements.in
     #   -r packages/cmk-werks/dev-requirements.in
     #   -r tests/dev-requirements.in
+    #   -r tests/system/redfish/dev-requirements.in
     #   pytest-asyncio
     #   pytest-base-url
     #   pytest-benchmark

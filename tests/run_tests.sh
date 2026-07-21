@@ -53,7 +53,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-integration                        Run integration tests locally
   test-integration-k8s                    Run integration tests (not requires_non_root_user)
   test-integration-non-root               Run integration tests (requires_non_root_user)
-  test-integration-redfish                Run integration tests for redfish
+  test-system-redfish                     Run system tests for redfish
   test-integration-otel                   Run integration tests for otel (ultimate edition)
   test-integration-mcp                    Run integration tests for the mcp-server (pro edition)
   test-integration-oauth                  Run integration tests for the oauth authorization server (pro edition)
@@ -324,9 +324,9 @@ test-integration-non-root() {
         -m requires_non_root_user --session-timeout 600
 }
 
-test-integration-redfish() {
+test-system-redfish() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration_redfish")" \
+        "$(realpath "$SCRIPT_DIR/system/redfish")" \
         --session-timeout 1800
 }
 
@@ -468,7 +468,7 @@ _dockerable-test-docker() {
 test-integration-docker() { _system-tests-docker test-integration; }
 test-integration-k8s-docker() { _system-tests-docker test-integration-k8s; }
 test-integration-non-root-docker() { _system-tests-docker test-integration-non-root; }
-test-integration-redfish-docker() { _system-tests-docker test-integration-redfish; }
+test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-integration-otel-docker() { _system-tests-docker test-integration-otel; }
 test-composition-docker() { _system-tests-docker test-composition; }
 test-update-community-docker() { _system-tests-docker test-update-community; }

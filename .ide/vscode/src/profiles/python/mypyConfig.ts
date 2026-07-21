@@ -25,7 +25,7 @@ const TOP_LEVEL_TEST_TREES = [
   'tests/agent_plugin_integration',
   'tests/agent-integration',
   'tests/extension_compatibility',
-  'tests/integration_redfish',
+  'tests/system/redfish',
   'tests/packaging'
 ]
 

@@ -56,8 +56,8 @@ GPL_HEADER_NOTIFICATION = re.compile(
 ignored_files = [
     "packages/cmk-notification-plugins/cmk/notification_plugins/ilert.py",
     "packages/cmk-notification-plugins/cmk/notification_plugins/signl4.py",
-    "tests/integration_redfish/mockup-server/redfishMockupServer.py",
-    "tests/integration_redfish/mockup-server/rfSsdpServer.py",
+    "tests/system/redfish/mockup-server/redfishMockupServer.py",
+    "tests/system/redfish/mockup-server/rfSsdpServer.py",
     # Remove when CMK-31227 is implemented
     "packages/cmk-agent-receiver/cmk/agent_receiver/relay/api/__init__.py",
     "packages/cmk-agent-receiver/cmk/agent_receiver/relay/api/routers/relays/handlers/cert_retriever.py",

@@ -178,6 +178,7 @@ compile_requirements_in(
         "//agents/plugins:dev-requirements.in",
         "//cmk:requirements.in",
         "//tests:dev-requirements.in",
+        "//tests/system/redfish:dev-requirements.in",
         "//omd:dev-requirements.in",
         "//packages:python_requirements",
         "//packages:dev_python_requirements",

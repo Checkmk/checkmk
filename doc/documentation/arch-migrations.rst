@@ -169,6 +169,24 @@ Two threads run here:
 * Migrate our own remaining plugins out of ``cmk/gui/plugins/`` to their owning feature and the discovery mechanism.
 * Decide whether the old ``cmk.gui.plugins.*`` namespaces kept for compatibility can be dropped, and remove them where they can.
 
+Tests: fixture-based suites to feature- and scope-based classification
+======================================================================
+
+:Phase: starting
+:Owner: Moritz Kiemer
+:Old: top-level ``tests/`` suites grouped by the fixture they happen to use (``tests/integration``, ``tests/composition``, ``tests/gui_e2e``, ``tests/integration_redfish``, ...)
+:New: tests classified by *scope* (static analysis, package, integration, system level) and, within the system level, organized by *feature* rather than fixture
+:References: ``tests/system/README-test-suite-organization.md``; `Test classification and architecture <https://wiki.lan.checkmk.net/spaces/DEV/pages/209453301/Test+classification+and+architecture>`_
+
+The historical suites are named after the machinery a test needs — ``composition`` is "everything that needs a remote site", ``gui_e2e`` is "everything that needs Playwright" — which scatters a single feature across several suites and lumps unrelated features together.
+The target layout classifies every test by scope and groups system level tests by the feature under test (``redfish``, ``otel``, ``piggyback``, ``agent bakery``, ...):
+
+* Package tests (unit + component) live in the owning package's own ``tests/`` directory and are fully Bazel-managed.
+* Cross-package tests without a running site live under ``tests/integration/``.
+* System level tests (the former ``integration``/``composition``/``gui_e2e`` suites) move under ``tests/system/<feature>/``, are parametrized over the site edition, and declare the feature they exercise rather than carrying edition-specific skips.
+
+The first steps are visible under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``); most suites still follow the old fixture-based grouping.
+
 Tooling: Make to Bazel
 ===========================
 

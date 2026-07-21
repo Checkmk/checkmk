@@ -245,22 +245,6 @@ py_library(
 )
 
 py_library(
-    name = "integration_redfish",
-    testonly = True,
-    srcs = glob(
-        include = ["integration_redfish/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        requirement("pytest"),
-        requirement("grequests"),
-        requirement("multipart"),
-        requirement("opentelemetry-instrumentation-requests"),
-        "//tests/testlib",
-    ],
-)
-
-py_library(
     name = "packaging",
     testonly = True,
     srcs = glob(

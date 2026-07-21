@@ -20,13 +20,15 @@ from cmk.gui.openapi.framework.model.common_fields import (
     _FolderValidation,
     BinaryBase64,
     columns_validator,
+    parse_columns,
+    parse_query_expression,
     query_expression_validator,
 )
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client.expressions import BinaryExpression, NothingExpression, QueryExpression
-from cmk.livestatus_client.tables import Hosts
+from cmk.livestatus_client.tables import Hosts, Status
 from cmk.livestatus_client.types import Column
 
 
@@ -211,6 +213,24 @@ class TestColumnsValidator:
         )
         result = adapter.validate_python(["alias"])
         assert repr(result[0]) == repr(Hosts.name)
+
+
+def test_parse_query_expression_validates_against_call_time_table() -> None:
+    # The Table class is supplied at call time, not baked in at factory time:
+    # `program_start` is a Status column but not a Hosts column, so the same
+    # filter validates against Status and is rejected against Hosts.
+    expr_dict = {"op": "=", "left": "program_start", "right": "0"}
+    assert isinstance(parse_query_expression(Status, expr_dict), QueryExpression)
+    with pytest.raises(ValueError, match="program_start"):
+        parse_query_expression(Hosts, expr_dict)
+
+
+def test_parse_columns_validates_against_call_time_table() -> None:
+    # Column names resolve to Column objects of the call-time table and are
+    # rejected when that table has no such column.
+    assert repr(parse_columns(Status, ["program_start"])) == repr([Status.program_start])
+    with pytest.raises(ValueError, match="program_start"):
+        parse_columns(Hosts, ["program_start"])
 
 
 class TestFolderValidation:

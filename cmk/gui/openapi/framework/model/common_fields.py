@@ -8,7 +8,7 @@ import ipaddress
 import json
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Annotated, ClassVar, Literal, overload, override, Self
 
 from annotated_types import Ge
@@ -485,6 +485,78 @@ def timerange_from_internal(
     raise ValueError(f"Invalid timerange value: {timerange}")
 
 
+def parse_query_expression(
+    table: type[Table], value: object, *, allow_empty: bool = False
+) -> QueryExpression:
+    """Parse and validate a Livestatus filter expression against a call-time table.
+
+    This is the single owner of the wire-value filter rules, shared by the
+    static-table `query_expression_validator` factory and the dynamic-table
+    endpoint. It hides JSON-string vs dict handling, empty-value handling
+    (`NothingExpression`), the `tree_to_expr` wiring, and normalization of
+    every failure to `ValueError`. The `table` is supplied at call time, so
+    column names are validated against whichever table the caller passes.
+
+    Args:
+        table: A Livestatus Table class used to validate column names.
+        value: Either a JSON string or an already-deserialized dict.
+        allow_empty: If True, an empty dict or empty string is accepted and
+            treated as NothingExpression (no filter applied).
+    """
+    if not isinstance(value, str | dict):
+        raise ValueError(f"Expected str or dict, got {value!r}")
+    if allow_empty and (not value or value == "{}"):
+        return NothingExpression()
+    if isinstance(value, str):
+        try:
+            data: Mapping[str, object] = json.loads(value)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON query expression: {e}") from e
+    else:
+        data = value
+    try:
+        return tree_to_expr(data, table)
+    except (ValueError, KeyError) as e:
+        raise ValueError(str(e)) from e
+
+
+def parse_columns(
+    table: type[Table], value: object, *, mandatory: Sequence[str] = ()
+) -> list[Column]:
+    """Validate column names against a call-time table and resolve them to Columns.
+
+    This is the single owner of the wire-value column rules, shared by the
+    static-table `columns_validator` factory and the dynamic-table endpoint. It
+    hides column-name validation against `table.__columns__()`, prepending any
+    missing mandatory columns in order, and resolving names to `Column` objects.
+    The `table` is supplied at call time.
+
+    Args:
+        table: A Livestatus Table class used to validate column names.
+        value: The list of column-name strings to validate.
+        mandatory: Column names that must always be present; prepended in order
+            if absent. These are assumed to be valid columns of `table` and are
+            NOT re-validated here (the `columns_validator` factory checks them
+            eagerly at annotation time); an unknown mandatory name surfaces as an
+            `AttributeError` from column resolution, not a `ValueError`. Callers
+            that accept `Column` objects normalize them to names before calling.
+    """
+    if not isinstance(value, list):
+        raise ValueError(f"Expected list, got {type(value).__name__!r}")
+    valid_columns = set(table.__columns__())
+    columns: list[str] = []
+    for item in value:
+        if not isinstance(item, str):
+            raise ValueError(f"Expected str column name, got {type(item).__name__!r}")
+        if item not in valid_columns:
+            raise ValueError(f"Unknown column {item!r} for table {table.__tablename__!r}")
+        columns.append(item)
+    for mand in reversed(mandatory):
+        if mand not in columns:
+            columns.insert(0, mand)
+    return [getattr(table, col) for col in columns]
+
+
 def query_expression_validator(table: type[Table], *, allow_empty: bool = False) -> PlainValidator:
     """Returns a pydantic PlainValidator that parses and validates a JSON Livestatus query expression string.
 
@@ -512,21 +584,7 @@ def query_expression_validator(table: type[Table], *, allow_empty: bool = False)
     """
 
     def _parse(value: object) -> QueryExpression:
-        if not isinstance(value, str | dict):
-            raise ValueError(f"Expected str or dict, got {value!r}")
-        if allow_empty and (not value or value == "{}"):
-            return NothingExpression()
-        if isinstance(value, str):
-            try:
-                data: Mapping[str, object] = json.loads(value)
-            except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid JSON query expression: {e}") from e
-        else:
-            data = value
-        try:
-            return tree_to_expr(data, table)
-        except (ValueError, KeyError) as e:
-            raise ValueError(str(e)) from e
+        return parse_query_expression(table, value, allow_empty=allow_empty)
 
     return PlainValidator(func=_parse, json_schema_input_type=str | dict[str, object])
 
@@ -559,18 +617,6 @@ def columns_validator(
             _mandatory.append(name)
 
     def _parse(value: object) -> list[Column]:
-        if not isinstance(value, list):
-            raise ValueError(f"Expected list, got {type(value).__name__!r}")
-        columns: list[str] = []
-        for item in value:
-            if not isinstance(item, str):
-                raise ValueError(f"Expected str column name, got {type(item).__name__!r}")
-            if item not in table.__columns__():
-                raise ValueError(f"Unknown column {item!r} for table {table.__tablename__!r}")
-            columns.append(item)
-        for mand in reversed(_mandatory):
-            if mand not in columns:
-                columns.insert(0, mand)
-        return [getattr(table, col) for col in columns]
+        return parse_columns(table, value, mandatory=_mandatory)
 
     return PlainValidator(func=_parse, json_schema_input_type=list[str])

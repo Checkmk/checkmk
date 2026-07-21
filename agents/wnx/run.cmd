@@ -80,6 +80,10 @@ if "%~1"=="--detach"        (set arg_detach=1)       & shift & goto CheckOpts
 if "%~1"=="--var"           (set arg_var_name=%~2) & (set arg_var_value=%~3) & shift & shift & shift & goto CheckOpts
 
 if "%~1"=="--sign"          (set arg_detach=1) & (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
+
+:: Azure Artifact Signing: signs in-process, no YubiKey USB token, so no detach.
+:: The two trailing deprecated params mirror --sign's calling convention.
+if "%~1"=="--sign-azure"    (set arg_sign_azure=1) & shift & shift & shift & goto CheckOpts
 )
 if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_mk_sql=1) & (set arg_ext=1) & (set arg_msi=1)
 
@@ -298,27 +302,45 @@ powershell Write-Host "Unit test SUCCESS" -Foreground Green
 goto :eof
 
 :sign_binaries
-if not "%arg_sign%" == "1" powershell Write-Host "Signing binaries skipped" -Foreground Yellow & goto :eof
+if not "%arg_sign%" == "1" if not "%arg_sign_azure%" == "1" powershell Write-Host "Signing binaries skipped" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Signing binary..." -Foreground White
 :: to be sure that all artifacts are up to date
 "%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+:: Azure signs in-process; only the YubiKey path needs the USB token.
+if "%arg_sign_azure%" == "1" goto sign_binaries_no_attach
 call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
 if errorlevel 1 call powershell Write-Host "Failed to attach USB token" -Foreground Red & call :halt 91
+:sign_binaries_no_attach
 del /Q %hash_file% 2>nul
 powershell Write-Host "Signing Executables" -Foreground White
-call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
+call :sign_one %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
 if errorlevel 1 powershell Write-Host "Failed to sign check_mk_service64.exe" -Foreground Red & call :halt 92
-call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
+call :sign_one %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
 if errorlevel 1 powershell Write-Host "Failed to sign check_mk_service32.exe" -Foreground Red & call :halt 93
-call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe %hash_file%
+call :sign_one %arte%\cmk-agent-ctl.exe
 if errorlevel 1 powershell Write-Host "Failed to sign cmk-agent-ctl.exe" -Foreground Red & call :halt 94
-call scripts\sign_code.cmd %arte%\mk-sql.exe %hash_file%
+call :sign_one %arte%\mk-sql.exe
 if errorlevel 1 powershell Write-Host "Failed to sign mk-sql.exe" -Foreground Red & call :halt 95
-call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
+call :sign_one %build_dir%\ohm\OpenHardwareMonitorLib.dll
 if errorlevel 1 powershell Write-Host "Failed to sign OpenHardwareMonitorLib.dll" -Foreground Red & call :halt 96
-call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
+call :sign_one %build_dir%\ohm\OpenHardwareMonitorCLI.exe
 if errorlevel 1 powershell Write-Host "Failed to sign OpenHardwareMonitorCLI.exe" -Foreground Red & call :halt 97
 goto :eof
+
+:: Sign a single file, honouring the selected method. Azure signs in-process
+:: (sign_code_azure.ps1) and we record the hash ourselves; YubiKey delegates to
+:: sign_code.cmd, which signs and appends the hash in one step.
+:sign_one
+if "%arg_sign_azure%" == "1" goto sign_one_azure
+call scripts\sign_code.cmd %1 %hash_file%
+exit /b %errorlevel%
+:sign_one_azure
+:: Azure Artifact Signing rejects relative paths ("is not rooted"), so resolve
+:: %1 to a fully qualified path with %~f1 before handing it to the signer.
+pwsh -ExecutionPolicy Bypass -File scripts\sign_code_azure.ps1 "%~f1"
+if errorlevel 1 exit /b 1
+powershell -File .\scripts\add_hash_line.ps1 "%~f1" %hash_file%
+exit /b %errorlevel%
 
 :build_msi
 if not "%arg_msi%" == "1" powershell Write-Host "Skipped MSI Build" -Foreground Yellow & goto :eof
@@ -367,10 +389,11 @@ copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi > nul
 goto :eof
 
 :sign_msi
-if not "%arg_sign%" == "1" powershell Write-Host "Signing MSI skipped" -Foreground Yellow & goto :eof
+if not "%arg_sign%" == "1" if not "%arg_sign_azure%" == "1" powershell Write-Host "Signing MSI skipped" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Signing MSI" -Foreground White
-@call scripts\sign_code.cmd %arte%\check_mk_agent.msi  %hash_file%
-call scripts\detach_usb_token.cmd %usbip_exe%
+@call :sign_one %arte%\check_mk_agent.msi
+:: Only the YubiKey path holds the USB token, so only it needs a detach.
+if not "%arg_sign_azure%" == "1" call scripts\detach_usb_token.cmd %usbip_exe%
 call scripts\call_signing_tests.cmd
 if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & call :halt 41
 @py -3 scripts\check_hashes.py %hash_file%
@@ -418,7 +441,8 @@ echo.  -M, --msi            build msi
 echo.  -O, --ohm            build ohm
 echo.  -E, --extensions     build extensions
 echo.  -T, --test           run unit test controller
-echo.  --sign file secret   sign controller with file in c:\common and secret
+echo.  --sign file secret   sign using local YubiKey and scsigntool.exe
+echo.  --sign-azure         sign using Azure Artifact Signing
 echo.
 echo.Examples:
 echo.

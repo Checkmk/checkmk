@@ -5,17 +5,22 @@
 
 import json
 from collections.abc import Iterable
+from pathlib import Path
 
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
+from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import TextInput
+from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
 from cmk.gui.wato.pages import global_settings
 from cmk.gui.wato.pages.global_settings import DefaultModeEditGlobals, MatchItemGeneratorSettings
 from cmk.gui.watolib.config_domain_name import (
@@ -23,10 +28,17 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableRegistry,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
+from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import Password
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    FormSpec,
+    Integer,
+    Password,
+)
 
 
 def test_match_item_generator_settings(
@@ -102,3 +114,47 @@ def test_parse_submitted_value_masks_password(
     # ... but the text written to the audit log does not.
     assert "hunter2" not in submitted.change_log_text
     assert "******" in submitted.change_log_text
+
+
+def _global_settings_context() -> GlobalSettingsContext:
+    return GlobalSettingsContext(
+        target_site_id=SiteId("test"),
+        edition_of_local_site=Edition.COMMUNITY,
+        site_neutral_log_dir=Path("/tmp"),
+        site_neutral_var_dir=Path("/tmp"),
+        configured_sites=SiteConfigurations({}),
+        configured_graph_timeranges=[],
+    )
+
+
+def _table_row_limit_form_spec() -> Integer:
+    form_spec = ConfigVariableTableRowLimit.value_model(_global_settings_context())
+    assert isinstance(form_spec, Integer)
+    return form_spec
+
+
+def test_table_row_limit_uses_form_spec_backend() -> None:
+    assert isinstance(ConfigVariableTableRowLimit.value_model(_global_settings_context()), FormSpec)
+
+
+def test_table_row_limit_default_matches_general_config() -> None:
+    assert _table_row_limit_form_spec().prefill == DefaultValue(100)
+
+
+def test_table_row_limit_valid_value_round_trips_as_int() -> None:
+    visitor = get_visitor(
+        _table_row_limit_form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
+    )
+    assert visitor.validate(RawFrontendData(50)) == []
+    assert visitor.to_disk(RawFrontendData(50)) == 50
+
+
+def test_table_row_limit_rejects_value_below_minimum() -> None:
+    visitor = get_visitor(
+        _table_row_limit_form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
+    )
+    assert visitor.validate(RawFrontendData(0))
+
+
+def test_table_row_limit_upgrade_keeps_stored_int() -> None:
+    assert migrate_form_spec_disk_value(_table_row_limit_form_spec(), 42) == 42

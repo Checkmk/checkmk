@@ -128,6 +128,8 @@ from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Help, Title
 
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import (
@@ -869,15 +871,16 @@ ConfigVariableTableRowLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="table_row_limit",
-    valuespec=lambda context: Integer(
-        title=_("Limit the number of rows shown in tables"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Limit the number of rows shown in tables"),
+        help_text=Help(
             "Several pages which use tables to show data in rows, like the "
             '"Users" configuration page, can be configured to show '
             "only a limited number of rows when accessing the pages."
         ),
-        minvalue=1,
-        unit=_("rows"),
+        unit_symbol="rows",
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
+        prefill=fs.DefaultValue(100),
     ),
 )
 

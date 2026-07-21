@@ -108,7 +108,7 @@ test('a gauge metric offers the last, max, avg and min functions', async () => {
   })
 })
 
-test('a histogram metric offers the quantile, count delta, count rate, sum rate, sum delta and cumulative sum field functions', async () => {
+test('a histogram metric offers the quantile, count delta, count rate, sum rate, sum delta, fraction below, fraction between and cumulative sum field functions', async () => {
   renderConsolidation({ metricTypes: ['histogram'] })
 
   await userEvent.click(chip())
@@ -120,6 +120,8 @@ test('a histogram metric offers the quantile, count delta, count rate, sum rate,
     expect(screen.getByRole('option', { name: 'Count rate' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'Sum rate' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'Sum delta' })).toBeVisible()
+    expect(screen.getByRole('option', { name: 'Fraction below' })).toBeVisible()
+    expect(screen.getByRole('option', { name: 'Fraction between' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'Cumulative sum field (raw)' })).toBeVisible()
   })
 })

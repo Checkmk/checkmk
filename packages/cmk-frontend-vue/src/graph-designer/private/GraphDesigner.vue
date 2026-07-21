@@ -810,6 +810,19 @@ function consolidationEquals(a: WireConsolidationFunction, b: WireConsolidationF
         a.lookback_seconds === b.lookback_seconds &&
         a.percentile === b.percentile
       )
+    case 'histogram_fraction_below':
+      return (
+        b.function === 'histogram_fraction_below' &&
+        a.lookback_seconds === b.lookback_seconds &&
+        a.threshold === b.threshold
+      )
+    case 'histogram_fraction_between':
+      return (
+        b.function === 'histogram_fraction_between' &&
+        a.lookback_seconds === b.lookback_seconds &&
+        a.lower_threshold === b.lower_threshold &&
+        a.upper_threshold === b.upper_threshold
+      )
     default:
       staticAssertNever(a)
       return false

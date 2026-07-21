@@ -63,6 +63,8 @@ export const allowedFunctionsScopes: Record<ScopeName, AllowedFunctions> = {
       'histogram_count_rate',
       'histogram_sum_rate',
       'histogram_sum_delta',
+      'histogram_fraction_below',
+      'histogram_fraction_between',
       'histogram_sum_raw'
     ]
   }

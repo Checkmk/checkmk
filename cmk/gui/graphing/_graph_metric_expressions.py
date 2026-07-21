@@ -181,6 +181,21 @@ class HistogramSumRaw:
     type_: Literal["histogram_sum_raw"] = "histogram_sum_raw"
 
 
+@dataclass(frozen=True, kw_only=True)
+class HistogramFractionBelow:
+    lookback_seconds: float
+    threshold: float
+    type_: Literal["histogram_fraction_below"] = "histogram_fraction_below"
+
+
+@dataclass(frozen=True, kw_only=True)
+class HistogramFractionBetween:
+    lookback_seconds: float
+    lower_threshold: float
+    upper_threshold: float
+    type_: Literal["histogram_fraction_between"] = "histogram_fraction_between"
+
+
 type ConsolidationFunction = (
     GaugeLast
     | GaugeMax
@@ -195,6 +210,8 @@ type ConsolidationFunction = (
     | HistogramSumRate
     | HistogramSumDelta
     | HistogramSumRaw
+    | HistogramFractionBelow
+    | HistogramFractionBetween
 )
 
 

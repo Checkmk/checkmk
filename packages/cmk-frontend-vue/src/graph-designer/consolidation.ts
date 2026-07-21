@@ -86,6 +86,28 @@ export function buildConsolidationFunction(
         lookback_seconds: lookbackSeconds,
         percentile: 0
       }
+    case 'histogram_fraction_below':
+      // This form only carries a single "percentile" number end to end (see
+      // aggregationHistogramPercentile in FormMetricBackendCustomQuery.vue); it has no
+      // plumbing yet for a distinct threshold, so a real value never reaches here.
+      return {
+        type: 'histogram',
+        function: 'histogram_fraction_below',
+        lookback_seconds: lookbackSeconds,
+        percentile: 0,
+        threshold: 0
+      }
+    case 'histogram_fraction_between':
+      // Same limitation as histogram_fraction_below, doubled: this form has no plumbing
+      // for either a lower or an upper threshold.
+      return {
+        type: 'histogram',
+        function: 'histogram_fraction_between',
+        lookback_seconds: lookbackSeconds,
+        percentile: 0,
+        lower_threshold: 0,
+        upper_threshold: 0
+      }
     case 'gauge_last':
     default:
       return { type: 'gauge', function: 'gauge_last', lookback_seconds: lookbackSeconds }

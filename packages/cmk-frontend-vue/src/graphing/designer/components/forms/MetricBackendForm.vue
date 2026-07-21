@@ -53,6 +53,19 @@ function toStored(
       return { type: 'sum_delta', lookback_seconds: lookbackSeconds }
     case 'histogram_quantile':
       return { type: 'histogram_quantile', lookback_seconds: lookbackSeconds, percentile }
+    case 'histogram_fraction_below':
+      // This form only carries a single "percentile" number end to end; it has no
+      // plumbing yet for a distinct threshold, so a real value never reaches here.
+      return { type: 'histogram_fraction_below', lookback_seconds: lookbackSeconds, threshold: 0 }
+    case 'histogram_fraction_between':
+      // Same limitation as histogram_fraction_below, doubled: no plumbing for either
+      // a lower or an upper threshold.
+      return {
+        type: 'histogram_fraction_between',
+        lookback_seconds: lookbackSeconds,
+        lower_threshold: 0,
+        upper_threshold: 0
+      }
     case 'histogram_count_delta':
       return { type: 'histogram_count_delta', lookback_seconds: lookbackSeconds }
     case 'histogram_count_rate':
@@ -86,6 +99,8 @@ function toPicker(consolidation: Consolidation): ConsolidationFunction {
     case 'histogram_sum_rate':
     case 'histogram_sum_delta':
     case 'histogram_sum_raw':
+    case 'histogram_fraction_below':
+    case 'histogram_fraction_between':
       return { type: 'histogram', function: consolidation.type }
   }
 }

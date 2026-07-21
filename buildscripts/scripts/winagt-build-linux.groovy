@@ -3,9 +3,10 @@
 /// file: winagt-build-linux.groovy
 ///
 /// Builds the Windows agent artifacts that can be produced on Linux --
-/// currently the Rust binaries (cmk-agent-ctl, mk-sql, mk-oracle), cross
-/// compiled via the xwin toolchain (//bazel/toolchains/cc/xwin, CMK-34215)
-/// -- and runs their unit tests under the pinned Wine and asserts that
+/// currently the Rust binaries (cmk-agent-ctl, mk-sql, mk-oracle,
+/// robotmk_ext), cross compiled via the xwin toolchain
+/// (//bazel/toolchains/cc/xwin, CMK-34215) -- and runs their unit tests
+/// under the pinned Wine and asserts that
 /// their PE import tables are free of dynamic-CRT references. Test
 /// results are published with one JUnit testcase per Rust test (via
 /// collect_rust_tests).
@@ -36,6 +37,7 @@ void main() {
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
         "//packages/mk-sql:mk-sql-windows",
         "//packages/mk-oracle:mk-oracle-windows",
+        "//agents/wnx/extensions/robotmk_ext:robotmk_ext-windows",
     ];
     // The Wine unit-test tiers of the targets above (a separate list:
     // not every artifact has one).

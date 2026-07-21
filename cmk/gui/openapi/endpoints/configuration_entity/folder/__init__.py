@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk import fields
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
@@ -21,6 +22,7 @@ from cmk.gui.openapi.endpoints.configuration_entity._common import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
@@ -45,7 +47,9 @@ class FolderResponseCollection(DomainObjectCollection):
 @list_endpoint_decorator(ConfigEntityType.folder, FolderResponseCollection)
 def _list_folder(params: Mapping[str, Any]) -> Response:
     """List existing folder"""
-    return serve_configuration_entity_list(ConfigEntityType.folder, params, user)
+    return serve_configuration_entity_list(
+        make_folder_tree(active_config), ConfigEntityType.folder, params, user
+    )
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

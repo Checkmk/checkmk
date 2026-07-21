@@ -50,7 +50,9 @@ class Oauth2ConnectionResponseCollection(DomainObjectCollection):
 @list_endpoint_decorator(ConfigEntityType.oauth2_connection, Oauth2ConnectionResponseCollection)
 def _list_oauth2_connections(params: Mapping[str, Any]) -> Response:
     """List OAuth2 configuration entities."""
-    return serve_configuration_entity_list(ConfigEntityType.oauth2_connection, params, user=user)
+    return serve_configuration_entity_list(
+        None, ConfigEntityType.oauth2_connection, params, user=user
+    )
 
 
 @get_endpoint_decorator(ConfigEntityType.oauth2_connection)

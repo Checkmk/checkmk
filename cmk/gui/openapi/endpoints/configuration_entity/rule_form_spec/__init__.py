@@ -50,7 +50,7 @@ class RuleFormSpecResponseCollection(DomainObjectCollection):
 @list_endpoint_decorator(ConfigEntityType.rule_form_spec, RuleFormSpecResponseCollection)
 def _list_rule_form_specs(params: Mapping[str, Any]) -> Response:
     """List existing rules"""
-    return serve_configuration_entity_list(ConfigEntityType.rule_form_spec, params, user=user)
+    return serve_configuration_entity_list(None, ConfigEntityType.rule_form_spec, params, user=user)
 
 
 @get_endpoint_decorator(ConfigEntityType.rule_form_spec)

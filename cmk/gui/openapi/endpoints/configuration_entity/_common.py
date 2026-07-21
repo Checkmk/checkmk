@@ -20,6 +20,7 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_configuration_entity,
     get_list_of_configuration_entities,
 )
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 ENTITY_ID_FIELD = {
@@ -69,6 +70,7 @@ def list_endpoint_decorator(
 
 
 def serve_configuration_entity_list(
+    tree: FolderTree | None,
     entity_type: ConfigEntityType,
     params: Mapping[str, Any],
     user: LoggedInUser,
@@ -76,7 +78,7 @@ def serve_configuration_entity_list(
     entity_type_specifier = params["entity_type_specifier"]
 
     entity_descriptions = get_list_of_configuration_entities(
-        entity_type, entity_type_specifier, user=user
+        tree, entity_type, entity_type_specifier, user=user
     )
 
     return serve_json(

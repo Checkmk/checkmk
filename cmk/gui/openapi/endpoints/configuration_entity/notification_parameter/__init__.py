@@ -49,7 +49,9 @@ class NotificationParamResponseCollection(DomainObjectCollection):
 )
 def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
     """List existing notification parameters"""
-    return serve_configuration_entity_list(ConfigEntityType.notification_parameter, params, user)
+    return serve_configuration_entity_list(
+        None, ConfigEntityType.notification_parameter, params, user
+    )
 
 
 @get_endpoint_decorator(ConfigEntityType.notification_parameter)

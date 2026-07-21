@@ -43,7 +43,7 @@ from cmk.gui.watolib.configuration_entity._rule_form_spec import (
     rule_form_spec_title,
     save_rule_form_spec_from_slidein_schema,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
@@ -297,6 +297,7 @@ def get_configuration_entity(
 
 
 def get_list_of_configuration_entities(
+    tree: FolderTree | None,
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
     *,
@@ -314,12 +315,15 @@ def get_list_of_configuration_entities(
                 )
             ]
         case ConfigEntityType.folder:
+            # Only the folder listing needs the tree, so the other entity type
+            # endpoints avoid constructing one (and its redis probe) entirely.
+            assert tree is not None
             return [
                 ConfigurationEntityDescription(
                     ident=EntityId(ident),
                     description=description,
                 )
-                for ident, description in folder_tree().folder_choices_fulltitle(user)
+                for ident, description in tree.folder_choices_fulltitle(user)
             ]
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")

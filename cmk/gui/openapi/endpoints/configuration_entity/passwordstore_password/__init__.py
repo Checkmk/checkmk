@@ -49,7 +49,7 @@ class PasswordStorePasswordResponseCollection(DomainObjectCollection):
 def _list_passwordstore_passwords(params: Mapping[str, Any]) -> Response:
     """List existing passwordstore passwords"""
     return serve_configuration_entity_list(
-        ConfigEntityType.passwordstore_password, params, user=user
+        None, ConfigEntityType.passwordstore_password, params, user=user
     )
 
 

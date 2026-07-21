@@ -23,6 +23,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_list_of_configuration_entities,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -78,7 +79,12 @@ class SingleChoiceEditableVisitor(
         title, help_text = get_title_and_help(self.form_spec)
         entity_type = ConfigEntityType(self.form_spec.entity_type.value)
         entity_selection = self.form_spec.entity_type_specifier
-        entities = get_list_of_configuration_entities(entity_type, entity_selection, user=user)
+        entities = get_list_of_configuration_entities(
+            folder_tree() if entity_type is ConfigEntityType.folder else None,
+            entity_type,
+            entity_selection,
+            user=user,
+        )
         return (
             shared_type_defs.SingleChoiceEditable(
                 # FormSpec

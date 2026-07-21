@@ -500,7 +500,7 @@ class PrometheusServer:
 
     def _prometheus_version(self) -> Sequence[str]:
         try:
-            endpoint_result = self.api_client.query_static_endpoint("/status/buildinfo")
+            endpoint_result = self.api_client.query_static_endpoint("status/buildinfo")
             return [json.loads(endpoint_result.content)["data"]["version"]]
         except requests.exceptions.HTTPError as e:  # This endpoint is only available from v2.14
             if e.response is None or e.response.status_code not in (404, 405):
@@ -535,7 +535,7 @@ class PrometheusServer:
 
     def _runtime_info(self) -> dict[str, Any]:
         try:
-            endpoint_result = self.api_client.query_static_endpoint("/status/runtimeinfo")
+            endpoint_result = self.api_client.query_static_endpoint("status/runtimeinfo")
         except requests.exceptions.HTTPError:  # This endpoint is only available from v2.14
             return {}
 

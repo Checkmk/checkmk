@@ -166,6 +166,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_datadog"),
     SpecialAgent("agent_ddn_s2a"),
     SpecialAgent("agent_elasticsearch"),
+    SpecialAgent("agent_extremecloud_iq"),
     SpecialAgent("agent_fritzbox"),
     SpecialAgent("agent_gcp"),
     SpecialAgent("agent_gcp_status"),

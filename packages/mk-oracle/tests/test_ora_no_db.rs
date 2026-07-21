@@ -437,7 +437,9 @@ mod find_sids {
     use mk_oracle::platform::registry::find_oratab_file;
     use std::io::Write;
 
-    #[cfg(unix)]
+    // Linux-only: sysinfo has no process backend on AIX/Solaris, and the mask
+    // matches a systemd process. CMK-35442 tracks proper coverage there.
+    #[cfg(target_os = "linux")]
     #[test]
     fn test_find_sids() {
         use mk_oracle::ora_sql::detect::find_sids_by_processes;

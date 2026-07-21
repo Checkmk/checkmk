@@ -96,3 +96,9 @@ ssh -o "UserKnownHostsFile=${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@
 EOF
 
 scp -o UserKnownHostsFile="${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@${REMOTE_HOST}:${checkmk_path}/target/release/mk-oracle" "mk-oracle.${REMOTE_OS}"
+
+case "${RUN_CMD}" in
+    *B* | *build-component-tests*)
+        scp -o UserKnownHostsFile="${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@${REMOTE_HOST}:${checkmk_path}/target/release/test_ora_no_db_test" "test_ora_no_db_test.${REMOTE_OS}"
+        ;;
+esac

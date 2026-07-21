@@ -30,10 +30,10 @@ if
     [ $? -eq 4 ]
 then
     # Provide better commandline with enhanced 'getopt' from util-linux
-    GETOPT_OPTIONS=(--options 'buFl:aRCfDTj:h' --long 'build,unit-tests,check-format,lint:,all,remote-host,component-tests,format,documentation,docker-tests:,jobs:,help' --name "$(basename "$0")" --)
+    GETOPT_OPTIONS=(--options 'bBuFl:aRCfDTj:h' --long 'build,build-component-tests,unit-tests,check-format,lint:,all,remote-host,component-tests,format,documentation,docker-tests:,jobs:,help' --name "$(basename "$0")" --)
 else
     # Compatibility with basic 'getopt' as found on non-Linux systems.
-    GETOPT_OPTIONS=('buFl:aRCfDTj:h')
+    GETOPT_OPTIONS=('bBuFl:aRCfDTj:h')
 fi
 
 failure() {
@@ -47,6 +47,7 @@ usage() {
     echo "(long options only available on Linux)"
     echo
     echo "  -b, --build                 build executable"
+    echo "  -B, --build-component-tests build component test executables without running them"
     echo "  -u, --unit-tests            run unit tests"
     echo "  -F, --check-format          check for correct formatting"
     echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
@@ -64,6 +65,7 @@ usage() {
 parse_options() {
     # Yes, all those option variables are global.
     RUN_BUILD=no
+    RUN_BUILD_COMPONENT_TESTS=no
     RUN_UNIT_TESTS=no
     RUN_COMPONENT_TESTS=no
     RUN_CHECK_FORMAT=no
@@ -84,6 +86,10 @@ parse_options() {
         case "$1" in
             '-b' | '--build')
                 RUN_BUILD=yes
+                shift
+                ;;
+            '-B' | '--build-component-tests')
+                RUN_BUILD_COMPONENT_TESTS=yes
                 shift
                 ;;
             '-u' | '--unit-tests')
@@ -156,7 +162,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_BUILD RUN_UNIT_TESTS RUN_COMPONENT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION RUN_DOCKER_TESTS ORACLE_DOCKER_VERSION JOBS
+    readonly RUN_BUILD RUN_BUILD_COMPONENT_TESTS RUN_UNIT_TESTS RUN_COMPONENT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION RUN_DOCKER_TESTS ORACLE_DOCKER_VERSION JOBS
 }
 
 get_version_from_source() {
@@ -176,6 +182,36 @@ run_build() {
             ;;
         *)
             bazel build --cmk_version="$(get_version_from_source)" :all
+            ;;
+    esac
+}
+
+run_build_component_tests() {
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            # same flags as run_build function above, but for the test_ora_no_db test module.
+            # --message-format lets cargo tell us the exact path of the produced test
+            # executable (its "executable" field), instead of guessing it from the
+            # hash-suffixed filenames cargo leaves in target/release/deps.
+            # json-render-diagnostics keeps human-readable compiler errors/warnings on
+            # stderr alongside the JSON artifact messages on stdout.
+            test_binary="$(
+                RUSTFLAGS="${RUSTFLAGS:+${RUSTFLAGS} }--remap-path-prefix=${HOME}=. --remap-path-prefix=$(rustc --print sysroot)=." \
+                    cargo test --release --test test_ora_no_db --no-run --message-format=json-render-diagnostics |
+                    python3 -c '
+import json, sys
+print(*[m["executable"] for m in map(json.loads, filter(str.strip, sys.stdin))
+        if m.get("reason") == "compiler-artifact"
+        and m["target"]["name"] == "test_ora_no_db"
+        and "test" in m["target"]["kind"]
+        and m["executable"]][-1:])
+'
+            )"
+            [ -n "${test_binary}" ] || failure "test_ora_no_db test executable not found"
+            cp "${test_binary}" "$(dirname "$(dirname "${test_binary}")")/test_ora_no_db_test"
+            ;;
+        *)
+            bazel build :mk-oracle-lib-test-external
             ;;
     esac
 }
@@ -275,7 +311,14 @@ remove_remote_staging() {
 }
 
 run_test_component_remote_host() {
-    resolve_test_endpoint
+    # A test database is optional here, unlike in the other component-test
+    # runners: remote hosts without database access (Solaris/AIX) run only the
+    # no-db test binary and leave CI_ORA2_DB_TEST unset.
+    if [ -n "${CI_ORA2_DB_TEST:-}" ] || [ -n "${CI_ORA_TEST_PASSWORD:-}" ]; then
+        resolve_test_endpoint
+    else
+        echo "no test database configured; running the tests without one" >&2
+    fi
     # SSH target: the login user comes from the environment (the CI job
     # exposes it from the jenkins-oracle-ssh-key credential as SSH_USER);
     # the host defaults to the CI database box (ci_host from
@@ -293,8 +336,12 @@ run_test_component_remote_host() {
     # name no longer has to reach this script). Created under $HOME to avoid
     # a noexec /tmp; cleaned up on exit.
     if [[ -z "${TEST_BINARY_REMOTE_PATH:-}" ]]; then
+        # A timestamp+PID-named directory, atomically claimed via mkdir (which
+        # fails on an existing name). mktemp would do the same job, but is not
+        # available out of the box everywhere (AIX!).
         # shellcheck disable=SC2086
-        TEST_BINARY_REMOTE_PATH="$(ssh $SSH_ARGS "${HOST_ADDRESS}" 'mktemp -d "$HOME/test_ora.XXXXXX"')" ||
+        TEST_BINARY_REMOTE_PATH="$(ssh $SSH_ARGS "${HOST_ADDRESS}" \
+            'd="$HOME/test_ora.$(date +%Y%m%d%H%M%S).$$" && mkdir "$d" && printf "%s\n" "$d"')" ||
             failure "could not create a remote staging directory on ${HOST_ADDRESS}"
         REMOTE_STAGING_TO_CLEAN="${TEST_BINARY_REMOTE_PATH}"
         trap remove_remote_staging EXIT
@@ -313,12 +360,16 @@ EOF
     scp $SSH_ARGS ${TEST_BINARIES} "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/"
     # shellcheck disable=SC2086
     scp $SSH_ARGS tests/files/tns/tnsnames.ora "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/tests/files/tns/"
+    # The heredoc below is expanded locally; an unset ORACLE_HOME must stay
+    # unset on the remote host too, so its export is prepared here.
+    ORACLE_HOME_EXPORT=""
+    [ -n "${ORACLE_HOME:-}" ] && ORACLE_HOME_EXPORT="export ORACLE_HOME=\"${ORACLE_HOME}\""
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
         cd "${TEST_BINARY_REMOTE_PATH}"
-        export ORACLE_HOME="${ORACLE_HOME}"
-        export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
+        ${ORACLE_HOME_EXPORT}
+        export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST:-}"
         export CI_ORA1_DB_TEST="${CI_ORA1_DB_TEST:-}"
         export MK_CONFDIR="${TEST_BINARY_REMOTE_PATH}"
         export MK_LIBDIR="${TEST_BINARY_REMOTE_PATH}"/runtimes
@@ -458,6 +509,7 @@ main() {
     parse_options "$@"
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && run_build
+    test ${RUN_BUILD_COMPONENT_TESTS} = yes && run_build_component_tests
     test ${RUN_UNIT_TESTS} = yes && run_test_unit
     test ${RUN_COMPONENT_TESTS} = yes && run_test_component
     test ${RUN_COMPONENT_TESTS_REMOTE_HOST} = yes && run_test_component_remote_host

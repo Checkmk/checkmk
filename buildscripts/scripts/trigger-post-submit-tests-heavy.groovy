@@ -105,7 +105,7 @@ void main() {
                     CUSTOM_GIT_REF: effective_git_ref,
                     FAKE_ARTIFACTS: fake_artifacts,
                     DISABLE_CACHE: disable_cache,
-                    DISABLE_SIGNING: disable_signing,
+                    DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
                 ],
                 build_params_no_check: [
                     CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

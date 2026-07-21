@@ -160,7 +160,7 @@ void main() {
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                         FAKE_ARTIFACTS: fake_artifacts,
-                        DISABLE_SIGNING: disable_signing,
+                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: build_node,
@@ -231,7 +231,7 @@ void main() {
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
                 stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                booleanParam(name: "DISABLE_SIGNING", value: disable_signing),
+                booleanParam(name: "DISABLE_CMK_DISTRO_PACKAGE_SIGNING", value: disable_signing),
             ],
             wait: false,
         );
@@ -249,7 +249,7 @@ void main() {
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: ""),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
                 stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
-                booleanParam(name: "DISABLE_SIGNING", value: disable_signing),
+                booleanParam(name: "DISABLE_CMK_DISTRO_PACKAGE_SIGNING", value: disable_signing),
             ],
             wait: false,
         );

@@ -659,6 +659,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
 
     host_labels = label_manager.labels_of_host(hostname)
@@ -906,6 +907,7 @@ def mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
     for hostname in sorted(hosts - all_hosts):
         sys.stderr.write(f"unknown host: {hostname}\n")
@@ -1527,6 +1529,7 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
             ),
             service_name_config,
             plugins.check_plugins,
+            label_manager.labels_of_service,
         ),
         plugins.check_plugins,
         hostnames=hostnames,
@@ -1619,6 +1622,7 @@ def mode_update(app: CheckmkBaseApp) -> None:
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
 
     try:
@@ -1735,6 +1739,7 @@ def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
             ),
             passive_service_name_config,
             plugins.check_plugins,
+            label_manager.labels_of_service,
         ),
         ip_lookup_config.ip_stack_config,
         ip_lookup_config.default_address_family,
@@ -1834,6 +1839,7 @@ def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
             ),
             passive_service_name_config,
             plugins.check_plugins,
+            label_manager.labels_of_service,
         ),
         ip_lookup_config.ip_stack_config,
         ip_lookup_config.default_address_family,
@@ -2091,6 +2097,7 @@ def mode_check_discovery(
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
 
     discovery_config = DiscoveryConfig(
@@ -2447,6 +2454,7 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -2764,6 +2772,7 @@ def run_checking(
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
@@ -3033,6 +3042,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -3380,6 +3390,7 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )  # not obvious to me why/if we *really* need this
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(

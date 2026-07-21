@@ -1421,6 +1421,7 @@ def test_host_config_static_checks(
                 pn: make_plugin(pn)
                 for pn in (CheckPluginName("checktype1"), CheckPluginName("checktype2"))
             },
+            config_cache.label_manager.labels_of_service,
         )(hostname)
         == result
     )
@@ -3087,6 +3088,7 @@ def test_check_table_cluster_merging_enforced_and_discovered(
                 ),
                 service_name_config,
                 {},
+                config_cache.label_manager.labels_of_service,
             ),
         )
         == expected

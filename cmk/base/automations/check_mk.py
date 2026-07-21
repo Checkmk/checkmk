@@ -358,6 +358,7 @@ def automation_service_discovery(
         ),
         service_name_config,
         plugins.check_plugins,
+        label_manager.labels_of_service,
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -653,6 +654,7 @@ def automation_discovery_preview(
                 ),
                 service_name_config,
                 plugins.check_plugins,
+                label_manager.labels_of_service,
             ),
             SNMPFetcherConfig(
                 on_error=on_error,
@@ -1016,6 +1018,7 @@ def _execute_discovery(
                     ),
                     service_name_config=passive_service_name_config,
                     plugins=plugins.check_plugins,
+                    labels_of_service=config_cache.label_manager.labels_of_service,
                 )(host_name).items()
             },
             on_error=on_error,
@@ -1158,6 +1161,7 @@ def _execute_autodiscovery(
         ),
         passive_service_name_config,
         ab_plugins.check_plugins,
+        label_manager.labels_of_service,
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
@@ -1691,6 +1695,7 @@ class AutomationRenameHosts:
                     ),
                     passive_service_name_config,
                     plugins.check_plugins,
+                    label_manager.labels_of_service,
                 )
 
                 ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -2139,6 +2144,7 @@ class AutomationAnalyseServices:
                         ),
                         service_name_config=service_name_config,
                         plugins=plugins.check_plugins,
+                        labels_of_service=label_manager.labels_of_service,
                     ),
                     active_service_name_config=final_service_name_config,
                     passive_service_name_config=service_name_config,
@@ -2718,6 +2724,7 @@ class AutomationRestart:
             ),
             passive_service_name_config,
             plugins.check_plugins,
+            label_manager.labels_of_service,
         )
         ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
@@ -3550,6 +3557,7 @@ class AutomationDiagHost:
                     ),
                     service_name_config,
                     plugins.check_plugins,
+                    config_cache.label_manager.labels_of_service,
                 ),
                 SNMPFetcherConfig(
                     on_error=OnError.RAISE,
@@ -4177,6 +4185,7 @@ def automation_get_agent_output(
                         ),
                         service_name_config,
                         plugins.check_plugins,
+                        config_cache.label_manager.labels_of_service,
                     ),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         on_error=OnError.RAISE,

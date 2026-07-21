@@ -3711,10 +3711,12 @@ class EnforcedServicesTable:
         ],
         service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         plugins: Mapping[CheckPluginName, CheckPlugin],
+        labels_of_service: Callable[[HostName, ServiceName, Labels], Labels],
     ) -> None:
         self._enforced_services_config = enforced_services_config
         self._service_name_config = service_name_config
         self._plugins = plugins
+        self._labels_of_service = labels_of_service
         self._memoized: dict[
             HostName, Mapping[ServiceID, tuple[RulesetName, ConfiguredService]]
         ] = {}
@@ -3743,26 +3745,32 @@ class EnforcedServicesTable:
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
-                        description=self._service_name_config(
-                            hostname,
-                            sid,
-                            (
-                                None
-                                if (
-                                    p := agent_based_register.get_check_plugin(
-                                        check_plugin_name, self._plugins
+                        description=(
+                            description := self._service_name_config(
+                                hostname,
+                                sid,
+                                (
+                                    None
+                                    if (
+                                        p := agent_based_register.get_check_plugin(
+                                            check_plugin_name, self._plugins
+                                        )
                                     )
-                                )
-                                is None
-                                else p.service_name
-                            ),
+                                    is None
+                                    else p.service_name
+                                ),
+                            )
                         ),
                         parameters=compute_enforced_service_parameters(
                             self._plugins, check_plugin_name, params
                         ),
                         discovered_parameters={},
                         discovered_labels={},
-                        labels={},
+                        # Enforced services have no discovered labels, but the "Service
+                        # labels" ruleset still applies. Compute the effective labels
+                        # (as the discovered and clustered-enforced paths do) so they
+                        # reach the monitoring core config.
+                        labels=self._labels_of_service(hostname, description, {}),
                         is_enforced=True,
                     ),
                 )

@@ -14,13 +14,13 @@ npm_link_all_packages(name = "node_modules")
 SRCS = glob([
     # TODO: tsconfig.json is missing
     "src/css/*",  # just for the directory
-    "src/images/**/*.*",
     "src/js/**/*.js",
     "src/js/**/*.ts",
     "src/openapi/**/*.*",
     "src/sounds/**/*.*",
     "src/themes/**/*.*",
 ]) + [
+    "//packages/cmk-frontend/src/images:nuvola-icons",
     "//packages/cmk-frontend/src/jquery",
     "//packages/cmk-frontend/src/openapi/swagger-ui-5.20.6:swagger-ui",
 ]

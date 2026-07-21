@@ -32,6 +32,14 @@ from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Section, Spl
             [
                 [
                     "tcp",
+                    "FIN-WAIT-1",
+                    "0",
+                    "0",
+                    "[::ffff:11.111.0.11]:442",
+                    "[::ffff:11.111.0.11]:11110",
+                ],
+                [
+                    "tcp",
                     "FIN-WAIT-2",
                     "0",
                     "0",
@@ -41,6 +49,12 @@ from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Section, Spl
                 ["tcp", "ESTAB", "0", "0", "[::ffff:127.0.0.1]:8888", "[::ffff:127.0.0.1]:55555"],
             ],
             [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP(ip_address="[::ffff:11.111.0.11]", port="442"),
+                    remote_address=SplitIP(ip_address="[::ffff:11.111.0.11]", port="11110"),
+                    state=ConnectionState.FIN_WAIT1,
+                ),
                 Connection(
                     proto="TCP",
                     local_address=SplitIP(ip_address="[::ffff:11.111.0.11]", port="443"),

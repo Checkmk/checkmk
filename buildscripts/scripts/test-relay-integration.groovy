@@ -95,6 +95,8 @@ void main() {
                 edition: edition,
                 fake_artifacts: fake_artifacts,
                 force_build: force_build,
+                // special case, this tests requires a signed package
+                relative_job_name: "builders/sign-cmk-distro-package",
                 safe_branch_name: setup_values.safe_branch_name,
             );
         }

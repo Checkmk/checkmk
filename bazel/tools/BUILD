@@ -125,6 +125,8 @@ bazel_env(
         "clang-tidy": "@multitool_hub//tools/clang-tidy",
         "genhtml": "@lcov//:genhtml",
         "lcov": "@lcov//:lcov",
+        "msibuild": "@msitools//:msibuild",
+        "msiinfo": "@msitools//:msiinfo",
         "mypy": ":mypy_cli_original",
         "osslsigncode": "@osslsigncode",
         "plantuml": "@plantuml",

@@ -20,6 +20,7 @@ instance name must start with the corresponding prefix.
 
 from collections.abc import Mapping
 
+from ._commands import collect_command_output
 from ._context import CollectContext, CollectLogger
 from ._exceptions import CollectError, CollectInfo, CollectWarning
 from ._localize import Help, Title, Topic
@@ -57,6 +58,7 @@ def entry_point_prefixes() -> Mapping[type[DiagnosticsPlugin], str]:
 
 
 __all__ = [
+    "collect_command_output",
     "CollectContext",
     "CollectError",
     "CollectInfo",

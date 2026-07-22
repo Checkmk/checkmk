@@ -121,6 +121,21 @@ def _run_new_plugin(oracle: OracleDatabase, config_path: Path | None = None) -> 
     return text
 
 
+def _run_new_plugin_as_root(oracle: OracleDatabase, config_path: Path | None = None) -> str:
+    """Run the mk-oracle binary inside the container as root and return its stdout.
+
+    Unlike `_run_new_plugin`, success is not asserted: run as root against a
+    non-root-owned runtime the plugin refuses to load and exits with empty
+    output, so callers assert on the (empty) stdout instead of the exit code.
+    """
+    cfg = (config_path or oracle.new_plugin_cfg).as_posix()
+    _, output = oracle.container.exec_run(
+        [oracle.new_plugin.as_posix(), "-c", cfg, "--no-spool"], user="root"
+    )
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    return output.decode("utf-8")
+
+
 def _install_custom_config(oracle: OracleDatabase, content: str, name: str) -> Path:
     """Write the YAML to the temp dir, copy into the container and return its container path."""
     host_path = oracle.ORAENV / name
@@ -348,6 +363,11 @@ def test_mk_oracle_sid_only_connection(oracle: OracleDatabase) -> None:
     assert rows, f"No oracle_instance rows in output:\n{output}"
     for row in rows:
         assert row.startswith(f"{oracle.SID}|"), f"Row does not start with SID: {row}"
+
+
+def test_mk_oracle_run_as_root_is_refused(oracle: OracleDatabase) -> None:
+    output = _run_new_plugin_as_root(oracle)
+    assert output.strip() == "", f"Expected empty output when run as root, got:\n{output}"
 
 
 def test_mk_oracle_custom_instance_connection(oracle: OracleDatabase) -> None:

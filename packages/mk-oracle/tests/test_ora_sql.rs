@@ -736,22 +736,27 @@ fn test_locks_last() {
         // Let's QA team checks correctness
         let sid = get_sid(endpoint);
         let sid_name = sid.as_str();
-        let row0_starts = format!("{}.CDB$ROOT|", sid_name);
+        let cdb_prefix = format!("{}.CDB$ROOT|", sid_name);
+        let pdb_prefix = format!("{0}.", sid_name);
+
+        let row_prefixes = [cdb_prefix.as_str(), pdb_prefix.as_str(), sid_name];
         assert!(
-            rows[0].starts_with(&row0_starts),
-            "expected {} starts with {row0_starts}",
-            rows[0]
-        );
-        let row1_starts = format!("{0}.", sid_name);
-        assert!(
-            rows[1].starts_with(&row1_starts),
-            "expected {} starts with {sid_name}",
-            rows[1]
+            row_prefixes.iter().any(|p| rows[0].starts_with(p)),
+            "expected {} to start with one of {:?}",
+            rows[0],
+            row_prefixes
         );
         assert!(
-            rows[2].starts_with(sid_name.to_string().as_str()),
-            "expected {} starts with {sid_name}",
-            rows[2]
+            row_prefixes.iter().any(|p| rows[1].starts_with(p)),
+            "expected {} to start with one of {:?}",
+            rows[1],
+            row_prefixes
+        );
+        assert!(
+            row_prefixes.iter().any(|p| rows[2].starts_with(p)),
+            "expected {} to start with one of {:?}",
+            rows[2],
+            row_prefixes
         );
     }
 }

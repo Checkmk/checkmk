@@ -9,12 +9,15 @@ from typing import Any, cast
 
 from cmk.utils import tty
 from cmk.utils.notify_types import (
+    ConditionEventConsoleAlertsType,
     EventRule,
+    HostEventType,
     NotificationParameterGeneralInfos,
     NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterMethod,
     NotificationParameterSpecs,
+    ServiceEventType,
 )
 from cmk.utils.paths import check_mk_config_dir, omd_root
 
@@ -40,6 +43,13 @@ type LegacyParameter = dict[str, object] | list[object]
 type MigratedParameter = NotificationParameterID | None
 type Parameter = LegacyParameter | MigratedParameter
 
+# Complete set of host/service notification event types (see _get_host_event_choices and
+# _get_service_event_choices in cmk/gui/wato/pages/events.py). The "?x" wildcards match any
+# preceding state, so together with the non-state-change events they cover every notification
+# a rule can receive.
+_ALL_HOST_EVENTS: list[HostEventType] = ["?r", "?d", "?u", "f", "s", "x", "as", "af"]
+_ALL_SERVICE_EVENTS: list[ServiceEventType] = ["?r", "?w", "?c", "?u", "f", "s", "x", "as", "af"]
+
 
 class MigrateNotifications(UpdateAction):
     def __init__(self, name: str, title: str, sort_index: int) -> None:
@@ -61,6 +71,8 @@ class MigrateNotifications(UpdateAction):
         parameters_per_method: NotificationParameterSpecs = {}
         updated_notification_rules: list[EventRule] = []
         for nr, rule in enumerate(notification_rules):
+            self._preserve_pre_24_ec_alert_matching(rule)
+
             method = rule["notify_plugin"][0]
             parameter = cast(Parameter, rule["notify_plugin"][1])
 
@@ -106,6 +118,36 @@ class MigrateNotifications(UpdateAction):
 
         NotificationRuleConfigFile().save(updated_notification_rules)
         logger.debug("       Saved migrated notification rules")
+
+    @staticmethod
+    def _preserve_pre_24_ec_alert_matching(rule: EventRule) -> None:
+        """Keep pre-2.4 Event Console alert matching for rules migrated from 2.3.
+
+        Event Console alerts are service notifications, so before 2.4 a rule
+        matching service events (without ``match_ec``) also matched them. Werk
+        #18082 changed this; add an empty ``match_ec`` to keep them matching (the
+        service event filter still applies). Host-event-only rules already excluded
+        EC alerts and are left untouched.
+
+        The legacy ``match_ec=False`` ("Do not match Event Console alerts") has no
+        2.4 equivalent and is dropped. When the rule also restricts host or service
+        events, dropping it keeps Event Console alerts excluded as before (and avoids
+        the broken 2.4 matching of a stored ``False``). But a rule with
+        ``match_ec=False`` and no event restriction matched *all* host and service
+        notifications except Event Console alerts; simply dropping the key would turn
+        it into an "all events" rule that suddenly also matches Event Console alerts.
+        To preserve the original behaviour we make the "all host and service events"
+        selection explicit before dropping ``match_ec``.
+        """
+        if "match_ec" in rule:
+            if rule["match_ec"] is False:
+                if "match_host_event" not in rule and "match_service_event" not in rule:
+                    rule["match_host_event"] = list(_ALL_HOST_EVENTS)
+                    rule["match_service_event"] = list(_ALL_SERVICE_EVENTS)
+                del rule["match_ec"]
+            return
+        if "match_service_event" in rule:
+            rule["match_ec"] = ConditionEventConsoleAlertsType()
 
     def _backup_notification_config(self, logger: Logger) -> None:
         self._notifications_mk_backup_path.write_text(self._notifications_mk_path.read_text())

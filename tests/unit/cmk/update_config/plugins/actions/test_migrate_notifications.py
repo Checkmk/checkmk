@@ -16,6 +16,7 @@ from cmk.utils.notify_types import (
     BasicAuthCredentials,
     CiscoPluginModel,
     EventRule,
+    HostEventType,
     IlertPluginModel,
     JiraIssuePluginModel,
     MailPluginModel,
@@ -24,6 +25,7 @@ from cmk.utils.notify_types import (
     MKEventdPluginModel,
     NotificationParameterID,
     NotificationParameterSpec,
+    NotificationRuleID,
     OpsGenieIssuesPluginModel,
     PagerDutyPluginModel,
     PushoverPluginModel,
@@ -35,6 +37,10 @@ from cmk.utils.notify_types import (
     SplunkPluginModel,
 )
 from cmk.utils.password_store import Password
+
+from cmk.events.event_context import EventContext
+
+from cmk.base import notify
 
 import cmk.gui.exceptions
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -1195,3 +1201,154 @@ def test_migrate_with_partially_migrated_rules() -> None:
 def test_migrate_with_list_parameter_for_custom_plugin_does_not_raise_validation_error() -> None:
     config = [EventRuleFactory.build(notify_plugin=("custom_pigeon_notifier", ["foo", "bar"]))]
     assert migrate_parameters(config)
+
+
+def _ec_rule(rule_id: str, **match: object) -> EventRule:
+    rule = EventRule(
+        rule_id=NotificationRuleID(rule_id),
+        allow_disable=False,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=False,
+        description="Test rule",
+        disabled=False,
+        # An unmigrated (dict) parameter is required so the migration action does not
+        # early-return via its "already migrated" guard.
+        notify_plugin=(
+            "mail",
+            MailPluginModel(
+                {
+                    "url_prefix": {"automatic": "https"},  # type: ignore[typeddict-item]
+                    "disable_multiplexing": True,
+                }
+            ),
+        ),
+    )
+    rule.update(match)  # type: ignore[typeddict-item]
+    return rule
+
+
+def _migrate_rules(rule_config: list[EventRule]) -> list[EventRule]:
+    with application_and_request_context():
+        NotificationRuleConfigFile().save(rule_config)
+        MigrateNotifications(
+            name="migrate_notification_parameters",
+            title="Migrate notification parameters",
+            sort_index=50,
+        )(logging.getLogger())
+    return NotificationRuleConfigFile().load_for_reading()
+
+
+def test_migrate_ec_matching_service_events_without_match_ec_gets_match_all_ec() -> None:
+    [rule] = _migrate_rules([_ec_rule("2", match_service_event=["?c"])])
+    assert rule["match_ec"] == {}
+
+
+def test_migrate_ec_matching_host_and_service_events_without_match_ec_gets_match_all_ec() -> None:
+    host_event: HostEventType = "?d"
+    [rule] = _migrate_rules(
+        [_ec_rule("2b", match_host_event=[host_event], match_service_event=["?c"])]
+    )
+    assert rule["match_ec"] == {}
+
+
+def test_migrate_ec_matching_host_events_only_is_left_untouched() -> None:
+    # Event Console alerts are service notifications and were already excluded by
+    # host-event-only rules before 2.4, so no match_ec must be added here.
+    host_event: HostEventType = "?d"
+    [rule] = _migrate_rules([_ec_rule("1", match_host_event=[host_event])])
+    assert "match_ec" not in rule
+
+
+def test_migrate_ec_matching_all_events_rule_is_left_untouched() -> None:
+    [rule] = _migrate_rules([_ec_rule("3")])
+    assert "match_ec" not in rule
+
+
+def test_migrate_ec_matching_do_not_match_false_is_dropped_with_service_events() -> None:
+    # match_ec=False ("Do not match EC alerts") has no 2.4 equivalent; it becomes the
+    # disabled "Event console alerts" trigger, i.e. no match_ec key. It must not be
+    # re-added as an empty match_ec by the service-event branch.
+    [rule] = _migrate_rules([_ec_rule("4", match_service_event=["?c"], match_ec=False)])
+    assert "match_ec" not in rule
+
+
+def test_migrate_ec_matching_do_not_match_false_is_dropped_with_host_events() -> None:
+    host_event: HostEventType = "?d"
+    [rule] = _migrate_rules([_ec_rule("4b", match_host_event=[host_event], match_ec=False)])
+    assert "match_ec" not in rule
+
+
+def test_migrate_ec_matching_do_not_match_false_without_events_keeps_ec_excluded() -> None:
+    # match_ec=False without any event restriction matched all host and service
+    # notifications except EC alerts. Dropping match_ec alone would make it an
+    # "all events" rule that also matches EC alerts, so the full host/service event
+    # selection is made explicit to keep EC alerts excluded.
+    [rule] = _migrate_rules([_ec_rule("4c", match_ec=False)])
+    assert "match_ec" not in rule
+    assert rule["match_host_event"] == ["?r", "?d", "?u", "f", "s", "x", "as", "af"]
+    assert rule["match_service_event"] == ["?r", "?w", "?c", "?u", "f", "s", "x", "as", "af"]
+
+
+def test_migrate_ec_matching_do_not_match_false_without_events_behaviour() -> None:
+    # Behaviour test: feed the migrated rule through the runtime matcher and assert it
+    # still excludes EC alerts (as match_ec=False did in 2.3) while continuing to match
+    # a regular service notification.
+    [rule] = _migrate_rules([_ec_rule("4d", match_ec=False)])
+
+    ec_context: EventContext = {"EC_ID": "1"}
+    assert (
+        notify.rbn_match_event_console(
+            rule=rule, context=ec_context, _analyse=False, _all_timeperiods={}
+        )
+        == "Notification has been created by the Event Console."
+    )
+
+    service_context: EventContext = {
+        "WHAT": "SERVICE",
+        "NOTIFICATIONTYPE": "PROBLEM",
+        "SERVICESTATE": "CRITICAL",
+        "PREVIOUSSERVICEHARDSTATE": "OK",
+    }
+    assert (
+        notify.rbn_match_event_console(
+            rule=rule, context=service_context, _analyse=False, _all_timeperiods={}
+        )
+        is None
+    )
+    assert (
+        notify.rbn_match_service_event(
+            rule=rule, context=service_context, _analyse=False, _all_timeperiods={}
+        )
+        is None
+    )
+
+
+def test_migrate_ec_matching_existing_match_ec_is_left_untouched() -> None:
+    host_event: HostEventType = "?d"
+    [rule] = _migrate_rules(
+        [_ec_rule("5", match_host_event=[host_event], match_ec={"match_facility": 3})]
+    )
+    assert rule["match_ec"] == {"match_facility": 3}
+
+
+def test_migrate_ec_preservation_is_idempotent_on_rerun() -> None:
+    # A second migration run must not further change EC matching. Dropping match_ec=False
+    # from a service-event rule leaves it looking like a plain service-event rule; the
+    # service-event branch would re-add an empty match_ec (flipping EC-excluded to
+    # EC-matches-all) if it ran again. The action's "already migrated" guard prevents this
+    # by skipping the whole migration once every parameter is migrated.
+    once = _migrate_rules([_ec_rule("6", match_service_event=["?c"], match_ec=False)])
+    assert "match_ec" not in once[0]
+    twice = _migrate_rules(once)
+    assert "match_ec" not in twice[0]
+
+
+def test_migrate_ec_preservation_no_events_is_idempotent_on_rerun() -> None:
+    # match_ec=False without event restriction gains explicit host/service event lists on
+    # the first run. A second run must not then add match_ec back via the service-event
+    # branch and start matching EC alerts.
+    once = _migrate_rules([_ec_rule("6b", match_ec=False)])
+    assert "match_ec" not in once[0]
+    twice = _migrate_rules(once)
+    assert "match_ec" not in twice[0]

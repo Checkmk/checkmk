@@ -163,7 +163,12 @@ def _valuespec_proxy_settings() -> CascadingSingleChoice:
             CascadingSingleChoiceElement(
                 name="env_proxy",
                 title=Title("Use environment variables from host"),
-                parameter_form=FixedValue(value="env"),
+                parameter_form=FixedValue(
+                    value="env",
+                    label=Label(
+                        'Agent updater will follow variables "HTTP_PROXY" and "HTTPS_PROXY" on the host.'
+                    ),
+                ),
             ),
             CascadingSingleChoiceElement(
                 name="explicit_proxy",

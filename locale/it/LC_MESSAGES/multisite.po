@@ -91815,6 +91815,10 @@ msgstr "Non ti è permesso di modificare i dashboard."
 msgid "You are not allowed to edit foreign %s."
 msgstr "Non sei autorizzato a modificare questo %s."
 
+#, fuzzy
+msgid "You are not allowed to edit foreign reports."
+msgstr "Non sei autorizzato a modificare questo %s."
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr "Non sei autorizzato a modificare questo %s."
@@ -100067,7 +100071,11 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"This script requires administrator privileges and will restart the computer "
+"This command requires administrator privileges. Once it completes, restart "
+"the "
+msgstr ""
+
+msgid "For running WSL2 your system needs to have virtualization enabled. "
 msgstr ""
 
 #, fuzzy

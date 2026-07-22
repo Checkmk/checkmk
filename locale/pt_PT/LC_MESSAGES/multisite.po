@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-21 13:38+0000\n"
+"PO-Revision-Date: 2026-07-22 12:39+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -91981,6 +91981,10 @@ msgstr "Você não está autorizado a editar painéis de controle."
 msgid "You are not allowed to edit foreign %s."
 msgstr "Não é permitido editar %s."
 
+#, fuzzy
+msgid "You are not allowed to edit foreign reports."
+msgstr "Não é permitido editar %s."
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr "Você não está autorizado a editar esta %s."
@@ -100205,7 +100209,11 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"This script requires administrator privileges and will restart the computer "
+"This command requires administrator privileges. Once it completes, restart "
+"the "
+msgstr ""
+
+msgid "For running WSL2 your system needs to have virtualization enabled. "
 msgstr ""
 
 #, fuzzy

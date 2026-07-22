@@ -92075,6 +92075,10 @@ msgstr "U mag dashboards niet bewerken."
 msgid "You are not allowed to edit foreign %s."
 msgstr "U mag geen vreemde %s bewerken."
 
+#, fuzzy
+msgid "You are not allowed to edit foreign reports."
+msgstr "U mag geen vreemde %s bewerken."
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr "U mag deze %s niet bewerken."
@@ -100311,7 +100315,11 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"This script requires administrator privileges and will restart the computer "
+"This command requires administrator privileges. Once it completes, restart "
+"the "
+msgstr ""
+
+msgid "For running WSL2 your system needs to have virtualization enabled. "
 msgstr ""
 
 #, fuzzy

@@ -92367,6 +92367,10 @@ msgstr "Nu aveți voie să editați tablouri de bord."
 msgid "You are not allowed to edit foreign %s."
 msgstr "Nu aveți voie să modificați site-urile străine %s."
 
+#, fuzzy
+msgid "You are not allowed to edit foreign reports."
+msgstr "Nu aveți voie să modificați site-urile străine %s."
+
 #, python-format
 msgid "You are not allowed to edit this %s."
 msgstr "Nu aveți voie să modificați acest %s."
@@ -100635,7 +100639,11 @@ msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
 msgstr ""
 
 msgid ""
-"This script requires administrator privileges and will restart the computer "
+"This command requires administrator privileges. Once it completes, restart "
+"the "
+msgstr ""
+
+msgid "For running WSL2 your system needs to have virtualization enabled. "
 msgstr ""
 
 #, fuzzy

@@ -7,16 +7,13 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import csv
 import json
-import os
 import shutil
 import tarfile
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple
-from unittest.mock import mock_open, patch
 
 import pytest
 import requests
@@ -136,22 +133,12 @@ def _fake_local_connection(host_list: Sequence[Sequence[str]]) -> Callable:
 
 def test_adapter_catalogue_names(tmp_path: Path) -> None:
     assert set(_adapter_catalogue(tmp_path)) == {
-        "appliance_info",
         "bi_runtime_data",
         "core_performance_metrics",
-        "disk_usage",
-        "file_sizes",
-        "hw_info",
         "latest_crash_reports",
         "metric_backend_state",
         "mkp_inventory",
-        "network_state",
-        "os_packages",
         "otel_license_counts",
-        "processes_and_logins",
-        "python_packages",
-        "selinux",
-        "vendor_info",
     }
 
 
@@ -326,252 +313,6 @@ def test_diagnostics_element_perfdata() -> None:
     )
 
 
-def test_diagnostics_element_hw_info(tmp_path: Path) -> None:
-    proc_path = tmp_path.joinpath("proc")
-    proc_path.mkdir(exist_ok=True)
-
-    # Create three fake proc files
-    with open(proc_path / "meminfo", "w", encoding="utf-8") as f:
-        f.write("MemTotal:       32663516 kB")
-
-    with open(proc_path / "loadavg", "w", encoding="utf-8") as f:
-        f.write("1.19 1.58 1.75 2/1922 891074")
-
-    with open(proc_path / "cpuinfo", "w", encoding="utf-8") as f:
-        f.write("""processor : 0
-physical id : 0
-processor   : 1
-physical id : 0
-processor   : 2
-physical id : 0
-processor   : 3
-physical id : 0""")
-
-    diagnostics_element = diagnostics.HWDiagnosticsElement(proc_path)
-    infos = diagnostics_element.contents(tmp_path.joinpath("omd_root"))
-
-    assert diagnostics_element.title == "HW information"
-    assert diagnostics_element.description == ("Hardware information of the Checkmk server")
-    assert diagnostics_element.filename == "hwinfo.json"
-    assert json.loads(infos) == {
-        "meminfo": {"MemTotal": "32663516 kB"},
-        "loadavg": {"loadavg_1": "1.19", "loadavg_5": "1.58", "loadavg_15": "1.75"},
-        "cpuinfo": {"physical_id": "0", "num_logical_processors": "4", "cpus": 1},
-    }
-
-
-def test_diagnostics_element_vendor_info(tmp_path: Path) -> None:
-    dmi_id_path = tmp_path.joinpath("sys/class/dmi/id")
-    dmi_id_path.mkdir(parents=True, exist_ok=True)
-
-    # Create five fake sys files
-    with open(dmi_id_path / "bios_vendor", "w", encoding="utf-8") as f:
-        f.write("Dull Ink")
-
-    with open(dmi_id_path / "bios_version", "w", encoding="utf-8") as f:
-        f.write("1.2.3")
-
-    with open(dmi_id_path / "sys_vendor", "w", encoding="utf-8") as f:
-        f.write("Dull Ink")
-
-    with open(dmi_id_path / "product_name", "w", encoding="utf-8") as f:
-        f.write("Longitude 4")
-
-    with open(dmi_id_path / "chassis_asset_tag", "w", encoding="utf-8") as f:
-        f.write("")
-
-    diagnostics_element = diagnostics.VendorDiagnosticsElement(dmi_id_path)
-    infos = diagnostics_element.contents(tmp_path.joinpath("omd_root"))
-
-    assert diagnostics_element.title == "Vendor Information"
-    assert diagnostics_element.description == ("HW vendor information of the Checkmk server")
-    assert diagnostics_element.filename == "vendorinfo.json"
-    assert json.loads(infos) == {
-        "bios_vendor": "Dull Ink",
-        "bios_version": "1.2.3",
-        "chassis_asset_tag": "Other",
-        "product_name": "Longitude 4",
-        "sys_vendor": "Dull Ink",
-    }
-
-
-def test_diagnostics_element_filesize() -> None:
-    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
-    assert diagnostics_element.title == "File size"
-    assert diagnostics_element.description == ("List of all files in the site including their size")
-    assert diagnostics_element.filename == "file_size.csv"
-
-
-@pytest.mark.usefixtures("monkeypatch")
-def test_diagnostics_element_filesize_content(tmp_path: Path) -> None:
-    omd_root = tmp_path.joinpath("omd_root")
-    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
-
-    test_dir = omd_root.joinpath("local/share/check_mk/checks")
-    test_dir.mkdir(parents=True, exist_ok=True)
-    test_file = test_dir.joinpath("testfile")
-    test_content = "test\n"
-    test_group = "dummygroup"
-    with test_file.open("w", encoding="utf-8") as f:
-        f.write(test_content)
-
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    with patch("pathlib.Path.group", return_value=test_group):
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
-        )
-
-    assert isinstance(filepath, Path)
-    assert filepath == tmp_dump_folder.joinpath("file_size.csv")
-
-    column_headers = [
-        "path",
-        "size",
-        "owner",
-        "group",
-        "mode",
-        "changed",
-    ]
-
-    size_of = {}
-    group_of = {}
-    last_row = {}
-    with open(filepath, newline="") as csvfile:
-        csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
-        for row in csvreader:
-            size_of[row["path"]] = row["size"]
-            group_of[row["path"]] = row["group"]
-            last_row = row
-
-    assert sorted(last_row.keys()) == sorted(column_headers)
-    assert str(test_file) in size_of
-    assert size_of[str(test_file)] == str(len(test_content))
-    assert group_of[str(test_file)] == test_group
-
-
-def test_diagnostics_element_dpkg() -> None:
-    diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
-    assert diagnostics_element.title == "Dpkg packages information"
-    assert diagnostics_element.description == (
-        "Output of `dpkg -l`. See the corresponding command line help for more details."
-    )
-    assert diagnostics_element.filename == "dpkg_packages.csv"
-
-
-@pytest.mark.usefixtures("monkeypatch")
-def test_diagnostics_element_filesize_content_ignores_temporary_file(tmp_path: Path) -> None:
-    omd_root = tmp_path.joinpath("omd_root")
-    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
-
-    # test_dir = cmk.utils.paths.local_checks_dir
-    test_dir = omd_root.joinpath("local/share/check_mk/checks")
-    test_dir.mkdir(parents=True, exist_ok=True)
-    test_dir.joinpath("testfile").write_text("test\n")
-
-    test_dir.joinpath(".session_info.mk.newodhsmg3r").write_text("test\n")
-
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    with patch("pathlib.Path.group", return_value="dummygroup"):
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
-        )
-
-    with open(filepath, newline="") as csvfile:
-        files = [
-            Path(row["path"]).name for row in csv.DictReader(csvfile, delimiter=";", quotechar="'")
-        ]
-
-    assert files == ["testfile"]
-
-
-def test_diagnostics_element_dpkg_content(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    omd_root = tmp_path.joinpath("omd_root")
-    test_bin_dir = omd_root.joinpath("bin")
-    test_bin_dir.mkdir(parents=True, exist_ok=True)
-    test_bin_filepath = test_bin_dir.joinpath("dpkg")
-
-    with test_bin_filepath.open("w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/bash
-                echo "Desired=Unknown/Install/Remove/Purge/Hold
-| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-||/ Name                                                        Version                                         Architecture Description
-+++-===========================================================-===============================================-============-=====================================================================================================
-ii  accountsservice                                             22.07.5-2ubuntu1.5                              amd64        query and manipulate user account information"
-                """
-        )
-
-    os.chmod(test_bin_filepath, 0o770)
-
-    with monkeypatch.context() as m:
-        m.setenv("PATH", str(test_bin_dir))
-
-        diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
-        tmp_dump_folder = tmp_path.joinpath("tmp")
-        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-        )
-
-        assert isinstance(filepath, Path)
-        assert filepath == tmp_dump_folder.joinpath("dpkg_packages.csv")
-
-        content = filepath.open().read()
-
-        assert "22.07.5-2ubuntu1.5" in content
-
-        shutil.rmtree(str(test_bin_dir))
-
-
-def test_diagnostics_element_rpm() -> None:
-    diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
-    assert diagnostics_element.title == "Rpm packages information"
-    assert diagnostics_element.description == (
-        "Output of `rpm -qa`. See the corresponding command line help for more details."
-    )
-    assert diagnostics_element.filename == "rpm_packages.csv"
-
-
-def test_diagnostics_element_rpm_content(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    omd_root = tmp_path.joinpath("omd_root")
-    test_bin_dir = omd_root.joinpath("bin")
-    test_bin_dir.mkdir(parents=True, exist_ok=True)
-    test_bin_filepath = test_bin_dir.joinpath("rpm")
-
-    with test_bin_filepath.open("w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/bash
-                echo "libgcc;11.4.1;2.1.el9;x86_64
-crypto-policies;20230731;1.git94f0e2c.el9_3.1;noarch
-tzdata;2023c;1.el9;noarch"
-                """
-        )
-
-    os.chmod(test_bin_filepath, 0o770)
-
-    with monkeypatch.context() as m:
-        m.setenv("PATH", str(test_bin_dir))
-
-        diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
-        tmp_dump_folder = tmp_path.joinpath("tmp")
-        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-        )
-
-        assert isinstance(filepath, Path)
-        assert filepath == tmp_dump_folder.joinpath("rpm_packages.csv")
-
-        content = filepath.open().read()
-
-        assert "libgcc;11.4.1;2.1.el9;x86_64" in content
-
-        shutil.rmtree(str(test_bin_dir))
-
-
 def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     """The old wire's explicit file lists are served by the native file plugins"""
     config_dir = tmp_path / "etc/check_mk/test"
@@ -725,89 +466,6 @@ def test_diagnostics_element_performance_graphs_content(
     assert filepath == tmp_dump_folder.joinpath("performance_graphs.pdf")
 
     shutil.rmtree(str(automation_dir))
-
-
-def test_diagnostics_element_se_linux() -> None:
-    diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
-    assert diagnostics_element.title == "SELinux information"
-    assert diagnostics_element.description == (
-        "Output of `sestatus`. See the corresponding command line help for more details."
-    )
-    assert diagnostics_element.filename == "selinux.json"
-
-
-def test_diagnostics_element_se_linux_content(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    omd_root = tmp_path.joinpath("omd_root")
-    test_bin_dir = Path(omd_root).joinpath("bin")
-    test_bin_dir.mkdir(parents=True, exist_ok=True)
-    test_bin_filepath = test_bin_dir.joinpath("sestatus")
-
-    with test_bin_filepath.open("w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/bash
-                echo "SELinux status:                 enabled"
-                """
-        )
-
-    os.chmod(test_bin_filepath, 0o770)
-
-    with monkeypatch.context() as m:
-        m.setenv("PATH", str(test_bin_dir))
-
-        diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
-        tmp_dump_folder = tmp_path.joinpath("tmp")
-        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-        )
-
-        assert isinstance(filepath, Path)
-        assert filepath == tmp_dump_folder.joinpath("selinux.json")
-
-        content = json.loads(filepath.open().read())
-
-        assert content["SELinux status"] == "enabled"
-
-        shutil.rmtree(str(test_bin_dir))
-
-
-def test_diagnostics_element_cma() -> None:
-    diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
-    assert diagnostics_element.title == "Checkmk Appliance information"
-    assert diagnostics_element.description == (
-        "Information about the appliance hardware and firmware version."
-    )
-    assert diagnostics_element.filename == "appliance.json"
-
-
-def test_diagnostics_element_cma_content(tmp_path: Path) -> None:
-    data_dict = {
-        "/etc/cma/hw": "product='Checkmk rack1 Mark VI'",
-        "/ro/usr/share/cma/version": "1.7.5",
-    }
-
-    def open_side_effect(name, *_args, **_kwargs):
-        return mock_open(read_data=data_dict.get(name))()
-
-    with patch("builtins.open") as bo:
-        bo.side_effect = open_side_effect
-
-        diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
-        tmp_dump_folder = tmp_path.joinpath("tmp")
-        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-        )
-
-        assert isinstance(filepath, Path)
-        assert filepath == tmp_dump_folder.joinpath("appliance.json")
-
-        content = json.loads(filepath.open().read())
-
-        assert content["hw"]["product"] == "Checkmk rack1 Mark VI"
-        assert content["fw"] == "1.7.5"
 
 
 def test_diagnostics_element_crash_dumps_content(tmp_path: Path) -> None:

@@ -29,6 +29,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-licensing-nonfree:__pkg__",
         "//non-free/packages/cmk-metric-backend:__pkg__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",

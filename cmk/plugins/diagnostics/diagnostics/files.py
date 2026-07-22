@@ -10,74 +10,21 @@ redacted (passwords) and sanitized (site configuration secrets), so they are
 always generated content; the Apache configuration is copied verbatim.
 """
 
-import tempfile
 from collections.abc import Iterable
 from functools import partial
 from pathlib import Path, PurePosixPath
 
-import cmk.livestatus_client as livestatus
-
 # TODO: FILE_MAP_* move into this family's lib once the GUI is migrated.
-from cmk.ccc import store
-from cmk.diagnostics.engine import FILE_MAP_CONFIG, FILE_MAP_LOG, FileMapConfig
+from cmk.diagnostics.engine import FILE_MAP_CONFIG, FILE_MAP_LOG
 from cmk.diagnostics.internal import (
     CollectContext,
     DiagnosticsPlugin,
     DumpItem,
-    GeneratedContent,
     Help,
-    redact_passwords_in_content,
-    REDACT_STRING,
     Sensitivity,
-    VerbatimCopy,
 )
-from cmk.plugins.diagnostics.lib.files import classified_files, walk_verbatim
+from cmk.plugins.diagnostics.lib.files import collect_bucket, walk_verbatim
 from cmk.plugins.diagnostics.lib.topics import TOPIC_CONFIGURATION, TOPIC_LOGS
-
-_SITES_MK = Path("multisite.d/sites.mk")
-
-
-def _sanitized_sites_mk(source: Path) -> bytes:
-    sites = {
-        site_id: livestatus.sanitize_site_configuration(config)
-        for site_id, config in store.load_from_mk_file(
-            source,
-            key="sites",
-            default=livestatus.SiteConfigurations({}),
-            lock=False,
-        ).items()
-    }
-    with tempfile.TemporaryDirectory() as tmp:
-        sanitized = Path(tmp) / "sites.mk"
-        store.save_to_mk_file(sanitized, key="sites", value=sites)
-        return sanitized.read_bytes()
-
-
-def _collect_file(
-    context: CollectContext, arcname: PurePosixPath, source: Path, rel_filepath: Path
-) -> DumpItem:
-    if rel_filepath == _SITES_MK:
-        return DumpItem(arcname, GeneratedContent(_sanitized_sites_mk(source)))
-    try:
-        content = source.read_text()
-    except UnicodeDecodeError:
-        # We won't redact non-text files
-        return DumpItem(arcname, VerbatimCopy(source))
-    redacted = redact_passwords_in_content(content, rel_filepath)
-    if passwords_redacted := redacted.count(REDACT_STRING):
-        message = f"Redacted {passwords_redacted} passwords in file {rel_filepath}"
-        context.log.info(message)
-    return DumpItem(arcname, GeneratedContent(redacted.encode()))
-
-
-def _collect_bucket(
-    context: CollectContext, *, file_map: FileMapConfig, bucket: Sensitivity
-) -> Iterable[DumpItem]:
-    for classified in classified_files(context.omd_root, file_map):
-        if classified.sensitivity is bucket:
-            yield _collect_file(
-                context, classified.arcname, classified.source, classified.rel_filepath
-            )
 
 
 def _collect_apache_config(context: CollectContext) -> Iterable[DumpItem]:
@@ -96,7 +43,7 @@ diagnostics_plugin_config_files_low = DiagnosticsPlugin(
     ),
     sensitivity=Sensitivity.LOW,
     topic=TOPIC_CONFIGURATION,
-    handler=partial(_collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.LOW),
+    handler=partial(collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.LOW),
 )
 
 diagnostics_plugin_config_files_medium = DiagnosticsPlugin(
@@ -107,7 +54,7 @@ diagnostics_plugin_config_files_medium = DiagnosticsPlugin(
     ),
     sensitivity=Sensitivity.MEDIUM,
     topic=TOPIC_CONFIGURATION,
-    handler=partial(_collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.MEDIUM),
+    handler=partial(collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.MEDIUM),
 )
 
 diagnostics_plugin_config_files_high = DiagnosticsPlugin(
@@ -119,7 +66,7 @@ diagnostics_plugin_config_files_high = DiagnosticsPlugin(
     ),
     sensitivity=Sensitivity.HIGH,
     topic=TOPIC_CONFIGURATION,
-    handler=partial(_collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.HIGH),
+    handler=partial(collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.HIGH),
 )
 
 diagnostics_plugin_apache_config = DiagnosticsPlugin(
@@ -137,7 +84,7 @@ diagnostics_plugin_log_files_low = DiagnosticsPlugin(
     ),
     sensitivity=Sensitivity.LOW,
     topic=TOPIC_LOGS,
-    handler=partial(_collect_bucket, file_map=FILE_MAP_LOG, bucket=Sensitivity.LOW),
+    handler=partial(collect_bucket, file_map=FILE_MAP_LOG, bucket=Sensitivity.LOW),
 )
 
 diagnostics_plugin_log_files_medium = DiagnosticsPlugin(
@@ -148,7 +95,7 @@ diagnostics_plugin_log_files_medium = DiagnosticsPlugin(
     ),
     sensitivity=Sensitivity.MEDIUM,
     topic=TOPIC_LOGS,
-    handler=partial(_collect_bucket, file_map=FILE_MAP_LOG, bucket=Sensitivity.MEDIUM),
+    handler=partial(collect_bucket, file_map=FILE_MAP_LOG, bucket=Sensitivity.MEDIUM),
 )
 
 diagnostics_plugin_log_files_high = DiagnosticsPlugin(
@@ -159,5 +106,5 @@ diagnostics_plugin_log_files_high = DiagnosticsPlugin(
     ),
     sensitivity=Sensitivity.HIGH,
     topic=TOPIC_LOGS,
-    handler=partial(_collect_bucket, file_map=FILE_MAP_LOG, bucket=Sensitivity.HIGH),
+    handler=partial(collect_bucket, file_map=FILE_MAP_LOG, bucket=Sensitivity.HIGH),
 )

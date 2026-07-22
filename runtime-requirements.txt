@@ -3385,6 +3385,7 @@ requests==2.34.2 \
     #   -r non-free/packages/cmk-core-helpers/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   -r non-free/packages/cmk-metric-backend/requirements.in
+    #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crash/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in

@@ -30,6 +30,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//tests:__subpackages__",
     ],

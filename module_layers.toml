@@ -149,10 +149,13 @@ allows = [
 allows = [
   "@livestatus_client",
   "cmk.ccc.hostaddress",
+  "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version",
   "cmk.crash",
   "cmk.inventory",
+  # decoding of the rot47-obfuscated licensing usage reports
+  "cmk.licensing.usage",
   # TODO: remove once the GUI is migrated and the classification table moved
   # into this family's lib
   "cmk.diagnostics.engine",

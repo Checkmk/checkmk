@@ -7,17 +7,12 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import shutil
 import tarfile
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path, PurePosixPath
-from typing import NamedTuple
 
 import pytest
-import requests
 
-import cmk.livestatus_client as livestatus
-import cmk.utils.paths
 from cmk.base import diagnostics
 from cmk.ccc.version import Edition
 from cmk.diagnostics.internal import (
@@ -104,18 +99,6 @@ def _adapter_catalogue(tmp_path: Path) -> Mapping[str, DiagnosticsPlugin]:
 def reset_collector_caches() -> None:
     # diagnostics.get_omd_config.cache_clear()
     diagnostics.verify_checkmk_server_host.cache_clear()
-
-
-@pytest.fixture()
-def _fake_local_connection(host_list: Sequence[Sequence[str]]) -> Callable:
-    class FakeLocalConnection:
-        def query(self, query: str) -> Sequence[Sequence[str]]:
-            return host_list
-
-    def _wrapper(host_list: Sequence[Sequence[str]]) -> type[FakeLocalConnection]:
-        return FakeLocalConnection
-
-    return _wrapper
 
 
 #   .--dump----------------------------------------------------------------.
@@ -304,8 +287,6 @@ def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     legacy_plugins = diagnostics._legacy_file_plugins(
         {"checkmk-config-files": ["test/test.conf", "no/such/file.mk"]},
         catalogue=catalogue,
-        edition=Edition.COMMUNITY,
-        tmp_parent=tmp_path,
     )
     assert [p.name for p in legacy_plugins] == ["config_files"]
 
@@ -315,135 +296,14 @@ def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     assert "No such files: no/such/file.mk" in logger.content()
 
 
-@pytest.mark.parametrize(
-    "host_list, status_code, text, content, warning, error",
-    [
-        # no Checkmk server
-        ([], 123, "", b"", "No Checkmk server found", None),
-        ([], 200, "<html>foo bar</html>", b"", "No Checkmk server found", None),
-        ([], 200, "", b"", "No Checkmk server found", None),
-        ([], 200, "", b"%PDF-", "No Checkmk server found", None),
-        # Checkmk server
-        ([["checkmk-server-name"]], 123, "", b"", None, "HTTP error - 123 ()"),
-        (
-            [["checkmk-server-name"]],
-            200,
-            "<html>foo bar</html>",
-            b"",
-            None,
-            "Login failed - Invalid automation user or secret",
-        ),
-        (
-            [["checkmk-server-name"]],
-            200,
-            "",
-            b"",
-            None,
-            "Verification of PDF document header failed",
-        ),
-    ],
-)
-def test_diagnostics_element_performance_graphs_error(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    _fake_local_connection: Callable,
-    host_list: Sequence[Sequence[str]],
-    status_code: int,
-    text: str,
-    content: str,
-    warning: str | None,
-    error: str | None,
-) -> None:
-    omd_config = {
-        "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
-        "CONFIG_APACHE_TCP_PORT": "5000",
-    }
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("", omd_config=omd_config)
-
-    monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
-
-    class FakeResponse(NamedTuple):
-        status_code: int
-        text: str
-        content: str
-
-    monkeypatch.setattr(
-        requests, "post", lambda *arg, **kwargs: FakeResponse(status_code, text, content)
+def test_legacy_cee_file_options_absent_on_community(tmp_path: Path) -> None:
+    """Without the CEE plugins the core/licensing options are silently unavailable"""
+    catalogue = _full_catalogue(tmp_path)
+    legacy_plugins = diagnostics._legacy_file_plugins(
+        {
+            "checkmk-core-files": ["core/history"],
+            "checkmk-licensing-files": ["licensing/history.json"],
+        },
+        catalogue=catalogue,
     )
-
-    automation_dir = cmk.utils.paths.var_dir / "web/automation"
-    automation_dir.mkdir(parents=True, exist_ok=True)
-    with automation_dir.joinpath("automation.secret").open("w") as f:
-        f.write("my-123-password")
-
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-
-    if warning:
-        with pytest.raises(diagnostics.DiagnosticsElementWarning) as w:
-            next(
-                diagnostics_element.add_or_get_files(
-                    omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder
-                )
-            )
-            assert warning == str(w)
-
-    if error:
-        with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-            next(
-                diagnostics_element.add_or_get_files(
-                    omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder
-                )
-            )
-            assert error == str(e)
-
-    shutil.rmtree(str(automation_dir))
-
-
-@pytest.mark.parametrize(
-    "host_list, status_code, text, content",
-    [
-        ([["checkmk-server-name"]], 200, "", b"%PDF-"),
-    ],
-)
-def test_diagnostics_element_performance_graphs_content(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    _fake_local_connection: Callable,
-    host_list: Sequence[Sequence[str]],
-    status_code: int,
-    text: str,
-    content: str,
-) -> None:
-    omd_config = {
-        "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
-        "CONFIG_APACHE_TCP_PORT": "5000",
-    }
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("", omd_config=omd_config)
-
-    monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
-
-    class FakeResponse(NamedTuple):
-        status_code: int
-        text: str
-        content: str
-
-    monkeypatch.setattr(
-        requests, "post", lambda *arg, **kwargs: FakeResponse(status_code, text, content)
-    )
-
-    automation_dir = cmk.utils.paths.var_dir / "web/automation"
-    automation_dir.mkdir(parents=True, exist_ok=True)
-    with automation_dir.joinpath("automation.secret").open("w") as f:
-        f.write("my-123-password")
-
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    filepath = next(
-        diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-    )
-
-    assert isinstance(filepath, Path)
-    assert filepath == tmp_dump_folder.joinpath("performance_graphs.pdf")
-
-    shutil.rmtree(str(automation_dir))
+    assert not legacy_plugins

@@ -239,7 +239,6 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",

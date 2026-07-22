@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import abc
 import io
-import json
 import logging
-import os
 import shutil
 import subprocess
 import sys
@@ -17,7 +15,6 @@ import tarfile
 import tempfile
 import textwrap
 import traceback
-import urllib.parse
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
@@ -25,8 +22,6 @@ from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Final, override
-
-import requests
 
 import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
@@ -38,25 +33,19 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
-from cmk.ccc import site, store, tty
+from cmk.ccc import site, tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.diagnostics.engine import (
-    CheckmkFileEncryption,
-    CheckmkFileInfoByRelFilePathMap,
-    CheckmkFilesMap,
     deserialize_cl_parameters,
     DiagnosticsCLParameters,
     DiagnosticsElementFilepaths,
     DiagnosticsModesParameters,
     DiagnosticsOptionalParameters,
     DumpSelection,
-    FILE_MAP_CORE,
-    FILE_MAP_LICENSING,
-    FileMapConfig,
     load_diagnostics_plugins,
     OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
@@ -70,7 +59,6 @@ from cmk.diagnostics.engine import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
-    redact_passwords_in_file,
 )
 from cmk.diagnostics.internal import (
     CollectContext,
@@ -85,7 +73,6 @@ from cmk.diagnostics.internal import (
     Topic,
     VerbatimCopy,
 )
-from cmk.licensing.usage import deserialize_dump
 from cmk.utils import log
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
@@ -447,12 +434,7 @@ def _create_dump(
         logger.info(message)
 
     extra_plugins = (
-        _legacy_file_plugins(
-            legacy_file_parameters,
-            catalogue=catalogue,
-            edition=app.edition,
-            tmp_parent=diagnostics_dir,
-        )
+        _legacy_file_plugins(legacy_file_parameters, catalogue=catalogue)
         if legacy_file_parameters is not None
         else ()
     )
@@ -686,25 +668,7 @@ def _adapter_plugin_catalogue(
                     always=True,
                     handler=_adapt(lambda _ctx: [DCDDiagnosticsElement()], tmp_parent=tmp_parent),
                 ),
-                DiagnosticsPlugin(
-                    name="performance_graphs",
-                    topic=_TOPIC_PERFORMANCE,
-                    description=Help(
-                        "CPU load and utilization, number of threads, Kernel performance, OMD,"
-                        " file system, Apache status, TCP connections of the time ranges"
-                        " 25 hours and 35 days"
-                    ),
-                    sensitivity=Sensitivity.LOW,
-                    handler=_adapt(
-                        lambda ctx: [
-                            PerformanceGraphsDiagnosticsElement(
-                                ctx.resolve_checkmk_server_host(), omd_config
-                            )
-                        ],
-                        tmp_parent=tmp_parent,
-                    ),
-                ),
-            ]
+            ],
         )
 
     return {plugin.name: plugin for plugin in plugins}
@@ -775,6 +739,16 @@ def _filter_by_arcname(
     return handler
 
 
+def _chain_handlers(
+    *handlers: Callable[[CollectContext], Iterable[DumpItem]],
+) -> Callable[[CollectContext], Iterable[DumpItem]]:
+    def handler(context: CollectContext) -> Iterable[DumpItem]:
+        for single_handler in handlers:
+            yield from single_handler(context)
+
+    return handler
+
+
 _OPT_GUI_PROFILES = "gui-profiles"
 _TOPIC_LEGACY_GUI_PROFILES = Topic("Performance & sizing")
 
@@ -801,8 +775,6 @@ def _legacy_file_plugins(
     parameters: DiagnosticsOptionalParameters,
     *,
     catalogue: Mapping[str, DiagnosticsPlugin],
-    edition: cmk_version.Edition,
-    tmp_parent: Path,
 ) -> Sequence[DiagnosticsPlugin]:
     """Plugins for the explicit file lists of the old wire (transitional)"""
     plugins = []
@@ -846,39 +818,48 @@ def _legacy_file_plugins(
             )
         )
 
-    if edition is not cmk_version.Edition.COMMUNITY:
-        if rel_checkmk_core_files := parameters.get(OPT_CHECKMK_CORE_FILES):
-            plugins.append(
-                DiagnosticsPlugin(
-                    name="core_files",
-                    description=Help("Checkmk core files and cmcdump output"),
-                    sensitivity=Sensitivity.HIGH,
-                    topic=_TOPIC_MONITORING_CORE,
-                    handler=_adapt(
-                        lambda _ctx: [
-                            CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files),
-                            CMCDumpDiagnosticsElement(),
-                        ],
-                        tmp_parent=tmp_parent,
+    # The CEE file plugins are gated by presence: on editions without them
+    # (community) the options below remain silently unavailable, matching the
+    # old edition gate.
+    if (rel_checkmk_core_files := parameters.get(OPT_CHECKMK_CORE_FILES)) and {
+        "cmc_history",
+        "cmc_core_files",
+        "cmc_dump",
+    } <= set(catalogue):
+        plugins.append(
+            DiagnosticsPlugin(
+                name="core_files",
+                description=Help("Checkmk core files and cmcdump output"),
+                sensitivity=Sensitivity.HIGH,
+                topic=_TOPIC_MONITORING_CORE,
+                handler=_chain_handlers(
+                    # The old engine always ran cmcdump when core files were selected.
+                    catalogue["cmc_dump"].handler,
+                    _filter_by_arcname(
+                        [catalogue[name].handler for name in ("cmc_history", "cmc_core_files")],
+                        PurePosixPath("var/check_mk"),
+                        rel_checkmk_core_files,
                     ),
-                )
+                ),
             )
+        )
 
-        if rel_checkmk_licensing_files := parameters.get(OPT_CHECKMK_LICENSING_FILES):
-            plugins.append(
-                DiagnosticsPlugin(
-                    name="licensing_files",
-                    description=Help("Checkmk licensing files"),
-                    sensitivity=Sensitivity.HIGH,
-                    topic=_TOPIC_LICENSING,
-                    handler=_adapt(
-                        lambda _ctx: [
-                            CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files)
-                        ],
-                        tmp_parent=tmp_parent,
-                    ),
-                )
+    if (
+        rel_checkmk_licensing_files := parameters.get(OPT_CHECKMK_LICENSING_FILES)
+    ) and "licensing_files" in catalogue:
+        plugins.append(
+            DiagnosticsPlugin(
+                name="licensing_files",
+                description=Help("Checkmk licensing files"),
+                sensitivity=Sensitivity.HIGH,
+                topic=_TOPIC_LICENSING,
+                handler=_filter_by_arcname(
+                    [catalogue["licensing_files"].handler],
+                    PurePosixPath("var/check_mk"),
+                    rel_checkmk_licensing_files,
+                ),
             )
+        )
 
     if gui_profile_ids := parameters.get(_OPT_GUI_PROFILES):
         plugins.append(
@@ -1110,115 +1091,6 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
         raise NotImplementedError
 
 
-#   ---text dumps-----------------------------------------------------------
-
-
-#   ---csv dumps-----------------------------------------------------------
-
-
-#   ---collect exiting files------------------------------------------------
-
-
-class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, rel_checkmk_files: list[str]) -> None:
-        self.rel_checkmk_files = rel_checkmk_files
-        self.file_map_config = self._file_map_config
-
-    def _checkmk_files_map(self, omd_root: Path) -> CheckmkFilesMap:
-        return self.file_map_config.map_generator(
-            omd_root / self.file_map_config.rel_base_folder,
-            lambda base_folder: list(os.walk(base_folder)),
-        )
-
-    @property
-    @abc.abstractmethod
-    def _file_map_config(self) -> FileMapConfig:
-        raise NotImplementedError
-
-    def _copy_and_decrypt(
-        self,
-        *,
-        checkmk_files_map: CheckmkFilesMap,
-        omd_root: Path,
-        rel_filepath: Path,
-        tmp_dump_folder: Path,
-    ) -> Path | None:
-        filepath = checkmk_files_map.get(str(rel_filepath))
-        if filepath is None or not filepath.exists():
-            return None
-
-        # Respect file path (2), otherwise the paths of same named files are forgotten (1).
-        # We want to pack a folder hierarchy.
-
-        subfolder = filepath.relative_to(omd_root).parent
-        # Create relative path in tmp tree
-        tmp_folder = tmp_dump_folder / subfolder
-        tmp_folder.mkdir(parents=True, exist_ok=True)
-
-        # Decrypt if file is encrypted, else only copy
-        encryption = CheckmkFileEncryption.none
-
-        tmp_filepath = tmp_folder / filepath.name
-        file_info = CheckmkFileInfoByRelFilePathMap.get(str(rel_filepath))
-
-        if file_info is not None:
-            encryption = file_info.encryption
-
-        if encryption == CheckmkFileEncryption.rot47:
-            tmp_filepath.write_text(
-                json.dumps(deserialize_dump(filepath.read_bytes()), sort_keys=True, indent=4)
-            )
-        # We 'encrypt' only license thingies at the moment, so there is currently no need to
-        # sanitize encrypted files
-        elif rel_filepath == Path("multisite.d/sites.mk"):
-            store.save_to_mk_file(
-                tmp_filepath,
-                key="sites",
-                value={
-                    siteid: livestatus.sanitize_site_configuration(config)
-                    for siteid, config in store.load_from_mk_file(
-                        filepath,
-                        key="sites",
-                        default=livestatus.SiteConfigurations({}),
-                        lock=False,
-                    ).items()
-                },
-            )
-        else:
-            shutil.copy(filepath, tmp_filepath)
-
-        passwords_redacted = redact_passwords_in_file(tmp_filepath, rel_filepath)
-
-        if passwords_redacted:
-            ConsoleLogger().info(f"Redacted {passwords_redacted} passwords in file {rel_filepath}")
-
-        return tmp_filepath
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        unknown_files = []
-        checkmk_files_map = self._checkmk_files_map(omd_root)
-
-        for rel_filepath in self.rel_checkmk_files:
-            tmp_filepath = self._copy_and_decrypt(
-                checkmk_files_map=checkmk_files_map,
-                omd_root=omd_root,
-                rel_filepath=Path(rel_filepath),
-                tmp_dump_folder=tmp_dump_folder,
-            )
-
-            if tmp_filepath is None:
-                unknown_files.append(str(rel_filepath))
-                continue
-
-            yield tmp_filepath
-
-        if unknown_files:
-            raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
-
-
 #   ---command calls--------------------------------------------------------------
 
 
@@ -1265,148 +1137,6 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
 
 
 #   ---cee dumps------------------------------------------------------------
-
-
-class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Checkmk core files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Core files (config, state and history) from var/check_mk/core: %(files)s") % {
-            "files": ", ".join(self.rel_checkmk_files)
-        }
-
-    @override
-    @property
-    def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_CORE
-
-
-class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Checkmk licensing files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Licensing files (data, config and logs) from var/check_mk/licensing, etc/check_mk/multisite.d and var/log: %(files)s"
-        ) % {"files": ", ".join(self.rel_checkmk_files)}
-
-    @override
-    @property
-    def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_LICENSING
-
-
-class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, checkmk_server_host: str, omd_config: site.OMDConfig) -> None:
-        self.checkmk_server_host = checkmk_server_host
-        self.omd_config = omd_config
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Time series graphs of Checkmk server")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "CPU load and utilization, number of threads, Kernel performance, OMD, file system, Apache status, TCP connections of the time ranges 25 hours and 35 days"
-        )
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
-        response = self._get_response(checkmk_server_host)
-
-        if response.status_code != 200:
-            raise DiagnosticsElementError(
-                "HTTP error - %d (%s)" % (response.status_code, response.text)
-            )
-
-        if "<html>" in response.text.lower():
-            raise DiagnosticsElementError("Login failed - Invalid automation user or secret")
-        # Verify if it's a PDF document: The header must begin with
-        # "%PDF-" (hex: "25 50 44 46 2d")
-        if response.content[:5].hex() != "255044462d":
-            raise DiagnosticsElementError("Verification of PDF document header failed")
-
-        filepath = tmp_dump_folder / "performance_graphs.pdf"
-        filepath.write_bytes(response.content)
-        yield filepath
-
-    def _get_response(self, checkmk_server_host: str) -> requests.Response:
-        internal_secret = "InternalToken %s" % (SiteInternalSecret().secret.b64_str)
-        url = "http://{}:{}/{}/check_mk/report.py?".format(
-            self.omd_config["CONFIG_APACHE_TCP_ADDR"],
-            self.omd_config["CONFIG_APACHE_TCP_PORT"],
-            omd_site(),
-        ) + urllib.parse.urlencode(
-            [
-                ("host", checkmk_server_host),
-                ("name", "host_performance_graphs"),
-            ]
-        )
-
-        return requests.post(
-            url,
-            headers={
-                "Authorization": internal_secret,
-            },
-            timeout=900,
-        )
-
-
-class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Config and state dumps of the CMC")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Configuration, status, and status history data of the CMC (Checkmk Micro Core); "
-            "cmcdump output of the status and config."
-        )
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        command = [str(omd_root / "bin/cmcdump")]
-
-        for dump_args in (None, "--config"):
-            tmpdir = tmp_dump_folder / "var/check_mk/core"
-            tmpdir.mkdir(parents=True, exist_ok=True)
-            suffix = ""
-
-            if dump_args is not None:
-                command.append(dump_args)
-                suffix = "%s" % dump_args
-
-            try:
-                output = subprocess.check_output(
-                    command, stderr=subprocess.STDOUT, timeout=15, encoding="utf-8"
-                )
-            except subprocess.CalledProcessError as e:
-                ConsoleLogger().error(str(e))
-                continue
-
-            filepath = tmpdir / f"cmcdump{suffix}"
-            filepath.write_text(output)
-            yield filepath
 
 
 class DCDDiagnosticsElement(ABCDiagnosticsElementTextDump):

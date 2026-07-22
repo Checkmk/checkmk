@@ -1055,6 +1055,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui"]
 allows = [
+  "cmk.diagnostics.engine",
   "@ccc",
   "@crypto",
   "@flags",
@@ -1070,7 +1071,6 @@ allows = [
   "cmk.checkengine",
   "cmk.crash",
   "cmk.crash_reporting",
-  "cmk.diagnostics.engine",
   "cmk.discover_plugins",
   "cmk.diskspace",
   "cmk.events.notification_result",

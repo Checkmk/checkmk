@@ -789,23 +789,23 @@ def notification_get_bulks(*, only_ripe: bool, debug: bool) -> results.Notificat
     )
 
 
-def create_diagnostics_dump(
+def create_diagnostics_dump_v2(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-    serialized_params: Sequence[str],
+    serialized_selection: str,
     timeout: int,
     *,
     debug: bool,
-) -> results.CreateDiagnosticsDumpResult:
+) -> results.CreateDiagnosticsDumpV2Result:
     return _deserialize(
         _automation_serialized(
-            AutomationID("create-diagnostics-dump"),
+            AutomationID("create-diagnostics-dump-v2"),
             automation_config=automation_config,
-            args=serialized_params,
+            args=[serialized_selection],
             timeout=timeout,
             non_blocking_http=True,
             debug=debug,
         ),
-        results.CreateDiagnosticsDumpResult,
+        results.CreateDiagnosticsDumpV2Result,
         debug=debug,
     )
 

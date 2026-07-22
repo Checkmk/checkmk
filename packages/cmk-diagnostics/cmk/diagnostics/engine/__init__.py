@@ -18,8 +18,6 @@ from ._unsorted import DiagnosticsModesParameters as DiagnosticsModesParameters
 from ._unsorted import DiagnosticsOptionalParameters as DiagnosticsOptionalParameters
 from ._unsorted import DiagnosticsParameters as DiagnosticsParameters
 from ._unsorted import FILE_MAP_CONFIG as FILE_MAP_CONFIG
-from ._unsorted import FILE_MAP_CORE as FILE_MAP_CORE
-from ._unsorted import FILE_MAP_LICENSING as FILE_MAP_LICENSING
 from ._unsorted import FILE_MAP_LOG as FILE_MAP_LOG
 from ._unsorted import FileMapConfig as FileMapConfig
 from ._unsorted import get_checkmk_file_description as get_checkmk_file_description
@@ -51,4 +49,5 @@ from ._unsorted import redact_passwords_in_content as redact_passwords_in_conten
 from ._unsorted import redact_passwords_in_file as redact_passwords_in_file
 from ._unsorted import REDACT_STRING as REDACT_STRING
 from ._unsorted import serialize_wato_parameters as serialize_wato_parameters
+from ._unsorted import topic_id as topic_id
 from ._wire import DumpSelection as DumpSelection

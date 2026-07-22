@@ -7,50 +7,24 @@
 
 import json
 import os
-import tarfile
-import uuid
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Final, NamedTuple, override
 
 from pydantic import BaseModel
 
 import cmk.utils.paths
-from cmk.automations.results import CreateDiagnosticsDumpResult
-from cmk.ccc.archive import CheckmkTarArchive
-from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import Edition
+from cmk.ccc.site import SiteId
 from cmk.diagnostics.engine import (
-    CheckmkFileInfo,
-    CheckmkFileSensitivity,
-    CheckmkFilesMap,
-    DiagnosticsParameters,
-    FILE_MAP_CONFIG,
-    FILE_MAP_CORE,
-    FILE_MAP_LICENSING,
-    FILE_MAP_LOG,
-    get_checkmk_file_description,
-    get_checkmk_file_info,
-    get_checkmk_file_sensitivity_for_humans,
-    OPT_APACHE_CONFIG,
-    OPT_BI_RUNTIME_DATA,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_CRASH_REPORTS,
-    OPT_CHECKMK_LOG_FILES,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_COMP_BUSINESS_INTELLIGENCE,
-    OPT_COMP_CMC,
-    OPT_COMP_GLOBAL_SETTINGS,
-    OPT_COMP_HOSTS_AND_FOLDERS,
-    OPT_COMP_LICENSING,
-    OPT_COMP_METRIC_BACKEND,
-    OPT_COMP_NOTIFICATIONS,
-    OPT_GUI_PROFILES,
-    OPT_LOCAL_FILES,
-    OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
-    OSWalk,
-    serialize_wato_parameters,
+    DumpSelection,
+    load_diagnostics_plugins,
+    resolve_selection,
+    topic_id,
+)
+from cmk.diagnostics.internal import (
+    DiagnosticsPlugin,
+    Sensitivity,
+    Topic,
 )
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -60,11 +34,12 @@ from cmk.gui.background_job.job import (
     JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, Request, request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -89,10 +64,8 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.valuespec import (
-    CascadingDropdown,
     Dictionary,
-    DictionaryEntry,
-    DualListChoice,
+    DropdownChoice,
     FixedValue,
     Integer,
     MonitoredHostname,
@@ -107,26 +80,24 @@ from cmk.gui.watolib.automations import (
     do_remote_automation,
     make_automation_config,
 )
-from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
+from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump_v2
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-from cmk.profiling.gui import ProfileStore
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 
-_FILE_MAPS = [
-    FILE_MAP_CONFIG,
-    FILE_MAP_CORE,
-    FILE_MAP_LICENSING,
-    FILE_MAP_LOG,
-]
-
-_CHECKMK_FILES_NOTE = _(
-    "<br><b>Note</b>: Some files may contain highly sensitive data like"
-    " passwords. These files are marked with 'H'."
-    " Other files may include IP addresses, host names, usernames,"
-    " mail addresses or phone numbers and are marked with 'M'."
-)
-
 timeout_default = 110
+
+_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
+    "off": None,
+    "low": Sensitivity.LOW,
+    "medium": Sensitivity.MEDIUM,
+    "high": Sensitivity.HIGH,
+}
+
+_SENSITIVITY_MARKERS: Final[Mapping[Sensitivity, str]] = {
+    Sensitivity.LOW: "L",
+    Sensitivity.MEDIUM: "M",
+    Sensitivity.HIGH: "H",
+}
 
 
 def register(
@@ -147,13 +118,39 @@ def register(
     job_registry.register(DiagnosticsDumpBackgroundJob)
 
 
-class ModeDiagnostics(WatoMode[object]):
-    # NOTE: ModeRegistry currently still contains types, not instances, so we can have no argument
-    # here. When this has been fixed, we can pass the diagnostics directory at registration time!
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
-        self._diagnostics_dir = cmk.utils.paths.diagnostics_dir
+def _load_plugin_catalogue() -> Sequence[DiagnosticsPlugin]:
+    """The support diagnostics plugins available on this site"""
+    discovered = load_diagnostics_plugins(raise_errors=False)
+    for error in discovered.errors:
+        logger.error(error)
+    return list(discovered.plugins.values())
 
+
+def _selectable_topics(plugins: Sequence[DiagnosticsPlugin]) -> Sequence[Topic]:
+    """The topics offering a threshold choice, i.e. those with selectable plugins
+
+    Topics whose plugins are all collected anyway get no dropdown.
+
+    Raises:
+        ValueError: if two topics sanitize to the same form element id.
+    """
+    topics = sorted(
+        {plugin.topic for plugin in plugins if not plugin.always},
+        key=lambda topic: topic.localize(str),
+    )
+    if len({topic_id(topic) for topic in topics}) != len(topics):
+        raise ValueError("Diagnostics topics with colliding form element ids")
+    return topics
+
+
+class _DiagnosticsParameters(NamedTuple):
+    site: SiteId
+    timeout: int
+    plugins: Sequence[str]
+    checkmk_server_host: str
+
+
+class ModeDiagnostics(WatoMode[object]):
     @classmethod
     def name(cls) -> str:
         return "diagnostics"
@@ -164,35 +161,25 @@ class ModeDiagnostics(WatoMode[object]):
 
     def _from_vars(self) -> None:
         self._site = request.var("select_site_p_site")
-        self._checkmk_files_map: dict[str, CheckmkFilesMap] = {}
-        for file_map in _FILE_MAPS:
-            self._checkmk_files_map[file_map.file_type] = file_map.map_generator(
-                _base_folder_of_site(self._site, file_map.rel_base_folder),
-                lambda base_folder: _os_walk_of_folder(self._site, base_folder, 10),
-            )
-
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
 
-    def _get_diagnostics_parameters(
-        self,
-    ) -> DiagnosticsParameters | None:
-        if self._site is None:
+    def _get_diagnostics_parameters(self) -> _DiagnosticsParameters | None:
+        if self._site is None or not self._collect_dump:
             return None
 
-        if self._collect_dump:
-            params = self._vs_diagnostics().from_html_vars("diagnostics")
-            return DiagnosticsParameters(
-                site=SiteId(self._site),
-                general=params["general"],
-                timeout=params.get("timing", {}).get("timeout", timeout_default),
-                opt_info=params["opt_info"],
-                comp_specific=params["comp_specific"],
-                checkmk_server_host=params["checkmk_server_host"],
-            )
-
-        return None
+        plugins = _load_plugin_catalogue()
+        params = self._vs_diagnostics(plugins).from_html_vars("diagnostics")
+        thresholds = {
+            topic: _THRESHOLDS[params[topic_id(topic)]] for topic in _selectable_topics(plugins)
+        }
+        return _DiagnosticsParameters(
+            site=SiteId(self._site),
+            timeout=params.get("timing", {}).get("timeout", timeout_default),
+            plugins=resolve_selection(plugins, thresholds),
+            checkmk_server_host=str(params.get("checkmk_server_host") or ""),
+        )
 
     def title(self) -> str:
         return _("Support diagnostics")
@@ -253,20 +240,21 @@ class ModeDiagnostics(WatoMode[object]):
             return redirect(self._job.detail_url())
 
         params = self._diagnostics_parameters
-        site = params["site"]
-        site_config = config.sites[site]
+        site_config = config.sites[params.site]
         automation_config = make_automation_config(site_config)
         if (
             result := self._job.start(
                 JobTarget(
                     callable=diagnostics_dump_entry_point,
                     args=DiagnosticsDumpArgs(
-                        params=params,
+                        site=params.site,
+                        plugins=list(params.plugins),
+                        checkmk_server_host=params.checkmk_server_host,
+                        timeout=params.timeout,
                         automation_config=automation_config,
                         user_permission_config=UserPermissionSerializableConfig.from_global_config(
                             config
                         ),
-                        diagnostics_dir=self._diagnostics_dir,
                         debug=config.debug,
                     ),
                 ),
@@ -293,7 +281,7 @@ class ModeDiagnostics(WatoMode[object]):
                 html.hidden_fields()
         else:
             with html.form_context("diagnostics", method="POST"):
-                self._vs_diagnostics().render_input("diagnostics", None)
+                self._vs_diagnostics(_load_plugin_catalogue()).render_input("diagnostics", None)
                 html.hidden_fields()
 
     def _vs_select_site(self) -> Dictionary:
@@ -389,469 +377,105 @@ class ModeDiagnostics(WatoMode[object]):
             ),
         )
 
-    def _vs_diagnostics(self) -> Dictionary:
+    def _vs_always_included_element(
+        self, plugins: Sequence[DiagnosticsPlugin]
+    ) -> Sequence[tuple[str, ValueSpec[Any]]]:
+        always_descriptions = sorted(
+            plugin.description.localize(translate_to_current_language)
+            for plugin in plugins
+            if plugin.always
+        )
+        if not always_descriptions:
+            return []
+        return [
+            (
+                "always",
+                FixedValue(
+                    value=True,
+                    title=_("Always included"),
+                    totext="<br>".join(always_descriptions),
+                    help=_(
+                        "This general information is part of every support diagnostics dump."
+                        " It contains no sensitive data and cannot be deselected."
+                    ),
+                ),
+            )
+        ]
+
+    def _vs_topic_elements(
+        self, plugins: Sequence[DiagnosticsPlugin]
+    ) -> Sequence[tuple[str, ValueSpec[Any]]]:
+        plugins_by_topic: dict[Topic, list[DiagnosticsPlugin]] = {}
+        for plugin in plugins:
+            if not plugin.always:
+                plugins_by_topic.setdefault(plugin.topic, []).append(plugin)
+
+        return [
+            (
+                topic_id(topic),
+                DropdownChoice(
+                    choices=[
+                        ("off", _("Off")),
+                        ("low", _("Low sensitivity only")),
+                        ("medium", _("Low and medium sensitivity")),
+                        ("high", _("All including highly sensitive data")),
+                    ],
+                    title=topic.localize(translate_to_current_language),
+                    help=self._topic_help(plugins_by_topic[topic]),
+                    default_value="medium",
+                ),
+            )
+            for topic in _selectable_topics(plugins)
+        ]
+
+    def _topic_help(self, topic_plugins: Sequence[DiagnosticsPlugin]) -> str:
+        plugin_list = "".join(
+            "<li>(%s) %s</li>"
+            % (
+                _SENSITIVITY_MARKERS[plugin.sensitivity],
+                plugin.description.localize(translate_to_current_language),
+            )
+            for plugin in sorted(topic_plugins, key=lambda p: (p.sensitivity.value, p.name))
+        )
+        return _("The sensitivity threshold selects what is included:<ul>%(plugin_list)s</ul>") % {
+            "plugin_list": plugin_list,
+        }
+
+    def _vs_diagnostics(self, plugins: Sequence[DiagnosticsPlugin]) -> Dictionary:
         elements: list[tuple[str, ValueSpec[Any]]] = [
             self._vs_site(),
             self._vs_timing(),
             self._vs_checkmk_server_host(),
+            *self._vs_always_included_element(plugins),
+            *self._vs_topic_elements(plugins),
         ]
+
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
             help=_(
-                "Files collected by the support diagnostics tool are automatically categorized to"
-                " help you identify sensitive data. We recommend reviewing all files prior to"
-                " sharing, particularly those in the 'Unclassified' category.<ul>"
-                "<li>H (High): Critical security data (e.g., passwords, API keys, secrets).</li>"
-                "<li>M (Medium): PII and infrastructure details (e.g., IP addresses, host names,"
-                " usernames, emails).</li>"
+                "The data provided by the support diagnostics is grouped into topics. For each"
+                " topic, select up to which sensitivity level data is included:<ul>"
                 "<li>L (Low): Operational data; no sensitive information is expected.</li>"
-                "<li>U (Unclassified): Files from custom components. These might be 3rd party"
-                " extensions or modifications made by you.</li></ul>"
+                "<li>M (Medium): May include IP addresses, host names, usernames, mail"
+                " addresses or phone numbers.</li>"
+                "<li>H (High): May include highly sensitive data like passwords, API keys or"
+                " secrets.</li></ul>"
                 "<b>Note</b>: These classifications may differ from your organization's specific"
-                " data security classifications.<br><br>"
-                "The following files are created by built-in components:<ul><li>%(file_list)s</li></ul>"
-            )
-            % {
-                "file_list": "</li><li>".join(
-                    [f"{s} {f}: {d}" for (r_s, f, d, s) in get_checkmk_file_description()]
-                )
-            },
-            elements=[
-                *elements,
-                (
-                    "general",
-                    FixedValue(
-                        value=True,
-                        title=_("General information"),
-                        totext=_("Collect information about OS and Checkmk version"),
-                        help=_(
-                            "Collect information about OS, Checkmk version and edition, "
-                            "time, core, Python version and paths, architecture"
-                        ),
-                    ),
-                ),
-                (
-                    "opt_info",
-                    Dictionary(
-                        title=_("Optional general information"),
-                        elements=self._get_optional_information_elements(),
-                        default_keys=[
-                            OPT_LOCAL_FILES,
-                            OPT_APACHE_CONFIG,
-                            OPT_OMD_CONFIG,
-                            OPT_CHECKMK_OVERVIEW,
-                            OPT_CHECKMK_CRASH_REPORTS,
-                            OPT_CHECKMK_LOG_FILES,
-                            OPT_CHECKMK_CONFIG_FILES,
-                            OPT_PERFORMANCE_GRAPHS,
-                        ],
-                    ),
-                ),
-                (
-                    "comp_specific",
-                    Dictionary(
-                        title=_("Component-specific information"),
-                        elements=self._get_component_specific_elements(),
-                        default_keys=[
-                            OPT_COMP_BUSINESS_INTELLIGENCE,
-                            OPT_COMP_CMC,
-                            OPT_COMP_LICENSING,
-                        ],
-                    ),
-                ),
-            ],
+                " data security classifications. We recommend reviewing the dump prior to"
+                " sharing."
+            ),
+            elements=elements,
             optional_keys=False,
         )
 
-    def _get_optional_information_elements(self) -> list[DictionaryEntry]:
-        elements: list[DictionaryEntry] = [
-            (
-                OPT_LOCAL_FILES,
-                FixedValue(
-                    value=True,
-                    totext="",
-                    title=_("Local Files and MKPs"),
-                    help=_(
-                        "List of installed, unpacked, optional files below OMD_ROOT/local. "
-                        "This also includes information about installed MKPs."
-                    ),
-                ),
-            ),
-            (
-                OPT_APACHE_CONFIG,
-                FixedValue(
-                    value=True,
-                    totext="",
-                    title=_("Apache config"),
-                    help=_(
-                        "Apache Configuration files in /etc/apache2 or /etc/httpd, "
-                        "/opt/omd/apache and $OMD_ROOT/etc/apache.<br>"
-                        "<b>Note</b>: This might include information with medium sensitivity (M)."
-                    ),
-                ),
-            ),
-            (
-                OPT_OMD_CONFIG,
-                FixedValue(
-                    value=True,
-                    totext="",
-                    title=_("OMD Config"),
-                    help=_(
-                        "Apache mode and TCP address and port, core, "
-                        "Liveproxy daemon and Livestatus TCP mode, "
-                        "event daemon config, graphical user interface (GUI) authorization, "
-                        "NSCA mode, TMP file system mode. "
-                    ),
-                ),
-            ),
-            (
-                OPT_CHECKMK_OVERVIEW,
-                FixedValue(
-                    value=True,
-                    totext="",
-                    title=_("Checkmk overview"),
-                    help=_(
-                        "Checkmk agent, number, version and edition of sites, cluster host; "
-                        "number of hosts, services, CMK Helper, Live Helper, "
-                        "Helper usage; state of daemons: Apache, Core, Crontab, "
-                        "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                        "(agent plug-in mk_inventory needs to be installed)"
-                    ),
-                ),
-            ),
-            (
-                OPT_CHECKMK_CRASH_REPORTS,
-                FixedValue(
-                    value=True,
-                    totext="",
-                    title=_("Crash reports"),
-                    help=_(
-                        "The latest crash reports<br>"
-                        "<b>Note</b>: Some crash reports may contain sensitive data like "
-                        "host names or usernames."
-                    ),
-                ),
-            ),
-            (
-                OPT_GUI_PROFILES,
-                DualListChoice(
-                    title=_("GUI Performance Profiles"),
-                    help=_(
-                        "Select which stored GUI request profiles to include. "
-                        "Each profile contains the raw cProfile .profile file and a "
-                        "JSON metadata sidecar (request URL, method, duration, timestamp). "
-                        "Flamegraphs are rendered on demand in the GUI and are not stored. "
-                        "Enable profiling in "
-                        "Global settings > Developer Tools > Performance profiles "
-                        "to collect profiles."
-                    ),
-                    choices=self._get_gui_profile_choices(),
-                    rows=6,
-                ),
-            ),
-            (
-                OPT_CHECKMK_LOG_FILES,
-                self._get_component_specific_checkmk_files_choices(
-                    _("Checkmk log files"),
-                    [
-                        (f, get_checkmk_file_info(f))
-                        for f in self._checkmk_files_map[FILE_MAP_LOG.file_type]
-                    ],
-                ),
-            ),
-            (
-                OPT_CHECKMK_CONFIG_FILES,
-                self._get_component_specific_checkmk_files_choices(
-                    _("Checkmk configuration files"),
-                    [
-                        (f, get_checkmk_file_info(f))
-                        for f in self._checkmk_files_map[FILE_MAP_CONFIG.file_type]
-                    ],
-                ),
-            ),
-        ]
-
-        if self._edition is not Edition.COMMUNITY:
-            elements.append(
-                (
-                    OPT_PERFORMANCE_GRAPHS,
-                    FixedValue(
-                        value=True,
-                        totext="",
-                        title=_("Time series graphs of Checkmk server"),
-                        help=_(
-                            "CPU load and utilization, number of threads, Kernel performance, "
-                            "OMD, file system, Apache status, TCP connections of the time ranges "
-                            "25 hours and 35 days"
-                        ),
-                    ),
-                )
-            )
-
-        return elements
-
-    def _get_component_specific_elements(self) -> list[tuple[str, ValueSpec[Any]]]:
-        elements: list[tuple[str, ValueSpec[Any]]] = [
-            (
-                OPT_COMP_GLOBAL_SETTINGS,
-                Dictionary(
-                    title=_("Global settings"),
-                    help=_(
-                        "Configuration files ('*.mk' or '*.conf') from etc/check_mk.%(_CHECKMK_FILES_NOTE)s"
-                    )
-                    % {"_CHECKMK_FILES_NOTE": _CHECKMK_FILES_NOTE},
-                    elements=self._get_component_specific_checkmk_files_elements(
-                        OPT_COMP_GLOBAL_SETTINGS
-                    ),
-                    default_keys=["config_files"],
-                ),
-            ),
-            (
-                OPT_COMP_HOSTS_AND_FOLDERS,
-                Dictionary(
-                    title=_("Hosts and folders"),
-                    help=_(
-                        "Configuration files ('*.mk' or '*.conf') from etc/check_mk.%(_CHECKMK_FILES_NOTE)s"
-                    )
-                    % {"_CHECKMK_FILES_NOTE": _CHECKMK_FILES_NOTE},
-                    elements=self._get_component_specific_checkmk_files_elements(
-                        OPT_COMP_HOSTS_AND_FOLDERS
-                    ),
-                    default_keys=["config_files"],
-                ),
-            ),
-            (
-                OPT_COMP_NOTIFICATIONS,
-                Dictionary(
-                    title=_("Notifications"),
-                    help=_(
-                        "Configuration files ('*.mk' or '*.conf') from etc/check_mk"
-                        " or log files ('*.log' or '*.state') from var/log.%(_CHECKMK_FILES_NOTE)s"
-                    )
-                    % {"_CHECKMK_FILES_NOTE": _CHECKMK_FILES_NOTE},
-                    elements=self._get_component_specific_checkmk_files_elements(
-                        OPT_COMP_NOTIFICATIONS
-                    ),
-                    default_keys=["config_files"],
-                ),
-            ),
-            (
-                OPT_COMP_BUSINESS_INTELLIGENCE,
-                Dictionary(
-                    title=_("Business Intelligence"),
-                    help=_(
-                        "Configuration files ('*.mk' or '*.conf') from etc/check_mk.%(_CHECKMK_FILES_NOTE)s"
-                    )
-                    % {"_CHECKMK_FILES_NOTE": _CHECKMK_FILES_NOTE},
-                    elements=self._get_component_specific_checkmk_files_elements(
-                        OPT_COMP_BUSINESS_INTELLIGENCE,
-                    )
-                    + self._get_bi_runtime_data(),
-                    default_keys=["config_files"],
-                ),
-            ),
-        ]
-
-        if self._edition is not Edition.COMMUNITY:
-            elements.append(
-                (
-                    OPT_COMP_CMC,
-                    Dictionary(
-                        title=_("CMC (Checkmk Micro Core)"),
-                        help=_(
-                            "Core files (config, state and history) from var/check_mk/core.%(_CHECKMK_FILES_NOTE)s<br>"
-                            " When this component is selected, a cmcdump will be included in the"
-                            " dump, that is also considered highly sensitive."
-                        )
-                        % {"_CHECKMK_FILES_NOTE": _CHECKMK_FILES_NOTE},
-                        elements=self._get_component_specific_checkmk_files_elements(
-                            OPT_COMP_CMC,
-                        ),
-                        default_keys=["core_files"],
-                    ),
-                )
-            )
-            elements.append(
-                (
-                    OPT_COMP_LICENSING,
-                    Dictionary(
-                        title=_("Licensing Information"),
-                        help=_(
-                            "Licensing files from var/check_mk/licensing, etc/check_mk,"
-                            " var/check_mk/core and var/log/licensing.log.%(_CHECKMK_FILES_NOTE)s"
-                        )
-                        % {"_CHECKMK_FILES_NOTE": _CHECKMK_FILES_NOTE},
-                        elements=self._get_component_specific_checkmk_files_elements(
-                            OPT_COMP_LICENSING,
-                        ),
-                        default_keys=["licensing_files", "log_files", "config_files"],
-                    ),
-                )
-            )
-
-        if self._edition in (Edition.ULTIMATEMT, Edition.ULTIMATE):
-            elements.append(
-                (
-                    OPT_COMP_METRIC_BACKEND,
-                    FixedValue(
-                        value=True,
-                        totext="",
-                        title=_("Metric Backend Information"),
-                        help=_("Infomation about the database schema, revision, and footprint"),
-                    ),
-                )
-            )
-
-        return elements
-
-    def _get_bi_runtime_data(self) -> list[tuple[str, ValueSpec[object]]]:
-        return [
-            (
-                OPT_BI_RUNTIME_DATA,
-                FixedValue(
-                    value=True,
-                    totext="",
-                    title=_("BI runtime data"),
-                    help=_(
-                        "Cached data from Business Intelligence. "
-                        "Contains states, downtimes, acknowledgments and service periods "
-                        "for all hosts/services included in a BI aggregation."
-                    ),
-                ),
-            )
-        ]
-
-    def _get_component_specific_checkmk_files_elements(
-        self, component: str
-    ) -> list[tuple[str, ValueSpec[object]]]:
-        elements: list[tuple[str, ValueSpec[object]]] = []
-        for element_id, element_title, file_map_config in (
-            ("config_files", _("Configuration files"), FILE_MAP_CONFIG),
-            ("core_files", _("Core files"), FILE_MAP_CORE),
-            ("licensing_files", _("Licensing files"), FILE_MAP_LICENSING),
-            ("log_files", _("Log files"), FILE_MAP_LOG),
-        ):
-            files = [
-                (f, fi)
-                for f in self._checkmk_files_map[file_map_config.file_type]
-                for fi in [get_checkmk_file_info(f, component)]
-                if component in fi.components
-            ]
-            if files:
-                elements.append(
-                    (
-                        element_id,
-                        self._get_component_specific_checkmk_files_choices(element_title, files),
-                    )
-                )
-        return elements
-
-    @staticmethod
-    def _get_gui_profile_choices() -> list[tuple[str, str]]:
-        """Return available GUI profiles as (profile_id, display_label) choices."""
-        store = ProfileStore(cmk.utils.paths.profiles_dir)
-        return [(p.profile_id, f"{p.timestamp} — {p.source_info}") for p in store.list_profiles()]
-
-    def _get_component_specific_checkmk_files_choices(
-        self,
-        title: str,
-        checkmk_files: list[tuple[str, CheckmkFileInfo]],
-    ) -> ValueSpec[Any]:
-        sorted_checkmk_files = sorted(checkmk_files, key=lambda t: t[0])
-        high_sensitive_files = [
-            f
-            for f in sorted_checkmk_files
-            if f[1].sensitivity == CheckmkFileSensitivity.high_sensitive
-        ]
-
-        sensitive_files = [
-            f for f in sorted_checkmk_files if f[1].sensitivity == CheckmkFileSensitivity.sensitive
-        ]
-
-        insensitive_files = [
-            f
-            for f in sorted_checkmk_files
-            if f[1].sensitivity == CheckmkFileSensitivity.insensitive
-        ]
-
-        uncategorized_files = [
-            f for f in sorted_checkmk_files if f[1].sensitivity == CheckmkFileSensitivity.unknown
-        ]
-
-        # File lists are sorted by filename and grouped by sensitivity
-        sorted_files = (
-            high_sensitive_files + sensitive_files + insensitive_files + uncategorized_files
-        )
-        sorted_non_high_sensitive_files = sensitive_files + insensitive_files
-        sorted_insensitive_files = insensitive_files
-
-        return CascadingDropdown(
-            title=title,
-            sorted=False,
-            choices=[
-                (
-                    "all",
-                    _("Pack all files: High, Medium, Low, Unclassified sensitivity"),
-                    FixedValue(
-                        value=[f for f, fi in sorted_files],
-                        totext=self._list_of_files_to_text(sorted_files),
-                    ),
-                ),
-                (
-                    "non_high_sensitive",
-                    _("Pack only Medium and Low sensitivity files"),
-                    FixedValue(
-                        value=[f for f, fi in sorted_non_high_sensitive_files],
-                        totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
-                    ),
-                ),
-                (
-                    "insensitive",
-                    _("Pack only Low sensitivity files"),
-                    FixedValue(
-                        value=[f for f, fi in sorted_insensitive_files],
-                        totext=self._list_of_files_to_text(sorted_insensitive_files),
-                    ),
-                ),
-                (
-                    "explicit_list_of_files",
-                    _("Select individual files from list"),
-                    DualListChoice(
-                        choices=self._list_of_files_choices(sorted_files),
-                        size=80,
-                        rows=10,
-                    ),
-                ),
-            ],
-            default_value="non_high_sensitive",
-        )
-
-    def _list_of_files_to_text(self, list_of_files: list[tuple[str, CheckmkFileInfo]]) -> str:
-        return "<br>%s" % ",<br>".join(
-            [
-                get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info)
-                for rel_filepath, file_info in list_of_files
-            ]
-        )
-
-    def _list_of_files_choices(
-        self,
-        files: list[tuple[str, CheckmkFileInfo]],
-    ) -> list[tuple[str, str]]:
-        return [
-            (
-                rel_filepath,
-                get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info),
-            )
-            for rel_filepath, file_info in files
-        ]
-
 
 class DiagnosticsDumpArgs(BaseModel, frozen=True):
-    params: DiagnosticsParameters
+    site: SiteId
+    plugins: list[str]
+    checkmk_server_host: str
+    timeout: int
     automation_config: LocalAutomationConfig | RemoteAutomationConfig
-    diagnostics_dir: Path
     user_permission_config: UserPermissionSerializableConfig
     debug: bool
 
@@ -888,47 +512,28 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
     ) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
-        chunks = serialize_wato_parameters(args.params, max_args=_get_max_args())
-
-        site = args.params["site"]
-        results = []
-        for chunk in chunks:
-            chunk_result = create_diagnostics_dump(
-                args.automation_config,
-                chunk,
-                args.params["timeout"],
-                debug=args.debug,
-            )
-            results.append(chunk_result)
-
-        if len(results) > 1:
-            result = _merge_results(
-                automation_config=args.automation_config,
-                results=results,
-                diagnostics_dir=args.diagnostics_dir,
-                timeout=args.params["timeout"],
-                debug=args.debug,
-            )
-            # The remote tarfiles will be downloaded and the link will point to the local site.
-            download_site_id = omd_site()
-        elif len(results) == 1:
-            result = results[0]
-            # When there is only one chunk, the download link will point to the remote site.
-            download_site_id = site
-        else:
-            job_interface.send_result_message(_("Got no result to create dump file"))
-            return
+        result = create_diagnostics_dump_v2(
+            args.automation_config,
+            DumpSelection(
+                plugins=args.plugins,
+                checkmk_server_host=args.checkmk_server_host,
+            ).serialize(),
+            args.timeout,
+            debug=args.debug,
+        )
 
         job_interface.send_progress_update(result.output)
 
         if result.tarfile_created:
             tarfile_path = result.tarfile_path
+            # The dump is created on the selected site; the download page fetches
+            # it from there via the diagnostics-dump-get-file automation.
             download_url = makeuri_contextless(
                 request,
                 [
-                    ("site", download_site_id),
+                    ("site", args.site),
                     ("tarfile_name", str(Path(tarfile_path).name)),
-                    ("timeout", args.params["timeout"]),
+                    ("timeout", args.timeout),
                 ],
                 filename="download_diagnostics_dump.py",
             )
@@ -950,93 +555,6 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))
-
-
-def _get_max_args() -> int:
-    try:
-        # maybe there is a better way, but this seems a reliable source
-        # and a manageable result
-        return int(os.sysconf("SC_PAGESIZES"))
-    except ValueError:
-        return 4096
-
-
-def _merge_results(
-    *,
-    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-    results: Sequence[CreateDiagnosticsDumpResult],
-    diagnostics_dir: Path,
-    timeout: int,
-    debug: bool,
-) -> CreateDiagnosticsDumpResult:
-    output: str = ""
-    tarfile_created: bool = False
-    tarfile_paths: list[str] = []
-    for result in results:
-        output += result.output
-        if result.tarfile_created:
-            tarfile_created = True
-            if isinstance(automation_config, LocalAutomationConfig):
-                tarfile_localpath = result.tarfile_path
-            else:
-                tarfile_localpath = _get_tarfile_from_remotesite(
-                    automation_config=automation_config,
-                    diagnostics_dir=diagnostics_dir,
-                    tarfile_name=Path(result.tarfile_path).name,
-                    timeout=timeout,
-                    debug=debug,
-                )
-            tarfile_paths.append(tarfile_localpath)
-
-    return CreateDiagnosticsDumpResult(
-        output=output,
-        tarfile_created=tarfile_created,
-        tarfile_path=str(_join_sub_tars(diagnostics_dir, tarfile_paths)),
-    )
-
-
-def _get_tarfile_from_remotesite(
-    *,
-    automation_config: RemoteAutomationConfig,
-    diagnostics_dir: Path,
-    tarfile_name: str,
-    timeout: int,
-    debug: bool,
-) -> str:
-    diagnostics_dir.mkdir(parents=True, exist_ok=True)
-    tarfile_localpath = str(_create_file_path(diagnostics_dir))
-    with open(tarfile_localpath, "wb") as file:
-        file.write(
-            _get_diagnostics_dump_file(
-                automation_config=automation_config,
-                diagnostics_dir=diagnostics_dir,
-                tarfile_name=tarfile_name,
-                timeout=timeout,
-                debug=debug,
-            )
-        )
-    return tarfile_localpath
-
-
-def _join_sub_tars(diagnostics_dir: Path, tarfile_paths: Sequence[str]) -> Path:
-    tarfile_path = _create_file_path(diagnostics_dir)
-    added: set[str] = set()
-    with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
-        for filepath in tarfile_paths:
-            with CheckmkTarArchive.from_path(Path(filepath)) as sub_tar:
-                for member in sub_tar:
-                    if member.name in added:
-                        continue
-                    added.add(member.name)
-                    # Only regular files have a payload. Asking for the payload
-                    # of a directory or a (sym)link raises in streaming mode.
-                    payload = sub_tar.extractmember(member) if member.isfile() else None
-                    dest.addfile(member, payload)
-    return tarfile_path
-
-
-def _create_file_path(diagnostics_dir: Path) -> Path:
-    return (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(".tar.gz")
 
 
 class PageDownloadDiagnosticsDump(Page):
@@ -1069,6 +587,8 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_data(file_content)
 
 
+# TODO(3.1): delete — serves older central sites that build explicit file
+# lists remotely. The form of this version no longer walks any files.
 class AutomationDiagnosticsDumpOsWalk(AutomationCommand[str]):
     def command_name(self) -> str:
         return "diagnostics-dump-os-walk"
@@ -1078,41 +598,6 @@ class AutomationDiagnosticsDumpOsWalk(AutomationCommand[str]):
 
     def get_request(self, config: Config, request: Request) -> str:
         return request.get_ascii_input_mandatory("folder")
-
-
-def _is_local_site(site: str | None) -> bool:
-    if not site:
-        return True
-    return isinstance(
-        make_automation_config(active_config.sites[SiteId(site)]), LocalAutomationConfig
-    )
-
-
-def _base_folder_of_site(site: str | None, rel_base_folder: Path) -> Path:
-    if _is_local_site(site):
-        return cmk.utils.paths.omd_root / rel_base_folder
-    assert site is not None
-    return Path("/omd/sites", site, rel_base_folder)
-
-
-def _os_walk_of_folder(site: str | None, base_folder: Path, timeout: int) -> OSWalk:
-    if _is_local_site(site):
-        return list(os.walk(base_folder))
-    assert site is not None
-
-    automation_config = make_automation_config(active_config.sites[SiteId(site)])
-    assert not isinstance(automation_config, LocalAutomationConfig)
-    json_response = do_remote_automation(
-        automation_config,
-        "diagnostics-dump-os-walk",
-        [
-            ("folder", str(base_folder)),
-        ],
-        timeout=timeout,
-        debug=active_config.debug,
-    )
-    assert isinstance(json_response, str)
-    return OSWalk(json.loads(json_response))
 
 
 class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):

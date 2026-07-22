@@ -23,6 +23,9 @@ from cmk.diagnostics.internal import (
     redact_passwords_in_file as redact_passwords_in_file,
 )
 from cmk.diagnostics.internal import REDACT_STRING as REDACT_STRING
+from cmk.diagnostics.internal import (
+    Topic,
+)
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.
 _JSONSerializable = (
@@ -37,6 +40,10 @@ CheckmkFilesMap = dict[str, Path]
 DiagnosticsElementFilepaths = Iterator[Path]
 
 
+def topic_id(t: Topic) -> str:
+    return "topic_" + re.sub(r"[^a-zA-Z0-9_]", "_", t.localize(str))
+
+
 # NOTE: This must be in sync with cmk.gui.wato.pages.diagnostics.ModeDiagnostics._vs_diagnostics()
 class DiagnosticsParameters(TypedDict):
     site: SiteId
@@ -49,7 +56,7 @@ class DiagnosticsParameters(TypedDict):
 
 @dataclass(frozen=True, kw_only=True)
 class FileMapConfig:
-    file_type: Literal["config", "core", "licensing", "log"]
+    file_type: Literal["config", "log"]
     rel_base_folder: Path
     """Base folder of this category's files, relative to the site's root"""
     keep: Callable[[Path], bool]
@@ -315,16 +322,6 @@ FILE_MAP_CONFIG = FileMapConfig(
         path.name != "ca-certificates.mk"
         and (path.suffix in (".mk", ".conf", ".bi") or path.name == ".wato")
     ),
-)
-FILE_MAP_CORE = FileMapConfig(
-    file_type="core",
-    rel_base_folder=Path("var/check_mk"),
-    keep=lambda path: path.stem in ("state", "history", "config"),
-)
-FILE_MAP_LICENSING = FileMapConfig(
-    file_type="licensing",
-    rel_base_folder=Path("var/check_mk"),
-    keep=lambda _path: True,
 )
 FILE_MAP_LOG = FileMapConfig(
     file_type="log",
@@ -730,121 +727,6 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="Contains GUI related user properties.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    # Core files
-    "core/cmcdump": CheckmkFileInfo(
-        components=[
-            OPT_COMP_CMC,
-        ],
-        sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="Contains the current status of the core in the cmcdump format.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "core/cmcdump--config": CheckmkFileInfo(
-        components=[
-            OPT_COMP_CMC,
-        ],
-        sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="Contains the current configuration of the core in the cmcdump format.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "core/config.pb": CheckmkFileInfo(
-        components=[
-            OPT_COMP_CMC,
-        ],
-        sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="Contains the current configuration of the core in the protobuff format.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "core/state": CheckmkFileInfo(
-        components=[
-            OPT_COMP_CMC,
-        ],
-        sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="Contains the current status of the core.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "core/state.pb": CheckmkFileInfo(
-        components=[
-            OPT_COMP_CMC,
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="Contains the current status of the core in the protobuff format.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "core/history": CheckmkFileInfo(
-        components=[
-            OPT_COMP_CMC,
-        ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="Contains the latest state history of all hosts and services.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    # Licensing files
-    "licensing/extensions.json": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Extends the information in history.json.",
-        encryption=CheckmkFileEncryption.rot47,
-    ),
-    "licensing/history.json": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Contains information about the licensing samples.",
-        encryption=CheckmkFileEncryption.rot47,
-    ),
-    "licensing/next_online_verification": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Contains timing information about the licensing samples.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "licensing/verification_request_id": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Stores the request id of each verification request against the license server.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "licensing/verification_response": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Contains the raw response from license server.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "licensing/verification_result.json": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Contains the last licensing verification result.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "licensing/state_file_created": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Contains the trial start date.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "licensing/licensed_state": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="Contains the licensed state for CMC/NEB.",
         encryption=CheckmkFileEncryption.none,
     ),
     "otel_collector.d/otel_collector_prom_scrape.mk": CheckmkFileInfo(

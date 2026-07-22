@@ -7,5 +7,6 @@ py_cmk_test(
     deps = [
         "//packages/cmk-ccc:site",
         "//packages/cmk-diagnostics:engine",
+        "//packages/cmk-plugin-apis:diagnostics",
     ],
 )

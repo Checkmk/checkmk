@@ -93,6 +93,8 @@ bazel_env(
     name = "bazel_env",
     toolchains = {},
     tools = {
+        "msibuild": "@msitools//:msibuild",
+        "msiinfo": "@msitools//:msiinfo",
         "osslsigncode": "@osslsigncode",
         "pnpm": "@pnpm",
         "uv": "@multitool//tools/uv",

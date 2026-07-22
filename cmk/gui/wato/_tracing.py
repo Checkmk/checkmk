@@ -5,11 +5,13 @@
 
 import ipaddress
 
+from cmk.gui.form_specs.generators.cascading_choice_utils import (
+    CascadingDataConversion,
+    enable_deprecated_cascading_elements,
+)
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    CascadingDropdown,
     Dictionary,
-    HTTPUrl,
     IPAddress,
     NetworkPort,
     Optional,
@@ -21,6 +23,8 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSupport
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Help, Label, Title
 
 
 def register(config_variable_registry: ConfigVariableRegistry) -> None:
@@ -32,37 +36,63 @@ ConfigVariableSiteTraceSend = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainOMD,
     ident="site_trace_send",
-    valuespec=lambda context: CascadingDropdown(
-        title=_("Send traces from Checkmk"),
-        help=_(
-            "Select where to send OpenTelemetry traces of Checkmk services to. "
-            "The most basic approach is to send traces to the site's local Jaeger "
-            "instance. To be able to do so, you additionally have to configure the global "
-            'setting "Support > Receive traces". In case you want to do tracing in '
-            "distributed setups, you need to configure that option in the central site only "
-            'and set this option to "Send traces to the central site\'s Jaeger instance". '
-            "Alternatively you can send the traces to another OpenTelemetry Collector via OTLP."
-        ),
-        sorted=False,
-        choices=[
-            ("no_tracing", _("Don't send any traces")),
-            ("local_site", _("Send traces to site local Jaeger instance")),
-            # Will be implemented later on
-            # ("central_site", _("Send traces to the central sites Jaeger instance")),
-            (
-                "other_collector",
-                _("Send traces to another OpenTelemetry Collector"),
-                Dictionary(
-                    elements=[
-                        (
-                            "url",
-                            HTTPUrl(
-                                title=_("OTLP endpoint"),
-                            ),
-                        ),
-                    ],
-                    optional_keys=[],
+    form_spec=lambda context: enable_deprecated_cascading_elements(
+        fs.CascadingSingleChoice(
+            title=Title("Send traces from Checkmk"),
+            help_text=Help(
+                "Select where to send OpenTelemetry traces of Checkmk services to. "
+                "The most basic approach is to send traces to the site's local Jaeger "
+                "instance. To be able to do so, you additionally have to configure the global "
+                'setting "Support > Receive traces". In case you want to do tracing in '
+                "distributed setups, you need to configure that option in the central site only "
+                'and set this option to "Send traces to the central site\'s Jaeger instance". '
+                "Alternatively you can send the traces to another OpenTelemetry Collector via "
+                "OTLP."
+            ),
+            prefill=fs.DefaultValue("no_tracing"),
+            elements=[
+                fs.CascadingSingleChoiceElement(
+                    name="no_tracing",
+                    title=Title("Don't send any traces"),
+                    parameter_form=fs.FixedValue(value=True, label=Label("")),
                 ),
+                fs.CascadingSingleChoiceElement(
+                    name="local_site",
+                    title=Title("Send traces to site local Jaeger instance"),
+                    parameter_form=fs.FixedValue(value=True, label=Label("")),
+                ),
+                fs.CascadingSingleChoiceElement(
+                    name="other_collector",
+                    title=Title("Send traces to another OpenTelemetry Collector"),
+                    parameter_form=fs.Dictionary(
+                        elements={
+                            "url": fs.DictElement(
+                                required=True,
+                                parameter_form=fs.String(
+                                    title=Title("OTLP endpoint"),
+                                    prefill=fs.InputHint("https://collector.example.com:4317"),
+                                    custom_validate=(
+                                        fs.validators.LengthInRange(min_value=1),
+                                        fs.validators.Url(
+                                            protocols=[
+                                                fs.validators.UrlProtocol.HTTP,
+                                                fs.validators.UrlProtocol.HTTPS,
+                                            ]
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                ),
+            ],
+        ),
+        [
+            CascadingDataConversion(
+                name_in_form_spec="no_tracing", value_on_disk="no_tracing", has_form_spec=False
+            ),
+            CascadingDataConversion(
+                name_in_form_spec="local_site", value_on_disk="local_site", has_form_spec=False
             ),
         ],
     ),

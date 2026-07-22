@@ -9,18 +9,20 @@
 from __future__ import annotations
 
 import time
+from ast import literal_eval
 from base64 import b64encode
 from collections.abc import Callable, Generator, Iterator
-from datetime import datetime
+from datetime import datetime, timedelta, UTC
 from http.cookies import SimpleCookie
 from typing import Literal
 
 import flask
 import pytest
+import time_machine
 from werkzeug.test import create_environ
 
 from cmk.ccc.user import UserId
-from cmk.gui import auth, http, login
+from cmk.gui import auth, http, login, oauth
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
@@ -182,6 +184,45 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
     ):
         assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
+
+
+def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
+    username, _ = with_user
+    token = oauth.token_store().issue_token(
+        username, expires_at=datetime.now(UTC) + timedelta(minutes=5)
+    )
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+    ):
+        assert type(session.user) is LoggedInUser
+        assert session.user.id == username
+        # Confirms the request authenticated as *this* token's user, not just "some" user.
+        last_login = load_custom_attr(user_id=username, key="last_login", parser=literal_eval)
+        assert last_login is not None
+        assert last_login["auth_type"] == "oauth"
+
+
+def test_login_with_invalid_oauth_bearer_token(flask_app: flask.Flask) -> None:
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": "Bearer not-a-real-token"}
+    ):
+        assert isinstance(session.user, LoggedInNobody)
+
+
+def test_login_with_expired_oauth_bearer_token(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    username, _ = with_user
+    token = oauth.token_store().issue_token(
+        username, expires_at=datetime.now(UTC) + timedelta(minutes=5)
+    )
+    with (
+        time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),
+        flask_app.test_request_context(
+            "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        ),
+    ):
+        assert isinstance(session.user, LoggedInNobody)
 
 
 def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:

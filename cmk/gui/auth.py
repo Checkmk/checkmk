@@ -24,7 +24,7 @@ from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
-from cmk.gui import userdb
+from cmk.gui import oauth, userdb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
@@ -66,6 +66,7 @@ def check_auth(config: Config) -> tuple[UserId | PseudoUserId, AuthType]:
         (_check_auth_by_basic_header, "basic_auth"),
         (_check_auth_by_bearer_header, "bearer"),
         (_check_internal_token, "internal_token"),
+        (_check_auth_by_oauth_token, "oauth"),
         (_check_remote_site, "remote_site"),
     ]
 
@@ -311,16 +312,73 @@ def _parse_basic_auth_token(token: str) -> tuple[str, str]:
     return user_id, password
 
 
-def _check_auth_by_bearer_header(config: Config) -> UserId | None:
-    """Authenticate the user via Bearer token in the HTTP_AUTHORIZATION header
+def _check_oauth_access_token(token: str) -> UserId | None:
+    """Authenticate via an OAuth-issued access token.
+
+    Returns:
+        the token's user_id if the token exists, hasn't expired, and the user
+        still exists and isn't locked
+        None otherwise
+    """
+    record = oauth.token_store().get_by_token(token)
+    if record is None or not record.is_valid():
+        return None
+
+    user_id = record.user_id
+    if not userdb.user_exists(user_id) or userdb.user_locked(user_id, load_user(user_id)):
+        return None
+
+    return user_id
+
+
+def _get_bearer_token() -> str | None:
+    """Return the raw token from a Bearer Authorization header, or None if absent."""
+    auth_header = request.environ.get("HTTP_AUTHORIZATION", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    return str(auth_header.removeprefix("Bearer ").strip())
+
+
+def _is_oauth_shaped(token: str) -> bool:
+    return " " not in token and oauth.looks_like_token(token)
+
+
+def _check_auth_by_oauth_token(config: Config) -> UserId | None:
+    """Authenticate via an OAuth-issued access token in the Bearer header.
 
     Returns:
         a UserId if authenticated successfully
-        None if no matching header is found
+        None if no Bearer header is present, or it isn't shaped like an
+            OAuth access token
 
     Raises:
-        MKAuthException: when the header is found but the credentials are not valid
+        MKAuthException: when the header is shaped like an OAuth token but
+            isn't a valid one
     """
+    if (token := _get_bearer_token()) is None or not _is_oauth_shaped(token):
+        return None
+
+    if (user_id := _check_oauth_access_token(token)) is not None:
+        return user_id
+
+    raise MKAuthException("Invalid OAuth access token")
+
+
+def _check_auth_by_bearer_header(config: Config) -> UserId | None:
+    """Authenticate the user via a legacy "<username> <password>" Bearer token.
+
+    Returns:
+        a UserId if authenticated successfully
+        None if no Bearer header is present, or it's shaped like an OAuth
+            access token instead
+
+    Raises:
+        MKAuthException: when the header is found but the credentials are
+            not valid
+    """
+    if (token := _get_bearer_token()) is None or _is_oauth_shaped(token):
+        return None
+
     return _check_auth_by_header(
         "Bearer",
         _parse_bearer_token,

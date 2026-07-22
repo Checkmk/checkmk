@@ -592,6 +592,7 @@ py_library(
         ":html_toolkit",
         ":page_toolkit",
         ":session_context",
+        "//cmk/gui/oauth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:flashed_messages",

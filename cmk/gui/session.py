@@ -505,8 +505,9 @@ class FileBasedSession(SessionInterface):
         userdb.session.on_succeeded_login(user_name, datetime.now())
 
         # Our REST API doesn't hand out session tokens, so every request is a new session.
-        # Filter those for now to avoid spamming the log.
-        if auth_type != "bearer":
+        # Filter those for now to avoid spamming the log. OAuth-issued tokens are forwarded
+        # the same way by the MCP server, so they get the same treatment.
+        if auth_type not in ("bearer", "oauth"):
             log_security_event(
                 AuthenticationSuccessEvent(
                     auth_method=auth_type,

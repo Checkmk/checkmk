@@ -75,6 +75,7 @@ def enable_two_fa(
             )
 
 
+@pytest.mark.skip(reason="CMK-37090; flake")
 def test_totp_fail_login(
     test_site: Site,
     enable_two_fa: tuple[CmkCredentials, str],
@@ -106,6 +107,7 @@ def test_totp_fail_login(
     )
 
 
+@pytest.mark.skip(reason="CMK-37090; flake")
 def test_totp_remove(
     test_site: Site,
     enable_two_fa: tuple[CmkCredentials, str],

@@ -12,7 +12,7 @@ from enum import Enum
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.search import index
+from cmk.gui.search import index as search_index
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.misc import gen_id
@@ -178,4 +178,4 @@ class PendingChanges:
 
 
 def index_update_change_hook(event: ChangeEvent) -> None:
-    index.request_update(event.request.action_name)
+    search_index.request_update(event.request.action_name)

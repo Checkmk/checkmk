@@ -83,7 +83,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_configs_dir, topology_settings_lookup
 from cmk.gui.ntop import ntop_connection
 from cmk.gui.permissions import permission_registry
-from cmk.gui.search import index
+from cmk.gui.search import index as search_index
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
     is_single_local_site,
@@ -3273,7 +3273,7 @@ def _execute_changed_local_files_actions() -> None:
     # In that case, we'd have to re*start* the core.
     mkp_tool.reload_services_affected_by_mkp_changes()
     invalidate_visuals_cache()
-    index.request_rebuild()
+    search_index.request_rebuild()
 
 
 def _execute_cmk_update_config() -> None:

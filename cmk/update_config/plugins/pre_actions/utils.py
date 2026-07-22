@@ -14,7 +14,7 @@ from typing import Final
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc import version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
-from cmk.gui.search import index
+from cmk.gui.search import index as search_index
 from cmk.mkp_tool import (
     disable,
     Installer,
@@ -151,7 +151,7 @@ def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
         on_any_change=(
             reload_services_affected_by_mkp_changes,
             invalidate_visuals_cache,
-            index.request_rebuild,
+            search_index.request_rebuild,
         )
     )
 

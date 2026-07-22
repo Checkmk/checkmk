@@ -5,13 +5,13 @@
 
 from logging import getLogger
 
-from cmk.gui.search import index
+from cmk.gui.search import index as search_index
 
 
 def main() -> None:
     logger = getLogger("init-redis")
     try:
-        index.request_rebuild()
+        search_index.request_rebuild()
     except Exception:
         logger.exception("Failed to request building of Setup search index")
 

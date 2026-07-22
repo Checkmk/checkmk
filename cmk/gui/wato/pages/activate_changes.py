@@ -41,7 +41,7 @@ from cmk.gui.page_menu import (
     show_confirm_cancel_dialog,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.search import index
+from cmk.gui.search import index as search_index
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, ReadOnlySpec, StaticIcon
@@ -242,7 +242,7 @@ class ModeRevertChanges(WatoMode):
         )
 
         _extract_snapshot(file_to_restore)
-        index.request_rebuild()
+        search_index.request_rebuild()
 
         active_config.sites = site_management_registry["site_management"].load_sites()
         reverted_site_ids = list(activation_sites(active_config.sites))

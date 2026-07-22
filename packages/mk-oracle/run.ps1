@@ -300,6 +300,14 @@ try {
         Resolve-TestDbEndpoint
 
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
+
+        if (Test-Administrator) {
+            Write-Host "Escalated permission checks!" -Foreground White
+            & "$PSScriptRoot/permissions-check-run.ps1" --root
+        }
+        else {
+            Write-Host "Not elevated: permissions will not be checked" -ForegroundColor Red
+        }
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

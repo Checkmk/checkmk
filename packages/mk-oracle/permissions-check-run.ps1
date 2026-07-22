@@ -18,6 +18,15 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# --root: run only the escalated (elevated) checks, skip the current-user ones.
+$only_escalated = $false
+foreach ($a in $args) {
+    switch ($a) {
+        "--root" { $only_escalated = $true }
+        default { Write-Error "Unknown argument: $a (supported: --root)" }
+    }
+}
+
 $package_name = "mk-oracle"
 $exe_name = "$package_name.exe"
 $cargo_target = "x86_64-pc-windows-msvc"
@@ -63,32 +72,40 @@ try {
     & icacls $runtime_path /grant "*S-1-5-32-545:(OI)(CI)M" /T /C | Out-Null
     if ($LASTEXITCODE -ne 0) { Write-Error "icacls grant failed" }
 
-    # 4. Run as current user — expect at least 3 lines
-    Write-Host "Step 3: running as current user..." -ForegroundColor White
-    $env:MK_LIBDIR = "$temp_dir/runtimes"
-    $output = & $binary -c tests/files/test-mini-one-section.yml 2>&1 | Out-String
-    $lines = ($output -split "`n" | Where-Object { $_ -ne "" })
-    $line_count = $lines.Count
-    Write-Host $output
-    Write-Host "---"
-    Write-Host "Lines: $line_count"
-    if ($line_count -lt 3) {
-        Write-Error "FAIL: expected at least 3 lines, got $line_count"
-    }
-    Write-Host "OK: non-root can exec non-root code" -ForegroundColor Green
-
-    # 3b. Create the custom-metric SQL file and run as current user — expect it is read and executed
-    Write-Host "Step 3b: running custom-metric config as current user..." -ForegroundColor White
+    # Custom-metric SQL fixture: created unconditionally — the elevated check
+    # needs an existing Users-writable SQL file to refuse reading.
     $orasql_dir = "$temp_dir/runtimes/plugins/packages/mk-oracle/orasql"
     New-Item -ItemType Directory -Path $orasql_dir -Force | Out-Null
     Copy-Item -Path "runtimes/plugins/packages/mk-oracle/orasql/simple_custom_metric.sql" -Destination (Join-Path $orasql_dir "simple_custom_metric.sql") -Force
-    $sql_output = & $binary -c tests/files/test-custom-metric.yml 2>&1 | Out-String
-    Write-Host $sql_output
-    Write-Host "---"
-    if ($sql_output -notmatch "details:hello") {
-        Write-Error "FAIL: expected custom SQL file output 'details:hello'"
+
+    if ($only_escalated) {
+        Write-Host "--root: skipping current-user checks" -ForegroundColor Yellow
     }
-    Write-Host "OK: non-root reads and executes custom SQL file" -ForegroundColor Green
+    else {
+        # 4. Run as current user — expect at least 3 lines
+        Write-Host "Step 3: running as current user..." -ForegroundColor White
+        $env:MK_LIBDIR = "$temp_dir/runtimes"
+        $output = & $binary -c tests/files/test-mini-one-section.yml 2>&1 | Out-String
+        $lines = ($output -split "`n" | Where-Object { $_ -ne "" })
+        $line_count = $lines.Count
+        Write-Host $output
+        Write-Host "---"
+        Write-Host "Lines: $line_count"
+        if ($line_count -lt 3) {
+            Write-Error "FAIL: expected at least 3 lines, got $line_count"
+        }
+        Write-Host "OK: non-root can exec non-root code" -ForegroundColor Green
+
+        # 3b. Run the custom-metric config as current user — expect the SQL file is read and executed
+        Write-Host "Step 3b: running custom-metric config as current user..." -ForegroundColor White
+        $sql_output = & $binary -c tests/files/test-custom-metric.yml 2>&1 | Out-String
+        Write-Host $sql_output
+        Write-Host "---"
+        if ($sql_output -notmatch "details:hello") {
+            Write-Error "FAIL: expected custom SQL file output 'details:hello'"
+        }
+        Write-Host "OK: non-root reads and executes custom SQL file" -ForegroundColor Green
+    }
 
     # 5+6. Single elevated session: verify the Users-writable dir is refused,
     # restrict it to Administrators-only (elevated, so the ACL reset itself
@@ -99,16 +116,29 @@ try {
     $admin_sql_out_before = "$env:TEMP\perms-check-sql-stdout-before.txt"
     $admin_script = Join-Path $temp_dir "admin-check.ps1"
     @"
+`$ErrorActionPreference = 'Stop'
 Set-Location '$PSScriptRoot'
 `$env:MK_LIBDIR = '$temp_dir/runtimes'
 & '$binary' -c tests/files/test-mini-one-section.yml *> '$admin_out_before'
 & '$binary' -c tests/files/test-custom-metric.yml *> '$admin_sql_out_before'
 icacls '$runtime_path' /inheritance:r /remove:g '*S-1-5-32-545' /grant:r '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' /T /C | Out-Null
+if (`$LASTEXITCODE -ne 0) { exit 2 }
 & '$binary' -c tests/files/test-mini-one-section.yml *> '$admin_out_after'
 "@ | Set-Content -Path $admin_script -Encoding utf8
     $proc = Start-Process pwsh -ArgumentList "-NoProfile -File `"$admin_script`"" -Verb RunAs -Wait -PassThru -WindowStyle Hidden
+    if ($proc.ExitCode -ne 0) {
+        Write-Error "FAIL: elevated check script exited with code $($proc.ExitCode) (2 = icacls restrict failed)"
+    }
 
-    $output_before = Get-Content $admin_out_before -Raw -ErrorAction SilentlyContinue
+    # Missing output file means the elevated run never executed the binary —
+    # that must FAIL, not pass as "empty output".
+    foreach ($f in @($admin_out_before, $admin_sql_out_before, $admin_out_after)) {
+        if (!(Test-Path $f)) {
+            Write-Error "FAIL: elevated run produced no output file: $f"
+        }
+    }
+
+    $output_before = Get-Content $admin_out_before -Raw
     Remove-Item $admin_out_before -ErrorAction SilentlyContinue
     if ($output_before -and $output_before.Trim() -ne "") {
         Write-Host $output_before -ForegroundColor Red
@@ -116,7 +146,7 @@ icacls '$runtime_path' /inheritance:r /remove:g '*S-1-5-32-545' /grant:r '*S-1-5
     }
     Write-Host "OK: root can't exec non-root code" -ForegroundColor Green
 
-    $sql_output_before = Get-Content $admin_sql_out_before -Raw -ErrorAction SilentlyContinue
+    $sql_output_before = Get-Content $admin_sql_out_before -Raw
     Remove-Item $admin_sql_out_before -ErrorAction SilentlyContinue
     if ($sql_output_before -and $sql_output_before.Trim() -ne "") {
         Write-Host $sql_output_before -ForegroundColor Red
@@ -124,13 +154,20 @@ icacls '$runtime_path' /inheritance:r /remove:g '*S-1-5-32-545' /grant:r '*S-1-5
     }
     Write-Host "OK: root can't read non-root custom SQL file" -ForegroundColor Green
 
-    $output_after = Get-Content $admin_out_after -Raw -ErrorAction SilentlyContinue
+    $output_after = Get-Content $admin_out_after -Raw
     Remove-Item $admin_out_after -ErrorAction SilentlyContinue
-    if ($output_after -and $output_after.Trim() -ne "") {
+    # Same shape as the non-elevated run (step 3): real section output, not
+    # just any bytes — error text on stderr must not count as success.
+    $after_lines = ($output_after -split "`n" | Where-Object { $_.Trim() -ne "" })
+    if ($after_lines.Count -ge 3 -and $output_after -match '<<<') {
+        Write-Host $output_after
+        Write-Host "---"
         Write-Host "OK: root can exec root code" -ForegroundColor Green
     }
     else {
-        Write-Error "FAIL: expected non empty output from admin run after restricting permissions"
+        Write-Host $output_after -ForegroundColor Red
+        Write-Error ("FAIL: expected section output (>=3 non-empty lines containing '<<<') " +
+            "from admin run after restricting permissions")
     }
 
 }

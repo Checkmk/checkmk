@@ -1721,9 +1721,6 @@ oracle:
 fn test_add_runtime_to_path() {
     use mk_oracle::platform::get_local_instances;
     use mk_oracle::setup::add_runtime_path_to_env;
-    // log block
-    let spec = flexi_logger::LogSpecification::parse("debug").unwrap();
-    let _ = flexi_logger::Logger::with(spec).log_to_stderr().start();
 
     fn exec_add_runtime_to_path(
         cfg: &OracleConfig,

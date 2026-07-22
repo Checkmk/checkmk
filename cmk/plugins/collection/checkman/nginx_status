@@ -26,12 +26,12 @@ description:
  following block:
 
  <pre>
- location /nginx_status {
+ location /nginx_status {{
    stub_status on;
    access_log off;
    allow 127.0.0.1;
    deny all;
- }
+ }}
  </pre>
 
  Afterwards execute {/etc/init.d/nginx reload} to apply this change. This makes

@@ -433,3 +433,19 @@ test('Default values of dict elements dont influence each other', async () => {
 
   expect(getCurrentData()).toBe('[{"bar":["some value"]},{"bar":["default value"]}]')
 })
+
+test('FormDictionary renders inline help of inactive optional element', async () => {
+  render(FormEdit, {
+    props: {
+      spec,
+      data: {},
+      backendValidation: []
+    }
+  })
+
+  expect(screen.queryByText('barHelp')).toBeNull()
+
+  await fireEvent.click(screen.getByRole('checkbox', { name: 'barTitle' }))
+
+  expect(screen.getAllByText('barHelp')).toHaveLength(1)
+})

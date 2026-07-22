@@ -766,6 +766,9 @@ section_nfs_mounts() {
         json_templ_empty() {
             echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "hanging", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}'
         }
+        json_templ_permission_denied() {
+            echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "Permission denied", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}'
+        }
 
         echo '<<<nfsmounts_v2:sep(0)>>>'
 
@@ -773,13 +776,12 @@ section_nfs_mounts() {
             while read -r MD MP; do
                 MD="$(printf "%s" "${MD}" | sed 's/\\040/ /g')"
                 MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
-                if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
-                    waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" ||
-                        json_templ_empty "${MP}" "${MD}"
-                else
-                    (waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" &&
-                        printf '\n') || json_templ_empty "${MP}" "${MD}"
-                fi
+                NFS_STAT_OUTPUT="$(waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" 2>&1)"
+                case "${NFS_STAT_OUTPUT}" in
+                    "{"*) printf '%s\n' "${NFS_STAT_OUTPUT}" ;;
+                    *"Permission denied"*) json_templ_permission_denied "${MP}" "${MD}" ;;
+                    *) json_templ_empty "${MP}" "${MD}" ;;
+                esac
             done
 
         echo '<<<cifsmounts>>>'

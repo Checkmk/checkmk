@@ -575,7 +575,7 @@ def render_unacknowleged_werks(request: Request) -> None:
 def get_sort_key_by_version_and_component(
     translator: werks_utils.WerkTranslator, werk: WerkV3
 ) -> tuple[str | int, ...]:
-    werk_result = werks_utils.get_sort_key_by_version_and_component(translator, werk)
+    werk_result = werks_utils.get_sort_key_by_version_and_component(translator, None, werk)
     result = (
         *werk_result[:4],
         int(is_acknowledged(werk, load_acknowledgements())),

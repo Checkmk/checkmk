@@ -16,6 +16,7 @@ from git.repo import Repo
 
 from cmk.werks import load_werk, parse_werk
 
+from .config import try_load_version_from_defines_make_content
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 from .models import AllWerks, WebsiteWerkV2, WebsiteWerkV3
 
@@ -94,10 +95,28 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
     logging.basicConfig()
     c = config
 
+    defines_make_version_by_branch: dict[str, str] = {}
     werk_files_by_id_and_branch: dict[int, dict[str, WerkFile]] = defaultdict(dict)
     r = Repo(repo_path)
     for branch_name, ref in _get_branches(r, c, branches):
         tree = r.tree(ref)
+
+        try:
+            defines_make = tree["defines.make"]
+        except KeyError:
+            logger.warning("no defines.make file in branch %(branch)s", {"branch": branch_name})
+            continue
+        if (
+            version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)
+        ) is not None:
+            defines_make_version_by_branch[branch_name] = version
+        else:
+            logger.warning(
+                "getting version from defines.make failed in branch %(branch)s",
+                {"branch": branch_name},
+            )
+            continue
+
         try:
             werks = tree[".werks"]
         except KeyError:
@@ -137,7 +156,11 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
                     f"could not parse werk {werk_file.file_name} from "
                     f"branch {branch} of flavor {config.flavor}"
                 ) from e
-            versions[c.cleanup_branch_name(branch)] = parsed.metadata["version"]
+            if (werk_version := parsed.metadata["version"]) is None:
+                # if there is no version in the werk itself,
+                # we assume the werk will be released with the next release
+                werk_version = defines_make_version_by_branch[branch]
+            versions[c.cleanup_branch_name(branch)] = werk_version
 
         try:
             # and here we simply access variables of the latest werk iteration above.

@@ -125,7 +125,10 @@ def test_werk_versions(werks_loaded: dict[int, WerkV3]) -> None:
     parsed_version = cmk_version.Version.from_str(cmk_version.__version__)
 
     for werk_id, werk in werks_loaded.items():
-        parsed_werk_version = cmk_version.Version.from_str(werk.version)
+        werk_version = werk.version
+        if werk_version is None:
+            continue
+        parsed_werk_version = cmk_version.Version.from_str(werk_version)
 
         assert parsed_werk_version <= parsed_version, (
             "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)

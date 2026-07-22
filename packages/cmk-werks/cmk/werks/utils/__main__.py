@@ -10,10 +10,12 @@ import argparse
 from pathlib import Path
 
 from cmk.ccc.version import __version__, Version
+from cmk.werks.config import RuntimeConfiguration
 from cmk.werks.models import EditionV2, EditionV3, WerkV3
 
 from . import (
     load_raw_files,
+    resolve_version,
     write_precompiled_werks,
 )
 from .collect import main as collect
@@ -37,6 +39,8 @@ def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
 def main_precompile(args: argparse.Namespace) -> None:
     werks_list = load_raw_files(args.werk_dir)
 
+    rtc = RuntimeConfiguration(args.werk_dir.parent)
+
     filter_by_edition = _get_filter(args.filter_by_edition)
 
     current_version = Version.from_str(__version__)
@@ -47,7 +51,7 @@ def main_precompile(args: argparse.Namespace) -> None:
         if filter_by_edition is not None and edition != filter_by_edition:
             return False
         # only include werks of this major version:
-        if Version.from_str(werk.version).base != current_version.base:
+        if Version.from_str(resolve_version(rtc, werk.version)).base != current_version.base:
             return False
         return True
 

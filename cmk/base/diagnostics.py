@@ -10,7 +10,6 @@ import io
 import json
 import logging
 import os
-import platform
 import re
 import shutil
 import subprocess
@@ -87,11 +86,6 @@ from cmk.diagnostics.internal import (
     Sensitivity,
     Topic,
     VerbatimCopy,
-)
-from cmk.inventory.structured_data import (
-    InventoryStore,
-    SDNodeName,
-    serialize_tree,
 )
 from cmk.licensing.usage import deserialize_dump
 from cmk.profiling.backend import PROFILE_ID_RE, PROFILE_SUFFIXES
@@ -669,43 +663,6 @@ def _adapter_plugin_catalogue(
 ) -> Mapping[str, DiagnosticsPlugin]:
     """All available plugins, keyed by name (transitional adapter catalogue)"""
     plugins = [
-        DiagnosticsPlugin(
-            name="general_info",
-            description=Help(
-                "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
-            ),
-            sensitivity=Sensitivity.LOW,
-            topic=_TOPIC_GENERAL,
-            always=True,
-            handler=_adapt(lambda _ctx: [GeneralDiagnosticsElement()], tmp_parent=tmp_parent),
-        ),
-        DiagnosticsPlugin(
-            name="omd_config",
-            description=Help(
-                "The OMD site configuration ('omd config show') and the files below etc/omd"
-            ),
-            sensitivity=Sensitivity.LOW,
-            topic=_TOPIC_GENERAL,
-            handler=_adapt(
-                lambda _ctx: [
-                    OMDConfigDiagnosticsElement(omd_config),
-                    CheckmkDirectoryDiagnosticsElement("etc/omd", rel=True),
-                ],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
-            name="checkmk_overview",
-            topic=_TOPIC_GENERAL,
-            description=Help(
-                "HW/SW Inventory node 'Software > Applications > Checkmk' of the Checkmk server"
-            ),
-            sensitivity=Sensitivity.LOW,
-            handler=_adapt(
-                lambda ctx: [CheckmkOverviewDiagnosticsElement(ctx.resolve_checkmk_server_host())],
-                tmp_parent=tmp_parent,
-            ),
-        ),
         DiagnosticsPlugin(
             name="hw_info",
             topic=_TOPIC_OPERATING_SYSTEM,
@@ -1407,45 +1364,6 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementTextDump):
 #   ---json dumps-----------------------------------------------------------
 
 
-class GeneralDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    @override
-    @property
-    def title(self) -> str:
-        return _("General")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
-        )
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "general.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        version_infos = cmk_version.get_general_version_infos(omd_root)
-        time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
-        return json.dumps(
-            {
-                "arch": platform.machine(),
-                "time_human_readable": time_obj.isoformat(sep=" "),
-                "time": version_infos["time"],
-                "os": version_infos["os"],
-                "version": version_infos["version"],
-                "edition": version_infos["edition"],
-                "core": version_infos["core"],
-                "python_version": version_infos["python_version"],
-                "python_paths": list(version_infos["python_paths"]),
-            },
-            sort_keys=True,
-            indent=4,
-        )
-
-
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(
         self,
@@ -1800,85 +1718,6 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementTextDump):
         if fw_content := _try_to_read("/ro/usr/share/cma/version"):
             cma_infos["fw"] = fw_content[0]
         return json.dumps(cma_infos, sort_keys=True, indent=4)
-
-
-class OMDConfigDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    def __init__(self, omd_config: site.OMDConfig) -> None:
-        self._omd_config = omd_config
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("OMD Config")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus TCP mode, event daemon config, graphical user interface (GUI) authorization, NSCA mode, TMP file system mode"
-        )
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "omd_config.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        return json.dumps(self._omd_config, sort_keys=True, indent=4)
-
-
-class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    def __init__(self, checkmk_server_host: str) -> None:
-        self.checkmk_server_host = checkmk_server_host
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Checkmk overview of Checkmk server")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Checkmk Agent, Number, version and edition of sites, cluster host; "
-            "number of hosts, services, CMK Helper, Live Helper, "
-            "Helper usage; state of daemons: Apache, Core, Crontab, "
-            "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-            "(Agent plug-in mk_inventory needs to be installed)"
-        )
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "checkmk_overview"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        return _get_checkmk_overview_content(InventoryStore(omd_root), self.checkmk_server_host)
-
-
-# TODO: some of this should go to the inventory component
-def _get_checkmk_overview_content(inventory_store: InventoryStore, checkmk_server_host: str) -> str:
-    checkmk_server_host = verify_checkmk_server_host(checkmk_server_host)
-    try:
-        tree = inventory_store.load_inventory_tree(host_name=checkmk_server_host)
-    except FileNotFoundError:
-        raise DiagnosticsElementError("No HW/SW Inventory tree of '%s' found" % checkmk_server_host)
-
-    if not (
-        node := tree.get_tree(
-            (
-                SDNodeName("software"),
-                SDNodeName("applications"),
-                SDNodeName("check_mk"),
-            )
-        )
-    ):
-        raise DiagnosticsElementWarning(
-            "No HW/SW Inventory node 'Software > Applications > Checkmk'"
-        )
-    return json.dumps(serialize_tree(node), sort_keys=True, indent=4)
 
 
 #   ---collect exiting files------------------------------------------------

@@ -10,12 +10,15 @@ def test_available_diagnostics_plugins() -> None:
     discovered = load_diagnostics_plugins(raise_errors=True)
     assert {plugin.name for plugin in discovered.plugins.values()} == {
         "apache_config",
+        "checkmk_overview",
         "config_files_high",
         "config_files_low",
         "config_files_medium",
         "environment_variables",
+        "general_info",
         "log_files_high",
         "log_files_low",
         "log_files_medium",
+        "omd_config",
         "parameters",
     }

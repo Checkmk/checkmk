@@ -152,6 +152,9 @@ allows = [
   # TODO: remove once the GUI is migrated and the classification table moved
   # into this family's lib
   "cmk.diagnostics.engine",
+  "cmk.ccc.hostaddress",
+  "cmk.ccc.version",
+  "cmk.inventory",
 ]
 
 # These plugins are tightly coupled to Checkmk.

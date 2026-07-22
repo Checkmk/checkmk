@@ -24,7 +24,6 @@ import requests
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.base import diagnostics
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
 from cmk.crash import make_crash_report_base_path
 from cmk.diagnostics.internal import (
@@ -38,12 +37,6 @@ from cmk.diagnostics.internal import (
     Help,
     Sensitivity,
     VerbatimCopy,
-)
-from cmk.inventory.structured_data import (
-    deserialize_tree,
-    InventoryStore,
-    make_meta,
-    SDRawTree,
 )
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 
@@ -145,17 +138,14 @@ def test_adapter_catalogue_names(tmp_path: Path) -> None:
     assert set(_adapter_catalogue(tmp_path)) == {
         "appliance_info",
         "bi_runtime_data",
-        "checkmk_overview",
         "core_performance_metrics",
         "disk_usage",
         "file_sizes",
-        "general_info",
         "hw_info",
         "latest_crash_reports",
         "metric_backend_state",
         "mkp_inventory",
         "network_state",
-        "omd_config",
         "os_packages",
         "otel_license_counts",
         "processes_and_logins",
@@ -322,46 +312,6 @@ def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
 #   |              \___|_|\___|_| |_| |_|\___|_| |_|\__|___/               |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def test_diagnostics_element_general() -> None:
-    diagnostics_element = diagnostics.GeneralDiagnosticsElement()
-    assert diagnostics_element.title == "General"
-    assert diagnostics_element.description == (
-        "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
-    )
-    assert diagnostics_element.filename == "general.json"
-
-
-@pytest.mark.usefixtures("patch_omd_site")
-def test_diagnostics_element_general_content(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.GeneralDiagnosticsElement()
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    filepath = next(
-        diagnostics_element.add_or_get_files(
-            omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
-        )
-    )
-
-    assert isinstance(tmp_path, Path)
-    assert isinstance(filepath, Path)
-    assert filepath == tmp_dump_folder.joinpath("general.json")
-
-    info_keys = [
-        "time",
-        "time_human_readable",
-        "os",
-        "version",
-        "edition",
-        "core",
-        "python_version",
-        "python_paths",
-        "arch",
-    ]
-    content = json.loads(filepath.open().read())
-
-    assert sorted(content.keys()) == sorted(info_keys)
 
 
 def test_diagnostics_element_perfdata() -> None:
@@ -620,239 +570,6 @@ tzdata;2023c;1.el9;noarch"
         assert "libgcc;11.4.1;2.1.el9;x86_64" in content
 
         shutil.rmtree(str(test_bin_dir))
-
-
-def test_diagnostics_element_omd_config() -> None:
-    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(omd_config={})
-    assert diagnostics_element.title == "OMD Config"
-    assert diagnostics_element.description == (
-        "Apache mode and TCP address and port, core, "
-        "Liveproxy daemon and Livestatus TCP mode, "
-        "event daemon config, graphical user interface (GUI) authorization, "
-        "NSCA mode, TMP file system mode"
-    )
-    assert diagnostics_element.filename == "omd_config.json"
-
-
-def test_diagnostics_element_omd_config_content(
-    tmp_path: Path,
-) -> None:
-    omd_config = {
-        "CONFIG_ADMIN_MAIL": "",
-        "CONFIG_APACHE_MODE": "own",
-        "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
-        "CONFIG_APACHE_TCP_PORT": "5000",
-        "CONFIG_AUTOSTART": "off",
-        "CONFIG_CORE": "cmc",
-        "CONFIG_LIVEPROXYD": "on",
-        "CONFIG_LIVESTATUS_TCP": "off",
-        "CONFIG_LIVESTATUS_TCP_ONLY_FROM": "0.0.0.0 ::/0",
-        "CONFIG_LIVESTATUS_TCP_PORT": "6557",
-        "CONFIG_LIVESTATUS_TCP_TLS": "on",
-        "CONFIG_MKEVENTD": "on",
-        "CONFIG_MKEVENTD_SNMPTRAP": "off",
-        "CONFIG_MKEVENTD_SYSLOG": "on",
-        "CONFIG_MKEVENTD_SYSLOG_TCP": "off",
-        "CONFIG_MULTISITE_AUTHORISATION": "on",
-        "CONFIG_MULTISITE_COOKIE_AUTH": "on",
-        "CONFIG_NSCA": "off",
-        "CONFIG_NSCA_TCP_PORT": "5667",
-        "CONFIG_PNP4NAGIOS": "on",
-        "CONFIG_TMPFS": "on",
-    }
-
-    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(omd_config=omd_config)
-
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    filepath = next(
-        diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-    )
-
-    assert isinstance(filepath, Path)
-    assert filepath == tmp_dump_folder.joinpath("omd_config.json")
-
-    info_keys = [
-        "CONFIG_ADMIN_MAIL",
-        "CONFIG_APACHE_MODE",
-        "CONFIG_APACHE_TCP_ADDR",
-        "CONFIG_APACHE_TCP_PORT",
-        "CONFIG_AUTOSTART",
-        "CONFIG_CORE",
-        "CONFIG_LIVEPROXYD",
-        "CONFIG_LIVESTATUS_TCP",
-        "CONFIG_LIVESTATUS_TCP_ONLY_FROM",
-        "CONFIG_LIVESTATUS_TCP_PORT",
-        "CONFIG_LIVESTATUS_TCP_TLS",
-        "CONFIG_MKEVENTD",
-        "CONFIG_MKEVENTD_SNMPTRAP",
-        "CONFIG_MKEVENTD_SYSLOG",
-        "CONFIG_MKEVENTD_SYSLOG_TCP",
-        "CONFIG_MULTISITE_AUTHORISATION",
-        "CONFIG_MULTISITE_COOKIE_AUTH",
-        "CONFIG_NSCA",
-        "CONFIG_NSCA_TCP_PORT",
-        "CONFIG_PNP4NAGIOS",
-        "CONFIG_TMPFS",
-    ]
-    content = json.loads(filepath.open().read())
-
-    assert sorted(content.keys()) == sorted(info_keys)
-    for key, value in zip(
-        info_keys,
-        [
-            "",
-            "own",
-            "127.0.0.1",
-            "5000",
-            "off",
-            "cmc",
-            "on",
-            "off",
-            "0.0.0.0 ::/0",
-            "6557",
-            "on",
-            "on",
-            "off",
-            "on",
-            "off",
-            "on",
-            "on",
-            "off",
-            "5667",
-            "on",
-            "on",
-        ],
-    ):
-        assert content[key] == value
-
-
-@pytest.mark.parametrize(
-    "host_list, raw_tree, error",
-    [
-        ([], None, "No Checkmk server found"),
-        ([["checkmk-server-name"]], None, "No HW/SW Inventory tree of 'checkmk-server-name' found"),
-        (
-            [["checkmk-server-name"]],
-            {
-                "hardware": {},
-                "networking": {},
-                "software": {
-                    "applications": {},
-                },
-            },
-            "No HW/SW Inventory node 'Software > Applications > Checkmk'",
-        ),
-    ],
-)
-def test_diagnostics_element_checkmk_overview_error(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    _fake_local_connection: Callable,
-    host_list: Sequence[Sequence[str]],
-    raw_tree: SDRawTree | None,
-    error: str,
-) -> None:
-    inv_store = InventoryStore(tmp_path)
-
-    monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
-
-    if raw_tree:
-        # Fake HW/SW Inventory tree
-        inv_store.save_inventory_tree(
-            host_name=HostName("checkmk-server-name"),
-            tree=deserialize_tree(raw_tree),
-            meta=make_meta(do_archive=False),
-        )
-
-    with pytest.raises(diagnostics.DiagnosticsElementWarning) as e:
-        diagnostics._get_checkmk_overview_content(inv_store, "")
-        assert error == str(e)
-
-
-def test_diagnostics_element_checkmk_overview_content(tmp_path: Path) -> None:
-    inv_store = InventoryStore(tmp_path)
-
-    # Fake HW/SW Inventory tree
-    inv_store.save_inventory_tree(
-        host_name=HostName("checkmk-server-name"),
-        tree=deserialize_tree(
-            {
-                "hardware": {},
-                "networking": {},
-                "software": {
-                    "applications": {
-                        "check_mk": {
-                            "versions": [
-                                {
-                                    "version": "2020.06.07.cee",
-                                    "number": "2020.06.07",
-                                    "edition": "cee",
-                                    "demo": False,
-                                    "num_sites": 0,
-                                },
-                                {
-                                    "version": "2020.06.09.cee",
-                                    "number": "2020.06.09",
-                                    "edition": "cee",
-                                    "demo": False,
-                                    "num_sites": 1,
-                                },
-                            ],
-                            "sites": [
-                                {
-                                    "site": "heute",
-                                    "used_version": "2020.06.09.cee",
-                                    "autostart": False,
-                                }
-                            ],
-                            "cluster": {"is_cluster": False},
-                            "agent_version": "1.7.0i1",
-                            "num_versions": 2,
-                            "num_sites": 1,
-                        }
-                    }
-                },
-            }
-        ),
-        meta=make_meta(do_archive=False),
-    )
-
-    content = json.loads(
-        diagnostics._get_checkmk_overview_content(inv_store, "checkmk-server-name")
-    )
-
-    assert content["Nodes"]["cluster"]["Attributes"]["Pairs"] == {
-        "is_cluster": False,
-    }
-
-    assert content["Nodes"]["sites"]["Table"]["Rows"] == [
-        {
-            "autostart": False,
-            "site": "heute",
-            "used_version": "2020.06.09.cee",
-        },
-    ]
-
-    rows = content["Nodes"]["versions"]["Table"]["Rows"]
-    assert len(rows) == 2
-    for row in [
-        {
-            "demo": False,
-            "edition": "cee",
-            "num_sites": 0,
-            "number": "2020.06.07",
-            "version": "2020.06.07.cee",
-        },
-        {
-            "demo": False,
-            "edition": "cee",
-            "num_sites": 1,
-            "number": "2020.06.09",
-            "version": "2020.06.09.cee",
-        },
-    ]:
-        assert row in rows
 
 
 def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:

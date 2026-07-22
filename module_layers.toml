@@ -666,7 +666,7 @@ allows = ["@ccc"]
 allows = []
 
 [components."cmk.diagnostics.engine"]
-allows = ["@plugin_apis", "cmk.ccc.site"]
+allows = ["@plugin_apis", "cmk.ccc.site", "cmk.discover_plugins"]
 
 [components."cmk.diskspace"]
 allows = ["@ccc", "cmk.utils.paths"]

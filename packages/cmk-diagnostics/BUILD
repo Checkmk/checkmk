@@ -15,6 +15,7 @@ py_library(
     name = "engine",
     srcs = [
         "cmk/diagnostics/engine/__init__.py",
+        "cmk/diagnostics/engine/_loader.py",
         "cmk/diagnostics/engine/_unsorted.py",
         "cmk/diagnostics/engine/_wire.py",
     ],
@@ -24,6 +25,7 @@ py_library(
     deps = [
         "//packages/cmk-ccc:site",
         "//packages/cmk-plugin-apis:diagnostics",
+        "//packages/cmk-plugin-apis:discover_plugins",
     ],
 )
 

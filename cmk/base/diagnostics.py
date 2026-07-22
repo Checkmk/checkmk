@@ -61,6 +61,7 @@ from cmk.diagnostics.engine import (
     FILE_MAP_LICENSING,
     FILE_MAP_LOG,
     FileMapConfig,
+    load_diagnostics_plugins,
     OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
@@ -464,12 +465,13 @@ def _create_dump(
     omd_config = get_omd_config(omd_root)
     logger = ConsoleLogger()
 
-    catalogue = _adapter_plugin_catalogue(
+    catalogue = _load_plugin_catalogue(
         edition=app.edition,
         loaded_config=loaded_config,
         core_performance_settings=app.core_performance_settings,
         omd_config=omd_config,
         tmp_parent=diagnostics_dir,
+        logger=logger,
     )
     for unknown in sorted(selected_names - set(catalogue)):
         message = f"Plugin '{unknown}' is not available on this site"
@@ -496,6 +498,31 @@ def _create_dump(
         diagnostics_dir=diagnostics_dir,
         omd_root=omd_root,
     )
+
+
+def _load_plugin_catalogue(
+    *,
+    edition: cmk_version.Edition,
+    loaded_config: BaseConfig,
+    core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
+    omd_config: site.OMDConfig,
+    tmp_parent: Path,
+    logger: ConsoleLogger,
+) -> Mapping[str, DiagnosticsPlugin]:
+    """All available plugins by name: discovered ones plus the transitional adapters"""
+    discovered = load_diagnostics_plugins(raise_errors=False)
+    for error in discovered.errors:
+        logger.error(str(error))
+    return {
+        **_adapter_plugin_catalogue(
+            edition=edition,
+            loaded_config=loaded_config,
+            core_performance_settings=core_performance_settings,
+            omd_config=omd_config,
+            tmp_parent=tmp_parent,
+        ),
+        **{plugin.name: plugin for plugin in discovered.plugins.values()},
+    }
 
 
 def _make_host_resolver(checkmk_server_host: str) -> Callable[[], str]:

@@ -18,7 +18,7 @@ const { _t } = usei18n()
 
 defineProps<CmkWizardStepProps>()
 
-const installScript = `wsl --install --web-download --no-distribution`
+const installScript = `wsl --install --web-download --no-distribution; Restart-Computer -Confirm`
 </script>
 
 <template>
@@ -29,23 +29,12 @@ const installScript = `wsl --install --web-download --no-distribution`
 
     <template #content>
       <CmkParagraph>
-        {{
-          _t(
-            'The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). ' +
-              'Run the command below in an elevated PowerShell to install it.'
-          )
-        }}
+        {{ _t('The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2).') }}
       </CmkParagraph>
-      <CmkCode :code_txt="installScript" data-testid="install-wsl2-command"></CmkCode>
-      <CmkAlertBox variant="warning">
-        {{
-          _t(
-            'This command requires administrator privileges. Once it completes, restart the ' +
-              'computer manually to finish the installation.'
-          )
-        }}
-      </CmkAlertBox>
-      <CmkAlertBox variant="warning">
+      <CmkParagraph>
+        {{ _t('Run the command below in an elevated PowerShell to install it.') }}
+      </CmkParagraph>
+      <CmkAlertBox>
         {{
           _t(
             'For running WSL2 your system needs to have virtualization enabled. ' +
@@ -54,6 +43,10 @@ const installScript = `wsl --install --web-download --no-distribution`
               'hypervisor/cloud level, not inside Windows.'
           )
         }}
+      </CmkAlertBox>
+      <CmkCode :code_txt="installScript" data-testid="install-wsl2-command"></CmkCode>
+      <CmkAlertBox variant="warning">
+        {{ _t('This command will prompt you to restart the computer to finish the installation.') }}
       </CmkAlertBox>
     </template>
 

@@ -18,14 +18,14 @@ describe('InstallWSL2', () => {
     mountWithWizardContext(InstallWSL2, baseProps)
 
     expect(screen.getByTestId('install-wsl2-command').textContent).toContain(
-      'wsl --install --web-download --no-distribution'
+      'wsl --install --web-download --no-distribution; Restart-Computer -Confirm'
     )
   })
 
-  test('shows manual restart warning', () => {
+  test('shows restart prompt warning', () => {
     mountWithWizardContext(InstallWSL2, baseProps)
 
-    expect(screen.getByText(/restart the computer manually/)).toBeInTheDocument()
+    expect(screen.getByText(/prompt you to restart the computer/)).toBeInTheDocument()
   })
 
   test('shows nested virtualization notice', () => {

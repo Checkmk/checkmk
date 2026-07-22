@@ -96,9 +96,11 @@ TEST(SectionPerf, Runner) {
     std::wstring port_param(internal_port.begin(), internal_port.end());
 
     std::vector<std::wstring_view> counters = {
+        L"234:-",                           // 0
         L"234:phydisk",                     // 0
         L"238:processor",                   // 1
-        L"Terminal*Services:ts_sessions"};  // 2
+        L"238:-",                           // 2
+        L"Terminal*Services:ts_sessions"};  // 3
 
     const std::wstring prefix = L"winperf";
 
@@ -113,9 +115,8 @@ TEST(SectionPerf, Runner) {
         for (const auto &line : table)
             if (line.find("<<<") != std::string::npos) headers_count++;
 
-        EXPECT_EQ(headers_count, 3);
+        EXPECT_EQ(headers_count, 2);
         EXPECT_NE(accu.find("winperf_phydisk"), std::string::npos);
-        EXPECT_NE(accu.find("winperf_processor"), std::string::npos);
         EXPECT_NE(accu.find("winperf_ts_sessions"), std::string::npos);
     }
 
@@ -136,9 +137,8 @@ TEST(SectionPerf, Runner) {
         for (const auto &line : table)
             if (line.find("<<<") != std::string::npos) headers_count++;
 
-        EXPECT_EQ(headers_count, 3);
+        EXPECT_EQ(headers_count, 2);
         EXPECT_NE(accu.find("winperf_phydisk"), std::string::npos);
-        EXPECT_NE(accu.find("winperf_processor"), std::string::npos);
         EXPECT_NE(accu.find("winperf_ts_sessions"), std::string::npos);
     }
     //

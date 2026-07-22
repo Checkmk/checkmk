@@ -202,6 +202,7 @@ winperf:
     counters:
         #- 638: tcp_conn
         #- Terminal Services: ts_sessions
+        #- 234: -  # exclude 234 counter from monitoring
 
 _logfiles:
     enabled: no

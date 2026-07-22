@@ -30,9 +30,20 @@ std::string AccumulateCounters(
     std::wstring_view prefix_name,
     const std::vector<std::wstring_view> &counter_array) {
     std::string accu;
-    for (const auto cur_counter : counter_array) {
-        auto [key, name] =
+    std::unordered_map<std::wstring, std::wstring> counters;
+
+    for (const auto &cur_counter : counter_array) {
+        auto [key, value] =
             tools::ParseKeyValue(cur_counter, exe::cmdline::kSplitter);
+
+        counters[std::move(key)] = std::move(value);
+    }
+
+    for (const auto &[key, name] : counters) {
+        if (name == L"-") {
+            XLOG::d.i("Skip counter {}", wtools::ToUtf8(name));
+            continue;
+        }
 
         // ip is not a real counter
         if (key == L"ip") {
@@ -40,10 +51,11 @@ std::string AccumulateCounters(
             continue;
         }
 
-        std::ranges::replace(key, L'*', L' ');
+        auto k = key;
+        std::ranges::replace(k, L'*', L' ');
 
         if (!name.empty() && !key.empty()) {
-            accu += provider::BuildWinPerfSection(prefix_name, name, key);
+            accu += provider::BuildWinPerfSection(prefix_name, name, k);
         }
     }
 

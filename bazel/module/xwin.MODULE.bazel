@@ -1,0 +1,37 @@
+# @xwin_sysroot provides the MSVC CRT + Windows SDK for cross compiling the Rust
+# agent packages to x86_64-pc-windows-msvc from Linux. See
+# //bazel/toolchains/cc/xwin:xwin_sysroot.bzl for the fetch/splat logic; the
+# pins below are the details that logic is parameterised over.
+
+# TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
+UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
+
+_XWIN_VERSION = "0.6.7"
+
+# The CRT and SDK version pins keep the fetched package set stable across
+# re-fetches; the VS manifest pin only selects the channel, whose manifest
+# drifts (if Microsoft drops the pinned versions from it, the xwin fallback
+# breaks while the mirror archive keeps working). Bump deliberately together
+# with the toolchain (and publish a new mirror archive, see xwin_sysroot.bzl).
+_VS_MANIFEST_VERSION = "17"
+
+_CRT_VERSION = "14.44.17.14"
+
+_SDK_VERSION = "10.0.26100"
+
+xwin_sysroot = use_repo_rule("//bazel/toolchains/cc/xwin:xwin_sysroot.bzl", "xwin_sysroot")
+
+xwin_sysroot(
+    name = "xwin_sysroot",
+    crt_version = _CRT_VERSION,
+    sdk_version = _SDK_VERSION,
+    sysroot_sha256 = "75c83668046d0c19914c2f415a38c52077531e8b33eebc2929d7c3d20286ccbd",
+    sysroot_url = (UPSTREAM_MIRROR_URL + "xwin-sysroot-crt{crt}-sdk{sdk}-x86_64.tar.xz").format(
+        crt = _CRT_VERSION,
+        sdk = _SDK_VERSION,
+    ),
+    vs_manifest_version = _VS_MANIFEST_VERSION,
+    xwin_sha256 = "0a2411665ba8cce7d841528566d2eedc7c88dccb12b087aac394811c61e6751b",
+    xwin_strip_prefix = "xwin-{v}-x86_64-unknown-linux-musl".format(v = _XWIN_VERSION),
+    xwin_url = "https://github.com/Jake-Shadle/xwin/releases/download/{v}/xwin-{v}-x86_64-unknown-linux-musl.tar.gz".format(v = _XWIN_VERSION),
+)

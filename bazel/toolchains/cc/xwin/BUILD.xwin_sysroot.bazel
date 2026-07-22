@@ -1,0 +1,80 @@
+# BUILD file installed into @xwin_sysroot by xwin_sysroot.bzl.
+load("@bazel_skylib//rules/directory:directory.bzl", "directory")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "includes",
+    srcs = glob(
+        [
+            "crt/include/**",
+            "sdk/include/**",
+        ],
+        # xwin adds case-correcting symlinks (Include -> include, ...); the
+        # lowercase canonical paths are enough for clang-cl.
+        allow_empty = False,
+    ),
+)
+
+filegroup(
+    name = "libs",
+    srcs = glob(
+        [
+            "crt/lib/x86_64/**",
+            "sdk/lib/ucrt/x86_64/**",
+            "sdk/lib/um/x86_64/**",
+        ],
+        allow_empty = False,
+    ),
+)
+
+directory(
+    name = "root",
+    srcs = [
+        ":includes",
+        ":libs",
+    ],
+)
+
+subdirectory(
+    name = "crt_include",
+    parent = ":root",
+    path = "crt/include",
+)
+
+subdirectory(
+    name = "sdk_include_ucrt",
+    parent = ":root",
+    path = "sdk/include/ucrt",
+)
+
+subdirectory(
+    name = "sdk_include_um",
+    parent = ":root",
+    path = "sdk/include/um",
+)
+
+subdirectory(
+    name = "sdk_include_shared",
+    parent = ":root",
+    path = "sdk/include/shared",
+)
+
+subdirectory(
+    name = "crt_lib",
+    parent = ":root",
+    path = "crt/lib/x86_64",
+)
+
+subdirectory(
+    name = "sdk_lib_ucrt",
+    parent = ":root",
+    path = "sdk/lib/ucrt/x86_64",
+)
+
+subdirectory(
+    name = "sdk_lib_um",
+    parent = ":root",
+    path = "sdk/lib/um/x86_64",
+)

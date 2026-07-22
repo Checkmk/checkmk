@@ -7,10 +7,8 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import json
 import shutil
 import tarfile
-import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple
@@ -22,7 +20,6 @@ import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.base import diagnostics
 from cmk.ccc.version import Edition
-from cmk.crash import make_crash_report_base_path
 from cmk.diagnostics.internal import (
     CollectContext,
     CollectError,
@@ -133,11 +130,7 @@ def _fake_local_connection(host_list: Sequence[Sequence[str]]) -> Callable:
 
 def test_adapter_catalogue_names(tmp_path: Path) -> None:
     assert set(_adapter_catalogue(tmp_path)) == {
-        "bi_runtime_data",
-        "core_performance_metrics",
-        "latest_crash_reports",
         "metric_backend_state",
-        "mkp_inventory",
         "otel_license_counts",
     }
 
@@ -301,18 +294,6 @@ def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def test_diagnostics_element_perfdata() -> None:
-    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(
-        EMPTY_CONFIG,
-        core_performance_settings=lambda x: {},
-    )
-    assert diagnostics_element.filename == "perfdata.json"
-    assert diagnostics_element.title == "Metrics"
-    assert diagnostics_element.description == (
-        "Metrics related to sizing, e.g. number of helpers, hosts, services"
-    )
-
-
 def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     """The old wire's explicit file lists are served by the native file plugins"""
     config_dir = tmp_path / "etc/check_mk/test"
@@ -466,37 +447,3 @@ def test_diagnostics_element_performance_graphs_content(
     assert filepath == tmp_dump_folder.joinpath("performance_graphs.pdf")
 
     shutil.rmtree(str(automation_dir))
-
-
-def test_diagnostics_element_crash_dumps_content(tmp_path: Path) -> None:
-    omd_root = tmp_path.joinpath("omd_root")
-    test_uuid = str(uuid.uuid4())
-    category = "checks"
-    test_crash_dir = make_crash_report_base_path(omd_root).joinpath(category).joinpath(test_uuid)
-    test_crash_dir.mkdir(parents=True, exist_ok=True)
-    test_crash_filepath = test_crash_dir.joinpath("info.json")
-    with test_crash_filepath.open("w", encoding="utf-8") as f:
-        f.write('{ "testvar": "testvalue"}')
-
-    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement()
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    filepath = next(
-        diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
-    )
-
-    relative_path = make_crash_report_base_path(omd_root).relative_to(omd_root)
-    test_filename = f"{test_uuid}.tar.gz"
-    assert filepath == tmp_dump_folder.joinpath(relative_path).joinpath(
-        f"{category}/{test_filename}"
-    )
-
-    import tarfile
-
-    assert tarfile.is_tarfile(filepath)
-    with tarfile.open(filepath, "r") as tar:
-        tar.extractall(path=tmp_path, filter="data")
-        with tmp_path.joinpath("info.json").open("r", encoding="utf-8") as f:
-            content = f.read()
-
-    assert json.loads(content)["testvar"] == "testvalue"

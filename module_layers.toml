@@ -148,13 +148,15 @@ allows = [
 [plugin_families.violations.diagnostics]
 allows = [
   "@livestatus_client",
+  "cmk.ccc.hostaddress",
   "cmk.ccc.store",
+  "cmk.ccc.version",
+  "cmk.crash",
+  "cmk.inventory",
   # TODO: remove once the GUI is migrated and the classification table moved
   # into this family's lib
   "cmk.diagnostics.engine",
-  "cmk.ccc.hostaddress",
-  "cmk.ccc.version",
-  "cmk.inventory",
+  "cmk.profiling.backend",
 ]
 
 # These plugins are tightly coupled to Checkmk.

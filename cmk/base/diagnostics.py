@@ -44,7 +44,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.crash import make_crash_report_base_path
 from cmk.diagnostics.engine import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
@@ -87,7 +86,6 @@ from cmk.diagnostics.internal import (
     VerbatimCopy,
 )
 from cmk.licensing.usage import deserialize_dump
-from cmk.profiling.backend import PROFILE_ID_RE, PROFILE_SUFFIXES
 from cmk.utils import log
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
@@ -115,17 +113,9 @@ def clickhouse_query(sql: str) -> list[str]:
 
 
 COMPONENT_COMMANDS = [
-    ("df", ".out", ["df"]),
-    ("df-i", ".out", ["df", "-i"]),
-    ("ip-a", ".out", ["ip", "a"]),
-    ("ss-tulpen", ".out", ["ss", "-tulpen"]),
-    ("w", ".out", ["w"]),
-    ("top", ".out", ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"]),
     # TODO: The command below will result in user-visible errors when there is no ClickHouse (e.g.
     # for the pro edition!) or ClickHouse is there, but not enabled. This is quite bad and
-    # irritating from a user POV. Basically the same holds for the other commands: Is e.g. "ss"
-    # installed everywhere? Does "top" support the tons of options above? I somehow doubt that this
-    # is universally the case.
+    # irritating from a user POV.
     (
         "otel-licenses",
         ".json",
@@ -604,13 +594,10 @@ class ConsoleLogger:
 _TOPIC_GENERAL = Topic("General site information")
 _TOPIC_OPERATING_SYSTEM = Topic("Operating system & hardware")
 _TOPIC_PERFORMANCE = Topic("Performance & sizing")
-_TOPIC_EXTENSIONS = Topic("Local files & extensions")
-_TOPIC_CRASH_REPORTS = Topic("Crash reports")
 _TOPIC_CONFIGURATION = Topic("Configuration files")
 _TOPIC_LOGS = Topic("Log files")
 _TOPIC_MONITORING_CORE = Topic("Monitoring core & daemons")
 _TOPIC_LICENSING = Topic("Licensing")
-_TOPIC_BUSINESS_INTELLIGENCE = Topic("Business Intelligence")
 
 
 def _adapt(
@@ -663,16 +650,6 @@ def _adapter_plugin_catalogue(
     """All available plugins, keyed by name (transitional adapter catalogue)"""
     plugins = [
         DiagnosticsPlugin(
-            name="core_performance_metrics",
-            topic=_TOPIC_PERFORMANCE,
-            description=Help("Metrics related to sizing, e.g. number of helpers, hosts, services"),
-            sensitivity=Sensitivity.LOW,
-            handler=_adapt(
-                lambda _ctx: [PerfDataDiagnosticsElement(loaded_config, core_performance_settings)],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
             name="metric_backend_state",
             topic=_TOPIC_PERFORMANCE,
             description=Help("Schema, revision and footprint of the metric backend database"),
@@ -681,44 +658,6 @@ def _adapter_plugin_catalogue(
                 lambda _ctx: [
                     CheckmkCommandDiagnosticsElementTextDump(ident, suffix, command)
                     for ident, suffix, command in METRIC_BACKEND_COMMANDS
-                ],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
-            name="mkp_inventory",
-            topic=_TOPIC_EXTENSIONS,
-            description=Help(
-                "Information about installed MKPs and unpackaged files below the site's"
-                " local hierarchy"
-            ),
-            sensitivity=Sensitivity.LOW,
-            handler=_adapt(
-                lambda _ctx: [
-                    MKPFindTextDiagnosticsElement(),
-                    MKPShowTextDiagnosticsElement(),
-                    MKPListTextDiagnosticsElement(),
-                ],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
-            name="latest_crash_reports",
-            topic=_TOPIC_CRASH_REPORTS,
-            description=Help(
-                "The latest crash dumps of each type as found in var/check_mk/crashes"
-            ),
-            sensitivity=Sensitivity.MEDIUM,
-            handler=_adapt(lambda _ctx: [CrashDumpsDiagnosticsElement()], tmp_parent=tmp_parent),
-        ),
-        DiagnosticsPlugin(
-            name="bi_runtime_data",
-            topic=_TOPIC_BUSINESS_INTELLIGENCE,
-            description=Help("Cached data of Business Intelligence aggregations"),
-            sensitivity=Sensitivity.MEDIUM,
-            handler=_adapt(
-                lambda _ctx: [
-                    CheckmkDirectoryDiagnosticsElement("tmp/check_mk/bi_cache", rel=True)
                 ],
                 tmp_parent=tmp_parent,
             ),
@@ -836,6 +775,28 @@ def _filter_by_arcname(
     return handler
 
 
+_OPT_GUI_PROFILES = "gui-profiles"
+_TOPIC_LEGACY_GUI_PROFILES = Topic("Performance & sizing")
+
+
+def _filter_gui_profiles(
+    native_handler: Callable[[CollectContext], Iterable[DumpItem]],
+    requested_ids: set[str],
+) -> Callable[[CollectContext], Iterable[DumpItem]]:
+    """Serve the old wire's explicit profile id list from the native plugin"""
+
+    def handler(context: CollectContext) -> Iterable[DumpItem]:
+        packed = False
+        for item in native_handler(context):
+            if item.path.name.split(".", 1)[0] in requested_ids:
+                packed = True
+                yield item
+        if not packed:
+            raise CollectInfo("No profiles found")
+
+    return handler
+
+
 def _legacy_file_plugins(
     parameters: DiagnosticsOptionalParameters,
     *,
@@ -919,16 +880,15 @@ def _legacy_file_plugins(
                 )
             )
 
-    if gui_profile_ids := parameters.get("gui-profiles"):
+    if gui_profile_ids := parameters.get(_OPT_GUI_PROFILES):
         plugins.append(
             DiagnosticsPlugin(
                 name="gui_profiles",
                 description=Help("Stored GUI performance profiles and flamegraphs"),
                 sensitivity=Sensitivity.MEDIUM,
-                topic=_TOPIC_PERFORMANCE,
-                handler=_adapt(
-                    lambda _ctx: [GUIProfilesDiagnosticsElement(gui_profile_ids)],
-                    tmp_parent=tmp_parent,
+                topic=_TOPIC_LEGACY_GUI_PROFILES,
+                handler=_filter_gui_profiles(
+                    catalogue["gui_profiles"].handler, set(gui_profile_ids)
                 ),
             )
         )
@@ -1156,128 +1116,6 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
 #   ---csv dumps-----------------------------------------------------------
 
 
-#   ---json dumps-----------------------------------------------------------
-
-
-class PerfDataDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    def __init__(
-        self,
-        loaded_config: BaseConfig,
-        core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
-    ) -> None:
-        self._loaded_config: Final = loaded_config
-        self._core_performance_settings: Final = core_performance_settings
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Metrics")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Metrics related to sizing, e.g. number of helpers, hosts, services")
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "perfdata.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        result = livestatus.LocalConnection().query("GET status\nColumnHeaders: on")
-        performance_data = {
-            key: result[1][i]
-            for i in range(len(result[0]))
-            if (key := result[0][i]) not in ["license_usage_history"]
-        }
-        performance_data.update(self._core_performance_settings(self._loaded_config))
-        return json.dumps(performance_data, sort_keys=True, indent=4)
-
-
-class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Extension package files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Output of `mkp find --all --json`. "
-            "See the corresponding command line help for more details."
-        )
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "mkp_find_all.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        try:
-            return subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
-        except subprocess.CalledProcessError as e:
-            ConsoleLogger().error(str(e.stderr))
-            return "{}"
-
-
-class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Extension package files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Output of `mkp show-all --json`. "
-            "See the corresponding command line help for more details."
-        )
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "mkp_show_all.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        try:
-            return subprocess.check_output(["mkp", "show-all", "--json"], text=True)
-        except subprocess.CalledProcessError as e:
-            ConsoleLogger().error(str(e.stderr))
-            return "{}"
-
-
-class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Extension package files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Output of `mkp list --json`. See the corresponding command line help for more details."
-        )
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "mkp_list.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        try:
-            return subprocess.check_output(["mkp", "list", "--json"], text=True)
-        except subprocess.CalledProcessError as e:
-            ConsoleLogger().error(str(e.stderr))
-            return "{}"
-
-
 #   ---collect exiting files------------------------------------------------
 
 
@@ -1379,44 +1217,6 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
-
-
-#   ---directory dumps------------------------------------------------------------
-
-
-class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, directory: str | Path, rel: bool = False) -> None:
-        if isinstance(directory, str):
-            self.directory = Path(directory)
-        else:
-            self.directory = directory
-        self.rel = rel
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Files in %(directory)s") % {"directory": self.directory}
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Configuration files from %(directory)s") % {"directory": str(self.directory)}
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        abs_path = (omd_root if self.rel else Path("")) / self.directory
-        for path, _dirs, files in abs_path.walk():
-            tmp_target_folder = tmp_dump_folder / (
-                path.relative_to(omd_root) if self.rel else "os_root" / path.relative_to("/")
-            )
-            for file in files:
-                tmp_file = tmp_target_folder / file
-                tmp_target_folder.mkdir(parents=True, exist_ok=True)
-                if not tmp_file.exists():
-                    shutil.copy(path / file, tmp_file)
-                yield tmp_file
 
 
 #   ---command calls--------------------------------------------------------------
@@ -1565,86 +1365,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             },
             timeout=900,
         )
-
-
-class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
-    @override
-    @property
-    def title(self) -> str:
-        return _("The latest crash dumps of each type")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Returns the latest crash dumps of each type as found in var/checkmk/crashes")
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        for category in make_crash_report_base_path(omd_root).glob("*"):
-            tmpdir = tmp_dump_folder / "var/check_mk/crashes" / category.name
-            tmpdir.mkdir(parents=True, exist_ok=True)
-
-            sorted_dumps = sorted(
-                (p for p in category.glob("*") if p.is_dir()),
-                key=lambda path: int(path.stat().st_mtime),
-            )
-
-            if sorted_dumps:
-                # Determine the latest file of that category
-                dumpfile_path = sorted_dumps[-1]
-
-                # Pack the dump into a .tar.gz, so it can easily be uploaded
-                # to https://crash.checkmk.com/
-                tarfile_path = (tmpdir / dumpfile_path.name).with_suffix(".tar.gz")
-
-                with tarfile.open(name=tarfile_path, mode="w:gz") as tar:
-                    for file in dumpfile_path.iterdir():
-                        tar.add(file, arcname=file.relative_to(dumpfile_path))
-
-                yield tarfile_path
-
-
-class GUIProfilesDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, profile_ids: Iterable[str]) -> None:
-        self._profile_ids = list(profile_ids)
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Performance profiles and flamegraphs")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Stored performance profiles (.profile) and metadata from var/check_mk/profiles")
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        profiles_dir = omd_root / "var/check_mk/profiles"
-        if not profiles_dir.is_dir():
-            raise DiagnosticsElementInfo("No profiles found")
-
-        tmpdir = tmp_dump_folder / "var/check_mk/profiles"
-        tmpdir.mkdir(parents=True, exist_ok=True)
-
-        found_any = False
-        for profile_id in self._profile_ids:
-            if not PROFILE_ID_RE.match(profile_id):
-                continue
-            for suffix in PROFILE_SUFFIXES:
-                src_file = profiles_dir / f"{profile_id}{suffix}"
-                if src_file.is_file():
-                    dst = tmpdir / src_file.name
-                    shutil.copy2(src_file, dst)
-                    found_any = True
-                    yield dst
-
-        if not found_any:
-            raise DiagnosticsElementInfo("No profiles found")
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):

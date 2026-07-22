@@ -243,11 +243,9 @@ py_library(
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
-        "//packages/cmk-crash:crash",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:diagnostics",
-        "//packages/cmk-profiling:backend",
         requirement("requests"),
     ],
 )

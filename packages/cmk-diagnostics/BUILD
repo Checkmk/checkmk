@@ -22,6 +22,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-ccc:site",
+        "//packages/cmk-plugin-apis:diagnostics",
     ],
 )
 

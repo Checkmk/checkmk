@@ -55,6 +55,7 @@ plugin_apis = [
   "cmk.server_side_calls.internal",
   "cmk.server_side_calls.v1",
   "cmk.server_side_programs.v1_unstable",
+  "cmk.diagnostics.internal",
 ]
 
 relay_protocols = ["cmk.relay_protocols"]
@@ -665,7 +666,7 @@ allows = ["@ccc"]
 allows = []
 
 [components."cmk.diagnostics.engine"]
-allows = ["cmk.ccc.site"]
+allows = ["@plugin_apis", "cmk.ccc.site"]
 
 [components."cmk.diskspace"]
 allows = ["@ccc", "cmk.utils.paths"]
@@ -1219,6 +1220,9 @@ allows = [
   "cmk.utils.password_store",
   "cmk.utils.paths",
 ]
+
+[components."cmk.diagnostics.internal"]
+allows = []
 
 [components."cmk.checkengine.snmp_backends"]
 allows = ["@ccc", "cmk.checkengine.snmplib"]

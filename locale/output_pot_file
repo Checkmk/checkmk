@@ -23,6 +23,7 @@ xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
     --keyword=Help:1,1t \
     --keyword=Label:1,1t \
     --keyword=Message:1,1t \
+    --keyword=Topic:1,1t \
     -o "${PYTHON_POT_FILE}" \
     $(find -L "${TOP_DIR}/packages" -type f -name "*.py" -not -path "*/tests/*" -not -path "*/test/*") \
     $(find -L "${TOP_DIR}/non-free/packages" -type f -name "*.py" -not -path "*/tests/*" -not -path "*/test/*") \

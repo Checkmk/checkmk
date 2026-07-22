@@ -26,3 +26,4 @@ class PluginGroup(enum.Enum):
     RULESETS = "rulesets"
     SERVER_SIDE_CALLS = "server_side_calls"
     INVENTORY_UI = "inventory_ui"
+    DIAGNOSTICS = "diagnostics"

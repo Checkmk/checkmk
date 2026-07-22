@@ -236,6 +236,14 @@ py_library(
 )
 
 py_library(
+    name = "diagnostics",
+    srcs = glob(["cmk/diagnostics/internal/**/*.py"]),
+    data = ["cmk/diagnostics/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "inventory_ui",
     srcs = [
         "cmk/inventory_ui/__init__.py",
@@ -268,6 +276,7 @@ py_doc_test(
         ":bakery",
         ":dcd_connector_parameters",
         ":dcd_connectors",
+        ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
@@ -383,6 +392,15 @@ py_cmk_test(
     ],
 )
 
+py_cmk_test(
+    name = "diagnostics-test",
+    size = "small",
+    srcs = glob(["tests/cmk/diagnostics/**/*.py"]),
+    deps = [
+        ":diagnostics",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-plugin-apis",
@@ -395,6 +413,7 @@ py_wheel(
         ":bakery",
         ":dcd_connector_parameters",
         ":dcd_connectors",
+        ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
@@ -419,6 +438,7 @@ filegroup(
         "cmk/bakery/py.typed",
         "cmk/dcd_connector_parameters/py.typed",
         "cmk/dcd_connectors/py.typed",
+        "cmk/diagnostics/py.typed",
         "cmk/discover_plugins/py.typed",
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
@@ -448,16 +468,17 @@ py_requirements_test(
     libs = [
         ":agent_based",
         ":bakery",
+        ":dcd_connector_parameters",
+        ":dcd_connectors",
+        ":diagnostics",
         ":discover_plugins",
         ":graphing",
-        ":rulesets",
+        ":inventory_ui",
         ":password_store",
+        ":post_rename_site",
+        ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
-        ":dcd_connectors",
-        ":dcd_connector_parameters",
-        ":inventory_ui",
-        ":post_rename_site",
     ],
     requirements_in = "requirements.in",
 )

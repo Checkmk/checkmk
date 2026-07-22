@@ -1,34 +1,93 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 filegroup(
-    name = "msibuild",
+    name = "msibuild_fg",
     srcs = ["@msitools"],
     output_group = "msibuild",
     tags = ["manual"],
 )
 
 filegroup(
-    name = "msiinfo",
+    name = "msiinfo_fg",
     srcs = ["@msitools"],
     output_group = "msiinfo",
     tags = ["manual"],
 )
 
+filegroup(
+    name = "libmsi_so_fg",
+    srcs = ["@msitools"],
+    output_group = "libmsi.so.0.0.0",
+)
+
 set_runpath(
-    name = "bin_runpath",
-    srcs = [
-        ":msibuild",
-        ":msiinfo",
-    ],
+    name = "msibuild_runpath",
+    srcs = [":msibuild_fg"],
     rpaths = ["${ORIGIN}/../lib"],
     tags = ["manual"],
 )
 
+set_runpath(
+    name = "msiinfo_runpath",
+    srcs = [":msiinfo_fg"],
+    rpaths = ["${ORIGIN}/../lib"],
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "lib",
+    srcs = [":libmsi_so_fg"],
+    tags = ["manual"],
+)
+
+copy_file(
+    name = "libmsi_so_symlink_fs",
+    src = ":lib",
+    out = "lib/libmsi.so.0",  # SONAME
+    allow_symlink = True,
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "msibuild_runpath_fg",
+    srcs = [":msibuild_runpath"],
+)
+
+filegroup(
+    name = "msiinfo_runpath_fg",
+    srcs = [":msiinfo_runpath"],
+)
+
+native_binary(
+    name = "msibuild",
+    src = ":msibuild_runpath_fg",
+    data = [
+        ":lib",
+        ":libmsi_so_symlink_fs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+native_binary(
+    name = "msiinfo",
+    src = ":msiinfo_runpath_fg",
+    data = [
+        ":lib",
+        ":libmsi_so_symlink_fs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 pkg_files(
     name = "bin",
-    srcs = [":bin_runpath"],
+    srcs = [
+        ":msibuild_runpath",
+        ":msiinfo_runpath",
+    ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -36,21 +95,9 @@ pkg_files(
     tags = ["manual"],
 )
 
-filegroup(
-    name = "libmsi.so.0.0.0",
-    srcs = ["@msitools"],
-    output_group = "libmsi.so.0.0.0",
-)
-
-set_runpath(
-    name = "libmsi_so_runpath",
-    srcs = [":libmsi.so.0.0.0"],
-    tags = ["manual"],
-)
-
 pkg_files(
     name = "libmsi_so",
-    srcs = [":libmsi_so_runpath"],
+    srcs = [":lib"],
 )
 
 pkg_mklink(
@@ -68,7 +115,7 @@ pkg_mklink(
 )
 
 pkg_filegroup(
-    name = "lib",
+    name = "lib_pkg",
     srcs = [
         ":libmsi_so",
         ":libmsi_so_major_symlink",
@@ -82,7 +129,7 @@ pkg_tar(
     name = "msitools",
     srcs = [
         ":bin",
-        ":lib",
+        ":lib_pkg",
     ],
     stamp = 1,
     tags = ["manual"],

@@ -14,6 +14,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import textwrap
@@ -40,6 +41,7 @@ from cmk.base.config import LoadingResult
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import site, store, tty
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
@@ -50,7 +52,6 @@ from cmk.diagnostics.engine import (
     CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
     deserialize_cl_parameters,
-    deserialize_modes_parameters,
     DiagnosticsCLParameters,
     DiagnosticsElementFilepaths,
     DiagnosticsModesParameters,
@@ -71,7 +72,6 @@ from cmk.diagnostics.engine import (
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_COMP_METRIC_BACKEND,
-    OPT_GUI_PROFILES,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
@@ -212,14 +212,89 @@ COMPONENT_DIRECTORIES = {
 }
 
 
+_CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
+    "off": None,
+    "low": Sensitivity.LOW,
+    "medium": Sensitivity.MEDIUM,
+    "high": Sensitivity.HIGH,
+}
+
+
+def _parse_cli_threshold(raw: str) -> Sensitivity | None:
+    try:
+        return _CLI_THRESHOLDS[raw]
+    except KeyError:
+        raise MKGeneralException(
+            "Invalid sensitivity threshold %r (allowed: %s)" % (raw, ", ".join(_CLI_THRESHOLDS))
+        ) from None
+
+
+def _resolve_cli_selection(
+    catalogue: Mapping[str, DiagnosticsPlugin], options: DiagnosticsModesParameters
+) -> DumpSelection:
+    default_threshold = (
+        _parse_cli_threshold(options["all-topics"]) if "all-topics" in options else None
+    )
+    thresholds: dict[Topic, Sensitivity | None] = dict.fromkeys(
+        (plugin.topic for plugin in catalogue.values()), default_threshold
+    )
+
+    selected = {
+        plugin.name
+        for plugin in catalogue.values()
+        if not plugin.always
+        and (threshold := thresholds[plugin.topic]) is not None
+        and plugin.sensitivity <= threshold
+    }
+    for name in options.get("plugins", "").split(",") if "plugins" in options else []:
+        if name not in catalogue:
+            raise MKGeneralException("Unknown plugin %r (see --list for available plugins)" % name)
+        selected.add(name)
+
+    return DumpSelection(
+        plugins=sorted(selected),
+        checkmk_server_host=options.get("checkmk-server-host", ""),
+    )
+
+
+def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None:
+    by_topic: dict[Topic, list[DiagnosticsPlugin]] = {}
+    for plugin in catalogue.values():
+        by_topic.setdefault(plugin.topic, []).append(plugin)
+    for topic in sorted(by_topic, key=lambda t: t.localize(str)):
+        plugins = by_topic[topic]
+        sys.stdout.write(f"{topic.localize(_)}\n")
+        for plugin in sorted(plugins, key=lambda p: p.name):
+            flags = [plugin.sensitivity.name.lower()]
+            if plugin.always:
+                flags.append("always")
+            sys.stdout.write(
+                f"  {plugin.name} ({', '.join(flags)}): {plugin.description.localize(_)}\n"
+            )
+
+
 def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    dump = create_diagnostics_dump(
+    loading_result = load_config(edition=app.edition)
+    catalogue = _load_plugin_catalogue(
+        edition=app.edition,
+        loaded_config=loading_result.loaded_config,
+        core_performance_settings=app.core_performance_settings,
+        omd_config=get_omd_config(cmk.utils.paths.omd_root),
+        tmp_parent=cmk.utils.paths.diagnostics_dir,
+        logger=ConsoleLogger(),
+    )
+
+    if "list" in options:
+        _print_available_plugins(catalogue)
+        return
+
+    dump = create_diagnostics_dump_v2(
         app=app,
         omd_root=cmk.utils.paths.omd_root,
         diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-        parameters=deserialize_modes_parameters(options),
-        loading_result=None,
+        selection=_resolve_cli_selection(catalogue, options),
+        loading_result=loading_result,
     )
     logger = ConsoleLogger()
     logger.section_step("Creating diagnostics dump", verbose=False)
@@ -232,111 +307,46 @@ def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModes
         logger.message("No dump")
 
 
-# FIXME: This function is out-of-sync with the actual options in cmk.diagostics!
-def _get_diagnostics_dump_sub_options(edition: cmk_version.Edition) -> list[Option]:
-    sub_options = [
-        Option(
-            long_option=OPT_LOCAL_FILES,
-            short_help=(
-                "Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
-                "This also includes information about installed MKPs."
-            ),
-        ),
-        Option(
-            long_option=OPT_OMD_CONFIG,
-            short_help="Pack content of 'etc/omd/site.conf'",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_CRASH_REPORTS,
-            short_help="Pack the latest crash reports.",
-        ),
-        Option(
-            long_option=OPT_GUI_PROFILES,
-            short_help="Pack stored GUI performance profiles and flamegraphs. Comma-separated profile IDs.",
-            argument=True,
-            argument_descr="ID,ID...",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_OVERVIEW,
-            short_help=(
-                "Pack HW/SW Inventory node 'Software > Applications > Checkmk'. "
-                "The parameter H is the name of the Checkmk server in Checkmk itself."
-            ),
-            argument=True,
-            argument_descr="H",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_CONFIG_FILES,
-            short_help=(
-                "Pack configuration files. Use filenames relative to etc/checkmk. Wildcards are "
-                "not supported."
-            ),
-            argument=True,
-            argument_descr="FILE,FILE...",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_LOG_FILES,
-            short_help=(
-                "Pack log files. Use filenames relative to var/log. Wildcards are not supported."
-            ),
-            argument=True,
-            argument_descr="FILE,FILE...",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_CORE_FILES,
-            short_help=(
-                "Pack core files. Use filenames relative to var/check_mk. Wildcards are not supported."
-            ),
-            argument=True,
-            argument_descr="FILE,FILE...",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_LICENSING_FILES,
-            short_help=(
-                "Pack licensing files. Use filenames relative to var/check_mk. Wildcards are not supported."
-            ),
-            argument=True,
-            argument_descr="FILE,FILE...",
-        ),
-    ]
-
-    # NOTE: This condition has to be in sync with
-    # cmk.gui.wato.pages.diagnostics.ModeDiagnostics._get_operational_informtion_elements().
-    if edition is not cmk_version.Edition.COMMUNITY:
-        sub_options.append(
-            Option(
-                long_option=OPT_PERFORMANCE_GRAPHS,
-                short_help=(
-                    "Pack performance graphs like CPU load and utilization of Checkmk Server. "
-                    "The parameter H is the name of the Checkmk server in Checkmk itself."
-                ),
-                argument=True,
-                argument_descr="H",
-            )
-        )
-
-    # NOTE: This condition has to be in sync with
-    # cmk.gui.wato.pages.diagnostics.ModeDiagnostics._get_component_specific_elements().
-    if edition is cmk_version.Edition.ULTIMATE:
-        sub_options.append(
-            Option(
-                long_option=OPT_COMP_METRIC_BACKEND,
-                short_help=("Pack Infomation about the database schema, revision, and footprint."),
-            )
-        )
-
-    return sub_options
-
-
 mode_create_diagnostics_dump = Mode(
     long_option="create-diagnostics-dump",
     handler_function=_mode_create_diagnostics_dump,
     short_help="Create diagnostics dump",
     long_help=[
         "Create a dump containing information for diagnostic analysis "
-        "in the folder var/check_mk/diagnostics."
+        "in the folder var/check_mk/diagnostics. The dump content is "
+        "provided by discoverable plugins grouped into topics; use --list "
+        "to see what is available on this site. Without any option only "
+        "the always collected plugins are packed."
     ],
-    sub_options=_get_diagnostics_dump_sub_options(cmk_version.edition(cmk.utils.paths.omd_root)),
+    sub_options=[
+        Option(
+            long_option="list",
+            short_help="List the available topics and plugins and exit",
+        ),
+        Option(
+            long_option="all-topics",
+            short_help=(
+                "Select all plugins of all topics up to the given sensitivity threshold "
+                "(off, low, medium or high)"
+            ),
+            argument=True,
+            argument_descr="THRESHOLD",
+        ),
+        Option(
+            long_option="plugins",
+            short_help="Additionally select the given plugins, regardless of topic thresholds",
+            argument=True,
+            argument_descr="NAME,NAME...",
+        ),
+        Option(
+            long_option="checkmk-server-host",
+            short_help=(
+                "The name of the host monitoring the Checkmk server; needed by some plugins"
+            ),
+            argument=True,
+            argument_descr="HOST",
+        ),
+    ],
 )
 
 

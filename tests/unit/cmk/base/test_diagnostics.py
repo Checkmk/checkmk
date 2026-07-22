@@ -251,6 +251,34 @@ def test_dump_logs_collect_exceptions(tmp_path: Path, exception: Exception, mark
     assert str(exception) in logger.content() or marker in logger.content()
 
 
+def test_resolve_cli_selection(tmp_path: Path) -> None:
+    catalogue = _full_catalogue(tmp_path)
+
+    # no options: only 'always' plugins run (empty explicit selection)
+    assert diagnostics._resolve_cli_selection(catalogue, {}).plugins == []
+
+    selection = diagnostics._resolve_cli_selection(
+        catalogue,
+        {
+            "all-topics": "low",
+            "plugins": "latest_crash_reports",
+            "checkmk-server-host": "my_server",
+        },
+    )
+    assert selection.checkmk_server_host == "my_server"
+    assert "mkp_inventory" in selection.plugins  # low via --all-topics
+    assert "environment_variables" not in selection.plugins  # medium exceeds the threshold
+    assert "latest_crash_reports" in selection.plugins  # explicitly selected
+
+
+def test_resolve_cli_selection_rejects_unknown(tmp_path: Path) -> None:
+    catalogue = _full_catalogue(tmp_path)
+    with pytest.raises(Exception, match="Unknown plugin"):
+        diagnostics._resolve_cli_selection(catalogue, {"plugins": "nope"})
+    with pytest.raises(Exception, match="Invalid sensitivity"):
+        diagnostics._resolve_cli_selection(catalogue, {"all-topics": "extreme"})
+
+
 def test_legacy_selection() -> None:
     selected, host = diagnostics._legacy_selection(
         {

@@ -6,9 +6,12 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
+import { loadMenu } from '@/graphing/api/burgerMenu.ts'
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
-import type { RequestedTimeRange } from '@/graphing/types'
+import type { BurgerMenuCallable, RequestedTimeRange } from '@/graphing/types'
+
+vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 
 // Mock renders received metric titles and view props as text so tests can assert on
 // visibility filtering and the interaction loop. Click targets are spans (not buttons)
@@ -60,6 +63,14 @@ function makeMetric(name: string, title: string): Metric {
 const CPU = makeMetric('cpu', 'CPU')
 const MEM = makeMetric('mem', 'Memory')
 
+beforeEach(() => {
+  vi.mocked(loadMenu).mockResolvedValue([])
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 test('does not render the legend when showLegend is not set', () => {
   render(GraphPanel, {
     props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
@@ -97,6 +108,31 @@ test('renders GraphBurgerMenu when showBurgerMenu is true', () => {
     }
   })
   expect(screen.getByRole('button')).toBeInTheDocument()
+})
+
+test('a do-action from the header runs the callback with the panel internal state', async () => {
+  const onClick: BurgerMenuCallable = vi.fn()
+  vi.mocked(loadMenu).mockResolvedValue([
+    {
+      heading: 'Export',
+      actions: [{ label: 'Export as JSON', ariaLabel: 'Export as JSON', onClick }]
+    }
+  ])
+
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      addType: 'test',
+      internal: 'panel-internal-state'
+    }
+  })
+
+  await fireEvent.click(screen.getByRole('button'))
+  await fireEvent.click(await screen.findByRole('button', { name: 'Export as JSON' }))
+
+  expect(onClick).toHaveBeenCalledWith('panel-internal-state')
 })
 
 test('renders title when showTitle is true', () => {

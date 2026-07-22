@@ -121,7 +121,10 @@ test('hides the zoom selector when showControls is false', () => {
 
 test('shows the burger action menu when showBurgerMenu is set', async () => {
   const groups: BurgerMenuGroup[] = [
-    { heading: 'Export', actions: [{ label: 'Export as JSON', onClick: vi.fn() }] }
+    {
+      heading: 'Export',
+      actions: [{ label: 'Export as JSON', ariaLabel: 'Export as JSON', onClick: vi.fn() }]
+    }
   ]
   render(GraphHeader, {
     props: { showControls: false, showBurgerMenu: true, burgerMenuGroups: groups }

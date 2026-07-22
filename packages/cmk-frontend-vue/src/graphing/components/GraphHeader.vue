@@ -12,7 +12,7 @@ import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import type { BurgerMenuGroup, TimeRange } from '../types.ts'
+import type { BurgerMenuCallable, BurgerMenuGroup, TimeRange } from '../types.ts'
 import { isoDate, stepLabel } from '../utils/timeFormat'
 import GraphBurgerMenu from './GraphBurgerMenu.vue'
 import GraphTitle from './GraphTitle.vue'
@@ -38,6 +38,8 @@ const props = withDefaults(
   }>(),
   { showControls: true }
 )
+
+const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', { default: 'avg' })
 const zoomMode = defineModel<ZoomMode>('zoomMode', { default: 'time' })
@@ -114,7 +116,11 @@ const resolutionLabel = computed(() =>
         :off-label="_t('Time zoom')"
         :on-label="_t('Peak zoom')"
       />
-      <GraphBurgerMenu v-if="showBurgerMenu" :groups="burgerMenuGroups ?? []" />
+      <GraphBurgerMenu
+        v-if="showBurgerMenu"
+        :groups="burgerMenuGroups ?? []"
+        @do-action="(onClick) => emit('doAction', onClick)"
+      />
     </div>
   </div>
 </template>

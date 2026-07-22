@@ -107,6 +107,7 @@ const svg = computed<string | null>(() => iconSvgByName[props.name] ?? null)
   --icon-tertiary-color: var(--color-corporate-green-60);
 
   svg {
+    display: block;
     width: 100%;
     height: 100%;
   }

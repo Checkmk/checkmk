@@ -12,13 +12,13 @@ const GROUPS: BurgerMenuGroup[] = [
   {
     heading: 'Add to dashboard',
     actions: [
-      { label: 'Dashboard One', onClick: vi.fn() },
-      { label: 'Dashboard Two', onClick: vi.fn() }
+      { label: 'Dashboard One', ariaLabel: 'Dashboard One', onClick: vi.fn() },
+      { label: 'Dashboard Two', ariaLabel: 'Dashboard Two', onClick: vi.fn() }
     ]
   },
   {
     heading: 'Export',
-    actions: [{ label: 'Export as JSON', onClick: vi.fn() }]
+    actions: [{ label: 'Export as JSON', ariaLabel: 'Export as JSON', onClick: vi.fn() }]
   }
 ]
 
@@ -40,11 +40,11 @@ test('clicking the trigger shows the dropdown with group headings and actions', 
   expect(screen.getByText('Export')).toBeInTheDocument()
 })
 
-test('clicking an action calls its onClick and closes the dropdown', async () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS } })
+test('clicking an action emits doAction with its onClick and closes the dropdown', async () => {
+  const { emitted } = render(GraphBurgerMenu, { props: { groups: GROUPS } })
   await fireEvent.click(screen.getByRole('button'))
   await fireEvent.click(screen.getByRole('button', { name: 'Dashboard One' }))
-  expect(GROUPS[0]!.actions[0]!.onClick).toHaveBeenCalledOnce()
+  expect(emitted().doAction![0]).toEqual([GROUPS[0]!.actions[0]!.onClick])
   expect(screen.queryByText('Dashboard One')).not.toBeInTheDocument()
 })
 
@@ -54,10 +54,4 @@ test('clicking outside the component closes the dropdown', async () => {
   expect(screen.getByText('Add to dashboard')).toBeInTheDocument()
   await fireEvent.click(document.body)
   expect(screen.queryByText('Add to dashboard')).not.toBeInTheDocument()
-})
-
-test('renders a visual separator between multiple groups', async () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS } })
-  await fireEvent.click(screen.getByRole('button'))
-  expect(screen.getByRole('separator')).toBeInTheDocument()
 })

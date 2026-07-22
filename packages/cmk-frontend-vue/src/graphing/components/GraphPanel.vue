@@ -8,9 +8,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import { loadMenu } from '../api/burgerMenu'
 import { useGraphInteraction } from '../composables/useGraphInteraction'
 import { useGraphVisibility } from '../composables/useGraphVisibility'
 import type {
+  BurgerMenuCallable,
   BurgerMenuGroup,
   GraphPanelEmits,
   GraphPanelProps,
@@ -90,6 +92,20 @@ const yAxis = computed(() => deriveYAxis(props.metrics))
 
 const showBurgerMenu = computed(() => !!props.addType)
 const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
+
+if (showBurgerMenu.value) {
+  loadMenu(props.addType!)
+    .then((groups) => {
+      burgerMenuGroups.value = groups
+    })
+    .catch((err) => {
+      throw new Error(`Failed to load menu for addType "${props.addType}": ${err.message}`)
+    })
+}
+
+const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
+  await onClick(props.internal!)
+}
 </script>
 
 <template>
@@ -112,6 +128,7 @@ const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
           :show-consolidation="showConsolidation"
           :show-burger-menu="showBurgerMenu"
           :burger-menu-groups="burgerMenuGroups"
+          @do-action="triggerBurgerMenuAction"
         />
 
         <div

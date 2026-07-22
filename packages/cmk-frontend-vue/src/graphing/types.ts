@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { IconNames } from 'cmk-shared-typing/typescript/icon'
+
 import type { HorizontalLine, Metric, TimeRange } from './components/TimeSeriesGraph'
 import type { ConsolidationFn } from './components/consolidation'
 
@@ -22,11 +24,13 @@ export type RequestedTimeRange = TimeInterval
 // re-derives it (multiplier × span) once the span changed.
 export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_span'
 
+export type BurgerMenuCallable = (internal: string) => Promise<void>
 interface BurgerMenuAction {
   label: string
-  onClick: () => void
+  ariaLabel: string
+  icon?: IconNames
+  onClick: BurgerMenuCallable
 }
-
 export interface BurgerMenuGroup {
   heading: string
   actions: BurgerMenuAction[]

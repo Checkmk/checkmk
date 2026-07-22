@@ -4,12 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import { onUnmounted, ref } from 'vue'
 
-import type { BurgerMenuGroup } from '../types'
+import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 
 withDefaults(defineProps<{ groups?: BurgerMenuGroup[] }>(), { groups: () => [] })
+
+const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
@@ -23,31 +27,51 @@ function onDocumentClick(e: MouseEvent) {
 document.addEventListener('click', onDocumentClick)
 onUnmounted(() => document.removeEventListener('click', onDocumentClick))
 
-function doAction(onClick: () => void) {
-  onClick()
+function doAction(onClick: BurgerMenuCallable) {
+  emit('doAction', onClick)
   isOpen.value = false
 }
 </script>
 
 <template>
   <div ref="containerRef" class="graphing-graph-burger-menu">
-    <button class="graphing-graph-burger-menu__trigger" @click="isOpen = !isOpen">
+    <button
+      class="graphing-graph-burger-menu__trigger"
+      :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
+      :aria-expanded="isOpen"
+      @click="isOpen = !isOpen"
+    >
       <CmkMultitoneIcon name="burger-menu" primary-color="font" size="small" />
     </button>
 
     <div v-if="isOpen" class="graphing-graph-burger-menu__dropdown">
-      <template v-for="(group, i) in groups" :key="group.heading">
-        <div v-if="i > 0" role="separator" class="graphing-graph-burger-menu__separator" />
-        <div class="graphing-graph-burger-menu__group-heading">{{ group.heading }}</div>
-        <button
+      <ul
+        v-for="group in groups"
+        :key="group.heading"
+        class="graphing-graph-burger-menu__group"
+        :aria-label="group.heading"
+      >
+        <li class="graphing-graph-burger-menu__group-heading" aria-hidden="true">
+          {{ group.heading }}
+        </li>
+        <li
           v-for="action in group.actions"
           :key="action.label"
           class="graphing-graph-burger-menu__item"
-          @click="doAction(action.onClick)"
         >
-          {{ action.label }}
-        </button>
-      </template>
+          <button
+            :aria-label="action.label"
+            class="graphing-graph-burger-menu__item-button"
+            @click="doAction(action.onClick)"
+          >
+            <template v-if="action.icon">
+              <CmkIcon :name="action.icon" size="small" />
+              <CmkSpace size="small" />
+            </template>
+            <span class="graphing-graph-burger-menu__item-label">{{ action.label }}</span>
+          </button>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -64,9 +88,9 @@ function doAction(onClick: () => void) {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: none;
+  border: var(--dimension-1) solid var(--button-form-border-color);
   border-radius: var(--border-radius);
-  background: transparent;
+  background: var(--color-midnight-grey-100);
   font-size: 16px;
   cursor: pointer;
   color: inherit;
@@ -78,48 +102,65 @@ function doAction(onClick: () => void) {
   }
 }
 
+.graphing-graph-burger-menu__trigger_open {
+  border-radius: var(--border-radius) var(--border-radius) 0 var(--border-radius);
+}
+
 .graphing-graph-burger-menu__dropdown {
   position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  top: calc(100% - 1px);
+  right: 10px;
   z-index: 100;
   min-width: 200px;
-  padding: 6px 0;
-  background: #fff;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius) 0 var(--border-radius) var(--border-radius);
+  border: var(--dimension-1) solid var(--button-form-border-color);
+  background-color: var(--ux-theme-5);
+  color: var(--font-color);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
+  white-space: nowrap;
+  padding: var(--dimension-4);
   box-shadow:
     0 2px 8px rgb(0 0 0 / 12%),
     0 0 0 1px rgb(0 0 0 / 6%);
 }
 
-.graphing-graph-burger-menu__separator {
-  height: 1px;
-  margin: 6px 0;
-  background: #f0f0f0;
+.graphing-graph-burger-menu__group {
+  list-style-type: none;
+  padding-left: 0 !important;
+  margin: 0;
+  &:not(:last-child) {
+    padding-bottom: var(--dimension-6);
+  }
 }
 
 .graphing-graph-burger-menu__group-heading {
-  padding: 6px 14px 2px;
-  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.5;
+  padding-bottom: var(--dimension-4);
 }
 
 .graphing-graph-burger-menu__item {
-  display: block;
-  width: 100%;
-  padding: 5px 14px;
-  border: none;
-  background: transparent;
-  font-size: var(--font-size-normal);
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-
+  padding-bottom: var(--dimension-3);
   &:hover {
-    background: #f5f5f5;
+    color: var(--default-select-hover-color);
+  }
+}
+
+.graphing-graph-burger-menu__item-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: none;
+  margin: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+body[data-theme='facelift'] {
+  .graphing-graph-burger-menu__trigger {
+    background-color: var(--color-daylight-grey-50);
   }
 }
 </style>

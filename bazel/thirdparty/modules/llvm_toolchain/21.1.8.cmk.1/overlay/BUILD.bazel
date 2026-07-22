@@ -1,0 +1,119 @@
+# The curated LLVM toolchain bundle: the subset of the upstream LLVM release
+# the hermetic cc toolchains consume -- clang, lld, the llvm bin-utils,
+# clang's builtin headers and the runtime libraries -- with the release's
+# bin/ include/ lib/ layout (and symlink structure) preserved.
+# buildscripts/scripts/extract_llvm.sh produces and publishes the archive.
+
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+load("@bazel_skylib//rules/directory:directory.bzl", "directory")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+
+package(default_visibility = ["//visibility:public"])
+
+native_binary(
+    name = "clang-cl",
+    src = "bin/clang-cl",
+    out = "clang-cl",
+    data = [":compiler_builtins"],
+)
+
+native_binary(
+    name = "lld-link",
+    src = "bin/lld-link",
+    out = "lld-link",
+    data = ["bin/lld"],
+)
+
+native_binary(
+    name = "llvm-ar",
+    src = "bin/llvm-ar",
+    out = "llvm-ar",
+)
+
+native_binary(
+    name = "llvm-lib",
+    src = "bin/llvm-lib",
+    out = "llvm-lib",
+    data = ["bin/llvm-ar"],
+)
+
+native_binary(
+    name = "llvm-objcopy",
+    src = "bin/llvm-objcopy",
+    out = "llvm-objcopy",
+)
+
+native_binary(
+    name = "llvm-readobj",
+    src = "bin/llvm-readobj",
+    out = "llvm-readobj",
+)
+
+native_binary(
+    name = "llvm-strip",
+    src = "bin/llvm-strip",
+    out = "llvm-strip",
+    data = ["bin/llvm-objcopy"],
+)
+
+directory(
+    name = "toolchain_root",
+    srcs = glob([
+        "lib/**",
+        "include/**",
+    ]),
+)
+
+subdirectory(
+    name = "lib-clang-include",
+    parent = ":toolchain_root",
+    path = "lib/clang/21/include",
+)
+
+subdirectory(
+    name = "include-c++-v1",
+    parent = ":toolchain_root",
+    path = "include/c++/v1",
+)
+
+subdirectory(
+    name = "include-x86_64-unknown-linux-gnu-c++-v1",
+    parent = ":toolchain_root",
+    path = "include/x86_64-unknown-linux-gnu/c++/v1",
+)
+
+filegroup(
+    name = "builtin_headers",
+    srcs = [
+        ":include-c++-v1",
+        ":include-x86_64-unknown-linux-gnu-c++-v1",
+        ":lib-clang-include",
+    ],
+)
+
+# bin/clang-cl and the binaries it resolves through (clang-cl -> clang ->
+# clang-21): actions invoking the symlink need the whole chain staged.
+filegroup(
+    name = "compiler_builtins",
+    data = [
+        "bin/clang",
+        "bin/clang-21",
+        "bin/clang-cl",
+    ],
+)
+
+# All four linker names are names of (or symlinks to) the one lld binary.
+filegroup(
+    name = "linker_builtins",
+    data = [
+        "bin/ld.lld",
+        "bin/ld64.lld",
+        "bin/lld",
+        "bin/lld-link",
+    ] + glob(
+        [
+            "lib/x86_64-unknown-linux-gnu/*",
+            "lib/clang/*/lib/x86_64-unknown-linux-gnu/*",
+        ],
+    ),
+)

@@ -1,0 +1,8 @@
+{
+  "url": "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/llvm/llvm-toolchain/21.1.8/linux/amd64/static/llvm-toolchain.tar.gz",
+  "integrity": "sha256-jLoTLTgnTBFtdS9bu/g7a7fjTgb8wVy5qiR7F0u/GhY=",
+  "overlay": {
+    "BUILD.bazel": "sha256-3R5fGuGNrM3Shrczmv3aUi6/QK1TrzOyM543Q3/6IUw=",
+    "MODULE.bazel": "sha256-q/+9zfGwTgz1B8OptvL4rytiPnPy2nuwzlCUI/GEMIE="
+  }
+}

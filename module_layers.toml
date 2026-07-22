@@ -102,6 +102,7 @@ clean = [
   "smb",
   "storeonce",
   "storeonce4x",
+  "diagnostics",
   "tinkerforge",
   "zerto",
 ]

@@ -44,6 +44,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:bakery",
+        "//packages/cmk-plugin-apis:diagnostics",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-plugin-apis:password_store",

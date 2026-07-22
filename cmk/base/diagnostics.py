@@ -673,17 +673,6 @@ def _adapter_plugin_catalogue(
     """All available plugins, keyed by name (transitional adapter catalogue)"""
     plugins = [
         DiagnosticsPlugin(
-            name="parameters",
-            description=Help("The parameters this diagnostics dump was created with"),
-            sensitivity=Sensitivity.LOW,
-            topic=_TOPIC_GENERAL,
-            always=True,
-            handler=_adapt(
-                lambda ctx: [ParametersDiagnosticsElement(dict(ctx.all_parameters))],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
             name="general_info",
             description=Help(
                 "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
@@ -813,13 +802,6 @@ def _adapter_plugin_catalogue(
                 lambda _ctx: [_command_element("w"), _command_element("top")],
                 tmp_parent=tmp_parent,
             ),
-        ),
-        DiagnosticsPlugin(
-            name="environment_variables",
-            topic=_TOPIC_OPERATING_SYSTEM,
-            description=Help("The environment variables of the site user"),
-            sensitivity=Sensitivity.MEDIUM,
-            handler=_adapt(lambda _ctx: [EnvironmentDiagnosticsElement()], tmp_parent=tmp_parent),
         ),
         DiagnosticsPlugin(
             name="core_performance_metrics",
@@ -1295,30 +1277,6 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
 #   ---text dumps-----------------------------------------------------------
 
 
-class ParametersDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    def __init__(self, parameters: DiagnosticsOptionalParameters | None) -> None:
-        self.parameters = parameters
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Parameters")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("The parameters that were provided to create the diagnostics dump.")
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "parameters_%s" % str(datetime.now().timestamp())
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        return str(self.parameters)
-
-
 #   ---csv dumps-----------------------------------------------------------
 
 
@@ -1651,27 +1609,6 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementTextDump):
                 else file_content
             )
         return json.dumps(vendor_info, sort_keys=True, indent=4)
-
-
-class EnvironmentDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Environment variables")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Variables set in the site user's environment")
-
-    @override
-    @property
-    def filename(self) -> str:
-        return "environment.json"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        return json.dumps(dict(os.environ), sort_keys=True, indent=4)
 
 
 class PipFreezeDiagnosticsElement(ABCDiagnosticsElementTextDump):

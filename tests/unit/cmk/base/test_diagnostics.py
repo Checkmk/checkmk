@@ -92,6 +92,17 @@ def _tar_names(dump: diagnostics.DiagnosticsDump) -> Sequence[str]:
         return tar.getnames()
 
 
+def _full_catalogue(tmp_path: Path) -> Mapping[str, DiagnosticsPlugin]:
+    return diagnostics._load_plugin_catalogue(
+        edition=Edition.COMMUNITY,
+        loaded_config=EMPTY_CONFIG,
+        core_performance_settings=lambda x: {},
+        omd_config={},
+        tmp_parent=tmp_path,
+        logger=diagnostics.ConsoleLogger(),
+    )
+
+
 def _adapter_catalogue(tmp_path: Path) -> Mapping[str, DiagnosticsPlugin]:
     return diagnostics._adapter_plugin_catalogue(
         edition=Edition.COMMUNITY,
@@ -138,7 +149,6 @@ def test_adapter_catalogue_names(tmp_path: Path) -> None:
         "checkmk_overview",
         "core_performance_metrics",
         "disk_usage",
-        "environment_variables",
         "file_sizes",
         "general_info",
         "hw_info",
@@ -149,7 +159,6 @@ def test_adapter_catalogue_names(tmp_path: Path) -> None:
         "omd_config",
         "os_packages",
         "otel_license_counts",
-        "parameters",
         "processes_and_logins",
         "python_packages",
         "selinux",
@@ -158,7 +167,7 @@ def test_adapter_catalogue_names(tmp_path: Path) -> None:
 
 
 def test_diagnostics_dump_create(tmp_path: Path) -> None:
-    catalogue = _adapter_catalogue(tmp_path)
+    catalogue = _full_catalogue(tmp_path)
     dump, _logger = _make_dump(tmp_path, [catalogue["environment_variables"]])
 
     assert dump.dump_folder.exists()
@@ -407,41 +416,6 @@ def test_diagnostics_element_vendor_info(tmp_path: Path) -> None:
         "product_name": "Longitude 4",
         "sys_vendor": "Dull Ink",
     }
-
-
-def test_diagnostics_element_environment() -> None:
-    diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
-    assert diagnostics_element.title == "Environment variables"
-    assert diagnostics_element.description == ("Variables set in the site user's environment")
-    assert diagnostics_element.filename == "environment.json"
-
-
-def test_diagnostics_element_environment_content(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
-
-    with monkeypatch.context() as m:
-        for key, value in environment_vars.items():
-            m.setenv(key, value)
-
-        diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
-        tmp_dump_folder = tmp_path.joinpath("tmp")
-        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        filepath = next(
-            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
-        )
-
-        assert isinstance(filepath, Path)
-        assert filepath == tmp_dump_folder.joinpath("environment.json")
-
-        content = json.loads(filepath.open().read())
-        assert "France" in content
-
-        for key, value in environment_vars.items():
-            assert content[key] == value
-
-        assert content["OMD_SITE"] == cmk.ccc.site.omd_site()
 
 
 def test_diagnostics_element_filesize() -> None:

@@ -666,7 +666,7 @@ class LDAPConnectionValuespec(Dictionary):
                         ),
                     )
 
-                if not dn.lower().endswith(group_dn.lower()):
+                if "=" in dn and not dn.lower().endswith(group_dn.lower()):
                     varname = "connection_p_active_plugins_p_groups_to_roles_p_%s_1_%d" % (
                         role_id,
                         index,

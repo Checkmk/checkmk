@@ -27,21 +27,30 @@ from cmk.crypto.password import Password
 from cmk.gui.ldap_integration.ldap_connector import (
     _sync_ldap_user,
     FetchedLDAPUser,
+    LDAPAttributePluginGroupAttributes,
+    LDAPAttributePluginGroupsToRoles,
     LDAPUserConnector,
     LdapUsername,
+    LDAPUserSpec,
     SyncUsersResult,
 )
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.user_connection_config_types import (
     ActivePlugins,
     Fixed,
+    GroupsToAttributes,
+    GroupsToRoles,
+    GroupsToSync,
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
     SyncAttribute,
     UserConnectionConfig,
 )
 from cmk.gui.userdb import get_user_attributes, UserAttribute
-from cmk.gui.userdb.user_attributes import StartURLUserAttribute, TemperatureUnitUserAttribute
+from cmk.gui.userdb.user_attributes import (
+    StartURLUserAttribute,
+    TemperatureUnitUserAttribute,
+)
 from cmk.gui.utils.security_log_events import UserManagementEvent
 
 
@@ -616,3 +625,272 @@ def test_check_credentials_with_auth_expire(
         assert "pwdchangedtime" in requested_attrs, (
             f"auth_expire needs 'pwdchangedtime' but _get_user() only requested: {requested_attrs}"
         )
+
+
+def _patch_get_connection(
+    mocker: MockerFixture, mapping: dict[str, MagicMock | LDAPUserConnector]
+) -> None:
+    mocker.patch(
+        "cmk.gui.ldap_integration.ldap_connector.get_connection",
+        side_effect=mapping.get,
+    )
+
+
+@pytest.mark.parametrize(
+    "group_spec, mocked_return, expected_ldap_groups",
+    [
+        (
+            ("CN=cmk-admins,OU=groups,DC=example,DC=com", "ldap_with_groups"),
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["alice"],
+                }
+            },
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["alice"],
+                }
+            },
+        ),
+        (
+            ("cmk-admins", "ldap_with_groups"),
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["alice"],
+                }
+            },
+            {"cmk-admins": {"cn": "cmk-admins", "members": ["alice"]}},
+        ),
+        (
+            ("CN=cmk-admins,OU=groups,DC=example,DC=com", "ldap_with_groups"),
+            {
+                "CN=Cmk-Admins,OU=Groups,DC=Example,DC=Com": {
+                    "cn": "Cmk-Admins",
+                    "members": ["alice"],
+                }
+            },
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "Cmk-Admins",
+                    "members": ["alice"],
+                }
+            },
+        ),
+        (
+            ("cmk-admins", "ldap_with_groups"),
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "Cmk-Admins",
+                    "members": ["alice"],
+                }
+            },
+            {"cmk-admins": {"cn": "Cmk-Admins", "members": ["alice"]}},
+        ),
+    ],
+    ids=["dn", "cn", "dn_case", "cn_case"],
+)
+def test_fetch_needed_groups_for_groups_to_roles_with_cn_or_dn(
+    mocker: MockerFixture,
+    group_spec: tuple[str, str],
+    mocked_return: dict[str, dict[str, object]],
+    expected_ldap_groups: dict[str, dict[str, object]],
+) -> None:
+    """Test a typical use case with DN OR CN"""
+    connection = LDAPUserConnector(_test_config)
+    mocker.patch.object(
+        connection,
+        "_get_group_memberships",
+        return_value=mocked_return,
+    )
+    _patch_get_connection(mocker, {"ldap_with_groups": connection})
+
+    params = GroupsToRoles(admin=[group_spec])
+    ldap_groups = LDAPAttributePluginGroupsToRoles().fetch_needed_groups_for_groups_to_roles(
+        connection, params
+    )
+
+    assert ldap_groups == expected_ldap_groups
+
+
+@pytest.mark.parametrize(
+    "admin_value",
+    [
+        [("cmk-admins", None)],
+        ["cmk-admins"],
+        "cmk-admins",
+    ],
+    ids=["tuple", "list_str", "str"],
+)
+def test_fetch_needed_groups_for_groups_to_roles_outliers(
+    mocker: MockerFixture, admin_value: object
+) -> None:
+    """Test outlier scenarios of tuple with none, list no connection id, just string"""
+    connection = LDAPUserConnector(_test_config)
+    mocker.patch.object(
+        connection,
+        "_get_group_memberships",
+        return_value={
+            "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                "cn": "cmk-admins",
+                "members": ["alice"],
+            },
+        },
+    )
+    _patch_get_connection(mocker, {connection.id: connection})
+
+    params = GroupsToRoles(admin=admin_value)  # type: ignore[typeddict-item]
+    ldap_groups = LDAPAttributePluginGroupsToRoles().fetch_needed_groups_for_groups_to_roles(
+        connection, params
+    )
+
+    assert ldap_groups == {"cmk-admins": {"cn": "cmk-admins", "members": ["alice"]}}
+
+
+@pytest.mark.parametrize(
+    "group_spec, mocked_return, is_assigned",
+    [
+        (
+            "cmk-admins",
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["alice"],
+                }
+            },
+            True,
+        ),
+        (
+            "CN=cmk-admins,OU=groups,DC=example,DC=com",
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["alice"],
+                }
+            },
+            True,
+        ),
+        (
+            "cmk-admins",
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "Cmk-Admins",
+                    "members": ["alice"],
+                }
+            },
+            True,
+        ),
+        (
+            "CN=cmk-admins,OU=groups,DC=example,DC=com",
+            {
+                "CN=Cmk-Admins,OU=Groups,DC=Example,DC=Com": {
+                    "cn": "Cmk-Admins",
+                    "members": ["alice"],
+                }
+            },
+            True,
+        ),
+        (
+            "cmk-admins",
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["bob"],
+                }
+            },
+            False,
+        ),
+        (
+            "CN=cmk-admins,OU=groups,DC=example,DC=com",
+            {
+                "cn=cmk-admins,ou=groups,dc=example,dc=com": {
+                    "cn": "cmk-admins",
+                    "members": ["bob"],
+                }
+            },
+            False,
+        ),
+    ],
+    ids=["cn_match", "dn_match", "cn_case", "dn_case", "cn_wrong_user", "dn_wrong_user"],
+)
+def test_groups_to_roles_and_groups_to_attributes_work_with_dn_or_cn(
+    mocker: MockerFixture,
+    group_spec: str,
+    mocked_return: dict[str, dict[str, object]],
+    is_assigned: bool,
+) -> None:
+    """This test ensures that even with the group_dn and group_cn spec differences,that a user
+    providing either a DN or CN will still produce the expected user assignment based on the group.
+    Additionally, this change as better improved case insensitivity"""
+    connection = LDAPUserConnector(_test_config)
+    mocker.patch.object(connection, "_get_group_memberships", return_value=mocked_return)
+    _patch_get_connection(mocker, {connection.id: connection})
+
+    ldap_user: LDAPUserSpec = {"dn": ["alice"]}
+
+    roles_result = LDAPAttributePluginGroupsToRoles().sync_func(
+        connection,
+        dict(GroupsToRoles(admin=[(group_spec, None)])),
+        UserId("alice"),
+        ldap_user,
+        UserSpec(),
+        [],
+    )
+    attrs_result = LDAPAttributePluginGroupAttributes().sync_func(
+        connection,
+        dict(
+            GroupsToAttributes(
+                groups=[GroupsToSync(cn=group_spec, attribute=("ldap_temp_unit", "fahrenheit"))]
+            ),
+        ),
+        UserId("alice"),
+        ldap_user,
+        UserSpec(),
+        [],
+    )
+
+    assert ("admin" in roles_result.get("roles", [])) == is_assigned
+    assert (attrs_result.get("ldap_temp_unit") == "fahrenheit") == is_assigned
+
+
+def test_fetch_needed_groups_for_groups_to_roles_multiple_groups_in_one_role(
+    mocker: MockerFixture,
+) -> None:
+    """A role mapped to a list of several groups must fetch all of them, not just the last one."""
+    connection = LDAPUserConnector(_test_config)
+
+    def _memberships(
+        names: list[str], filt_attr: str | None = None, nested: bool = False
+    ) -> dict[str, dict[str, object]]:
+        return {name: {"cn": name, "members": ["alice"]} for name in names}
+
+    mocker.patch.object(connection, "_get_group_memberships", side_effect=_memberships)
+    _patch_get_connection(mocker, {connection.id: connection})
+
+    params = GroupsToRoles(admin=[("cmk-admins", None), ("cmk-superusers", None)])
+    ldap_groups = LDAPAttributePluginGroupsToRoles().fetch_needed_groups_for_groups_to_roles(
+        connection, params
+    )
+
+    assert ldap_groups == {
+        "cmk-admins": {"cn": "cmk-admins", "members": ["alice"]},
+        "cmk-superusers": {"cn": "cmk-superusers", "members": ["alice"]},
+    }
+
+
+def test_fetch_needed_groups_for_groups_to_roles_empty_group_list(
+    mocker: MockerFixture,
+) -> None:
+    """A role mapped to an empty group list must fetch nothing instead of crashing."""
+    connection = LDAPUserConnector(_test_config)
+    mocker.patch.object(connection, "_get_group_memberships", return_value={})
+    _patch_get_connection(mocker, {connection.id: connection})
+
+    params = GroupsToRoles(admin=[])
+    ldap_groups = LDAPAttributePluginGroupsToRoles().fetch_needed_groups_for_groups_to_roles(
+        connection, params
+    )
+
+    assert ldap_groups == {}

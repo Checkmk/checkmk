@@ -544,7 +544,7 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
             "the agent controller, or by manual agent updater registration call. "
             "Customizable in _Registration_ option below. See there for details."
             "<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
-            'Python 3.7 installation (or newer) with installed python packages "pyOpenSSL", '
+            'Python 3.7 installation (or newer) with installed python packages "cryptography", '
             '"requests" and "PySocks" is required on the target hosts.'
         ),
         elements={

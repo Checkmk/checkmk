@@ -8,7 +8,6 @@ from __future__ import annotations
 import abc
 import io
 import logging
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -81,84 +80,6 @@ from cmk.utils.log import console, section
 
 
 SUFFIX = ".tar.gz"
-
-
-def clickhouse_query(sql: str) -> list[str]:
-    return [
-        "clickhouse",
-        "client",
-        "--config",
-        "etc/clickhouse-server/config.xml",
-        "--user",
-        "checkmk_read_write",
-        "--secure",
-        "--format",
-        "JSONEachRow",
-        "--query",
-        sql,
-    ]
-
-
-COMPONENT_COMMANDS = [
-    # TODO: The command below will result in user-visible errors when there is no ClickHouse (e.g.
-    # for the pro edition!) or ClickHouse is there, but not enabled. This is quite bad and
-    # irritating from a user POV.
-    (
-        "otel-licenses",
-        ".json",
-        clickhouse_query("""
-SELECT count
-FROM checkmk.licensing_active_series_count
-ORDER BY bucket_start DESC
-LIMIT 1;
-        """),
-    ),
-]
-
-
-METRIC_BACKEND_COMMANDS = [
-    (
-        "metric-backend-schema",
-        ".json",
-        clickhouse_query("""
-SELECT *
-FROM system.tables
-WHERE database = 'checkmk';
-        """),
-    ),
-    (
-        "metric-backend-revision",
-        ".json",
-        clickhouse_query("""
-SELECT *
-FROM checkmk._revision;
-        """),
-    ),
-    (
-        "metric-backend-footprint",
-        ".json",
-        clickhouse_query("""
-SELECT table,
-       SUM(rows) AS rows,
-       SUM(bytes_on_disk) AS bytes_on_disk,
-       SUM(data_compressed_bytes) AS data_compressed_bytes,
-       SUM(data_uncompressed_bytes) AS data_uncompressed_bytes,
-       SUM(primary_key_size) AS primary_key_size,
-       SUM(marks_bytes) AS marks_bytes,
-       SUM(secondary_indices_compressed_bytes) AS secondary_indices_compressed_bytes,
-       SUM(secondary_indices_uncompressed_bytes) AS secondary_indices_uncompressed_bytes,
-       SUM(secondary_indices_marks_bytes) AS secondary_indices_marks_bytes,
-       MAX(modification_time) AS modification_time,
-       MAX(remove_time) AS remove_time,
-       any(engine) AS engine,
-       any(path) AS path
-FROM system.parts
-WHERE active
-  AND database = 'checkmk'
-GROUP BY table;
-        """),
-    ),
-]
 
 _CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
     "off": None,
@@ -616,11 +537,6 @@ def _adapt(
     return handle
 
 
-def _command_element(command_id: str) -> CheckmkCommandDiagnosticsElementTextDump:
-    ident, suffix, command = next(c for c in COMPONENT_COMMANDS if c[0] == command_id)
-    return CheckmkCommandDiagnosticsElementTextDump(ident, suffix, command)
-
-
 def _adapter_plugin_catalogue(
     *,
     edition: cmk_version.Edition,
@@ -629,49 +545,12 @@ def _adapter_plugin_catalogue(
     omd_config: site.OMDConfig,
     tmp_parent: Path,
 ) -> Mapping[str, DiagnosticsPlugin]:
-    """All available plugins, keyed by name (transitional adapter catalogue)"""
-    plugins = [
-        DiagnosticsPlugin(
-            name="metric_backend_state",
-            topic=_TOPIC_PERFORMANCE,
-            description=Help("Schema, revision and footprint of the metric backend database"),
-            sensitivity=Sensitivity.LOW,
-            handler=_adapt(
-                lambda _ctx: [
-                    CheckmkCommandDiagnosticsElementTextDump(ident, suffix, command)
-                    for ident, suffix, command in METRIC_BACKEND_COMMANDS
-                ],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
-            name="otel_license_counts",
-            topic=_TOPIC_LICENSING,
-            description=Help("The latest licensed active time series count of the metric backend"),
-            sensitivity=Sensitivity.LOW,
-            always=True,
-            handler=_adapt(lambda _ctx: [_command_element("otel-licenses")], tmp_parent=tmp_parent),
-        ),
-    ]
+    """All available plugins, keyed by name (transitional adapter catalogue)
 
-    if edition is not cmk_version.Edition.COMMUNITY:
-        plugins.extend(
-            [
-                DiagnosticsPlugin(
-                    name="dcd_state",
-                    topic=_TOPIC_MONITORING_CORE,
-                    description=Help(
-                        "Returns the current state of DCD cycles and batches. "
-                        "Executes the commands cmk-dcd -Bv and cmk-dcd -Cv."
-                    ),
-                    sensitivity=Sensitivity.LOW,
-                    always=True,
-                    handler=_adapt(lambda _ctx: [DCDDiagnosticsElement()], tmp_parent=tmp_parent),
-                ),
-            ],
-        )
-
-    return {plugin.name: plugin for plugin in plugins}
+    All elements are converted to discoverable plugins; the empty adapter
+    scaffolding is up for deletion.
+    """
+    return {}
 
 
 # Legacy boolean options and the plugin name they select (old wire / current CLI)
@@ -1134,50 +1013,3 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
             raise DiagnosticsElementInfo(
                 "Command %s not available on this system." % " ".join(self._command)
             )
-
-
-#   ---cee dumps------------------------------------------------------------
-
-
-class DCDDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    @property
-    def title(self) -> str:
-        return _("DCD cycles and batches.")
-
-    @property
-    def description(self) -> str:
-        return _(
-            "Returns the current state of DCD cycles and batches. "
-            "Executes the commands cmk-dcd -Bv and cmk-dcd -Cv."
-        )
-
-    @property
-    def filename(self) -> str:
-        return "dcd"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        if not (cmk_dcd_binary := shutil.which("cmk-dcd")):
-            return ""
-
-        parameters = {
-            "Batches": "-Bv",
-            "Cycles": "-Cv",
-        }
-
-        output = []
-
-        for what, parameter in parameters.items():
-            try:
-                output.append("[%s]" % what)
-                output.append(
-                    subprocess.check_output(
-                        [cmk_dcd_binary, parameter],
-                        text=True,
-                        stderr=subprocess.STDOUT,
-                    )
-                )
-            except subprocess.CalledProcessError:
-                output.append("Unable to determine %s" % what)
-
-        return "\n".join(output)

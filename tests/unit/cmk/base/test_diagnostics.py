@@ -112,10 +112,7 @@ def reset_collector_caches() -> None:
 
 
 def test_adapter_catalogue_names(tmp_path: Path) -> None:
-    assert set(_adapter_catalogue(tmp_path)) == {
-        "metric_backend_state",
-        "otel_license_counts",
-    }
+    assert not _adapter_catalogue(tmp_path)
 
 
 def test_diagnostics_dump_create(tmp_path: Path) -> None:

@@ -80,21 +80,24 @@ def _ensure_line_break(body: str) -> str:
     return body.replace("\\n", "\n")
 
 
+def _bulk_subject(contexts: list[dict[str, str]], hosts: set[str]) -> str:
+    # Use the single context subject in case there is only one context in the bulk
+    if len(contexts) > 1:
+        return utils.get_bulk_notification_subject(contexts, hosts)
+    return contexts[-1]["SUBJECT"]
+
+
 def main() -> NoReturn:
     if bulk_mode:
         parameters, contexts = utils.read_bulk_contexts()
         content_txt = "".join(construct_content(context) for context in contexts)
         hosts = {context["HOSTNAME"] for context in contexts}
 
-        # Take last context as all contexts share the same key/value pairs needed for sending mail.
-        context = contexts.pop()
-        context.update(parameters)
+        subject = _bulk_subject(contexts, hosts)
 
-        # Use the single context subject in case there is only one context in the bulk
-        if len(hosts) > 1:
-            subject = utils.get_bulk_notification_subject(contexts, hosts)
-        else:
-            subject = context["SUBJECT"]
+        # Take last context as all contexts share the same key/value pairs needed for sending mail.
+        context = contexts[-1]
+        context.update(parameters)
 
     else:
         # gather all options from env

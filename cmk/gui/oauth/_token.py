@@ -8,10 +8,12 @@ import hashlib
 import hmac
 import http.client as http_client
 import re
-import secrets
 from collections.abc import Callable
+from datetime import datetime, timedelta, UTC
 from typing import Literal, override
 
+from cmk.ccc.user import UserId
+from cmk.gui import oauth
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.oauth._auth_code_store import AuthCodeStore
@@ -32,6 +34,12 @@ _KNOWN_PARAMS = ("grant_type", "code", "client_id", "code_verifier", "redirect_u
 
 # RFC 7636 section 4.1: 43 to 128 characters from the unreserved set.
 _CODE_VERIFIER_RE = re.compile(r"[A-Za-z0-9\-._~]{43,128}")
+
+# Not tied to AuthCodeStore.AUTH_CODE_TTL (that's the short-lived code, this
+# is the token it's redeemed for). Long-lived because permissions are
+# re-checked on every request; a compromised token is bounded by that, not by
+# its own expiry.
+_ACCESS_TOKEN_TTL = timedelta(hours=48)
 
 _TokenError = Literal["invalid_request", "unsupported_grant_type", "invalid_grant"]
 
@@ -70,8 +78,9 @@ class OAuthTokenPage(Page):
     binding of the redeemed record is enforced: the PKCE S256 challenge, the
     client_id, and redirect_uri/resource if sent. A scope parameter is
     ignored; the eventual token's user and scope come only from the record.
-    Rejections follow the RFC 6749 section 5.2 error format. Still a stub:
-    the access token is a random value not yet bound to the record (CMK-36818).
+    Rejections follow the RFC 6749 section 5.2 error format. The returned
+    access token is a real, store-backed token issued for the record's user
+    (see cmk.gui.oauth.token_store).
     """
 
     def __init__(self, enabled: Callable[[], bool]) -> None:
@@ -178,8 +187,10 @@ class OAuthTokenPage(Page):
             _error("invalid_grant")
             return None
 
-        response.set_content_type("application/json")
-        response.set_data(
-            OAuthTokenResponse(access_token=secrets.token_urlsafe(32)).model_dump_json()
+        access_token = oauth.token_store().issue_token(
+            UserId(record.user_id), expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL
         )
+
+        response.set_content_type("application/json")
+        response.set_data(OAuthTokenResponse(access_token=access_token).model_dump_json())
         return None

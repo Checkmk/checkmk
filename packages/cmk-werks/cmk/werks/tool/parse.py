@@ -13,7 +13,7 @@ WerkMetadata = TypedDict(
     "WerkMetadata",
     {
         "class": str,
-        "version": str,
+        "version": str | None,
         "title": str,
         "level": str,
         "component": str,

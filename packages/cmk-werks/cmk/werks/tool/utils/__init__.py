@@ -11,6 +11,7 @@ from pydantic import RootModel, TypeAdapter
 
 from cmk.ccc.version import parse_check_mk_version
 from cmk.werks.tool import load_werk
+from cmk.werks.tool.config import RuntimeConfiguration
 from cmk.werks.tool.models import Class, Compatibility, WerkV1, WerkV2, WerkV3
 
 WerksOnDisk = RootModel[dict[int, WerkV2 | WerkV3]]
@@ -45,10 +46,12 @@ def load_precompiled_werks_file(path: Path) -> dict[int, WerkV3]:
 
 
 def get_sort_key_by_version_and_component(
-    translator: "WerkTranslator", werk: WerkV3
+    translator: "WerkTranslator",
+    rtc: RuntimeConfiguration | None,
+    werk: WerkV3,
 ) -> tuple[str | int, ...]:
     return (
-        -parse_check_mk_version(werk.version),
+        -parse_check_mk_version(resolve_version(rtc, werk.version)),
         translator.translate_component(werk.component),
         _CLASS_SORTING_VALUE.get(werk.class_, 99),
         -werk.level.value,
@@ -58,9 +61,11 @@ def get_sort_key_by_version_and_component(
     )
 
 
-def sort_by_version_and_component(werks: Iterable[WerkV3]) -> list[WerkV3]:
+def sort_by_version_and_component(
+    werks: Iterable[WerkV3], rtc: RuntimeConfiguration | None = None
+) -> list[WerkV3]:
     translator = WerkTranslator()
-    return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
+    return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator, rtc))
 
 
 # This class is used to avoid repeated construction of dictionaries, including
@@ -154,3 +159,17 @@ def write_precompiled_werks(path: Path, werks: dict[int, WerkV3]) -> None:
 
 def has_content(description: str) -> bool:
     return bool(description.strip())
+
+
+def resolve_version(rtc: RuntimeConfiguration | None, version: str | None) -> str:
+    # version can be None this means it was not yet burned (released)
+    # if this is the case we have to look the version up in defines.make
+    if version is not None:
+        return version
+
+    if rtc is None:
+        # we use some functions in the UI, where we are sure that we don't have
+        # to resolve a version, this is why we can pass None and raise then.
+        raise RuntimeError("Can not resolve Werk version!")
+
+    return rtc.get_defines_make_version()

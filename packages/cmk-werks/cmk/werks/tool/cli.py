@@ -23,7 +23,12 @@ from typing import Literal, NamedTuple
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
-from .config import Config, load_config, try_load_current_version_from_defines_make
+from .config import (
+    Config,
+    load_config,
+    RuntimeConfiguration,
+    try_load_current_version_from_defines_make,
+)
 from .format import format_as_markdown_werk
 from .id_pool import (
     add_id_to_stash,
@@ -53,6 +58,7 @@ from .in_out_elements import (
 from .models import EditionV2, EditionV3
 from .parse import WerkMetadata, WerkV3ParseResult
 from .schemas.werk import LegacyStash, Stash, Werk, WerkId
+from .utils import resolve_version
 
 WerkVersion = Literal["v1", "markdown"]
 
@@ -499,8 +505,12 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
+    # we os.chdir to the .werks folder quite early on
+    # but in this case we need the repo root:
+    rtc = RuntimeConfiguration(Path(".").parent)
+
     werks: list[Werk] = list(load_werks().values())
-    versions = sorted({werk.content.metadata["version"] for werk in werks})
+    versions = sorted({resolve_version(rtc, werk.content.metadata["version"]) for werk in werks})
 
     filters: dict[str, list[str]] = {}
 

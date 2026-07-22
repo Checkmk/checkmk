@@ -8,6 +8,7 @@
 import argparse
 import datetime
 import difflib
+import io
 import json
 import logging
 import re
@@ -28,6 +29,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 from cmk.ccc.version import Version
 from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
 from cmk.werks.tool import load_werk
+from cmk.werks.tool.config import try_load_version_from_defines_make_content
 from cmk.werks.tool.models import Class, Level, WerkV3
 from cmk.werks.tool.utils import WerkTranslator
 
@@ -362,12 +364,12 @@ def git_notes_push(repo: Repo, args: Args) -> None:
 
 def send_mail(
     werk: WerkV3,
+    base_version: str,
     change: WerkChange,
     template: Template,
     translator: WerkTranslator,
     args: Args,
 ) -> None:
-    base_version = str(Version.from_str(werk.version).base)
 
     mail_addresses = build_mail_addresses(werk, args)
 
@@ -399,6 +401,18 @@ def send_mail(
             sys.stdout.write(
                 textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True) + "\n"
             )
+
+
+def _load_base_version(commit: Commit) -> str:
+    defines_make = commit.tree / "defines.make"
+    defines_make_version = try_load_version_from_defines_make_content(
+        io.BytesIO(defines_make.data_stream.read())
+    )
+    if defines_make_version is None:
+        raise RuntimeError(f"Could not load version from defines.make in commit {commit}")
+    # the version we read from defines.make is not the version this werk will be released with.
+    # we can only use the baseversion of this version! everything else would be a lie!
+    return str(Version.from_str(defines_make_version).base)
 
 
 def main(argparse_args: argparse.Namespace) -> None:
@@ -466,7 +480,11 @@ def main(argparse_args: argparse.Namespace) -> None:
             sys.stdout.write(f"DRY RUN: add note to commit {werk_commit.commit}\n")
 
         for change, werk in change_with_werk:
-            send_mail(werk, change, template, translator, args)
+            if (werk_version := werk.version) is not None:
+                base_version = str(Version.from_str(werk_version).base)
+            else:
+                base_version = _load_base_version(werk_commit.commit)
+            send_mail(werk, base_version, change, template, translator, args)
 
         if args.do_push_git_notes:
             git_notes_push(repo, args)

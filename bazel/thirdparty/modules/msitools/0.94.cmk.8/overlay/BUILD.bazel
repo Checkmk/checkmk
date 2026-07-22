@@ -1,4 +1,7 @@
 load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@@//bazel/rules:patchelf.bzl", "set_runpath")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 dependency_info(
@@ -74,4 +77,86 @@ configure_make(
             "//conditions:default": [],
         },
     ),
+)
+
+filegroup(
+    name = "msibuild_fg",
+    srcs = [":msitools"],
+    output_group = "msibuild",
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "msiinfo_fg",
+    srcs = [":msitools"],
+    output_group = "msiinfo",
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "libmsi_so_fg",
+    srcs = [":msitools"],
+    output_group = "libmsi.so.0.0.0",
+)
+
+set_runpath(
+    name = "msibuild_runpath",
+    srcs = [":msibuild_fg"],
+    rpaths = ["${ORIGIN}/../lib"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+set_runpath(
+    name = "msiinfo_runpath",
+    srcs = [":msiinfo_fg"],
+    rpaths = ["${ORIGIN}/../lib"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+set_runpath(
+    name = "lib",
+    srcs = [":libmsi_so_fg"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+copy_file(
+    name = "libmsi_so_symlink_fs",
+    src = ":lib",
+    out = "lib/libmsi.so.0",  # SONAME
+    allow_symlink = True,
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "msibuild_runpath_fg",
+    srcs = [":msibuild_runpath"],
+)
+
+filegroup(
+    name = "msiinfo_runpath_fg",
+    srcs = [":msiinfo_runpath"],
+)
+
+native_binary(
+    name = "msibuild",
+    src = ":msibuild_runpath_fg",
+    data = [
+        ":lib",
+        ":libmsi_so_symlink_fs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+native_binary(
+    name = "msiinfo",
+    src = ":msiinfo_runpath_fg",
+    data = [
+        ":lib",
+        ":libmsi_so_symlink_fs",
+    ],
+    visibility = ["//visibility:public"],
 )

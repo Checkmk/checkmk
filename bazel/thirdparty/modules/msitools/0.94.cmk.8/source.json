@@ -3,8 +3,8 @@
   "strip_prefix": "msitools-0.94",
   "url": "http://ftp.gnome.org/pub/GNOME/sources/msitools/0.94/msitools-0.94.tar.xz",
   "overlay": {
-    "BUILD.bazel": "sha256-yEP26riZKD3NwoJwOvloTDBs+kLa6psGv4+JlrpMT3U=",
-    "MODULE.bazel": "sha256-jU6wtzh5ZeL8wi1w92MK+8KZ1Q1fTkDTIxWTdD8fJLs="
+    "BUILD.bazel": "sha256-Dm5WH5GUQV5G6SNVXisdcCmzrwimsEnMuu8q4JBRfIA=",
+    "MODULE.bazel": "sha256-/VI12unjLkqHMxgDTGVGYz/SkiDtY6Mle9I4r2PJ+XA="
   },
   "patches": {
     "0001-configure_remove_wixl.patch": "sha256-IcS0FzkeqmSYR5NdiOAOSSRtcpehmqFu2y1FmPnYfT8=",

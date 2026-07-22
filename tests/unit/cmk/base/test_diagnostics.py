@@ -856,106 +856,25 @@ def test_diagnostics_element_checkmk_overview_content(tmp_path: Path) -> None:
         assert row in rows
 
 
-@pytest.mark.parametrize(
-    "diag_elem, title, description",
-    [
-        (
-            diagnostics.CheckmkConfigFilesDiagnosticsElement,
-            "Checkmk configuration files",
-            "Configuration files ('*.mk' or '*.conf') from etc/checkmk:",
-        ),
-        (
-            diagnostics.CheckmkLogFilesDiagnosticsElement,
-            "Checkmk log files",
-            "Log files ('*.log' or '*.state') from var/log:",
-        ),
-    ],
-)
-def test_diagnostics_element_checkmk_files(
-    diag_elem: type[diagnostics.ABCCheckmkFilesDiagnosticsElement],
-    title: str,
-    description: str,
-    tmp_path: Path,
-) -> None:
-    files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
-    diagnostics_element = diag_elem(files)
-    assert diagnostics_element.title == title
-    assert diagnostics_element.description == (f"{description} {', '.join(files)}")
+def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
+    """The old wire's explicit file lists are served by the native file plugins"""
+    config_dir = tmp_path / "etc/check_mk/test"
+    config_dir.mkdir(parents=True)
+    (config_dir / "test.conf").write_text("testvar = testvalue")
 
-
-@pytest.mark.parametrize(
-    "diag_elem",
-    [
-        diagnostics.CheckmkConfigFilesDiagnosticsElement,
-        diagnostics.CheckmkLogFilesDiagnosticsElement,
-    ],
-)
-def test_diagnostics_element_checkmk_files_error(
-    tmp_path: Path,
-    diag_elem: (
-        type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
-        | type[diagnostics.CheckmkLogFilesDiagnosticsElement]
-    ),
-) -> None:
-    short_test_conf_filepath = "/no/such/file"
-    diagnostics_element = diag_elem([short_test_conf_filepath])
-    tmp_dump_folder = tmp_path.joinpath("tmp")
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-
-    with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(
-            diagnostics_element.add_or_get_files(
-                omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
-            )
-        )
-        assert "No such files %s" % short_test_conf_filepath == str(e)
-
-
-@pytest.mark.parametrize(
-    "diag_elem, test_dir, test_filename",
-    [
-        (
-            diagnostics.CheckmkConfigFilesDiagnosticsElement,
-            cmk.utils.paths.default_config_dir,
-            "test.conf",
-        ),
-        (
-            diagnostics.CheckmkLogFilesDiagnosticsElement,
-            cmk.utils.paths.log_dir,
-            "test.log",
-        ),
-    ],
-    ids=["conf", "log"],
-)
-def test_diagnostics_element_checkmk_files_content(
-    tmp_path: Path,
-    diag_elem: type[diagnostics.ABCCheckmkFilesDiagnosticsElement],
-    test_dir: Path,
-    test_filename: str,
-) -> None:
-    test_conf_dir = Path(test_dir) / "test"
-    test_conf_dir.mkdir(parents=True, exist_ok=True)
-    test_conf_filepath = test_conf_dir.joinpath(test_filename)
-    with test_conf_filepath.open("w", encoding="utf-8") as f:
-        f.write("testvar = testvalue")
-
-    relative_path = str(Path(test_dir).relative_to(cmk.utils.paths.omd_root))
-    short_test_conf_filepath = str(Path(test_conf_filepath).relative_to(test_dir))
-    diagnostics_element = diag_elem([short_test_conf_filepath])
-    tmp_dump_folder = tmp_path / "tmp"
-    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-    filepath = next(
-        diagnostics_element.add_or_get_files(
-            omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
-        )
+    catalogue = _full_catalogue(tmp_path)
+    legacy_plugins = diagnostics._legacy_file_plugins(
+        {"checkmk-config-files": ["test/test.conf", "no/such/file.mk"]},
+        catalogue=catalogue,
+        edition=Edition.COMMUNITY,
+        tmp_parent=tmp_path,
     )
+    assert [p.name for p in legacy_plugins] == ["config_files"]
 
-    assert filepath == tmp_dump_folder.joinpath(f"{relative_path}/test/{test_filename}")
+    dump, logger = _make_dump(tmp_path, list(legacy_plugins))
 
-    with filepath.open("r", encoding="utf-8") as f:
-        content = f.read()
-
-    assert content == "testvar = testvalue"
+    assert "etc/check_mk/test/test.conf" in _tar_names(dump)
+    assert "No such files: no/such/file.mk" in logger.content()
 
 
 @pytest.mark.parametrize(

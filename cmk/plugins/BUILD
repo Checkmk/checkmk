@@ -40,6 +40,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-diagnostics:engine",
         "//packages/cmk-ec:syslog",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",

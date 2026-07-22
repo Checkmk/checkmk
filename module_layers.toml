@@ -102,7 +102,6 @@ clean = [
   "smb",
   "storeonce",
   "storeonce4x",
-  "diagnostics",
   "tinkerforge",
   "zerto",
 ]
@@ -145,6 +144,15 @@ allows = [
   "cmk.bakery",
 ]
 
+
+[plugin_families.violations.diagnostics]
+allows = [
+  "@livestatus_client",
+  "cmk.ccc.store",
+  # TODO: remove once the GUI is migrated and the classification table moved
+  # into this family's lib
+  "cmk.diagnostics.engine",
+]
 
 # These plugins are tightly coupled to Checkmk.
 # We cannot expect them to not depend on the core product.

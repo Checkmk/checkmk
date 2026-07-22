@@ -57,7 +57,6 @@ from cmk.diagnostics.engine import (
     DiagnosticsModesParameters,
     DiagnosticsOptionalParameters,
     DumpSelection,
-    FILE_MAP_CONFIG,
     FILE_MAP_CORE,
     FILE_MAP_LICENSING,
     FILE_MAP_LOG,
@@ -427,9 +426,7 @@ def create_diagnostics_dump(
         selected_names=selected_names,
         checkmk_server_host=checkmk_server_host,
         all_parameters=parameters or {},
-        extra_plugins=_legacy_file_plugins(
-            parameters or {}, edition=app.edition, tmp_parent=diagnostics_dir
-        ),
+        legacy_file_parameters=parameters or {},
         loading_result=loading_result,
     )
 
@@ -452,7 +449,7 @@ def create_diagnostics_dump_v2(
             "plugins": sorted(selection.plugins),
             "checkmk_server_host": selection.checkmk_server_host,
         },
-        extra_plugins=(),
+        legacy_file_parameters=None,
         loading_result=loading_result,
     )
 
@@ -465,7 +462,7 @@ def _create_dump(
     selected_names: set[str],
     checkmk_server_host: str,
     all_parameters: Mapping[str, object],
-    extra_plugins: Sequence[DiagnosticsPlugin],
+    legacy_file_parameters: DiagnosticsOptionalParameters | None,
     loading_result: LoadingResult | None,
 ) -> DiagnosticsDump:
     log.logger.setLevel(logging.INFO)
@@ -486,6 +483,17 @@ def _create_dump(
     for unknown in sorted(selected_names - set(catalogue)):
         message = f"Plugin '{unknown}' is not available on this site"
         logger.info(message)
+
+    extra_plugins = (
+        _legacy_file_plugins(
+            legacy_file_parameters,
+            catalogue=catalogue,
+            edition=app.edition,
+            tmp_parent=diagnostics_dir,
+        )
+        if legacy_file_parameters is not None
+        else ()
+    )
 
     context = CollectContext(
         omd_root=omd_root,
@@ -983,9 +991,33 @@ def _legacy_selection(parameters: DiagnosticsOptionalParameters) -> tuple[set[st
     return selected, checkmk_server_host
 
 
+def _filter_by_arcname(
+    handlers: Sequence[Callable[[CollectContext], Iterable[DumpItem]]],
+    base: PurePosixPath,
+    requested: Sequence[str],
+) -> Callable[[CollectContext], Iterable[DumpItem]]:
+    """Serve an explicit file list of the old wire from the native file plugins"""
+
+    def handler(context: CollectContext) -> Iterable[DumpItem]:
+        remaining = set(requested)
+        for native_handler in handlers:
+            for item in native_handler(context):
+                if not item.path.is_relative_to(base):
+                    continue
+                rel = str(item.path.relative_to(base))
+                if rel in remaining:
+                    remaining.discard(rel)
+                    yield item
+        if remaining:
+            raise CollectError("No such files: %s" % ", ".join(sorted(remaining)))
+
+    return handler
+
+
 def _legacy_file_plugins(
     parameters: DiagnosticsOptionalParameters,
     *,
+    catalogue: Mapping[str, DiagnosticsPlugin],
     edition: cmk_version.Edition,
     tmp_parent: Path,
 ) -> Sequence[DiagnosticsPlugin]:
@@ -998,9 +1030,17 @@ def _legacy_file_plugins(
                 description=Help("Checkmk configuration files"),
                 sensitivity=Sensitivity.HIGH,
                 topic=_TOPIC_CONFIGURATION,
-                handler=_adapt(
-                    lambda _ctx: [CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files)],
-                    tmp_parent=tmp_parent,
+                handler=_filter_by_arcname(
+                    [
+                        catalogue[name].handler
+                        for name in (
+                            "config_files_low",
+                            "config_files_medium",
+                            "config_files_high",
+                        )
+                    ],
+                    PurePosixPath("etc/check_mk"),
+                    rel_checkmk_config_files,
                 ),
             )
         )
@@ -1978,25 +2018,6 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
-
-
-class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Checkmk configuration files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Configuration files ('*.mk' or '*.conf') from etc/checkmk: %(files)s") % {
-            "files": ", ".join(self.rel_checkmk_files)
-        }
-
-    @override
-    @property
-    def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_CONFIG
 
 
 class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):

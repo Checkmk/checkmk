@@ -52,7 +52,7 @@ class NetworkFSState(Enum):
 
 
 NetworkFSStateMapping: Mapping[NetworkFSState, State] = {
-    NetworkFSState.PERMISSION_DENIED: State.CRIT,
+    NetworkFSState.PERMISSION_DENIED: State.UNKNOWN,
     NetworkFSState.HANGING: State.CRIT,
     NetworkFSState.UNKNOWN: State.CRIT,
     NetworkFSState.OK: State.OK,

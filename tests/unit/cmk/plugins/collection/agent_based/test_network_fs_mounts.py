@@ -157,7 +157,7 @@ def test_network_fs_mounts_discovery(
         (  # Mountpoint with spaces and permission denied
             [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
             "/var/dba export",
-            [Result(state=State.CRIT, summary="State: Permission denied")],
+            [Result(state=State.UNKNOWN, summary="State: Permission denied")],
         ),
         (
             [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
@@ -295,6 +295,34 @@ def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(monkeypatch) 
                 Result(state=State.OK, summary="Used: 37.06% - 85.8 GiB of 232 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.88%"),
+            ],
+        ),
+        (  # mount the agent user cannot read -> UNKNOWN, not CRIT
+            [
+                [
+                    """
+                    {"mountpoint": "/opt/app/avaloq", "source": "pnfsv4filer:/avaloqprod", "state": "Permission denied", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}
+                    """
+                ]
+            ],
+            "/opt/app/avaloq",
+            [
+                Result(state=State.OK, summary="Source: pnfsv4filer:/avaloqprod"),
+                Result(state=State.UNKNOWN, summary="State: Permission denied"),
+            ],
+        ),
+        (  # a genuinely hanging mount stays CRIT
+            [
+                [
+                    """
+                    {"mountpoint": "/opt/app/hang", "source": "pnfsv4filer:/hang", "state": "hanging", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}
+                    """
+                ]
+            ],
+            "/opt/app/hang",
+            [
+                Result(state=State.OK, summary="Source: pnfsv4filer:/hang"),
+                Result(state=State.CRIT, summary="State: Hanging"),
             ],
         ),
     ],

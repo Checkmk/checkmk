@@ -16,7 +16,6 @@
 
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
 from typing import (
     NotRequired,
     TypedDict,
@@ -41,65 +40,17 @@ from cmk.agent_based.v2 import (
     State,
     StringByteTable,
 )
-
-TYPE_MAPPING = {
-    "1": ("current", "RMS"),
-    "2": ("peak", "Peak"),
-    "3": ("unbalanced", "Unbalanced"),
-    "4": ("voltage", "RMS"),
-    "5": ("power", "Active"),
-    "6": ("appower", "Apparent"),
-    # power factor is defined as the ratio of the real power flowing
-    # to the load to the apparent power
-    "7": ("power_factor", "Power Factor"),
-    "8": ("energy", "Active"),
-    "9": ("energy", "Apparent"),
-    "10": ("temp", ""),
-    "11": ("humidity", ""),
-    "12": ("airflow", ""),
-    "13": ("pressure_pa", "Air"),
-    "14": ("binary", "On/Off"),
-    "15": ("binary", "Trip"),
-    "16": ("binary", "Vibration"),
-    "17": ("binary", "Water Detector"),
-    "18": ("binary", "Smoke Detector"),
-    "19": ("binary", ""),
-    "20": ("binary", "Contact"),
-    "21": ("fanspeed", ""),
-    "26": ("residual_current", "Residual Current"),
-    "30": ("", "Other"),
-    "31": ("", "None"),
-}
-
-UNIT_MAPPING = {
-    "-1": "",
-    "0": " Other",
-    "1": " V",
-    "2": " A",
-    "3": " W",
-    "4": " VA",
-    "5": " Wh",
-    "6": " VAh",
-    # for dev_unit in check_temperature
-    "7": "c",
-    "8": " hz",
-    "9": "%",
-    "10": " m/s",
-    "11": " Pa",
-    # 1 psi = 6894,757293168 Pa
-    "12": " psi",
-    "13": " g",
-    # for dev_unit in check_temperature
-    "14": "f",
-    "15": " ft",
-    "16": " inch",
-    "17": " cm",
-    "18": " m",
-    "19": " RPM",
-}
-
-
-RESIDUAL_BITMASK = 0b01000000
+from cmk.plugins.raritan import (
+    InletDeviceCapabilities,
+    InletPoleCapabilities,
+    InletSensorEnabledThresholds,
+    PDU,
+    RaritanData,
+    Sensor,
+    SensorValues,
+    TYPE_MAPPING,
+    UNIT_MAPPING,
+)
 
 _RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
     "%": (
@@ -119,46 +70,6 @@ class Params(TypedDict):
     residual_levels: NotRequired[NoLevelsT | FixedLevelsT]
 
 
-@dataclass(frozen=True, kw_only=True)
-class PDU:
-    pdu_index: str
-    label: str
-    name: str
-    plug: str
-    pole_count: str
-    rated_voltage: str
-    rated_current: str
-    rated_frequency: str
-    rated_va: str
-    plug_descriptor: str
-    enable_state: str
-    device_capabilities: list[int]
-    pole_capabilities: list[int]
-
-
-@dataclass(frozen=True, kw_only=True)
-class SensorValues:
-    sensor_value: float
-    sensor_upper_crit: float
-    sensor_upper_warn: float
-
-
-@dataclass(frozen=True, kw_only=True)
-class Sensor:
-    availability: str
-    sensor_name: str
-    sensor_type: str
-    sensor_values: SensorValues
-    sensor_unit: str
-    sensor_thresholds: list[int]
-
-
-@dataclass(kw_only=True)
-class RaritanData:
-    pdu: PDU
-    sensors: dict[str, dict[str, Sensor]] = field(default_factory=dict)
-
-
 def _parse_pdu_data(raw_pdu_data: StringByteTable) -> PDU:
     pdu_data = raw_pdu_data[0]
 
@@ -172,8 +83,8 @@ def _parse_pdu_data(raw_pdu_data: StringByteTable) -> PDU:
         rated_current=str(pdu_data[6]),
         rated_frequency=str(pdu_data[7]),
         rated_va=str(pdu_data[8]),
-        device_capabilities=pdu_data[9] if isinstance(pdu_data[9], list) else [int(pdu_data[9])],
-        pole_capabilities=pdu_data[10] if isinstance(pdu_data[10], list) else [int(pdu_data[10])],
+        device_capabilities=InletDeviceCapabilities.from_snmp_bits(pdu_data[9]),
+        pole_capabilities=InletPoleCapabilities.from_snmp_bits(pdu_data[10]),
         plug_descriptor=str(pdu_data[11]),
         enable_state=str(pdu_data[12]),
     )
@@ -235,9 +146,7 @@ def _parse_sensor_data(sensor_data: StringByteTable) -> dict[str, dict[str, Sens
                 decimal_digits_int,
             ),
             sensor_unit=sensor_unit.strip(),
-            sensor_thresholds=enabled_thresholds
-            if isinstance(enabled_thresholds, list)
-            else [int(enabled_thresholds)],
+            sensor_thresholds=InletSensorEnabledThresholds.from_snmp_bits(enabled_thresholds),
         )
 
     return sensors
@@ -250,9 +159,9 @@ def parse_raritan_inlet_sensors(
         return None
 
     section = RaritanData(pdu=_parse_pdu_data(raw_pdu_data))
-    if int(section.pdu.device_capabilities[3]) & RESIDUAL_BITMASK:
+    if section.pdu.device_capabilities.residualCurrent:
         section.sensors.update(_parse_sensor_data(string_table[1]))
-    if int(section.pdu.pole_capabilities[3]) & RESIDUAL_BITMASK:
+    if section.pdu.pole_capabilities.residualCurrent:
         section.sensors.update(_parse_sensor_data(string_table[2]))
 
     return section
@@ -346,16 +255,25 @@ def _create_levels(
     params: Params,
     sensor_data: Sensor,
 ) -> NoLevelsT | FixedLevelsT:
-    thresholds = sensor_data.sensor_thresholds[0]
-    has_warn = thresholds & 0b00100000 and sensor_data.sensor_values.sensor_upper_warn != 0
-    has_crit = thresholds & 0b00010000 and sensor_data.sensor_values.sensor_upper_crit != 0
 
-    if has_warn or has_crit:
-        levels_upper_warn = sensor_data.sensor_values.sensor_upper_warn if has_warn else None
-        levels_upper_crit = sensor_data.sensor_values.sensor_upper_crit if has_crit else None
-        return ("fixed", (levels_upper_warn, levels_upper_crit))
+    has_warn = (
+        sensor_data.sensor_thresholds.upperWarning
+        and sensor_data.sensor_values.sensor_upper_warn != 0
+    )
+    has_crit = (
+        sensor_data.sensor_thresholds.upperCritical
+        and sensor_data.sensor_values.sensor_upper_crit != 0
+    )
 
-    return params.get("residual_levels", ("no_levels", None))
+    if params.get("residual_levels", False):
+        levels_upper = params.get("residual_levels", ("no_levels", None))
+    elif has_warn or has_crit:
+        levels_upper_warn = sensor_data.sensor_values.sensor_upper_warn if has_warn else has_crit
+        levels_upper_crit = sensor_data.sensor_values.sensor_upper_crit if has_crit else has_warn
+        levels_upper = ("fixed", (levels_upper_warn, levels_upper_crit))
+    else:
+        levels_upper = ("no_levels", None)
+    return levels_upper
 
 
 def _check_missing_levels(

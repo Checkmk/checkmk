@@ -8,7 +8,7 @@ from collections.abc import Iterator
 from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 
-def _sort_keys(key_value: tuple[str, str]) -> int:
+def _sort_keys(key_value: tuple[str, object]) -> int:
     key, _value = key_value
     try:
         return [

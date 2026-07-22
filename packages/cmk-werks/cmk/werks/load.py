@@ -44,10 +44,9 @@ VALID_TAGS = {
 
 def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
     # TODO: c&p from v2
-    werk = parsed.metadata
-    werk["__version__"] = "3"
-    werk["description"] = markdown_to_html(parsed.description)
-    _check_html(werk["description"])
+    description = markdown_to_html(parsed.description)
+    _check_html(description)
+    werk = {**parsed.metadata, "__version__": "3", "description": description}
 
     try:
         result = WerkV3.model_validate(werk)
@@ -59,11 +58,9 @@ def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
 
 
 def load_werk_v2(parsed: WerkV2ParseResult) -> WerkV2:
-    werk = parsed.metadata
-    werk["__version__"] = "2"
-
-    werk["description"] = markdown_to_html(parsed.description)
-    _check_html(werk["description"])
+    description = markdown_to_html(parsed.description)
+    _check_html(description)
+    werk = {**parsed.metadata, "__version__": "2", "description": description}
 
     try:
         result = WerkV2.model_validate(werk)

@@ -4,19 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
 from . import constants
 from .error import WerkError
 
+WerkMetadata = TypedDict(
+    "WerkMetadata",
+    {
+        "class": str,
+        "version": str,
+        "title": str,
+        "level": str,
+        "component": str,
+        "id": str,
+        "edition": str,
+        "date": str,
+        "compatible": str,
+        "effort": str,
+    },
+    total=False,
+)
+
 
 class WerkV3ParseResult(NamedTuple):
-    metadata: dict[str, str]
+    metadata: WerkMetadata
     description: str
 
 
 class WerkV2ParseResult(NamedTuple):
-    metadata: dict[str, str]
+    metadata: WerkMetadata
     description: str
 
 
@@ -72,8 +89,8 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
     return WerkV2ParseResult(*_parse_markdown_werk(content, werk_id))
 
 
-def _parse_markdown_werk(content: str, werk_id: str) -> tuple[dict[str, str], str]:
-    metadata: dict[str, str] = {
+def _parse_markdown_werk(content: str, werk_id: str) -> tuple[WerkMetadata, str]:
+    metadata: WerkMetadata = {
         "id": werk_id,
     }
 
@@ -102,7 +119,7 @@ def _parse_markdown_werk(content: str, werk_id: str) -> tuple[dict[str, str], st
     metadata["title"] = title.removeprefix("#").strip()
 
     # we parse the table on our own, converting it to html and parsing the html is quite slow
-    metadata.update(markdown_table_to_dict(md_table))
+    metadata.update(markdown_table_to_dict(md_table))  # type: ignore[typeddict-item]
     return metadata, md_description
 
 

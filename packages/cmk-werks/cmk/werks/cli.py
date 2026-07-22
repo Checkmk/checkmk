@@ -61,8 +61,6 @@ from .schemas.werk import (
 
 WerkVersion = Literal["v1", "markdown"]
 
-WerkMetadata = dict[str, str]
-
 WERK_ID_RANGES = {
     # start is inclusive, end is exclusive, as it is in range()
     "cma": [(9_000, 10_000)],
@@ -503,7 +501,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     for werk in werks:
         skip = False
         for tp, entries in filters.items():
-            if werk.content.metadata[tp] not in entries:
+            if werk.content.metadata[tp] not in entries:  # type: ignore[literal-required]
                 skip = True
                 break
         if not skip:
@@ -668,7 +666,7 @@ def main_new(args: argparse.Namespace) -> None:
     stash = load_or_update_stash(paths, WerkIDsClient(get_config().werk_ids_server_url))
     werk_id = pick_id_from_stash(stash, get_config().project)
 
-    metadata: WerkMetadata = {}
+    metadata: dict[str, str] = {}
     metadata["id"] = str(werk_id)
 
     # this is the metadata format of werkv1

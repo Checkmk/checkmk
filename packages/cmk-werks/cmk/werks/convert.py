@@ -7,14 +7,14 @@ import datetime
 from collections.abc import Iterator
 
 from .markup import nowiki_to_markdown
-from .parse import parse_werk_v1
+from .parse import parse_werk_v1, WerkMetadata
 
 
-def _table_entry(key: str, value: str) -> str:
+def _table_entry(key: str, value: object) -> str:
     return f"{key} | {value}"
 
 
-def werkv1_metadata_to_markdown_werk_metadata(metadata: dict[str, str]) -> dict[str, str]:
+def werkv1_metadata_to_markdown_werk_metadata(metadata: dict[str, str]) -> WerkMetadata:
     metadata = metadata.copy()
     metadata.pop("knowledge", None)  # removed field
     metadata.pop("state", None)  # removed field
@@ -35,7 +35,7 @@ def werkv1_metadata_to_markdown_werk_metadata(metadata: dict[str, str]) -> dict[
     if (date := metadata.get("date")) is not None:
         metadata["date"] = datetime.datetime.fromtimestamp(float(date), tz=datetime.UTC).isoformat()
 
-    return metadata
+    return metadata  # type: ignore[return-value]
 
 
 def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:

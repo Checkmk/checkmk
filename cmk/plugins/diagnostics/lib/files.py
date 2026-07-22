@@ -17,7 +17,7 @@ from cmk.diagnostics.engine import (
     FileMapConfig,
     get_checkmk_file_info,
 )
-from cmk.diagnostics.internal import Sensitivity
+from cmk.diagnostics.internal import DumpItem, Sensitivity, VerbatimCopy
 
 _SENSITIVITY_OF = {
     CheckmkFileSensitivity.insensitive: Sensitivity.LOW,
@@ -37,6 +37,14 @@ class ClassifiedFile:
     rel_filepath: Path
     """Path relative to the category's base folder (classification key)"""
     sensitivity: Sensitivity
+
+
+def walk_verbatim(root: Path, arcbase: PurePosixPath) -> Iterator[DumpItem]:
+    """Yield every file below root as a verbatim copy under arcbase"""
+    for path, _dirs, files in root.walk():
+        for file in files:
+            source = path / file
+            yield DumpItem(arcbase / source.relative_to(root), VerbatimCopy(source))
 
 
 def classified_files(omd_root: Path, file_map: FileMapConfig) -> Iterator[ClassifiedFile]:

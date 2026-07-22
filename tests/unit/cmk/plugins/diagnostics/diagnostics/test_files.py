@@ -10,6 +10,7 @@ from cmk.plugins.diagnostics.diagnostics.files import (
     diagnostics_plugin_config_files_high,
     diagnostics_plugin_config_files_low,
     diagnostics_plugin_config_files_medium,
+    diagnostics_plugin_log_files_medium,
 )
 
 
@@ -72,3 +73,16 @@ def test_config_files_are_redacted(tmp_path: Path) -> None:
     assert isinstance(content, GeneratedContent)
     assert b"very_secret" not in content.data
     assert REDACT_STRING.encode() in content.data
+
+
+def test_log_files_content(tmp_path: Path) -> None:
+    log_dir = tmp_path / "var/log"
+    log_dir.mkdir(parents=True)
+    (log_dir / "web.log").write_text("a log line")
+
+    context = _make_context(tmp_path)
+    items = {i.path: i.content for i in diagnostics_plugin_log_files_medium.handler(context)}
+
+    content = items[PurePosixPath("var/log/web.log")]
+    assert isinstance(content, GeneratedContent)
+    assert content.data == b"a log line"

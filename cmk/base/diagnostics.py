@@ -59,7 +59,6 @@ from cmk.diagnostics.engine import (
     DumpSelection,
     FILE_MAP_CORE,
     FILE_MAP_LICENSING,
-    FILE_MAP_LOG,
     FileMapConfig,
     load_diagnostics_plugins,
     OPT_APACHE_CONFIG,
@@ -190,26 +189,6 @@ GROUP BY table;
         """),
     ),
 ]
-
-COMPONENT_DIRECTORIES = {
-    OPT_APACHE_CONFIG: {
-        "abs_dirs": [
-            "/etc/apache2",
-            "/etc/httpd",
-            "/opt/omd/apache",
-        ],
-        "rel_dirs": [
-            "etc/apache",
-        ],
-    },
-    OPT_OMD_CONFIG: {
-        "abs_dirs": [],
-        "rel_dirs": [
-            "etc/omd",
-        ],
-    },
-}
-
 
 _CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
     "off": None,
@@ -871,25 +850,6 @@ def _adapter_plugin_catalogue(
             handler=_adapt(lambda _ctx: [CrashDumpsDiagnosticsElement()], tmp_parent=tmp_parent),
         ),
         DiagnosticsPlugin(
-            name="apache_config",
-            topic=_TOPIC_CONFIGURATION,
-            description=Help("The Apache configuration of the operating system and the site"),
-            sensitivity=Sensitivity.MEDIUM,
-            handler=_adapt(
-                lambda _ctx: [
-                    *(
-                        CheckmkDirectoryDiagnosticsElement(directory, rel=False)
-                        for directory in COMPONENT_DIRECTORIES[OPT_APACHE_CONFIG]["abs_dirs"]
-                    ),
-                    *(
-                        CheckmkDirectoryDiagnosticsElement(directory, rel=True)
-                        for directory in COMPONENT_DIRECTORIES[OPT_APACHE_CONFIG]["rel_dirs"]
-                    ),
-                ],
-                tmp_parent=tmp_parent,
-            ),
-        ),
-        DiagnosticsPlugin(
             name="bi_runtime_data",
             topic=_TOPIC_BUSINESS_INTELLIGENCE,
             description=Help("Cached data of Business Intelligence aggregations"),
@@ -1052,9 +1012,13 @@ def _legacy_file_plugins(
                 description=Help("Checkmk log files"),
                 sensitivity=Sensitivity.HIGH,
                 topic=_TOPIC_LOGS,
-                handler=_adapt(
-                    lambda _ctx: [CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files)],
-                    tmp_parent=tmp_parent,
+                handler=_filter_by_arcname(
+                    [
+                        catalogue[name].handler
+                        for name in ("log_files_low", "log_files_medium", "log_files_high")
+                    ],
+                    PurePosixPath("var/log"),
+                    rel_checkmk_log_files,
                 ),
             )
         )
@@ -2018,25 +1982,6 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
-
-
-class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
-    @override
-    @property
-    def title(self) -> str:
-        return _("Checkmk log files")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Log files ('*.log' or '*.state') from var/log: %(files)s") % {
-            "files": ", ".join(self.rel_checkmk_files)
-        }
-
-    @override
-    @property
-    def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_LOG
 
 
 #   ---directory dumps------------------------------------------------------------

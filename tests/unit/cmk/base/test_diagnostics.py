@@ -143,7 +143,6 @@ def _fake_local_connection(host_list: Sequence[Sequence[str]]) -> Callable:
 
 def test_adapter_catalogue_names(tmp_path: Path) -> None:
     assert set(_adapter_catalogue(tmp_path)) == {
-        "apache_config",
         "appliance_info",
         "bi_runtime_data",
         "checkmk_overview",

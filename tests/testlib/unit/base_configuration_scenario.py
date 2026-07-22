@@ -229,7 +229,7 @@ class Scenario:
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
-                "autochecks_memoizer",
+                "_autochecks_memoizer",
                 self._autochecks_mocker,
                 raising=False,
             )

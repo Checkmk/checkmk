@@ -31,6 +31,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.userdb import (
     add_internal_attributes,
     create_cmk_automation_user,
+    distributed_saml_supported,
     get_user_attributes,
     load_users,
     save_users,
@@ -279,7 +280,11 @@ class ConfigGeneratorLocalSiteConnection(SampleConfigGenerator):
                         "timeout": 5,
                         "user_login": True,
                         "proxy": None,
-                        "authentication_connections": "all",
+                        "authentication_connections": (
+                            ("all", ["ldap", "saml"])
+                            if distributed_saml_supported()
+                            else ("all", ["ldap"])
+                        ),
                         "user_attribute_sync_connections": "all",
                         "status_host": None,
                         "message_broker_port": 5672,

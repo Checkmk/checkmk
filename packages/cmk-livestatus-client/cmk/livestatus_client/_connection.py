@@ -67,6 +67,20 @@ AuthenticationConnectionEntry = (
     tuple[Literal["ldap"], str] | tuple[Literal["saml"], SAMLAuthenticationEntry]
 )
 
+AuthenticationConnectionType = Literal["ldap", "saml"]
+
+# The on-disk value of `SiteConfiguration["authentication_connections"]`:
+#   * "disabled": no connection may authenticate users on this site.
+#   * ("all", [types]): every configured connection of the selected types,
+#     including ones added later; expanded into a concrete list per site
+#     before propagation.
+#   * [entries]: an explicit list of connections.
+AuthenticationConnectionsValue = (
+    Literal["disabled"]
+    | tuple[Literal["all"], list[AuthenticationConnectionType]]
+    | list[AuthenticationConnectionEntry]
+)
+
 
 class ProxyConfigParams(TypedDict, total=False):
     channels: int
@@ -109,20 +123,18 @@ class SiteConfiguration(TypedDict):
     timeout: int
     url_prefix: str
     user_login: bool
-    # Connectors available for login authentication on this site (LDAP / SAML).
-    # Absence of the key means "inherit from the central site": the central
-    # resolves it from its own live config when building the remote's
-    # `sitespecific.mk`, so the remote sees the resolved list at runtime via
-    # the propagated global. ``"all"`` means "every configured connection,
-    # including ones added later"; it is expanded into a concrete list per
-    # site before propagation. The form layer's ``"central_site" / "all" /
-    # "list"`` discriminator is translated at the save/load boundary; only
-    # ``"all"`` and the bare list appear on disk.
-    authentication_connections: NotRequired[Literal["all"] | list[AuthenticationConnectionEntry]]
+    # Connectors available for login authentication on this site (LDAP / SAML),
+    # see `AuthenticationConnectionsValue`. The site editor always writes the
+    # key and cmk-update-config migrates legacy specs, so the key is always
+    # present on disk (`NotRequired` only eases constructing partial specs in
+    # code). The central site expands the value into a concrete list per site
+    # when building the remote's `sitespecific.mk`, so the remote sees the
+    # resolved list at runtime via the propagated global.
+    authentication_connections: NotRequired[AuthenticationConnectionsValue]
     # Connectors used for periodic user attribute synchronization on this
-    # site. Absence of the key means "inherit from the central site" (same
-    # propagation as `authentication_connections`); ``"disabled"`` switches
-    # the periodic synchronization off for this site.
+    # site. Like `authentication_connections`, the key is always present on
+    # disk. ``"disabled"`` switches the periodic synchronization off for this
+    # site. Propagated to remotes like `authentication_connections`.
     user_attribute_sync_connections: NotRequired[Literal["all", "disabled"] | list[str]]
     # Should this site be technically be able to XSS the central site or do other harm
     # In 2.5 this is mandatory, that meant that all creations of a SiteConfiguration need this

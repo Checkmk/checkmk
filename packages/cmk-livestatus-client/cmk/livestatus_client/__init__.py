@@ -79,6 +79,8 @@ from ._api.commands import (
 )
 from ._connection import (
     AuthenticationConnectionEntry,
+    AuthenticationConnectionsValue,
+    AuthenticationConnectionType,
     BrokerConnection,
     BrokerConnections,
     BrokerSite,
@@ -211,6 +213,8 @@ __all__ = [
     "StopExecutingServiceChecks",
     # Connection
     "AuthenticationConnectionEntry",
+    "AuthenticationConnectionsValue",
+    "AuthenticationConnectionType",
     "BrokerConnection",
     "BrokerConnections",
     "BrokerSite",

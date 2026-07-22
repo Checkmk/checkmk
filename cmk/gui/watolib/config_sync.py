@@ -19,9 +19,7 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
 from cmk.gui.log import logger
-from cmk.gui.site_config import central_site_config
 from cmk.gui.userdb import (
     get_active_saml_connections,
     resolved_authentication_connections,
@@ -234,7 +232,9 @@ def populate_saml_site_endpoint_urls(
     placeholder alert for empty values.
     """
     auth_conns = site_config.get("authentication_connections")
-    if auth_conns is None or isinstance(auth_conns, str):
+    if not isinstance(auth_conns, list):
+        # "disabled" or the dynamic ("all", [types]) form — there are no
+        # explicit SAML entries to populate.
         return site_config
 
     callback_url = site_config.get("multisiteurl", "")
@@ -302,7 +302,6 @@ def _saml_endpoint_urls(
 
 
 def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlobals:
-    central_config = central_site_config(active_config.sites)
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update(
         {
@@ -310,20 +309,18 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlo
             "userdb_automatic_sync": user_sync_default_config(site_config, site_id),
             "user_login": site_config.get("user_login", False),
             "authentication_connections": _populate_endpoint_urls(
-                resolved_authentication_connections(site_config, central_config),
+                resolved_authentication_connections(site_config),
                 site_config.get("multisiteurl", ""),
                 empty_marker="-",
             ),
         }
     )
-    # Propagate `user_attribute_sync_connections` when set per-site; otherwise
-    # fall back to the central's own value so the remote inherits it. If
-    # neither is set the global keeps its default ("all").
-    attr_sync = site_config.get("user_attribute_sync_connections")
-    if attr_sync is None and central_config is not None:
-        attr_sync = central_config.get("user_attribute_sync_connections")
-    if attr_sync is not None:
-        site_globals["user_attribute_sync_connections"] = attr_sync
+    # Propagate the site's own `user_attribute_sync_connections`. The key is
+    # always written by the site editor and cmk-update-config; a spec
+    # constructed in code without it gets the legacy behavior of syncing all.
+    site_globals["user_attribute_sync_connections"] = site_config.get(
+        "user_attribute_sync_connections", "all"
+    )
     return site_globals
 
 

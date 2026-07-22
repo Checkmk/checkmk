@@ -652,22 +652,6 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "message_broker_port": 5672,
         "is_trusted": False,
     },
-    {
-        "enable_replication": True,
-        "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
-        "disable_remote_configuration": True,
-        "ignore_tls_errors": True,
-        "direct_login_to_web_gui_allowed": True,
-        # "Use same connections as the central site": stored as key absence,
-        # round-trips through the response as "central_site".
-        "user_sync": {
-            "sync_with_ldap_connections": "central_site",
-        },
-        "replicate_event_console": True,
-        "replicate_extensions": True,
-        "message_broker_port": 5672,
-        "is_trusted": False,
-    },
 ]
 
 

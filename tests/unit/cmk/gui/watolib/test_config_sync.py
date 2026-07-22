@@ -379,8 +379,8 @@ def test_replication_path_serialize_deserialize_error() -> None:
         config_sync.ReplicationPath.deserialize(("file", "ident", "some_path/x.mk"))
 
 
-def test_populate_saml_site_endpoint_urls_leaves_all_shorthand_untouched() -> None:
-    site_config = cast(SiteConfiguration, {"authentication_connections": "all"})
+def test_populate_saml_site_endpoint_urls_leaves_all_form_untouched() -> None:
+    site_config = cast(SiteConfiguration, {"authentication_connections": ("all", ["ldap", "saml"])})
     assert config_sync.populate_saml_site_endpoint_urls(site_config) == site_config
 
 

@@ -5,22 +5,27 @@
 """Migrate the removed ``user_sync`` site field to ``authentication_connections``
 and ``user_attribute_sync_connections``.
 
-Two constraints shape the mapping:
+The split between authentication and attribute sync did not exist before the
+upgrade, so both new fields mirror the legacy ``user_sync`` value:
 
-* Key absence now means "inherit from the central site" (typically ``"all"``),
-  so legacy values that meant "no sync on this site" (``None``, ``"master"``
-  on a remote) must become an explicit ``"disabled"`` — leaving the key out
-  would silently turn the sync on.
+* ``"all"`` becomes the dynamic "use all connections" form on both fields.
+* ``("list", [...])`` becomes the equivalent explicit lists.
+* ``None`` (the legacy "Disable automatic user synchronization" choice) and
+  ``"master"`` on a remote become the explicit ``"disabled"`` value on both
+  fields.
 
-* The new ``"all"`` shorthand for ``authentication_connections`` also enrolls
-  SAML connections, which before the upgrade authenticated only on the central
-  site. Remote sites therefore never get ``"all"`` (nor an absent key); they
-  get the explicit list of LDAP connections existing at upgrade time. That
-  freezes the list — LDAP connections added later no longer join remotes
-  automatically — but that fails loud (the admin notices when enabling one),
-  whereas enrolling SAML on remotes would fail silent.
-  ``user_attribute_sync_connections`` is LDAP-only and unaffected, so it may
-  keep ``"all"`` on remotes.
+Before the upgrade SAML connections could only be configured for (and
+authenticate on) the central site. Remote sites therefore never enable the
+"All SAML connections" type: they get ``("all", ["ldap"])`` where the central
+site gets ``("all", ["ldap", "saml"])``.
+
+A site spec without the ``user_sync`` key (hand-edited; the legacy valuespec
+always wrote the key) gets both values written explicitly, since an absent
+key now falls back to the defaults ("all" — which would silently enroll SAML
+connections on remotes and start the attribute sync there). Authentication
+is treated like the "use all" case, preserving that LDAP login always worked;
+the attribute sync follows the legacy ``userdb_automatic_sync`` default
+(``"master"``): ``"all"`` on the central site, ``"disabled"`` on remotes.
 
 Only fields not yet set are filled in, so manually migrated sites keep their
 configuration.
@@ -31,19 +36,14 @@ from typing import Literal, override
 
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
-from cmk.gui.userdb._connections import (
-    is_ldap,
-    ldap_authentication_entries_for_site,
-    load_connection_config,
-)
+from cmk.gui.userdb._connections import distributed_saml_supported
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_management_registry
-from cmk.livestatus_client import AuthenticationConnectionEntry
+from cmk.livestatus_client import AuthenticationConnectionEntry, AuthenticationConnectionsValue
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
 
-AuthConnectionsValue = Literal["all"] | list[AuthenticationConnectionEntry]
 AttrSyncConnectionsValue = Literal["all", "disabled"] | list[str]
 
 # Distinguishes "key not on disk" from an explicit ``user_sync = None``
@@ -58,14 +58,6 @@ class MigrateUserSyncToAuthConnections(UpdateAction):
         configured_sites = site_mgmt.load_sites()
         central_site_id = omd_site()
 
-        # All configured LDAP connections, read from disk (independent of
-        # whether `active_config.user_connections` is populated during
-        # update-config). Remote sites freeze into an explicit list over
-        # these — including currently disabled connections: a disabled
-        # connection is inert at login time and joins again when re-enabled,
-        # as it would have under the legacy bare-string forms.
-        ldap_connections = {c["id"]: c for c in load_connection_config() if is_ldap(c)}
-
         migrated = False
         for site_id, site_spec in configured_sites.items():
             # `user_sync` was a required field on legacy `SiteConfiguration`
@@ -79,9 +71,7 @@ class MigrateUserSyncToAuthConnections(UpdateAction):
             auth_value, attr_sync_value = _derive_new_values(
                 user_sync,
                 is_central_site=(site_id == central_site_id),
-                frozen_ldap_entries=ldap_authentication_entries_for_site(
-                    ldap_connections, site_spec
-                ),
+                saml_supported=distributed_saml_supported(),
             )
             did_set = user_sync is not _MISSING
             if "authentication_connections" not in site_spec and auth_value is not None:
@@ -124,19 +114,25 @@ def _derive_new_values(
     user_sync: object,
     *,
     is_central_site: bool,
-    frozen_ldap_entries: list[AuthenticationConnectionEntry],
-) -> tuple[AuthConnectionsValue | None, AttrSyncConnectionsValue | None]:
+    saml_supported: bool,
+) -> tuple[AuthenticationConnectionsValue | None, AttrSyncConnectionsValue | None]:
     """Map a ``user_sync`` value to the new fields.
 
-    ``None`` for a field means "leave the key absent on disk" so the runtime
-    inherits the central site's value — callers must skip the assignment.
-    See the module docstring for why remotes get ``frozen_ldap_entries``
-    instead of ``"all"`` and why "no sync" maps to an explicit ``"disabled"``.
+    Both new fields mirror the legacy value (the authentication / attribute
+    sync split did not exist before the upgrade). ``None`` for a field means
+    "leave the key absent on disk" — callers must skip the assignment. See
+    the module docstring for why remotes never enable the SAML type and how
+    a missing ``user_sync`` key is handled.
     """
+    all_value: AuthenticationConnectionsValue = (
+        ("all", ["ldap", "saml"]) if is_central_site and saml_supported else ("all", ["ldap"])
+    )
     if user_sync == "all":
-        return ("all", "all") if is_central_site else (frozen_ldap_entries, "all")
+        return all_value, "all"
     if user_sync == "master":
-        return ("all", "all") if is_central_site else (frozen_ldap_entries, "disabled")
+        # Legacy "sync only on the central site": the central behaved like
+        # "all", a remote like "disabled".
+        return (all_value, "all") if is_central_site else ("disabled", "disabled")
     if isinstance(user_sync, tuple) and user_sync[0] == "list":
         conn_ids: list[str] = list(user_sync[1])
         auth_entries: list[AuthenticationConnectionEntry] = [
@@ -144,16 +140,18 @@ def _derive_new_values(
         ]
         return auth_entries, conn_ids
     if user_sync is None:
-        return (None, "disabled") if is_central_site else (frozen_ldap_entries, "disabled")
-    return None, None
+        # Legacy "Disable automatic user synchronization".
+        return "disabled", "disabled"
+    # Missing key (or unrecognized value): write both sides explicitly. The
+    # attribute sync follows the legacy `userdb_automatic_sync` default
+    # ("master"): only the central site syncs.
+    return all_value, "all" if is_central_site else "disabled"
 
 
 update_action_registry.register(
     MigrateUserSyncToAuthConnections(
         name="migrate_user_sync_to_auth_connections",
         title="Migrate site user_sync to authentication_connections",
-        # Run after `clean_up_site_attributes` (sort_index=30), which
-        # `setdefault`s `user_sync = "all"` for legacy sites that lacked it.
         sort_index=35,
         expiry_version=ExpiryVersion.CMK_310,
     )

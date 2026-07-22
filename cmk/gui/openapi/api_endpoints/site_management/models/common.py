@@ -529,20 +529,6 @@ class UserSyncDisabledModel:
 
 
 @api_model
-class UserSyncCentralSiteModel:
-    sync_with_ldap_connections: Literal["central_site"] = api_field(
-        description="Use the same connections as the central site (inherit the central"
-        " site's setting; changes made on the central site take effect after the next"
-        " configuration sync).",
-        example="central_site",
-    )
-
-    def to_internal(self) -> None:
-        """Sentinel: the API caller wants the key absent on disk."""
-        return
-
-
-@api_model
 class ConnectionModel:
     enable_replication: bool = api_field(
         description="Replication allows you to manage several monitoring sites with a logically"
@@ -587,7 +573,7 @@ class ConnectionModel:
         example=True,
     )
     user_sync: Annotated[
-        UserSyncWithLdapModel | UserSyncAllModel | UserSyncDisabledModel | UserSyncCentralSiteModel,
+        UserSyncWithLdapModel | UserSyncAllModel | UserSyncDisabledModel,
         Discriminator("sync_with_ldap_connections"),
     ] = api_field(
         description="By default the users are synchronized automatically in the interval "
@@ -659,6 +645,10 @@ class SiteConnectionBaseModel:
             replicate_mkps=True,
             message_broker_port=5672,
             is_trusted=False,
+            # The API does not expose the field yet; write the site editor's
+            # default so the key is always present on disk. The edit endpoint
+            # carries over the existing value instead.
+            authentication_connections=("all", ["ldap", "saml"]),
         )
 
         if isinstance(self.status_connection.status_host, StatusHostEnabled):
@@ -674,12 +664,9 @@ class SiteConnectionBaseModel:
         if not isinstance(self.configuration_connection.url_of_remote_site, ApiOmitted):
             site_configuration["multisiteurl"] = self.configuration_connection.url_of_remote_site
         site_configuration["insecure"] = self.configuration_connection.ignore_tls_errors
-        user_sync_value = self.configuration_connection.user_sync.to_internal()
-        # `UserSyncCentralSiteModel.to_internal()` returns `None` meaning
-        # "leave the key absent" (= inherit from the central site's
-        # propagated value).
-        if user_sync_value is not None:
-            site_configuration["user_attribute_sync_connections"] = user_sync_value
+        site_configuration["user_attribute_sync_connections"] = (
+            self.configuration_connection.user_sync.to_internal()
+        )
         site_configuration["disable_wato"] = (
             self.configuration_connection.disable_remote_configuration
         )

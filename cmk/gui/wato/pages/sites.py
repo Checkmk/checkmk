@@ -71,6 +71,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.userdb import distributed_saml_supported
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -146,7 +147,6 @@ from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
 )
 from cmk.gui.watolib.sites import (
-    DropKeySentinel,
     is_livestatus_encrypted,
     ldap_connections_are_configurable,
     PingResult,
@@ -333,7 +333,9 @@ class ModeEditSite(WatoMode):
                 persist=False,
                 proxy={},
                 message_broker_port=5672,
-                authentication_connections="all",
+                authentication_connections=(
+                    ("all", ["ldap", "saml"]) if distributed_saml_supported() else ("all", ["ldap"])
+                ),
                 user_attribute_sync_connections="all",
                 status_host=None,
                 replicate_mkps=True,
@@ -394,12 +396,6 @@ class ModeEditSite(WatoMode):
                 raw_site_spec["status_host"]
             )
 
-        # `authentication_connections` / `user_attribute_sync_connections`
-        # may carry a `DropKeySentinel` value to mark "inherit from central"
-        # / "disabled". Leave the sentinel in place here so the
-        # `setdefault` loop in `save_site_changes` treats the key as
-        # present and does not reinstate the previous on-disk value; the
-        # sentinel is stripped after that loop.
         site_spec = cast(SiteConfiguration, raw_site_spec)
         if self._new:
             self._site_id = site_spec["id"]
@@ -427,13 +423,6 @@ class ModeEditSite(WatoMode):
         for key, value in configured_sites.get(self._site_id, {}).items():
             # We need to review whether or not we still want to allow setting arbritrary keys
             site_spec.setdefault(key, value)  # type: ignore[misc]
-
-        # Strip the `DropKeySentinel` markers that survived `setdefault`
-        # (they blocked the old on-disk value from leaking back in, but
-        # must not reach `save_sites`).
-        for drop_key in ("authentication_connections", "user_attribute_sync_connections"):
-            if isinstance(site_spec.get(drop_key), DropKeySentinel):
-                site_spec.pop(drop_key)  # type: ignore[misc]
 
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
@@ -514,31 +503,24 @@ class ModeEditSite(WatoMode):
         """Build the form-input dict for the site-edit dialog.
 
         Translates the on-disk shapes of `status_host` and
-        `authentication_connections` (absent ↔ inherit from central, present
-        ↔ explicit list) into the cascading-choice tuples the form spec
-        expects, and fills SAML endpoint URLs so the read-only display
-        widgets show meaningful values.
+        `authentication_connections` into the cascading-choice tuples the
+        form spec expects, and fills SAML endpoint URLs so the read-only
+        display widgets show meaningful values.
         """
         data: dict = dict(populate_saml_site_endpoint_urls(self._site, empty_marker=""))
         if "status_host" in data:
             data["status_host"] = self._status_host_adapter.to_form_spec(data["status_host"])
-        if "authentication_connections" in data:
-            value = data["authentication_connections"]
-            data["authentication_connections"] = (
-                ("all", True) if value == "all" else ("list", value)
-            )
-        else:
-            # Absent key = inherit from the central site.
-            data["authentication_connections"] = ("central_site", True)
-        if "user_attribute_sync_connections" in data:
-            value = data["user_attribute_sync_connections"]
-            if isinstance(value, list):
-                data["user_attribute_sync_connections"] = ("list", value)
-        else:
-            # Absent key = inherit from the central site.
-            data["user_attribute_sync_connections"] = (
-                ("all", True) if site_is_local(self._site) else ("central_site", True)
-            )
+        # Both keys are always present (cmk-update-config migrates legacy
+        # specs). The on-disk ("all", [types]) form already matches the form
+        # choice tuple.
+        value = data["authentication_connections"]
+        if value == "disabled":
+            data["authentication_connections"] = ("disabled", True)
+        elif isinstance(value, list):
+            data["authentication_connections"] = ("list", value)
+        value = data["user_attribute_sync_connections"]
+        if isinstance(value, list):
+            data["user_attribute_sync_connections"] = ("list", value)
         return data
 
     def _flat_catalog(self, config: Config):  # type: ignore[no-untyped-def]
@@ -837,13 +819,11 @@ class ModeEditSite(WatoMode):
         return {
             "authentication_connections": DictElement(
                 required=True,
-                parameter_form=self._site_mgmt.authentication_connections_form_spec(self._site),
+                parameter_form=self._site_mgmt.authentication_connections_form_spec(),
             ),
             "user_attribute_sync_connections": DictElement(
                 required=True,
-                parameter_form=self._site_mgmt.user_attribute_sync_connections_form_spec(
-                    self._site
-                ),
+                parameter_form=self._site_mgmt.user_attribute_sync_connections_form_spec(),
             ),
         }
 

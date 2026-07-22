@@ -155,6 +155,8 @@ def get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             multisiteurl="http://localhost/unit_remote_1/check_mk/",
             message_broker_port=5672,
             is_trusted=False,
+            authentication_connections=("all", ["ldap", "saml"]),
+            user_attribute_sync_connections="all",
         )
     if remote_site == SiteId("unit_remote_2"):
         return SiteConfiguration(
@@ -184,6 +186,8 @@ def get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             multisiteurl="http://localhost/unit_remote_1/check_mk/",
             message_broker_port=5672,
             is_trusted=False,
+            authentication_connections=("all", ["ldap", "saml"]),
+            user_attribute_sync_connections="all",
         )
     raise ValueError(remote_site)
 
@@ -222,6 +226,8 @@ def get_activation_manager(
                     user_login=True,
                     proxy=None,
                     is_trusted=False,
+                    authentication_connections=("all", ["ldap", "saml"]),
+                    user_attribute_sync_connections="all",
                 ),
                 remote_site: get_site_configuration(remote_site),
             },

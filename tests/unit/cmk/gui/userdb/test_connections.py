@@ -42,7 +42,9 @@ def _local_self_site(auth_connections: object) -> SiteConfiguration:
 def test_effective_authentication_connections_on_remote_prefers_propagated_global(
     load_config: Config, remote_site: None
 ) -> None:
-    load_config.sites = SiteConfigurations({omd_site(): _local_self_site("all")})
+    load_config.sites = SiteConfigurations(
+        {omd_site(): _local_self_site(("all", ["ldap", "saml"]))}
+    )
     propagated: list[AuthenticationConnectionEntry] = [
         (
             "saml",
@@ -55,7 +57,7 @@ def test_effective_authentication_connections_on_remote_prefers_propagated_globa
     ]
     load_config.authentication_connections = propagated
 
-    # The seeded local self-default ("all") must not shadow the per-site ACS URL
+    # The seeded local self-default must not shadow the per-site ACS URL
     # that get_site_globals() propagated into the global.
     assert effective_authentication_connections(load_config.sites[omd_site()]) == propagated
 
@@ -68,3 +70,12 @@ def test_effective_authentication_connections_on_central_uses_own(
     load_config.authentication_connections = [("ldap", "propagated_but_ignored")]
 
     assert effective_authentication_connections(load_config.sites[omd_site()]) == own
+
+
+def test_effective_authentication_connections_on_central_disabled(
+    load_config: Config,
+) -> None:
+    load_config.sites = SiteConfigurations({omd_site(): _local_self_site("disabled")})
+    load_config.authentication_connections = [("ldap", "propagated_but_ignored")]
+
+    assert effective_authentication_connections(load_config.sites[omd_site()]) == []

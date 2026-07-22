@@ -57,8 +57,13 @@ def edit_site_connection_v1(
     body.site_config.basic_settings.site_id = site_id
 
     sites_api_mgr = SitesApiMgr()
-    if (secret := sites_api_mgr.get_a_site(site_id).get("secret")) is not None:
+    old_site_config = sites_api_mgr.get_a_site(site_id)
+    if (secret := old_site_config.get("secret")) is not None:
         site_config_spec_from_request["secret"] = secret
+    # The API does not expose `authentication_connections` yet; carry the
+    # configured value over instead of resetting it to the create default.
+    if (auth_connections := old_site_config.get("authentication_connections")) is not None:
+        site_config_spec_from_request["authentication_connections"] = auth_connections
 
     try:
         sites_to_update = sites_api_mgr.get_connected_sites_to_update(

@@ -14,7 +14,7 @@ import re
 import time
 from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, assert_never, cast, NamedTuple, Protocol
+from typing import Any, cast, NamedTuple, Protocol
 
 from flask import has_request_context
 
@@ -46,7 +46,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import (
-    central_site_config,
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
@@ -56,11 +55,10 @@ from cmk.gui.site_config import (
 from cmk.gui.userdb import (
     connection_choices,
     distributed_saml_supported,
-    inherited_authentication_connections,
     saml_connection_choices,
 )
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
     Dictionary as _LegacyDictionary,
 )
@@ -178,36 +176,21 @@ class NoOpLivestatusProxy:
         return []
 
 
-class DropKeySentinel:
-    """Sentinel returned by `to_disk` converters to signal "remove this key".
-
-    The save path in `cmk/gui/wato/pages/sites.py` checks for instances of
-    this and `pop`s the key from the `SiteConfiguration` dict instead of
-    assigning it. Used to encode "inherit from central site" as key absence
-    on disk (for both ``authentication_connections`` and
-    ``user_attribute_sync_connections``).
-    """
-
-
-DROP_KEY: DropKeySentinel = DropKeySentinel()
-
-
 def _auth_connections_from_disk(value: object) -> tuple[str, object]:
     """Translate the on-disk shape into the cascading-choice tuple.
 
-    The site-edit page pre-renders the dict and converts list → ("list",
-    list) / "all" → ("all", True) / absent → ("central_site", True) before
-    passing to the form, so the typical input here is already a tuple. The
-    bare-shape branches handle direct disk loads (legacy/migration paths)
-    and form-resubmission after validation failure.
+    The site-edit page pre-renders the dict and converts the bare disk
+    shapes into the choice tuples before passing them to the form, so the
+    typical input here is already a tuple — including the on-disk
+    ``("all", [types])`` form, whose discriminator matches the form choice.
+    The bare-shape branches handle direct disk loads and form-resubmission
+    after validation failure. The key is always present on disk
+    (cmk-update-config migrates legacy specs).
     """
     if isinstance(value, tuple) and len(value) == 2:
         return value[0], value[1]
-    # Absent key → form shows "Use identity connectors from central site".
-    if value is None:
-        return "central_site", True
-    if value == "all":
-        return "all", True
+    if value == "disabled":
+        return "disabled", True
     assert isinstance(value, list)
     return "list", value
 
@@ -215,10 +198,11 @@ def _auth_connections_from_disk(value: object) -> tuple[str, object]:
 def _auth_connections_to_disk(value: object) -> object:
     assert isinstance(value, tuple) and len(value) == 2
     choice, payload = value
-    if choice == "central_site":
-        return DROP_KEY
+    if choice == "disabled":
+        return "disabled"
     if choice == "all":
-        return "all"
+        assert isinstance(payload, list)
+        return ("all", payload)
     assert choice == "list"
     return payload
 
@@ -226,17 +210,14 @@ def _auth_connections_to_disk(value: object) -> object:
 def _user_attribute_sync_from_disk(value: object) -> tuple[str, object]:
     """Translate the on-disk shape into the cascading-choice tuple.
 
-    Form choices: ``"central_site"`` / ``"disabled"`` / ``"all"`` /
-    ``"list"``. The disk shape is ``Literal["all", "disabled"] | list[str]``
-    with absence meaning "inherit from the central site".
+    Form choices: ``"disabled"`` / ``"all"`` / ``"list"``. The disk shape is
+    ``Literal["all", "disabled"] | list[str]``; the key is always present on
+    disk (cmk-update-config migrates legacy specs).
     """
-    # Absent key → form shows "Use same as the central site".
-    if value is None:
-        return "central_site", True
-    if value == "disabled":
-        return "disabled", True
     if value == "all":
         return "all", True
+    if value == "disabled":
+        return "disabled", True
     if isinstance(value, tuple) and len(value) == 2:
         # Already in form-spec tuple shape (e.g. on validation re-render).
         return value[0], value[1]
@@ -248,15 +229,12 @@ def _user_attribute_sync_to_disk(value: object) -> object:
     """Translate the cascading-choice tuple back to the on-disk shape.
 
     The cascading choice always arrives as ``(choice_name, payload)``:
-    ``"central_site"`` → ``DROP_KEY`` (key absent on disk = inherit),
     ``"disabled"`` → bare ``"disabled"``,
     ``"all"`` → bare ``"all"``,
     ``"list"`` → ``list[str]``.
     """
     assert isinstance(value, tuple) and len(value) == 2
     choice, payload = value
-    if choice == "central_site":
-        return DROP_KEY
     if choice == "disabled":
         return "disabled"
     if choice == "all":
@@ -406,70 +384,60 @@ class SiteManagement:
         )
 
     @classmethod
-    def authentication_connections_form_spec(
-        cls,
-        site_configuration: SiteConfiguration | None = None,
-    ) -> FormSpec[Any]:
-        # The "central_site" choice means "inherit from the central site"
-        # (encoded on disk as the per-site key being absent). Hide it when
-        # the form edits the central site itself, where it would be a
-        # self-reference. The on-disk value never carries the form's
-        # ``("central_site", _)`` shape; ``_auth_connections_to_disk`` maps
-        # it to the ``DROP_KEY`` sentinel that the save path translates to
-        # key removal.
-        is_local_site = site_configuration is not None and site_is_local(site_configuration)
-        elements: list[CascadingSingleChoiceElement[Any]] = []
-        if not is_local_site:
-            elements.append(
-                CascadingSingleChoiceElement(
-                    name="central_site",
-                    title=Title("Use same as the central site"),
-                    parameter_form=FixedValue(
-                        value=True,
-                        label=Label(  # astrein: disable=localization-checker
-                            cls._central_site_connections_summary(site_configuration)
-                        ),
-                    ),
-                ),
-            )
-        elements.append(
+    def authentication_connections_form_spec(cls) -> FormSpec[Any]:
+        saml_supported = distributed_saml_supported()
+        all_type_elements = []
+        if saml_supported:
+            all_type_elements.append(MultipleChoiceElement(name="saml", title=Title("SAML")))
+        all_type_elements.append(MultipleChoiceElement(name="ldap", title=Title("LDAP")))
+        elements: list[CascadingSingleChoiceElement[Any]] = [
             CascadingSingleChoiceElement(
-                name="all",
-                title=Title("Use all"),
-                parameter_form=FixedValue(
-                    value=True,
-                    label=Label(""),
-                ),
+                name="disabled",
+                title=Title("Disabled (Use the local users of the central site)"),
+                parameter_form=FixedValue(value=True, label=Label("")),
             ),
-        )
-        elements.append(
             CascadingSingleChoiceElement(
                 name="list",
                 title=Title("Use the following"),
                 parameter_form=cls._editable_connections_form_spec(),
             ),
-        )
+            CascadingSingleChoiceElement(
+                name="all",
+                title=Title("Use all"),
+                parameter_form=MultipleChoice(
+                    elements=all_type_elements,
+                    prefill=DefaultValue(
+                        ["saml", "ldap"] if saml_supported else ["ldap"],
+                    ),
+                    custom_validate=[
+                        not_empty(
+                            Message(
+                                "Please select at least one connection type or choose 'Disabled'."
+                            )
+                        )
+                    ],
+                ),
+            ),
+        ]
 
-        if distributed_saml_supported():
+        if saml_supported:
             help_text = Help(
                 "Select the connections that are available for login on this site. "
-                "Choose <i>Use same as the central site</i> to inherit "
-                "the central site's selection (changes made on the central site take effect "
-                "after the next configuration sync), <i>Use all</i> to enable "
-                "every configured LDAP and SAML connection — including ones added later — "
-                "or <i>Use the following</i> to pick specific LDAP and SAML "
-                "connections. <br>Authentication connections are responsible "
+                "Choose <i>Disabled</i> to allow no LDAP or SAML login on this site, "
+                "<i>Use the following connections</i> to pick specific LDAP and SAML "
+                "connections, or <i>Use all</i> to enable every configured "
+                "connection of the selected types — including ones added later. "
+                "<br>Authentication connections are responsible "
                 "of creating the user and the initial user setup.<br>SAML connection are only authorized "
                 "to overwrite user attributes if no other Attribute Sync Connection is configured for that user."
             )
         else:
             help_text = Help(
                 "Select the connections that are available for login on this site. "
-                "Choose <i>Use same as the central site</i> to inherit "
-                "the central site's selection (changes made on the central site take effect "
-                "after the next configuration sync), <i>Use all</i> to enable "
-                "every configured LDAP connection — including ones added later — or "
-                "<i>Use the following</i> to pick specific LDAP connections."
+                "Choose <i>Disabled</i> to allow no LDAP login on this site, "
+                "<i>Use the following</i> to pick specific LDAP "
+                "connections, or <i>Use all</i> to enable every configured "
+                "LDAP connection — including ones added later."
                 "<br>Authentication connections are responsible "
                 "of creating the user and the initial user setup."
             )
@@ -478,6 +446,7 @@ class SiteManagement:
             wrapped_form_spec=CascadingSingleChoiceExtended(
                 title=Title("Authentication connections"),
                 elements=elements,
+                prefill=DefaultValue("all"),
                 help_text=help_text,
                 layout=CascadingSingleChoiceLayout.vertical,
             ),
@@ -572,78 +541,9 @@ class SiteManagement:
             editable_order=False,
         )
 
-    @staticmethod
-    def _central_site_connections_summary(site_configuration: SiteConfiguration | None) -> str:
-        """One-line summary of the connections the central site currently hands down when known.
-
-        The result is rendered as HTML so connection names are escaped edit-page links."""
-        entries = inherited_authentication_connections(
-            central_site_config(active_config.sites), site_configuration
-        )
-        if not entries:
-            return ""
-        links = []
-        for entry in entries:
-            match entry:
-                case ("ldap", connection_id):
-                    edit_mode = "edit_ldap_connection"
-                case ("saml", saml_entry):
-                    connection_id = saml_entry["connection_id"]
-                    edit_mode = "edit_saml_config"
-                case _:
-                    assert_never(entry)
-            links.append(
-                str(
-                    html.render_a(
-                        connection_id,
-                        makeuri_contextless(
-                            request,
-                            [
-                                ("mode", edit_mode),
-                                ("id", connection_id),
-                                ("edit", connection_id),
-                            ],
-                            filename="wato.py",
-                        ),
-                    )
-                )
-            )
-        return _("Currently inherited: %(connections)s") % {"connections": ", ".join(links)}
-
-    @staticmethod
-    def _central_site_user_attribute_sync_summary() -> str:
-        # On a remote site the central's config is unknown; make no claim.
-        if (central_config := central_site_config(active_config.sites)) is None:
-            return ""
-        match central_config.get("user_attribute_sync_connections", "all"):
-            case "all" | "disabled":
-                return ""
-            case list() as value:
-                return _("Sync attributes for: %(connections)s") % {"connections": ", ".join(value)}
-            case _:
-                assert_never()
-
     @classmethod
-    def user_attribute_sync_connections_form_spec(
-        cls,
-        site_configuration: SiteConfiguration | None = None,
-    ) -> FormSpec[Any]:
-        is_local_site = site_configuration is not None and site_is_local(site_configuration)
-        elements: list[CascadingSingleChoiceElement[Any]] = []
-        if not is_local_site:
-            elements.append(
-                CascadingSingleChoiceElement(
-                    name="central_site",
-                    title=Title("Use same as the central site"),
-                    parameter_form=FixedValue(
-                        value=True,
-                        label=Label(  # astrein: disable=localization-checker
-                            cls._central_site_user_attribute_sync_summary()
-                        ),
-                    ),
-                ),
-            )
-        elements += [
+    def user_attribute_sync_connections_form_spec(cls) -> FormSpec[Any]:
+        elements: list[CascadingSingleChoiceElement[Any]] = [
             CascadingSingleChoiceElement(
                 name="disabled",
                 title=Title("Disable automatic user attribute synchronization"),
@@ -712,34 +612,6 @@ class SiteManagement:
         )
 
     @classmethod
-    def _auth_inheritance_affected_sites(
-        cls,
-        modified_site: SiteId,
-        current_config: SiteConfiguration,
-        old_config: SiteConfiguration,
-        site_configs: SiteConfigurations,
-    ) -> set[SiteId]:
-        """Remote sites whose effective authentication connections change with this edit.
-
-        Editing the central site's ``authentication_connections`` changes the
-        effective config of every remote that inherits them.
-        Those remotes must be flagged for sync even though their own entry in
-        ``sites.mk`` is untouched, so the next activation resolves the
-        inheritance into their snapshot.
-        """
-        if modified_site != omd_site():
-            return set()
-        if current_config.get("authentication_connections") == old_config.get(
-            "authentication_connections"
-        ):
-            return set()
-        return {
-            site_id
-            for site_id, site_config in distributed_setup_remote_sites(site_configs).items()
-            if "authentication_connections" not in site_config
-        }
-
-    @classmethod
     def get_connected_sites_to_update(
         cls,
         *,
@@ -761,14 +633,8 @@ class SiteManagement:
         if old_config is None:
             raise MKUserError(None, _("An old configuration is required for existing connections."))
 
-        auth_affected_sites = cls._auth_inheritance_affected_sites(
-            modified_site, current_config, old_config, site_configs
-        )
-
         if not cls._change_affects_broker_connection(current_config, old_config):
-            return (connected | auth_affected_sites) if auth_affected_sites else set()
-
-        connected |= auth_affected_sites
+            return set()
 
         connections = BrokerConnectionsConfigFile().load_for_reading()
         for connection in connections.values():

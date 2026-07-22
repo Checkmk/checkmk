@@ -437,9 +437,9 @@ class GeneralConfig:
     # `SiteConfiguration` via `get_site_globals()`. Read on the remote site as the
     # source of truth, since `sites.mk` is not synchronized to remotes.
     #
-    # The form-layer "inherit from central" discriminator is resolved before
+    # Dynamic forms ("all connections of a type") are resolved before
     # propagation, so these globals always carry a concrete list / explicit
-    # value. The form's ``("central_site", _)`` shape never appears here.
+    # value.
     authentication_connections: list[AuthenticationConnectionEntry] = field(default_factory=list)
     user_attribute_sync_connections: Literal["all", "disabled"] | list[str] = "all"
 

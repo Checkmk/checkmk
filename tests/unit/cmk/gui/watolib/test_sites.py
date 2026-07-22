@@ -10,14 +10,12 @@ Each chain has independently testable parts:
 
 * ``_auth_connections_from_disk`` / ``_auth_connections_to_disk`` and
   ``_user_attribute_sync_from_disk`` / ``_user_attribute_sync_to_disk`` —
-  pure functions that bridge the on-disk representation (a bare value if
-  the per-site override is set, or the key being absent for "inherit
-  from central") and the form spec's cascading-choice tuple form.
+  pure functions that bridge the on-disk representation and the form
+  spec's cascading-choice tuple form.
 * ``SiteManagement.authentication_connections_form_spec`` /
-  ``SiteManagement.user_attribute_sync_connections_form_spec`` — select
-  the available top-level choices based on whether the edited site is
-  the central site itself (no ``"central_site"`` self-reference) or a
-  remote.
+  ``SiteManagement.user_attribute_sync_connections_form_spec`` — offer the
+  same top-level choices for every site; there is no "inherit from the
+  central site" option.
 """
 
 import pytest
@@ -31,7 +29,6 @@ from cmk.gui.watolib.sites import (
     _auth_connections_to_disk,
     _user_attribute_sync_from_disk,
     _user_attribute_sync_to_disk,
-    DROP_KEY,
     SiteManagement,
 )
 from cmk.livestatus_client import (
@@ -98,25 +95,21 @@ def _remote_site_config() -> SiteConfiguration:
     )
 
 
-def test_auth_connections_from_disk_translates_absent_to_central_site_choice() -> None:
-    """Absent key (loaded as ``None``) maps to the ``"central_site"`` form choice."""
-    assert _auth_connections_from_disk(None) == ("central_site", True)
-
-
 def test_auth_connections_from_disk_wraps_bare_list() -> None:
     entries = [("ldap", "ldap_a"), ("saml", {"connection_id": "saml_a"})]
     assert _auth_connections_from_disk(entries) == ("list", entries)
 
 
-def test_auth_connections_from_disk_wraps_all_shorthand() -> None:
-    assert _auth_connections_from_disk("all") == ("all", True)
+def test_auth_connections_from_disk_translates_disabled() -> None:
+    assert _auth_connections_from_disk("disabled") == ("disabled", True)
 
 
 def test_auth_connections_from_disk_passes_tuple_form_through() -> None:
     """The site-edit page pre-wraps the value so the form-friendly tuple
-    arrives here directly; pass it through unchanged."""
-    central = ("central_site", {"connection_0": {"connection_id": "saml_a"}})
-    assert _auth_connections_from_disk(central) == central
+    arrives here directly; pass it through unchanged. The on-disk
+    ``("all", [types])`` form already matches the form tuple."""
+    all_form = ("all", ["ldap"])
+    assert _auth_connections_from_disk(all_form) == all_form
     list_form = ("list", [("ldap", "ldap_a")])
     assert _auth_connections_from_disk(list_form) == list_form
 
@@ -126,15 +119,12 @@ def test_auth_connections_to_disk_unwraps_list_choice() -> None:
     assert _auth_connections_to_disk(("list", entries)) == entries
 
 
-def test_auth_connections_to_disk_unwraps_all_choice() -> None:
-    assert _auth_connections_to_disk(("all", True)) == "all"
+def test_auth_connections_to_disk_keeps_all_choice_tuple() -> None:
+    assert _auth_connections_to_disk(("all", ["saml", "ldap"])) == ("all", ["saml", "ldap"])
 
 
-def test_auth_connections_to_disk_returns_drop_key_for_central_site() -> None:
-    assert (
-        _auth_connections_to_disk(("central_site", {"connection_0": {"connection_id": "saml_a"}}))
-        is DROP_KEY
-    )
+def test_auth_connections_to_disk_unwraps_disabled_choice() -> None:
+    assert _auth_connections_to_disk(("disabled", True)) == "disabled"
 
 
 def _choice_names(form_spec: object) -> list[str]:
@@ -146,36 +136,15 @@ def _choice_names(form_spec: object) -> list[str]:
     return [element.name for element in inner.elements]
 
 
-def test_authentication_connections_form_spec_local_site_omits_central_site_choice(
+def test_authentication_connections_form_spec_choices(
     request_context: None,
 ) -> None:
-    """Editing the central site must not offer ``"central_site"`` — it would
-    be a self-reference."""
-    assert _choice_names(
-        SiteManagement.authentication_connections_form_spec(_local_site_config())
-    ) == ["all", "list"]
-
-
-def test_authentication_connections_form_spec_remote_site_offers_all_choices(
-    request_context: None,
-) -> None:
-    """A remote site can inherit from the central, use all connections, or
-    pick its own list."""
-    assert _choice_names(
-        SiteManagement.authentication_connections_form_spec(_remote_site_config())
-    ) == ["central_site", "all", "list"]
-
-
-def test_authentication_connections_form_spec_no_site_config_offers_all_choices(
-    request_context: None,
-) -> None:
-    """Without a site configuration (e.g. when adding a new connection), all
-    choices are available — the form cannot yet know whether it edits the
-    central."""
+    """The choices are the same for every site — there is no
+    "inherit from the central site" option."""
     assert _choice_names(SiteManagement.authentication_connections_form_spec()) == [
-        "central_site",
-        "all",
+        "disabled",
         "list",
+        "all",
     ]
 
 
@@ -195,7 +164,7 @@ def test_saml_endpoint_widgets_carry_pending_placeholder() -> None:
 
 
 def _distributed_site_configs(central: SiteConfiguration) -> SiteConfigurations:
-    """Central plus one inheriting remote and one remote with its own connections."""
+    """Central plus one remote without the key and one with its own connections."""
     inheriting_remote = _remote_site_config()
     explicit_remote = _remote_site_config()
     explicit_remote["id"] = SiteId("remote_explicit")
@@ -209,18 +178,23 @@ def _distributed_site_configs(central: SiteConfiguration) -> SiteConfigurations:
     )
 
 
-def test_get_connected_sites_to_update_central_auth_change_flags_inheriting_remotes() -> None:
+def test_get_connected_sites_to_update_central_auth_change_does_not_fan_out() -> None:
+    """Every site carries its own ``authentication_connections`` value —
+    editing the central site's value no longer affects other sites."""
     current_config = _local_site_config()
     current_config["authentication_connections"] = [
         ("saml", SAMLAuthenticationEntry(connection_id="saml_a"))
     ]
-    assert SiteManagement.get_connected_sites_to_update(
-        new_or_deleted_connection=False,
-        modified_site=omd_site(),
-        current_config=current_config,
-        old_config=_local_site_config(),
-        site_configs=_distributed_site_configs(current_config),
-    ) == {omd_site(), SiteId("remote")}
+    assert (
+        SiteManagement.get_connected_sites_to_update(
+            new_or_deleted_connection=False,
+            modified_site=omd_site(),
+            current_config=current_config,
+            old_config=_local_site_config(),
+            site_configs=_distributed_site_configs(current_config),
+        )
+        == set()
+    )
 
 
 def test_get_connected_sites_to_update_unchanged_auth_flags_no_sites() -> None:
@@ -258,7 +232,6 @@ def test_get_connected_sites_to_update_remote_auth_change_does_not_fan_out() -> 
 @pytest.mark.parametrize(
     ["disk_value", "form_value"],
     [
-        (None, ("central_site", True)),
         ("disabled", ("disabled", True)),
         ("all", ("all", True)),
         (["ldap_a", "ldap_b"], ("list", ["ldap_a", "ldap_b"])),
@@ -284,50 +257,13 @@ def test_user_attribute_sync_to_disk(form_value: tuple[str, object], disk_value:
     assert _user_attribute_sync_to_disk(form_value) == disk_value
 
 
-def test_user_attribute_sync_to_disk_returns_drop_key_for_central_site() -> None:
-    """The "inherit from central site" choice is encoded as key absence on
-    disk, exactly like ``authentication_connections``."""
-    assert _user_attribute_sync_to_disk(("central_site", True)) is DROP_KEY
-
-
-def test_user_attribute_sync_form_spec_local_site_omits_central_site_choice(
+def test_user_attribute_sync_form_spec_choices(
     request_context: None,
 ) -> None:
-    assert _choice_names(
-        SiteManagement.user_attribute_sync_connections_form_spec(_local_site_config())
-    ) == ["disabled", "all", "list"]
-
-
-def test_user_attribute_sync_form_spec_remote_site_offers_central_site_choice(
-    request_context: None,
-) -> None:
-    assert _choice_names(
-        SiteManagement.user_attribute_sync_connections_form_spec(_remote_site_config())
-    ) == ["central_site", "disabled", "all", "list"]
-
-
-def test_central_site_connections_summary_empty(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.sites.inherited_authentication_connections",
-        lambda central_config, site_config=None: [],
-    )
-    assert SiteManagement._central_site_connections_summary(None) == ""
-
-
-def test_central_site_connections_summary_links_connection_ids(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.sites.inherited_authentication_connections",
-        lambda central_config, site_config=None: [
-            ("ldap", "ldap_a"),
-            ("saml", {"connection_id": "saml_b"}),
-        ],
-    )
-    assert SiteManagement._central_site_connections_summary(None) == (
-        "Currently inherited: "
-        '<a href="wato.py?edit=ldap_a&id=ldap_a&mode=edit_ldap_connection">ldap_a</a>, '
-        '<a href="wato.py?edit=saml_b&id=saml_b&mode=edit_saml_config">saml_b</a>'
-    )
+    """The choices are the same for every site — there is no
+    "inherit from the central site" option."""
+    assert _choice_names(SiteManagement.user_attribute_sync_connections_form_spec()) == [
+        "disabled",
+        "all",
+        "list",
+    ]

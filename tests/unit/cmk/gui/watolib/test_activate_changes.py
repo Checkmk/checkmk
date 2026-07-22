@@ -642,6 +642,7 @@ class TestAutomationReceiveConfigSync:
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    authentication_connections=("all", ["ldap", "saml"]),
                     user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),

@@ -31,6 +31,7 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfi
 from cmk.gui.watolib.utils import multisite_dir
 from cmk.livestatus_client import (
     AuthenticationConnectionEntry,
+    AuthenticationConnectionsValue,
     SAMLAuthenticationEntry,
     SiteConfiguration,
     SiteConfigurations,
@@ -211,15 +212,26 @@ def ldap_authentication_entries_for_site(
     ]
 
 
+# `authentication_connections` is always written by the site editor and by
+# cmk-update-config, but specs constructed in code may omit it. Missing means
+# the legacy behavior: every configured connection may authenticate users.
+_DEFAULT_AUTHENTICATION_CONNECTIONS: AuthenticationConnectionsValue = ("all", ["ldap", "saml"])
+
+
 def _expand_to_available_connections(
-    value: Literal["all"] | list[AuthenticationConnectionEntry],
+    value: AuthenticationConnectionsValue,
     site_config: SiteConfiguration,
 ) -> list[AuthenticationConnectionEntry]:
-    """Resolve an on-disk `authentication_connections` `all` value into a concrete list."""
+    """Resolve an on-disk `authentication_connections` value into a concrete list."""
+    if value == "disabled":
+        return []
     if isinstance(value, list):
         return value
-    expanded = ldap_authentication_entries_for_site(get_active_ldap_connections(), site_config)
-    if distributed_saml_supported():
+    _all, connection_types = value
+    expanded: list[AuthenticationConnectionEntry] = []
+    if "ldap" in connection_types:
+        expanded += ldap_authentication_entries_for_site(get_active_ldap_connections(), site_config)
+    if "saml" in connection_types and distributed_saml_supported():
         expanded += [
             ("saml", SAMLAuthenticationEntry(connection_id=connection_id))
             for connection_id, saml_connection in sorted(get_active_saml_connections().items())
@@ -228,41 +240,14 @@ def _expand_to_available_connections(
     return expanded
 
 
-def _own_authentication_connections(
-    site_config: SiteConfiguration,
-) -> list[AuthenticationConnectionEntry] | None:
-    # A legacy explicit `None` value means "inherit", same as an absent key.
-    if (value := site_config.get("authentication_connections")) is None:
-        return None
-    return _expand_to_available_connections(value, site_config)
-
-
-def inherited_authentication_connections(
-    central_config: SiteConfiguration | None,
-    site_config: SiteConfiguration | None,
-) -> list[AuthenticationConnectionEntry]:
-    """The connections the central site hands down to a site that has none of its own."""
-    if central_config is None:
-        # No central site config is available, e.g. on a remote site in a distributed setup.
-        return []
-    central_value = central_config.get("authentication_connections")
-    if central_value is None:
-        # No connections configured (a legacy ``None`` value counts as unconfigured)
-        return []
-    return _expand_to_available_connections(
-        central_value, site_config if site_config is not None else central_config
-    )
-
-
 def resolved_authentication_connections(
     site_config: SiteConfiguration,
-    central_config: SiteConfiguration | None,
 ) -> list[AuthenticationConnectionEntry]:
     """The connections a site ends up with, determined on the central site to propagate them."""
-    own = _own_authentication_connections(site_config)
-    if own is not None:
-        return own
-    return inherited_authentication_connections(central_config, site_config)
+    return _expand_to_available_connections(
+        site_config.get("authentication_connections", _DEFAULT_AUTHENTICATION_CONNECTIONS),
+        site_config,
+    )
 
 
 def effective_authentication_connections(
@@ -274,10 +259,7 @@ def effective_authentication_connections(
         # local self-default. The connections propagated by get_site_globals(), carrying
         # per-site ACS URLs and restrictions, are the source of truth here.
         return active_config.authentication_connections or []
-    own = _own_authentication_connections(site_config)
-    if own is not None:
-        return own
-    return active_config.authentication_connections or []
+    return resolved_authentication_connections(site_config)
 
 
 def _referenced_connection_id(entry: AuthenticationConnectionEntry) -> str:
@@ -291,11 +273,11 @@ def _references_connection(entry: AuthenticationConnectionEntry, connection_id: 
 
 
 def _explicitly_references_connection(site_config: SiteConfiguration, connection_id: str) -> bool:
-    value = site_config.get("authentication_connections")
-    if value is None or value == "all":
-        # Absence (= inherit from central) and "all" are resolved dynamically
-        # and simply skip connections that are not available on the site — no
-        # dead reference can remain.
+    value = site_config.get("authentication_connections", _DEFAULT_AUTHENTICATION_CONNECTIONS)
+    if not isinstance(value, list):
+        # "disabled" references nothing; the ("all", [types]) form is
+        # resolved dynamically and simply skips connections that are not
+        # available on the site — no dead reference can remain.
         return False
     return any(_references_connection(entry, connection_id) for entry in value)
 
@@ -313,10 +295,10 @@ def sites_with_dangling_login_reference(
     different customer would be left with a dead login reference. The central site is
     exempt: as the configuration master it always has every connection.
 
-    Sites without an explicit ``authentication_connections`` value inherit the central
-    site's selection, and sites using the ``"all"`` shorthand resolve it dynamically;
-    both simply skip connections that are not available on the site — those are not
-    reported here.
+    Sites using the ``("all", [types])`` shorthand (or lacking the key, which defaults
+    to it) resolve their connections dynamically and simply skip connections that are
+    not available on the site — those are not reported here. ``"disabled"`` references
+    nothing.
 
     Outside the ultimatemt edition the customer API stub treats every scope as global,
     so this always returns an empty list.
@@ -357,11 +339,11 @@ def login_connections_of_other_customer(
     """
     if site_is_local(site_config):
         return []
-    auth_connections = site_config.get("authentication_connections")
+    auth_connections = site_config["authentication_connections"]
     if not isinstance(auth_connections, list):
-        # Absence (= inherit from central) and "all" are resolved dynamically
-        # and simply skip connections that are not available on the site, no
-        # dead reference can arise.
+        # "disabled" references nothing; the ("all", [types]) form is
+        # resolved dynamically and simply skips connections that are not
+        # available on the site, no dead reference can arise.
         return []
     _customer_api = customer_api()
     site_customer = _customer_api.get_customer_id(site_config)

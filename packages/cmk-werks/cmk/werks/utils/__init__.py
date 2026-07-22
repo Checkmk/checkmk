@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
 from collections.abc import Iterable, Iterator
 from functools import partial
 from pathlib import Path
-from typing import IO
 
 from pydantic import RootModel, TypeAdapter
 
@@ -158,48 +156,3 @@ def write_precompiled_werks(path: Path, werks: dict[int, WerkV3]) -> None:
 
 def has_content(description: str) -> bool:
     return bool(description.strip())
-
-
-# this function is used from the bauwelt repo. TODO: move script from bauwelt into this repo
-# TODO: use a jinja template for this, and move it to .announce
-def write_as_text(werks: dict[int, WerkV3], f: IO[str], write_version: bool = True) -> None:
-    """Write the given werks to a file object
-
-    This is used for creating a textual hange log for the released versions.
-    """
-    # TODO: reuse code from  .announce and replace with two jinja templates,
-    # one for txt, one for markdown
-    translator = WerkTranslator()
-    werklist = sort_by_version_and_component(werks.values())
-    for version, version_group in itertools.groupby(werklist, key=lambda w: w.version):
-        # write_version=False is used by the announcement mails
-        if write_version:
-            f.write(f"{version}:\n")
-        for component, component_group in itertools.groupby(
-            version_group, key=translator.component_of
-        ):
-            f.write(f"    {component}:\n")
-            for werk in component_group:
-                write_werk_as_text(f, werk)
-            f.write("\n")
-        f.write("\n")
-
-
-def write_werk_as_text(f: IO[str], werk: WerkV3) -> None:
-    # TODO: use jinja templates of .announce
-    prefix = ""
-    if werk.class_ == Class.FIX:
-        prefix = " FIX:"
-    elif werk.class_ == Class.SECURITY:
-        prefix = " SEC:"
-
-    # See following commits...
-    if has_content(werk.description):
-        omit = "..."
-    else:
-        omit = ""
-
-    f.write(f"    * {werk.id:0>4}{prefix} {werk.title}{omit}\n")
-
-    if werk.compatible == Compatibility.NOT_COMPATIBLE:
-        f.write("            NOTE: Please refer to the migration notes!\n")

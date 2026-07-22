@@ -14,7 +14,6 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from cmk.base import diagnostics
-from cmk.ccc.version import Edition
 from cmk.diagnostics.internal import (
     CollectContext,
     CollectError,
@@ -25,9 +24,9 @@ from cmk.diagnostics.internal import (
     GeneratedContent,
     Help,
     Sensitivity,
+    Topic,
     VerbatimCopy,
 )
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 
 
 def _make_context(tmp_path: Path, logger: diagnostics.ConsoleLogger) -> CollectContext:
@@ -50,7 +49,7 @@ def _make_plugin(
         name=name,
         description=Help("A test plugin"),
         sensitivity=Sensitivity.LOW,
-        topic=diagnostics._TOPIC_GENERAL,
+        topic=Topic("Test topic"),
         handler=handler,
     )
 
@@ -74,25 +73,8 @@ def _tar_names(dump: diagnostics.DiagnosticsDump) -> Sequence[str]:
         return tar.getnames()
 
 
-def _full_catalogue(tmp_path: Path) -> Mapping[str, DiagnosticsPlugin]:
-    return diagnostics._load_plugin_catalogue(
-        edition=Edition.COMMUNITY,
-        loaded_config=EMPTY_CONFIG,
-        core_performance_settings=lambda x: {},
-        omd_config={},
-        tmp_parent=tmp_path,
-        logger=diagnostics.ConsoleLogger(),
-    )
-
-
-def _adapter_catalogue(tmp_path: Path) -> Mapping[str, DiagnosticsPlugin]:
-    return diagnostics._adapter_plugin_catalogue(
-        edition=Edition.COMMUNITY,
-        loaded_config=EMPTY_CONFIG,
-        core_performance_settings=lambda x: {},
-        omd_config={},
-        tmp_parent=tmp_path,
-    )
+def _catalogue() -> Mapping[str, DiagnosticsPlugin]:
+    return diagnostics._load_plugin_catalogue(logger=diagnostics.ConsoleLogger())
 
 
 @pytest.fixture(autouse=True)
@@ -111,12 +93,8 @@ def reset_collector_caches() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def test_adapter_catalogue_names(tmp_path: Path) -> None:
-    assert not _adapter_catalogue(tmp_path)
-
-
 def test_diagnostics_dump_create(tmp_path: Path) -> None:
-    catalogue = _full_catalogue(tmp_path)
+    catalogue = _catalogue()
     dump, _logger = _make_dump(tmp_path, [catalogue["environment_variables"]])
 
     assert dump.dump_folder.exists()
@@ -200,8 +178,8 @@ def test_dump_logs_collect_exceptions(tmp_path: Path, exception: Exception, mark
     assert str(exception) in logger.content() or marker in logger.content()
 
 
-def test_resolve_cli_selection(tmp_path: Path) -> None:
-    catalogue = _full_catalogue(tmp_path)
+def test_resolve_cli_selection() -> None:
+    catalogue = _catalogue()
 
     # no options: only 'always' plugins run (empty explicit selection)
     assert diagnostics._resolve_cli_selection(catalogue, {}).plugins == []
@@ -220,8 +198,8 @@ def test_resolve_cli_selection(tmp_path: Path) -> None:
     assert "latest_crash_reports" in selection.plugins  # explicitly selected
 
 
-def test_resolve_cli_selection_rejects_unknown(tmp_path: Path) -> None:
-    catalogue = _full_catalogue(tmp_path)
+def test_resolve_cli_selection_rejects_unknown() -> None:
+    catalogue = _catalogue()
     with pytest.raises(Exception, match="Unknown plugin"):
         diagnostics._resolve_cli_selection(catalogue, {"plugins": "nope"})
     with pytest.raises(Exception, match="Invalid sensitivity"):
@@ -280,7 +258,7 @@ def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     config_dir.mkdir(parents=True)
     (config_dir / "test.conf").write_text("testvar = testvalue")
 
-    catalogue = _full_catalogue(tmp_path)
+    catalogue = _catalogue()
     legacy_plugins = diagnostics._legacy_file_plugins(
         {"checkmk-config-files": ["test/test.conf", "no/such/file.mk"]},
         catalogue=catalogue,
@@ -293,9 +271,9 @@ def test_legacy_file_list_served_by_native_plugins(tmp_path: Path) -> None:
     assert "No such files: no/such/file.mk" in logger.content()
 
 
-def test_legacy_cee_file_options_absent_on_community(tmp_path: Path) -> None:
+def test_legacy_cee_file_options_absent_on_community() -> None:
     """Without the CEE plugins the core/licensing options are silently unavailable"""
-    catalogue = _full_catalogue(tmp_path)
+    catalogue = _catalogue()
     legacy_plugins = diagnostics._legacy_file_plugins(
         {
             "checkmk-core-files": ["core/history"],

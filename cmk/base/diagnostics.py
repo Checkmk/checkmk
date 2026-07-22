@@ -5,13 +5,10 @@
 
 from __future__ import annotations
 
-import abc
 import io
 import logging
-import subprocess
 import sys
 import tarfile
-import tempfile
 import textwrap
 import traceback
 import uuid
@@ -20,9 +17,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
-from typing import Final, override
+from typing import Final
 
-import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
@@ -30,9 +26,8 @@ from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
-from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
-from cmk.ccc import site, tty
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
@@ -41,7 +36,6 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.diagnostics.engine import (
     deserialize_cl_parameters,
     DiagnosticsCLParameters,
-    DiagnosticsElementFilepaths,
     DiagnosticsModesParameters,
     DiagnosticsOptionalParameters,
     DumpSelection,
@@ -145,14 +139,7 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     loading_result = load_config(edition=app.edition)
-    catalogue = _load_plugin_catalogue(
-        edition=app.edition,
-        loaded_config=loading_result.loaded_config,
-        core_performance_settings=app.core_performance_settings,
-        omd_config=get_omd_config(cmk.utils.paths.omd_root),
-        tmp_parent=cmk.utils.paths.diagnostics_dir,
-        logger=ConsoleLogger(),
-    )
+    catalogue = _load_plugin_catalogue(logger=ConsoleLogger())
 
     if "list" in options:
         _print_available_plugins(catalogue)
@@ -342,14 +329,7 @@ def _create_dump(
     omd_config = get_omd_config(omd_root)
     logger = ConsoleLogger()
 
-    catalogue = _load_plugin_catalogue(
-        edition=app.edition,
-        loaded_config=loaded_config,
-        core_performance_settings=app.core_performance_settings,
-        omd_config=omd_config,
-        tmp_parent=diagnostics_dir,
-        logger=logger,
-    )
+    catalogue = _load_plugin_catalogue(logger=logger)
     for unknown in sorted(selected_names - set(catalogue)):
         message = f"Plugin '{unknown}' is not available on this site"
         logger.info(message)
@@ -383,39 +363,16 @@ def _create_dump(
     )
 
 
-def _load_plugin_catalogue(
-    *,
-    edition: cmk_version.Edition,
-    loaded_config: BaseConfig,
-    core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
-    omd_config: site.OMDConfig,
-    tmp_parent: Path,
-    logger: ConsoleLogger,
-) -> Mapping[str, DiagnosticsPlugin]:
-    """All available plugins by name: discovered ones plus the transitional adapters"""
+def _load_plugin_catalogue(*, logger: ConsoleLogger) -> Mapping[str, DiagnosticsPlugin]:
+    """All available plugins by name, as discovered on this site"""
     discovered = load_diagnostics_plugins(raise_errors=False)
     for error in discovered.errors:
         logger.error(str(error))
-    return {
-        **_adapter_plugin_catalogue(
-            edition=edition,
-            loaded_config=loaded_config,
-            core_performance_settings=core_performance_settings,
-            omd_config=omd_config,
-            tmp_parent=tmp_parent,
-        ),
-        **{plugin.name: plugin for plugin in discovered.plugins.values()},
-    }
+    return {plugin.name: plugin for plugin in discovered.plugins.values()}
 
 
 def _make_host_resolver(checkmk_server_host: str) -> Callable[[], str]:
-    def resolve() -> str:
-        try:
-            return str(verify_checkmk_server_host(checkmk_server_host or None))
-        except DiagnosticsElementWarning as e:
-            raise CollectWarning(str(e)) from e
-
-    return resolve
+    return lambda: str(verify_checkmk_server_host(checkmk_server_host or None))
 
 
 #   .--format helper-------------------------------------------------------.
@@ -489,68 +446,16 @@ class ConsoleLogger:
 #   '----------------------------------------------------------------------'
 
 
-# Transitional topic declarations: they describe the target taxonomy and move
-# into the diagnostics plugin family together with the plugins. The
-# adapter catalogue below shrinks with every element converted to a
-# discoverable plugin.
+# TODO(3.1): delete — the whole section below down to _legacy_file_plugins
+# serves the old automation wire for older central sites (and the legacy
+# parameters of the v1 automation). The topic declarations mirror the ones of
+# the diagnostics plugin family; they only tag the synthetic legacy
+# plugins.
 
-_TOPIC_GENERAL = Topic("General site information")
-_TOPIC_OPERATING_SYSTEM = Topic("Operating system & hardware")
-_TOPIC_PERFORMANCE = Topic("Performance & sizing")
 _TOPIC_CONFIGURATION = Topic("Configuration files")
 _TOPIC_LOGS = Topic("Log files")
 _TOPIC_MONITORING_CORE = Topic("Monitoring core & daemons")
 _TOPIC_LICENSING = Topic("Licensing")
-
-
-def _adapt(
-    elements_factory: Callable[[CollectContext], Sequence[ABCDiagnosticsElement]],
-    *,
-    tmp_parent: Path,
-) -> Callable[[CollectContext], Iterable[DumpItem]]:
-    """Wrap legacy element classes as a plugin handler (transitional)
-
-    Runs the elements into a temporary folder and yields the produced files
-    as verbatim copies, reproducing the tar layout of the old engine. The
-    temporary folder lives until the engine has consumed the generator.
-    """
-
-    def handle(context: CollectContext) -> Iterable[DumpItem]:
-        with tempfile.TemporaryDirectory(dir=str(tmp_parent)) as tmp:
-            tmp_dump_folder = Path(tmp)
-            try:
-                for element in elements_factory(context):
-                    for filepath in element.add_or_get_files(
-                        omd_root=context.omd_root, tmp_dump_folder=tmp_dump_folder
-                    ):
-                        yield DumpItem(
-                            PurePosixPath(filepath.relative_to(tmp_dump_folder)),
-                            VerbatimCopy(filepath),
-                        )
-            except DiagnosticsElementInfo as e:
-                raise CollectInfo(str(e)) from e
-            except DiagnosticsElementWarning as e:
-                raise CollectWarning(str(e)) from e
-            except DiagnosticsElementError as e:
-                raise CollectError(str(e)) from e
-
-    return handle
-
-
-def _adapter_plugin_catalogue(
-    *,
-    edition: cmk_version.Edition,
-    loaded_config: BaseConfig,
-    core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
-    omd_config: site.OMDConfig,
-    tmp_parent: Path,
-) -> Mapping[str, DiagnosticsPlugin]:
-    """All available plugins, keyed by name (transitional adapter catalogue)
-
-    All elements are converted to discoverable plugins; the empty adapter
-    scaffolding is up for deletion.
-    """
-    return {}
 
 
 # Legacy boolean options and the plugin name they select (old wire / current CLI)
@@ -901,115 +806,4 @@ def verify_checkmk_server_host(checkmk_server_host: str | None) -> HostName:
     try:
         return HostName(result[0][0])
     except IndexError:
-        raise DiagnosticsElementWarning("No Checkmk server found")
-
-
-# .
-#   .--elements------------------------------------------------------------.
-#   |                   _                           _                      |
-#   |               ___| | ___ _ __ ___   ___ _ __ | |_ ___                |
-#   |              / _ \ |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|               |
-#   |             |  __/ |  __/ | | | | |  __/ | | | |_\__ \               |
-#   |              \___|_|\___|_| |_| |_|\___|_| |_|\__|___/               |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class DiagnosticsElementError(Exception):
-    pass
-
-
-class DiagnosticsElementWarning(Exception):
-    pass
-
-
-class DiagnosticsElementInfo(Exception):
-    pass
-
-
-class ABCDiagnosticsElement(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def description(self) -> str:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        # Please note the case if there are more than one filepath results. A Python generator
-        # is executed until the first raise. Then it will be stopped and all generator states
-        # are gone. Correctly calculated filepaths till then are yielded.
-        # (Example: CheckmkConfigFilesDiagnosticsElement: collect errors and raise at the end)
-        raise NotImplementedError
-
-
-class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        if not (infos := self.contents(omd_root)):
-            raise DiagnosticsElementInfo("No data")
-        filepath = tmp_dump_folder / self.filename
-        filepath.write_text(infos)
-        yield filepath
-
-    @property
-    @abc.abstractmethod
-    def filename(self) -> str:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def contents(self, omd_root: Path) -> str:
-        raise NotImplementedError
-
-
-#   ---command calls--------------------------------------------------------------
-
-
-class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
-    def __init__(self, command_id: str, suffix: str, command: list[str]) -> None:
-        self._command_id = command_id
-        self._suffix = suffix
-        self._command = command
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Command %(command_id)s") % {"command_id": self._command_id}
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Output of %(command)s") % {"command": " ".join(self._command)}
-
-    @override
-    @property
-    def filename(self) -> str:
-        return f"command_{self._command_id}{self._suffix}"
-
-    @override
-    def contents(self, omd_root: Path) -> str:
-        try:
-            return subprocess.check_output(
-                self._command,
-                text=True,
-                stderr=subprocess.STDOUT,
-                cwd=omd_root,
-            )
-
-        except subprocess.CalledProcessError:
-            raise DiagnosticsElementError(
-                "Command %s returned an unexpected error." % " ".join(self._command)
-            )
-
-        except FileNotFoundError:
-            raise DiagnosticsElementInfo(
-                "Command %s not available on this system." % " ".join(self._command)
-            )
+        raise CollectWarning("No Checkmk server found")

@@ -28,6 +28,15 @@ platform(
     ],
 )
 
+platform(
+    name = "x86_64-windows-msvc",
+    constraint_values = [
+        ":msvc",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
 constraint_setting(
     name = "linker",
     default_constraint_value = ":linker_unknown",
@@ -35,6 +44,11 @@ constraint_setting(
 
 constraint_value(
     name = "musl",
+    constraint_setting = ":linker",
+)
+
+constraint_value(
+    name = "msvc",
     constraint_setting = ":linker",
 )
 

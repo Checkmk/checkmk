@@ -12,15 +12,6 @@ from pathlib import Path, PurePosixPath
 
 import cmk.livestatus_client as livestatus
 from cmk.ccc import store
-
-# TODO: The classification table and the file map configs still live in the
-# transitional cmk.diagnostics package because the GUI still consumes them
-# there; they move here once the GUI is migrated.
-from cmk.diagnostics.engine import (
-    CheckmkFileSensitivity,
-    FileMapConfig,
-    get_checkmk_file_info,
-)
 from cmk.diagnostics.internal import (
     CollectContext,
     DumpItem,
@@ -29,6 +20,11 @@ from cmk.diagnostics.internal import (
     REDACT_STRING,
     Sensitivity,
     VerbatimCopy,
+)
+from cmk.plugins.diagnostics.lib._classification import (
+    CheckmkFileSensitivity,
+    FileMapConfig,
+    get_checkmk_file_info,
 )
 
 _SENSITIVITY_OF = {

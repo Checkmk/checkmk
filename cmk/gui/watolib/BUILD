@@ -278,7 +278,6 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
-        "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-messaging",
         requirement("cryptography"),

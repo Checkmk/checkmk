@@ -228,6 +228,60 @@ def test_legacy_selection() -> None:
     assert host == "my_server"
 
 
+@pytest.mark.parametrize(
+    "cl_parameters, expected_parameters",
+    [
+        ([], {}),
+        # boolean
+        (
+            [
+                "local-files",
+                "omd-config",
+                "checkmk-crashes",
+                "metric-backend",
+            ],
+            {
+                "local-files": True,
+                "omd-config": True,
+                "checkmk-crashes": True,
+                "metric-backend": True,
+            },
+        ),
+        # files
+        (
+            [
+                "checkmk-config-files",
+                "a,b",
+                "checkmk-log-files",
+                "a,b",
+            ],
+            {
+                "checkmk-config-files": ["a", "b"],
+                "checkmk-log-files": ["a", "b"],
+            },
+        ),
+        # with host
+        (
+            [
+                "performance-graphs",
+                "myhost",
+                "checkmk-overview",
+                "myhost",
+            ],
+            {
+                "performance-graphs": "myhost",
+                "checkmk-overview": "myhost",
+            },
+        ),
+    ],
+)
+def test_legacy_deserialize_cl_parameters(
+    cl_parameters: Sequence[str],
+    expected_parameters: Mapping[str, object],
+) -> None:
+    assert diagnostics.deserialize_cl_parameters(cl_parameters) == expected_parameters
+
+
 def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
     dump, _logger = _make_dump(tmp_path, [])
     # Fake existing tarfiles

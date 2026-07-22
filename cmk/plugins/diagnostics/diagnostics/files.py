@@ -14,8 +14,6 @@ from collections.abc import Iterable
 from functools import partial
 from pathlib import Path, PurePosixPath
 
-# TODO: FILE_MAP_* move into this family's lib once the GUI is migrated.
-from cmk.diagnostics.engine import FILE_MAP_CONFIG, FILE_MAP_LOG
 from cmk.diagnostics.internal import (
     CollectContext,
     DiagnosticsPlugin,
@@ -23,6 +21,7 @@ from cmk.diagnostics.internal import (
     Help,
     Sensitivity,
 )
+from cmk.plugins.diagnostics.lib._classification import FILE_MAP_CONFIG, FILE_MAP_LOG
 from cmk.plugins.diagnostics.lib.files import collect_bucket, walk_verbatim
 from cmk.plugins.diagnostics.lib.topics import TOPIC_CONFIGURATION, TOPIC_LOGS
 

@@ -17,7 +17,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import Any, Final
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -34,24 +34,8 @@ from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.diagnostics.engine import (
-    deserialize_cl_parameters,
-    DiagnosticsCLParameters,
-    DiagnosticsModesParameters,
-    DiagnosticsOptionalParameters,
     DumpSelection,
     load_diagnostics_plugins,
-    OPT_APACHE_CONFIG,
-    OPT_BI_RUNTIME_DATA,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_CORE_FILES,
-    OPT_CHECKMK_CRASH_REPORTS,
-    OPT_CHECKMK_LICENSING_FILES,
-    OPT_CHECKMK_LOG_FILES,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_COMP_METRIC_BACKEND,
-    OPT_LOCAL_FILES,
-    OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
     resolve_selection,
 )
 from cmk.diagnostics.internal import (
@@ -73,6 +57,11 @@ from cmk.utils.log import console, section
 
 # TODO: why is there localization in this module?
 
+
+# TODO(3.1): delete together with the legacy wire sections below.
+DiagnosticsCLParameters = Sequence[str]
+DiagnosticsModesParameters = dict[str, Any]
+DiagnosticsOptionalParameters = dict[str, Any]
 
 SUFFIX = ".tar.gz"
 
@@ -446,6 +435,67 @@ class ConsoleLogger:
 # parameters of the v1 automation). The topic declarations mirror the ones of
 # the diagnostics plugin family; they only tag the synthetic legacy
 # plugins.
+
+# The option names of the old wire.
+OPT_APACHE_CONFIG = "apache-config"
+OPT_BI_RUNTIME_DATA = "bi-runtime-data"
+OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
+OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
+OPT_CHECKMK_CRASH_REPORTS = "checkmk-crashes"
+OPT_CHECKMK_LICENSING_FILES = "checkmk-licensing-files"
+OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
+OPT_CHECKMK_OVERVIEW = "checkmk-overview"
+OPT_LOCAL_FILES = "local-files"
+OPT_OMD_CONFIG = "omd-config"
+OPT_PERFORMANCE_GRAPHS = "performance-graphs"
+OPT_COMP_METRIC_BACKEND = "metric-backend"
+
+_OPTS_WITH_HOST = [
+    OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_OVERVIEW,
+]
+
+_BOOLEAN_CONFIG_OPTS = [
+    OPT_APACHE_CONFIG,
+    OPT_BI_RUNTIME_DATA,
+    OPT_CHECKMK_CRASH_REPORTS,
+    OPT_COMP_METRIC_BACKEND,
+    OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
+]
+
+_FILES_OPTS = [
+    "gui-profiles",
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_LICENSING_FILES,
+    OPT_CHECKMK_LOG_FILES,
+]
+
+
+# Used for the Automation "create-diagnostics-dump"
+def deserialize_cl_parameters(
+    cl_parameters: DiagnosticsCLParameters,
+) -> DiagnosticsOptionalParameters:
+    deserialized_parameters = DiagnosticsOptionalParameters()
+    parameters = iter(cl_parameters)
+    while True:
+        try:
+            parameter = next(parameters)
+            if parameter in _BOOLEAN_CONFIG_OPTS:
+                deserialized_parameters[parameter] = True
+
+            elif parameter in _OPTS_WITH_HOST:
+                deserialized_parameters[parameter] = next(parameters)
+
+            elif parameter in _FILES_OPTS:
+                deserialized_parameters[parameter] = next(parameters).split(",")
+
+        except StopIteration:
+            break
+
+    return deserialized_parameters
+
 
 _TOPIC_CONFIGURATION = Topic("Configuration files")
 _TOPIC_LOGS = Topic("Log files")

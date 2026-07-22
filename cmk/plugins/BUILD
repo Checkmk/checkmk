@@ -46,7 +46,6 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crash:crash",
-        "//packages/cmk-diagnostics:engine",
         "//packages/cmk-ec:syslog",
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-livestatus-client",

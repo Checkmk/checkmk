@@ -5,7 +5,6 @@ py_cmk_test(
     size = "small",
     srcs = glob(["**/*.py"]),
     deps = [
-        "//packages/cmk-ccc:site",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-plugin-apis:diagnostics",
     ],

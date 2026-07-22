@@ -156,9 +156,6 @@ allows = [
   "cmk.inventory",
   # decoding of the rot47-obfuscated licensing usage reports
   "cmk.licensing.usage",
-  # TODO: remove once the GUI is migrated and the classification table moved
-  # into this family's lib
-  "cmk.diagnostics.engine",
   "cmk.profiling.backend",
 ]
 
@@ -534,6 +531,7 @@ allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 
 [components."cmk.base"]
 allows = [
+  "cmk.diagnostics.engine",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -544,7 +542,6 @@ allows = [
   "cmk.checkengine",
   "cmk.core_client",
   "cmk.crash",
-  "cmk.diagnostics.engine",
   "cmk.discover_plugins",
   "cmk.ec",
   "cmk.events",
@@ -673,9 +670,6 @@ allows = ["@ccc"]
 
 [components."cmk.dev_deploy"]
 allows = []
-
-[components."cmk.diagnostics.engine"]
-allows = ["@plugin_apis", "cmk.ccc.site", "cmk.discover_plugins"]
 
 [components."cmk.diskspace"]
 allows = ["@ccc", "cmk.utils.paths"]
@@ -1237,6 +1231,9 @@ allows = [
   "cmk.utils.password_store",
   "cmk.utils.paths",
 ]
+
+[components."cmk.diagnostics.engine"]
+allows = ["@plugin_apis", "cmk.discover_plugins"]
 
 [components."cmk.diagnostics.internal"]
 allows = []

@@ -35,6 +35,18 @@ platform(
         "@platforms//cpu:x86_64",
         "@platforms//os:windows",
     ],
+    # Targeting windows-msvc implies the static CRT: platform flags apply to
+    # every Rust compile in the configuration — dependencies included, like
+    # the [target.'cfg(...)'] rustflags of a plain cargo build — while exec
+    # tools (proc-macros, build scripts) stay unaffected. They take
+    # precedence over the command line, rc files and transitions, so the
+    # invariant cannot be overridden by accident; static_crt_test() asserts
+    # it on the shipped binaries. The matching CRT link libraries and the
+    # /MD -> /MT rewrite for cc-built C sources live in
+    # //bazel/toolchains/cc/xwin/args.
+    flags = [
+        "--@rules_rust//rust/settings:extra_rustc_flags=-Ctarget-feature=+crt-static",
+    ],
 )
 
 constraint_setting(

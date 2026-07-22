@@ -6,17 +6,18 @@
 import pytest
 
 from cmk.gui.inventory._tree import InventoryPath, TreeSource
-from cmk.gui.inventory.filters import FilterInvFloat, FilterInvFloatChoice
+from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvFloatChoice
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableTree,
     SDKey,
     SDNodeName,
+    SDValue,
 )
 
 
-def _make_host_inventory_tree(value: int | float) -> ImmutableTree:
+def _make_host_inventory_tree(value: SDValue) -> ImmutableTree:
     return ImmutableTree(
         nodes_by_name={
             SDNodeName("path-to-node"): ImmutableTree(
@@ -188,6 +189,74 @@ def test_filter_inv_float_unit_choices(
                 "k": FilterInvFloatChoice("kU", 10),
                 "M": FilterInvFloatChoice("MU", 100),
             },
+        ).filter_table(context, rows)
+        == expected_rows
+    )
+
+
+@pytest.mark.parametrize(
+    "context, rows, expected_rows",
+    [
+        pytest.param(
+            {},
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+                {"host_inventory": _make_host_inventory_tree(False)},
+            ],
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+                {"host_inventory": _make_host_inventory_tree(False)},
+            ],
+            id="no-context",
+        ),
+        pytest.param(
+            {"ident": {"is_ident": "-1"}},
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+                {"host_inventory": _make_host_inventory_tree(False)},
+            ],
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+                {"host_inventory": _make_host_inventory_tree(False)},
+            ],
+            id="ignore",
+        ),
+        pytest.param(
+            {"ident": {"is_ident": "1"}},
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+                {"host_inventory": _make_host_inventory_tree(False)},
+                {"host_inventory": _make_host_inventory_tree(None)},
+            ],
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+            ],
+            id="select-true",
+        ),
+        pytest.param(
+            {"ident": {"is_ident": "0"}},
+            [
+                {"host_inventory": _make_host_inventory_tree(True)},
+                {"host_inventory": _make_host_inventory_tree(False)},
+                {"host_inventory": _make_host_inventory_tree(None)},
+            ],
+            [
+                {"host_inventory": _make_host_inventory_tree(False)},
+            ],
+            id="select-false",
+        ),
+    ],
+)
+def test_filter_inv_bool(context: VisualContext, rows: Rows, expected_rows: Rows) -> None:
+    assert (
+        FilterInvBool(
+            ident="ident",
+            title="Title",
+            inventory_path=InventoryPath(
+                (SDNodeName("path-to-node"),),
+                TreeSource.attributes,
+                SDKey("key"),
+            ),
         ).filter_table(context, rows)
         == expected_rows
     )

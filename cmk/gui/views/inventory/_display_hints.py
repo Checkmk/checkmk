@@ -494,17 +494,13 @@ def _make_attribute_filter(
     filter_ident: str,
     long_title: str,
     inventory_path: inventory.InventoryPath,
-) -> FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
+) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
     match field_from_api:
         case BoolFieldFromAPI():
-            return FilterInvChoice(
+            return FilterInvBool(
                 ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
-                options=[
-                    ("True", _make_str(field_from_api.render_true)),
-                    ("False", _make_str(field_from_api.render_false)),
-                ],
                 is_show_more=True,
             )
         case NumberFieldFromAPI():
@@ -886,7 +882,7 @@ def _get_unit_choices_from_legacy_data_type(data_type: str) -> Mapping[str, Filt
 
 def _make_attribute_filter_from_legacy_hint(
     *, path: SDPath, key: str, data_type: str, filter_ident: str, title: str, is_show_more: bool
-) -> FilterInvText | FilterInvChoice | FilterInvFloat:
+) -> FilterInvText | FilterInvBool | FilterInvFloat:
     inventory_path = inventory.InventoryPath(
         path=path,
         source=inventory.TreeSource.attributes,
@@ -901,14 +897,10 @@ def _make_attribute_filter_from_legacy_hint(
                 is_show_more=is_show_more,
             )
         case "bool":
-            return FilterInvChoice(
+            return FilterInvBool(
                 ident=filter_ident,
                 title=title,
                 inventory_path=inventory_path,
-                options=[
-                    ("True", _("yes")),
-                    ("False", _("no")),
-                ],
                 is_show_more=True,
             )
         case _:
@@ -928,7 +920,9 @@ class AttributeDisplayHint:
     long_title: str
     paint_function: PaintFunctionFromAPI
     sort_function: SortFunction
-    filter: FilterInvText | FilterInvFloat | FilterInvChoice | FilterInvTextWithSortKey
+    filter: (
+        FilterInvBool | FilterInvText | FilterInvFloat | FilterInvChoice | FilterInvTextWithSortKey
+    )
 
     @property
     def long_inventory_title(self) -> str:

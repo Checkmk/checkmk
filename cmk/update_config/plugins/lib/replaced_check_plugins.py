@@ -9,7 +9,8 @@ from cmk.checkengine.plugins import CheckPluginName
 
 # Please keep this functionality even if we currently don't have any replaced check plugins!
 _REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
-    CheckPluginName("tplink_mem"): CheckPluginName("memory_utilization")
+    CheckPluginName("tplink_mem"): CheckPluginName("memory_utilization"),
+    CheckPluginName("ups_eaton_enviroment"): CheckPluginName("ups_eaton_environment"),
 }
 
 ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {

@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import logging
+import re
+from re import Pattern
+from typing import override
+
+from playwright.sync_api import expect, Locator
+
+from tests.system.gui.testlib.playwright.helpers import LocatorHelper
+
+# from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
+from tests.system.gui.testlib.playwright.pom.page import CmkPage
+
+logger = logging.getLogger(__name__)
+
+
+class ActivateChangesSlideout(LocatorHelper):
+    """Represents main menu 'Changes > Quick activation of pending changes' slideout"""
+
+    slide_title: str = "Quick activation of pending changes"
+    activate_changes_btn_name: str = "Activate pending changes"
+
+    def __init__(self, cmk_page: CmkPage, open_slideout: bool = True) -> None:
+        """Page object for the 'Quick activation of pending changes' slideout.
+
+        Args:
+            open_slideout: Open the slideout via the main menu.
+                Pass False when the slideout is already open.
+        """
+        self.cmk_page = cmk_page
+        if open_slideout:
+            logger.info("Navigate to 'Main menu' -> 'Quick activation of pending changes' slideout")
+            self.cmk_page.main_menu.changes_menu().click()
+        logger.info("Validate that slideout '%s' is open", self.slide_title)
+        expect(self.title).to_be_visible()
+
+    @override
+    def locator(
+        self,
+        selector: str | None = None,
+        *,
+        has_text: Pattern[str] | str | None = None,
+        has_not_text: Pattern[str] | str | None = None,
+        has: Locator | None = None,
+        has_not: Locator | None = None,
+    ) -> Locator:
+        if not selector:
+            selector = "xpath=."
+        _loc = self.cmk_page.locator("#check_mk_sidebar").locator(selector)
+        kwargs = self._build_locator_kwargs(
+            has_text=has_text,
+            has_not_text=has_not_text,
+            has=has,
+            has_not=has_not,
+        )
+        return _loc.filter(**kwargs) if kwargs else _loc
+
+    @property
+    def slideout(self) -> Locator:
+        return (
+            self.cmk_page.locator("#main_menu_changes div").filter(has_text=self.slide_title).nth(1)
+        )
+
+    @property
+    def title(self) -> Locator:
+        return self.slideout.get_by_role("heading", name=self.slide_title)
+
+    @property
+    def activate_changes_btn(self) -> Locator:
+        return self.slideout.get_by_role("button", name=self.activate_changes_btn_name)
+
+    @property
+    def full_view_btn(self) -> Locator:
+        return self.slideout.get_by_role("button", name="Open full view")
+
+    @property
+    def no_pending_changes_text(self) -> Locator:
+        return self.sites_section.get_by_text("No pending changes on your site(s).")
+
+    @property
+    def info_text(self) -> Locator:
+        # New installations show a one-time info banner; existing installations show the
+        # user-setting dialog ("Working with a complex environment?"). Match either.
+        return self.slideout.get_by_text("Changes are saved without affecting").or_(
+            self.slideout.get_by_role("heading", name="Working with a complex environment?")
+        )
+
+    @property
+    def info_close_btn(self) -> Locator:
+        # "Do not show again" closes the new-install info banner; "Keep quick activation"
+        # dismisses the user-setting dialog.
+        return self.slideout.get_by_role("button", name="Do not show again").or_(
+            self.slideout.get_by_role("button", name="Keep quick activation")
+        )
+
+    @property
+    def sites_section(self) -> Locator:
+        return self.slideout.get_by_role("region", name="Site(s) with changes")
+
+    @property
+    def changes_section(self) -> Locator:
+        return self.slideout.locator("div.cmk-scroll-pending-changes-container")
+
+    @property
+    def total_changes_lbl(self) -> Locator:
+        return self.slideout.get_by_role("button", name=re.compile("Changes:"))
+
+    @property
+    def foreign_changes_lbl(self) -> Locator:
+        return self.slideout.get_by_role("button", name=re.compile("Foreign changes:"))
+
+    @property
+    def sites_with_errors_tab(self) -> Locator:
+        """Get the locator for the 'Sites with errors' tab."""
+        return self.slideout.get_by_role("tab", name="Sites with errors")
+
+    @property
+    def sites_with_changes_tab(self) -> Locator:
+        """Get the locator for the 'Sites with changes' tab."""
+        return self.slideout.get_by_role("tab", name="Sites with changes")
+
+    @property
+    def activation_succcess_banner(self) -> Locator:
+        return self.slideout.get_by_role("status").filter(has_text="Successfully activated")
+
+    def expect_total_changes_count(self, expected: int) -> None:
+        """Wait until the 'Changes' label shows the expected number of total changes."""
+        expect(
+            self.total_changes_lbl,
+            message=f"The number of total changes is not {expected}!",
+        ).to_contain_text(f"Changes: ({expected})")
+
+    def expect_foreign_changes_count(self, expected: int) -> None:
+        """Wait until the 'Foreign changes' label shows the expected number of changes."""
+        expect(
+            self.foreign_changes_lbl,
+            message=f"The number of foreign changes is not {expected}!",
+        ).to_contain_text(f"Foreign changes: ({expected})")
+
+    def close(self) -> None:
+        self.cmk_page.main_menu.changes_menu().click()
+        expect(self.title).not_to_be_visible()
+        expect(self.slideout).not_to_be_visible()
+
+    def site_entry(self, site_name: str = "", central: bool = True) -> Locator:
+        """Get the locator for the specific site entry in the sites section."""
+        text = f"Local site {site_name}" if central else f"Remote site {site_name}"
+        return self.slideout.locator("div.cmk-changes-sites-item-wrapper").filter(has_text=text)
+
+    def site_online_status(self, site_entry: Locator) -> Locator:
+        """Get the locator for the online status badge of a specific site."""
+        return site_entry.locator("div.cmk-badge.cmk-badge--success", has_text="online")
+
+    def expect_site_changes_count(self, site_entry: Locator, expected: int) -> None:
+        """Wait until the site entry's badge shows the expected number of changes."""
+        expect(
+            site_entry.locator("div.cmk-badge.cmk-badge--default"),
+            message=f"The number of changes for the site entry is not {expected}!",
+        ).to_have_text(str(expected))
+
+    def site_entry_checkbox(self, site_entry: Locator) -> Locator:
+        """Get the locator of the checkbox to select/deselect a site entry."""
+        return site_entry.get_by_role("checkbox")
+
+    def expect_site_entry_selected(self, site_entry: Locator, selected: bool = True) -> None:
+        """Wait until the site entry checkbox reaches the expected selection state."""
+        expect(
+            self.site_entry_checkbox(site_entry),
+            message=f"The site entry is not {'selected' if selected else 'deselected'}!",
+        ).to_be_checked(checked=selected)
+
+    def ensure_expected_changes_activated(self, expected_changes: int) -> None:
+        expect(
+            self.slideout.get_by_role("status").get_by_text(
+                re.compile(r"You can safely navigate away")
+            )
+        ).to_be_visible()
+        expect(
+            self.slideout.get_by_role(
+                "heading",
+                name=re.compile(
+                    rf"Successfully activated {expected_changes} pending changes on \d+ sites?"
+                ),
+            )
+        ).to_be_visible()
+
+    def _click_activate_button(self) -> None:
+        """Verify the slideout and button are ready, then click Activate."""
+        logger.info("Clicking the 'Activate pending changes' button")
+        expect(self.slideout, "The slideout is not visible!").to_be_visible()
+        expect(
+            self.activate_changes_btn, "The 'Activate Changes' button is not visible!"
+        ).to_be_visible()
+        expect(
+            self.activate_changes_btn, "The 'Activate Changes' button is not enabled!"
+        ).to_be_enabled()
+        self.activate_changes_btn.click()
+
+    def activate_changes_strict(self, expected_changes: int) -> None:
+        """
+        Click the 'Activate pending changes' button and wait for the activation to complete.
+        The method performs several assertions to ensure the slideout is in the correct state before
+        and after clicking the button.
+        These assertions can be disabled by setting the argument 'expected_changes' to 0.
+        Args:
+            expected_changes: The expected number of changes to be activated.
+        """
+        if expected_changes:
+            logger.info(
+                "Activating changes, expecting %s changes to be activated", expected_changes
+            )
+            expect(
+                self.no_pending_changes_text,
+                f"The banner 'No pending changes' is visible while expecting {expected_changes} changes!",
+            ).not_to_be_visible()
+        self._click_activate_button()
+        if expected_changes:
+            self.ensure_expected_changes_activated(expected_changes)
+        else:
+            expect(
+                self.activation_succcess_banner, "The activation success banner is not visible!"
+            ).to_be_visible()
+        logger.info("Activation completed!")
+
+    def activate_pending_changes(self) -> None:
+        """Trigger activation and close the slideout without waiting for the success banner.
+
+        Use for activations that cause a site restart; follow with
+        site.wait_for_site_restarting_changes_to_complete() to wait for the site to come back up.
+        """
+        self._click_activate_button()
+        self.close()
+
+    def activate_pending_changes_and_wait_for_completion(self) -> None:
+        """Activate pending changes and close the slideout afterwards.
+        Calls activate_changes_strict with disabled assertions.
+        """
+        self.activate_changes_strict(expected_changes=0)
+        self.close()

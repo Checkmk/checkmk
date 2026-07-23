@@ -44,7 +44,7 @@ Custom images can be used like:
     IMAGE_ID=artifacts.lan.tribe29.com:4000/ubuntu-22.04:master-latest run-in-docker2.sh <CMD>
 
 Run a specific Pytest and stay inside the container after the test completed for further debugging:
-    run-in-docker2.sh --keep-going TEST_FILTER="-k test_apache_restart_trigger" tests/run_tests.sh test-integration
+    run-in-docker2.sh --keep-going TEST_FILTER="-k test_apache_restart_trigger" tests/run_tests.sh test-my-job
 
 Options:
     -h, --help                    Show this message and exit
@@ -153,7 +153,7 @@ print_debug "TERMINAL_FLAG: ${TERMINAL_FLAG}"
 print_debug "CPU_LIMITATION: ${CPU_LIMITATION}"
 
 # all pods of Jenkins as of now use 16GB RAM
-# except for test-plugins which requires 20GB
+# except for test-system-plugins which requires 20GB
 # building a CMK distro package is using 32GB if built from scratch
 : "${MEMORY_LIMITATION:="--memory=24g"}"
 print_debug "MEMORY_LIMITATION: ${MEMORY_LIMITATION}"

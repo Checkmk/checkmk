@@ -16,13 +16,13 @@ This document gives the overview and quick start; the details live in [`docs/`](
 ```mermaid
 flowchart LR
     U["Unit tests<br/>(no DB)"] --> C["Component tests<br/>(real Oracle DB,<br/>network or on-host)"]
-    C --> I["Integration tests<br/>(Docker DB + both plugins,<br/>tests/agent_plugin_integration)"]
+    C --> I["System tests<br/>(Docker DB + both plugins,<br/>tests/system/mk_oracle)"]
     I --> E["E2E via agent + site<br/>(manual for now)"]
 ```
 
 - **Unit** — `bazel test //packages/mk-oracle:mk-oracle-lib-test-internal`; pure Rust, no database.
 - **Component** — this directory's `test_ora_no_db.rs` / `test_ora_discovery.rs` / `test_ora_with_db.rs` / `test_mk_oracle_bin.rs`; the DB-dependent ones run against a real Oracle DB (see [`docs/test-systems.md`](docs/test-systems.md) for which one).
-- **Integration** — `tests/agent_plugin_integration/` at the repo root: Dockerised Oracle Free, exercises the built plugin end-to-end including the legacy-vs-new comparison harness.
+- **System** — `tests/system/mk_oracle/` at the repo root: Dockerised Oracle Free, exercises the built plugin end-to-end including the legacy-vs-new comparison harness.
 - **Perf / regression** — semi-automated local tiers under `perf/` and `regression/`.
 
 ## Layout

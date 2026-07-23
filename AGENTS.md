@@ -7,12 +7,12 @@ instead. Direct invocations bypass the build system's environment and dependency
 setup and produce incorrect results.
 
 Bazel is the primary build system for unit tests, linting, formatting, and type
-checking. Integration, composition, and GUI E2E tests use Make:
+checking. System tests use run_tests.sh:
 
 ```
-tests/run_tests.sh test-integration
-tests/run_tests.sh test-composition
-tests/run_tests.sh test-gui-e2e
+tests/run_tests.sh test-system-singlesite
+tests/run_tests.sh test-system-multisite
+tests/run_tests.sh test-system-gui
 ```
 
 Always format, lint, and run tests after completing a task.

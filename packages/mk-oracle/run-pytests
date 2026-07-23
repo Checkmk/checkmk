@@ -44,4 +44,4 @@ case "${1:-}" in
         ;;
 esac
 
-pytest --mk-oracle-binary-path="$BINARY_PATH" "$REPO_ROOT/tests/agent_plugin_integration"
+pytest --mk-oracle-binary-path="$BINARY_PATH" "$REPO_ROOT/tests/system/mk_oracle"

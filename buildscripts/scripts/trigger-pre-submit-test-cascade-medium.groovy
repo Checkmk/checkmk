@@ -167,8 +167,8 @@ void main() {
     def edition_medium_chain = "ultimate";
     def distro_medium_chain = "ubuntu-24.04";
     def job_names = [
-        "test-composition-${edition_medium_chain}",
-        "test-integration-${edition_medium_chain}",
+        "test-system-multisite-${edition_medium_chain}",
+        "test-system-singlesite-${edition_medium_chain}",
     ];
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
@@ -317,7 +317,7 @@ void main() {
                             // "TEST_FILTER" is prepended to the pytest call and thereby always the first source of settings and so it is
                             // overruled if there is an additional test filter set later in the list of pytest args
                             // Remember to quote a chain of filters to prevent word splitting
-                            // Setting "-m medium_test_chain" will cause special handling in "test-integration-single.groovy"
+                            // Setting "-m medium_test_chain" will cause special handling in "test-system-singlesite-single.groovy"
                             TEST_FILTER: '-m medium_test_chain',
                         ],
                         build_params_no_check: [

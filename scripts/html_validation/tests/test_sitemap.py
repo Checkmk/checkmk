@@ -11,7 +11,7 @@ from scripts.html_validation.lib.sitemap import parse_gui_crawl_sitemap
 
 CRAWL_XML = """\
 <testsuites>
-  <testsuite name="test-gui-crawl" tests="7" skipped="2">
+  <testsuite name="test-system-gui-crawl" tests="7" skipped="2">
     <testcase name="http://127.0.0.1:5000/mysite/check_mk/dashboard.py"/>
     <testcase name="javascript:void(0)" classname="crawled_urls">
       <skipped type="InvalidUrl" message="javascript URL"/>

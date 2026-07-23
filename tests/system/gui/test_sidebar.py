@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import re
+from typing import Final
+
+import pytest
+from playwright.sync_api import expect
+
+# from tests.system.gui.testlib.playwright.helpers import Keys
+from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
+
+
+@pytest.mark.parametrize("snapin_id", [("time"), ("speedometer")])
+def test_add_remove_snapin(dashboard_page: MainDashboard, snapin_id: str) -> None:
+    """Add and remove a snapin (aka a sidebar element)"""
+
+    snapin = dashboard_page.sidebar.add_snapin(snapin_id)
+    snapin.remove_from_sidebar()
+
+
+def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
+    """Tests the addition of the NagVis snapin to the sidebar and verifies its functionality.
+
+    This test performs the following steps:
+    1. Adds the NagVis snapin to the sidebar.
+    2. Verifies that the NagVis snapin is visible in the sidebar.
+    3. Ensures that no error message is displayed in the NagVis snapin.
+    4. Confirms that the "Edit" button in the NagVis snapin is visible and clickable.
+    5. Clicks the "Edit" button and verifies that the NagVis frame is loaded.
+    6. Cleans up by removing the NagVis snapin from the sidebar.
+    7. Verifies that the NagVis snapin is no longer visible in the sidebar.
+    """
+
+    snapin_id: Final[str] = "nagvis_maps"
+
+    # add nagvis snapin to the sidebar
+    snapin = dashboard_page.sidebar.add_snapin(snapin_id)
+
+    # Wait for the loading spinner to disappear
+    snapin.loading_spinner.wait_for(state="detached")
+
+    # Check that the nagvis snapin has no error message
+    expect(
+        snapin.error_message, message="Nagvis error message is visible, but should not be"
+    ).not_to_be_visible()
+
+    # Check that the nagvis snapin edit button is visible and clickable
+    nagvis_maps_edit_button = snapin.get_button("Edit")
+    expect(nagvis_maps_edit_button, message="Nagvis 'Edit' button is not visible").to_be_visible()
+    nagvis_maps_edit_button.click()
+
+    # Check that the nagvis edit frame is loaded
+    dashboard_page.get_frame_locator("div#content_area >> iframe").locator(
+        "div#header >> img[alt='NagVis']"
+    ).wait_for(state="visible")
+
+    # Clean up: remove the nagvis snapin from the sidebar
+    snapin.remove_from_sidebar()
+
+
+def test_global_searchbar_sanity_check(dashboard_page: MainDashboard) -> None:
+    """Navigate to the 'CPU inventory' from the global searchbar.
+
+    TODO: Breakdown and replace with test(s) arising from test-plan.
+    """
+
+    main_menu = dashboard_page.main_menu
+    main_menu.global_searchbar.fill("all hosts")
+
+    # validate ordering of the found items.
+    # Search results are grouped by topic; individual list items no longer
+    # carry the provider prefix (e.g. "Monitor").
+    expect(main_menu.active_side_menu_popup.get_by_role("listitem")).to_contain_text(
+        [
+            re.compile(r"All hosts$"),
+            re.compile(r"CPU inventory of all hosts$"),
+        ]
+    )
+
+    # validated keyboard iteraction
+    # TODO: keyboard interaction with searchbar is broken!
+    # dashboard_page.press_keyboard(Keys.ArrowDown)
+    # dashboard_page.press_keyboard(Keys.ArrowDown)
+    # dashboard_page.press_keyboard(Keys.Enter)
+    # dashboard_page.main_area.check_page_title("CPU inventory of all hosts")

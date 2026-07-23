@@ -91,7 +91,7 @@ def get_cmk_download_credentials() -> tuple[str, str]:
 
 
 def get_standard_linux_agent_output() -> str:
-    with (repo_path() / "tests/integration/cmk/base/test-files/linux-agent-output").open(
+    with (repo_path() / "tests/system/singlesite/cmk/base/test-files/linux-agent-output").open(
         encoding="utf-8"
     ) as f:
         return f.read()

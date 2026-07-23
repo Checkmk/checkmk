@@ -16,30 +16,30 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def job_names = [
-        "test-composition-pro",
-        "test-composition-community",
-        "test-composition-ultimatemt",
-        "test-gui-crawl",
-        "test-gui-e2e-cloud",
-        "test-gui-e2e-pro",
-        "test-gui-e2e-ultimate",
-        "test-integration-agent-plugin",
+        "test-system-multisite-pro",
+        "test-system-multisite-community",
+        "test-system-multisite-ultimatemt",
+        "test-system-gui-crawl",
+        "test-system-gui-cloud",
+        "test-system-gui-pro",
+        "test-system-gui-ultimate",
+        "test-system-mk-oracle",
         "test-system-redfish",
-        "test-integration-community",
-        "test-integration-cloud",
-        "test-integration-pro",
-        "test-integration-ultimatemt",
-        "test-integration-single-node",
-        "test-plugins",
-        "test-plugins-piggyback",
-        "test-relay-integration",
-        "test-update-cloud",
-        "test-update-community",
-        "test-update-pro",
-        "test-update-ultimatemt",
-        "test-update-community-pro",
-        "test-update-pro-ultimate",
-        "test-update-pro-ultimatemt",
+        "test-system-singlesite-community",
+        "test-system-singlesite-cloud",
+        "test-system-singlesite-pro",
+        "test-system-singlesite-ultimatemt",
+        "test-system-singlesite-single-node",
+        "test-system-plugins",
+        "test-system-plugins-piggyback",
+        "test-system-relay",
+        "test-system-update-cloud",
+        "test-system-update-community",
+        "test-system-update-pro",
+        "test-system-update-ultimatemt",
+        "test-system-update-community-pro",
+        "test-system-update-pro-ultimate",
+        "test-system-update-pro-ultimatemt",
         "winagt-test-mk-oracle",
     ];
     /// In order to ensure a fixed order for stages executed in parallel,
@@ -98,16 +98,16 @@ void main() {
         }]
     }
 
-    stages += [("test-xss-crawl") : {
+    stages += [("test-system-gui-crawl-xss") : {
         smart_stage(
-            name: "Trigger test-xss-crawl",
+            name: "Trigger test-system-gui-crawl-xss",
             condition: trigger_xss_crawl,
         ) {
             smart_build(
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
                 force_build: force_build,
-                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl",
+                relative_job_name: "${branch_base_folder}/heavy/test-system-gui-crawl-xss",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
                     FAKE_ARTIFACTS: fake_artifacts,

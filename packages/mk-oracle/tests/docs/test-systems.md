@@ -104,7 +104,7 @@ flowchart LR
 
 ## Docker — ephemeral Oracle containers
 
-- **Integration suite** (`tests/agent_plugin_integration/` at the repo root):
+- **System test suite** (`tests/system/mk_oracle/` at the repo root):
   the `OracleDatabase` fixture starts an **Oracle Database Free** container per
   session, resolved through the image alias `IMAGE_ORACLE_DB_23C`
   (`buildscripts/docker_image_aliases/`, mirrored on

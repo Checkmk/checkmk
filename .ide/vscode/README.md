@@ -345,7 +345,7 @@ Run options are configured via the **CMK Tests · Config** webview inside the Te
 
 On a **community checkout** (a clone of the open-source repo), only the `community` edition can be built, so the extension auto-detects this and restricts the edition everywhere: the effective `--cmk_edition` is clamped to `community` regardless of the setting, and the other editions are dropped from the **CMK Tests · Config** dropdown, the `CMK ▸ Test: Configure Bazel run options` picker, and the OMD **Create Site** edition picker.
 
-Site-related env vars (`VERSION`, `REUSE`, `CLEANUP`, `DEBUG`) are not exposed because they only matter for the Make-driven integration / composition / gui_e2e suites, which Bazel test targets don't run. Discovery uses `find` to enumerate `BUILD` / `BUILD.bazel` files in the discovery roots; the tree refreshes automatically when any of those files changes. Trigger a manual refresh via the Test Explorer's refresh button or `CMK ▸ Test: Refresh Bazel test targets`.
+Site-related env vars (`VERSION`, `REUSE`, `CLEANUP`, `DEBUG`) are not exposed because they only matter for the run_tests.sh-driven system test suites, which Bazel test targets don't run. Discovery uses `find` to enumerate `BUILD` / `BUILD.bazel` files in the discovery roots; the tree refreshes automatically when any of those files changes. Trigger a manual refresh via the Test Explorer's refresh button or `CMK ▸ Test: Refresh Bazel test targets`.
 
 Because CMK Tests covers vitest and rust tests too, the standalone **Vitest** (`vitest.explorer`) and **Rust Test Adapter** (`swellaby.vscode-rust-test-adapter`) extensions are no longer recommended — they can be uninstalled or disabled.
 

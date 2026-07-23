@@ -50,33 +50,36 @@ AGENT PLUGIN TESTS
   test-agent-plugin-docker                Run all agent plugin docker tests via run-in-docker.sh
 
 SYSTEM TESTS (local / -docker variant available for each)
-  test-integration                        Run integration tests locally
-  test-integration-k8s                    Run integration tests (not requires_non_root_user)
-  test-integration-non-root               Run integration tests (requires_non_root_user)
+  test-system-singlesite                  Run single site system tests locally
+  test-system-singlesite-k8s              Run single site system tests (not requires_non_root_user)
+  test-system-singlesite-non-root         Run single site system tests (requires_non_root_user)
   test-system-redfish                     Run system tests for redfish
-  test-integration-otel                   Run integration tests for otel (ultimate edition)
-  test-integration-mcp                    Run integration tests for the mcp-server (pro edition)
-  test-integration-oauth                  Run integration tests for the oauth authorization server (pro edition)
-  test-composition                        Run composition tests
-  test-update-community                   Run update tests for community edition
-  test-update-pro                         Run update tests for pro edition
-  test-update-ultimate                    Run update tests for ultimate edition
-  test-update-ultimatemt                  Run update tests for ultimatemt edition
-  test-update-cloud                       Run update tests for cloud edition
-  test-update-cross-edition-pro-to-ultimate
-  test-update-cross-edition-pro-to-ultimatemt
-  test-update-cross-edition-community-to-ultimate
-  test-update-cross-edition-community-to-pro
-  test-plugins                            Run plugin integration tests
-  test-plugins-piggyback                  Run piggyback plugin integration tests
-  test-gui-crawl                          Run GUI crawl tests
-  test-xss-crawl                          Run XSS crawl tests
-  test-gui-e2e                            Run full e2e tests (pro edition)
-  test-gui-e2e-pro                        Run full e2e tests (pro edition)
-  test-gui-e2e-non-free                   Run limited e2e tests (non-free editions)
-  test-gui-e2e-ultimate                   Run limited e2e tests (ultimate edition)
-  test-gui-e2e-ultimatemt                 Run limited e2e tests (ultimatemt edition)
-  test-gui-e2e-cloud                      Run limited e2e tests (cloud edition)
+  test-system-relay                       Run system tests for the relay (ultimate edition)
+  test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
+  test-system-mk-oracle-docker            Run system tests for the mk_oracle agent plugins in docker
+  test-system-otel                        Run system tests for otel (ultimate edition)
+  test-system-mcp                         Run system tests for the mcp-server (pro edition)
+  test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
+  test-system-multisite                   Run multisite system tests
+  test-system-update-community            Run update tests for community edition
+  test-system-update-pro                  Run update tests for pro edition
+  test-system-update-ultimate             Run update tests for ultimate edition
+  test-system-update-ultimatemt           Run update tests for ultimatemt edition
+  test-system-update-cloud                Run update tests for cloud edition
+  test-system-update-cross-edition-pro-to-ultimate
+  test-system-update-cross-edition-pro-to-ultimatemt
+  test-system-update-cross-edition-community-to-ultimate
+  test-system-update-cross-edition-community-to-pro
+  test-system-plugins                     Run plugin system tests
+  test-system-plugins-piggyback           Run piggyback plugin system tests
+  test-system-gui-crawl                   Run GUI crawl tests
+  test-system-gui-crawl-xss               Run XSS crawl tests
+  test-system-gui                         Run full GUI system tests (pro edition)
+  test-system-gui-pro                     Run full GUI system tests (pro edition)
+  test-system-gui-non-free                Run limited GUI system tests (non-free editions)
+  test-system-gui-ultimate                Run limited GUI system tests (ultimate edition)
+  test-system-gui-ultimatemt              Run limited GUI system tests (ultimatemt edition)
+  test-system-gui-cloud                   Run limited GUI system tests (cloud edition)
   test-extension-compatibility            Run extension compatibility tests
 
 SITELESS TESTS (local / -docker variant available for each)
@@ -105,10 +108,6 @@ MYPY / FORMAT / PACKAGING
 OTHER TESTS
   test-docker                             Run docker tests
   test-docker-docker                      Run docker tests in docker
-  test-integration-agent-plugin           Run agent plugin integration tests
-  test-integration-agent-plugin-docker    Run agent plugin integration tests in docker
-  test-relay-integration                  Run relay integration tests
-  test-relay-integration-docker           Run relay integration tests in docker
   test-performance                        Run performance tests
   test-performance-docker                 Run performance tests in docker
   test-doctest                            Run doctests via bazel
@@ -213,7 +212,7 @@ test-agent-plugin-docker() {
 }
 
 # ---------------------------------------------------------------------------
-# Docker / integration-agent-plugin
+# Docker tests
 # ---------------------------------------------------------------------------
 
 test-docker() {
@@ -225,29 +224,6 @@ test-docker() {
 test-docker-docker() {
     DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
         "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-docker
-}
-
-test-integration-agent-plugin() {
-    _pytest -x "$(realpath "$SCRIPT_DIR/agent_plugin_integration")" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600 \
-        --log-cli-level=INFO -o junit_logging=all \
-        ${RESULT_PATH:+--junitxml="$RESULT_PATH/junit.xml"} \
-        ${MK_ORACLE_BINARY_PATH:+"$MK_ORACLE_BINARY_PATH"}
-}
-
-test-integration-agent-plugin-docker() {
-    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-integration-agent-plugin
-}
-
-test-relay-integration() {
-    _pytest -x "$(realpath "$SCRIPT_DIR/relay_integration")" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
-}
-
-test-relay-integration-docker() {
-    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-relay-integration
 }
 
 # ---------------------------------------------------------------------------
@@ -263,64 +239,64 @@ test-performance-docker() {
     RESULT_PATH="$(realpath "$SCRIPT_DIR/..")" $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "test-performance"
 }
 
-test-gui-crawl() {
+test-system-gui-crawl() {
     prepare-playwright
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/gui_crawl")/test_gui_crawl.py"
+        "$(realpath "$SCRIPT_DIR/system/gui_crawl")/test_gui_crawl.py"
 }
 
-test-xss-crawl() {
+test-system-gui-crawl-xss() {
     prepare-playwright
     XSS_CRAWL=1 _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/gui_crawl")/test_gui_crawl.py"
+        "$(realpath "$SCRIPT_DIR/system/gui_crawl")/test_gui_crawl.py"
 }
 
-test-gui-e2e() {
+test-system-gui() {
     prepare-playwright
     _pytest --cmk-edition pro \
         --screenshot=only-on-failure \
         --output="${RESULT_PATH:-/tmp}/" \
         --tracing=retain-on-failure \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/gui_e2e")"
+        "$(realpath "$SCRIPT_DIR/system/gui")"
 }
 
-test-gui-e2e-pro() { test-gui-e2e; }
+test-system-gui-pro() { test-system-gui; }
 
-test-gui-e2e-non-free() {
+test-system-gui-non-free() {
     prepare-playwright
     _pytest --screenshot=only-on-failure \
         --output="${RESULT_PATH:-/tmp}/" \
         --tracing=retain-on-failure \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --cmk-edition "$EDITION" \
-        "$(realpath "$SCRIPT_DIR/gui_e2e")/nonfree"
+        "$(realpath "$SCRIPT_DIR/system/gui")/nonfree"
 }
 
-test-gui-e2e-ultimate() { EDITION=ultimate test-gui-e2e-non-free; }
-test-gui-e2e-ultimatemt() { EDITION=ultimatemt test-gui-e2e-non-free; }
-test-gui-e2e-cloud() { EDITION=cloud test-gui-e2e-non-free; }
+test-system-gui-ultimate() { EDITION=ultimate test-system-gui-non-free; }
+test-system-gui-ultimatemt() { EDITION=ultimatemt test-system-gui-non-free; }
+test-system-gui-cloud() { EDITION=cloud test-system-gui-non-free; }
 
 # ---------------------------------------------------------------------------
-# Integration tests
+# System tests
 # ---------------------------------------------------------------------------
 
-test-integration() {
+test-system-singlesite() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration")" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")" \
         --session-timeout 7200
 }
 
-# keep this target in sync with test-integration-single.groovy
-test-integration-k8s() {
+# keep this target in sync with test-system-singlesite-single.groovy
+test-system-singlesite-k8s() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration")" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")" \
         -m "not requires_non_root_user" --session-timeout 7200
 }
 
-test-integration-non-root() {
+test-system-singlesite-non-root() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration")" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")" \
         -m requires_non_root_user --session-timeout 600
 }
 
@@ -330,28 +306,51 @@ test-system-redfish() {
         --session-timeout 1800
 }
 
-test-integration-otel() {
+test-system-relay() {
+    _pytest -x "$(realpath "$SCRIPT_DIR/system/relay")" \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
+}
+
+test-system-relay-docker() {
+    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-system-relay
+}
+
+test-system-mk-oracle() {
+    _pytest -x "$(realpath "$SCRIPT_DIR/system/mk_oracle")" \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600 \
+        --log-cli-level=INFO -o junit_logging=all \
+        ${RESULT_PATH:+--junitxml="$RESULT_PATH/junit.xml"} \
+        ${MK_ORACLE_BINARY_PATH:+"$MK_ORACLE_BINARY_PATH"}
+}
+
+test-system-mk-oracle-docker() {
+    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-system-mk-oracle
+}
+
+test-system-otel() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration")/nonfree/ultimate/otel/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/otel/" \
         --session-timeout 1800
 }
 
-test-integration-mcp() {
+test-system-mcp() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration")/nonfree/pro/mcp/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/pro/mcp/" \
         --session-timeout 1800
 }
 
-test-integration-oauth() {
+test-system-oauth() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/integration")/cmk/gui/oauth/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/cmk/gui/oauth/" \
         --session-timeout 1800
 }
 
-test-composition() {
+test-system-multisite() {
     OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
         _pytest --export-traces "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/composition")"
+        "$(realpath "$SCRIPT_DIR/system/multisite")"
 }
 
 test-extension-compatibility() {
@@ -363,64 +362,64 @@ test-extension-compatibility() {
 # Update tests
 # ---------------------------------------------------------------------------
 
-test-update-community() {
+test-system-update-community() {
     _pytest --cmk-edition community \
-        "$(realpath "$SCRIPT_DIR/update")/community" \
+        "$(realpath "$SCRIPT_DIR/system/update")/community" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 5400
 }
 
-test-update-pro() {
+test-system-update-pro() {
     _pytest --cmk-edition pro \
-        "$(realpath "$SCRIPT_DIR/update")/nonfree" \
+        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 5400
 }
 
-test-update-ultimate() {
+test-system-update-ultimate() {
     _pytest --cmk-edition ultimate \
-        "$(realpath "$SCRIPT_DIR/update")/nonfree" \
+        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 9000
 }
 
-test-update-ultimatemt() {
+test-system-update-ultimatemt() {
     _pytest --cmk-edition ultimatemt \
-        "$(realpath "$SCRIPT_DIR/update")/nonfree" \
+        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 9000
 }
 
-test-update-cloud() {
+test-system-update-cloud() {
     _pytest --cmk-edition cloud \
-        "$(realpath "$SCRIPT_DIR/update")/nonfree" \
+        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --disable-interactive-mode --session-timeout 5400
 }
 
-test-update-cross-edition-pro-to-ultimate() {
+test-system-update-cross-edition-pro-to-ultimate() {
     _pytest --cmk-edition pro \
-        "$(realpath "$SCRIPT_DIR/update")/nonfree/pro/test_update.py" \
+        "$(realpath "$SCRIPT_DIR/system/update")/nonfree/pro/test_update.py" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --latest-base-version --target-edition=ultimate \
         --disable-interactive-mode --session-timeout 5400
 }
 
-test-update-cross-edition-pro-to-ultimatemt() {
+test-system-update-cross-edition-pro-to-ultimatemt() {
     _pytest --cmk-edition pro \
-        "$(realpath "$SCRIPT_DIR/update")/nonfree/pro/test_update.py" \
+        "$(realpath "$SCRIPT_DIR/system/update")/nonfree/pro/test_update.py" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --latest-base-version --target-edition=ultimatemt \
         --disable-interactive-mode --session-timeout 5400
 }
 
-test-update-cross-edition-community-to-pro() {
+test-system-update-cross-edition-community-to-pro() {
     _pytest --cmk-edition community \
-        "$(realpath "$SCRIPT_DIR/update")/community/test_update.py" \
+        "$(realpath "$SCRIPT_DIR/system/update")/community/test_update.py" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --latest-base-version --target-edition=pro \
         --disable-interactive-mode --session-timeout 5400
 }
 
-test-update-cross-edition-community-to-ultimate() {
+test-system-update-cross-edition-community-to-ultimate() {
     _pytest --cmk-edition community \
-        "$(realpath "$SCRIPT_DIR/update")/community/test_update.py" \
+        "$(realpath "$SCRIPT_DIR/system/update")/community/test_update.py" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --latest-base-version --target-edition=ultimate \
         --disable-interactive-mode --session-timeout 5400
@@ -430,16 +429,16 @@ test-update-cross-edition-community-to-ultimate() {
 # Plugin tests
 # ---------------------------------------------------------------------------
 
-test-plugins() {
+test-system-plugins() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/plugins_integration")" \
-        --ignore=plugins_integration/nonfree/pro/test_plugin_piggyback.py \
+        "$(realpath "$SCRIPT_DIR/system/plugins")" \
+        --ignore=system/plugins/nonfree/pro/test_plugin_piggyback.py \
         --session-timeout 7200
 }
 
-test-plugins-piggyback() {
+test-system-plugins-piggyback() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/plugins_integration")/nonfree/pro/test_plugin_piggyback.py" \
+        "$(realpath "$SCRIPT_DIR/system/plugins")/nonfree/pro/test_plugin_piggyback.py" \
         --session-timeout 3600
 }
 
@@ -465,36 +464,36 @@ _dockerable-test-docker() {
 }
 
 # System test -docker variants
-test-integration-docker() { _system-tests-docker test-integration; }
-test-integration-k8s-docker() { _system-tests-docker test-integration-k8s; }
-test-integration-non-root-docker() { _system-tests-docker test-integration-non-root; }
+test-system-singlesite-docker() { _system-tests-docker test-system-singlesite; }
+test-system-singlesite-k8s-docker() { _system-tests-docker test-system-singlesite-k8s; }
+test-system-singlesite-non-root-docker() { _system-tests-docker test-system-singlesite-non-root; }
 test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
-test-integration-otel-docker() { _system-tests-docker test-integration-otel; }
-test-composition-docker() { _system-tests-docker test-composition; }
-test-update-community-docker() { _system-tests-docker test-update-community; }
-test-update-pro-docker() { _system-tests-docker test-update-pro; }
-test-update-ultimate-docker() { _system-tests-docker test-update-ultimate; }
-test-update-ultimatemt-docker() { _system-tests-docker test-update-ultimatemt; }
-test-update-cloud-docker() { _system-tests-docker test-update-cloud; }
-test-update-cross-edition-pro-to-ultimate-docker() { _system-tests-docker test-update-cross-edition-pro-to-ultimate; }
-test-update-cross-edition-pro-to-ultimatemt-docker() { _system-tests-docker test-update-cross-edition-pro-to-ultimatemt; }
-test-update-cross-edition-community-to-ultimate-docker() { _system-tests-docker test-update-cross-edition-community-to-ultimate; }
-test-update-cross-edition-community-to-pro-docker() { _system-tests-docker test-update-cross-edition-community-to-pro; }
-test-plugins-docker() { _system-tests-docker test-plugins; }
-test-plugins-piggyback-docker() { _system-tests-docker test-plugins-piggyback; }
-test-gui-crawl-docker() { _system-tests-docker test-gui-crawl; }
-test-xss-crawl-docker() { _system-tests-docker test-xss-crawl; }
-test-gui-e2e-docker() { _system-tests-docker test-gui-e2e; }
-test-gui-e2e-non-free-docker() { _system-tests-docker test-gui-e2e-non-free; }
-test-gui-e2e-pro-docker() { _system-tests-docker test-gui-e2e-pro; }
-test-gui-e2e-ultimate-docker() { _system-tests-docker test-gui-e2e-ultimate; }
-test-gui-e2e-ultimatemt-docker() { _system-tests-docker test-gui-e2e-ultimatemt; }
-test-gui-e2e-cloud-docker() { _system-tests-docker test-gui-e2e-cloud; }
+test-system-otel-docker() { _system-tests-docker test-system-otel; }
+test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
+test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
+test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
+test-system-update-ultimate-docker() { _system-tests-docker test-system-update-ultimate; }
+test-system-update-ultimatemt-docker() { _system-tests-docker test-system-update-ultimatemt; }
+test-system-update-cloud-docker() { _system-tests-docker test-system-update-cloud; }
+test-system-update-cross-edition-pro-to-ultimate-docker() { _system-tests-docker test-system-update-cross-edition-pro-to-ultimate; }
+test-system-update-cross-edition-pro-to-ultimatemt-docker() { _system-tests-docker test-system-update-cross-edition-pro-to-ultimatemt; }
+test-system-update-cross-edition-community-to-ultimate-docker() { _system-tests-docker test-system-update-cross-edition-community-to-ultimate; }
+test-system-update-cross-edition-community-to-pro-docker() { _system-tests-docker test-system-update-cross-edition-community-to-pro; }
+test-system-plugins-docker() { _system-tests-docker test-system-plugins; }
+test-system-plugins-piggyback-docker() { _system-tests-docker test-system-plugins-piggyback; }
+test-system-gui-crawl-docker() { _system-tests-docker test-system-gui-crawl; }
+test-system-gui-crawl-xss-docker() { _system-tests-docker test-system-gui-crawl-xss; }
+test-system-gui-docker() { _system-tests-docker test-system-gui; }
+test-system-gui-non-free-docker() { _system-tests-docker test-system-gui-non-free; }
+test-system-gui-pro-docker() { _system-tests-docker test-system-gui-pro; }
+test-system-gui-ultimate-docker() { _system-tests-docker test-system-gui-ultimate; }
+test-system-gui-ultimatemt-docker() { _system-tests-docker test-system-gui-ultimatemt; }
+test-system-gui-cloud-docker() { _system-tests-docker test-system-gui-cloud; }
 test-extension-compatibility-docker() { _system-tests-docker test-extension-compatibility; }
 
 # Debug variants
-test-integration-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
-test-composition-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
+test-system-singlesite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
+test-system-multisite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 container-debug-docker() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 
 # Siteless test -docker variants
@@ -638,9 +637,9 @@ test-find-modified-lock-files() {
 # ---------------------------------------------------------------------------
 
 TESTS_MEDIUM_CHAIN_OUTFILE="tests_medium_chain_master.list"
-TEST_DIRS_MEDIUM_CHAIN=("$(realpath "$SCRIPT_DIR/integration")" "$(realpath "$SCRIPT_DIR/composition")")
+TEST_DIRS_MEDIUM_CHAIN=("$(realpath "$SCRIPT_DIR/system/singlesite")" "$(realpath "$SCRIPT_DIR/system/multisite")")
 
-# keep this target in sync with test-integration-single.groovy
+# keep this target in sync with test-system-singlesite-single.groovy
 test-medium-chain() {
     _pytest --log-cli-level=INFO -m medium_test_chain \
         "${TEST_DIRS_MEDIUM_CHAIN[@]}"

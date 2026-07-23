@@ -38,7 +38,7 @@ def raw_linux_agent_wget_commands(version: str) -> list[str]:
     """`wget` commands for the basic, unbaked Linux agent packages.
 
     The asymmetric naming (RPM uses `-`, DEB uses `_`) matches the on-disk
-    filenames produced by the build (see `Makefile`, `tests/composition/utils.py`).
+    filenames produced by the build (see `Makefile`, `tests/system/multisite/utils.py`).
     """
     return [
         f"wget {_LINUX_RPM_DOWNLOAD_URL.format(version=version)}",

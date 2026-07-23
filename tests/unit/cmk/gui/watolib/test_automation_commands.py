@@ -7,7 +7,7 @@ from cmk.gui.watolib.automation_commands import AutomationPing
 
 
 def test_parse_omd_status() -> None:
-    # raw status tested in tests/integration/omd/test_omd.py
+    # raw status tested in tests/system/singlesite/omd/test_omd.py
     raw_status = (
         "jaeger 5\n"
         "agent-receiver 0\n"

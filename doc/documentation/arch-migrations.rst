@@ -185,7 +185,7 @@ The target layout classifies every test by scope and groups system level tests b
 * Cross-package tests without a running site live under ``tests/integration/``.
 * System level tests (the former ``integration``/``composition``/``gui_e2e`` suites) move under ``tests/system/<feature>/``, are parametrized over the site edition, and declare the feature they exercise rather than carrying edition-specific skips.
 
-The first steps are visible under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``); most suites still follow the old fixture-based grouping.
+The first steps are visible under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``, ``tests/system/singlesite/``, the former ``tests/integration/``, and ``tests/system/multisite/``, the former ``tests/composition/``); most suites still follow the old fixture-based grouping.
 
 Tooling: Make to Bazel
 ===========================

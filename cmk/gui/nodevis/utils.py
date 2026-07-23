@@ -168,6 +168,10 @@ class CoreDataProvider:
         if not services:
             return
 
+        host_filter = f"Filter: host_name ~ ^({'|'.join(set(map(lambda x: x[0], services)))})$"
+        description_filter = (
+            f"Filter: description ~ ^({'|'.join(set(map(lambda x: x[1], services)))})$"
+        )
         service_filter = "\n".join(
             (
                 (
@@ -178,13 +182,18 @@ class CoreDataProvider:
             )
         )
         service_filter += "\nOr: %d" % len(services)
+        # The complete filter includes a quick check for the host and description,
+        # which is faster than the long filter for all services. This can drastically increse performance
+        # when there are many services
+        complete_filter = f"{host_filter}\n{description_filter}\n{service_filter}"
+
         columns = [
             "host_name",
             "description",
             "state",
             "icon_image",
         ]
-        query = f"GET services\nColumns: {' '.join(columns)}\n%s" % service_filter
+        query = f"GET services\nColumns: {' '.join(columns)}\n{complete_filter}"
 
         with sites.prepend_site():
             for (

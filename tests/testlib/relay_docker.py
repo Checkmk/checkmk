@@ -55,6 +55,33 @@ def _wait_for_container_running(
     )
 
 
+def _wait_for_container_removed(
+    container: docker.models.containers.Container,
+    timeout: int = _CONTAINER_READY_TIMEOUT,
+) -> None:
+    """Poll until the container no longer exists or raise on timeout.
+
+    Containers started with ``auto_remove=True`` are removed by the Docker
+    daemon asynchronously after they stop. Anything that must wait for their
+    resources to be released (e.g. removing a named volume they mount) has to
+    wait for the removal itself, not just for ``stop()`` to return.
+    """
+
+    def _is_removed() -> bool:
+        try:
+            container.reload()
+        except docker.errors.NotFound:
+            return True
+        return False
+
+    wait_until(
+        _is_removed,
+        timeout=timeout,
+        interval=1,
+        condition_name=f"container '{container.name}' removed",
+    )
+
+
 def get_container_ip(
     container: docker.models.containers.Container,
     network: docker.models.networks.Network,
@@ -181,6 +208,17 @@ class DockerSnmpHost:
             return
         try:
             self._container.stop()
+            # The snmpd container runs with auto_remove=True, so the Docker
+            # daemon removes it asynchronously after stop(). Wait for the
+            # removal so the monitored network fixture tears down against a
+            # stable container list instead of racing the removal.
+            _wait_for_container_removed(self._container)
+        except TimeoutError as e:
+            e.add_note(
+                f"snmpd container was not auto-removed within "
+                f"{_CONTAINER_READY_TIMEOUT} secs after stop()!"
+            )
+            raise
         except docker.errors.APIError as e:
             logger.warning("Could not stop snmpd container: %s", e)
             raise
@@ -341,6 +379,17 @@ class DockerRelaySetup:
         logger.info("Cleaning up relay daemon")
         try:
             self._relay_container.stop()
+            # The daemon container runs with auto_remove=True, so the Docker
+            # daemon removes it asynchronously after stop(). The relay volume
+            # fixture tears down right after us and cannot remove the volume
+            # while the container still references it (409 "volume is in use").
+            _wait_for_container_removed(self._relay_container)
+        except TimeoutError as e:
+            e.add_note(
+                f"Relay container was not auto-removed within "
+                f"{_CONTAINER_READY_TIMEOUT} secs after stop()!"
+            )
+            raise
         except docker.errors.APIError as e:
             logger.warning("Could not stop relay container: %s", e)
             raise

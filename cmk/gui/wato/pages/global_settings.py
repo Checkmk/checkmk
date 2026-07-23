@@ -14,7 +14,7 @@ import abc
 import contextlib
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from copy import deepcopy
-from typing import Any, Final, NamedTuple, override
+from typing import Any, Final, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
@@ -108,12 +108,45 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
 
 
-class SubmittedValue(NamedTuple):
-    value: Any
-    change_log_text: str | HTML
+def _masked_value_for_log(
+    config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
+) -> object:
+    value_model = config_variable.value_model(context)
+    if isinstance(value_model, FormSpec):
+        visitor = get_visitor(
+            value_model,
+            VisitorOptions(migrate_values=True, mask_values=True),
+        )
+        return visitor.to_disk(RawDiskData(value))
+    return value_model.mask(value)
+
+
+def _global_settings_diff_text(
+    config_variable: ConfigVariable,
+    context: GlobalSettingsContext,
+    old_settings: GlobalSettings,
+    new_settings: GlobalSettings,
+) -> str:
+    old_masked = {
+        varname: _masked_value_for_log(config_variable, context, value)
+        for varname, value in old_settings.items()
+    }
+    new_masked = {
+        varname: _masked_value_for_log(config_variable, context, value)
+        for varname, value in new_settings.items()
+    }
+
+    unmasked_diff = make_diff(old_settings, new_settings)
+    masked_diff = make_diff(old_masked, new_masked)
+
+    if unmasked_diff == masked_diff:
+        return make_diff_text(old_masked, new_masked)
+
+    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")
 
 
 def register(
@@ -433,6 +466,9 @@ class ABCEditGlobalSettingMode(WatoMode):
         check_csrf_token()
 
         current = self._current_settings.get(self._varname)
+        old_settings: GlobalSettings = (
+            {self._varname: current} if self._varname in self._current_settings else {}
+        )
         new_value: Any = None
         if request.var("_reset"):
             if not transactions.check_transaction():
@@ -453,9 +489,9 @@ class ABCEditGlobalSettingMode(WatoMode):
                 _("Resetted configuration variable %(varname)s to its default.")
                 % {"varname": self._varname}
             )
+            new_settings: GlobalSettings = {}
         else:
-            submitted = self._parse_submitted_value()
-            new_value = submitted.value
+            new_value = self._parse_submitted_value()
 
             if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
                 self._validate_update_piggyback_hub_config(
@@ -463,13 +499,10 @@ class ABCEditGlobalSettingMode(WatoMode):
                 )
 
             self._current_settings[self._varname] = new_value
-            msg = HTML.without_escaping(
-                _("Changed global configuration variable %(varname)s to %(value)s.")
-                % {
-                    "varname": escaping.escape_attribute(self._varname),
-                    "value": escaping.escape_attribute(submitted.change_log_text),
-                }
+            msg = HTML.with_escaping(
+                _("Changed global configuration variable %(varname)s.") % {"varname": self._varname}
             )
+            new_settings = {self._varname: new_value}
 
         self._save(
             make_folder_tree(config),
@@ -489,6 +522,12 @@ class ABCEditGlobalSettingMode(WatoMode):
                 use_git=config.wato_use_git,
                 local_site=omd_site(),
                 user_id=user.id,
+            ),
+            diff_text=_global_settings_diff_text(
+                self._config_variable,
+                self.make_global_settings_context(config),
+                old_settings,
+                new_settings,
             ),
         )
 
@@ -550,18 +589,12 @@ class ABCEditGlobalSettingMode(WatoMode):
         assert isinstance(title, str)
         return title
 
-    def _parse_submitted_value(self) -> SubmittedValue:
-        """Parse and validate the submitted value, returning it together with a
-        human-readable representation for the change log."""
+    def _parse_submitted_value(self) -> object:
         if isinstance(self._value_model, FormSpec):
-            new_value = parse_data_from_field_id(self._value_model, self._vue_field_id())
-            masked_value = get_visitor(
-                self._value_model, VisitorOptions(migrate_values=False, mask_values=True)
-            ).to_disk(RawDiskData(new_value))
-            return SubmittedValue(new_value, str(masked_value))
+            return parse_data_from_field_id(self._value_model, self._vue_field_id())
         new_value = self._value_model.from_html_vars("ve")
         self._value_model.validate_value(new_value, "ve")
-        return SubmittedValue(new_value, self._value_model.value_to_html(new_value))
+        return new_value
 
     def _render_editable_value(self, value: object) -> None:
         if isinstance(self._value_model, FormSpec):
@@ -725,14 +758,14 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         if not transactions.check_transaction():
             return None
 
+        old_settings: GlobalSettings = (
+            {varname: self._current_settings[varname]} if varname in self._current_settings else {}
+        )
         if varname in self._current_settings:
             self._current_settings[varname] = not self._current_settings[varname]
         else:
             self._current_settings[varname] = not def_value
-        msg = _("Changed Configuration variable %(varname)s to %(state)s.") % {
-            "varname": varname,
-            "state": "on" if self._current_settings[varname] else "off",
-        }
+        msg = _("Changed global configuration variable %(varname)s.") % {"varname": varname}
         save_global_settings(self._current_settings)
 
         add_global_settings_change(
@@ -744,6 +777,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 use_git=config.wato_use_git,
                 local_site=omd_site(),
                 user_id=user.id,
+            ),
+            diff_text=_global_settings_diff_text(
+                config_variable,
+                self.make_global_settings_context(config),
+                old_settings,
+                {varname: self._current_settings[varname]},
             ),
         )
 

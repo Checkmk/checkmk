@@ -97,11 +97,13 @@ def add_global_settings_change(
     text: LogMessage,
     sites: Sequence[SiteId] | None,
     pending_changes: PendingChanges,
+    diff_text: str | None = None,
 ) -> None:
     pending_changes.add(
         Change(
             action_name="edit-configvar",
             text=text,
+            diff_text=diff_text,
             force_restart=config_variable.need_restart(),
             force_apache_reload=config_variable.need_apache_reload(),
             domains=[d.ident() for d in config_variable.all_domains()],

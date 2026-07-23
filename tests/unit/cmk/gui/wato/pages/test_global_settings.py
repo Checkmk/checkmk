@@ -19,10 +19,15 @@ from cmk.gui.i18n import _l
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
 from cmk.gui.wato.pages import global_settings
-from cmk.gui.wato.pages.global_settings import DefaultModeEditGlobals, MatchItemGeneratorSettings
+from cmk.gui.wato.pages.global_settings import (
+    _global_settings_diff_text,
+    DefaultModeEditGlobals,
+    MatchItemGeneratorSettings,
+)
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigVariable,
@@ -32,6 +37,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.livestatus_client import SiteConfigurations
+from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -88,7 +94,7 @@ def test_match_item_generator_settings(
 
 
 @pytest.mark.usefixtures("load_config")
-def test_parse_submitted_value_masks_password(
+def test_parse_submitted_value_keeps_cleartext_password_for_storage(
     monkeypatch: MonkeyPatch,
     test_edition: Edition,
 ) -> None:
@@ -109,11 +115,10 @@ def test_parse_submitted_value_masks_password(
 
     submitted = global_settings.ModeEditGlobalSetting(test_edition)._parse_submitted_value()
 
-    # The value that gets stored keeps the cleartext password ...
-    assert submitted.value[2][1] == "hunter2"
-    # ... but the text written to the audit log does not.
-    assert "hunter2" not in submitted.change_log_text
-    assert "******" in submitted.change_log_text
+    assert isinstance(submitted, tuple)
+    password_id_and_value = submitted[2]
+    assert isinstance(password_id_and_value, tuple)
+    assert password_id_and_value[1] == "hunter2"
 
 
 def _global_settings_context() -> GlobalSettingsContext:
@@ -158,3 +163,105 @@ def test_table_row_limit_rejects_value_below_minimum() -> None:
 
 def test_table_row_limit_upgrade_keeps_stored_int() -> None:
     assert migrate_form_spec_disk_value(_table_row_limit_form_spec(), 42) == 42
+
+
+def _valuespec_config_variable() -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
+        primary_domain=ConfigDomainCore,
+        ident="test_setting",
+        valuespec=lambda context: TextInput(),
+    )
+
+
+def _form_spec_config_variable() -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
+        primary_domain=ConfigDomainCore,
+        ident="test_setting",
+        form_spec=lambda context: Integer(),
+    )
+
+
+def test_diff_text_valuespec_value_changed() -> None:
+    assert (
+        _global_settings_diff_text(
+            _valuespec_config_variable(),
+            _global_settings_context(),
+            {"test_setting": "before"},
+            {"test_setting": "after"},
+        )
+        == 'Value of "test_setting" changed from "before" to "after".'
+    )
+
+
+def test_diff_text_form_spec_value_changed() -> None:
+    assert (
+        _global_settings_diff_text(
+            _form_spec_config_variable(),
+            _global_settings_context(),
+            {"test_setting": 100},
+            {"test_setting": 66},
+        )
+        == 'Value of "test_setting" changed from 100 to 66.'
+    )
+
+
+def test_diff_text_first_override_reads_as_added() -> None:
+    assert (
+        _global_settings_diff_text(
+            _form_spec_config_variable(),
+            _global_settings_context(),
+            {},
+            {"test_setting": 66},
+        )
+        == 'Attribute "test_setting" with value 66 added.'
+    )
+
+
+def test_diff_text_reset_reads_as_removed() -> None:
+    assert (
+        _global_settings_diff_text(
+            _form_spec_config_variable(),
+            _global_settings_context(),
+            {"test_setting": 100},
+            {},
+        )
+        == 'Attribute "test_setting" with value 100 removed.'
+    )
+
+
+def test_diff_text_valuespec_secret_is_redacted() -> None:
+    config_variable = ConfigVariable(
+        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
+        primary_domain=ConfigDomainCore,
+        ident="test_setting",
+        valuespec=lambda context: PasswordValuespec(),
+    )
+    diff_text = _global_settings_diff_text(
+        config_variable,
+        _global_settings_context(),
+        {"test_setting": "old-secret"},
+        {"test_setting": "new-secret"},
+    )
+    assert diff_text == "Redacted secrets changed."
+    assert "old-secret" not in diff_text
+    assert "new-secret" not in diff_text
+
+
+def test_diff_text_form_spec_secret_is_redacted() -> None:
+    config_variable = ConfigVariable(
+        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
+        primary_domain=ConfigDomainCore,
+        ident="test_setting",
+        form_spec=lambda context: SimplePassword(),
+    )
+    diff_text = _global_settings_diff_text(
+        config_variable,
+        _global_settings_context(),
+        {"test_setting": "old-secret"},
+        {"test_setting": "new-secret"},
+    )
+    assert diff_text == "Redacted secrets changed."
+    assert "old-secret" not in diff_text
+    assert "new-secret" not in diff_text

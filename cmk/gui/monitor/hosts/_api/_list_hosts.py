@@ -156,6 +156,17 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
+    # A `None` request means "remove the limit". We only honor that for users allowed to ignore
+    # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are already
+    # bounded to the ceiling by the request schema, so they pass through unchanged.
+    match body.limit:
+        case None if user.may("general.ignore_hard_limit"):
+            limit = None
+        case None:
+            limit = _MAX_NUMBER_OF_HOSTS
+        case _:
+            limit = body.limit
+
     parsed_filters = (
         HostFilter("")
         if isinstance(body.filter, ApiOmitted)
@@ -164,23 +175,11 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
 
     return _handle_list_hosts(
         host_repo,
-        limit=_resolve_limit(body.limit, may_remove_limit=user.may("general.ignore_hard_limit")),
+        limit=limit,
         query="" if isinstance(body.q, ApiOmitted) else body.q,
         sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         filters=parsed_filters,
     )
-
-
-def _resolve_limit(requested: int | None, *, may_remove_limit: bool) -> int | None:
-    """Resolve the requested row limit into the one to actually apply.
-
-    A ``None`` request means "remove the limit". We only honor that for users allowed to ignore the
-    hard limit; everyone else is clamped to the safety ceiling. Numeric requests are already bounded
-    to the ceiling by the request schema, so they pass through unchanged.
-    """
-    if requested is None:
-        return None if may_remove_limit else _MAX_NUMBER_OF_HOSTS
-    return requested
 
 
 def _handle_list_hosts(

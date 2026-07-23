@@ -10,7 +10,7 @@ import pytest
 from cmk.werks.tool import load_werk, parse_werk
 from cmk.werks.tool.error import WerkError
 from cmk.werks.tool.load import load_werk_v2, load_werk_v3
-from cmk.werks.tool.models import WerkV2
+from cmk.werks.tool.models import WerkV2, WerkV3
 from cmk.werks.tool.parse import parse_werk_v2, parse_werk_v3, WerkV2ParseResult
 
 from ._werk_files import werk_text
@@ -102,6 +102,10 @@ def test_werk_loading_unknown_field() -> None:
 
 def _markdown_string_to_werk(md: str) -> WerkV2:
     return load_werk_v2(parse_werk_v2(md, werk_id="1234"))
+
+
+def _markdown_string_to_werk_v3(md: str) -> WerkV3:
+    return load_werk_v3(parse_werk_v3(md, werk_id="1234"))
 
 
 def test_loading_md_werk_missing_header() -> None:
@@ -316,6 +320,38 @@ edition | cre
         WerkError, match="Found tag <script> which is not in the list of allowed tags"
     ):
         _markdown_string_to_werk(md)
+
+
+def test_loading_md_werk_version_not_set() -> None:
+    md = """[//]: # (werk v3)
+# test < werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+compatible | yes
+edition | community
+
+this is the `description` with some *italic* and __bold__ ***formatting***.
+
+"""
+    assert _markdown_string_to_werk_v3(md).to_json_dict() == {
+        "__version__": "3",
+        "id": 1234,
+        "class": "fix",
+        "compatible": "yes",
+        "component": "core",
+        "date": "2022-12-12T11:08:08Z",
+        "edition": "community",
+        "level": 1,
+        "title": "test < werk",
+        "version": None,
+        "description": "<p>this is the <code>description</code> with some <em>italic</em> and "
+        "<strong>bold</strong> <strong><em>formatting</em></strong>.</p>",
+    }
 
 
 def test_loading_md_werk() -> None:

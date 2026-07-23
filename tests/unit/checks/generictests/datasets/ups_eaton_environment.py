@@ -7,7 +7,7 @@
 # mypy: disable-error-code=var-annotated
 
 
-checkname = "ups_eaton_enviroment"
+checkname = "ups_eaton_environment"
 
 
 info = [

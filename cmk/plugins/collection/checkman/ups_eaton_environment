@@ -4,7 +4,7 @@ catalog: hw/environment/eaton
 license: GPLv2
 distribution: check_mk
 description:
- Shows Sensor information for Temperature, External Temperature an Humidity for
+ Shows Sensor information for Temperature, External Temperature and Humidity for
  Eaton UPS devices
 
 discovery:

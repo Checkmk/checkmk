@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { type GraphLines } from 'cmk-shared-typing/typescript/graph_designer'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
@@ -552,6 +553,71 @@ test.each(graphLineTypesExceptQuery)(
     expect(inlineHelpTextElement).not.toBeInTheDocument()
   }
 )
+
+test("a query graph line's single attribute filter is copied when the line is cloned", async () => {
+  // Two conjuncts so the round-trip stays a stable AND (one would normalize to a bare "equals" leaf).
+  const attributeFilter: AttributeFilter = {
+    type: 'and',
+    conjuncts: [
+      { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'frontend' },
+      { type: 'equals', key: { kind: 'scope', name: 'otel.library.name' }, value: 'http' }
+    ]
+  }
+  const graphLines: GraphLines = [
+    {
+      id: 0,
+      type: 'query',
+      color: '#ff0000',
+      auto_title: 'Query line',
+      custom_title: '',
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      metric_name: 'test_metric',
+      resource_attributes: [{ key: 'service.name', value: 'frontend' }],
+      scope_attributes: [{ key: 'otel.library.name', value: 'http' }],
+      data_point_attributes: [],
+      attribute_filter: attributeFilter,
+      consolidation_function: {
+        type: 'histogram',
+        function: 'histogram_quantile',
+        lookback_seconds: 60,
+        percentile: 95
+      }
+    }
+  ]
+  const submittedGraphLines = (container: Element): Array<Record<string, unknown>> => {
+    const input = container.querySelector<HTMLInputElement>('input[name="graph_designer_content"]')
+    if (!input) {
+      throw new Error('graph_designer_content input not found')
+    }
+    return (JSON.parse(input.value) as { graph_lines: Array<Record<string, unknown>> }).graph_lines
+  }
+
+  const { container } = render(GraphDesignerApp, {
+    props: {
+      graph_id: 'attribute_filter_graph',
+      graph_lines: graphLines,
+      graph_options: {
+        unit: 'first_entry_with_unit',
+        explicit_vertical_range: 'auto',
+        omit_zero_metrics: true
+      },
+      metric_backend_available: true,
+      create_services_available: false,
+      graph_renderer: fakeGraphRenderer
+    }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Clone this entry' }))
+
+  await waitFor(() => {
+    expect(submittedGraphLines(container)).toHaveLength(2)
+  })
+  const submitted = submittedGraphLines(container)
+  expect(submitted[0]!.attribute_filter).toEqual(attributeFilter)
+  expect(submitted[1]!.attribute_filter).toEqual(attributeFilter)
+})
 
 describe('Constant graph line empty-value validation', () => {
   test('inline error does not appear before submit, even when value is cleared', async () => {

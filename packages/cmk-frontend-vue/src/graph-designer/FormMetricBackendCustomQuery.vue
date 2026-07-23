@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import {
   type GraphLineQueryAttributes,
   type ConsolidationFunction as WireConsolidationFunction
@@ -36,6 +37,7 @@ export interface Query {
   resourceAttributes: GraphLineQueryAttributes
   scopeAttributes: GraphLineQueryAttributes
   dataPointAttributes: GraphLineQueryAttributes
+  attributeFilter?: AttributeFilter
   consolidationFunction: WireConsolidationFunction
 }
 
@@ -70,6 +72,9 @@ const scopeAttributes = defineModel<GraphLineQueryAttributes>('scopeAttributes',
 })
 const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttributes', {
   default: []
+})
+const attributeFilter = defineModel<AttributeFilter | undefined>('attributeFilter', {
+  default: undefined
 })
 const consolidation = defineModel<WireConsolidationFunction>('consolidation', { required: true })
 
@@ -128,6 +133,7 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
         v-model:resource-attributes="resourceAttributes"
         v-model:scope-attributes="scopeAttributes"
         v-model:data-point-attributes="dataPointAttributes"
+        v-model:attribute-filter="attributeFilter"
         :metric-name="metricName"
       />
       <FormMetricBackendConsolidation

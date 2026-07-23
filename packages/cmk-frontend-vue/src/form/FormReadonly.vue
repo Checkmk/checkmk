@@ -46,6 +46,7 @@ import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import { formatTimeSpan } from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { randomId } from 'cmk-ui-library/lib/randomId'
 import { type PropType, type VNode, defineComponent, h } from 'vue'
 
 import type { CheckboxListChoiceElement } from '@/form/private/forms/FormCheckboxListChoice.vue'
@@ -56,6 +57,8 @@ import {
   groupIndexedValidations,
   groupNestedValidations
 } from '@/form/private/validation'
+
+import { fromAttributeFilter, fromModel } from '@/metric-backend/attributeFilterAdapter'
 
 import {
   type Operator,
@@ -202,26 +205,34 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
 
   const renderAttributes = (
     title: string,
-    attributes: typeof value.resource_attributes
+    attributes: ReadonlyArray<{ key: string; value: string }>
   ): VNode | null => {
-    if (!attributes || attributes.length === 0) {
+    if (attributes.length === 0) {
       return null
     }
     const attributeText = attributes.map((attr) => `${attr.key}:${attr.value}`).join(', ')
     return h('tr', [h('td', { class: 'dict_title' }, [`${title}:`]), h('td', [attributeText])])
   }
 
-  const resourceRow = renderAttributes('Resource Attributes', value.resource_attributes)
+  const attributeLists = value.attribute_filter
+    ? fromModel(fromAttributeFilter(value.attribute_filter, () => randomId()))
+    : {
+        resource: value.resource_attributes ?? [],
+        scope: value.scope_attributes ?? [],
+        data_point: value.data_point_attributes ?? []
+      }
+
+  const resourceRow = renderAttributes('Resource Attributes', attributeLists.resource)
   if (resourceRow) {
     rows.push(resourceRow)
   }
 
-  const scopeRow = renderAttributes('Scope Attributes', value.scope_attributes)
+  const scopeRow = renderAttributes('Scope Attributes', attributeLists.scope)
   if (scopeRow) {
     rows.push(scopeRow)
   }
 
-  const dataPointRow = renderAttributes('Data Point Attributes', value.data_point_attributes)
+  const dataPointRow = renderAttributes('Data Point Attributes', attributeLists.data_point)
   if (dataPointRow) {
     rows.push(dataPointRow)
   }

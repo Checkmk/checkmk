@@ -1050,9 +1050,6 @@
           "required": [
             "type",
             "metric_name",
-            "resource_attributes",
-            "scope_attributes",
-            "data_point_attributes",
             "aggregation_lookback",
             "aggregation_histogram_percentile",
             "service_name_template"
@@ -1086,7 +1083,7 @@
               "$ref": "../attribute_filter.json"
             }
           },
-          "required": ["type", "resource_attributes", "scope_attributes", "data_point_attributes"]
+          "required": ["type"]
         }
       ]
     },

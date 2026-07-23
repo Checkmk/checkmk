@@ -44,9 +44,10 @@ onBeforeUnmount(() => {
   <table>
     <FormMetricBackendAttributes
       ref="attributesComponent"
-      v-model:resource-attributes="data.resource_attributes"
-      v-model:scope-attributes="data.scope_attributes"
-      v-model:data-point-attributes="data.data_point_attributes"
+      v-model:resource-attributes="data.resource_attributes!"
+      v-model:scope-attributes="data.scope_attributes!"
+      v-model:data-point-attributes="data.data_point_attributes!"
+      v-model:attribute-filter="data.attribute_filter"
       v-model:backend-validation="validation"
       :static-resource-attribute-keys="['service.name']"
       :indent="true"

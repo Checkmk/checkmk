@@ -121,9 +121,6 @@
         "line_type",
         "mirrored",
         "metric_name",
-        "resource_attributes",
-        "scope_attributes",
-        "data_point_attributes",
         "consolidation_function"
       ]
     },

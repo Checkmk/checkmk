@@ -8,12 +8,13 @@ import threading
 from collections.abc import Callable
 
 from cmk.gui.oauth.store.backend import initialize_database, oauth_db_path, open_connection
+from cmk.gui.oauth.store.client_store import ClientStore
 from cmk.gui.oauth.store.token_store import looks_like_token, TokenStore
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-__all__ = ["register", "token_store", "looks_like_token"]
+__all__ = ["register", "client_store", "token_store", "looks_like_token"]
 
 
 def register(
@@ -61,26 +62,29 @@ def register(
     register_main_module(main_module_registry)
 
 
+# The OAuth stores share one sqlite connection per worker process: opened on
+# first use, reused for the rest of the process's lifetime, never closed.
 _connection_lock = threading.Lock()
 _connection: sqlite3.Connection | None = None
 
 
-def token_store() -> TokenStore:
-    """Get the OAuth token store, backed by a process-wide shared connection.
-
-    The connection is opened once per worker process (the lock only guards
-    against a first-use race between threads) and reused for the rest of
-    the process's lifetime, instead of every request opening and closing its
-    own connection. This mirrors the persistent_connections pool
-    cmk.livestatus_client keeps for site connections, but as a real
-    per-process singleton rather than one that gets closed at the end of
-    every request.
-    """
+def _get_connection() -> sqlite3.Connection:
     global _connection
     if _connection is None:
+        # The lock only guards against a first-use race between threads.
         with _connection_lock:
             if _connection is None:
                 db_path = oauth_db_path()
                 initialize_database(db_path)
                 _connection = open_connection(db_path)
-    return TokenStore(_connection)
+    return _connection
+
+
+def token_store() -> TokenStore:
+    """Get the token store, backed by the shared per-process connection."""
+    return TokenStore(_get_connection())
+
+
+def client_store() -> ClientStore:
+    """Get the registered-client store, backed by the shared per-process connection."""
+    return ClientStore(_get_connection())

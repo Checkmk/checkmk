@@ -3,21 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime, UTC
-
 import pytest
 from flask import Flask
 
+from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
-from cmk.gui.oauth import _store
 from cmk.gui.oauth._client_registration import OAuthClientRegistrationPage
-from cmk.gui.oauth._store import get_registered_client
 from cmk.gui.pages import PageContext
 
 
 @pytest.mark.usefixtures("request_context")
 class TestOAuthClientRegistrationPage:
+    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_client_id_when_enabled(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST",
@@ -37,6 +35,7 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(client_id, str)
             assert client_id
 
+    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_response_echoes_all_submitted_client_metadata(self, flask_app: Flask) -> None:
         # Extend this payload as more RFC 7591 client metadata fields get modeled --
         # section 3.2.1 requires the response to include all registered (accepted)
@@ -56,6 +55,7 @@ class TestOAuthClientRegistrationPage:
             for field, value in submitted.items():
                 assert response.json[field] == value
 
+    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_different_client_id_on_each_call(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST", json={"redirect_uris": ["https://client.example/callback"]}
@@ -171,6 +171,7 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_client_metadata"
 
+    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_registered_client_id_is_persisted(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST",
@@ -184,20 +185,18 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(response.json, dict)
             client_id = response.json["client_id"]
 
-        assert get_registered_client(client_id) is not None
+        assert oauth.client_store().get(client_id) is not None
 
+    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_400_when_registration_limit_is_reached(self, flask_app: Flask) -> None:
-        clients = {
-            _store.ClientId(f"client-{i}"): _store.ClientRegistration(
-                client_id=_store.ClientId(f"client-{i}"),
-                redirect_uris=["https://client.example/callback"],
-                client_name=None,
-                registered_at=datetime.fromtimestamp(0, tz=UTC),
-            )
-            for i in range(1000)
-        }
-        _store.REGISTERED_CLIENTS_STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        _store.REGISTERED_CLIENTS_STORE_PATH.write_text(_store._serialize_store(clients))
+        store = oauth.client_store()
+        store._connection.executemany(
+            """
+            INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
+            VALUES (?, '["https://client.example/callback"]', NULL, 0)
+            """,
+            [(f"limit-test-client-{i}",) for i in range(1000)],
+        )
 
         with flask_app.test_request_context(
             method="POST",

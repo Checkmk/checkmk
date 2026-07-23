@@ -16,11 +16,11 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.user import UserId
+from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.oauth._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth._authorize import OAuthAuthorizePage
-from cmk.gui.oauth._store import register_client
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
@@ -55,7 +55,9 @@ _SESSION_USER = UserId("alice")
 
 @pytest.fixture(name="registered_client_id")
 def fixture_registered_client_id() -> str:
-    return register_client(["https://client.example/callback"], "Test Client").client_id
+    return (
+        oauth.client_store().register(["https://client.example/callback"], "Test Client").client_id
+    )
 
 
 @pytest.mark.usefixtures("request_context", "mock_vue_manifest")
@@ -203,7 +205,11 @@ class TestOAuthAuthorizePage:
 
     @pytest.mark.usefixtures("clean_redis")
     def test_preserves_existing_query_params_on_redirect_uri(self, flask_app: Flask) -> None:
-        client_id = register_client(["https://client.example/callback?foo=bar"], None).client_id
+        client_id = (
+            oauth.client_store()
+            .register(["https://client.example/callback?foo=bar"], None)
+            .client_id
+        )
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
             patch("cmk.gui.oauth._authorize.check_csrf_token"),

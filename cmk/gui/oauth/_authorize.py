@@ -9,6 +9,7 @@ import urllib.parse
 from collections.abc import Callable
 from typing import override
 
+from cmk.gui import oauth
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -17,7 +18,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.oauth._auth_code_store import AuthCodeRecord, AuthCodeStore
-from cmk.gui.oauth._store import get_registered_client
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
@@ -37,7 +37,7 @@ class OAuthAuthorizePage(Page):
 
     Codes minted on approval are persisted PKCE-bound via AuthCodeStore; the
     token endpoint later redeems them single-use. Validates client_id against
-    the registered-client store (see cmk.gui.oauth._store) and requires
+    the registered-client store (see cmk.gui.oauth.client_store()) and requires
     redirect_uri to exactly match one of that client's registered
     redirect_uris. _token.py does not yet validate that a code was issued to
     the client redeeming it -- that's separate follow-up work. Rejected
@@ -74,7 +74,7 @@ class OAuthAuthorizePage(Page):
             response.status_code = http_client.BAD_REQUEST
             return None
 
-        registration = get_registered_client(client_id)
+        registration = oauth.client_store().get(client_id)
         if registration is None:
             self._log_authorization_failure("unknown client_id")
             response.status_code = http_client.BAD_REQUEST

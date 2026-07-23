@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from cmk.gui.oauth.store.backend import create_schema, initialize_database, open_connection
-from cmk.gui.oauth.store.token_store import TokenStore
 
 
 def _tables(db_path: Path) -> set[str]:
@@ -88,17 +87,6 @@ def test_tokens_table_rejects_expires_at_not_after_issued_at() -> None:
             "INSERT INTO tokens (token_hash, user_id, issued_at, expires_at) VALUES (?, ?, ?, ?)",
             ("a" * 64, "cmkadmin", 100, 100),
         )
-
-
-def test_close_makes_the_connection_unusable() -> None:
-    # Backend has no public method of its own to probe; TokenStore is its only
-    # concrete subclass, so it stands in as the minimal usable instance here.
-    store = TokenStore(sqlite3.connect(":memory:"))
-
-    store.close()
-
-    with pytest.raises(sqlite3.ProgrammingError):
-        store.get_by_token("cmko1.does-not-matter")
 
 
 def test_open_connection_returns_rows_addressable_by_column_name(tmp_path: Path) -> None:

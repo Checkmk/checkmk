@@ -22,6 +22,5 @@ py_library(
         "//cmk/utils:paths",
         "//cmk/utils:redis",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:store",
     ],
 )

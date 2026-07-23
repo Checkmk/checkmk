@@ -8,8 +8,9 @@ import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, onBeforeMount, ref, watch } from 'vue'
+import { computed, inject, onBeforeMount, ref, watch } from 'vue'
 
+import { hostSlideInKey } from '@/dashboard/types/injectionKeys.ts'
 import type { NetworkFlowTopTableContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkRankedTable from '@/network-flow/CmkRankedTable'
@@ -21,6 +22,9 @@ import type { ContentProps } from '../types.ts'
 const { _t } = usei18n()
 const props = defineProps<ContentProps<NetworkFlowTopTableContent>>()
 
+// null when the dashboard does not wire it up; cells then stay plain text.
+const openHostSlideIn = inject(hostSlideInKey, null)
+
 const columns = ref<RankedTableColumn[] | undefined>(undefined)
 const rows = ref<RankedTableRow[] | undefined>(undefined)
 // A backend-reported condition (flow monitoring disabled, database unreachable,
@@ -31,6 +35,19 @@ const error = ref<{ variant: 'warning' | 'error'; message: string } | null>(null
 // The widget's accent values name colors of the chart palette, so the
 // configuration passes straight through (the assignment is type-checked).
 const barColor = computed<ChartColor>(() => props.content.accent)
+
+// Make the "host" column clickable (host dimensions only) when an opener exists.
+const displayColumns = computed<RankedTableColumn[]>(() =>
+  (columns.value ?? []).map((column) =>
+    column.key === 'host' && openHostSlideIn ? { ...column, clickable: true } : column
+  )
+)
+
+function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
+  if (column.key === 'host' && openHostSlideIn) {
+    openHostSlideIn(String(row[column.key] ?? ''))
+  }
+}
 
 const fetchData = async (): Promise<void> => {
   error.value = null
@@ -68,7 +85,13 @@ watch(dataParameters, () => void fetchData())
         <CmkAlertBox :variant="error.variant">{{ error.message }}</CmkAlertBox>
       </div>
       <CmkLoading v-else-if="columns === undefined || rows === undefined" />
-      <CmkRankedTable v-else :columns="columns" :rows="rows" :bar-color="barColor" />
+      <CmkRankedTable
+        v-else
+        :columns="displayColumns"
+        :rows="rows"
+        :bar-color="barColor"
+        @cell-click="onCellClick"
+      />
     </div>
   </DashboardContentContainer>
 </template>

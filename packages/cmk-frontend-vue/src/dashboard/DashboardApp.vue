@@ -27,6 +27,7 @@ import {
 
 import DashboardBreadcrumb from '@/dashboard/components/DashboardBreadcrumb/DashboardBreadcrumb.vue'
 import DashboardComponent from '@/dashboard/components/DashboardComponent.vue'
+import NetworkFlowHostSlideIn from '@/dashboard/components/DashboardContent/NetworkFlow/HostSlideIn/NetworkFlowHostSlideIn.vue'
 import DashboardFilterSettings from '@/dashboard/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -56,7 +57,7 @@ import {
   type DashboardModel
 } from '@/dashboard/types/dashboard.ts'
 import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
-import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
+import { hostSlideInKey, urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { DashboardPageProperties } from '@/dashboard/types/page.ts'
 import type {
   WidgetContent,
@@ -108,6 +109,28 @@ useProvideVisualInfos()
 
 // So far, this is only needed and used by the DashboardContentNtop component
 provide(urlParamsKey, props.url_params)
+
+// Network flow host detail slide-in, opened via hostSlideInKey from flow
+// widgets. Switching hosts while open toggles closed/open so the panel reloads.
+const hostSlideInIp = ref<string | null>(null)
+const hostSlideInOpen = computed(() => hostSlideInIp.value !== null)
+
+function openHostSlideIn(ip: string): void {
+  if (hostSlideInIp.value !== null && hostSlideInIp.value !== ip) {
+    hostSlideInIp.value = null
+    void nextTick(() => {
+      hostSlideInIp.value = ip
+    })
+  } else {
+    hostSlideInIp.value = ip
+  }
+}
+
+function closeHostSlideIn(): void {
+  hostSlideInIp.value = null
+}
+
+provide(hostSlideInKey, openHostSlideIn)
 
 const dashboardsManager = useDashboardsManager()
 useProvideDashboardConstants(dashboardsManager.constants)
@@ -713,6 +736,11 @@ const reviewFilters = () => {
           :permissions="permissions"
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
+        />
+        <NetworkFlowHostSlideIn
+          :open="hostSlideInOpen"
+          :ip="hostSlideInIp"
+          @close="closeHostSlideIn"
         />
       </div>
       <div class="db-app__content">

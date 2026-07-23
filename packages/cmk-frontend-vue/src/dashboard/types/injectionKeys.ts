@@ -8,3 +8,7 @@ import type { InjectionKey } from 'vue'
 import type { FilterHTTPVars } from './widget.ts'
 
 export const urlParamsKey: InjectionKey<FilterHTTPVars> = Symbol('urlParams')
+
+/** Opens the network flow host detail slide-in for the given IP address. */
+export type OpenHostSlideIn = (ip: string) => void
+export const hostSlideInKey: InjectionKey<OpenHostSlideIn> = Symbol('networkFlowHostSlideIn')

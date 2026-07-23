@@ -559,12 +559,6 @@ def something_in_git_index() -> bool:
     return False
 
 
-def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk.content.metadata["description"] += f"""
-{time.strftime("%F %T")}: {title}
-{comment}"""
-
-
 def _launcher() -> str:
     # Bazel runs the tool out of a runfiles tree; the venv entry point does not.
     return "bazel" if "RUNFILES_DIR" in os.environ else "venv"

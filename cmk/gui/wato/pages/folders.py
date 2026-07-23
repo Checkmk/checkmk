@@ -188,6 +188,8 @@ class ModeFolder(WatoMode):
         if request.has_var("_show_explicit_labels"):
             user.wato_folders_show_labels = request.get_ascii_input("_show_explicit_labels") == "1"
 
+        self._hosts_known_in_monitoring: set[HostName] | None = None
+
     @override
     def title(self) -> str:
         return self._folder.title()
@@ -1243,6 +1245,15 @@ class ModeFolder(WatoMode):
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
+    def _host_known_in_monitoring(self, host_name: HostName) -> bool:
+        if self._hosts_known_in_monitoring is None:
+            self._hosts_known_in_monitoring = {
+                HostName(h["name"])
+                for h in Query([Hosts.name]).fetchall(sites=sites.live())
+                if h["name"] is not None
+            }
+        return host_name in self._hosts_known_in_monitoring
+
     def _show_host_actions(self, host: Host) -> None:
         if user.may("wato.edit_hosts") and host.permissions.may("write"):
             html.icon_button(
@@ -1281,8 +1292,7 @@ class ModeFolder(WatoMode):
                             "/latest/en/wato.html#activate_changes' target='_blank'>Activate cha"
                             "nges</a> before it becomes effective in monitoring."
                         )
-                        if host.name()
-                        in [h["name"] for h in Query([Hosts.name]).fetchall(sites=sites.live())]
+                        if self._host_known_in_monitoring(host.name())
                         else None,
                         confirm_text=_("Yes, delete host"),
                         cancel_text=_("No, keep host"),

@@ -20,9 +20,11 @@ extern crate common;
 mod common;
 
 use crate::common::tools::{
-    default_role, make_mini_config, make_mini_config_cdb_root, make_mini_config_custom_instance,
-    make_mini_config_pdb, make_mini_config_with_sid, platform::add_runtime_to_path,
-    ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
+    make_endpoint_tns_admin_dir, make_mini_config, make_mini_config_cdb_root,
+    make_mini_config_custom_instance, make_mini_config_custom_instance_with_tns_admin,
+    make_mini_config_pdb, make_mini_config_pdb_builtin_then_custom,
+    make_mini_config_pdb_custom_then_builtin, make_mini_config_with_sid,
+    platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -34,15 +36,13 @@ use mk_oracle::ora_sql::section;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::platform::registry::get_instances;
-#[cfg(not(windows))]
-use mk_oracle::setup::detect_host_runtime;
-use mk_oracle::setup::{create_plugin, detect_runtime, Env};
+use mk_oracle::setup::{create_plugin, detect_host_runtime, detect_runtime, Env};
 use mk_oracle::types::{EnvVarName, SqlQuery};
 
 use mk_oracle::config::connection::setup_wallet_environment;
 use mk_oracle::types::{
-    Credentials, InstanceName, InstanceNumVersion, InstanceVersion, ServiceName, Tenant,
-    UseHostClient,
+    ConnectionStringType, Credentials, InstanceName, InstanceNumVersion, InstanceVersion,
+    ServiceName, Tenant, UseHostClient,
 };
 use regex::Regex;
 use std::collections::HashSet;
@@ -52,10 +52,7 @@ use std::sync::LazyLock;
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 
 pub fn get_sid(endpoint: &SqlDbEndpoint) -> String {
-    endpoint
-        .sid
-        .clone()
-        .unwrap_or(endpoint.service_name.clone())
+    endpoint.sid.clone().unwrap()
 }
 
 pub fn get_service_name(endpoint: &SqlDbEndpoint) -> String {
@@ -199,10 +196,11 @@ static WORKING_ENDPOINTS: LazyLock<Vec<SqlDbEndpoint>> = LazyLock::new(load_endp
 fn test_endpoints_file() {
     let s = &WORKING_ENDPOINTS;
     let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap();
+    let local = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).ok();
     assert!(!s.is_empty());
     assert_eq!(s[0], r);
     for e in &s[..] {
-        if e.host == "localhost" {
+        if e.host == "localhost" || Some(e) == local.as_ref() {
             continue; // skip local endpoint, it may have strange credentials
         }
         assert_eq!(e.user, r.user);
@@ -275,12 +273,18 @@ fn test_local_connection() {
         None,
     );
 
-    for _ in [None, Some(&ServiceName::from(&endpoint.service_name))] {
+    for i in [None, Some(&ServiceName::from(&endpoint.service_name))] {
         let spot = backend::make_spot(&config.endpoint()).unwrap();
         let conn = spot.connect(None).unwrap();
         let result = conn.query_table(&TEST_SQL_INSTANCE).format("");
         assert!(result.is_ok());
         let rows = result.unwrap();
+        eprintln!(
+            "Rows: {i:?} {:?} {:?}",
+            rows,
+            conn.target()
+                .make_connection_string(None, ConnectionStringType::Tns)
+        );
         assert!(!rows.is_empty());
         assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &instance_name)));
         assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &instance_name)));
@@ -295,6 +299,7 @@ fn test_remote_mini_connection() {
     let config = make_mini_config(&endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
+    println!("Target {:?}", spot.target());
     let conn = spot.connect(None).unwrap();
     let result = conn.query_table(&TEST_SQL_INSTANCE).format("");
     assert!(result.is_ok());
@@ -344,7 +349,7 @@ oracle:
 "#,
         endpoint.user,
         endpoint.pwd,
-        default_role(&endpoint.host),
+        role_spec(&endpoint.role, &endpoint.host),
         endpoint.host,
         endpoint.port,
         endpoint.service_name
@@ -421,9 +426,11 @@ async fn test_remote_custom_instance_connection() {
 
     assert!(r.is_ok());
     let table = r.unwrap();
+    eprintln!("{:?}", table);
     assert_eq!(table.len(), 2);
     assert_eq!(table[0], "<<<oracle_instance>>>");
     let rows: Vec<&str> = table[1].split("\n").collect();
+    eprintln!("{rows:?}");
     assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
     for r in rows[1..].iter() {
         assert!(r.starts_with(endpoint.sid.as_ref().unwrap()));
@@ -462,17 +469,15 @@ async fn test_remote_tns_custom_instance_connection() {
         std::env::var("TNS_ADMIN").unwrap_or_default()
     );
     let endpoint = remote_reference_endpoint();
-    // The fixture freezes ora_remote to the CI database; a local endpoint
-    // (localhost, e.g. the Docker tier) uses the static ora_local alias instead.
-    let alias = if endpoint.host == "localhost" {
-        "ora_local"
-    } else {
-        "ora_remote"
-    };
-    let config = make_mini_config_custom_instance(
+    // Resolve the alias through a generated tnsnames.ora that points at the
+    // reference endpoint itself: the alias mechanics get exercised without
+    // pinning the test to one specific reference DB host.
+    let tns_admin = make_endpoint_tns_admin_dir(&endpoint, "ora_remote");
+    let config = make_mini_config_custom_instance_with_tns_admin(
         &endpoint,
         "FREE",
-        Some(InstanceAlias::from(alias.to_string())),
+        Some(InstanceAlias::from("ora_remote".to_string())),
+        &tns_admin,
     );
     let env = Env::default();
     let r = generate_data(&config, &env).await;
@@ -506,6 +511,7 @@ SELECT
 fn test_remote_mini_connection_version() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        eprintln!("Endpoint: {}", endpoint.host);
         let config = make_mini_config(endpoint);
 
         let spot = backend::make_spot(&config.endpoint()).unwrap();
@@ -544,7 +550,7 @@ fn test_io_stats_query() {
     for endpoint in WORKING_ENDPOINTS.iter() {
         let rows = connect_and_query(endpoint, sqls::Id::IoStats, None);
         assert!(rows.len() > 10);
-        let name_dot = format!("{}.", get_sid(endpoint));
+        let name_dot = format!("{}.", &endpoint.sid.clone().unwrap());
         for r in &rows {
             let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
             assert_eq!(
@@ -593,8 +599,7 @@ fn connect_and_query(
     version: Option<InstanceNumVersion>,
 ) -> Vec<String> {
     let config = make_mini_config(endpoint);
-
-    log::info!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    eprintln!("Connecting to {:#?}", endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     let conn = spot.connect(None).unwrap();
@@ -615,6 +620,7 @@ fn connect_and_query(
 fn test_ts_quotas() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::TsQuotas, None);
         assert!(!rows.is_empty());
         let expected = format!("{}||||", get_service_name(endpoint));
@@ -626,6 +632,7 @@ fn test_ts_quotas() {
 fn test_jobs() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Jobs, None);
         assert!(rows.len() > 10);
         rows.iter().for_each(|r| {
@@ -652,6 +659,7 @@ fn test_jobs() {
 fn test_jobs_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Jobs,
@@ -675,6 +683,7 @@ fn test_jobs_old() {
 fn test_resumable() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Resumable, None);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
@@ -683,7 +692,10 @@ fn test_resumable() {
                 ORA_TEST_RESUMABLE_DATA.split('|').collect::<Vec<_>>().len(),
             );
         });
-        assert_eq!(rows[0], format!("{}|||||||||", get_sid(endpoint)));
+        assert_eq!(
+            rows[0],
+            format!("{}|||||||||", endpoint.sid.clone().unwrap().as_str())
+        );
     }
 }
 
@@ -691,7 +703,9 @@ fn test_resumable() {
 fn test_undo_stats() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         for version in [None, Some(InstanceNumVersion::from(11_00_00_00))] {
+            println!("Testing version: {:?}", version);
             let rows = connect_and_query(endpoint, sqls::Id::UndoStat, version);
             assert_eq!(rows.len(), 1);
             let r = &rows[0];
@@ -718,6 +732,7 @@ fn test_undo_stats() {
 fn test_locks_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Locks, None);
         assert!(rows.len() >= 3);
         rows.iter().for_each(|r| {
@@ -765,6 +780,7 @@ fn test_locks_last() {
 fn test_locks_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Locks,
@@ -793,6 +809,7 @@ fn test_locks_old() {
 fn test_log_switches() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::LogSwitches, None);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
@@ -816,6 +833,7 @@ fn test_log_switches() {
 fn test_long_active_sessions_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::LongActiveSessions, None);
         assert!(rows.len() >= 3);
         rows.iter().for_each(|r| {
@@ -852,6 +870,7 @@ fn test_long_active_sessions_last() {
 fn test_long_active_sessions_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::LongActiveSessions,
@@ -866,6 +885,7 @@ fn test_long_active_sessions_old() {
 fn test_processes() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Processes, None);
         assert!(!rows.is_empty());
         let array = rows[0].split('|').collect::<Vec<&str>>();
@@ -885,6 +905,7 @@ fn test_processes() {
 fn test_recovery_status_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::RecoveryStatus, None);
         for r in rows {
             let array = r.split('|').collect::<Vec<&str>>();
@@ -914,6 +935,7 @@ fn test_recovery_status_last() {
 fn test_recovery_status_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::RecoveryStatus,
@@ -942,6 +964,7 @@ fn test_recovery_status_old() {
 fn test_rman() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Rman, None);
         assert!(rows.is_empty());
     }
@@ -951,6 +974,7 @@ fn test_rman() {
 fn test_rman_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Rman,
@@ -964,6 +988,7 @@ fn test_rman_old() {
 fn test_sessions_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Sessions, None);
         assert_eq!(rows.len(), 3);
         let start = get_sid(endpoint) + ".";
@@ -1004,6 +1029,7 @@ fn test_sessions_last() {
 fn test_sessions_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Sessions,
@@ -1022,6 +1048,7 @@ fn test_sessions_old() {
 fn test_system_parameter() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::SystemParameter, None);
         assert!(rows.len() > 100);
         rows.iter().for_each(|r| {
@@ -1048,6 +1075,7 @@ fn test_system_parameter() {
 fn test_table_spaces() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::TableSpaces, None);
         assert!(rows.len() > 2);
         rows.iter().for_each(|r| {
@@ -1099,6 +1127,7 @@ fn test_table_spaces() {
 fn test_table_spaces_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::TableSpaces,
@@ -1144,6 +1173,7 @@ fn test_table_spaces_old() {
 fn test_data_guard_stats() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::DataGuardStats, None);
         assert!(rows.is_empty());
     }
@@ -1154,6 +1184,7 @@ fn test_instance() {
     use crate::system::convert_to_num_version;
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Instance, None);
         assert!(rows.len() > 2);
         rows.iter().for_each(|r| {
@@ -1190,6 +1221,7 @@ fn test_instance_full_version() {
     use crate::system::convert_to_num_version;
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Instance,
@@ -1225,6 +1257,7 @@ fn test_instance_full_version() {
 fn test_instance_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Instance,
@@ -1261,6 +1294,7 @@ fn test_instance_old() {
 fn test_asm_instance_new() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::AsmInstance, None);
         assert_eq!(rows.len(), 1);
         let r = rows[0].clone();
@@ -1309,6 +1343,7 @@ fn test_asm_instance_new() {
 fn test_performance_new() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Performance, None);
         assert!(rows.len() > 30);
         rows.iter().for_each(|r| {
@@ -1387,6 +1422,7 @@ fn test_performance_new() {
 #[test]
 fn test_performance_old() {
     for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
             endpoint,
             sqls::Id::Performance,
@@ -1503,6 +1539,101 @@ async fn test_pdb_wildcard_pattern_targets_all_discovered_pdbs() {
     }
 }
 
+// TC-ORA-144
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pdb_scoped_query_reverts_to_cdb_root_builtin_then_custom() {
+    use mk_oracle::ora_sql::pdbs::Pdbs;
+    add_runtime_to_path();
+    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+        return;
+    };
+    let sid = endpoint
+        .sid
+        .as_deref()
+        .unwrap_or(&endpoint.service_name)
+        .to_uppercase();
+
+    let discovery_config = make_mini_config_pdb(&endpoint, &[".*"]);
+    let spot = backend::make_spot(&discovery_config.endpoint()).unwrap();
+    let conn = spot
+        .connect(None)
+        .expect("Connect failed, check environment variables");
+    let discovered = Pdbs::discover(&conn).expect("PDB discovery failed");
+    let pdb = discovered
+        .names()
+        .first()
+        .expect("test endpoint must expose at least one PDB for this scenario")
+        .as_ref()
+        .to_string();
+
+    let config = make_mini_config_pdb_builtin_then_custom(&endpoint, &pdb);
+    let env = Env::default();
+    let output = generate_data(&config, &env).await.unwrap().join("\n");
+
+    let builtin_pos = output
+        .find(&format!("[[[{sid}|probe_builtin]]]\nCDB$ROOT"))
+        .unwrap_or_else(|| panic!("expected leading probe to see CDB$ROOT: {output}"));
+    let pdb_pos = output
+        .find(&format!("[[[{sid}_{pdb}|probe_pdb]]]\n{pdb}"))
+        .unwrap_or_else(|| panic!("expected PDB-scoped probe to see {pdb}: {output}"));
+    let followup_pos = output
+        .find(&format!("[[[{sid}|probe_followup]]]\nCDB$ROOT"))
+        .unwrap_or_else(|| panic!("expected follow-up probe to see CDB$ROOT again: {output}"));
+
+    assert!(
+        builtin_pos < pdb_pos && pdb_pos < followup_pos,
+        "expected probes in order builtin -> pdb -> followup; \
+         out-of-order output means the PDB switch didn't revert to CDB$ROOT \
+         before the follow-up query ran: {output}"
+    );
+}
+
+// TC-ORA-144
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pdb_scoped_query_reverts_to_cdb_root_custom_then_builtin() {
+    use mk_oracle::ora_sql::pdbs::Pdbs;
+    add_runtime_to_path();
+    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+        return;
+    };
+    let sid = endpoint
+        .sid
+        .as_deref()
+        .unwrap_or(&endpoint.service_name)
+        .to_uppercase();
+
+    let discovery_config = make_mini_config_pdb(&endpoint, &[".*"]);
+    let spot = backend::make_spot(&discovery_config.endpoint()).unwrap();
+    let conn = spot
+        .connect(None)
+        .expect("Connect failed, check environment variables");
+    let discovered = Pdbs::discover(&conn).expect("PDB discovery failed");
+    let pdb = discovered
+        .names()
+        .first()
+        .expect("test endpoint must expose at least one PDB for this scenario")
+        .as_ref()
+        .to_string();
+
+    let config = make_mini_config_pdb_custom_then_builtin(&endpoint, &pdb);
+    let env = Env::default();
+    let output = generate_data(&config, &env).await.unwrap().join("\n");
+
+    let pdb_pos = output
+        .find(&format!("[[[{sid}_{pdb}|probe_pdb]]]\n{pdb}"))
+        .unwrap_or_else(|| panic!("expected PDB-scoped probe to see {pdb}: {output}"));
+    let followup_pos = output
+        .find(&format!("[[[{sid}|probe_followup]]]\nCDB$ROOT"))
+        .unwrap_or_else(|| panic!("expected follow-up probe to see CDB$ROOT: {output}"));
+
+    assert!(
+        pdb_pos < followup_pos,
+        "expected probe_pdb before probe_followup; \
+         out-of-order output means the PDB switch didn't revert to CDB$ROOT \
+         before the follow-up query ran: {output}"
+    );
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pdb_absent_runs_against_cdb_root() {
     add_runtime_to_path();
@@ -1534,7 +1665,15 @@ fn test_detection_registry() {
     eprintln!("Instances = {:?}", instances);
     assert!(!instances.is_empty());
     for i in instances {
-        assert!(i.name == InstanceName::from("XE") || i.name == InstanceName::from("FREE"));
+        // Instance names are deployment-specific: XE / FREE on the reference
+        // hosts, ORCL* on the ORACLE-WIN-CI VM (e.g. ORCL19 alongside 23ai Free).
+        let name = i.name.to_string();
+        assert!(
+            i.name == InstanceName::from("XE")
+                || i.name == InstanceName::from("FREE")
+                || name.starts_with("ORCL"),
+            "unexpected instance name: {name}"
+        );
         assert!(std::path::PathBuf::from(&i.home).is_dir());
         assert!(std::path::PathBuf::from(&i.home).exists());
         let base = i.base.unwrap();
@@ -1543,7 +1682,6 @@ fn test_detection_registry() {
     }
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_detect_host_runtime() {
     let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
@@ -1573,7 +1711,6 @@ fn base_dir() -> std::path::PathBuf {
     }))
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_detect_runtime_with_runtime() {
     // MK_LIBDIR is set so that runtimes exist
@@ -1930,7 +2067,6 @@ fn test_create_plugin_async() {
     assert!(bakery_content.contains("  - pattern: $CUSTOM_PLUGINS_PATH$\\a"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_find_current_instance_runtime() {
     use mk_oracle::setup::find_env_var_lib_runtime;

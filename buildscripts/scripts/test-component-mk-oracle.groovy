@@ -41,25 +41,19 @@ void main() {
                 sshUserPrivateKey(
                     credentialsId: 'jenkins-oracle-ssh-key',
                     keyFileVariable: 'SSH_KEYFILE',
-                    usernameVariable: "USER",
+                    usernameVariable: "SSH_USER",
                 ),
                 string(
                     credentialsId: "CI_ORA_TEST_PASSWORD",
                     variable: "CI_ORA_TEST_PASSWORD",
                 ),
-                string(
-                    credentialsId: "CI_ORA2_DB_TEST_SERVER",
-                    variable: "SERVER",
-                ),
             ]) {
-                // The endpoint is constructed by run's resolve_test_endpoint
-                // from CI_ORA_TEST_PASSWORD; constants live in
-                // packages/mk-oracle/test-db-endpoints.conf.
+                // SSH_USER comes from the jenkins-oracle-ssh-key credential;
+                // run pairs it with the host and DB endpoint from
+                // packages/mk-oracle/test-db-endpoints.conf and stages the
+                // test binary in a unique remote directory it creates itself.
                 sh("""
                     ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1 \
-                    HOST_ADDRESS="$USER@$SERVER" \
-                    TEST_BINARY_LOCAL_PATH=test_ora_sql_test \
-                    TEST_BINARY_REMOTE_PATH=/home/rocky/test_ora_${safe_branch_name} \
                     ${checkout_dir}/packages/mk-oracle/run --remote-host
                 """)
             }

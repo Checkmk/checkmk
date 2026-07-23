@@ -264,11 +264,42 @@ setup_oci_runtime() {
     export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
 }
 
+# Remove the remote staging directory created by run_test_component_remote_host
+# (a caller-provided TEST_BINARY_REMOTE_PATH is left untouched).
+remove_remote_staging() {
+    [[ -n "${REMOTE_STAGING_TO_CLEAN:-}" ]] || return 0
+    # REMOTE_STAGING_TO_CLEAN is expanded client-side on purpose (the path we
+    # created); SSH_ARGS is intentionally word-split.
+    # shellcheck disable=SC2086,SC2029
+    ssh $SSH_ARGS "${HOST_ADDRESS}" "rm -rf '${REMOTE_STAGING_TO_CLEAN}'" || true
+}
+
 run_test_component_remote_host() {
     resolve_test_endpoint
+    # SSH target: the login user comes from the environment (the CI job
+    # exposes it from the jenkins-oracle-ssh-key credential as SSH_USER);
+    # the host defaults to the CI database box (ci_host from
+    # test-db-endpoints.conf). A pre-set HOST_ADDRESS wins for manual runs
+    # against another host.
+    if [[ -z "${HOST_ADDRESS:-}" ]]; then
+        [[ -n "${SSH_USER:-}" ]] ||
+            failure "set SSH_USER (SSH login for ${ci_host}) or HOST_ADDRESS"
+        HOST_ADDRESS="${SSH_USER}@${ci_host}"
+    fi
     TEST_NAME="test_ora_sql_test"
     SSH_ARGS=
     [ -n "$SSH_KEYFILE" ] && SSH_ARGS="$SSH_ARGS -i $SSH_KEYFILE -o StrictHostKeyChecking=no"
+    # Stage under a unique remote directory unless the caller supplied one,
+    # so concurrent runs on the shared host never collide (and the branch
+    # name no longer has to reach this script). Created under $HOME to avoid
+    # a noexec /tmp; cleaned up on exit.
+    if [[ -z "${TEST_BINARY_REMOTE_PATH:-}" ]]; then
+        # shellcheck disable=SC2086
+        TEST_BINARY_REMOTE_PATH="$(ssh $SSH_ARGS "${HOST_ADDRESS}" 'mktemp -d "$HOME/test_ora.XXXXXX"')" ||
+            failure "could not create a remote staging directory on ${HOST_ADDRESS}"
+        REMOTE_STAGING_TO_CLEAN="${TEST_BINARY_REMOTE_PATH}"
+        trap remove_remote_staging EXIT
+    fi
     # NOTE: create test folder and directory structure emulating real deployment too
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
@@ -278,7 +309,7 @@ run_test_component_remote_host() {
 EOF
     # copy Oracle DB plug-in test-binary and test data to the remote-host
     # shellcheck disable=SC2086
-    scp $SSH_ARGS "${TEST_BINARY_LOCAL_PATH}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
+    scp $SSH_ARGS "${TEST_NAME}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
     # shellcheck disable=SC2086
     scp $SSH_ARGS tests/files/tns/tnsnames.ora "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/tests/files/tns/"
     # shellcheck disable=SC2086,SC2087,SC2029
@@ -400,7 +431,7 @@ run_clippy() {
             echo "clippy not available on AIX - skipping."
             ;;
         *)
-            bazel build --config=clippy :all
+            bazel lint :all
             ;;
     esac
 }

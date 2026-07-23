@@ -1829,24 +1829,18 @@ def test_resolve_service_dependencies_cyclic(
         )
 
 
-# TODO(igor): In this and maybe other tests: Construct HostTags directly, drop Scenario
-def test_service_depends_on_unknown_host(monkeypatch: MonkeyPatch) -> None:
-    loading_result = Scenario().apply(monkeypatch)
+def test_service_depends_on_unknown_host() -> None:
     service_depends_on = config.ServiceDependsOn(
-        tag_list=loading_result.host_tags.tag_list,
+        tag_list=lambda hn: (),
         service_dependencies=(),
     )
     assert not service_depends_on(HostName("test-host"), "svc")
 
 
-def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
+def test_service_depends_on() -> None:
     test_host = HostName("test-host")
-    ts = Scenario()
-    ts.add_host(test_host)
-    loading_result = ts.apply(monkeypatch)
-
     service_depends_on = config.ServiceDependsOn(
-        tag_list=loading_result.host_tags.tag_list,
+        tag_list=lambda hn: (),
         service_dependencies=[
             ("dep1", [], config.ALL_HOSTS, ["svc1"], {}),
             ("dep2-%s", [], config.ALL_HOSTS, ["svc1-(.*)"], {}),

@@ -381,7 +381,7 @@ impl Section {
                     .clone()
             });
 
-        let pdbs = yaml.get_string_vector(keys::PDBS, &[""]);
+        let pdbs = yaml.get_string_vector(keys::PDBS, &[]);
 
         if !pdbs.is_empty() {
             builder.set_pdb_patterns(pdbs)

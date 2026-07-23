@@ -24,11 +24,11 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
-from cmk.post_rename_site.logger import logger
-from cmk.post_rename_site.plugins.actions.hosts_and_folders import (
+from cmk.plugins.checkmk.post_rename_site.hosts_and_folders import (
     _update_locked_by,
     update_hosts_and_folders,
 )
+from cmk.post_rename_site.logger import logger
 from cmk.ruleset_matcher.tags import TagGroupID
 from cmk.utils.global_ident_type import (
     GlobalIdent,

@@ -22,6 +22,7 @@ class PluginGroup(enum.Enum):
     DCD_CONNECTORS = "dcd_connectors"
     DCD_CONNECTOR_PARAMETERS = "dcd_connector_parameters"
     GRAPHING = "graphing"
+    POST_RENAME_SITE = "post_rename_site"
     RULESETS = "rulesets"
     SERVER_SIDE_CALLS = "server_side_calls"
     INVENTORY_UI = "inventory_ui"

@@ -10,7 +10,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
-from cmk.post_rename_site.plugins.actions.builtin_host_labels import (
+from cmk.plugins.checkmk.post_rename_site.builtin_host_labels import (
     update_builtin_host_labels_site,
 )
 from cmk.ruleset_matcher.labels import BuiltinHostLabelsStore

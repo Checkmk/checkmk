@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.site import SiteId
+from cmk.plugins.checkmk.post_rename_site.nagvis import update_nagvis_maps
 from cmk.post_rename_site.logger import logger
-from cmk.post_rename_site.plugins.actions.nagvis import update_nagvis_maps
 
 
 @pytest.fixture(name="nagvis_maps_dir")

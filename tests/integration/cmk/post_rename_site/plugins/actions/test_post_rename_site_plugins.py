@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 
 from . import prs_test_plugin
 
-POST_RENAME_SITE_PLUGINS_PATH = "local/lib/python3/cmk/post_rename_site/plugins/actions"
+POST_RENAME_SITE_PLUGINS_PATH = "local/lib/python3/cmk/plugins/mytest/post_rename_site"
 
 
 @pytest.fixture()

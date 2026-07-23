@@ -157,6 +157,9 @@ allows = [
   # The agent_controller_connections core bakelet reads the site certificate.
   "cmk.crypto",
   "cmk.gui",
+  "cmk.messaging",
+  "cmk.post_rename_site.internal",
+  "cmk.ruleset_matcher",
   "cmk.server_side_calls_backend",
   "cmk.utils",
 ]
@@ -1496,13 +1499,9 @@ allows = ["@ccc", "cmk.crash", "cmk.utils"]
 [components."cmk.post_rename_site"]
 allows = [
   "@ccc",
-  "@messaging",
   "cmk.discover_plugins",
-  "cmk.dcd.gui",
-  "cmk.gui",
   "cmk.post_rename_site.internal",
   "cmk.utils",
-  "cmk.ruleset_matcher",
 ]
 
 [components."cmk.post_rename_site.internal"]

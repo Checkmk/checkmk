@@ -34,8 +34,8 @@ py_cmk_test(
     visibility = ["//tests:__subpackages__"],
     deps = [
         ":conftest",
+        "//cmk/plugins/checkmk/post_rename_site",
         "//cmk/post_rename_site",
-        "//cmk/post_rename_site/plugins",
         "//tests/unit:conftest",
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),

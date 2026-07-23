@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import cmk.ccc.debug
 from cmk.ccc.i18n import _ as localizer
 from cmk.ccc.site import omd_site, SiteId
-from cmk.discover_plugins import discover_plugins_from_modules, discover_submodules
+from cmk.discover_plugins import discover_all_plugins, PluginGroup
 from cmk.post_rename_site.internal import entry_point_prefixes, RenameAction
 from cmk.utils.log import VERBOSE
 
@@ -78,17 +78,9 @@ def main(args: Sequence[str]) -> int:
 
 
 def load_plugins() -> Iterable[RenameAction[SiteId]]:
-    discovered_actions = discover_plugins_from_modules(
+    discovered_actions = discover_all_plugins(
+        PluginGroup.POST_RENAME_SITE,
         entry_point_prefixes(),
-        discover_submodules(
-            # TODO: switch to the generic 'cmk.plugins.*.<GROUP>' mechanism
-            # once all plugins are moved.
-            "cmk.plugins.agent_controller.post_rename_site",
-            "cmk.plugins.dcd.post_rename_site",
-            "cmk.plugins.otel_collector.post_rename_site",
-            "cmk.post_rename_site.plugins.actions",
-            raise_errors=cmk.ccc.debug.enabled(),
-        ),
         skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )

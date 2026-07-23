@@ -272,7 +272,7 @@ Given a domain `X` whose plugins live in `x_registry` (a
 
 ## 5. Half-migrated domains (concrete deviation list)
 
-Three recent migrations are discovery-flavoured but not yet aligned
+Two recent migrations are discovery-flavoured but not yet aligned
 with the target pattern. Each is a tractable follow-up.
 
 ### 5.1 Modes — `cmk/gui/watolib/mode/_registry.py`
@@ -287,7 +287,7 @@ with the target pattern. Each is a tractable follow-up.
   - No `PluginGroup.MODES`.
   - Plugins live outside `cmk/plugins/`.
   - Plugin objects are _classes_, not data.
-- **To finish:** largest of the three. Add `PluginGroup.MODES`,
+- **To finish:** largest of the two. Add `PluginGroup.MODES`,
   introduce a `Mode` dataclass (name, page handler, permissions, …),
   move definitions to `cmk/plugins/<family>/modes/`, replace the
   `mode_registry` cascade with one `discover_all_plugins` call and
@@ -310,26 +310,6 @@ with the target pattern. Each is a tractable follow-up.
   `discover_all_plugins`. Decide separately whether to unify the GUI
   `AutomationCommand` domain with the base one or leave them
   distinct.
-
-### 5.3 Post-rename-site — `cmk/post_rename_site/main.py:99`
-
-- **Status:** `discover_plugins_from_modules` over a hard-coded
-  namespace list assembled by `discover_submodules`. The file carries
-  a TODO comment to switch to the generic `cmk.plugins.*.<GROUP>`
-  mechanism once all plugins are moved.
-- **Deviations:**
-  - No `PluginGroup` entry.
-  - Plugins split between `cmk/post_rename_site/plugins/actions/`
-    (legacy) and `cmk/plugins/{dcd,otel_collector}/post_rename_site/`
-    (already moved).
-  - `discover_submodules` does not enforce the
-    `<family>/<group>/` convention.
-- **To finish:** smallest of the three. Add a `PluginGroup` member
-  (directory value `post_rename_site`), move the remaining legacy
-  plugins (including the non-free siblings under
-  `cmk/post_rename_site/nonfree/...`) into
-  `cmk/plugins/<family>/post_rename_site/`, switch the loader to
-  `discover_all_plugins`.
 
 ## 6. Registry → discovery, at a glance
 

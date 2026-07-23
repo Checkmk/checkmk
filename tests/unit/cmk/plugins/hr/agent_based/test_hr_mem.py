@@ -159,6 +159,54 @@ def test_hr_mem(
     assert hr_mem.pre_parse_hr_mem(string_table) == expected_parsed_data
 
 
+# hrStorageUsed of the "Physical memory" entry (1602976) is smaller than the
+# "Cached memory" entry (2190028) - i.e. the device reports "used" with the
+# cache already excluded. Data taken from a real ArubaOS-CX switch (SUP-29474).
+_ARUBA_HR_STORAGE: StringTable = [
+    [".1.3.6.1.2.1.25.2.1.2", "Physical memory", "1024", "7784284", "1602976"],
+    [".1.3.6.1.2.1.25.2.1.1", "Cached memory", "1024", "2190028", "2190028"],
+]
+
+
+# Real ArubaOS-CX sysObjectIDs from SUP-29474: JL658A 6300M and JL728B 6200F.
+_ARUBA_SYS_OBJECT_IDS = [".1.3.6.1.4.1.47196.4.1.1.1.100", ".1.3.6.1.4.1.47196.4.1.1.1.309"]
+
+
+@pytest.mark.parametrize("sys_object_id", _ARUBA_SYS_OBJECT_IDS)
+def test_reports_cache_excluded_from_used_aruba(sys_object_id: str) -> None:
+    assert hr_mem._reports_cache_excluded_from_used([[sys_object_id]])
+
+
+def test_reports_cache_excluded_from_used_other_devices() -> None:
+    # net-snmp / UCD device -> "used" includes the cache -> must not match.
+    assert not hr_mem._reports_cache_excluded_from_used([[".1.3.6.1.4.1.8072.3.2.10"]])
+    assert not hr_mem._reports_cache_excluded_from_used([])
+    assert not hr_mem._reports_cache_excluded_from_used([[]])
+    assert not hr_mem._reports_cache_excluded_from_used([[""]])
+
+
+def test_parse_hr_mem_subtracts_cache_by_default() -> None:
+    # Unknown device -> classic net-snmp interpretation -> cache is subtracted.
+    section = hr_mem.parse_hr_mem([_ARUBA_HR_STORAGE, [[".1.3.6.1.4.1.8072.3.2.10"]]])
+    assert section is not None
+    assert section["Cached"] == 2190028 * 1024
+
+
+@pytest.mark.parametrize("sys_object_id", _ARUBA_SYS_OBJECT_IDS)
+def test_parse_hr_mem_keeps_cache_for_cache_excluded_devices(sys_object_id: str) -> None:
+    # Recognized ArubaOS-CX device -> cache must not be subtracted.
+    section = hr_mem.parse_hr_mem([_ARUBA_HR_STORAGE, [[sys_object_id]]])
+    assert section is not None
+    assert section["Cached"] == 0
+
+
+def test_parse_hr_mem_without_system_info_subtracts_cache() -> None:
+    # No sysObjectID fetched (e.g. old cached data) -> keep classic behavior.
+    section = hr_mem.parse_hr_mem([_ARUBA_HR_STORAGE])
+    assert section is not None
+    assert section["Cached"] == 2190028 * 1024
+
+
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.

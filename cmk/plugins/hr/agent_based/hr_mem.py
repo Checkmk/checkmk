@@ -95,7 +95,37 @@ def pre_parse_hr_mem(string_table: Sequence[StringTable]) -> PreParsed:
     return parsed
 
 
-def aggregate_meminfo(parsed: PreParsed) -> memory.SectionMemUsed:
+# The "Physical memory" hrStorageUsed value is normally interpreted as
+# INCLUDING the reclaimable page cache (classic net-snmp / UCD, which reports
+# "MemTotal - MemFree"). Checkmk therefore subtracts the "Cached memory" entry
+# to obtain the real usage.
+#
+# ArubaOS-CX switches (HPE Aruba Networking) instead report the physical "used"
+# value with the cache already excluded (modern net-snmp "MemAvailable"
+# semantics), while still exposing a large "Cached memory" entry. There the
+# cached memory can exceed the reported "used" value, and subtracting it would
+# understate the usage or even push it below zero. The two cases cannot be told
+# apart from the HOST-RESOURCES-MIB values alone (RFC 2790 defines no
+# relationship between storage entries), so these devices are recognized by
+# their sysObjectID, which lives under the Aruba (enterprise 47196) wired switch
+# product arc, e.g. ...47196.4.1.1.1.100 (6300M) or ...4.1.1.1.309 (6200F).
+_CACHE_EXCLUDED_FROM_USED_SYS_OBJECT_IDS: tuple[str, ...] = (
+    ".1.3.6.1.4.1.47196.4.1.1.1.",  # ArubaOS-CX switches (SUP-29474)
+)
+
+
+def _reports_cache_excluded_from_used(system_info: StringTable) -> bool:
+    """Whether the device's SNMP agent reports the physical memory usage with the
+    page cache already excluded (so the cache must not be subtracted again)."""
+    if not system_info or not system_info[0]:
+        return False
+    sys_object_id = system_info[0][0]
+    return any(
+        sys_object_id.startswith(prefix) for prefix in _CACHE_EXCLUDED_FROM_USED_SYS_OBJECT_IDS
+    )
+
+
+def aggregate_meminfo(parsed: PreParsed, *, subtract_cache: bool = True) -> memory.SectionMemUsed:
     """return a meminfo dict as expected by check_memory from mem.include"""
     meminfo: memory.SectionMemUsed = {"Cached": 0}
 
@@ -115,7 +145,7 @@ def aggregate_meminfo(parsed: PreParsed) -> memory.SectionMemUsed:
                     meminfo.setdefault("SwapTotal", size)
                     meminfo.setdefault("SwapFree", (size - used))
 
-            if descr == "cached memory" and used > 0:
+            if subtract_cache and descr == "cached memory" and used > 0:
                 # Account for cached memory (this works at least for systems using
                 # the UCD snmpd (such as Linux based applicances)
                 # some devices report negative used cache values...
@@ -132,7 +162,10 @@ def parse_hr_mem(string_table: Sequence[StringTable]) -> memory.SectionMemUsed |
     if not any(size > 0 for _, size, __ in pre_parsed.get("RAM", [])):
         return None
 
-    section = aggregate_meminfo(pre_parsed)
+    system_info = string_table[1] if len(string_table) > 1 else []
+    subtract_cache = not _reports_cache_excluded_from_used(system_info)
+
+    section = aggregate_meminfo(pre_parsed, subtract_cache=subtract_cache)
     return section if section.get("MemTotal") else None
 
 
@@ -149,6 +182,12 @@ snmp_section_hr_mem = SNMPSection(
                 "4",  # hrStorageAllocationUnits
                 "5",  # hrStorageSize
                 "6",  # hrStorageUsed
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.1",
+            oids=[
+                "2.0",  # sysObjectID
             ],
         ),
     ],

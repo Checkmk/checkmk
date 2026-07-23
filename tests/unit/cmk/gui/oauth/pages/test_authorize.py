@@ -19,8 +19,8 @@ from cmk.ccc.user import UserId
 from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
-from cmk.gui.oauth._auth_code_store import AuthCodeRecord, AuthCodeStore
-from cmk.gui.oauth._authorize import OAuthAuthorizePage
+from cmk.gui.oauth.pages._authorize import OAuthAuthorizePage
+from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
@@ -114,7 +114,7 @@ class TestOAuthAuthorizePage:
     ) -> None:
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -212,7 +212,7 @@ class TestOAuthAuthorizePage:
         )
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -247,7 +247,7 @@ class TestOAuthAuthorizePage:
         # it's necessarily a different origin (the OAuth client's callback).
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -499,7 +499,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_redirect_uri_is_invalid(
         self, flask_app: Flask, mocker: MockerFixture
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(query_string={"redirect_uri": "javascript:alert(1)"}):
             flask_app.preprocess_request()
             OAuthAuthorizePage(lambda: True).handle_page(
@@ -512,7 +512,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_response_type_is_missing(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={
                 "redirect_uri": "https://client.example/callback",
@@ -530,7 +530,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_response_type_is_unsupported(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={
                 "redirect_uri": "https://client.example/callback",
@@ -549,7 +549,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_client_id_is_missing(
         self, flask_app: Flask, mocker: MockerFixture
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={"redirect_uri": "https://client.example/callback"}
         ):
@@ -564,7 +564,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_client_id_is_unknown(
         self, flask_app: Flask, mocker: MockerFixture
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={
                 "redirect_uri": "https://client.example/callback",
@@ -582,7 +582,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_redirect_uri_does_not_match_registered_client(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={
                 "redirect_uri": "https://attacker.example/callback",
@@ -603,7 +603,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_code_challenge_is_missing(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={
                 "redirect_uri": "https://client.example/callback",
@@ -625,7 +625,7 @@ class TestOAuthAuthorizePage:
     ) -> None:
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -663,7 +663,7 @@ class TestOAuthAuthorizePage:
     ) -> None:
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -693,7 +693,7 @@ class TestOAuthAuthorizePage:
     def test_deny_persists_nothing(self, flask_app: Flask, registered_client_id: str) -> None:
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -720,7 +720,7 @@ class TestOAuthAuthorizePage:
     ) -> None:
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -753,10 +753,10 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_the_store_is_unavailable(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -788,10 +788,10 @@ class TestOAuthAuthorizePage:
     ) -> None:
         # The security event carries only a static reason; the log entry with
         # the traceback is the only place the actual cause ends up.
-        mock_logger = mocker.patch("cmk.gui.oauth._authorize.logger")
+        mock_logger = mocker.patch("cmk.gui.oauth.pages._authorize.logger")
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -822,7 +822,7 @@ class TestOAuthAuthorizePage:
         mocker.patch.object(AuthCodeStore, "store", side_effect=MKTimeout)
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
-            patch("cmk.gui.oauth._authorize.check_csrf_token"),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
             flask_app.test_request_context(
                 method="POST",
                 data={
@@ -847,7 +847,7 @@ class TestOAuthAuthorizePage:
     def test_logs_security_event_when_code_challenge_method_is_unsupported(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._authorize.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
         with flask_app.test_request_context(
             query_string={
                 "redirect_uri": "https://client.example/callback",

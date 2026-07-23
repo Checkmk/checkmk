@@ -7,12 +7,12 @@
 
 from collections.abc import Collection
 
-from cmk.gui import oauth
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.oauth import client_store
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
@@ -85,7 +85,7 @@ class ModeRegisteredOAuthClients(WatoMode):
             return redirect(self.mode_url())
 
         if delete_client := request.get_ascii_input("_delete"):
-            deleted = oauth.client_store().delete([delete_client])
+            deleted = client_store().delete([delete_client])
             if deleted:
                 flash(_("Deleted the client."))
             return redirect(self.mode_url())
@@ -96,7 +96,7 @@ class ModeRegisteredOAuthClients(WatoMode):
                 for varname, _value in request.itervars(prefix="_c_client_")
                 if html.get_checkbox(varname)
             ]
-            deleted = oauth.client_store().delete(selected)
+            deleted = client_store().delete(selected)
             if deleted:
                 flash(_("Deleted %(n)d clients.") % {"n": deleted})
             return redirect(self.mode_url())
@@ -106,7 +106,7 @@ class ModeRegisteredOAuthClients(WatoMode):
     def page(self, config: Config) -> None:
         with html.form_context("bulk_delete_form", method="POST"):
             with table_element("oauth_registered_clients", limit=config.table_row_limit) as table:
-                for client in oauth.client_store().list():
+                for client in client_store().list():
                     table.row()
                     table.cell(
                         html.render_input(

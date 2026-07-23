@@ -9,9 +9,9 @@ from typing import override
 
 from pydantic import ValidationError
 
-from cmk.gui import oauth
 from cmk.gui.http import request, response
-from cmk.gui.oauth._models import (
+from cmk.gui.oauth import client_store
+from cmk.gui.oauth.pages._models import (
     OAuthClientRegistrationErrorResponse,
     OAuthClientRegistrationRequest,
     OAuthClientRegistrationResponse,
@@ -68,7 +68,7 @@ class OAuthClientRegistrationPage(Page):
             return None
 
         try:
-            registration = oauth.client_store().register(body.redirect_uris, body.client_name)
+            registration = client_store().register(body.redirect_uris, body.client_name)
         except ClientRegistrationLimitExceededError:
             response.status_code = http_client.BAD_REQUEST
             response.set_content_type("application/json")

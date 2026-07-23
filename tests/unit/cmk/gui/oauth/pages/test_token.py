@@ -14,8 +14,8 @@ from pytest_mock import MockerFixture
 from cmk.ccc.exceptions import MKTimeout
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
-from cmk.gui.oauth._auth_code_store import AuthCodeRecord, AuthCodeStore
-from cmk.gui.oauth._token import OAuthTokenPage
+from cmk.gui.oauth.pages._token import OAuthTokenPage
+from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.pages import PageContext
 from cmk.utils.redis import disable_redis
 
@@ -424,7 +424,7 @@ class TestOAuthTokenPage:
     def test_logs_security_event_when_the_store_is_unavailable(
         self, flask_app: Flask, mocker: MockerFixture
     ) -> None:
-        mock_log = mocker.patch("cmk.gui.oauth._token.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._token.log_security_event")
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             with disable_redis():
@@ -441,7 +441,7 @@ class TestOAuthTokenPage:
     ) -> None:
         # A timeout inside consume() takes the store-outage path, not the framework's handling.
         mocker.patch.object(AuthCodeStore, "consume", side_effect=MKTimeout)
-        mock_log = mocker.patch("cmk.gui.oauth._token.log_security_event")
+        mock_log = mocker.patch("cmk.gui.oauth.pages._token.log_security_event")
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
@@ -456,7 +456,7 @@ class TestOAuthTokenPage:
     ) -> None:
         # The security event carries only a static reason; the log entry with
         # the traceback is the only place the actual cause ends up.
-        mock_logger = mocker.patch("cmk.gui.oauth._token.logger")
+        mock_logger = mocker.patch("cmk.gui.oauth.pages._token.logger")
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             with disable_redis():

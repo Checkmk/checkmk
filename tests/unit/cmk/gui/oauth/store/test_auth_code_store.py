@@ -5,7 +5,7 @@
 
 from fakeredis import FakeRedis
 
-from cmk.gui.oauth._auth_code_store import AuthCodeRecord, AuthCodeStore
+from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 
 
 def _make_store() -> tuple[AuthCodeStore, FakeRedis]:

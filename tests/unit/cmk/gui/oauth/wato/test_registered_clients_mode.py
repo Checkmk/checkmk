@@ -11,7 +11,7 @@ from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody
-from cmk.gui.oauth._registered_clients_mode import ModeRegisteredOAuthClients
+from cmk.gui.oauth.wato._registered_clients_mode import ModeRegisteredOAuthClients
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 

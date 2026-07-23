@@ -9,7 +9,7 @@ from flask import Flask
 from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
-from cmk.gui.oauth._client_registration import OAuthClientRegistrationPage
+from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
 from cmk.gui.pages import PageContext
 
 

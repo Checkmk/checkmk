@@ -9,7 +9,7 @@ from typing import override
 
 from cmk.ccc.site import omd_site
 from cmk.gui.http import request, response
-from cmk.gui.oauth._models import OAuthAuthorizationServerMetadata
+from cmk.gui.oauth.pages._models import OAuthAuthorizationServerMetadata
 from cmk.gui.pages import Page, PageContext, PageResult
 
 

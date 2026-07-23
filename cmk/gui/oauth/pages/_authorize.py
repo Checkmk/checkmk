@@ -9,7 +9,6 @@ import urllib.parse
 from collections.abc import Callable
 from typing import override
 
-from cmk.gui import oauth
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -17,7 +16,8 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.oauth._auth_code_store import AuthCodeRecord, AuthCodeStore
+from cmk.gui.oauth import client_store
+from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
@@ -31,7 +31,7 @@ class OAuthAuthorizePage(Page):
     Referenced via the "authorization_endpoint" field of the RFC 8414
     authorization server metadata document. Requires an active Checkmk login
     session (enforced by the page registry via the missing "noauth:" prefix,
-    see cmk.gui.oauth.register()) and shows a consent screen before issuing a
+    see cmk.gui.oauth.registration.register()) and shows a consent screen before issuing a
     code. Returns 404 while no OAuth-consuming feature is enabled for the
     site (the enabled predicate is injected at registration).
 
@@ -74,7 +74,7 @@ class OAuthAuthorizePage(Page):
             response.status_code = http_client.BAD_REQUEST
             return None
 
-        registration = oauth.client_store().get(client_id)
+        registration = client_store().get(client_id)
         if registration is None:
             self._log_authorization_failure("unknown client_id")
             response.status_code = http_client.BAD_REQUEST

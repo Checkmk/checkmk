@@ -18,7 +18,7 @@ requests for unregistered clients or mismatched redirect_uris) worth proving
 holds over real HTTP, not just through the Flask test client, so it gets its
 own narrow coverage here too.
 
-Enabling the MCP server -- the only current oauth.register() caller -- is
+Enabling the MCP server -- the only current oauth.registration.register() caller -- is
 handled by the ``mcp_enabled_site`` fixture in conftest.py.
 """
 

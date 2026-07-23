@@ -13,11 +13,11 @@ from datetime import datetime, timedelta, UTC
 from typing import Literal, override
 
 from cmk.ccc.user import UserId
-from cmk.gui import oauth
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
-from cmk.gui.oauth._auth_code_store import AuthCodeStore
-from cmk.gui.oauth._models import OAuthTokenErrorResponse, OAuthTokenResponse
+from cmk.gui.oauth import token_store
+from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
+from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
 from cmk.utils.security_event import log_security_event
@@ -187,7 +187,7 @@ class OAuthTokenPage(Page):
             _error("invalid_grant")
             return None
 
-        access_token = oauth.token_store().issue_token(
+        access_token = token_store().issue_token(
             UserId(record.user_id), expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL
         )
 

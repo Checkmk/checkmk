@@ -11,7 +11,7 @@ from tests.testlib.site import Site
 
 # The OMD config variable backing the "Enable MCP server" global setting. Setting
 # it to "on" and restarting the site is what ``ConfigDomainOMD`` does when the
-# global setting is activated. MCP is the only current oauth.register() caller.
+# global setting is activated. MCP is the only current oauth.registration.register() caller.
 _MCP_SERVER_CONFIG = "MCP_SERVER"
 
 

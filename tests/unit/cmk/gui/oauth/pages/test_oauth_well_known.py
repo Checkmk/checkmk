@@ -8,7 +8,7 @@ from werkzeug.test import create_environ
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request, response
-from cmk.gui.oauth._authorization_server import OAuthAuthorizationServerMetadataPage
+from cmk.gui.oauth.pages._oauth_well_known import OAuthAuthorizationServerMetadataPage
 from cmk.gui.pages import PageContext
 
 

@@ -10725,7 +10725,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('eaton_enviroment', [])
 
 static_checks['eaton_enviroment'] = [
-{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_enviroment', None, {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_environment', None, {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['eaton_enviroment']
 
 

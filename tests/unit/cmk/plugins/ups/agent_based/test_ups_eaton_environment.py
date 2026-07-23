@@ -12,10 +12,10 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.ups.agent_based.ups_eaton_enviroment import (
-    check_ups_eaton_enviroment,
-    discover_ups_eaton_enviroment,
-    parse_ups_eaton_enviroment,
+from cmk.plugins.ups.agent_based.ups_eaton_environment import (
+    check_ups_eaton_environment,
+    discover_ups_eaton_environment,
+    parse_ups_eaton_environment,
 )
 
 
@@ -30,15 +30,22 @@ def string_table_fixture() -> list[list[str]]:
 @pytest.fixture(name="parsed")
 def parsed_fixture(string_table: list[list[str]]) -> list[list[str]]:
     """Parsed UPS Eaton environment data"""
-    return parse_ups_eaton_enviroment(string_table)
+    return parse_ups_eaton_environment(string_table)
 
 
-def test_discover_ups_eaton_enviroment(parsed: list[list[str]]) -> None:
-    """Test environment discovery creates single service"""
-    assert list(discover_ups_eaton_enviroment(parsed)) == [Service()]
+@pytest.mark.parametrize(
+    "section, expected",
+    [
+        ([["1", "40", "3"]], [Service()]),
+        ([], []),
+    ],
+)
+def test_discover_ups_eaton_environment(section: list[list[str]], expected: list[Service]) -> None:
+    """Discovery yields one service for a non-empty section and nothing for an empty one."""
+    assert list(discover_ups_eaton_environment(parse_ups_eaton_environment(section))) == expected
 
 
-def test_check_ups_eaton_enviroment_with_thresholds(parsed: list[list[str]]) -> None:
+def test_check_ups_eaton_environment_with_thresholds(parsed: list[list[str]]) -> None:
     """Test environment check with warning/critical thresholds"""
     params = {
         "temp": (40, 50),
@@ -46,20 +53,21 @@ def test_check_ups_eaton_enviroment_with_thresholds(parsed: list[list[str]]) -> 
         "humidity": (65, 80),
     }
 
-    result = list(check_ups_eaton_enviroment(params, parsed))
-
     # temp=1 within thresholds (OK), remote_temp=40 hits warn (WARN), humidity=3 OK
-    assert result[0] == Result(state=State.OK, summary="Temperature: 1.0 °C")
-    assert result[1] == Metric("temp", 1.0, levels=(40.0, 50.0))
-    assert result[2] == Result(
-        state=State.WARN,
-        summary="Remote-Temperature: 40.0 °C (warn/crit at 40.0 °C/50.0 °C)",
-    )
-    assert result[4] == Result(state=State.OK, summary="Humidity: 3.0%")
-    assert result[5] == Metric("humidity", 3.0, levels=(65.0, 80.0))
+    assert list(check_ups_eaton_environment(params, parsed)) == [
+        Result(state=State.OK, summary="Temperature: 1.0 °C"),
+        Metric("temp", 1.0, levels=(40.0, 50.0)),
+        Result(
+            state=State.WARN,
+            summary="Remote-Temperature: 40.0 °C (warn/crit at 40.0 °C/50.0 °C)",
+        ),
+        Metric("remote_temp", 40.0, levels=(40.0, 50.0)),
+        Result(state=State.OK, summary="Humidity: 3.0%"),
+        Metric("humidity", 3.0, levels=(65.0, 80.0)),
+    ]
 
 
-def test_check_ups_eaton_enviroment_critical_state(parsed: list[list[str]]) -> None:
+def test_check_ups_eaton_environment_critical_state(parsed: list[list[str]]) -> None:
     """Test environment check with critical threshold breach"""
     params = {
         "temp": (0, 1),  # temp=1 hits critical
@@ -67,7 +75,7 @@ def test_check_ups_eaton_enviroment_critical_state(parsed: list[list[str]]) -> N
         "humidity": (1, 2),  # humidity=3 hits critical
     }
 
-    result = [r for r in check_ups_eaton_enviroment(params, parsed) if isinstance(r, Result)]
+    result = [r for r in check_ups_eaton_environment(params, parsed) if isinstance(r, Result)]
 
     assert result[0].state == State.CRIT
     assert "warn/crit at 0.0 °C/1.0 °C" in result[0].summary
@@ -77,7 +85,7 @@ def test_check_ups_eaton_enviroment_critical_state(parsed: list[list[str]]) -> N
     assert "warn/crit at 1.0%/2.0%" in result[2].summary
 
 
-def test_check_ups_eaton_enviroment_ok_state() -> None:
+def test_check_ups_eaton_environment_ok_state() -> None:
     """Test environment check with all values OK"""
     good_data = [["25", "30", "50"]]  # temp=25°C, remote_temp=30°C, humidity=50%
     params = {
@@ -86,7 +94,7 @@ def test_check_ups_eaton_enviroment_ok_state() -> None:
         "humidity": (65, 80),
     }
 
-    assert list(check_ups_eaton_enviroment(params, good_data)) == [
+    assert list(check_ups_eaton_environment(params, good_data)) == [
         Result(state=State.OK, summary="Temperature: 25.0 °C"),
         Metric("temp", 25.0, levels=(40.0, 50.0)),
         Result(state=State.OK, summary="Remote-Temperature: 30.0 °C"),
@@ -96,6 +104,6 @@ def test_check_ups_eaton_enviroment_ok_state() -> None:
     ]
 
 
-def test_parse_ups_eaton_enviroment(string_table: list[list[str]]) -> None:
+def test_parse_ups_eaton_environment(string_table: list[list[str]]) -> None:
     """Test that parsing returns the data unchanged"""
-    assert parse_ups_eaton_enviroment(string_table) == string_table
+    assert parse_ups_eaton_environment(string_table) == string_table

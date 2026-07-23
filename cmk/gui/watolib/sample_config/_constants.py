@@ -494,6 +494,7 @@ USE_NEW_DESCRIPTIONS_FOR_SETTING = {
         "statgrab_mem": True,
         "tplink_mem": True,
         "ups_bat_temp": True,
+        "ups_eaton_environment": True,
         "vms_diskstat_df": True,
         "wmic_process": True,
         "zfsget": True,

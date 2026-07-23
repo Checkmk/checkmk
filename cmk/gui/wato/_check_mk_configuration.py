@@ -3064,6 +3064,13 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
             ),
         ),
         (
+            "ups_eaton_environment",
+            Checkbox(
+                title=_("Eaton UPS: temperature and humidity sensors"),
+                label=_("Use the new service name"),
+            ),
+        ),
+        (
             "vms_diskstat_df",
             Checkbox(title=_("Disk space on OpenVMS"), label=_("Use the new service name")),
         ),

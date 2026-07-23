@@ -34,16 +34,16 @@ def saveint(i: str) -> int:
         return 0
 
 
-def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:
+def parse_ups_eaton_environment(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_ups_eaton_enviroment(section: StringTable) -> DiscoveryResult:
+def discover_ups_eaton_environment(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_ups_eaton_enviroment(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+def check_ups_eaton_environment(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     wert = list(map(saveint, section[0]))
     for i, (sensor, sensor_name, unit_symbol) in enumerate(
         [
@@ -62,8 +62,8 @@ def check_ups_eaton_enviroment(params: Mapping[str, Any], section: StringTable) 
         )
 
 
-snmp_section_ups_eaton_enviroment = SimpleSNMPSection(
-    name="ups_eaton_enviroment",
+snmp_section_ups_eaton_environment = SimpleSNMPSection(
+    name="ups_eaton_environment",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
@@ -73,15 +73,15 @@ snmp_section_ups_eaton_enviroment = SimpleSNMPSection(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],
     ),
-    parse_function=parse_ups_eaton_enviroment,
+    parse_function=parse_ups_eaton_environment,
 )
 
 
-check_plugin_ups_eaton_enviroment = CheckPlugin(
-    name="ups_eaton_enviroment",
-    service_name="Enviroment",
-    discovery_function=discover_ups_eaton_enviroment,
-    check_function=check_ups_eaton_enviroment,
+check_plugin_ups_eaton_environment = CheckPlugin(
+    name="ups_eaton_environment",
+    service_name="Environment",
+    discovery_function=discover_ups_eaton_environment,
+    check_function=check_ups_eaton_environment,
     check_ruleset_name="eaton_enviroment",
     check_default_parameters={
         "temp": (40, 50),

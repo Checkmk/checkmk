@@ -189,7 +189,7 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
 def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     username, _ = with_user
     token = oauth.token_store().issue_token(
-        username, expires_at=datetime.now(UTC) + timedelta(minutes=5)
+        username, expires_at=datetime.now(UTC) + timedelta(minutes=5), resource=None
     )
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {token}"}
@@ -214,7 +214,7 @@ def test_login_with_expired_oauth_bearer_token(
 ) -> None:
     username, _ = with_user
     token = oauth.token_store().issue_token(
-        username, expires_at=datetime.now(UTC) + timedelta(minutes=5)
+        username, expires_at=datetime.now(UTC) + timedelta(minutes=5), resource=None
     )
     with (
         time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),

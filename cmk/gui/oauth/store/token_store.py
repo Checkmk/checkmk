@@ -19,6 +19,7 @@ class TokenRecord:
     user_id: UserId
     issued_at: datetime
     expires_at: datetime
+    resource: str | None
 
     def is_valid(self, *, at: datetime | None = None) -> bool:
         current_time = at or _utc_now()
@@ -52,6 +53,7 @@ class TokenStore(Backend):
         user_id: UserId,
         *,
         expires_at: datetime,
+        resource: str | None,
     ) -> str:
         if not user_id:
             raise ValueError("user_id must not be empty")
@@ -65,10 +67,10 @@ class TokenStore(Backend):
         token = _mint_token()
         self._connection.execute(
             """
-            INSERT INTO tokens (user_id, token_hash, issued_at, expires_at)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO tokens (user_id, token_hash, issued_at, expires_at, resource)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (user_id, _token_hash(token), issued_at_timestamp, expires_at_timestamp),
+            (user_id, _token_hash(token), issued_at_timestamp, expires_at_timestamp, resource),
         )
         return token
 
@@ -80,7 +82,7 @@ class TokenStore(Backend):
 
         row = self._connection.execute(
             """
-            SELECT user_id, issued_at, expires_at
+            SELECT user_id, issued_at, expires_at, resource
             FROM tokens
             WHERE token_hash = ?
             """,
@@ -95,7 +97,7 @@ class TokenStore(Backend):
     def list_by_user(self, user_id: UserId) -> list[TokenRecord]:
         rows = self._connection.execute(
             """
-            SELECT user_id, issued_at, expires_at
+            SELECT user_id, issued_at, expires_at, resource
             FROM tokens
             WHERE user_id = ?
             """,
@@ -109,6 +111,7 @@ def _row_to_record(row: sqlite3.Row) -> TokenRecord:
         user_id=UserId(row["user_id"]),
         issued_at=datetime.fromtimestamp(row["issued_at"], tz=UTC),
         expires_at=datetime.fromtimestamp(row["expires_at"], tz=UTC),
+        resource=row["resource"],
     )
 
 

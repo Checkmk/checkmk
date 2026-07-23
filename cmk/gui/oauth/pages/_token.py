@@ -188,7 +188,9 @@ class OAuthTokenPage(Page):
             return None
 
         access_token = token_store().issue_token(
-            UserId(record.user_id), expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL
+            UserId(record.user_id),
+            expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
+            resource=record.resource,
         )
 
         response.set_content_type("application/json")

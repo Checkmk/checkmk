@@ -56,12 +56,23 @@ def test_create_schema_sets_the_schema_version() -> None:
 
     create_schema(connection)
 
-    assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
+    assert connection.execute("PRAGMA user_version").fetchone()[0] == 2
 
 
 def test_create_schema_rejects_a_newer_schema_version() -> None:
     connection = sqlite3.connect(":memory:")
-    connection.execute("PRAGMA user_version=2")
+    connection.execute("PRAGMA user_version=3")
+
+    with pytest.raises(RuntimeError, match="unsupported schema version"):
+        create_schema(connection)
+
+
+def test_create_schema_rejects_a_database_from_an_earlier_schema_version() -> None:
+    # The point of bumping SCHEMA_VERSION: a database created before a column
+    # was added cannot be repaired by replaying CREATE TABLE IF NOT EXISTS, so
+    # it has to fail loudly here instead of silently missing the column.
+    connection = sqlite3.connect(":memory:")
+    connection.execute("PRAGMA user_version=1")
 
     with pytest.raises(RuntimeError, match="unsupported schema version"):
         create_schema(connection)

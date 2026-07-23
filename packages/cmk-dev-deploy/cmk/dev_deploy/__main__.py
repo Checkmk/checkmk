@@ -519,6 +519,8 @@ def _run_deploy_cycle(
     failed = [r for r in results if not r.success]
     if failed:
         output.error(f"{len(failed)} deploy step(s) failed: " + ", ".join(r.name for r in failed))
+        if (log_path := output.get_log_file_path()) is not None:
+            output.info(f"Full log: {log_path}")
         _total_elapsed = _time.monotonic() - _cycle_start
         output.print_deploy_total(_total_elapsed, success=False)
         # Still save state for successful deployers (partial failure recovery).

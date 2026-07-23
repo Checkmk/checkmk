@@ -13,6 +13,9 @@ from unittest.mock import patch
 
 import pytest
 
+from cmk.dev_deploy.core.output import print_parallel_result, set_verbosity
+from cmk.dev_deploy.types import StepResult
+
 # ---------------------------------------------------------------------------
 # Fixture: reset all output state before and after each test
 # ---------------------------------------------------------------------------
@@ -262,6 +265,59 @@ class TestPrintDeployTotal:
             assert "[deploy]" in text
             assert "Deploy complete" in text
             assert "2.1s" in text
+
+
+# ---------------------------------------------------------------------------
+# TestPrintParallelResult
+# ---------------------------------------------------------------------------
+
+
+class TestPrintParallelResult:
+    """print_parallel_result(): failure reasons always reach the console."""
+
+    @staticmethod
+    def _results() -> list[StepResult]:
+        return [
+            StepResult(name="config_deploy", success=True, message="12 file(s)", elapsed=0.4),
+            StepResult(
+                name="wheel_deploy",
+                success=False,
+                message="bazel run //:deploy-python failed (exit 1): ERROR: analysis failed\n\n"
+                "Check 'bazel run //:deploy-python' manually.",
+                elapsed=1.2,
+            ),
+        ]
+
+    def test_failure_reason_on_console_at_default_verbosity(self) -> None:
+        """The full failure message prints to stderr even without -v."""
+        with (
+            patch("cmk.dev_deploy.core.output._print_locked") as mock_print,
+            patch("cmk.dev_deploy.core.output._log_to_file") as mock_log,
+        ):
+            print_parallel_result(self._results())
+
+        assert mock_print.call_count == 1
+        text = mock_print.call_args[0][0]
+        assert "fail" in text
+        assert "wheel_deploy" in text
+        assert "failed (exit 1): ERROR: analysis failed" in text
+        assert "Check 'bazel run //:deploy-python' manually." in text
+        assert mock_print.call_args.kwargs["file"] is sys.stderr
+        # The success line still reaches the log file.
+        assert any("config_deploy" in call[0][0] for call in mock_log.call_args_list)
+
+    def test_success_and_failure_lines_at_verbose(self) -> None:
+        """-v prints ok lines to the console as before."""
+        set_verbosity(1)
+        with patch("cmk.dev_deploy.core.output._print_locked") as mock_print:
+            print_parallel_result(self._results())
+
+        texts = [call[0][0] for call in mock_print.call_args_list]
+        assert len(texts) == 2
+        assert "ok" in texts[0]
+        assert "config_deploy" in texts[0]
+        assert "fail" in texts[1]
+        assert "wheel_deploy" in texts[1]
 
 
 # ---------------------------------------------------------------------------

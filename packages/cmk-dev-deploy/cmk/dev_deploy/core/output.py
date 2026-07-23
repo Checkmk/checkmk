@@ -576,24 +576,28 @@ def print_service_preview(
 # --- Parallel execution display ---
 
 
-@_verbose_only
 def print_parallel_result(results: list[StepResult]) -> None:
-    """Display results of parallel deployment execution."""
+    """Display results of parallel deployment execution.
 
+    Success lines are verbose-only (still written to the log file at
+    default verbosity). Failure lines print unconditionally to stderr:
+    the reason for an aborted deploy must reach the console at every
+    verbosity level.
+    """
     succeeded = [r for r in results if r.success]
     failed = [r for r in results if not r.success]
 
-    if succeeded:
-        for r in succeeded:
-            msg = f" -- {r.message}" if r.message else ""
-            _print_locked(
-                f"  {GREEN}ok{RESET}    {r.name:<25s} {DIM}({r.elapsed:.1f}s){RESET}{msg}"
-            )
+    for r in succeeded:
+        msg = f" -- {r.message}" if r.message else ""
+        line = f"  {GREEN}ok{RESET}    {r.name:<25s} {DIM}({r.elapsed:.1f}s){RESET}{msg}"
+        if _config.verbosity >= Verbosity.VERBOSE:
+            _print_locked(line)
+        else:
+            _log_to_file(line)
 
-    if failed:
-        for r in failed:
-            msg = f" -- {r.message}" if r.message else ""
-            _print_locked(f"  {RED}fail{RESET}  {r.name:<25s}{msg}")
+    for r in failed:
+        msg = f" -- {r.message}" if r.message else ""
+        _print_locked(f"  {RED}fail{RESET}  {r.name:<25s}{msg}", file=sys.stderr)
 
 
 # --- Dry-run display ---

@@ -424,12 +424,6 @@ def something_in_git_index() -> bool:
     return False
 
 
-def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk.content.metadata["description"] += f"""
-{time.strftime("%F %T")}: {title}
-{comment}"""
-
-
 def list_werk(werk: Werk) -> None:
     if werk_is_modified(werk.id):
         bold = TTY_BOLD + TTY_CYAN + "(*) "

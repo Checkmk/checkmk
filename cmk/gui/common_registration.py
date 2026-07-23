@@ -243,6 +243,7 @@ def register(
     monitor_services_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
+        page_registry,
     )
     crash_reporting.register(
         page_registry,

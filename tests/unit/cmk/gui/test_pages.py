@@ -166,6 +166,7 @@ def test_registered_pages() -> None:
         "gui_timings",
         "download_product_usage",
         "monitor_all_hosts",
+        "monitor_host_services",
     ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

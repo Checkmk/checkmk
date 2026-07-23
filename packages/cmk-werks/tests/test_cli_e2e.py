@@ -7,6 +7,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -133,6 +134,21 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     assert "some_title" in (repo_path / ".werks/11111.md").read_text()
     remaining = json.loads(stash_file.read_text())["ids"]
     assert remaining == [11112, 11113]
+
+
+def test_create_werk_sets_the_current_version(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    _create_werk(home, repo_path)
+
+    werk_file = (repo_path / ".werks/11111.md").read_text()
+    assert re.search(r"^version +\| 0\.1\.0$", werk_file, re.MULTILINE)
 
 
 def test_create_werk_logs_the_consumed_id(tmp_path: Path) -> None:

@@ -3,48 +3,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import (
-    Age,
-    Alternative,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    ListChoice,
-    TextInput,
-    Transform,
-)
 from cmk.plugins.docker.sections import CONTAINER_SECTIONS, NODE_SECTIONS
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    MultipleChoice,
+    MultipleChoiceElement,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-# Note: this ruleset is used to store *skipped* sections, but when presenting the
-# configured values we always invert them to present the selected sections to the user.
-# The new API does not allow this hack. Upon migration, simply make the 'node' and
-# 'container' elements optional, and display the skipped sections directly.
-def _agent_config_mk_docker_invert_choices_node(selected: list[str]) -> list[str]:
-    return [key for key in NODE_SECTIONS if key not in selected]
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        interval = value.get("interval", 0)
+        deployment: tuple[str, float | None] = (
+            ("cached", float(interval))
+            if isinstance(interval, (int, float)) and interval > 60
+            else ("sync", None)
+        )
+        result: dict[str, object] = {"deployment": deployment}
+        for key in (
+            "node",
+            "containers",
+            "container_id",
+            "base_url",
+            "persist_period_node_disk_usage",
+        ):
+            if key in value:
+                result[key] = value[key]
+        return result
+    raise ValueError(f"Unexpected value: {value!r}")
 
 
-def _agent_config_mk_docker_choices_cont() -> list[tuple[str, str]]:
-    return [(k, v.localize(_)) for k, v in CONTAINER_SECTIONS.items()]
-
-
-def _agent_config_mk_docker_choices_node() -> list[tuple[str, str]]:
-    return [(k, v.localize(_)) for k, v in NODE_SECTIONS.items()]
-
-
-def _agent_config_mk_docker_invert_choices_cont(selected: list[str]) -> list[str]:
-    return [key for key in CONTAINER_SECTIONS if key not in selected]
-
-
-def _valuespec_agent_config_mk_docker() -> Alternative:
-    return Alternative(
-        title=_("Docker node and containers"),
-        help=_(
+def _valuespec_agent_config_mk_docker() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "This will deploy the agent plug-in <tt>mk_docker.py</tt>."
             " You can choose to monitor the node and/or the individual containers."
             " This plug-in requires the Python library 'docker' (at least version 2.0.0) to be"
@@ -57,129 +66,131 @@ def _valuespec_agent_config_mk_docker() -> Alternative:
             " to avoid name collisions if containers with the same name exist on"
             " multiple Docker nodes."
         ),
-        elements=[
-            Dictionary(
-                title=_("Deploy the Docker plug-in"),
-                elements=[
-                    (
-                        "node",
-                        Transform(
-                            valuespec=ListChoice(
-                                title=_("Gathered node information"),
-                                help=_(
-                                    "Choose how to monitor the Docker node. You can uncheck"
-                                    " individual sections, if you do not need the corresponding"
-                                    " services. The respective checkboxes belong to the check"
-                                    " plug-ins by the name starting with 'docker_node_' (e.g., the"
-                                    " 'Disk usage:' checkbox belongs to 'docker_node_disk_usage')."
-                                    " Note that the disk usage section is notoriously long running."
-                                    " If you experience performance issues, consider disabling it."
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                    TimeMagnitude.SECOND,
                                 ),
-                                choices=_agent_config_mk_docker_choices_node(),
-                                toggle_all=True,
-                                default_value=[
-                                    key for key, _label in _agent_config_mk_docker_choices_node()
-                                ],
+                                prefill=DefaultValue(300.0),
                             ),
-                            from_valuespec=_agent_config_mk_docker_invert_choices_node,
-                            to_valuespec=_agent_config_mk_docker_invert_choices_node,
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ),
-                    (
-                        "containers",
-                        Transform(
-                            valuespec=ListChoice(
-                                title=_("Gathered container information (piggybacked)"),
-                                help=_(
-                                    "In order to monitor Docker containers the plug-in"
-                                    " <tt>mk_docker.py</tt> collects the following information of"
-                                    " each Docker container as piggyback data. The piggybacked host"
-                                    " name is the container's host name configured below. The"
-                                    " respective checkboxes belong to the check plug-ins with their names"
-                                    " starting with 'docker_container_' (e.g. the 'Node name:'"
-                                    " checkbox belongs to 'docker_container_node_name')."
-                                ),
-                                choices=_agent_config_mk_docker_choices_cont(),
-                                toggle_all=True,
-                                default_value=[
-                                    key for key, _label in _agent_config_mk_docker_choices_cont()
-                                ],
-                            ),
-                            from_valuespec=_agent_config_mk_docker_invert_choices_cont,
-                            to_valuespec=_agent_config_mk_docker_invert_choices_cont,
-                        ),
-                    ),
-                    (
-                        "container_id",
-                        DropdownChoice(
-                            title=_("Host name used for containers"),
-                            help=_(
-                                "Choose which identifier is used for the monitored containers."
-                                " This will affect the name used for the piggyback host"
-                                " corresponding to the container, as well as items for"
-                                " services created on the node for each container."
-                            ),
-                            choices=[
-                                (
-                                    "short",
-                                    _(
-                                        "Short - Use the first 12 characters of the Docker container ID"
-                                    ),
-                                ),
-                                ("long", _("Long - Use the full Docker container ID")),
-                                ("name", _("Name - Use the name of the container")),
-                                (
-                                    "combined",
-                                    _("Combine the node name and the name of the container"),
-                                ),
-                            ],
-                        ),
-                    ),
-                    (
-                        "base_url",
-                        TextInput(
-                            title=_("Base URL for Docker API engine"),
-                            help=_(
-                                "Provide the base URL for Docker API engine calls. By default"
-                                " we are trying to connect via the Unix socket at %(socket_path)s."
-                            )
-                            % {"socket_path": "/var/run/docker.sock"},
-                            default_value="unix://var/run/docker.sock",
-                        ),
-                    ),
-                    (
-                        "persist_period_node_disk_usage",
-                        Age(
-                            title=_("Persistence period for node disk usage fallback"),
-                            label=_("Keep last successful data for"),
-                            display=["hours", "minutes", "seconds"],
-                            default_value=90,
-                        ),
-                    ),
-                    (
-                        "interval",
-                        Age(
-                            title=_("Run asynchronously"),
-                            label=_("Interval for collecting data"),
-                            default_value=300,
-                        ),
-                    ),
-                ],
-                optional_keys=["interval", "base_url", "persist_period_node_disk_usage"],
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy the Docker plug-in"),
-                totext=_("(disabled)"),
+            "node": DictElement(
+                parameter_form=MultipleChoice(
+                    title=Title("Node sections to skip"),
+                    help_text=Help(
+                        "Choose which node sections to skip. The respective sections belong to"
+                        " the check plug-ins by the name starting with 'docker_node_'."
+                        " Note that the disk usage section is notoriously long running."
+                        " If you experience performance issues, consider skipping it."
+                    ),
+                    elements=[
+                        MultipleChoiceElement(name=k, title=v) for k, v in NODE_SECTIONS.items()
+                    ],
+                    prefill=DefaultValue([]),
+                ),
             ),
-        ],
+            "containers": DictElement(
+                parameter_form=MultipleChoice(
+                    title=Title("Container sections to skip"),
+                    help_text=Help(
+                        "Choose which container sections to skip. The piggybacked host"
+                        " name is the container's host name configured below. The"
+                        " respective sections belong to the check plug-ins with their names"
+                        " starting with 'docker_container_'."
+                    ),
+                    elements=[
+                        MultipleChoiceElement(name=k, title=v)
+                        for k, v in CONTAINER_SECTIONS.items()
+                    ],
+                    prefill=DefaultValue([]),
+                ),
+            ),
+            "container_id": DictElement(
+                parameter_form=SingleChoice(
+                    title=Title("Host name used for containers"),
+                    help_text=Help(
+                        "Choose which identifier is used for the monitored containers."
+                        " This will affect the name used for the piggyback host"
+                        " corresponding to the container, as well as items for"
+                        " services created on the node for each container."
+                    ),
+                    elements=[
+                        SingleChoiceElement(
+                            name="short",
+                            title=Title(
+                                "Short - Use the first 12 characters of the Docker container ID"
+                            ),
+                        ),
+                        SingleChoiceElement(
+                            name="long",
+                            title=Title("Long - Use the full Docker container ID"),
+                        ),
+                        SingleChoiceElement(
+                            name="name",
+                            title=Title("Name - Use the name of the container"),
+                        ),
+                        SingleChoiceElement(
+                            name="combined",
+                            title=Title("Combine the node name and the name of the container"),
+                        ),
+                    ],
+                    prefill=DefaultValue("short"),
+                ),
+            ),
+            "base_url": DictElement(
+                parameter_form=String(
+                    title=Title("Base URL for Docker API engine"),
+                    help_text=Help(
+                        "Provide the base URL for Docker API engine calls. By default"
+                        " we are trying to connect via the Unix socket at /var/run/docker.sock."
+                    ),
+                    prefill=DefaultValue("unix://var/run/docker.sock"),
+                ),
+            ),
+            "persist_period_node_disk_usage": DictElement(
+                parameter_form=TimeSpan(
+                    title=Title("Persistence period for node disk usage fallback"),
+                    help_text=Help("Keep last successful data for"),
+                    displayed_magnitudes=(
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.MINUTE,
+                        TimeMagnitude.SECOND,
+                    ),
+                    prefill=DefaultValue(90.0),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_docker"),
-        valuespec=_valuespec_agent_config_mk_docker,
-    )
+rule_spec_mk_docker = AgentConfig(
+    title=Title("Docker node and containers"),
+    name="mk_docker",
+    topic=Topic.VIRTUALIZATION,
+    parameter_form=_valuespec_agent_config_mk_docker,
 )

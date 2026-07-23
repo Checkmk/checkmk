@@ -50,6 +50,53 @@ def make_service(description: ServiceName) -> ConfiguredService:
     )
 
 
+def test_predictive_otel_metrics_hack_gate_covers_both_otel_plugins() -> None:
+    assert (
+        CheckPluginName("otel_metrics"),
+        CheckPluginName("otel_azure_metrics"),
+    ) == checkers._PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK
+
+
+def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_metric_and_direction() -> (
+    None
+):
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_available_memory_bytes_average",
+                    "levels_lower": ("cmk_postprocessed", "predictive_levels", {"period": "day"}),
+                    "levels_upper": ("fixed", (50.0, 80.0)),
+                }
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_available_memory_bytes_average",
+                    "levels_lower": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {
+                            "period": "day",
+                            "__reference_metric__": "azure_available_memory_bytes_average",
+                            "__direction__": "lower",
+                        },
+                    ),
+                    "levels_upper": ("fixed", (50.0, 80.0)),
+                }
+            ],
+        )
+    }
+
+
 @pytest.mark.parametrize(
     "subresults, aggregated_results",
     [

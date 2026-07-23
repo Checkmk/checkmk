@@ -688,6 +688,12 @@ def _make_rrd_data_getter(
     return get_rrd_data
 
 
+_PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK: Final = (
+    CheckPluginName("otel_metrics"),
+    CheckPluginName("otel_azure_metrics"),
+)
+
+
 def update_predictive_levels(
     metric_name: str, levels: tuple, direction: Literal["upper", "lower"]
 ) -> tuple:
@@ -734,9 +740,9 @@ def _compute_final_check_parameters(
     if not _needs_postprocessing(params):
         return Parameters(params)
 
-    # We have this special case for the otel plugin, where we want to have predictive levels,
-    # but don't know the metric names ahead of time.
-    if service.check_plugin_name == CheckPluginName("otel_metrics"):
+    # We have this special case for the otel and otel_azure plug-ins, where we want to have
+    # predictive levels, but don't know the metric names ahead of time.
+    if service.check_plugin_name in _PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK:
         params = _special_processing_hack_for_predictive_otel_metrics(params)
 
     # Most of the following are only needed for individual plugins, actually.

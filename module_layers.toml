@@ -128,6 +128,8 @@ allows = [
 allows = [
   # reuse of the free azure_v2 plugin library (agent_based + rulesets helpers)
   "cmk.plugins.azure_v2",
+  # StringAutocompleter for the otel_azure_metrics ruleset's metric-name field
+  "cmk.gui.form_specs.unstable",
 ]
 
 

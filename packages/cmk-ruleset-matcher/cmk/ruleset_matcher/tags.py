@@ -34,9 +34,11 @@ class HostTags:
         self,
         host_tags_sequences: Mapping[HostName, Sequence[TagID]],
         host_tags_maps: HostTagsMap,
+        site_id: str,
     ) -> None:
         self.host_tags_sequences: Final = host_tags_sequences
         self.host_tags_maps: Final = host_tags_maps
+        self.site_id: Final = site_id
 
     @staticmethod
     def _parse_raw_host_tags(
@@ -57,6 +59,7 @@ class HostTags:
         raw_host_tags: object,
         tagged_hosts: Iterable[str],
         shadow_hosts: Mapping[HostName, Mapping[str, object]],
+        site_id: str,
     ) -> Self:
         """Calculate the effective tags for all configured hosts
 
@@ -97,7 +100,7 @@ class HostTags:
             tags_maps[shadow_host_name] = cls._tag_list_to_tag_groups(
                 tag_to_group_map, tags_sequences[shadow_host_name]
             )
-        return cls(tags_sequences, tags_maps)
+        return cls(tags_sequences, tags_maps, site_id)
 
     @staticmethod
     def _tag_groups_to_tag_list(
@@ -137,7 +140,7 @@ class HostTags:
         with contextlib.suppress(KeyError):
             return self.host_tags_maps[hostname]
 
-        return fallback_tags(omd_site())
+        return fallback_tags(self.site_id)
 
 
 class GroupedTagSpec(TypedDict):

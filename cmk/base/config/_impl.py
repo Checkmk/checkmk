@@ -1182,6 +1182,7 @@ def make_host_tags(loaded_config: BaseConfig, hosts_config: Hosts) -> HostTags:
         loaded_config.host_tags,
         [*loaded_config.all_hosts, *loaded_config.clusters],
         loaded_config.shadow_hosts,
+        site_id=omd_site(),
     )
 
 

@@ -3,6 +3,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
@@ -74,6 +75,16 @@ package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],
     whl = "wheel",
+)
+
+py_cmk_test(
+    name = "unit-tests",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]),
+    deps = [
+        ":cmk-ruleset-matcher",
+        "//packages/cmk-ccc:hostaddress",
+    ],
 )
 
 py_requirements_test(

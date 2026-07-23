@@ -806,6 +806,7 @@ py_library(
         "//cmk/gui/mkeventd",
         "//cmk/gui/mobile",
         "//cmk/gui/monitor/hosts",
+        "//cmk/gui/monitor/services",
         "//cmk/gui/nagvis",
         "//cmk/gui/nodevis",
         "//cmk/gui/oauth2_connections",

@@ -49,6 +49,7 @@ from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
+from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.nodevis import nodevis
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
@@ -238,6 +239,10 @@ def register(
         versioned_endpoint_registry,
         page_registry,
         command_registry,
+    )
+    monitor_services_registration.register(
+        endpoint_family_registry,
+        versioned_endpoint_registry,
     )
     crash_reporting.register(
         page_registry,

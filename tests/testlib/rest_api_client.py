@@ -4740,6 +4740,21 @@ class MonitorHostsClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def list_host_services(
+        self,
+        hostname: str,
+        site_id: str,
+        limit: int | None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/monitor/hosts/{hostname}/services",
+            query_params={"site_id": site_id},
+            body={"limit": limit},
+            expect_ok=expect_ok,
+        )
+
     def action_menu(
         self,
         hostname: str,

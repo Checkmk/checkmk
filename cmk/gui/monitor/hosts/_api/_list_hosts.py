@@ -100,10 +100,7 @@ class HostEntry:
 
 @api_model
 class HostsPageMeta:
-    limit: int = api_field(
-        description="Applied row limit. 0 means no limit was applied (unlimited).",
-        example=1000,
-    )
+    limit: int | None = api_field(description="Applied row limit.", example=1000)
     matched: int = api_field(description="Total matched hosts", example=42)
     total: int = api_field(description="Total number of hosts", example=1234)
 
@@ -211,7 +208,7 @@ def _handle_list_hosts(
     return HostsResponse(
         hosts=[HostEntry.from_domain(host) for host in hosts],
         meta=HostsPageMeta(
-            limit=limit if limit is not None else 0,
+            limit=limit,
             matched=matched_host_count,
             total=total_host_count,
         ),

@@ -160,7 +160,7 @@ class TestMonitorHosts:
             resp = clients.MonitorHosts.list_all(limit=None)
 
         assert len(resp.json["hosts"]) == len(_HOSTS)
-        assert resp.json["meta"]["limit"] == 0
+        assert resp.json["meta"]["limit"] is None
 
 
 class TestMonitorHostsQuery:

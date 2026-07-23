@@ -28,7 +28,7 @@ def test_handle_list_hosts_without_limit_returns_all() -> None:
     response = _handle_list_hosts(host_repo, limit=None)
 
     assert len(response.hosts) == 10
-    assert response.meta.limit == 0
+    assert response.meta.limit is None
     assert response.meta.total == 10
     assert response.meta.matched == 10
 

@@ -32,7 +32,7 @@ import { useColumnFilterBridge } from './useColumnFilterBridge'
 export interface PagedResponse<T> {
   items: T[]
   meta: {
-    limit: number
+    limit: number | null
     matched: number
     total: number
   }

@@ -1,3 +1,4 @@
 marshmallow<4 # CMK-25251, breaking changes
 datamodel-code-generator==0.42.0 # CMK-29509
+kubernetes<36.0.0 # CMK-37075, some unit tests below //packages/cmk-plugins/tests/cmk/plugins/kube fail
 pysmi<2.0.0 # CMK-37075, bazel build //omd/packages/net-snmp:generate_python_mibs fails with "Could not compile mib NET-SNMP-PASS-MIB"

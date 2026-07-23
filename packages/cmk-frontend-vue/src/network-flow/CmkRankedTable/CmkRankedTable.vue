@@ -12,6 +12,11 @@ import type { CmkRankedTableProps, RankedTableColumn, RankedTableRow } from './t
 
 const props = defineProps<CmkRankedTableProps>()
 
+const emit = defineEmits<{
+  /** A cell in a column marked `clickable` was activated. */
+  cellClick: [column: RankedTableColumn, row: RankedTableRow]
+}>()
+
 const barColorCss = computed<string>(() => chartColorCss(props.barColor))
 
 // Canonical SI byte formatter (base 1000), matching the backend: 90_400_000_000 → "90.40 GB".
@@ -88,6 +93,14 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
               cellText(column, row)
             }}</span>
           </div>
+          <button
+            v-else-if="column.clickable"
+            type="button"
+            class="network-flow-cmk-ranked-table__link"
+            @click="emit('cellClick', column, row)"
+          >
+            {{ cellText(column, row) }}
+          </button>
           <template v-else>{{ cellText(column, row) }}</template>
         </td>
       </tr>
@@ -170,5 +183,20 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
   min-width: 5.5em;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+/* Clickable cell: a bare button styled like CmkLink. */
+.network-flow-cmk-ranked-table__link {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.network-flow-cmk-ranked-table__link:hover {
+  color: var(--cmk-link-hover-color, #15d1a0);
 }
 </style>

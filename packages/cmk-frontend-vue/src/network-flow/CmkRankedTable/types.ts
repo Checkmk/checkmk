@@ -12,6 +12,8 @@ export interface RankedTableColumn {
   title: string
   render: RankedTableCellRender
   bar: boolean
+  /** When true, cells render as buttons emitting `cellClick`. Ignored for bar columns. */
+  clickable?: boolean
 }
 
 export type RankedTableRow = Record<string, string | number>

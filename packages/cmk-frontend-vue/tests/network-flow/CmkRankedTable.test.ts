@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { fireEvent, render } from '@testing-library/vue'
 
 import CmkRankedTable from '@/network-flow/CmkRankedTable/CmkRankedTable.vue'
 import type { RankedTableColumn, RankedTableRow } from '@/network-flow/CmkRankedTable/types'
@@ -52,6 +52,31 @@ test('scales inline bars to the column max and fills them with the accent color'
   expect(fills.map((el) => el.style.width)).toEqual(['100%', '40%', '20%'])
   // The named color resolves to its theme palette CSS variable.
   expect(fills[0]!.style.backgroundColor).toBe('var(--color-corporate-green-50)')
+})
+
+test('emits cellClick with column and row when a clickable cell is activated', async () => {
+  const clickableColumns: RankedTableColumn[] = [
+    { key: 'host', title: 'Host', render: 'text', bar: false, clickable: true },
+    { key: 'volume', title: 'Volume', render: 'bytes', bar: true }
+  ]
+  const { container, emitted } = render(CmkRankedTable, {
+    props: { columns: clickableColumns, rows: ROWS, barColor: 'green' as const }
+  })
+
+  const button = container.querySelector<HTMLButtonElement>('.network-flow-cmk-ranked-table__link')
+  expect(button).not.toBeNull()
+  await fireEvent.click(button!)
+
+  const events = emitted()['cellClick'] as [RankedTableColumn, RankedTableRow][]
+  expect(events).toHaveLength(1)
+  expect(events[0]![0]!.key).toBe('host')
+  expect(events[0]![1]!.host).toBe('B')
+})
+
+test('renders plain text (no button) for non-clickable columns', () => {
+  const { container } = renderTable()
+
+  expect(container.querySelector('.network-flow-cmk-ranked-table__link')).toBeNull()
 })
 
 test('formats byte columns as human-readable SI values', () => {

@@ -1500,9 +1500,13 @@ allows = [
   "cmk.discover_plugins",
   "cmk.dcd.gui",
   "cmk.gui",
+  "cmk.post_rename_site.internal",
   "cmk.utils",
   "cmk.ruleset_matcher",
 ]
+
+[components."cmk.post_rename_site.internal"]
+allows = []
 
 [components."cmk.trace"]
 allows = []

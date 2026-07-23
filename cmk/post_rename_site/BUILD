@@ -21,21 +21,6 @@ pkg_files(
 )
 
 py_library(
-    name = "internal",
-    srcs = ["internal.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//non-free/packages:__subpackages__",
-        "//packages:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//packages/cmk-ccc:site",
-    ],
-)
-
-py_library(
     name = "post_rename_site",
     srcs = [
         "logger.py",
@@ -48,11 +33,11 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":internal",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:site",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugin-apis:post_rename_site",
     ],
 )

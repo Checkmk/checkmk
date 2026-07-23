@@ -250,6 +250,16 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
+py_library(
+    name = "post_rename_site",
+    srcs = [
+        "cmk/post_rename_site/internal/__init__.py",
+    ],
+    data = ["cmk/post_rename_site/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
@@ -262,6 +272,7 @@ py_doc_test(
         ":graphing",
         ":inventory_ui",
         ":password_store",
+        ":post_rename_site",
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
@@ -388,6 +399,7 @@ py_wheel(
         ":graphing",
         ":inventory_ui",
         ":password_store",
+        ":post_rename_site",
         ":py_typed",
         ":rulesets",
         ":server_side_calls",
@@ -411,6 +423,7 @@ filegroup(
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
         "cmk/password_store/py.typed",
+        "cmk/post_rename_site/py.typed",
         "cmk/rulesets/py.typed",
         "cmk/server_side_calls/py.typed",
         "cmk/server_side_programs/py.typed",
@@ -444,6 +457,7 @@ py_requirements_test(
         ":dcd_connectors",
         ":dcd_connector_parameters",
         ":inventory_ui",
+        ":post_rename_site",
     ],
     requirements_in = "requirements.in",
 )

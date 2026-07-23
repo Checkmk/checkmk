@@ -39,7 +39,6 @@ py_library(
         "//cmk/piggyback:hub",
         "//cmk/plugins",
         "//cmk/post_rename_site",
-        "//cmk/post_rename_site:internal",
         "//cmk/post_rename_site/plugins",
         "//cmk/product_usage",
         "//cmk/product_usage:product_usage_cli",

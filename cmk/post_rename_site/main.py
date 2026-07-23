@@ -11,9 +11,9 @@ import cmk.ccc.debug
 from cmk.ccc.i18n import _ as localizer
 from cmk.ccc.site import omd_site, SiteId
 from cmk.discover_plugins import discover_plugins_from_modules, discover_submodules
+from cmk.post_rename_site.internal import entry_point_prefixes, RenameAction
 from cmk.utils.log import VERBOSE
 
-from .internal import entry_point_prefixes, RenameAction
 from .logger import logger, setup_logging
 
 
@@ -77,7 +77,7 @@ def main(args: Sequence[str]) -> int:
     return 1 if has_errors else 0
 
 
-def load_plugins() -> Iterable[RenameAction]:
+def load_plugins() -> Iterable[RenameAction[SiteId]]:
     discovered_actions = discover_plugins_from_modules(
         entry_point_prefixes(),
         discover_submodules(
@@ -98,7 +98,7 @@ def load_plugins() -> Iterable[RenameAction]:
 
 
 def run(
-    plugins: Iterable[RenameAction], debug: bool, old_site_id: SiteId, new_site_id: SiteId
+    plugins: Iterable[RenameAction[SiteId]], debug: bool, old_site_id: SiteId, new_site_id: SiteId
 ) -> bool:
     has_errors = False
     logger.debug("Starting actions...")

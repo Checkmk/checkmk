@@ -8,7 +8,7 @@ dependency_info(
     license_text = "COPYING",
     purl_namespace = None,
     purl_type = "generic",
-    version = "1.10.5",
+    version = "1.10.6",
 )
 
 exports_files(["etc/nagvis.ini.php-sample"])

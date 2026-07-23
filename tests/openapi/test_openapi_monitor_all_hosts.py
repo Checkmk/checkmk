@@ -9,6 +9,7 @@ import pytest
 import time_machine
 
 from cmk.ccc.user import UserId
+from cmk.gui.monitor.hosts._api._list_hosts import _MAX_NUMBER_OF_HOSTS
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -160,6 +161,59 @@ class TestMonitorHosts:
             resp = clients.MonitorHosts.list_all(limit=None)
 
         assert len(resp.json["hosts"]) == len(_HOSTS)
+        assert resp.json["meta"]["limit"] is None
+
+
+class TestMonitorHostsLimitPermissions:
+    def test_limit_removal_clamped_without_permission(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials(*with_user)
+
+        mock_livestatus.add_table("hosts", _HOSTS)
+        # see_all-less user → sites.live() adds an AuthUser line; match loosely to tolerate it.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_MAX_NUMBER_OF_HOSTS}",
+            ],
+            match_type="loose",
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+
+        with mock_livestatus(expect_status_query=True):
+            resp = client.list_all(limit=None)
+
+        assert resp.json["meta"]["limit"] == _MAX_NUMBER_OF_HOSTS
+
+    def test_limit_removal_honored_with_permission(
+        self,
+        clients: ClientRegistry,
+        with_admin: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials(*with_admin)
+
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+
+        with mock_livestatus(expect_status_query=True):
+            resp = client.list_all(limit=None)
+
         assert resp.json["meta"]["limit"] is None
 
 

@@ -733,6 +733,7 @@ allows = ["@ccc"]
 [components."cmk.network_flow.gui"]
 allows = [
   "@ccc",
+  "@livestatus_client",
   "@network_flow",
   "cmk.gui",
   "cmk.gui_plugins.internal",

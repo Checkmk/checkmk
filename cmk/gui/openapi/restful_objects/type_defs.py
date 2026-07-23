@@ -134,6 +134,7 @@ CmkEndpointName = Literal[
     "cmk/compute_dashboard_widget_titles",
     "cmk/compute-list",
     "cmk/compute_network_flow_donut",
+    "cmk/compute_network_flow_host_context",
     "cmk/compute_network_flow_kpi_stat_card",
     "cmk/compute_network_flow_top_table",
     "cmk/compute_network_flow_trend_chart",

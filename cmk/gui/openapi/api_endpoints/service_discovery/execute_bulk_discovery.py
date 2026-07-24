@@ -29,7 +29,7 @@ from cmk.gui.watolib.bulk_discovery import (
     prepare_hosts_for_discovery,
     start_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import SERVICE_DISCOVERY_FAMILY
 from .models.request_models import BulkDiscoveryModel
@@ -67,7 +67,7 @@ def execute_bulk_discovery_v1(
         update_changed_service_parameters=options.update_service_parameters,
     )
     hosts_to_discover = prepare_hosts_for_discovery(
-        folder_tree(), body.hostnames, api_context.config.sites
+        make_folder_tree(api_context.config), body.hostnames, api_context.config.sites
     )
     if (
         result := start_bulk_discovery(

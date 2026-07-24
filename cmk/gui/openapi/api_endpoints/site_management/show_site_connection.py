@@ -8,6 +8,7 @@ from typing import Annotated
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -18,6 +19,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.site_management import SitesApiMgr
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
@@ -26,6 +28,7 @@ from .utils import PERMISSIONS
 
 
 def show_site_connection_v1(
+    api_context: ApiContext,
     site_id: Annotated[
         SiteId,
         TypedPlainValidator(str, SiteIdConverter.should_exist),
@@ -34,7 +37,9 @@ def show_site_connection_v1(
 ) -> SiteConnectionModel:
     """Show a site connection"""
     user.need_permission("wato.sites")
-    return SiteConnectionModel.from_internal(SitesApiMgr().get_a_site(site_id))
+    return SiteConnectionModel.from_internal(
+        make_folder_tree(api_context.config), SitesApiMgr().get_a_site(site_id)
+    )
 
 
 ENDPOINT_SHOW_SITE_CONNECTION = VersionedEndpoint(

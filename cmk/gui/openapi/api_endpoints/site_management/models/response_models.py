@@ -15,6 +15,7 @@ from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.site_config import site_is_local
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 
@@ -78,7 +79,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
     )
 
     @classmethod
-    def from_internal(cls, site_configuration: SiteConfiguration) -> Self:
+    def from_internal(cls, tree: FolderTree, site_configuration: SiteConfiguration) -> Self:
         def _configuration_connection_from_internal(
             site_configuration: SiteConfiguration,
         ) -> ConnectionModel:
@@ -120,7 +121,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
 
         return cls(
             basic_settings=BasicSettingsModel.from_internal(site_configuration),
-            status_connection=StatusConnectionModel.from_internal(site_configuration),
+            status_connection=StatusConnectionModel.from_internal(tree, site_configuration),
             configuration_connection=_configuration_connection_from_internal(site_configuration),
             logged_in=bool(site_configuration.get("secret"))
             if not site_is_local(site_configuration)
@@ -139,12 +140,12 @@ class SiteConnectionModel(DomainObjectModel):
     )
 
     @classmethod
-    def from_internal(cls, site_configuration: SiteConfiguration) -> Self:
+    def from_internal(cls, tree: FolderTree, site_configuration: SiteConfiguration) -> Self:
         return cls(
             domainType="site_connection",
             id=site_configuration["id"],
             title=site_configuration["alias"],
-            extensions=SiteConnectionExtensionsModel.from_internal(site_configuration),
+            extensions=SiteConnectionExtensionsModel.from_internal(tree, site_configuration),
             links=generate_links(
                 domain_type="site_connection",
                 identifier=site_configuration["id"],

@@ -24,7 +24,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.licensing.basics.options import OptionName
 
 from ._family import HOST_CONFIG_FAMILY
@@ -92,7 +92,7 @@ def create_cluster_host_v1(
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)
 
-    host = folder_tree().load_host(host_name)
+    host = make_folder_tree(api_context.config).load_host(host_name)
     return ApiResponse(
         serialize_host(
             host, api_context=api_context, compute_effective_attributes=False, compute_links=True

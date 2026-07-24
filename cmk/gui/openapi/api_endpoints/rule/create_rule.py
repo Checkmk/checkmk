@@ -17,6 +17,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.utils.misc import gen_id
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets
 
 from ._family import RULE_FAMILY
@@ -58,7 +59,7 @@ def create_rule_v1(api_context: ApiContext, body: CreateRuleModel) -> ApiRespons
         index, folder, rule, pending_changes=make_pending_changes(api_context)
     )
 
-    rule_entry = get_rule_by_id(rule.id)
+    rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule.id)
     return ApiResponse(
         body=serialize_rule(rule_entry, api_context),
         status_code=200,

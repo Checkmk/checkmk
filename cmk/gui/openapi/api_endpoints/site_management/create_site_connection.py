@@ -90,7 +90,9 @@ def create_site_connection_v1(
         ),
     )
 
-    return SiteConnectionModel.from_internal(new_site_config_spec)
+    return SiteConnectionModel.from_internal(
+        make_folder_tree(api_context.config), new_site_config_spec
+    )
 
 
 ENDPOINT_CREATE_SITE_CONNECTION = VersionedEndpoint(

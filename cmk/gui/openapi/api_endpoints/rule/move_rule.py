@@ -21,7 +21,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestDataValidationException
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
 from cmk.gui.watolib.rulesets import Ruleset
 
 from ._family import RULE_FAMILY
@@ -50,7 +50,8 @@ def move_rule_v1(
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
 
-    source_entry = get_rule_by_id(rule_id)
+    tree = make_folder_tree(api_context.config)
+    source_entry = get_rule_by_id(tree, rule_id)
 
     if is_locked_by_quick_setup(source_entry.rule.locked_by):
         raise ProblemException(
@@ -68,7 +69,7 @@ def move_rule_v1(
             dest_folder = body.folder
             index = Ruleset.TOP if body.position == "top_of_folder" else Ruleset.BOTTOM
         case MoveToSpecificRuleModel():
-            dest_entry = get_rule_by_id(body.rule_id, all_rulesets=all_rulesets)
+            dest_entry = get_rule_by_id(tree, body.rule_id, all_rulesets=all_rulesets)
             validate_rule_move(source_entry, dest_entry)
             if body.position == "before_specific_rule":
                 if is_locked_by_quick_setup(dest_entry.rule.locked_by):
@@ -100,7 +101,7 @@ def move_rule_v1(
         pprint_value=api_context.config.wato_pprint_config, debug=api_context.config.debug
     )
 
-    return serialize_rule(get_rule_by_id(rule_id), api_context)
+    return serialize_rule(get_rule_by_id(tree, rule_id), api_context)
 
 
 ENDPOINT_MOVE_RULE = VersionedEndpoint(

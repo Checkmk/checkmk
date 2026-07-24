@@ -107,7 +107,9 @@ def edit_site_connection_v1(
         ),
     )
 
-    return SiteConnectionModel.from_internal(sites_api_mgr.get_a_site(site_id))
+    return SiteConnectionModel.from_internal(
+        make_folder_tree(api_context.config), sites_api_mgr.get_a_site(site_id)
+    )
 
 
 ENDPOINT_EDIT_SITE_CONNECTION = VersionedEndpoint(

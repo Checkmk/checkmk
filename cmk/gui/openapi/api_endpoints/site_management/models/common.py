@@ -19,7 +19,7 @@ from cmk.gui.openapi.framework.model.converter import (
     SiteIdConverter,
     TypedPlainValidator,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.livestatus_client import (
     LocalSocketInfo,
     NetworkSocketDetails,
@@ -412,7 +412,7 @@ class StatusConnectionModel:
     )
 
     @classmethod
-    def from_internal(cls, status_connection: SiteConfiguration) -> Self:
+    def from_internal(cls, tree: FolderTree, status_connection: SiteConfiguration) -> Self:
         def _socket_from_internal(
             socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo,
         ) -> LocalSocket | IP4Socket | IP6Socket | UnixSocket:
@@ -460,7 +460,7 @@ class StatusConnectionModel:
             if status_host is None:
                 return StatusHostDisabled(status_host_set="disabled")
 
-            host = folder_tree().host(HostName(status_host[1]))
+            host = tree.host(HostName(status_host[1]))
             assert host is not None
             return StatusHostEnabled(status_host_set="enabled", site=status_host[0], host=host)
 

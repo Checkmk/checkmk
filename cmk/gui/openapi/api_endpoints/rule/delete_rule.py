@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, visible_rulesets
 
 from ._family import RULE_FAMILY
@@ -40,7 +40,7 @@ def delete_rule_v1(
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
 
-    all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+    all_rulesets = AllRulesets.load_all_rulesets(make_folder_tree(api_context.config))
     for ruleset in visible_rulesets(all_rulesets.get_rulesets()).values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:

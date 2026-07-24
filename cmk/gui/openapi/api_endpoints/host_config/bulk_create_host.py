@@ -26,7 +26,7 @@ from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
 from cmk.licensing.basics.options import OptionName
 
 from ._family import HOST_CONFIG_FAMILY
@@ -120,7 +120,10 @@ def bulk_create_host_v1(
 
     return bulk_host_action_response(
         failed_hosts,
-        [folder_tree().load_host(host_name) for host_name in succeeded_hosts],
+        [
+            make_folder_tree(api_context.config).load_host(host_name)
+            for host_name in succeeded_hosts
+        ],
         api_context=api_context,
     )
 

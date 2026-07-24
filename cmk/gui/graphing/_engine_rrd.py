@@ -271,7 +271,7 @@ def _originals_for_metric_name(
     ]
 
 
-def _translate_metric_names(
+def translate_metric_names(
     check_command: str,
     raw_metric_names: Sequence[MetricName],
     registered_translations: Sequence[translations_v1.Translation],
@@ -485,7 +485,7 @@ class EngineRRDFetchMetricNames:
                 service = Service(
                     site_id=SiteID(str(row_site)), host_name=host_name, service_name=description
                 )
-                result[service] = _translate_metric_names(
+                result[service] = translate_metric_names(
                     raw.check_command, list(raw.values), self.registered_translations
                 )
         return result

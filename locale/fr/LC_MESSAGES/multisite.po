@@ -5755,6 +5755,13 @@ msgstr "Agent de mise à jour (Linux, Windows, Solaris)"
 msgid "Agent updater rule set"
 msgstr "Jeu de règles pour la mise à jour des agents"
 
+msgid ""
+"Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
+"the host."
+msgstr ""
+"L'agent de mise à jour suivra les variables \"HTTP_PROXY\" et "
+"\"HTTPS_PROXY\" sur l'hôte."
+
 msgid "Agent updates"
 msgstr "Mises à jour des agents"
 
@@ -101215,15 +101222,18 @@ msgstr ""
 msgid "Install WSL2"
 msgstr "Date d'installation"
 
-msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2)."
 msgstr ""
 
-msgid ""
-"This command requires administrator privileges. Once it completes, restart "
-"the "
+msgid "Run the command below in an elevated PowerShell to install it."
 msgstr ""
 
 msgid "For running WSL2 your system needs to have virtualization enabled. "
+msgstr ""
+
+msgid ""
+"This command will prompt you to restart the computer to finish the "
+"installation."
 msgstr ""
 
 #, fuzzy
@@ -102842,13 +102852,6 @@ msgstr ""
 
 #~ msgid "Agent controller"
 #~ msgstr "Contrôleur d'agent"
-
-#~ msgid ""
-#~ "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
-#~ "the host."
-#~ msgstr ""
-#~ "L'agent de mise à jour suivra les variables \"HTTP_PROXY\" et "
-#~ "\"HTTPS_PROXY\" sur l'hôte."
 
 #, fuzzy
 #~ msgid "Alert manager rule state"

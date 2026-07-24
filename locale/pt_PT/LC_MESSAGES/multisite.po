@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-22 12:39+0000\n"
+"PO-Revision-Date: 2026-07-23 17:47+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -5703,6 +5703,13 @@ msgstr "Actualizador de agentes (Linux, Windows, Solaris)"
 #, fuzzy
 msgid "Agent updater rule set"
 msgstr "Conjunto de regras do actualizador de agentes"
+
+msgid ""
+"Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
+"the host."
+msgstr ""
+"O actualizador do agente irá seguir as variáveis \"HTTP_PROXY\" e "
+"\"HTTPS_PROXY\" no anfitrião."
 
 msgid "Agent updates"
 msgstr "Atualizações de agentes"
@@ -100204,15 +100211,18 @@ msgstr ""
 msgid "Install WSL2"
 msgstr "Data de Instalação"
 
-msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2)."
 msgstr ""
 
-msgid ""
-"This command requires administrator privileges. Once it completes, restart "
-"the "
+msgid "Run the command below in an elevated PowerShell to install it."
 msgstr ""
 
 msgid "For running WSL2 your system needs to have virtualization enabled. "
+msgstr ""
+
+msgid ""
+"This command will prompt you to restart the computer to finish the "
+"installation."
 msgstr ""
 
 #, fuzzy
@@ -101827,13 +101837,6 @@ msgstr ""
 
 #~ msgid "Agent controller"
 #~ msgstr "Controlador de agentes"
-
-#~ msgid ""
-#~ "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
-#~ "the host."
-#~ msgstr ""
-#~ "O actualizador do agente irá seguir as variáveis \"HTTP_PROXY\" e "
-#~ "\"HTTPS_PROXY\" no anfitrião."
 
 #, fuzzy
 #~ msgid "Alert manager rule state"

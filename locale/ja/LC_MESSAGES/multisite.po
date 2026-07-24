@@ -5471,6 +5471,13 @@ msgstr "エージェントアップデーター(Linux、Windows、Solaris)"
 msgid "Agent updater rule set"
 msgstr "エージェントアップデータルールセット"
 
+msgid ""
+"Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
+"the host."
+msgstr ""
+"エージェントアップデーターは、ホスト上の変数 \"HTTP_PROXY\"および"
+"\"HTTPS_PROXY\"に従います。"
+
 msgid "Agent updates"
 msgstr "エージェントの更新"
 
@@ -95182,15 +95189,18 @@ msgstr ""
 msgid "Install WSL2"
 msgstr "インストール日"
 
-msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2)."
 msgstr ""
 
-msgid ""
-"This command requires administrator privileges. Once it completes, restart "
-"the "
+msgid "Run the command below in an elevated PowerShell to install it."
 msgstr ""
 
 msgid "For running WSL2 your system needs to have virtualization enabled. "
+msgstr ""
+
+msgid ""
+"This command will prompt you to restart the computer to finish the "
+"installation."
 msgstr ""
 
 #, fuzzy
@@ -96822,13 +96832,6 @@ msgstr ""
 
 #~ msgid "Agent controller"
 #~ msgstr "エージェントコントローラー"
-
-#~ msgid ""
-#~ "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
-#~ "the host."
-#~ msgstr ""
-#~ "エージェントアップデーターは、ホスト上の変数 \"HTTP_PROXY\"および"
-#~ "\"HTTPS_PROXY\"に従います。"
 
 #~ msgid "Alert manager rule state"
 #~ msgstr "アラートマネージャのルール状況"

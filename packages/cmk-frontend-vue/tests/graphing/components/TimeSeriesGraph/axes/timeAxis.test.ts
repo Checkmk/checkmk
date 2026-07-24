@@ -163,6 +163,54 @@ describe('computeTimeAxis timezone handling', () => {
   })
 })
 
+// Guards Werk #14830: a DST-crossing axis must label every tick unambiguously. The
+// fall-back case is the critical one — the 02:00 local hour occurs twice.
+describe('computeTimeAxis DST label uniqueness', () => {
+  function labelTexts(start: number, end: number): string[] {
+    return computeTimeAxis(start, end, 70, 60, BERLIN)
+      .map((tick) => tick.text)
+      .filter((text): text is string => text !== null)
+  }
+
+  test('hourly labels across the spring-forward boundary are unique', () => {
+    const midnightBeforeSpringForward = Date.UTC(2022, 2, 26, 23) / 1000
+
+    const labels = labelTexts(midnightBeforeSpringForward, midnightBeforeSpringForward + 8 * 3600)
+
+    expect(labels.length).toBeGreaterThan(2)
+    expect(new Set(labels).size).toBe(labels.length)
+  })
+
+  test('hourly labels across the fall-back boundary are unique', () => {
+    const midnightBeforeFallBack = Date.UTC(2022, 9, 29, 22) / 1000
+
+    const labels = labelTexts(midnightBeforeFallBack, midnightBeforeFallBack + 8 * 3600)
+
+    expect(labels.length).toBeGreaterThan(2)
+    expect(new Set(labels).size).toBe(labels.length)
+  })
+
+  test('keeps a tick for both instants of the repeated fall-back hour, labelling only the first', () => {
+    const midnightBeforeFallBack = Date.UTC(2022, 9, 29, 22) / 1000
+    // 02:00 CEST and 02:00 CET: the same wall-clock hour, one absolute hour apart.
+    const twoAmCest = Date.UTC(2022, 9, 30, 0) / 1000
+    const twoAmCet = Date.UTC(2022, 9, 30, 1) / 1000
+
+    const ticks = computeTimeAxis(
+      midnightBeforeFallBack,
+      midnightBeforeFallBack + 8 * 3600,
+      70,
+      60,
+      BERLIN
+    )
+
+    const cestTick = ticks.find((tick) => tick.position === twoAmCest)
+    const cetTick = ticks.find((tick) => tick.position === twoAmCet)
+    expect(cestTick).toEqual({ position: twoAmCest, text: '02:00', lineWidth: 2 })
+    expect(cetTick).toEqual({ position: twoAmCet, text: null, lineWidth: 2 })
+  })
+})
+
 describe('computeTimeAxis guards', () => {
   test('returns no ticks for an empty range (end <= start after trimming)', () => {
     const start = 1_700_000_000

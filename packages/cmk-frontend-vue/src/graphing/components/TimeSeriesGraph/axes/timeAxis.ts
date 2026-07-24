@@ -194,6 +194,7 @@ export function computeTimeAxis(
 
   const ticks: TimeAxisTick[] = []
   const secondsPerChar = timeRange / (safeWidthEx - 7)
+  const emittedLabels = new Set<string>()
   for (const positionZoned of producer(startZoned, endZoned)) {
     let lineWidth = 2
     let position = Math.round(positionZoned.toDate().getTime() / 1000)
@@ -207,6 +208,16 @@ export function computeTimeAxis(
 
     if (label !== null && (label.length / 3.5) * secondsPerChar > endTime - position) {
       label = null
+    }
+    // A DST fall-back repeats a local hour, so wall-clock labels ("02:00") would show up
+    // twice (hour-level counterpart of Werk #14830). Keep the tick but suppress the
+    // repeated label so every rendered label stays unambiguous.
+    if (label !== null) {
+      if (emittedLabels.has(label)) {
+        label = null
+      } else {
+        emittedLabels.add(label)
+      }
     }
     ticks.push({ position, text: label, lineWidth })
   }

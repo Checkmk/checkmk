@@ -352,7 +352,6 @@ export function getPageDimensions() {
  * Calculate dashboard container dimensions based on element positioning
  */
 export function calculateDashboardDimensions(dashboardElement: HTMLElement): AbsoluteDimensions {
-  const dashboardRect = dashboardElement.getBoundingClientRect()
   const oContainer = dashboardElement.parentElement
   const containerPaddingRight = oContainer
     ? parseInt(window.getComputedStyle(oContainer).paddingRight, 10)
@@ -360,8 +359,16 @@ export function calculateDashboardDimensions(dashboardElement: HTMLElement): Abs
 
   const pageDims = getPageDimensions()
 
+  const previousInlineWidth = dashboardElement.style.width
+  dashboardElement.style.width = '100%'
+  void dashboardElement.offsetWidth
+  const measuredWidth = dashboardElement.clientWidth
+  dashboardElement.style.width = previousInlineWidth
+
+  const dashboardRect = dashboardElement.getBoundingClientRect()
+
   return {
-    width: pageDims.width - dashboardRect.left - containerPaddingRight,
+    width: measuredWidth || pageDims.width - dashboardRect.left - containerPaddingRight,
     // For some reason a cache removing reload on Firefox breaks this height calculation by 1px.
     // Thus the '- 1' hack here, so the dashboard does not overflow and no scrollbar is needed.
     height: pageDims.height - dashboardRect.top - 1

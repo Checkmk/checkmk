@@ -267,6 +267,7 @@ export function toggle_sidebar() {
   if (sidebar) {
     if (has_class(sidebar, 'folded')) unfold_sidebar()
     else fold_sidebar()
+    window.dispatchEvent(new Event('resize'))
   }
 }
 

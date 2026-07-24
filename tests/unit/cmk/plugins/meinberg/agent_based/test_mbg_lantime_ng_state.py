@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.mbg_lantime_ng_state import (
+from cmk.plugins.meinberg.agent_based.mbg_lantime_ng_state import (
     check_mbg_lantime_ng_state,
     parse_mbg_lantime_ng_state,
 )

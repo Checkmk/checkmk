@@ -452,17 +452,14 @@ def parse_performance_data(
 
 @dataclass(frozen=True)
 class EngineRRDFetchMetricNames:
-    services: Sequence[Service]
+    service: Service
     debug: bool
     registered_translations: Sequence[translations_v1.Translation] = ()
 
     def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
-        unique = list(dict.fromkeys(self.services))
-        if not unique:
-            return {}
         query = (
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
-            + _service_or_filter(unique)
+            + _service_or_filter([self.service])
         )
         # prepend_site tags each row with the site its data lives on (as the legacy fetch does), so
         # each resolved service carries its real site - the site scope, if any, is the caller's

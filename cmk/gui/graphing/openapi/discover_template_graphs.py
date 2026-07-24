@@ -51,12 +51,10 @@ def discover_template_graphs_v1(
             registered_graphs=registered_graphs(),
             registered_metrics=registered_metrics(),
             fetch_metric_names=EngineRRDFetchMetricNames(
-                services=[
-                    Service(
-                        host_name=HostName(body.hostname),
-                        service_name=ServiceName(body.service_description),
-                    )
-                ],
+                service=Service(
+                    host_name=HostName(body.hostname),
+                    service_name=ServiceName(body.service_description),
+                ),
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
             ),

@@ -59,6 +59,7 @@ class RestrictEditions:
 def after_validator_for_customer_field(
     customer: str | ApiOmitted,
     required_if_supported: bool = False,
+    allow_global: bool = True,
 ) -> None:
     RestrictEditions(
         supported_editions={Edition.ULTIMATEMT},
@@ -66,4 +67,4 @@ def after_validator_for_customer_field(
         which_field="customer",
     )._validate_editions(customer)
     if not isinstance(customer, ApiOmitted):
-        CustomerConverter().should_exist(customer)
+        CustomerConverter(allow_global=allow_global).should_exist(customer)

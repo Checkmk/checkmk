@@ -214,8 +214,7 @@ class SAMLUserConnectionConfig(TypedDict, total=True):
     role_membership_mapping: ROLE_MAPPING
     version: Literal["1.0.0"]
     # Edition-specific (ultimatemt): which customer's sites receive this connection.
-    # None means "Global" (all sites), like for LDAP connections.
-    customer: NotRequired[str | None]
+    customer: NotRequired[str]
 
 
 ConfigurableUserConnectionSpec = LDAPUserConnectionConfig | SAMLUserConnectionConfig

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.netscaler_mem import (
+from cmk.plugins.netscaler.agent_based.netscaler_mem import (
     check_netscaler_mem,
     discover_netscaler_mem,
     parse_netscaler_mem,

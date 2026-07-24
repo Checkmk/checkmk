@@ -4,48 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Generator, Iterable
-from typing import Any
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 
-check_info = {}
 
-
-def parse_mbg_lantime_ng_fan(string_table: StringTable) -> dict[str, dict[str, dict[str, Any]]]:
-    parsed: dict[str, dict[str, dict[str, Any]]] = {}
-    fan_states: dict[str, tuple[int, str]] = {
-        "0": (3, "not available"),
-        "1": (2, "off"),
-        "2": (0, "on"),
+def parse_mbg_lantime_ng_fan(string_table: StringTable) -> dict[str, dict[str, tuple[State, str]]]:
+    parsed: dict[str, dict[str, tuple[State, str]]] = {}
+    fan_states: dict[str, tuple[State, str]] = {
+        "0": (State.UNKNOWN, "not available"),
+        "1": (State.CRIT, "off"),
+        "2": (State.OK, "on"),
     }
-    fan_errors: dict[str, tuple[int, str]] = {
-        "0": (0, "not available"),
-        "1": (0, "no"),
-        "2": (2, "yes"),
+    fan_errors: dict[str, tuple[State, str]] = {
+        "0": (State.OK, "not available"),
+        "1": (State.OK, "no"),
+        "2": (State.CRIT, "yes"),
     }
 
-    for line in string_table:
-        index, fan_status, fan_error = line
+    for index, fan_status, fan_error in string_table:
         if not index:
             continue
-
-        fan_state, fan_state_name = fan_states.get(
-            fan_status,
-            (3, "not available"),
-        )
-        error_state, error_name = fan_errors.get(
-            fan_error,
-            (3, "not available"),
-        )
 
         parsed.setdefault(
             index,
             {
-                "status": {"state": fan_state, "name": fan_state_name},
-                "error": {"state": error_state, "name": error_name},
+                "status": fan_states.get(fan_status, (State.UNKNOWN, "not available")),
+                "error": fan_errors.get(fan_error, (State.UNKNOWN, "not available")),
             },
         )
 
@@ -53,27 +47,27 @@ def parse_mbg_lantime_ng_fan(string_table: StringTable) -> dict[str, dict[str, d
 
 
 def discover_mbg_lantime_ng_fan(
-    section: dict[str, dict[str, dict[str, Any]]],
-) -> Iterable[tuple[str, dict[str, Any]]]:
+    section: dict[str, dict[str, tuple[State, str]]],
+) -> DiscoveryResult:
     yield from (
-        (item, {}) for item, data in section.items() if data["status"]["name"] != "not available"
+        Service(item=item) for item, data in section.items() if data["status"][1] != "not available"
     )
 
 
 def check_mbg_lantime_ng_fan(
-    item: str, _no_params: None, parsed: dict[str, dict[str, dict[str, Any]]]
-) -> Generator[LegacyResult]:
-    if not (data := parsed.get(item)):
+    item: str, section: dict[str, dict[str, tuple[State, str]]]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
-    fan_status = data["status"]
-    yield fan_status["state"], "Status: %s" % fan_status["name"]
+    status_state, status_name = data["status"]
+    yield Result(state=status_state, summary=f"Status: {status_name}")
 
-    fan_error = data["error"]
-    yield fan_error["state"], "Errors: %s" % fan_error["name"]
+    error_state, error_name = data["error"]
+    yield Result(state=error_state, summary=f"Errors: {error_name}")
 
 
-check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
+snmp_section_mbg_lantime_ng_fan = SimpleSNMPSection(
     name="mbg_lantime_ng_fan",
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
@@ -81,6 +75,11 @@ check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     parse_function=parse_mbg_lantime_ng_fan,
+)
+
+
+check_plugin_mbg_lantime_ng_fan = CheckPlugin(
+    name="mbg_lantime_ng_fan",
     service_name="Fan %s",
     discovery_function=discover_mbg_lantime_ng_fan,
     check_function=check_mbg_lantime_ng_fan,

@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type SimpleBar from 'simplebar'
 import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
@@ -11,7 +10,6 @@ import type { CMKAjaxReponse } from './types'
 import {
   add_class,
   change_class,
-  execute_javascript_by_object,
   get_button,
   has_class,
   is_window_active,
@@ -20,8 +18,6 @@ import {
   remove_class,
   update_contents
 } from './utils'
-
-let g_scrollbar: SimpleBar | null | undefined = null
 
 // The main iframe is gone, so the sidebar no longer has a sibling frame to
 // observe. ``initialize_sidebar`` used to spawn a 1 Hz interval that polled
@@ -334,24 +330,6 @@ export function add_snapin(name: string) {
         }
       }
 
-      const sidebar_content = g_scrollbar?.getContentElement()
-      if (sidebar_content) {
-        const tmp_container = document.createElement('div')
-        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-        tmp_container.innerHTML = result.content
-
-        const add_button = sidebar_content.lastChild as HTMLElement
-        while (tmp_container.childNodes.length) {
-          const tmp = tmp_container.childNodes[0] as HTMLElement
-          add_button.insertAdjacentElement('beforebegin', tmp)
-
-          // The object specific JS must be called after the object was inserted.
-          // Otherwise JS code that works on DOM objects (e.g. the quicksearch snapin
-          // registry) cannot find these objects.
-          execute_javascript_by_object(tmp)
-        }
-      }
-
       const preview = document.getElementById('snapin_container_' + name)
       if (preview) {
         const container = preview.parentElement?.parentElement
@@ -494,55 +472,6 @@ export function refresh_single_snapin(name: string) {
     }
   })
   window.dispatchEvent(event)
-}
-
-/************************************************
- * Save/Restore scroll position
- *************************************************/
-
-// TODO: remove expiredays. this is either a null or number, though
-//  it is been used only one time as null and when we add date to null
-//  we get a very weird result so to be safer it's better to delete it
-function setCookie(cookieName: string, value: number, expiredays: null | number) {
-  const exdate = new Date()
-  exdate.setDate(exdate.getDate() + (expiredays ?? 0))
-  document.cookie =
-    cookieName +
-    '=' +
-    encodeURIComponent(value) +
-    (expiredays == null ? '' : ';expires=' + exdate.toUTCString() + ';SameSite=Lax')
-}
-
-function getCookie(cookieName: string) {
-  if (document.cookie.length == 0) return null
-
-  let cookieStart = document.cookie.indexOf(cookieName + '=')
-  if (cookieStart == -1) return null
-
-  cookieStart = cookieStart + cookieName.length + 1
-  let cookieEnd = document.cookie.indexOf(';', cookieStart)
-  if (cookieEnd == -1) cookieEnd = document.cookie.length
-  return decodeURIComponent(document.cookie.substring(cookieStart, cookieEnd))
-}
-
-export function initialize_scroll_position() {
-  if (!g_scrollbar) return
-  const scrollPosFromCookie = getCookie('sidebarScrollPos')
-  const scrollPos: number = scrollPosFromCookie ? parseInt(scrollPosFromCookie) : 0
-  // 2531: Object is possibly 'null'
-  // @ts-ignore
-  g_scrollbar.getScrollElement().scrollTop = scrollPos
-}
-
-function store_scroll_position() {
-  setCookie(
-    'sidebarScrollPos',
-    // 2345: Argument of type 'number | undefined' is not assignable to
-    // parameter of type 'number'
-    // @ts-ignore
-    g_scrollbar!.getScrollElement()?.scrollTop,
-    null
-  )
 }
 
 /************************************************

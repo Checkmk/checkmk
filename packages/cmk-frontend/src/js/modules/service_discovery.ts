@@ -10,10 +10,10 @@ import { hide_msg, monitor, show_error, show_message_by_type } from './async_pro
 import {
   add_class,
   add_event_handler,
-  content_scrollbar,
   execute_javascript_by_object,
   has_class,
   is_in_viewport,
+  main_content_scroll_element,
   remove_class,
   time,
   update_pending_changes
@@ -304,11 +304,7 @@ export function register_delayed_active_check(
 
   // Register event listeners on first call
   if (g_delayed_active_checks.length == 0) {
-    //2531: Object is possibly 'null'
-    // @ts-ignore
-    content_scrollbar('')!
-      .getScrollElement()
-      .addEventListener('scroll', trigger_delayed_active_checks)
+    main_content_scroll_element()?.addEventListener('scroll', trigger_delayed_active_checks)
     add_event_handler('resize', trigger_delayed_active_checks)
   }
 

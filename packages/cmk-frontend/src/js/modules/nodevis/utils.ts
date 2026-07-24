@@ -363,9 +363,7 @@ export class LiveSearch {
   }
 
   get_filter_params(): Record<string, string> {
-    const inputs = this._root_node
-      .select('div.simplebar-content')
-      .selectAll<HTMLInputElement, null>('input,select')
+    const inputs = this._root_node.selectAll<HTMLInputElement, null>('input,select')
     const params: Record<string, string> = { live_search: '1' }
     inputs.each((_d, idx, nodes) => {
       const input = nodes[idx]

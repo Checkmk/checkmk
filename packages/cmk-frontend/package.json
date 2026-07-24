@@ -110,7 +110,6 @@
     "jquery": "^3.7.1",
     "qrcode": "^1.5.4",
     "select2": "^4.0.13",
-    "simplebar": "^6.3.3",
     "sweetalert2": "^11.26.24"
   }
 }

@@ -70,19 +70,12 @@ export function update_position(event_: MouseEvent) {
   }
 
   // document.body.scrollTop does not work in IE
-  let scrollTop = document.body.scrollTop
+  const scrollTop = document.body.scrollTop
     ? document.body.scrollTop
     : document.documentElement.scrollTop
-  let scrollLeft = document.body.scrollLeft
+  const scrollLeft = document.body.scrollLeft
     ? document.body.scrollLeft
     : document.documentElement.scrollLeft
-
-  // Change scroll variables to SimpleBar container values if in place
-  const scroll_container = g_hover_menu.closest('.simplebar-content-wrapper')
-  if (scroll_container) {
-    scrollTop = scroll_container.scrollTop
-    scrollLeft = scroll_container.scrollLeft
-  }
 
   let x = event_.clientX
   let y = event_.clientY
@@ -183,19 +176,9 @@ function hover_container() {
     return ensure_hover_portal()
   }
 
-  // Return the simplebar wrapper div (if it exists) to avoid the default browser scrollbar for
-  // long hover menu contents. If it doesn't exist try the content wrapper div. If that doesn't
-  // exist either, fall back to the document body.
-  const container = get_content_wrapper_object()
-  if (!container) {
-    return document.body
-  }
-
-  const simplebar_wrapper = container.getElementsByClassName('simplebar-content-wrapper')
-  if (simplebar_wrapper.length == 0) {
-    return container
-  }
-  return simplebar_wrapper[0]
+  // Return the content wrapper div if it exists, otherwise fall back to the
+  // document body.
+  return get_content_wrapper_object() ?? document.body
 }
 
 function ensure_hover_portal(): HTMLDivElement {

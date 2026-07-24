@@ -3,14 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import SimpleBar from 'simplebar'
 import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
 import { get_selection_id, is_selection_enabled } from './selection'
 
 export type Nullable<T> = null | T
-let g_content_scrollbar: SimpleBar | null | undefined = null
 
 export const browser = {
   agent: navigator.userAgent.toLowerCase(),
@@ -465,15 +463,6 @@ export function acknowledge_user_message(msg_id: string) {
   })
 }
 
-export function add_height_to_simple_bar_content_of_iframe(target_iframe: string) {
-  const iframe = document.getElementById(target_iframe)
-  if (!iframe) return
-
-  const simple_bar_content = iframe.parentElement
-  if (!simple_bar_content) return
-  simple_bar_content.style.height = '100%'
-}
-
 export function update_time(target: string, time: string) {
   const container = document.getElementById(target) as HTMLInputElement
   if (container) {
@@ -733,8 +722,6 @@ export function toggle_more(trigger: HTMLElement, toggle_id: string, dom_levels_
 
     for (let i = 0; i < dom_levels_up; i++) {
       container = container!.parentNode
-      while ((container as HTMLElement).className.includes('simplebar-'))
-        container = container!.parentNode
     }
   }
 
@@ -759,62 +746,14 @@ export function toggle_more(trigger: HTMLElement, toggle_id: string, dom_levels_
   )
 }
 
-export function add_simplebar_scrollbar(scrollable_id: string) {
-  return add_simplebar_scrollbar_to_object(document.getElementById(scrollable_id))
-}
-
-export function add_simplebar_scrollbar_to_object(
-  obj: Nullable<HTMLElement>
-): SimpleBar | undefined {
-  if (obj) {
-    return new SimpleBar(obj)
-  }
-  console.log('Missing object for SimpleBar initiation.')
-  return undefined
-}
-
-export function content_scrollbar(scrollable_id: string) {
-  if (g_content_scrollbar === null) {
-    const element = document.getElementById(scrollable_id)
-    const current_position = element!.scrollTop
-    g_content_scrollbar = add_simplebar_scrollbar(scrollable_id)
-    if (current_position) {
-      const scrollElement = g_content_scrollbar!.getScrollElement()
-      if (scrollElement) {
-        scrollElement.scrollTop = current_position
-      }
-    }
-  }
-  return g_content_scrollbar
+// The native scroll container of the main page content.
+export function main_content_scroll_element(): HTMLElement | null {
+  return document.getElementById('main_page_content')
 }
 
 export function setButtonLoadingState(event: Event) {
   const target = event.target as HTMLInputElement
   target.classList.add('shimmer-input-button')
-}
-
-export async function fix_simplebar_scroll_to_id_in_chrome(
-  container: HTMLElement,
-  _options: Record<string, string>
-) {
-  container.addEventListener(
-    'click',
-    (event) => {
-      event.preventDefault()
-      const id = container.getAttribute('href')?.substring(1)
-      if (id === undefined) return
-      const element = document.getElementById(id)
-      if (element) {
-        const scrollElement = g_content_scrollbar!.getScrollElement()
-        if (scrollElement) {
-          const elementRect = element.getBoundingClientRect()
-          const scrollRect = scrollElement.getBoundingClientRect()
-          scrollElement.scrollTop += elementRect.top - scrollRect.top
-        }
-      }
-    },
-    false
-  )
 }
 
 export function set_focus_by_name(form_name: string | undefined, field_name: number) {

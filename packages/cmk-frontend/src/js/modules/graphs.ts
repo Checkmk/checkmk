@@ -10,12 +10,12 @@ import { pause } from './reload_pause'
 import {
   add_class,
   add_event_handler,
-  content_scrollbar,
   current_script,
   execute_javascript_by_object,
   get_url_param,
   has_class,
   is_in_viewport,
+  main_content_scroll_element,
   makeuri,
   prevent_default_events,
   wheel_event_delta,
@@ -469,18 +469,12 @@ export function register_delayed_graph_listener() {
   if (num_delayed == 0) return // no delayed graphs: Nothing to do
 
   // Start of delayed graph renderer listening
-  // @ts-ignore
-  // TODO replace content scrollbar with two functions
-  // create_content_scrollbar if no parameter is given
-  // get_content_scrollbar if it is given
+  // if the graph is rendered in a dashlet, we have to use the scroll container
+  // of the dashlet
+  const scroll_container =
+    document.getElementById('dashlet_content_wrapper') ?? main_content_scroll_element()
 
-  // if the graph is rendered in a dashlet, we have to use the scrollbar of
-  // the dashlet
-  const dashletElement = document.getElementById('dashlet_content_wrapper')
-
-  const scrollbar = content_scrollbar(dashletElement ? 'dashlet_content_wrapper' : '')
-
-  scrollbar?.getScrollElement()?.addEventListener('scroll', delayed_graph_renderer)
+  scroll_container?.addEventListener('scroll', delayed_graph_renderer)
 
   add_event_handler('resize', delayed_graph_renderer)
 }

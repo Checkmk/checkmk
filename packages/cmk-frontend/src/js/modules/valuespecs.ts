@@ -22,7 +22,6 @@ import { close_popup } from './popup_menu'
 import type { Nullable } from './utils'
 import {
   add_class,
-  add_simplebar_scrollbar,
   execute_javascript_by_object,
   has_class,
   prevent_default_events,
@@ -1230,11 +1229,7 @@ export function visual_filter_list_reset(
       const response = JSON.parse(ajax_response)
       const filters_html = response.result.filters_html
       const filter_list = document.getElementById(varprefix + '_popup_filter_list_selected')!
-      set_inner_html_and_execute_scripts(
-        filter_list.getElementsByClassName('simplebar-content')[0] as HTMLElement,
-        filters_html
-      )
-      add_simplebar_scrollbar(varprefix + '_popup_filter_list')
+      set_inner_html_and_execute_scripts(filter_list, filters_html)
       listofmultiple_disable_selected_options(varprefix)
       enable_dynamic_form_elements()
     }

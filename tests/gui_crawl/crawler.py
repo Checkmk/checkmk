@@ -582,12 +582,8 @@ class Crawler:
                 self.handle_new_reference(url, referer_url=referer_url)
 
     def check_logs(self, url: Url, logs: Iterable[str]) -> None:
-        accepted_logs = [
-            "Missing object for SimpleBar initiation.",
-        ]
         for log in logs:
-            if not any(accepted_log in log for accepted_log in accepted_logs):
-                self.handle_error(url, error_type="JavascriptError", message=log)
+            self.handle_error(url, error_type="JavascriptError", message=log)
 
     def verify_is_valid_url(self, url: str) -> None:
         parsed = urlsplit(url)

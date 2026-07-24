@@ -12,7 +12,6 @@ import { confirm_dialog } from './forms'
 import { close_popup as popup_menu_close_popup } from './popup_menu'
 import {
   add_class,
-  add_simplebar_scrollbar_to_object,
   change_class,
   has_class,
   remove_class,
@@ -312,22 +311,15 @@ export function on_filter_popup_close() {
 
 // Scroll to the top after adding new filters
 export function update_filter_list_scroll(filter_list_id: string) {
-  const filter_list = document.getElementById(filter_list_id)
-  const scrollable = filter_list!.getElementsByClassName('simplebar-content-wrapper')[0]
+  const filter_list = document.getElementById(filter_list_id)!
   try {
     // scrollTo() is not supported in IE
     setTimeout(() => {
-      scrollable.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+      filter_list.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
     }, 200)
   } catch (e) {
-    scrollable.scrollTop = 0
+    filter_list.scrollTop = 0
   }
-}
-
-export function side_popup_add_simplebar_scrollbar(popup_id: string) {
-  const popup = document.getElementById(popup_id)
-  const content = popup!.getElementsByClassName('side_popup_content')[0] as HTMLElement
-  add_simplebar_scrollbar_to_object(content)
 }
 
 export function inpage_search_init(

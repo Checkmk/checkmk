@@ -8,7 +8,6 @@ import { insert_before } from '@/modules/layout'
 import { render_qr_code } from '@/modules/qrcode_rendering'
 import { lock_and_redirect } from '@/modules/sites'
 import { render_stats_table } from '@/modules/tracking_display'
-import { fix_simplebar_scroll_to_id_in_chrome } from '@/modules/utils'
 
 type CallableFunctionArguments = { [key: string]: string }
 type CallableFunction = (node: HTMLElement, options: CallableFunctionArguments) => Promise<void>
@@ -19,7 +18,6 @@ const callable_functions: { [name: string]: CallableFunction } = {
   render_qr_code: render_qr_code,
   insert_before: insert_before,
   lock_and_redirect: lock_and_redirect,
-  fix_simplebar_scroll_to_id_in_chrome: fix_simplebar_scroll_to_id_in_chrome,
   confirm_on_form_leave: confirm_on_form_leave
 }
 

@@ -50,7 +50,6 @@ BUILD_DEPS = [
     ":node_modules/sass-loader",
     ":node_modules/script-loader",
     ":node_modules/select2",
-    ":node_modules/simplebar",
     ":node_modules/sweetalert2",
     ":node_modules/terser-webpack-plugin",
     ":node_modules/webpack-remove-empty-scripts",

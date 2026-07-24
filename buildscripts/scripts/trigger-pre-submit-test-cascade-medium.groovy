@@ -63,11 +63,14 @@ void setGerritHashtags(Map args) {
     }
 }
 
+// notify defaults to Gerrit's own default ("ALL") so callers only need to pass
+// it for the intermediate/progress votes we want to keep quiet.
 void voteGerrit(Map args) {
     def defaultDict = [
         label  : "medium-chain-verified",
         vote   : -1,
         submit : false,
+        notify : "ALL",
     ] << args;
     def submit_flag = defaultDict.submit ? "--submit" : "";
     withGerritSshKey {
@@ -76,6 +79,7 @@ void voteGerrit(Map args) {
                 -p 29418 jenkins@review.lan.tribe29.com \
                 gerrit review \
                 --${defaultDict.label}=${defaultDict.vote} \
+                --notify ${defaultDict.notify} \
                 ${submit_flag} \
                 ${defaultDict.identifier}
         """);
@@ -137,6 +141,7 @@ void main() {
                             -p 29418 jenkins@review.lan.tribe29.com \
                             gerrit review \
                             --message "'Build started: ${env.BUILD_URL}'" \
+                            --notify NONE \
                             ${new_patchset_revision}
                     """);
 
@@ -294,12 +299,12 @@ void main() {
 
                             if ("${changeInfo.commit}" == "${new_patchset_revision}") {
                                 println("Vote yourself +2");
-                                voteGerrit(vote: 2, identifier: "${changeInfo.commit}");
+                                voteGerrit(vote: 2, identifier: "${changeInfo.commit}", notify: "NONE");
                             } else {
                                 // status can be: NEW, MERGED, ABANDONED. We want only new changes.
                                 if ("${changeInfo.status}" == "NEW") {
                                     println("Vote ancestor ${changeInfo.number} aka ${changeInfo.id} +1");
-                                    voteGerrit(vote: 1, identifier: "${changeInfo.commit}");
+                                    voteGerrit(vote: 1, identifier: "${changeInfo.commit}", notify: "NONE");
                                 } else {
                                     println("No vote for ancestor ${changeInfo.number} aka ${changeInfo.id} as it is not 'NEW'");
                                 }
@@ -318,7 +323,7 @@ void main() {
                                 // status can be: NEW, MERGED, ABANDONED. We want only new changes.
                                 if ("${changeInfo.status}" == "NEW") {
                                     println("Reset vote on ancestor ${changeInfo.number} aka ${changeInfo.id} to 0");
-                                    voteGerrit(vote: 0, identifier: "${changeInfo.commit}");
+                                    voteGerrit(vote: 0, identifier: "${changeInfo.commit}", notify: "NONE");
                                 }
                             }
                             // Unstable: ssh connection fails, exit code 255

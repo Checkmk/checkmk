@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Monitoring - Host Services App",
+  "$id": "../host_services.json",
+  "allOf": [{ "$ref": "monitoring/_base.json" }],
+  "properties": {
+    "host": {
+      "type": "string"
+    },
+    "site": {
+      "type": "string"
+    }
+  },
+  "required": ["host", "site"]
+}

@@ -41,7 +41,7 @@ export async function deployToSite(siteName: string): Promise<void> {
   })
   if (!pick) return
 
-  const flags = ['-v', '--site', siteName, '--backend', 'clone']
+  const flags = ['-v', '--site', siteName]
   if (pick.mode === 'watch') flags.push('--watch')
   if (pick.mode === 'dry-run') flags.push('--dry-run')
 

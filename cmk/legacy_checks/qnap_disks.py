@@ -3,54 +3,65 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.qnap.lib import DETECT_QNAP
 
-check_info = {}
+
+def discover_qnap_disks(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=x[0]) for x in section if x[2] != "-5")
 
 
-def discover_qnap_disks(info):
-    return [(x[0], None) for x in info if x[2] != "-5"]
-
-
-def check_qnap_disks(item, _no_params, info):
+def check_qnap_disks(item: str, section: StringTable) -> CheckResult:
     map_states = {
-        "0": (0, "ready"),
-        "-4": (2, "unknown"),
-        "-5": (2, "no disk"),
-        "-6": (2, "invalid"),
-        "-9": (2, "read write error"),
+        "0": (State.OK, "ready"),
+        "-4": (State.CRIT, "unknown"),
+        "-5": (State.CRIT, "no disk"),
+        "-6": (State.CRIT, "invalid"),
+        "-9": (State.CRIT, "read write error"),
     }
 
-    for desc, temp, status, model, size, cond in info:
+    for desc, temp, status, model, size, cond in section:
         if desc == item:
-            state, state_readable = map_states.get(status, (3, "unknown"))
-            yield state, f"Status: {state_readable} ({cond})"
+            state, state_readable = map_states.get(status, (State.UNKNOWN, "unknown"))
+            yield Result(state=state, summary=f"Status: {state_readable} ({cond})")
 
             if "--" in cond:
-                yield 1, "SMART Information missing"
+                yield Result(state=State.WARN, summary="SMART Information missing")
             elif cond != "GOOD":
-                yield 1, "SMART Warnings"
+                yield Result(state=State.WARN, summary="SMART Warnings")
 
-            yield 0, f"Model: {model}, Temperature: {temp}, Size: {size}"
+            yield Result(
+                state=State.OK, summary=f"Model: {model}, Temperature: {temp}, Size: {size}"
+            )
 
 
 def parse_qnap_disks(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["qnap_disks"] = LegacyCheckDefinition(
+snmp_section_qnap_disks = SimpleSNMPSection(
     name="qnap_disks",
-    parse_function=parse_qnap_disks,
     detect=DETECT_QNAP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
+    parse_function=parse_qnap_disks,
+)
+
+
+check_plugin_qnap_disks = CheckPlugin(
+    name="qnap_disks",
     service_name="Disk %s",
     discovery_function=discover_qnap_disks,
     check_function=check_qnap_disks,

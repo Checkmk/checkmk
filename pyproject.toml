@@ -210,9 +210,6 @@ ignore = [
   "UP045",  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 ]
 
-# SIM108 incremental rollout
-"non-free/**" = ["SIM108"]
-
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
 

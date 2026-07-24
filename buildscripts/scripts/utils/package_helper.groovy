@@ -150,13 +150,13 @@ void provide_agent_binaries(Map args) {
             additional_build_params: [
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
-                FILE_ARCHIVING_PATTERN: "test_ora_sql_test",
+                FILE_ARCHIVING_PATTERN: "test_ora_*_test",
                 // do not add line breaks here. ci-artifacts might not find a match
                 // groovylint-disable-next-line LineLength
-                COMMAND_LINE: """bazel build //packages/mk-oracle:mk-oracle-lib-test-external; cp \$(bazel info workspace)/\$(bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/test_ora_sql_test) \$(bazel info workspace)"""
+                COMMAND_LINE: """bazel build //packages/mk-oracle:mk-oracle-lib-test-external; for t in test_ora_no_db test_ora_discovery test_ora_with_db; do cp \$(bazel info workspace)/\$(bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/\${t}_test) \$(bazel info workspace); done"""
             ],
             install_cmd: """\
-                cp test_ora_sql_test ${checkout_dir}/packages/mk-oracle/
+                cp test_ora_no_db_test test_ora_discovery_test test_ora_with_db_test ${checkout_dir}/packages/mk-oracle/
                 """.stripIndent(),
         ],
         "winagt-build": [

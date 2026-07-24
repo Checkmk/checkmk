@@ -286,7 +286,6 @@ run_test_component_remote_host() {
             failure "set SSH_USER (SSH login for ${ci_host}) or HOST_ADDRESS"
         HOST_ADDRESS="${SSH_USER}@${ci_host}"
     fi
-    TEST_NAME="test_ora_sql_test"
     SSH_ARGS=
     [ -n "$SSH_KEYFILE" ] && SSH_ARGS="$SSH_ARGS -i $SSH_KEYFILE -o StrictHostKeyChecking=no"
     # Stage under a unique remote directory unless the caller supplied one,
@@ -300,6 +299,8 @@ run_test_component_remote_host() {
         REMOTE_STAGING_TO_CLEAN="${TEST_BINARY_REMOTE_PATH}"
         trap remove_remote_staging EXIT
     fi
+
+    : "${TEST_BINARIES:=test_ora_no_db_test test_ora_discovery_test test_ora_with_db_test}"
     # NOTE: create test folder and directory structure emulating real deployment too
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
@@ -307,9 +308,9 @@ run_test_component_remote_host() {
         mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle"
         mkdir -p "${TEST_BINARY_REMOTE_PATH}/tests/files/tns"
 EOF
-    # copy Oracle DB plug-in test-binary and test data to the remote-host
+    # copy Oracle DB plug-in test binaries and test data to the remote-host
     # shellcheck disable=SC2086
-    scp $SSH_ARGS "${TEST_NAME}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
+    scp $SSH_ARGS ${TEST_BINARIES} "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/"
     # shellcheck disable=SC2086
     scp $SSH_ARGS tests/files/tns/tnsnames.ora "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/tests/files/tns/"
     # shellcheck disable=SC2086,SC2087,SC2029
@@ -318,11 +319,14 @@ EOF
         cd "${TEST_BINARY_REMOTE_PATH}"
         export ORACLE_HOME="${ORACLE_HOME}"
         export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
+        export CI_ORA1_DB_TEST="${CI_ORA1_DB_TEST:-}"
         export MK_CONFDIR="${TEST_BINARY_REMOTE_PATH}"
         export MK_LIBDIR="${TEST_BINARY_REMOTE_PATH}"/runtimes
         export TNS_ADMIN="${TEST_BINARY_REMOTE_PATH}/tests/files/tns"
-        chmod +x ./"${TEST_NAME}"
-        ./"${TEST_NAME}"
+        for test_name in ${TEST_BINARIES}; do
+            chmod +x "./\${test_name}"
+            "./\${test_name}"
+        done
 EOF
 }
 

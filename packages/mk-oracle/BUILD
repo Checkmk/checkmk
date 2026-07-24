@@ -170,7 +170,9 @@ rust_test_suite(
     name = "mk-oracle-lib-test-external",
     srcs = [
         "tests/test_mk_oracle_bin.rs",
-        "tests/test_ora_sql.rs",
+        "tests/test_ora_discovery.rs",
+        "tests/test_ora_no_db.rs",
+        "tests/test_ora_with_db.rs",
     ],
     compile_data = [
         "tests/files/tns/tnsnames.ora",

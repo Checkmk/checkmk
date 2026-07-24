@@ -15,15 +15,15 @@ Both use the same colon-separated connection string, parsed by `SqlDbEndpoint::f
 host:user:password:port:instance_name:role:service_name:sid:_:_
 ```
 
-| Field               | Notes                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `host`              | DNS name or IP.                                                                                               |
-| `user` / `password` | DB credentials. May be left empty to reuse the previous endpoint's credentials.                               |
-| `port`              | Listener port (default `1521`).                                                                               |
-| `instance_name`     | `_` or empty → `None`. Used to verify the plugin identifies the instance.                                     |
-| `role`              | e.g. `sysdba`; empty → none. `localhost` endpoints connect as `sysdba` automatically (see `common/tools.rs`). |
-| `service_name`      | Mandatory for connection.                                                                                     |
-| `sid`               | `_` or empty → `None`.                                                                                        |
+| Field               | Notes                                                                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `host`              | DNS name or IP.                                                                                                                                                                             |
+| `user` / `password` | DB credentials. May be left empty to reuse the previous endpoint's credentials.                                                                                                             |
+| `port`              | Listener port (default `1521`).                                                                                                                                                             |
+| `instance_name`     | `_` or empty → `None`. Used to verify the plugin identifies the instance.                                                                                                                   |
+| `role`              | e.g. `sysdba`; empty → none. Always explicit — nothing infers a role from the host (e.g. connecting as `sys` needs `role: sysdba` spelled out; Oracle refuses `sys` without it, ORA-28009). |
+| `service_name`      | Mandatory for connection.                                                                                                                                                                   |
+| `sid`               | `_` or empty → `None`.                                                                                                                                                                      |
 
 Point `CI_ORA2_DB_TEST` at any reachable database — no other file needs editing for a local run.
 CI delivers only a password, so `CI_ORA2_DB_TEST` is constructed from it in the run scripts and the Jenkins jobs.

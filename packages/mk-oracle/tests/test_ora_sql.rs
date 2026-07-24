@@ -290,7 +290,7 @@ oracle:
 "#,
         endpoint.user,
         endpoint.pwd,
-        role_spec(&endpoint.role, &endpoint.host),
+        role_spec(&endpoint.role),
         endpoint.host,
         endpoint.port,
         endpoint.service_name

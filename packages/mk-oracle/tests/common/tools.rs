@@ -94,19 +94,10 @@ pub mod platform {
     }
 }
 
-/// The role to put into a generated config: an explicit endpoint role wins
-/// (e.g. the local endpoint authenticates as sys/sysdba even when addressed
-/// by hostname). Otherwise the localhost (Docker) database is accessed as
-/// sys, which Oracle refuses without SYSDBA (ORA-28009,
-/// https://docs.oracle.com/en/error-help/db/ora-28009).
-pub fn role_spec(role: &Option<Role>, address: &str) -> String {
-    if let Some(r) = role {
-        r.to_string()
-    } else if address == "localhost" {
-        "sysdba".to_string()
-    } else {
-        String::new()
-    }
+/// The role for a generated config. Explicit only: connecting as `sys`
+/// requires `role: sysdba` (ORA-28009).
+pub fn role_spec(role: &Option<Role>) -> String {
+    role.as_ref().map(|r| r.to_string()).unwrap_or_default()
 }
 
 fn _make_mini_config(
@@ -140,7 +131,7 @@ oracle:
         credentials.user,
         credentials.password,
         auth_type,
-        role_spec(role, address),
+        role_spec(role),
         address,
         port,
         service_name,
@@ -206,7 +197,7 @@ oracle:
         credentials.user,
         credentials.password,
         auth_type,
-        role_spec(role, address),
+        role_spec(role),
         address,
         include,
         alias_raw(&alias),
@@ -335,7 +326,7 @@ oracle:
         credentials.user,
         credentials.password,
         auth_type,
-        role_spec(role, address),
+        role_spec(role),
         address,
         port,
         sid,
@@ -387,7 +378,7 @@ oracle:
 "#,
         user = endpoint.user,
         pwd = endpoint.pwd,
-        role = role_spec(&endpoint.role, &endpoint.host),
+        role = role_spec(&endpoint.role),
         host = endpoint.host,
         port = endpoint.port,
         service = endpoint.service_name,
@@ -420,7 +411,7 @@ oracle:
 "#,
         user = endpoint.user,
         pwd = endpoint.pwd,
-        role = role_spec(&endpoint.role, &endpoint.host),
+        role = role_spec(&endpoint.role),
         host = endpoint.host,
         port = endpoint.port,
         service = endpoint.service_name,
@@ -458,7 +449,7 @@ oracle:
 "#,
         user = endpoint.user,
         pwd = endpoint.pwd,
-        role = role_spec(&endpoint.role, &endpoint.host),
+        role = role_spec(&endpoint.role),
         host = endpoint.host,
         port = endpoint.port,
         service = endpoint.service_name,
@@ -495,7 +486,7 @@ oracle:
 "#,
         user = endpoint.user,
         pwd = endpoint.pwd,
-        role = role_spec(&endpoint.role, &endpoint.host),
+        role = role_spec(&endpoint.role),
         host = endpoint.host,
         port = endpoint.port,
         service = endpoint.service_name,

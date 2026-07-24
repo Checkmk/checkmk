@@ -12,9 +12,9 @@ from typing import Any
 import pytest
 import time_machine
 
-import cmk.legacy_checks.netscaler_cpu as netscaler_cpu_plugin
+import cmk.plugins.netscaler.agent_based.netscaler_cpu as netscaler_cpu_plugin
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.netscaler_cpu import (
+from cmk.plugins.netscaler.agent_based.netscaler_cpu import (
     check_netscaler_cpu,
     discover_netscaler_cpu,
     parse_netscaler_cpu,

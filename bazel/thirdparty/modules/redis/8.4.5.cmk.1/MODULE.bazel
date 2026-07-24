@@ -1,6 +1,6 @@
 module(
     name = "redis",
-    version = "8.4.0.cmk.1",
+    version = "8.4.5.cmk.1",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
 )

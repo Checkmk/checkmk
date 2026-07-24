@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 #
 # Example Output:
 # .1.3.6.1.4.1.5951.4.1.1.53.1.1.0  13
@@ -12,35 +10,43 @@
 
 
 import time
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 
-check_info = {}
+
+def discover_netscaler_dnsrates(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def discover_netscaler_dnsrates(info):
-    if info:
-        return [(None, {})]
-    return []
-
-
-def check_netscaler_dnsrates(_no_item, params, info):
-    queries, answers = map(int, info[0])
+def check_netscaler_dnsrates(
+    params: Mapping[str, tuple[float, float]], section: StringTable
+) -> CheckResult:
+    queries, answers = map(int, section[0])
 
     now = time.time()
     value_store = get_value_store()
-    for name, counter in [("query", queries), ("answer", answers)]:
+    for name, counter in (("query", queries), ("answer", answers)):
         rate = get_rate(value_store, name, now, counter, raise_overflow=True)
-        warn, crit = params[name]
-
-        yield check_levels(
+        yield from check_levels(
             rate,
-            name + "_rate",
-            (warn, crit),
-            infoname=f"{name} rate",
-            human_readable_func=lambda x: f"{x:.1f}/sec",
+            levels_upper=("fixed", params[name]),
+            metric_name=f"{name}_rate",
+            render_func=lambda x: f"{x:.1f}/sec",
+            label=f"{name} rate",
         )
 
 
@@ -48,14 +54,19 @@ def parse_netscaler_dnsrates(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
+snmp_section_netscaler_dnsrates = SimpleSNMPSection(
     name="netscaler_dnsrates",
-    parse_function=parse_netscaler_dnsrates,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.53.1",
         oids=["1", "2"],
     ),
+    parse_function=parse_netscaler_dnsrates,
+)
+
+
+check_plugin_netscaler_dnsrates = CheckPlugin(
+    name="netscaler_dnsrates",
     service_name="DNS rates",
     discovery_function=discover_netscaler_dnsrates,
     check_function=check_netscaler_dnsrates,

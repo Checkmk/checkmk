@@ -43,11 +43,8 @@ _DISCOVERY_RANGE = TimeRange(start=0, end=60, step=10)
 class _FakeRRDFetchMetricNames:
     metric_names: Sequence[str] = (_METRIC,)
 
-    def __call__(self, services: Sequence[Service]) -> Mapping[Service, frozenset[MetricName]]:
-        return {
-            service: frozenset(MetricName(name) for name in self.metric_names)
-            for service in services
-        }
+    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
+        return {_SERVICE: frozenset(MetricName(name) for name in self.metric_names)}
 
 
 @dataclass
@@ -87,7 +84,6 @@ def test_template_lifecycle_discover_and_update() -> None:
     # rules the engine builds itself.
     fetch_data = _FakeRRDFetchData()
     graphs = build_template_graphs(
-        service=_SERVICE,
         registered_graphs=[],
         registered_metrics={},
         fetch_metric_names=_FakeRRDFetchMetricNames(),
@@ -124,7 +120,6 @@ def test_template_lifecycle_discover_and_update() -> None:
     # share it — discovery rejects it (legacy parity).
     with pytest.raises(MKGeneralException, match="different units"):
         build_template_graphs(
-            service=_SERVICE,
             registered_graphs=[
                 graphs_v1.Graph(
                     name="mixed",

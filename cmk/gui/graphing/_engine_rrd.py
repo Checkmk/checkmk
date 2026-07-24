@@ -452,11 +452,12 @@ def parse_performance_data(
 
 @dataclass(frozen=True)
 class EngineRRDFetchMetricNames:
+    services: Sequence[Service]
     debug: bool
     registered_translations: Sequence[translations_v1.Translation] = ()
 
-    def __call__(self, services: Sequence[Service]) -> Mapping[Service, frozenset[MetricName]]:
-        unique = list(dict.fromkeys(services))
+    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
+        unique = list(dict.fromkeys(self.services))
         if not unique:
             return {}
         query = (

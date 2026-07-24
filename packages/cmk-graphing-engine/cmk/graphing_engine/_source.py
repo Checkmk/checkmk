@@ -17,7 +17,7 @@ from ._quantities import EvaluationContext, Metric
 
 
 class RRDFetchMetricNames(Protocol):
-    def __call__(self, services: Sequence[Service]) -> Mapping[Service, frozenset[MetricName]]: ...
+    def __call__(self) -> Mapping[Service, frozenset[MetricName]]: ...
 
 
 class RRDFetchData(Protocol):

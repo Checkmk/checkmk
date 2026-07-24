@@ -147,7 +147,6 @@ _FALLBACK_SCALAR_KINDS = (
 
 def build_matched_graphs(
     *,
-    services: Sequence[Service],
     localizer: Callable[[str], str],
     fetch_metric_names: RRDFetchMetricNames,
     kind: str,
@@ -155,7 +154,7 @@ def build_matched_graphs(
     registered_metrics: Mapping[str, metrics_v1.Metric],
     quantity_builder: QuantityBuilder = _SINGLE_QUANTITY_BUILDER,
 ) -> Sequence[Graph]:
-    names_by_service = fetch_metric_names(services)
+    names_by_service = fetch_metric_names()
     # The metric-name fetch returns the services tagged with their resolved site; build from those so
     # the metrics carry it.
     resolved = list(names_by_service)

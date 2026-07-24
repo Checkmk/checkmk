@@ -17,7 +17,6 @@ from cmk.graphing_engine import (
     Graph,
     RRDFetchData,
     RRDFetchMetricNames,
-    Service,
 )
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _, translate_to_current_language
@@ -58,13 +57,11 @@ def matches_graph_id(graph: Graph, graph_id: str) -> bool:
 
 def build_template_graphs(
     *,
-    service: Service,
     registered_graphs: Sequence[GraphFromAPI],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     fetch_metric_names: RRDFetchMetricNames,
 ) -> Sequence[Graph]:
     graphs = build_matched_graphs(
-        services=[service],
         localizer=translate_to_current_language,
         fetch_metric_names=fetch_metric_names,
         kind="template",

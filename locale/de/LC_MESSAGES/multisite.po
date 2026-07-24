@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-23 00:47+0000\n"
+"PO-Revision-Date: 2026-07-23 19:47+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
 "de/>\n"
 "Language: de\n"
@@ -3902,11 +3902,9 @@ msgstr "Aktive Checks wurden für %(what)s manuell aktiviert!"
 msgid "Active connections"
 msgstr "Aktive Verbindungen"
 
-#, fuzzy
 msgid "Active directory"
 msgstr "Active Directory"
 
-#, fuzzy
 msgid "Active directory replication"
 msgstr "Active Directory Replikation"
 
@@ -3937,7 +3935,6 @@ msgstr "Aktiver Knoten"
 msgid "Active paths"
 msgstr "Aktive Pfade"
 
-#, fuzzy
 msgid "Active power"
 msgstr "Aktive Leistung"
 
@@ -4169,13 +4166,11 @@ msgstr "Inhalt hinzufügen"
 msgid "Add context information to title"
 msgstr "Kontaktinformation zu Titel ergänzen"
 
-#, fuzzy
 msgid "Add counter"
 msgstr "Zähler hinzufügen"
 
-#, fuzzy
 msgid "Add counter object"
-msgstr "Leistungsindikatorobjekt hinzufügen"
+msgstr "Zählerobjekt hinzufügen"
 
 msgid "Add customer"
 msgstr "Kunde hinzufügen"
@@ -4742,9 +4737,9 @@ msgstr "%(name)s '%(ident)s' hinzugefügt"
 msgid "Added to stack"
 msgstr "Dem Stack hinzugefügt"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Added user %(user_id)s"
-msgstr "Geänderter Benutzer: %(user_id)s"
+msgstr "Benutzer %(user_id)s hinzugefügt"
 
 #, python-format
 msgid "Added: %(added)s"
@@ -4804,7 +4799,6 @@ msgstr "Zusätzliche Optionen"
 msgid "Additional plug-in output"
 msgstr "Zusätzliche Plugin-Ausgabe"
 
-#, fuzzy
 msgid "Additional plug-ins, local checks and MRPE configurations"
 msgstr "Zusätzliche Plugins, lokale Checks und MRPE-Konfigurationen"
 
@@ -4817,7 +4811,6 @@ msgstr "Zusätzlicher Text, welcher der Ausgabe vorangestellt wird"
 msgid "Additional values per metric"
 msgstr "Zusätzliche Werte pro Metrik"
 
-#, fuzzy
 msgid "Additive: effects of seasonality are added to the trend."
 msgstr ""
 "Additiv: Die Auswirkungen der Saisonalität werden dem Trend hinzugefügt."
@@ -5200,9 +5193,8 @@ msgstr "Alterslevels"
 msgid "Age of Anti-Virus signature"
 msgstr "Alter der Anti-Virus-Signatur"
 
-#, fuzzy
 msgid "Age of Anti-Virus signature extended database"
-msgstr "Alter der AntiVirus-Signatur (erweiterte Datenbank)"
+msgstr "Alter der erweiterten Anti-Virus-Signaturdatenbank"
 
 #, fuzzy
 msgid "Age of Intrusion Prevention signature"
@@ -5557,11 +5549,9 @@ msgstr "Luftströmung"
 msgid "Airflow deviation"
 msgstr "Luftstromabweichung"
 
-#, fuzzy
 msgid "Airflow deviation in percent"
 msgstr "Luftstromabweichung in Prozent"
 
-#, fuzzy
 msgid "Airflow deviation measured at airflow sensors"
 msgstr "Luftstromabweichung gemessen an Luftstromsensoren"
 
@@ -5657,7 +5647,6 @@ msgstr "Alert bei zu hoher CPU-Auslastung"
 msgid "Alert on too high FPGA utilization"
 msgstr "Alert bei zu hoher FPGA-Auslastung"
 
-#, fuzzy
 msgid "Alert on too high PCI I/O utilization"
 msgstr "Alert bei zu hoher PCI E/A-Auslastung"
 
@@ -5939,7 +5928,6 @@ msgstr "Alle Hosts"
 msgid "All hosts (experimental)"
 msgstr "Alle Hosts (experimentell)"
 
-#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -5954,7 +5942,6 @@ msgstr ""
 "sicher, dass Sie das Agentenplugin <tt>mk_inventory</tt> auf diesen Hosts "
 "installiert haben."
 
-#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
@@ -6337,7 +6324,6 @@ msgstr "Erlaubte Werte gehen von %(min_length)s bis %(max_length)s."
 msgid "Allowed license states"
 msgstr "Erlaubte Lizenzstatus"
 
-#, fuzzy
 msgid "Allowed network states on Bosch IP cameras"
 msgstr "Erlaubte Netzwerkzustände für Bosch IP-Kameras"
 
@@ -7033,7 +7019,6 @@ msgstr "AppDynamics Login-Benutzername"
 msgid "AppDynamics via REST API"
 msgstr "AppDynamics via REST-API"
 
-#, fuzzy
 msgid "Apparent Power"
 msgstr "Scheinleistung"
 
@@ -7082,14 +7067,12 @@ msgstr "Anwendung/Syslog Tag"
 msgid "Application / Syslog-Tag (regex)"
 msgstr "Anwendung/Syslog Tag (regex)"
 
-#, fuzzy
 msgid "Application and network load balancing (ELBv2)"
 msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
 
 msgid "Application gateway"
 msgstr "Anwendungs-Gateway"
 
-#, fuzzy
 msgid "Application key"
 msgstr "Applikationsschlüssel"
 
@@ -7114,11 +7097,9 @@ msgstr "Name der Anwendung"
 msgid "Application pending requests"
 msgstr "Application ausstehende Anfragen"
 
-#, fuzzy
 msgid "Application pool name"
 msgstr "Name des Anwendungspools"
 
-#, fuzzy
 msgid "Application type"
 msgstr "Applikationstyp"
 
@@ -7128,9 +7109,8 @@ msgstr "Anwendungen"
 msgid "Applications overview"
 msgstr "Anwendungsübersicht"
 
-#, fuzzy
 msgid "Applications, processes & services"
-msgstr "Anwendungen, Prozesse & Services"
+msgstr "Applikationen, Prozesse & Services"
 
 msgid "Apply"
 msgstr "Anwenden"
@@ -7172,19 +7152,17 @@ msgstr "Endzeit der Anwendung"
 msgid "Apply lag"
 msgstr "Verzögerung der Anwendung"
 
-#, fuzzy
 msgid "Apply lag: Maximum time"
-msgstr "Apply Lag: Maximale Zeit"
+msgstr "Verzögerung der Anwendung: maximale Zeit"
 
-#, fuzzy
 msgid "Apply lag: Minimum time"
-msgstr "Apply Lag: Minimale Zeit"
+msgstr "Verzögerung der Anwendung: minimale Zeit"
 
-#, fuzzy
 msgid "Apply lag: State in case the apply lag is not known"
-msgstr "Apply Lag: Zustand für den Fall, dass das Apply Lag unbekannt ist"
+msgstr ""
+"Verzögerung der Anwendung: Zustand für den Fall, dass die Verzögerung der "
+"Anwendung unbekannt ist"
 
-#, fuzzy
 msgid "Apply latency"
 msgstr "Latenz anwenden"
 
@@ -7525,7 +7503,6 @@ msgstr "Linkgeschwindigkeit manuell setzen"
 msgid "Assumed output speed"
 msgstr "Angenommene Sendegeschwindigkeit"
 
-#, fuzzy
 msgid "Assumed state"
 msgstr "Angenommener Zustand"
 
@@ -7700,7 +7677,6 @@ msgstr "Attribute"
 msgid "Attributes to remove from hosts"
 msgstr "Von Hosts zu entfernende Attribute"
 
-#, fuzzy
 msgid "AudioCodes SBC calls"
 msgstr "AudioCodes SBC Anrufe"
 
@@ -7749,7 +7725,6 @@ msgstr ""
 msgid "Authentication error"
 msgstr "Authentifizierungsfehler"
 
-#, fuzzy
 msgid "Authentication expiration"
 msgstr "Ablauf der Authentifizierung"
 
@@ -7836,9 +7811,8 @@ msgstr "Einstellungen zur Autorisierung"
 msgid "Authorizations per DB security group"
 msgstr "Autorisierungen pro DB-Sicherheitsgruppe"
 
-#, fuzzy
 msgid "Auto (default)"
-msgstr "Automatische Erkennung (Standard)"
+msgstr "Auto (Standard)"
 
 #, fuzzy
 msgid "Auto close off"
@@ -7859,11 +7833,9 @@ msgstr "Auto-Shrink an"
 msgid "Auto-detect (default)"
 msgstr "Automatische Erkennung (Standard)"
 
-#, fuzzy
 msgid "Auto-detect instances"
-msgstr "Automatisch erkannte Instanzen"
+msgstr "Instanzen automatisch erkennen"
 
-#, fuzzy
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
 msgstr "Instanzen automatisch erkennen, HTTPS auf folgenden Ports erwarten:"
 
@@ -7873,25 +7845,20 @@ msgstr "Automatische Erkennung von Proxy-Einstellungen für dieses Netzwerk"
 msgid "Auto-disconnect time"
 msgstr "Automatische Abschaltzeit"
 
-#, fuzzy
 msgid "Auto-discovery"
-msgstr "Auto-Erkennung"
+msgstr "Automatische Erkennung"
 
-#, fuzzy
 msgid "Auto-extensible"
 msgstr "Automatisch erweiterbar"
 
-#, fuzzy
 msgid "Auto-restart on crash"
 msgstr "Automatischer Neustart bei Absturz"
 
-#, fuzzy
 msgid "Auto-start"
-msgstr "Autostart"
+msgstr "Automatischer Start"
 
-#, fuzzy
 msgid "Auto-start services"
-msgstr "Autostart-Dienste"
+msgstr "Services automatisch starten"
 
 #, fuzzy
 msgid "Autoextend is expected to be OFF"
@@ -14938,7 +14905,7 @@ msgid ""
 "will then query this domain for it's closest domain controller to "
 "communicate with."
 msgstr ""
-"Konfigurieren Sie hier die DNS-Domäne ihres Active Directory. Checkmk "
+"Konfigurieren Sie hier die DNS-Domäne Ihres Active Directory. Checkmk "
 "versucht dann anhand dessen den nächsten erreichbaren Domain Controller zu "
 "finden."
 
@@ -27931,7 +27898,7 @@ msgid "Handle count (Windows only)"
 msgstr "Anzahl Handles (nur Windows)"
 
 msgid "Handle nested group memberships (Active Directory only at the moment)"
-msgstr "Verschachtelte Gruppen unterstützen (nur Active Directory)"
+msgstr "Verschachtelte Gruppen unterstützen (derzeit nur Active Directory)"
 
 msgid "Handle real-time checks"
 msgstr "Echtzeitchecks verarbeiten"
@@ -54404,7 +54371,7 @@ msgstr ""
 "API überwachen wollen."
 
 msgid "Return to classic view"
-msgstr "Zurück zur Standardansicht"
+msgstr "Zurück zur klassischen Ansicht"
 
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
@@ -71513,7 +71480,7 @@ msgid ""
 "the account the service is being started with to a domain user account with "
 "enough permissions on the DC."
 msgstr ""
-"Dieses Plugin überprüft die Replikation des Active Directories. Um diesen "
+"Dieses Plugin überprüft die Replikation des Active Directory. Um diesen "
 "Check durchführen zu können, benötigen Sie entsprechende Anmeldedaten in der "
 "Zieldomäne. Normalerweise läuft der Checkmk-Agent als Service mit lokalen "
 "Systemanmeldedaten, die für diesen Check nicht ausreichen. Um dieses Problem "
@@ -93298,7 +93265,7 @@ msgid "Clear"
 msgstr "Leeren"
 
 msgid "Any (>0)"
-msgstr ""
+msgstr "Beliebig (>0)"
 
 msgid "None (=0)"
 msgstr "Keine (=0)"

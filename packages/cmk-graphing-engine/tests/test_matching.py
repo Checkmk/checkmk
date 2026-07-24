@@ -272,6 +272,32 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     assert fallback == _fallback(extra)
 
 
+def test_build_matched_graphs_filters_to_the_requested_graph_id() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    extra = MetricName("extra")
+    plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
+    fetch_data = _FakeRRDFetchData(
+        performance_response={service: _perf_data(_perf(cpu_user), _perf(extra))}
+    )
+
+    def _matched(graph_id: str) -> Sequence[Graph]:
+        return build_matched_graphs(
+            localizer=_id,
+            fetch_metric_names=_FakeRRDFetchMetricNames(fetch_data.performance_response),
+            kind=_KIND,
+            registered_graphs=[plugin],
+            registered_metrics=_METRICS,
+            graph_id=graph_id,
+        )
+
+    assert [graph.name for graph in _matched("cpu")] == ["cpu"]
+    # The legacy "METRIC_<name>" id addresses the engine's single-metric fallback graph "<name>".
+    assert [graph.name for graph in _matched("extra")] == ["extra"]
+    assert [graph.name for graph in _matched("METRIC_extra")] == ["extra"]
+    assert list(_matched("does_not_exist")) == []
+
+
 def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")

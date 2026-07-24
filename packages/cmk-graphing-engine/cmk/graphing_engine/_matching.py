@@ -145,6 +145,12 @@ _FALLBACK_SCALAR_KINDS = (
 )
 
 
+def _matches_graph_id(graph: Graph, graph_id: str) -> bool:
+    # Legacy configs and autocompleters identify single-metric graphs as "METRIC_<name>", while the
+    # engine names the corresponding fallback graphs after the bare metric name.
+    return graph.name == graph_id or graph.name == graph_id.removeprefix("METRIC_")
+
+
 def build_matched_graphs(
     *,
     localizer: Callable[[str], str],
@@ -153,6 +159,7 @@ def build_matched_graphs(
     registered_graphs: Sequence[_GraphPlugin],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     quantity_builder: QuantityBuilder = _SINGLE_QUANTITY_BUILDER,
+    graph_id: str | None = None,
 ) -> Sequence[Graph]:
     names_by_service = fetch_metric_names()
     # The metric-name fetch returns the services tagged with their resolved site; build from those so
@@ -168,6 +175,10 @@ def build_matched_graphs(
     claimed: set[MetricName] = set()
 
     def _collect(base: Graph) -> None:
+        # Discard non-requested graphs the moment their name is known, before the predictive-line
+        # work, rather than building every graph and filtering afterwards.
+        if graph_id is not None and not _matches_graph_id(base, graph_id):
+            return
         # Rules and predictive lines are single-service concepts; a graph over multiple services
         # drops them.
         if single_service is None:

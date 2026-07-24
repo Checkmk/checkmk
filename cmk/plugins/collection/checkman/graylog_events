@@ -1,4 +1,4 @@
-title: Graylog: Sources
+title: Graylog: Events
 agents: graylog
 catalog: app/graylog
 license: GPLv2

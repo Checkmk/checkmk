@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from dataclasses import asdict
 from typing import override
 
 from cmk.ccc.hostaddress import HostName
@@ -18,15 +19,14 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.shared_typing.monitoring.host_services import MonitoringHostServicesApp
 
 
 class MonitorHostServicesPage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         hostname = ctx.request.get_validated_type_input_mandatory(HostName, "host")
-        # Read for parity with the endpoint's site scoping; not used yet since there is no
-        # frontend Vue app to hand it to.
-        SiteId(ctx.request.get_str_input_mandatory("site"))
+        site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
 
         breadcrumb = _make_breadcrumb(ctx, title)
@@ -48,8 +48,17 @@ class MonitorHostServicesPage(Page):
             user_role_ids=user.role_ids,
         )
 
-        # No Vue app exists yet to mount here; this is a placeholder mount point for it.
-        html.vue_component("cmk-monitoring-host-services", data={})
+        html.vue_component(
+            "cmk-monitoring-host-services",
+            data=asdict(
+                MonitoringHostServicesApp(
+                    poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
+                    may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+                    host=hostname,
+                    site=site_id,
+                )
+            ),
+        )
 
         html.footer()
 

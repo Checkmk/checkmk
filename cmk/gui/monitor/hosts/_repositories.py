@@ -25,7 +25,7 @@ class HostRepository(Protocol):
         sorters: Sequence[HostSort],
         filters: HostFilter,
     ) -> Sequence[Host]:
-        """Fetch hosts based on filter criteria. A ``limit`` of ``None`` fetches without a limit."""
+        """Fetch hosts based on filter criteria."""
         ...
 
     def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:

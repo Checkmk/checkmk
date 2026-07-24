@@ -7,9 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-import cmk.legacy_checks.qnap_hdd_temp as qnap_hdd_temp_plugin
+import cmk.plugins.qnap.agent_based.qnap_hdd_temp as qnap_hdd_temp_plugin
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.qnap_hdd_temp import (
+from cmk.plugins.qnap.agent_based.qnap_hdd_temp import (
     check_qqnap_hdd_temp,
     discover_qnap_hdd_temp,
     parse_qnap_hdd_temp,

@@ -8,16 +8,21 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
-from cmk.graphing_engine import Graph, HostName, ServiceName
+from cmk.ccc.hostaddress import HostName
+from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
+from cmk.gui.graphing._engine_template_graphs import matches_graph_id
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing.openapi import discover_template_graphs as discover_module
 from cmk.livestatus_client import MKLivestatusSocketError
 from tests.testlib.rest_api_client import ClientRegistry
 
 
 def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[Graph]]:
-    def _build(**_kwargs: object) -> Sequence[Graph]:
+    def _build(specification: TemplateGraphSpecification, **_kwargs: object) -> Sequence[Graph]:
+        if specification.graph_id is not None:
+            return [graph for graph in graphs if matches_graph_id(graph, specification.graph_id)]
         return graphs
 
     return _build
@@ -46,24 +51,26 @@ def test_discover_template_graphs_emits_fetchable_graphs(
     assert fetch_resp.json["metrics"] == []
 
 
-def test_discover_template_graphs_passes_the_service_to_the_fetch(
+def test_discover_template_graphs_passes_the_specification_to_the_fetch(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     captured: dict[str, object] = {}
 
-    def _build(**kwargs: object) -> Sequence[Graph]:
+    def _build(specification: TemplateGraphSpecification, **kwargs: object) -> Sequence[Graph]:
+        captured["specification"] = specification
         captured.update(kwargs)
         return [Graph(name="g", title="t", kind="template")]
 
     monkeypatch.setattr(discover_module, "build_template_graphs", _build)
 
     clients.Graph.discover_template_graphs(hostname="my-host", service_description="CPU load")
-    # The service is carried by the fetcher, not passed to the build.
-    assert "service" not in captured
-    fetch_metric_names = captured["fetch_metric_names"]
-    assert isinstance(fetch_metric_names, EngineRRDFetchMetricNames)
-    assert fetch_metric_names.host_name == HostName("my-host")
-    assert fetch_metric_names.service_name == ServiceName("CPU load")
+    assert captured["specification"] == TemplateGraphSpecification(
+        site=None,
+        host_name=HostName("my-host"),
+        service_description="CPU load",
+        graph_id=None,
+    )
+    assert isinstance(captured["fetch_metric_names"], EngineRRDFetchMetricNames)
 
 
 def test_discover_template_graphs_filters_by_graph_id(
@@ -119,7 +126,7 @@ def test_discover_template_graphs_no_graphs_is_empty_state(
 def test_discover_template_graphs_missing_data_is_empty_state(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def _raise(**_kwargs: object) -> Sequence[Graph]:
+    def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
         raise MKMissingDataError("As soon as you add your Checkmk server ...")
 
     monkeypatch.setattr(discover_module, "build_template_graphs", _raise)
@@ -133,7 +140,7 @@ def test_discover_template_graphs_missing_data_is_empty_state(
 def test_discover_template_graphs_livestatus_failure_is_503(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def _raise(**_kwargs: object) -> Sequence[Graph]:
+    def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
         raise MKLivestatusSocketError("connection refused")
 
     monkeypatch.setattr(discover_module, "build_template_graphs", _raise)

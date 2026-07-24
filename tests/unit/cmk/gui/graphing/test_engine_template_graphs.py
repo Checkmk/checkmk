@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
@@ -33,8 +34,10 @@ from cmk.gui.graphing._engine_template_graphs import (
     build_template_graphs,
     evaluate_template_graphs,
 )
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 
 _SERVICE = Service(host_name=HostName("h"), service_name=ServiceName("svc"))
+_SPEC = TemplateGraphSpecification(site=None, host_name=HostAddress("h"), service_description="svc")
 _METRIC = "x"
 _DISCOVERY_RANGE = TimeRange(start=0, end=60, step=10)
 
@@ -84,6 +87,7 @@ def test_template_lifecycle_discover_and_update() -> None:
     # rules the engine builds itself.
     fetch_data = _FakeRRDFetchData()
     graphs = build_template_graphs(
+        _SPEC,
         registered_graphs=[],
         registered_metrics={},
         fetch_metric_names=_FakeRRDFetchMetricNames(),
@@ -116,10 +120,34 @@ def test_template_lifecycle_discover_and_update() -> None:
     assert fetch_data.requested_ranges
     assert all(time_range == _DISCOVERY_RANGE for time_range in fetch_data.requested_ranges)
 
+
+def test_template_graphs_filter_by_graph_id() -> None:
+    def _build(graph_id: str | None) -> Sequence[str]:
+        return [
+            graph.name
+            for graph in build_template_graphs(
+                TemplateGraphSpecification(
+                    site=None,
+                    host_name=HostAddress("h"),
+                    service_description="svc",
+                    graph_id=graph_id,
+                ),
+                registered_graphs=[],
+                registered_metrics={},
+                fetch_metric_names=_FakeRRDFetchMetricNames(),
+            )
+        ]
+
+    assert _build(_METRIC) == [_METRIC]
+    assert _build("does_not_exist") == []
+
+
+def test_template_lifecycle_rejects_mixed_units() -> None:
     # A template graph has a single value axis, so a plugin drawing curves of different units cannot
     # share it — discovery rejects it (legacy parity).
     with pytest.raises(MKGeneralException, match="different units"):
         build_template_graphs(
+            _SPEC,
             registered_graphs=[
                 graphs_v1.Graph(
                     name="mixed",

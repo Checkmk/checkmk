@@ -23,7 +23,8 @@ from cmk.livestatus_client import MKLivestatusException
 
 from .._engine_plugins import registered_graphs, registered_metrics, registered_translations
 from .._engine_rrd import EngineRRDFetchMetricNames
-from .._engine_template_graphs import build_template_graphs, matches_graph_id
+from .._engine_template_graphs import build_template_graphs
+from .._graph_templates import TemplateGraphSpecification
 from ._family import GRAPH_FAMILY
 from .models import ApiDiscoveredGraph, GraphsDiscoverResponse
 
@@ -48,6 +49,12 @@ def discover_template_graphs_v1(
     """Discover the data-less template graph definitions of a service"""
     try:
         graphs = build_template_graphs(
+            TemplateGraphSpecification(
+                site=None,
+                host_name=body.hostname,
+                service_description=body.service_description,
+                graph_id=body.graph_id,
+            ),
             registered_graphs=registered_graphs(),
             registered_metrics=registered_metrics(),
             fetch_metric_names=EngineRRDFetchMetricNames(
@@ -72,8 +79,6 @@ def discover_template_graphs_v1(
             detail=f"Failed to discover graphs: {exc}",
         ) from exc
 
-    if body.graph_id is not None:
-        graphs = [graph for graph in graphs if matches_graph_id(graph, body.graph_id)]
     if not graphs:
         return GraphsDiscoverResponse(
             graphs=[],

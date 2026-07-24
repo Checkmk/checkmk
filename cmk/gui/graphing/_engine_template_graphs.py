@@ -19,6 +19,7 @@ from cmk.graphing_engine import (
     RRDFetchMetricNames,
 )
 from cmk.gui.config import active_config
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
 
 from ._engine_dispatch import (
@@ -56,6 +57,7 @@ def matches_graph_id(graph: Graph, graph_id: str) -> bool:
 
 
 def build_template_graphs(
+    specification: TemplateGraphSpecification,
     *,
     registered_graphs: Sequence[GraphFromAPI],
     registered_metrics: Mapping[str, metrics_v1.Metric],
@@ -70,6 +72,8 @@ def build_template_graphs(
     )
     for graph in graphs:
         _assert_uniform_unit(graph)
+    if specification.graph_id is not None:
+        graphs = [graph for graph in graphs if matches_graph_id(graph, specification.graph_id)]
     return graphs
 
 

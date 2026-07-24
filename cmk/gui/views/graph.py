@@ -307,6 +307,7 @@ def _paint_time_graph_cmk(
     vue_html: HTML | str = ""
     if request.has_var("vue-graphing-enabled"):
         engine_graphs = build_template_graphs(
+            graph_specification,
             registered_graphs=engine_plugins.registered_graphs(),
             registered_metrics=engine_plugins.registered_metrics(),
             fetch_metric_names=EngineRRDFetchMetricNames(

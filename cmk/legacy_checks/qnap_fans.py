@@ -3,38 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 import contextlib
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.legacy_includes.fan import check_fan
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.fan import check_fan
 from cmk.plugins.qnap.lib import DETECT_QNAP
 
-check_info = {}
 
-
-def parse_qnap_fans(string_table):
-    parsed = {}
+def parse_qnap_fans(string_table: StringTable) -> Mapping[str, int]:
+    parsed: dict[str, int] = {}
     for fan, value in string_table:
         with contextlib.suppress(ValueError):
             parsed[fan] = int(value.replace("RPM", ""))
     return parsed
 
 
-def check_qnap_fans(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_qnap_fans(
+    item: str, params: Mapping[str, Any], section: Mapping[str, int]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    yield check_fan(data, params)
+    yield from check_fan(data, params)
 
 
-def discover_qnap_fans(section):
-    yield from ((item, {}) for item in section)
+def discover_qnap_fans(section: Mapping[str, int]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["qnap_fans"] = LegacyCheckDefinition(
+snmp_section_qnap_fans = SimpleSNMPSection(
     name="qnap_fans",
     detect=DETECT_QNAP,
     fetch=SNMPTree(
@@ -42,6 +49,11 @@ check_info["qnap_fans"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3"],
     ),
     parse_function=parse_qnap_fans,
+)
+
+
+check_plugin_qnap_fans = CheckPlugin(
+    name="qnap_fans",
     service_name="QNAP FAN %s",
     discovery_function=discover_qnap_fans,
     check_function=check_qnap_fans,

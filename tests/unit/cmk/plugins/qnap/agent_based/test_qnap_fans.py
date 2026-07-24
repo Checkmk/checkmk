@@ -8,7 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.qnap_fans import check_qnap_fans, discover_qnap_fans, parse_qnap_fans
+from cmk.plugins.qnap.agent_based.qnap_fans import (
+    check_qnap_fans,
+    discover_qnap_fans,
+    parse_qnap_fans,
+)
 
 
 @pytest.mark.parametrize(

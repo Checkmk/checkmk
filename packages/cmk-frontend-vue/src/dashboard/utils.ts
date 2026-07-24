@@ -28,6 +28,7 @@ import type {
 import { DashboardLayout, DashboardOwnerType } from '@/dashboard/types/dashboard.ts'
 import type { ContextFilter, ContextFilters, FilterOrigin } from '@/dashboard/types/filter.ts'
 import type {
+  ComputedNetworkFlowAutonomousSystemResponse,
   ComputedNetworkFlowDonutResponse,
   ComputedNetworkFlowHostResponse,
   ComputedNetworkFlowKpiStatCardResponse,
@@ -325,6 +326,19 @@ export const dashboardAPI = {
         {
           ...CONTENT_TYPE_HEADER,
           body: { ip }
+        }
+      )
+    )
+  },
+  computeNetworkFlowAutonomousSystemContext: async (
+    asn: number
+  ): Promise<ComputedNetworkFlowAutonomousSystemResponse> => {
+    return unwrap(
+      await client.POST(
+        '/domain-types/dashboard/actions/compute-network-flow-autonomous-system-context/invoke',
+        {
+          ...CONTENT_TYPE_HEADER,
+          body: { asn }
         }
       )
     )

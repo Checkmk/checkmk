@@ -68,6 +68,10 @@ export type ComputedNetworkFlowTrendChartResponse =
 export type ComputedNetworkFlowHostResponse =
   components['schemas']['ComputedNetworkFlowHostResponse']
 export type ComputedNetworkFlowHost = components['schemas']['ComputedNetworkFlowHost']
+export type ComputedNetworkFlowAutonomousSystemResponse =
+  components['schemas']['ComputedNetworkFlowAutonomousSystemResponse']
+export type ComputedNetworkFlowAutonomousSystem =
+  components['schemas']['ComputedNetworkFlowAutonomousSystem']
 export type ComputedNetworkFlowHostApplication =
   components['schemas']['ComputedNetworkFlowHostApplication']
 export type ComputedNetworkFlowHostPeer = components['schemas']['ComputedNetworkFlowHostPeer']

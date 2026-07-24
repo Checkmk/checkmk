@@ -11,9 +11,10 @@ import csv
 import json
 import os
 import shutil
+import tarfile
 import uuid
-from collections.abc import Callable, Sequence
-from pathlib import Path
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 from unittest.mock import mock_open, patch
 
@@ -26,6 +27,18 @@ from cmk.base import diagnostics
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
 from cmk.crash import make_crash_report_base_path
+from cmk.diagnostics.internal import (
+    CollectContext,
+    CollectError,
+    CollectInfo,
+    CollectWarning,
+    DiagnosticsPlugin,
+    DumpItem,
+    GeneratedContent,
+    Help,
+    Sensitivity,
+    VerbatimCopy,
+)
 from cmk.inventory.structured_data import (
     deserialize_tree,
     InventoryStore,
@@ -35,13 +48,57 @@ from cmk.inventory.structured_data import (
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 
 
-def _diagnostics_elements() -> Sequence[diagnostics.ABCDiagnosticsElement]:
-    return diagnostics.diagnostics_elements_for(
+def _make_context(tmp_path: Path, logger: diagnostics.ConsoleLogger) -> CollectContext:
+    return CollectContext(
+        omd_root=tmp_path,
+        omd_config={},
+        all_parameters={},
+        core_performance_settings={},
+        resolve_checkmk_server_host=lambda: "checkmk_server",
+        site_internal_auth_header=lambda: "InternalToken deadbeef",
+        log=logger,
+    )
+
+
+def _make_plugin(
+    name: str,
+    handler: Callable[[CollectContext], Iterable[DumpItem]],
+) -> DiagnosticsPlugin:
+    return DiagnosticsPlugin(
+        name=name,
+        description=Help("A test plugin"),
+        sensitivity=Sensitivity.LOW,
+        topic=diagnostics._TOPIC_GENERAL,
+        handler=handler,
+    )
+
+
+def _make_dump(
+    tmp_path: Path, plugins: Sequence[DiagnosticsPlugin]
+) -> tuple[diagnostics.DiagnosticsDump, diagnostics.ConsoleLogger]:
+    logger = diagnostics.ConsoleLogger()
+    dump = diagnostics.DiagnosticsDump(
+        plugins=plugins,
+        context=_make_context(tmp_path, logger),
+        logger=logger,
+        diagnostics_dir=tmp_path / "var/check_mk/diagnostics",
+        omd_root=tmp_path,
+    )
+    return dump, logger
+
+
+def _tar_names(dump: diagnostics.DiagnosticsDump) -> Sequence[str]:
+    with tarfile.open(dump.tarfile_path) as tar:
+        return tar.getnames()
+
+
+def _adapter_catalogue(tmp_path: Path) -> Mapping[str, DiagnosticsPlugin]:
+    return diagnostics._adapter_plugin_catalogue(
         edition=Edition.COMMUNITY,
         loaded_config=EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
         omd_config={},
-        parameters={},
+        tmp_parent=tmp_path,
     )
 
 
@@ -73,54 +130,142 @@ def _fake_local_connection(host_list: Sequence[Sequence[str]]) -> Callable:
 #   '----------------------------------------------------------------------'
 
 
-def test_diagnostics_dump_elements() -> None:
-    fixed_element_classes = {
-        diagnostics.GeneralDiagnosticsElement,
-    }
-    element_classes = {type(e) for e in _diagnostics_elements()}
-    assert fixed_element_classes.issubset(element_classes)
+def test_adapter_catalogue_names(tmp_path: Path) -> None:
+    catalogue = _adapter_catalogue(tmp_path)
+    assert {
+        "parameters",
+        "general_info",
+        "omd_config",
+        "checkmk_overview",
+        "hw_info",
+        "mkp_inventory",
+        "latest_crash_reports",
+    }.issubset(catalogue)
+    # presence based: CEE plugins are not available on community
+    assert "performance_graphs" not in catalogue
+    assert "dcd_state" not in catalogue
+    assert catalogue["general_info"].always
+    assert not catalogue["mkp_inventory"].always
 
 
-@pytest.mark.usefixtures("mock_livestatus")
 def test_diagnostics_dump_create(tmp_path: Path) -> None:
-    elements = _diagnostics_elements()
-    diagnostics_dump = diagnostics.DiagnosticsDump(
-        elements=elements,
-        diagnostics_dir=tmp_path / "var/check_mk/diagnostics",
-        omd_root=tmp_path,
+    catalogue = _adapter_catalogue(tmp_path)
+    dump, _logger = _make_dump(tmp_path, [catalogue["environment_variables"]])
+
+    assert dump.dump_folder.exists()
+    assert dump.dump_folder.name == "diagnostics"
+    assert dump.tarfile_created
+
+    tarfiles = list(dump.dump_folder.iterdir())
+    assert len(tarfiles) == 1
+    assert all(t.suffix == ".gz" for t in tarfiles)
+    assert "environment.json" in _tar_names(dump)
+
+
+def test_dump_packs_generated_and_verbatim_content(tmp_path: Path) -> None:
+    source = tmp_path / "source.txt"
+    source.write_text("verbatim content")
+
+    def handler(_context: CollectContext) -> Iterable[DumpItem]:
+        yield DumpItem(PurePosixPath("generated/a.json"), GeneratedContent(b'{"key": "value"}'))
+        yield DumpItem(PurePosixPath("copied/source.txt"), VerbatimCopy(source))
+
+    dump, _logger = _make_dump(tmp_path, [_make_plugin("test_plugin", handler)])
+
+    with tarfile.open(dump.tarfile_path) as tar:
+        names = tar.getnames()
+        assert "generated/a.json" in names
+        assert "copied/source.txt" in names
+        generated = tar.extractfile("generated/a.json")
+        assert generated is not None and generated.read() == b'{"key": "value"}'
+        copied = tar.extractfile("copied/source.txt")
+        assert copied is not None and copied.read() == b"verbatim content"
+
+
+def test_dump_arcname_collision_first_wins(tmp_path: Path) -> None:
+    def handler_one(_context: CollectContext) -> Iterable[DumpItem]:
+        yield DumpItem(PurePosixPath("shared.txt"), GeneratedContent(b"one"))
+
+    def handler_two(_context: CollectContext) -> Iterable[DumpItem]:
+        yield DumpItem(PurePosixPath("shared.txt"), GeneratedContent(b"two"))
+
+    dump, logger = _make_dump(
+        tmp_path,
+        [_make_plugin("one", handler_one), _make_plugin("two", handler_two)],
     )
-    diagnostics_dump._create_dump_folder()
 
-    assert isinstance(diagnostics_dump.dump_folder, Path)
+    with tarfile.open(dump.tarfile_path) as tar:
+        shared = tar.extractfile("shared.txt")
+        assert shared is not None and shared.read() == b"one"
+    assert "already collected by 'one'" in logger.content()
 
-    assert diagnostics_dump.dump_folder.exists()
-    assert diagnostics_dump.dump_folder.name == "diagnostics"
 
-    diagnostics_dump._create_tarfile(elements, tmp_path)
+def test_dump_rejects_invalid_arcnames(tmp_path: Path) -> None:
+    def handler(_context: CollectContext) -> Iterable[DumpItem]:
+        yield DumpItem(PurePosixPath("/absolute.txt"), GeneratedContent(b"nope"))
+        yield DumpItem(PurePosixPath("../escape.txt"), GeneratedContent(b"nope"))
 
-    tarfiles = diagnostics_dump.dump_folder.iterdir()
-    assert len(list(tarfiles)) == 1
-    assert all(tarfile.suffix == ".tar.gz" for tarfile in tarfiles)
+    dump, logger = _make_dump(tmp_path, [_make_plugin("test_plugin", handler)])
+
+    assert not dump.tarfile_created
+    assert not dump.tarfile_path.exists()
+    assert "invalid file path" in logger.content()
+
+
+@pytest.mark.parametrize(
+    ["exception", "marker"],
+    [
+        (CollectInfo("nothing to do"), "INFO"),
+        (CollectWarning("something odd"), "WARNING"),
+        (CollectError("it broke"), "ERROR"),
+        (RuntimeError("unexpected"), "RuntimeError"),
+    ],
+)
+def test_dump_logs_collect_exceptions(tmp_path: Path, exception: Exception, marker: str) -> None:
+    def handler(_context: CollectContext) -> Iterable[DumpItem]:
+        yield DumpItem(PurePosixPath("before.txt"), GeneratedContent(b"kept"))
+        raise exception
+
+    dump, logger = _make_dump(tmp_path, [_make_plugin("test_plugin", handler)])
+
+    # files yielded before the exception stay in the dump
+    assert "before.txt" in _tar_names(dump)
+    assert str(exception) in logger.content() or marker in logger.content()
+
+
+def test_legacy_selection() -> None:
+    selected, host = diagnostics._legacy_selection(
+        {
+            "local-files": True,
+            "checkmk-crashes": True,
+            "checkmk-overview": "my_server",
+        }
+    )
+    assert selected == {
+        # implicitly selected: unconditional in the old engine
+        "core_performance_metrics",
+        "environment_variables",
+        "network_state",
+        "processes_and_logins",
+        # explicitly selected
+        "mkp_inventory",
+        "latest_crash_reports",
+        "checkmk_overview",
+    }
+    assert host == "my_server"
 
 
 def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
-    elements = _diagnostics_elements()
-    diagnostics_dump = diagnostics.DiagnosticsDump(
-        elements=elements,
-        diagnostics_dir=tmp_path / "var/check_mk/diagnostics",
-        omd_root=tmp_path,
-    )
-    diagnostics_dump._create_dump_folder()
-
+    dump, _logger = _make_dump(tmp_path, [])
     # Fake existing tarfiles
     for nr in range(10):
-        diagnostics_dump.dump_folder.joinpath("dummy-%s.tar.gz" % nr).touch()
+        dump.dump_folder.joinpath("dummy-%s.tar.gz" % nr).touch()
 
-    diagnostics_dump._cleanup_dump_folder(tmp_path)
+    dump._cleanup_dump_folder(tmp_path)
 
-    tarfiles = diagnostics_dump.dump_folder.iterdir()
-    assert len(list(tarfiles)) == diagnostics_dump._keep_num_dumps
-    assert all(tarfile.suffix == ".tar.gz" for tarfile in tarfiles)
+    tarfiles = list(dump.dump_folder.iterdir())
+    assert len(tarfiles) == dump._keep_num_dumps
+    assert all(t.suffixes[-1] == ".gz" for t in tarfiles)
 
 
 # .

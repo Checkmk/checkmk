@@ -247,6 +247,7 @@ py_library(
         "//packages/cmk-crash:crash",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:diagnostics",
         "//packages/cmk-profiling:backend",
         requirement("requests"),
     ],

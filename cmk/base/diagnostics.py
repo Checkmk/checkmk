@@ -20,11 +20,11 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from functools import cache
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Final, override
 
 import requests
@@ -74,6 +74,19 @@ from cmk.diagnostics.engine import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     redact_passwords_in_file,
+)
+from cmk.diagnostics.internal import (
+    CollectContext,
+    CollectError,
+    CollectInfo,
+    CollectWarning,
+    DiagnosticsPlugin,
+    DumpItem,
+    GeneratedContent,
+    Help,
+    Sensitivity,
+    Topic,
+    VerbatimCopy,
 )
 from cmk.inventory.structured_data import (
     InventoryStore,
@@ -363,24 +376,82 @@ def create_diagnostics_dump(
     parameters: DiagnosticsOptionalParameters,
     loading_result: LoadingResult | None,
 ) -> DiagnosticsDump:
-    log.logger.setLevel(logging.INFO)
-    return DiagnosticsDump(
-        elements=diagnostics_elements_for(
-            edition=app.edition,
-            loaded_config=(
-                load_config(
-                    edition=app.edition,
-                )
-                if loading_result is None
-                else loading_result
-            ).loaded_config,
-            core_performance_settings=app.core_performance_settings,
-            omd_config=get_omd_config(omd_root),
-            parameters=parameters,
+    """Create a dump from legacy parameters (old automation wire and current CLI)"""
+    selected_names, checkmk_server_host = _legacy_selection(parameters or {})
+    return _create_dump(
+        app=app,
+        omd_root=omd_root,
+        diagnostics_dir=diagnostics_dir,
+        selected_names=selected_names,
+        checkmk_server_host=checkmk_server_host,
+        all_parameters=parameters or {},
+        extra_plugins=_legacy_file_plugins(
+            parameters or {}, edition=app.edition, tmp_parent=diagnostics_dir
         ),
+        loading_result=loading_result,
+    )
+
+
+def _create_dump(
+    *,
+    app: CheckmkBaseApp,
+    omd_root: Path,
+    diagnostics_dir: Path,
+    selected_names: set[str],
+    checkmk_server_host: str,
+    all_parameters: Mapping[str, object],
+    extra_plugins: Sequence[DiagnosticsPlugin],
+    loading_result: LoadingResult | None,
+) -> DiagnosticsDump:
+    log.logger.setLevel(logging.INFO)
+    loaded_config = (
+        load_config(edition=app.edition) if loading_result is None else loading_result
+    ).loaded_config
+    omd_config = get_omd_config(omd_root)
+    logger = ConsoleLogger()
+
+    catalogue = _adapter_plugin_catalogue(
+        edition=app.edition,
+        loaded_config=loaded_config,
+        core_performance_settings=app.core_performance_settings,
+        omd_config=omd_config,
+        tmp_parent=diagnostics_dir,
+    )
+    for unknown in sorted(selected_names - set(catalogue)):
+        message = f"Plugin '{unknown}' is not available on this site"
+        logger.info(message)
+
+    context = CollectContext(
+        omd_root=omd_root,
+        omd_config=omd_config,
+        all_parameters=all_parameters,
+        core_performance_settings=app.core_performance_settings(loaded_config),
+        resolve_checkmk_server_host=_make_host_resolver(checkmk_server_host),
+        site_internal_auth_header=lambda: (
+            "InternalToken %s" % (SiteInternalSecret().secret.b64_str)
+        ),
+        log=logger,
+    )
+    return DiagnosticsDump(
+        plugins=[
+            *(p for p in catalogue.values() if p.always or p.name in selected_names),
+            *extra_plugins,
+        ],
+        context=context,
+        logger=logger,
         diagnostics_dir=diagnostics_dir,
         omd_root=omd_root,
     )
+
+
+def _make_host_resolver(checkmk_server_host: str) -> Callable[[], str]:
+    def resolve() -> str:
+        try:
+            return str(verify_checkmk_server_host(checkmk_server_host or None))
+        except DiagnosticsElementWarning as e:
+            raise CollectWarning(str(e)) from e
+
+    return resolve
 
 
 #   .--format helper-------------------------------------------------------.
@@ -454,89 +525,482 @@ class ConsoleLogger:
 #   '----------------------------------------------------------------------'
 
 
-def diagnostics_elements_for(
+# Transitional topic declarations: they describe the target taxonomy and move
+# into the diagnostics plugin family together with the plugins. The
+# adapter catalogue below shrinks with every element converted to a
+# discoverable plugin.
+
+_TOPIC_GENERAL = Topic("General site information")
+_TOPIC_OPERATING_SYSTEM = Topic("Operating system & hardware")
+_TOPIC_PERFORMANCE = Topic("Performance & sizing")
+_TOPIC_EXTENSIONS = Topic("Local files & extensions")
+_TOPIC_CRASH_REPORTS = Topic("Crash reports")
+_TOPIC_CONFIGURATION = Topic("Configuration files")
+_TOPIC_LOGS = Topic("Log files")
+_TOPIC_MONITORING_CORE = Topic("Monitoring core & daemons")
+_TOPIC_LICENSING = Topic("Licensing")
+_TOPIC_BUSINESS_INTELLIGENCE = Topic("Business Intelligence")
+
+
+def _adapt(
+    elements_factory: Callable[[CollectContext], Sequence[ABCDiagnosticsElement]],
+    *,
+    tmp_parent: Path,
+) -> Callable[[CollectContext], Iterable[DumpItem]]:
+    """Wrap legacy element classes as a plugin handler (transitional)
+
+    Runs the elements into a temporary folder and yields the produced files
+    as verbatim copies, reproducing the tar layout of the old engine. The
+    temporary folder lives until the engine has consumed the generator.
+    """
+
+    def handle(context: CollectContext) -> Iterable[DumpItem]:
+        with tempfile.TemporaryDirectory(dir=str(tmp_parent)) as tmp:
+            tmp_dump_folder = Path(tmp)
+            try:
+                for element in elements_factory(context):
+                    for filepath in element.add_or_get_files(
+                        omd_root=context.omd_root, tmp_dump_folder=tmp_dump_folder
+                    ):
+                        yield DumpItem(
+                            PurePosixPath(filepath.relative_to(tmp_dump_folder)),
+                            VerbatimCopy(filepath),
+                        )
+            except DiagnosticsElementInfo as e:
+                raise CollectInfo(str(e)) from e
+            except DiagnosticsElementWarning as e:
+                raise CollectWarning(str(e)) from e
+            except DiagnosticsElementError as e:
+                raise CollectError(str(e)) from e
+
+    return handle
+
+
+def _command_element(command_id: str) -> CheckmkCommandDiagnosticsElementTextDump:
+    ident, suffix, command = next(c for c in COMPONENT_COMMANDS if c[0] == command_id)
+    return CheckmkCommandDiagnosticsElementTextDump(ident, suffix, command)
+
+
+def _adapter_plugin_catalogue(
     *,
     edition: cmk_version.Edition,
     loaded_config: BaseConfig,
     core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
     omd_config: site.OMDConfig,
-    parameters: DiagnosticsOptionalParameters,
-) -> list[ABCDiagnosticsElement]:
-    elements: list[ABCDiagnosticsElement] = [
-        ParametersDiagnosticsElement(parameters),
-        GeneralDiagnosticsElement(),
-        PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
-        HWDiagnosticsElement(),
-        VendorDiagnosticsElement(),
-        EnvironmentDiagnosticsElement(),
-        FilesSizeCSVDiagnosticsElement(),
-        PipFreezeDiagnosticsElement(),
-        SELinuxJSONDiagnosticsElement(),
-        DpkgCSVDiagnosticsElement(),
-        RpmCSVDiagnosticsElement(),
-        CMAJSONDiagnosticsElement(),
+    tmp_parent: Path,
+) -> Mapping[str, DiagnosticsPlugin]:
+    """All available plugins, keyed by name (transitional adapter catalogue)"""
+    plugins = [
+        DiagnosticsPlugin(
+            name="parameters",
+            description=Help("The parameters this diagnostics dump was created with"),
+            sensitivity=Sensitivity.LOW,
+            topic=_TOPIC_GENERAL,
+            always=True,
+            handler=_adapt(
+                lambda ctx: [ParametersDiagnosticsElement(dict(ctx.all_parameters))],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="general_info",
+            description=Help(
+                "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
+            ),
+            sensitivity=Sensitivity.LOW,
+            topic=_TOPIC_GENERAL,
+            always=True,
+            handler=_adapt(lambda _ctx: [GeneralDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="omd_config",
+            description=Help(
+                "The OMD site configuration ('omd config show') and the files below etc/omd"
+            ),
+            sensitivity=Sensitivity.LOW,
+            topic=_TOPIC_GENERAL,
+            handler=_adapt(
+                lambda _ctx: [
+                    OMDConfigDiagnosticsElement(omd_config),
+                    CheckmkDirectoryDiagnosticsElement("etc/omd", rel=True),
+                ],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="checkmk_overview",
+            topic=_TOPIC_GENERAL,
+            description=Help(
+                "HW/SW Inventory node 'Software > Applications > Checkmk' of the Checkmk server"
+            ),
+            sensitivity=Sensitivity.LOW,
+            handler=_adapt(
+                lambda ctx: [CheckmkOverviewDiagnosticsElement(ctx.resolve_checkmk_server_host())],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="hw_info",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("Hardware information like memory, CPU load and CPU model"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [HWDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="vendor_info",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("Vendor information from the DMI table of the Checkmk server"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [VendorDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="appliance_info",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("Checkmk appliance hardware and version information"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [CMAJSONDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="selinux",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("The SELinux status of the operating system ('sestatus')"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [SELinuxJSONDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="os_packages",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("The operating system packages installed on the Checkmk server"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(
+                lambda _ctx: [DpkgCSVDiagnosticsElement(), RpmCSVDiagnosticsElement()],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="python_packages",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("The Python packages installed in the site ('pip freeze')"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [PipFreezeDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="disk_usage",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("File system usage of the Checkmk server ('df')"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(
+                lambda _ctx: [_command_element("df"), _command_element("df-i")],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="file_sizes",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("Size, owner and permissions of the files below the site directory"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [FilesSizeCSVDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="network_state",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help(
+                "Network interfaces, addresses and sockets of the Checkmk server ('ip a', 'ss')"
+            ),
+            sensitivity=Sensitivity.MEDIUM,
+            handler=_adapt(
+                lambda _ctx: [_command_element("ip-a"), _command_element("ss-tulpen")],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="processes_and_logins",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help(
+                "Running processes and logged in users of the Checkmk server ('top', 'w')"
+            ),
+            sensitivity=Sensitivity.MEDIUM,
+            handler=_adapt(
+                lambda _ctx: [_command_element("w"), _command_element("top")],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="environment_variables",
+            topic=_TOPIC_OPERATING_SYSTEM,
+            description=Help("The environment variables of the site user"),
+            sensitivity=Sensitivity.MEDIUM,
+            handler=_adapt(lambda _ctx: [EnvironmentDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="core_performance_metrics",
+            topic=_TOPIC_PERFORMANCE,
+            description=Help("Metrics related to sizing, e.g. number of helpers, hosts, services"),
+            sensitivity=Sensitivity.LOW,
+            handler=_adapt(
+                lambda _ctx: [PerfDataDiagnosticsElement(loaded_config, core_performance_settings)],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="metric_backend_state",
+            topic=_TOPIC_PERFORMANCE,
+            description=Help("Schema, revision and footprint of the metric backend database"),
+            sensitivity=Sensitivity.LOW,
+            handler=_adapt(
+                lambda _ctx: [
+                    CheckmkCommandDiagnosticsElementTextDump(ident, suffix, command)
+                    for ident, suffix, command in METRIC_BACKEND_COMMANDS
+                ],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="mkp_inventory",
+            topic=_TOPIC_EXTENSIONS,
+            description=Help(
+                "Information about installed MKPs and unpackaged files below the site's"
+                " local hierarchy"
+            ),
+            sensitivity=Sensitivity.LOW,
+            handler=_adapt(
+                lambda _ctx: [
+                    MKPFindTextDiagnosticsElement(),
+                    MKPShowTextDiagnosticsElement(),
+                    MKPListTextDiagnosticsElement(),
+                ],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="latest_crash_reports",
+            topic=_TOPIC_CRASH_REPORTS,
+            description=Help(
+                "The latest crash dumps of each type as found in var/check_mk/crashes"
+            ),
+            sensitivity=Sensitivity.MEDIUM,
+            handler=_adapt(lambda _ctx: [CrashDumpsDiagnosticsElement()], tmp_parent=tmp_parent),
+        ),
+        DiagnosticsPlugin(
+            name="apache_config",
+            topic=_TOPIC_CONFIGURATION,
+            description=Help("The Apache configuration of the operating system and the site"),
+            sensitivity=Sensitivity.MEDIUM,
+            handler=_adapt(
+                lambda _ctx: [
+                    *(
+                        CheckmkDirectoryDiagnosticsElement(directory, rel=False)
+                        for directory in COMPONENT_DIRECTORIES[OPT_APACHE_CONFIG]["abs_dirs"]
+                    ),
+                    *(
+                        CheckmkDirectoryDiagnosticsElement(directory, rel=True)
+                        for directory in COMPONENT_DIRECTORIES[OPT_APACHE_CONFIG]["rel_dirs"]
+                    ),
+                ],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="bi_runtime_data",
+            topic=_TOPIC_BUSINESS_INTELLIGENCE,
+            description=Help("Cached data of Business Intelligence aggregations"),
+            sensitivity=Sensitivity.MEDIUM,
+            handler=_adapt(
+                lambda _ctx: [
+                    CheckmkDirectoryDiagnosticsElement("tmp/check_mk/bi_cache", rel=True)
+                ],
+                tmp_parent=tmp_parent,
+            ),
+        ),
+        DiagnosticsPlugin(
+            name="otel_license_counts",
+            topic=_TOPIC_LICENSING,
+            description=Help("The latest licensed active time series count of the metric backend"),
+            sensitivity=Sensitivity.LOW,
+            always=True,
+            handler=_adapt(lambda _ctx: [_command_element("otel-licenses")], tmp_parent=tmp_parent),
+        ),
     ]
 
     if edition is not cmk_version.Edition.COMMUNITY:
-        elements.append(DCDDiagnosticsElement())
+        plugins.extend(
+            [
+                DiagnosticsPlugin(
+                    name="dcd_state",
+                    topic=_TOPIC_MONITORING_CORE,
+                    description=Help(
+                        "Returns the current state of DCD cycles and batches. "
+                        "Executes the commands cmk-dcd -Bv and cmk-dcd -Cv."
+                    ),
+                    sensitivity=Sensitivity.LOW,
+                    always=True,
+                    handler=_adapt(lambda _ctx: [DCDDiagnosticsElement()], tmp_parent=tmp_parent),
+                ),
+                DiagnosticsPlugin(
+                    name="performance_graphs",
+                    topic=_TOPIC_PERFORMANCE,
+                    description=Help(
+                        "CPU load and utilization, number of threads, Kernel performance, OMD,"
+                        " file system, Apache status, TCP connections of the time ranges"
+                        " 25 hours and 35 days"
+                    ),
+                    sensitivity=Sensitivity.LOW,
+                    handler=_adapt(
+                        lambda ctx: [
+                            PerformanceGraphsDiagnosticsElement(
+                                ctx.resolve_checkmk_server_host(), omd_config
+                            )
+                        ],
+                        tmp_parent=tmp_parent,
+                    ),
+                ),
+            ]
+        )
 
-    for command_id, suffix, command in COMPONENT_COMMANDS:
-        elements.append(CheckmkCommandDiagnosticsElementTextDump(command_id, suffix, command))
+    return {plugin.name: plugin for plugin in plugins}
 
-    if parameters.get(OPT_COMP_METRIC_BACKEND):
-        for command_id, suffix, command in METRIC_BACKEND_COMMANDS:
-            elements.append(CheckmkCommandDiagnosticsElementTextDump(command_id, suffix, command))
 
-    if parameters.get(OPT_LOCAL_FILES):
-        elements.append(MKPFindTextDiagnosticsElement())
-        elements.append(MKPShowTextDiagnosticsElement())
-        elements.append(MKPListTextDiagnosticsElement())
+# Legacy boolean options and the plugin name they select (old wire / current CLI)
+_LEGACY_BOOLEAN_OPT_TO_PLUGIN: Final = {
+    OPT_LOCAL_FILES: "mkp_inventory",
+    OPT_OMD_CONFIG: "omd_config",
+    OPT_APACHE_CONFIG: "apache_config",
+    OPT_CHECKMK_CRASH_REPORTS: "latest_crash_reports",
+    OPT_BI_RUNTIME_DATA: "bi_runtime_data",
+    OPT_COMP_METRIC_BACKEND: "metric_backend_state",
+}
 
-    if parameters.get(OPT_OMD_CONFIG):
-        elements.append(OMDConfigDiagnosticsElement(omd_config))
+# Legacy options carrying the Checkmk server host and the plugin name they select
+_LEGACY_HOST_OPT_TO_PLUGIN: Final = {
+    OPT_CHECKMK_OVERVIEW: "checkmk_overview",
+    OPT_PERFORMANCE_GRAPHS: "performance_graphs",
+}
 
-    if OPT_CHECKMK_OVERVIEW in parameters:
-        elements.append(CheckmkOverviewDiagnosticsElement(parameters[OPT_CHECKMK_OVERVIEW]))
+# Plugins the old engine collected unconditionally which are selectable now
+_LEGACY_IMPLICITLY_SELECTED: Final = (
+    "core_performance_metrics",
+    "environment_variables",
+    "network_state",
+    "processes_and_logins",
+)
 
-    if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
-        elements.append(CrashDumpsDiagnosticsElement())
 
-    if gui_profile_ids := parameters.get(OPT_GUI_PROFILES):
-        elements.append(GUIProfilesDiagnosticsElement(gui_profile_ids))
+def _legacy_selection(parameters: DiagnosticsOptionalParameters) -> tuple[set[str], str]:
+    """Map legacy parameters onto plugin names + the Checkmk server host"""
+    selected = set(_LEGACY_IMPLICITLY_SELECTED)
+    for opt, name in _LEGACY_BOOLEAN_OPT_TO_PLUGIN.items():
+        if parameters.get(opt):
+            selected.add(name)
 
-    if parameters.get(OPT_BI_RUNTIME_DATA):
-        # HACK, should be in the COMPONENT_DIRECTORIES loop below
-        elements.append(CheckmkDirectoryDiagnosticsElement("tmp/check_mk/bi_cache", rel=True))
+    # The old wire had no global host field; these options carried the host as their value
+    checkmk_server_host = ""
+    for opt, name in _LEGACY_HOST_OPT_TO_PLUGIN.items():
+        if opt in parameters:
+            selected.add(name)
+            checkmk_server_host = parameters.get(opt) or checkmk_server_host
 
+    return selected, checkmk_server_host
+
+
+def _legacy_file_plugins(
+    parameters: DiagnosticsOptionalParameters,
+    *,
+    edition: cmk_version.Edition,
+    tmp_parent: Path,
+) -> Sequence[DiagnosticsPlugin]:
+    """Plugins for the explicit file lists of the old wire (transitional)"""
+    plugins = []
     if rel_checkmk_config_files := parameters.get(OPT_CHECKMK_CONFIG_FILES):
-        elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
+        plugins.append(
+            DiagnosticsPlugin(
+                name="config_files",
+                description=Help("Checkmk configuration files"),
+                sensitivity=Sensitivity.HIGH,
+                topic=_TOPIC_CONFIGURATION,
+                handler=_adapt(
+                    lambda _ctx: [CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files)],
+                    tmp_parent=tmp_parent,
+                ),
+            )
+        )
 
     if rel_checkmk_log_files := parameters.get(OPT_CHECKMK_LOG_FILES):
-        elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
-
-    for dir_comp in COMPONENT_DIRECTORIES:
-        if dir_comp in parameters:
-            for directory in COMPONENT_DIRECTORIES[dir_comp]["abs_dirs"]:
-                elements.append(CheckmkDirectoryDiagnosticsElement(directory, rel=False))
-            for directory in COMPONENT_DIRECTORIES[dir_comp]["rel_dirs"]:
-                elements.append(CheckmkDirectoryDiagnosticsElement(directory, rel=True))
+        plugins.append(
+            DiagnosticsPlugin(
+                name="log_files",
+                description=Help("Checkmk log files"),
+                sensitivity=Sensitivity.HIGH,
+                topic=_TOPIC_LOGS,
+                handler=_adapt(
+                    lambda _ctx: [CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files)],
+                    tmp_parent=tmp_parent,
+                ),
+            )
+        )
 
     if edition is not cmk_version.Edition.COMMUNITY:
         if rel_checkmk_core_files := parameters.get(OPT_CHECKMK_CORE_FILES):
-            elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
-            elements.append(CMCDumpDiagnosticsElement())
-
-        if OPT_PERFORMANCE_GRAPHS in parameters:
-            elements.append(
-                PerformanceGraphsDiagnosticsElement(
-                    parameters.get(OPT_PERFORMANCE_GRAPHS, ""), omd_config
+            plugins.append(
+                DiagnosticsPlugin(
+                    name="core_files",
+                    description=Help("Checkmk core files and cmcdump output"),
+                    sensitivity=Sensitivity.HIGH,
+                    topic=_TOPIC_MONITORING_CORE,
+                    handler=_adapt(
+                        lambda _ctx: [
+                            CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files),
+                            CMCDumpDiagnosticsElement(),
+                        ],
+                        tmp_parent=tmp_parent,
+                    ),
                 )
             )
 
         if rel_checkmk_licensing_files := parameters.get(OPT_CHECKMK_LICENSING_FILES):
-            elements.append(CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files))
+            plugins.append(
+                DiagnosticsPlugin(
+                    name="licensing_files",
+                    description=Help("Checkmk licensing files"),
+                    sensitivity=Sensitivity.HIGH,
+                    topic=_TOPIC_LICENSING,
+                    handler=_adapt(
+                        lambda _ctx: [
+                            CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files)
+                        ],
+                        tmp_parent=tmp_parent,
+                    ),
+                )
+            )
 
-    return elements
+    if gui_profile_ids := parameters.get("gui-profiles"):
+        plugins.append(
+            DiagnosticsPlugin(
+                name="gui_profiles",
+                description=Help("Stored GUI performance profiles and flamegraphs"),
+                sensitivity=Sensitivity.MEDIUM,
+                topic=_TOPIC_PERFORMANCE,
+                handler=_adapt(
+                    lambda _ctx: [GUIProfilesDiagnosticsElement(gui_profile_ids)],
+                    tmp_parent=tmp_parent,
+                ),
+            )
+        )
+
+    return plugins
+
+
+def _normalized_arcname(arcname: PurePosixPath) -> PurePosixPath | None:
+    if arcname.is_absolute() or ".." in arcname.parts or not arcname.parts:
+        return None
+    return arcname
 
 
 # Not really a class...
@@ -548,68 +1012,88 @@ class DiagnosticsDump:
     def __init__(
         self,
         *,
-        elements: Sequence[ABCDiagnosticsElement],
+        plugins: Sequence[DiagnosticsPlugin],
+        context: CollectContext,
+        logger: ConsoleLogger,
         diagnostics_dir: Path,
         omd_root: Path,
     ) -> None:
-        self._logger = ConsoleLogger()
+        self._logger = logger
         self.dump_folder = diagnostics_dir
         self.tarfile_path = (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(SUFFIX)
         self.tarfile_created = False
         self._create_dump_folder()
-        self._create_tarfile(elements, omd_root)
+        self._create_tarfile(plugins, context)
         self._cleanup_dump_folder(omd_root)
 
     def _create_dump_folder(self) -> None:
         self._logger.section_step("Create dump folder")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
-    def _create_tarfile(self, elements: Sequence[ABCDiagnosticsElement], omd_root: Path) -> None:
-        with (
-            tarfile.open(name=self.tarfile_path, mode="w:gz") as tar,
-            tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder_str,
-        ):
-            tmp_dump_folder = Path(tmp_dump_folder_str)
-            for filepath in self._get_filepaths(
-                elements=elements, omd_root=omd_root, tmp_dump_folder=tmp_dump_folder
-            ):
-                tar.add(filepath, arcname=filepath.relative_to(tmp_dump_folder))
-                self.tarfile_created = True
-
-            log_filepath = self._write_console_output_to_file(tmp_dump_folder)
-            tar.add(log_filepath, arcname=log_filepath.relative_to(tmp_dump_folder))
-            # Hmmm, why don't we do a 'self.tarfile_created = True' here?
-
-    def _write_console_output_to_file(self, tmp_dump_folder: Path) -> Path:
-        logfile = tmp_dump_folder / f"console_{datetime.now().timestamp()}.log"
-        logfile.write_text(self._logger.content())
-        return logfile
-
-    def _get_filepaths(
-        self, *, elements: Sequence[ABCDiagnosticsElement], omd_root: Path, tmp_dump_folder: Path
-    ) -> list[Path]:
+    def _create_tarfile(
+        self, plugins: Sequence[DiagnosticsPlugin], context: CollectContext
+    ) -> None:
         self._logger.section_step("Collect diagnostics information", verbose=False)
-        filepaths = []
-        for element in elements:
-            self._logger.title(element.title)
-            self._logger.description(element.description)
-            try:
-                for filepath in element.add_or_get_files(
-                    omd_root=omd_root, tmp_dump_folder=tmp_dump_folder
-                ):
-                    filepaths.append(filepath)
-            except DiagnosticsElementInfo as e:
-                self._logger.info(str(e))
-            except DiagnosticsElementWarning as e:
-                self._logger.warning(str(e))
-            except DiagnosticsElementError as e:
-                # ConsoleLogger has no .exception(); keep .error() (mirrors the Info/Warning
-                # handlers above and logs the element message at its level).
-                self._logger.error(str(e))  # noqa: TRY400
-            except Exception:
-                # ConsoleLogger has no .exception(); format_exc() gives it the traceback.
-                self._logger.error(traceback.format_exc())  # noqa: TRY400
-        return filepaths
+        collected: dict[PurePosixPath, str] = {}
+        with tarfile.open(name=self.tarfile_path, mode="w:gz") as tar:
+            for plugin in plugins:
+                self._logger.title(plugin.name)
+                self._logger.description(plugin.description.localize(_))
+                self._collect_plugin(tar, plugin, context, collected)
+
+            content = self._logger.content().encode()
+            info = tarfile.TarInfo(f"console_{datetime.now().timestamp()}.log")
+            info.size = len(content)
+            info.mtime = int(datetime.now().timestamp())
+            tar.addfile(info, io.BytesIO(content))
+            # The console log alone does not count as a created dump.
+
+    def _collect_plugin(
+        self,
+        tar: tarfile.TarFile,
+        plugin: DiagnosticsPlugin,
+        context: CollectContext,
+        collected: MutableMapping[PurePosixPath, str],
+    ) -> None:
+        try:
+            for item in plugin.handler(context):
+                normalized = _normalized_arcname(item.path)
+                if normalized is None:
+                    message = f"{plugin.name}: invalid file path '{item.path}'"
+                    self._logger.warning(message)
+                    continue
+                if (owner := collected.get(normalized)) is not None:
+                    message = f"{plugin.name}: '{normalized}' already collected by '{owner}'"
+                    self._logger.warning(message)
+                    continue
+                self._add_item(tar, normalized, item.content)
+                collected[normalized] = plugin.name
+                self.tarfile_created = True
+        except CollectInfo as e:
+            self._logger.info(str(e))
+        except CollectWarning as e:
+            self._logger.warning(str(e))
+        except CollectError as e:
+            # ConsoleLogger has no .exception(); keep .error() (mirrors the Info/Warning
+            # handlers above and logs the plugin message at its level).
+            self._logger.error(str(e))  # noqa: TRY400
+        except Exception:
+            # ConsoleLogger has no .exception(); format_exc() gives it the traceback.
+            self._logger.error(traceback.format_exc())  # noqa: TRY400
+
+    @staticmethod
+    def _add_item(
+        tar: tarfile.TarFile, arcname: PurePosixPath, item: GeneratedContent | VerbatimCopy
+    ) -> None:
+        match item:
+            case GeneratedContent(data):
+                info = tarfile.TarInfo(str(arcname))
+                info.size = len(data)
+                info.mtime = int(datetime.now().timestamp())
+                tar.addfile(info, io.BytesIO(data))
+            case VerbatimCopy(source):
+                # Streams the file from disk in blocks; never loads it into memory.
+                tar.add(source, arcname=str(arcname), recursive=False)
 
     def _cleanup_dump_folder(self, omd_root: Path) -> None:
         if not self.tarfile_created:

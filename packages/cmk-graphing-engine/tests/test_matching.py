@@ -272,7 +272,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     assert fallback == _fallback(extra)
 
 
-def test_build_matched_graphs_filters_to_the_requested_graph_id() -> None:
+def test_build_matched_graphs_filters_to_the_requested_graph_name() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     extra = MetricName("extra")
@@ -281,14 +281,14 @@ def test_build_matched_graphs_filters_to_the_requested_graph_id() -> None:
         performance_response={service: _perf_data(_perf(cpu_user), _perf(extra))}
     )
 
-    def _matched(graph_id: str) -> Sequence[Graph]:
+    def _matched(graph_name: str) -> Sequence[Graph]:
         return build_matched_graphs(
             localizer=_id,
             fetch_metric_names=_FakeRRDFetchMetricNames(fetch_data.performance_response),
             kind=_KIND,
             registered_graphs=[plugin],
             registered_metrics=_METRICS,
-            graph_id=graph_id,
+            graph_name=graph_name,
         )
 
     assert [graph.name for graph in _matched("cpu")] == ["cpu"]

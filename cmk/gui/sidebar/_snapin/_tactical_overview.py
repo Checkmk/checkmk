@@ -232,7 +232,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 request, [*row.views.total, *context_vars], filename="view.py"
             )
             html.open_td(class_=["total", td_class])
-            html.a("%s" % amount, href=url, title=f"{amount:,}")
+            html.a("%s" % amount, href=url, target="main", title=f"{amount:,}")
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:

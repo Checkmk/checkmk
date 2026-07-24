@@ -56,7 +56,7 @@ class VisualMenuItem(NamedTuple):
 def render_link(
     text: str | HTML,
     url: str,
-    target: str | None = None,
+    target: str = "main",
     onclick: str | None = None,
     title: str | None = None,
 ) -> HTML:
@@ -81,7 +81,7 @@ def render_link(
 def link(
     text: str | HTML,
     url: str,
-    target: str | None = None,
+    target: str = "main",
     onclick: str | None = None,
     title: str | None = None,
 ) -> None:

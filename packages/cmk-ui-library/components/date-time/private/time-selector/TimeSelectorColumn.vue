@@ -47,7 +47,7 @@ defineExpose({ focusSelected, centerSelected })
 </script>
 
 <template>
-  <CmkScrollContainer ref="scrollContainerRef" type="outer" max-height="256px" height="auto">
+  <CmkScrollContainer ref="scrollContainerRef" max-height="256px" height="auto">
     <div ref="listboxRef" class="cmk-time-selector-column" role="listbox" :aria-label="label">
       <button
         v-for="option in options"

@@ -51,7 +51,7 @@ const containerClasses = computed(() => ({
     <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
     <div class="code_wrapper">
       <div class="code_container" :class="containerClasses">
-        <CmkScrollContainer type="outer" class="code_scroll_container">
+        <CmkScrollContainer class="code_scroll_container">
           <pre><code v-text="displayedCode"></code></pre>
         </CmkScrollContainer>
         <div v-if="shouldShowToggle && !isExpanded" class="fade_overlay"></div>

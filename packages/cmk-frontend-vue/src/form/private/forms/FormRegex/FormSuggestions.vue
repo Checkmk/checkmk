@@ -69,7 +69,7 @@ defineExpose({
 
 <template>
   <ul class="form-suggestions__text">
-    <CmkScrollContainer v-if="type === 'text'" type="outer" :max-height="'200px'">
+    <CmkScrollContainer v-if="type === 'text'" :max-height="'200px'">
       <FormSuggestionsList
         ref="suggestionListRef"
         v-model:data="data"
@@ -83,11 +83,7 @@ defineExpose({
     </CmkScrollContainer>
   </ul>
   <ul class="form-suggestions__regex">
-    <CmkScrollContainer
-      v-if="suggestionsMode === 'all' && type === 'regex'"
-      type="outer"
-      :max-height="'200px'"
-    >
+    <CmkScrollContainer v-if="suggestionsMode === 'all' && type === 'regex'" :max-height="'200px'">
       <FormSuggestionsList
         v-model:data="data"
         :suggestions-mode="suggestionsMode"

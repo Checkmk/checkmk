@@ -225,7 +225,7 @@ onMounted(() => {
       </div>
 
       <div class="cmk-filter-selection__scroll-container">
-        <CmkScrollContainer type="outer">
+        <CmkScrollContainer>
           <div class="filter-menu__entries">
             <template
               v-for="entry in processedCategory.entries"

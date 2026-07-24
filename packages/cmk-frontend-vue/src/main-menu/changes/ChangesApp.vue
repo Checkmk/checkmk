@@ -428,7 +428,7 @@ onMounted(async () => {
           {{ _t('Open full view') }}
         </CmkButton>
       </div>
-      <CmkScrollContainer type="outer" height="auto" class="cmk-changes-scroll-panel">
+      <CmkScrollContainer height="auto" class="cmk-changes-scroll-panel">
         <UserSettingDialog
           v-if="!new_installation"
           :activate-changes-url="activate_changes_url"

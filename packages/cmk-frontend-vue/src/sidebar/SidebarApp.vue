@@ -81,11 +81,7 @@ function dragEnd(_e: DragEvent, index: number) {
 
 <template>
   <div class="sidebar-app__wrapper">
-    <CmkScrollContainer
-      class="sidebar-app__snapin-container"
-      max-height="calc(100vh - 64px)"
-      type="outer"
-    >
+    <CmkScrollContainer class="sidebar-app__snapin-container" max-height="calc(100vh - 64px)">
       <SidebarSnapin
         v-for="(snapin, index) in sidebar.snapinsRef.value"
         :key="snapin.name"

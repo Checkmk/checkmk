@@ -95,7 +95,6 @@ onUnmounted(() => {
           {{ `${_t('Results')} (${searchResults.length})` }}
         </CmkHeading>
         <CmkScrollContainer
-          type="outer"
           max-height="300px"
           class="cmk-filter-selection-search__results-container"
         >

@@ -23,7 +23,6 @@
   --default-help-icon-bg-color: rgb(6 103 193);
   --default-help-icon-bg-color-hover: rgb(56 133 205);
   --default-nav-popup-border-color: rgb(19 211 137);
-  --scrollbar-color: var(--color-mid-grey-60);
   --popup-dialog-success: var(--color-corporate-green-50);
   --popup-dialog-warning: var(--color-yellow-50);
   --popup-dialog-danger: var(--color-light-red-50);
@@ -189,6 +188,10 @@
     --cmk-alert-box-success-icon-color: var(--color-corporate-green-80);
     --cmk-alert-box-info-icon-color: var(--color-dark-blue-80);
     --cmk-alert-box-text-color: var(--color-mid-grey-100);
+
+    /* Keep in sync with $scrollbar-color in the legacy theme
+       (packages/cmk-frontend, facelift _variables.scss) */
+    --scrollbar-color: var(--color-mid-grey-60);
   }
 
   body[data-theme='modern-dark'] {
@@ -325,29 +328,9 @@
     --cmk-alert-box-success-icon-color: var(--color-corporate-green-20);
     --cmk-alert-box-info-icon-color: var(--color-dark-blue-20);
     --cmk-alert-box-text-color: var(--color-mid-grey-0);
+
+    /* Keep in sync with $scrollbar-color in the legacy theme
+       (packages/cmk-frontend, modern-dark _variables.scss) */
+    --scrollbar-color: var(--color-mid-grey-90);
   }
-}
-
-/* stylelint-disable-next-line selector-class-pattern */
-.cmk-vue-app ::-webkit-scrollbar {
-  width: 8px;
-}
-
-/* stylelint-disable-next-line selector-class-pattern */
-.cmk-vue-app ::-webkit-scrollbar-track {
-  background: var(--ux-theme-6);
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-/* stylelint-disable-next-line selector-class-pattern */
-.cmk-vue-app ::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-color);
-  border-radius: 16px;
-  border: 3px solid var(--ux-theme-6);
-}
-
-/* stylelint-disable-next-line selector-class-pattern */
-.cmk-vue-app ::-webkit-scrollbar-corner {
-  background-color: var(--ux-theme-6);
 }

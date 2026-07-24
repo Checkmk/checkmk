@@ -10,8 +10,12 @@ import { useTemplateRef } from 'vue'
 const scrollContainerVariants = cva('', {
   variants: {
     type: {
-      inner: '', // Inner style is default and defined in global css via cmk-vue-app class
-      outer: 'cmk-scroll-container--outer'
+      // The slimmer scrollbar of the two, fitting the compact scroll areas of
+      // components (popups, dialogs, panels)
+      inner: 'cmk-scroll-container--inner',
+      // The global scrollbar design, defined in the theme css and sized for
+      // page-level content areas
+      outer: ''
     }
   },
   defaultVariants: {
@@ -44,21 +48,15 @@ defineExpose({ containerRef })
 </template>
 
 <style scoped>
-.cmk-scroll-container--outer::-webkit-scrollbar {
-  width: 10px;
-}
-
-.cmk-scroll-container--outer::-webkit-scrollbar-track {
-  background: transparent;
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-.cmk-scroll-container--outer::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-color);
-  border-radius: 16px;
-  border: 3px solid transparent;
-  background-clip: content-box;
+.cmk-scroll-container--inner::-webkit-scrollbar {
   width: 8px;
+}
+
+/* Firefox-only, like the global scrollbar design: in Chromium a non-auto
+   scrollbar-width would disable the ::-webkit-scrollbar styling */
+@supports (-moz-appearance: none) {
+  .cmk-scroll-container--inner {
+    scrollbar-width: thin;
+  }
 }
 </style>

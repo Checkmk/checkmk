@@ -7,17 +7,21 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyDiscoveryResult,
-    LegacyResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.fan import check_fan
-from cmk.legacy_includes.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.fan import check_fan
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
-
-check_info = {}
 
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
@@ -45,14 +49,14 @@ def parse_netscaler_health(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["netscaler_health"] = LegacyCheckDefinition(
+snmp_section_netscaler_health = SimpleSNMPSection(
     name="netscaler_health",
-    parse_function=parse_netscaler_health,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41.7.1",
         oids=["1", "2"],
     ),
+    parse_function=parse_netscaler_health,
 )
 
 # .
@@ -66,22 +70,22 @@ check_info["netscaler_health"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def discover_netscaler_health_fan(info: StringTable) -> LegacyDiscoveryResult:
-    for name, value in info:
+def discover_netscaler_health_fan(section: StringTable) -> DiscoveryResult:
+    for name, value in section:
         if name.endswith("Speed") and value != "0":
-            yield name[:-5], {}
+            yield Service(item=name[:-5])
 
 
 def check_netscaler_health_fan(
-    item: str, params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
-    for name, value in info:
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    for name, value in section:
         if name[:-5] == item:
-            return check_fan(int(value), params)
-    return None
+            yield from check_fan(int(value), params)
+            return
 
 
-check_info["netscaler_health.fan"] = LegacyCheckDefinition(
+check_plugin_netscaler_health_fan = CheckPlugin(
     name="netscaler_health_fan",
     service_name="FAN %s",
     sections=["netscaler_health"],
@@ -103,23 +107,27 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def discover_netscaler_health_temp(info: StringTable) -> LegacyDiscoveryResult:
-    for name, value in info:
+def discover_netscaler_health_temp(section: StringTable) -> DiscoveryResult:
+    for name, value in section:
         if name.endswith("Temperature") and value != "0":
-            yield name[:-11], {}
+            yield Service(item=name[:-11])
 
 
 def check_netscaler_health_temp(
-    item: str, params: TempParamType, info: StringTable
-) -> LegacyResult | None:
-    for name, value in info:
+    item: str, params: TempParamType, section: StringTable
+) -> CheckResult:
+    for name, value in section:
         if name[:-11] == item and name.endswith("Temperature"):
-            temp = int(value)
-            return check_temperature(temp, params, "netscaler_health_%s" % item)
-    return None
+            yield from check_temperature(
+                reading=int(value),
+                params=params,
+                unique_name=f"netscaler_health_{item}",
+                value_store=get_value_store(),
+            )
+            return
 
 
-check_info["netscaler_health.temp"] = LegacyCheckDefinition(
+check_plugin_netscaler_health_temp = CheckPlugin(
     name="netscaler_health_temp",
     service_name="Temperature %s",
     sections=["netscaler_health"],
@@ -144,31 +152,29 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
 PSU_STATE_PATTERN = re.compile(r"PowerSupply([\d])(Failure|)Status")
 
 
-def discover_netscaler_health_psu(info: StringTable) -> LegacyDiscoveryResult:
-    for name, state in info:
+def discover_netscaler_health_psu(section: StringTable) -> DiscoveryResult:
+    for name, state in section:
         m = PSU_STATE_PATTERN.match(name)
-        if m:
-            if int(state) > 0:
-                yield m.group(1), {}
+        if m and int(state) > 0:
+            yield Service(item=m.group(1))
 
 
-def check_netscaler_health_psu(
-    item: str, _no_params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
+def check_netscaler_health_psu(item: str, section: StringTable) -> CheckResult:
     psu_status_map = (
-        (3, "not supported"),  # 0
-        (2, "not present"),  # 1
-        (2, "failed"),  # 2
-        (0, "normal"),  # 3
+        (State.UNKNOWN, "not supported"),  # 0
+        (State.CRIT, "not present"),  # 1
+        (State.CRIT, "failed"),  # 2
+        (State.OK, "normal"),  # 3
     )
 
-    for name, state in info:
+    for name, state in section:
         if name.startswith("PowerSupply" + item) and name.endswith(("Status", "FailureStatus")):
-            return psu_status_map[int(state)]
-    return None
+            psu_state, psu_text = psu_status_map[int(state)]
+            yield Result(state=psu_state, summary=psu_text)
+            return
 
 
-check_info["netscaler_health.psu"] = LegacyCheckDefinition(
+check_plugin_netscaler_health_psu = CheckPlugin(
     name="netscaler_health_psu",
     service_name="Power Supply %s",
     sections=["netscaler_health"],

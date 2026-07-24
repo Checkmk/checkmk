@@ -185,7 +185,7 @@ class GraphFetchResponse:
     )
 
 
-type BurgerMenuActionType = Literal["add_to_container", "add_to_visual", "export"]
+BurgerMenuActionType = Literal["add_to_container", "add_to_visual", "export"]
 
 
 @api_model

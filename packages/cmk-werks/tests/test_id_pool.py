@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import errno
 import json
 from collections.abc import Sequence
 from pathlib import Path
@@ -167,8 +168,57 @@ def test_add_id_to_new_stash() -> None:
 def test_paths_object(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     assert paths.legacy_stash_file == tmp_path / ".cmk-werk-ids"
-    assert paths.stash_file == tmp_path / ".local/state/cmk-werk-ids-reserved"
-    assert paths.secret_file == tmp_path / ".config/cmk-werk-ids-secret"
+    assert paths.stash_file == tmp_path / ".local/state/cmk-werks/reserved-ids"
+    assert paths.secret_file == tmp_path / ".config/cmk-werks/secret"
+
+
+def test_paths_object_migrates_old_locations(tmp_path: Path) -> None:
+    old_secret = tmp_path / ".config/cmk-werk-ids-secret"
+    old_stash = tmp_path / ".local/state/cmk-werk-ids-reserved"
+    old_secret.parent.mkdir(parents=True, exist_ok=True)
+    old_stash.parent.mkdir(parents=True, exist_ok=True)
+    old_secret.write_text("secret", encoding="utf-8")
+    old_stash.write_text("reserved", encoding="utf-8")
+
+    paths = make_paths_object(tmp_path)
+
+    assert not old_secret.exists()
+    assert not old_stash.exists()
+    assert paths.secret_file.read_text(encoding="utf-8") == "secret"
+    assert paths.stash_file.read_text(encoding="utf-8") == "reserved"
+
+
+def test_paths_object_migration_does_not_overwrite_new_locations(tmp_path: Path) -> None:
+    old_secret = tmp_path / ".config/cmk-werk-ids-secret"
+    old_secret.parent.mkdir(parents=True, exist_ok=True)
+    old_secret.write_text("old", encoding="utf-8")
+    new_secret = tmp_path / ".config/cmk-werks/secret"
+    new_secret.parent.mkdir(parents=True, exist_ok=True)
+    new_secret.write_text("new", encoding="utf-8")
+
+    paths = make_paths_object(tmp_path)
+
+    assert old_secret.read_text(encoding="utf-8") == "old"
+    assert paths.secret_file.read_text(encoding="utf-8") == "new"
+
+
+def test_paths_object_migration_survives_cross_device_rename(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    old_secret = tmp_path / ".config/cmk-werk-ids-secret"
+    old_secret.parent.mkdir(parents=True, exist_ok=True)
+    old_secret.write_text("secret", encoding="utf-8")
+
+    def _fail_rename(*_args: object, **_kwargs: object) -> Path:
+        raise OSError(errno.EXDEV, "Invalid cross-device link")
+
+    monkeypatch.setattr(Path, "rename", _fail_rename)
+
+    paths = make_paths_object(tmp_path)
+
+    assert old_secret.read_text(encoding="utf-8") == "secret"
+    assert not paths.secret_file.exists()
+    assert "could not migrate" in capsys.readouterr().err
 
 
 def test_active_stash_file_without_secret(tmp_path: Path) -> None:

@@ -42,7 +42,7 @@ import shutil
 import time
 import traceback
 from collections import Counter
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -112,6 +112,8 @@ from cmk.gui.userdb import (
 from cmk.gui.userdb._connector import (
     CheckCredentialsResult,
     ConnectorType,
+    LoadUsersFunction,
+    SaveUsersFunction,
     UserConnector,
     UserConnectorRegistry,
 )
@@ -1963,18 +1965,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         add_to_changelog: bool,  # unused
         only_username: UserId | None,
         user_attributes: Sequence[tuple[str, UserAttribute]],
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
+        load_users_func: LoadUsersFunction,
+        save_users_func: SaveUsersFunction,
         default_user_profile: UserSpec,
     ) -> None:
         if not self.has_user_base_dn_configured():
@@ -2002,7 +1994,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         start_time = time.time()
 
         fetched_ldap_users = self.get_users(user_attributes)
-        users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
+        users: Users = load_users_func(lock=True)
 
         sync_users_result = SyncUsersResult(
             sync_start_time=start_time,
@@ -2040,17 +2032,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         sync_users_result: SyncUsersResult,
         users: Users,
         user_connections: Sequence[UserConnectionConfig],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
+        save_users_func: SaveUsersFunction,
         user_attributes: Sequence[tuple[str, UserAttribute]],
     ) -> None:
         """Call hook, log changes, save changes, release locks"""

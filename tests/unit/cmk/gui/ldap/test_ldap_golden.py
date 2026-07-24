@@ -270,7 +270,7 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         add_to_changelog=True,
         only_username=None,
         user_attributes=get_user_attributes([]),
-        load_users_func=lambda _: loaded_users,
+        load_users_func=lambda lock=False: loaded_users,
         save_users_func=assert_expected_users,
         default_user_profile={},
     )
@@ -882,7 +882,7 @@ def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_conte
         add_to_changelog=True,
         only_username=None,
         user_attributes=get_user_attributes([]),
-        load_users_func=lambda _: loaded_users,
+        load_users_func=lambda lock=False: loaded_users,
         save_users_func=fail_if_save_called,
         default_user_profile={},
     )

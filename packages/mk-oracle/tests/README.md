@@ -30,7 +30,7 @@ flowchart LR
 - `test_ora_sql.rs` — main integration suite; connects to every endpoint in `WORKING_ENDPOINTS` and exercises sections, discovery, PDB handling, and custom metrics.
 - `test_mk_oracle_bin.rs` — drives the built binary end-to-end (CLI behaviour, agent output).
 - `common/tools.rs` — helpers that build mini `Config`s from an endpoint and, on Windows, patch `PATH`/`TNS_ADMIN` to the bundled OCI runtime.
-- `files/` — fixtures: `endpoints.txt`, TNS config under `tns/`, docker compose under `docker/`, and the `test-*.yml` configs.
+- `files/` — fixtures: TNS config under `tns/`, docker compose under `docker/`, and the `test-*.yml` configs.
 - `perf/`, `regression/` — performance and regression fixtures.
 
 ## Running the tests

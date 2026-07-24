@@ -6,7 +6,7 @@ To cover those, run the Windows test binary **on** a Windows Oracle host and poi
 ## Automated: `run.ps1 --remote-host`
 
 `run.ps1 --remote-host` (also `-R`) builds the test binary on the current Windows node, ships it plus `tests/files/` to the Oracle host over SSH, and runs it there against the host's own DB, using the installed client via `ORACLE_HOME`.
-`CI_ORA2` (external reference) connects as `system`; `CI_ORA1` (local endpoint, which activates the local-connection and registry-discovery tests) connects as `sys` with the `sysdba` role that those tests require.
+`CI_ORA2` (mandatory reference endpoint) connects as `system`; `CI_ORA1` (optional second endpoint) connects as `sys` with the `sysdba` role. The endpoint-iterating tests run against both; the explicit-sysdba test requires the second one. The registry-discovery tests need no endpoint — they run whenever a local Oracle installation is detected on the machine.
 
 Endpoints use the DB **host name**, not `localhost`: the listeners bind the host address rather than loopback, so a `localhost` connection is refused (ORA-12541).
 
@@ -100,4 +100,5 @@ Connection strings for a host with both a 23ai Free and a 19c instance installed
 - `ORA-01017` (invalid username/password) — reachable, wrong credentials.
 - `ORA-12514` (service not known) — wrong `service_name`; confirm with `lsnrctl status` on the host.
 - SSH hangs — port 22 blocked; SSH prompts for a password on reuse — the ControlMaster socket is not open, or (key auth) the `administrators_authorized_keys` ACL is wrong.
-- `No local endpoint found` in test output — `CI_ORA1_DB_TEST` is unset; local-connection tests are skipped.
+- `Skipping test_connection_with_explicit_sysdba_role` in test output — `CI_ORA1_DB_TEST` is unset; that test skips itself.
+- `Skipping test_detection_registry: no local Oracle installation found` — no oratab/registry entry on this machine; expected on a build node that isn't co-located with an Oracle install.

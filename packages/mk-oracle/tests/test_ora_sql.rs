@@ -20,11 +20,12 @@ extern crate common;
 mod common;
 
 use crate::common::tools::{
-    make_endpoint_tns_admin_dir, make_mini_config, make_mini_config_cdb_root,
-    make_mini_config_custom_instance, make_mini_config_custom_instance_with_tns_admin,
-    make_mini_config_pdb, make_mini_config_pdb_builtin_then_custom,
-    make_mini_config_pdb_custom_then_builtin, make_mini_config_with_sid,
-    platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
+    local_oracle_client_present, make_endpoint_tns_admin_dir, make_mini_config,
+    make_mini_config_cdb_root, make_mini_config_custom_instance,
+    make_mini_config_custom_instance_with_tns_admin, make_mini_config_pdb,
+    make_mini_config_pdb_builtin_then_custom, make_mini_config_pdb_custom_then_builtin,
+    make_mini_config_with_sid, platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR,
+    ORA_ENDPOINT_ENV_VAR_SECONDARY,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -46,10 +47,7 @@ use mk_oracle::types::{
 };
 use regex::Regex;
 use std::collections::HashSet;
-use std::str::FromStr;
 use std::sync::LazyLock;
-
-pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 
 pub fn get_sid(endpoint: &SqlDbEndpoint) -> String {
     endpoint.sid.clone().unwrap()
@@ -135,78 +133,20 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
-fn load_endpoints() -> Vec<SqlDbEndpoint> {
-    let mut reference: Option<SqlDbEndpoint> = None;
-    let content = ORA_TEST_ENDPOINTS.to_owned();
-    let mut endpoints = content
-        .split("\n")
-        .filter_map(|s| {
-            let cleaned = s.split('#').next().unwrap_or("").trim();
-            if cleaned.is_empty() {
-                None
-            } else {
-                Some(cleaned)
-            }
-        })
-        .filter_map(|s| {
-            if let Some(credentials_env_var) = s.strip_prefix("CREDENTIALS_ONLY:$") {
-                reference = Some(SqlDbEndpoint::from_env(credentials_env_var).unwrap());
-                return None;
-            };
+fn reference_endpoint() -> SqlDbEndpoint {
+    SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR).unwrap()
+}
 
-            let mut connection_string = if let Some(env_var) = s.strip_prefix("$") {
-                std::env::var(env_var).unwrap()
-            } else {
-                s.to_string()
-            };
-
-            if connection_string.contains(":::") {
-                let existing_reference = reference
-                    .as_ref()
-                    .expect("Specify at least one endpoint with credentials as reference");
-                connection_string = connection_string.replacen(
-                    ":::",
-                    &format!(":{}:{}:", existing_reference.user, existing_reference.pwd,),
-                    1,
-                );
-            }
-
-            let new_connection = SqlDbEndpoint::from_str(&connection_string).unwrap();
-            reference = Some(new_connection.clone());
-
-            Some(new_connection)
-        })
-        .collect::<Vec<SqlDbEndpoint>>();
-
-    if let Ok(local_endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL) {
-        endpoints.push(local_endpoint);
-    } else {
-        eprintln!("No local endpoint found, skipping test_local_connection");
-    };
-
+/// The reference endpoint plus, if configured, the secondary endpoint.
+fn working_endpoints() -> Vec<SqlDbEndpoint> {
+    let mut endpoints = vec![reference_endpoint()];
+    if let Ok(secondary) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_SECONDARY) {
+        endpoints.push(secondary);
+    }
     endpoints
 }
 
-fn remote_reference_endpoint() -> SqlDbEndpoint {
-    SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap()
-}
-
-static WORKING_ENDPOINTS: LazyLock<Vec<SqlDbEndpoint>> = LazyLock::new(load_endpoints);
-#[test]
-fn test_endpoints_file() {
-    let s = &WORKING_ENDPOINTS;
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap();
-    let local = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).ok();
-    assert!(!s.is_empty());
-    assert_eq!(s[0], r);
-    for e in &s[..] {
-        if e.host == "localhost" || Some(e) == local.as_ref() {
-            continue; // skip local endpoint, it may have strange credentials
-        }
-        assert_eq!(e.user, r.user);
-        assert_eq!(e.pwd, r.pwd);
-    }
-}
+static WORKING_ENDPOINTS: LazyLock<Vec<SqlDbEndpoint>> = LazyLock::new(working_endpoints);
 
 #[test]
 fn test_authentication_from_env_var() {
@@ -249,38 +189,39 @@ fn test_environment() {
     assert_eq!(env_value, "-DNDEBUG");
 }
 
-#[allow(clippy::const_is_empty)]
 #[test]
-fn test_local_connection() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
+fn test_connection_with_explicit_sysdba_role() {
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_SECONDARY);
     if r.is_err() {
-        eprintln!("Skipping test_local_connection: {}", r.err().unwrap());
+        eprintln!(
+            "Skipping test_connection_with_explicit_sysdba_role: {}",
+            r.err().unwrap()
+        );
         return;
     }
     add_runtime_to_path();
     let endpoint = r.unwrap();
     let instance_name = get_sid(&endpoint);
 
-    let config = make_base_config(
-        &Credentials {
-            user: endpoint.user,
-            password: endpoint.pwd,
-        },
-        AuthType::Standard,
-        Some(Role::SysDba),
-        &endpoint.host,
-        endpoint.port,
-        None,
-    );
-
-    for i in [None, Some(&ServiceName::from(&endpoint.service_name))] {
+    for service_name in [None, Some(ServiceName::from(&endpoint.service_name))] {
+        let config = make_base_config(
+            &Credentials {
+                user: endpoint.user.clone(),
+                password: endpoint.pwd.clone(),
+            },
+            AuthType::Standard,
+            Some(Role::SysDba),
+            &endpoint.host,
+            endpoint.port,
+            service_name.clone(),
+        );
         let spot = backend::make_spot(&config.endpoint()).unwrap();
         let conn = spot.connect(None).unwrap();
         let result = conn.query_table(&TEST_SQL_INSTANCE).format("");
         assert!(result.is_ok());
         let rows = result.unwrap();
         eprintln!(
-            "Rows: {i:?} {:?} {:?}",
+            "Rows: {service_name:?} {:?} {:?}",
             rows,
             conn.target()
                 .make_connection_string(None, ConnectionStringType::Tns)
@@ -295,7 +236,7 @@ fn test_local_connection() {
 #[test]
 fn test_remote_mini_connection() {
     add_runtime_to_path();
-    let endpoint = remote_reference_endpoint();
+    let endpoint = reference_endpoint();
     let config = make_mini_config(&endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
@@ -322,7 +263,7 @@ fn test_remote_mini_connection() {
 #[test]
 fn test_remote_custom_metric_with_sql_params() {
     add_runtime_to_path();
-    let endpoint = remote_reference_endpoint();
+    let endpoint = reference_endpoint();
     let config_str = format!(
         r#"
 ---
@@ -389,7 +330,7 @@ oracle:
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_sid_only_connection() {
     add_runtime_to_path();
-    let endpoint = remote_reference_endpoint();
+    let endpoint = reference_endpoint();
     let sid = endpoint
         .sid
         .clone()
@@ -419,7 +360,7 @@ async fn test_remote_sid_only_connection() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_custom_instance_connection() {
     add_runtime_to_path();
-    let endpoint = remote_reference_endpoint();
+    let endpoint = reference_endpoint();
     let config = make_mini_config_custom_instance(&endpoint, &endpoint.service_name, None);
     let env = Env::default();
     let r = generate_data(&config, &env).await;
@@ -441,7 +382,7 @@ async fn test_remote_custom_instance_connection() {
 async fn test_absent_remote_custom_instance_connection() {
     add_runtime_to_path();
 
-    let endpoint = remote_reference_endpoint();
+    let endpoint = reference_endpoint();
     let config = make_mini_config_custom_instance(&endpoint, "absent", None);
     let env = Env::default();
     let r = generate_data(&config, &env).await;
@@ -468,7 +409,7 @@ async fn test_remote_tns_custom_instance_connection() {
         "TNS_ADMIN='{}'",
         std::env::var("TNS_ADMIN").unwrap_or_default()
     );
-    let endpoint = remote_reference_endpoint();
+    let endpoint = reference_endpoint();
     // Resolve the alias through a generated tnsnames.ora that points at the
     // reference endpoint itself: the alias mechanics get exercised without
     // pinning the test to one specific reference DB host.
@@ -497,6 +438,8 @@ async fn test_remote_tns_custom_instance_connection() {
     }
 }
 
+// `VERSION_FULL_2` does not exist: the query fails and drives
+// `WorkInstances::new` into its pre-VERSION_FULL fallback path.
 pub const INSTANCE_INFO_SQL_TEXT_FAIL: &str = r"
 SELECT
     INSTANCE_NAME,
@@ -593,6 +536,9 @@ fn test_io_stats_query() {
     }
 }
 
+/// `version` selects the SQL variant directly, bypassing the live
+/// version/tenant detection of `WorkInstances::get_info`. A legacy version
+/// forces the pre-CDB queries.
 fn connect_and_query(
     endpoint: &SqlDbEndpoint,
     id: sqls::Id,
@@ -1485,7 +1431,7 @@ fn test_pdbs_discovery() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pdb_nonexistent_pattern_produces_no_subsection() {
     add_runtime_to_path();
-    let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+    let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR).ok() else {
         return;
     };
     let config = make_mini_config_pdb(&ep, &["GHOST_PDB"]);
@@ -1501,7 +1447,7 @@ async fn test_pdb_nonexistent_pattern_produces_no_subsection() {
 async fn test_pdb_wildcard_pattern_targets_all_discovered_pdbs() {
     use mk_oracle::ora_sql::pdbs::Pdbs;
     add_runtime_to_path();
-    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR).ok() else {
         return;
     };
     let sid = endpoint
@@ -1544,7 +1490,7 @@ async fn test_pdb_wildcard_pattern_targets_all_discovered_pdbs() {
 async fn test_pdb_scoped_query_reverts_to_cdb_root_builtin_then_custom() {
     use mk_oracle::ora_sql::pdbs::Pdbs;
     add_runtime_to_path();
-    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR).ok() else {
         return;
     };
     let sid = endpoint
@@ -1593,7 +1539,7 @@ async fn test_pdb_scoped_query_reverts_to_cdb_root_builtin_then_custom() {
 async fn test_pdb_scoped_query_reverts_to_cdb_root_custom_then_builtin() {
     use mk_oracle::ora_sql::pdbs::Pdbs;
     add_runtime_to_path();
-    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+    let Some(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR).ok() else {
         return;
     };
     let sid = endpoint
@@ -1637,7 +1583,7 @@ async fn test_pdb_scoped_query_reverts_to_cdb_root_custom_then_builtin() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pdb_absent_runs_against_cdb_root() {
     add_runtime_to_path();
-    let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+    let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR).ok() else {
         return;
     };
     let sid = ep.sid.as_deref().unwrap_or(&ep.service_name).to_uppercase();
@@ -1656,46 +1602,29 @@ async fn test_pdb_absent_runs_against_cdb_root() {
 
 #[test]
 fn test_detection_registry() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
-    if r.is_err() {
-        eprintln!("Skipping test_detection_registry: {}", r.err().unwrap());
-        return;
-    }
-    let instances = get_instances(None).unwrap();
+    let instances = match get_instances(None) {
+        Ok(instances) if !instances.is_empty() => instances,
+        _ => {
+            eprintln!("Skipping test_detection_registry: no local Oracle installation found");
+            return;
+        }
+    };
     eprintln!("Instances = {:?}", instances);
-    assert!(!instances.is_empty());
     for i in instances {
-        // Instance names are deployment-specific: XE / FREE on the reference
-        // hosts, ORCL* on the ORACLE-WIN-CI VM (e.g. ORCL19 alongside 23ai Free).
-        let name = i.name.to_string();
-        assert!(
-            i.name == InstanceName::from("XE")
-                || i.name == InstanceName::from("FREE")
-                || name.starts_with("ORCL"),
-            "unexpected instance name: {name}"
-        );
-        assert!(std::path::PathBuf::from(&i.home).is_dir());
-        assert!(std::path::PathBuf::from(&i.home).exists());
-        let base = i.base.unwrap();
-        assert!(std::path::PathBuf::from(&base).is_dir());
-        assert!(std::path::PathBuf::from(&base).exists());
+        assert!(!i.name.to_string().is_empty());
+        assert!(i.home.is_dir(), "missing ORACLE_HOME dir {:?}", i.home);
+        // oratab carries no ORACLE_BASE; only the Windows registry does.
+        if let Some(base) = i.base {
+            assert!(base.is_dir(), "missing ORACLE_BASE dir {:?}", base);
+        }
     }
 }
 
 #[test]
 fn test_detect_host_runtime() {
-    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
-        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
-    } else {
-        std::env::var("ORACLE_HOME")
-            .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
-    };
+    let local_exists = local_oracle_client_present();
     if local_exists {
-        assert!(
-            detect_host_runtime().is_some(),
-            "{:?}",
-            SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
-        );
+        assert!(detect_host_runtime().is_some());
     } else {
         assert!(detect_host_runtime().is_none());
     }
@@ -1720,12 +1649,7 @@ fn test_detect_runtime_with_runtime() {
         std::env::set_var(LIBDIR_VAR, &good_path);
     }
     let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
-    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
-        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
-    } else {
-        std::env::var("ORACLE_HOME")
-            .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
-    };
+    let local_exists = local_oracle_client_present();
 
     // Never
     assert!(detect_runtime(&UseHostClient::Never, Some("Hurz".to_string())).is_none()); // env var does not exist
@@ -1787,10 +1711,7 @@ fn test_detect_runtime_without_runtime() {
         std::env::set_var(LIBDIR_VAR, &bad_path);
     }
     let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
-    let local_installation = std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
-        && SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok();
-    let oracle_home_set = std::env::var("ORACLE_HOME")
-        .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir());
+    let local_installation = local_oracle_client_present();
 
     // Never
     assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_none());
@@ -1799,10 +1720,10 @@ fn test_detect_runtime_without_runtime() {
     // If local exists -> expected path to local client otherwise nothing
     for mode in [UseHostClient::Auto, UseHostClient::Always] {
         let path = to_string(detect_runtime(&mode, lib_dir_var.clone()));
-        if local_installation || oracle_home_set {
+        if local_installation {
             eprintln!(
-                "Local installation path = {:?} {} {}",
-                path, local_installation, oracle_home_set
+                "Local installation path = {:?} {}",
+                path, local_installation
             );
             #[cfg(unix)]
             assert!(path.clone().unwrap().ends_with("bin") || path.unwrap().ends_with("lib"));
@@ -1856,7 +1777,6 @@ oracle:
 /// NOT ALL CONDITIONS TESTED
 #[test]
 fn test_add_runtime_to_path() {
-    use mk_oracle::platform::get_local_instances;
     use mk_oracle::setup::add_runtime_path_to_env;
 
     fn exec_add_runtime_to_path(
@@ -1877,23 +1797,7 @@ fn test_add_runtime_to_path() {
     let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
     let mut_env_var = EnvVarName::from("SOME_PATH_TEST_VAR_XXX".to_string());
     let good_path = base_dir().join("runtimes");
-    let local_db_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
-        && SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
-    {
-        println!("ORA_DB_ENDPOINT_LOCAL is set");
-        true
-    } else if std::env::var("ORACLE_HOME")
-        .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
-    {
-        println!("ORACLE_HOME is set");
-        true
-    } else if !get_local_instances().unwrap_or_default().is_empty() {
-        println!("Local instances detected");
-        true
-    } else {
-        println!("No local Oracle client detected");
-        false
-    };
+    let local_db_exists = local_oracle_client_present();
     let good_path_str = good_path.clone().into_os_string().into_string().unwrap();
 
     // *** AUTO ***

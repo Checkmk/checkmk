@@ -1,11 +1,13 @@
 # Database endpoints
 
-Two environment variables select the databases under test:
+Two environment variables select the databases under test. The plugin doesn't
+distinguish "local" from "remote" — it's a TCP connection either way, so
+neither variable is tied to where the target actually lives:
 
-| Variable          | Required | Meaning                                                                                    |
-| ----------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `CI_ORA2_DB_TEST` | Yes      | External reference endpoint; the suite unwraps it and treats it as `WORKING_ENDPOINTS[0]`. |
-| `CI_ORA1_DB_TEST` | No       | Local endpoint; when set, local-connection tests run, otherwise they are skipped.          |
+| Variable          | Required | Meaning                                                                                                                                                                                 |
+| ----------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CI_ORA2_DB_TEST` | Yes      | Mandatory reference endpoint; the suite unwraps it and treats it as `WORKING_ENDPOINTS[0]`.                                                                                             |
+| `CI_ORA1_DB_TEST` | No       | Optional second endpoint with its own credentials (e.g. sys/sysdba). The endpoint-iterating tests include it when set; the explicit-sysdba test requires it and skips itself otherwise. |
 
 Both use the same colon-separated connection string, parsed by `SqlDbEndpoint::from_str`:
 
@@ -23,8 +25,7 @@ host:user:password:port:instance_name:role:service_name:sid:_:_
 | `service_name`      | Mandatory for connection.                                                                                     |
 | `sid`               | `_` or empty → `None`.                                                                                        |
 
-`../files/endpoints.txt` lists the endpoints to load.
-It references `$CI_ORA2_DB_TEST` only, so pointing that variable at any reachable database is sufficient — no edits to the file are needed for a local run.
+Point `CI_ORA2_DB_TEST` at any reachable database — no other file needs editing for a local run.
 CI delivers only a password, so `CI_ORA2_DB_TEST` is constructed from it in the run scripts and the Jenkins jobs.
 
 > Never commit a connection string containing credentials.

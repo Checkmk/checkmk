@@ -51,6 +51,15 @@ describe('drawHorizontalLines', () => {
     expect(actual).toEqual(expected)
   })
 
+  test('renders no lines when no thresholds are configured', () => {
+    const contextGroup = makeContextGroup()
+    const noThresholds: HorizontalLine[] = []
+
+    drawHorizontalLines(contextGroup, noThresholds, yScale, plotWidth)
+
+    expect(renderedLines(contextGroup)).toHaveLength(0)
+  })
+
   test('groups the rendered lines under a single container', () => {
     const contextGroup = makeContextGroup()
 

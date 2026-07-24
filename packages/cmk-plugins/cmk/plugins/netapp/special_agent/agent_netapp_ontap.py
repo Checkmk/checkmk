@@ -660,6 +660,7 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
         "frus.id",
         "frus.state",
         "frus.installed",
+        "frus.type",
     )
 
     for element in NetAppResource.Shelf.get_collection(
@@ -670,6 +671,8 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
         frus = element_data.get("frus", [])
 
         for fru in frus:
+            if fru.get("type") != "psu":
+                continue
             yield models.ShelfPsuModel(
                 list_id=list_id,
                 id=fru["id"],
@@ -924,7 +927,7 @@ def fetch_environment(connection: HostConnection) -> Iterable[models.Environment
         )
 
     for element in NetAppResource.Sensors.get_collection(
-        connection=connection, fields=",".join(field_query), type="discrete"
+        connection=connection, fields=",".join(field_query), type="discrete|fru"
     ):
         element_data = element.to_dict()
         yield models.EnvironmentDiscreteSensorModel(

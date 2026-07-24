@@ -1,0 +1,56 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
+
+import { DEFAULT_TITLE_MACRO, type MetricBackendItem } from './types'
+
+// The rule form spec's own defaults, for the aggregation parameters a consolidation does not carry.
+export const DEFAULT_HISTOGRAM_PERCENTILE = 90
+export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
+export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
+export const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100
+
+/** One query of the `special_agents:custom_query_metric_backend` rule value. */
+export interface MetricBackendRuleQuery {
+  metric_name: string
+  attribute_filter: AttributeFilter
+  aggregation_lookback: number
+  aggregation_histogram_percentile: number
+  aggregation_histogram_threshold_for_fraction_below: number
+  aggregation_histogram_lower_threshold_for_fraction_between: number
+  aggregation_histogram_upper_threshold_for_fraction_between: number
+  service_name_template: string
+}
+
+/** The rule query prefilled from a designer row, with the row's title as the service name. */
+export function metricBackendRuleQuery(
+  item: MetricBackendItem,
+  defaultTitle: string
+): MetricBackendRuleQuery {
+  const consolidation = item.consolidation_function
+  return {
+    metric_name: item.metric_name,
+    attribute_filter: item.attribute_filter,
+    aggregation_lookback: consolidation.lookback_seconds,
+    aggregation_histogram_percentile:
+      consolidation.type === 'histogram_quantile'
+        ? consolidation.percentile
+        : DEFAULT_HISTOGRAM_PERCENTILE,
+    aggregation_histogram_threshold_for_fraction_below:
+      consolidation.type === 'histogram_fraction_below'
+        ? consolidation.threshold
+        : DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+    aggregation_histogram_lower_threshold_for_fraction_between:
+      consolidation.type === 'histogram_fraction_between'
+        ? consolidation.lower_threshold
+        : DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+    aggregation_histogram_upper_threshold_for_fraction_between:
+      consolidation.type === 'histogram_fraction_between'
+        ? consolidation.upper_threshold
+        : DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
+    service_name_template: item.title.replaceAll(DEFAULT_TITLE_MACRO, defaultTitle)
+  }
+}

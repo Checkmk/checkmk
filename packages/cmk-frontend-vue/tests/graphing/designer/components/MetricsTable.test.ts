@@ -5,12 +5,27 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { TitleMacroGroup } from 'cmk-shared-typing/typescript/custom_graph_designer'
+import { vi } from 'vitest'
 
 import MetricsTable from '@/graphing/designer/components/MetricsTable.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
-import type { DesignerItem } from '@/graphing/designer/drafts'
+import { type DesignerItem, newMetricBackendDraft } from '@/graphing/designer/drafts'
 
 import { constantItem, formulaItem, metricBackendItem, rrdMetricItem } from '../fixtures'
+
+vi.mock('@/graphing/designer/components/MetricBackendRuleSlideIn.vue', () => ({
+  default: {
+    props: ['open', 'item', 'defaultTitle'],
+    emits: ['close'],
+    template: `<div
+      data-testid="metric-backend-rule-slidein"
+      :data-item-id="item?.id"
+      :data-default-title="defaultTitle"
+    ></div>`
+  }
+}))
+
+const ADD_RULE_LABEL = 'Add rule: Metric backend (Custom query)'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400', '#ec48b6', '#ffd703']
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
@@ -18,13 +33,19 @@ const TITLE_MACROS: TitleMacroGroup[] = [
   { source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$', '$METRIC_NAME$'] }
 ]
 
-function renderTable(seed: DesignerItem[] = [], metricBackendAvailable = true) {
+function renderTable(
+  seed: DesignerItem[] = [],
+  metricBackendAvailable = true,
+  createServicesAvailable = true
+) {
   const store = useGraphItems(PALETTE, seed)
   const utils = render(MetricsTable, {
     props: {
       store,
       thresholds: THRESHOLDS,
       metricBackendAvailable,
+      createServicesAvailable,
+      metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
       titleMacros: TITLE_MACROS
     }
   })
@@ -167,4 +188,40 @@ test('the title column header exposes the rendered macro help', async () => {
   const tooltip = await screen.findByRole('tooltip')
   expect(tooltip).toHaveTextContent('Available title macros:')
   expect(tooltip).toHaveTextContent('Checkmk RRD (single): $DEFAULT_TITLE$, $METRIC_NAME$')
+})
+
+test('a complete metric_backend row offers the add-rule action', () => {
+  renderTable([metricBackendItem('A')])
+  expect(screen.getByRole('button', { name: ADD_RULE_LABEL })).toBeInTheDocument()
+})
+
+test('the add-rule action is absent on non metric_backend rows', () => {
+  renderTable([rrdMetricItem('A')])
+  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+})
+
+test('the add-rule action is absent while the metric_backend query is incomplete', () => {
+  renderTable([newMetricBackendDraft('A')])
+  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+})
+
+test('the add-rule action is absent when the metric backend is unavailable', () => {
+  renderTable([metricBackendItem('A')], false)
+  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+})
+
+test('the add-rule action is absent when creating services is unavailable', () => {
+  renderTable([metricBackendItem('A')], true, false)
+  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+})
+
+test('clicking the add-rule action opens the rule slide-in for that row', async () => {
+  renderTable([metricBackendItem('A')])
+  expect(screen.queryByTestId('metric-backend-rule-slidein')).not.toBeInTheDocument()
+
+  await fireEvent.click(screen.getByRole('button', { name: ADD_RULE_LABEL }))
+
+  const slideIn = await screen.findByTestId('metric-backend-rule-slidein')
+  expect(slideIn).toHaveAttribute('data-item-id', 'A')
+  expect(slideIn).toHaveAttribute('data-default-title', '$METRIC_NAME$ - $SERIES_ID$')
 })

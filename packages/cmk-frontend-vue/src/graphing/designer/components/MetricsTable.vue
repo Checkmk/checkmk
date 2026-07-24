@@ -32,24 +32,36 @@ import { useRowLabels } from '../composables/useRowLabels'
 import { useTitleMacroHelp } from '../composables/useTitleMacroHelp'
 import {
   type DesignerItem,
+  isComplete,
   newConstantDraft,
   newMetricBackendDraft,
   newRrdMetricDraft,
   newScalarDraft,
   scalarColor
 } from '../drafts'
-import { type ItemId, isSingleLine, parseLineType } from '../types'
+import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
+import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
 import ConstantLineForm from './forms/ConstantLineForm.vue'
 import FormulaForm from './forms/FormulaForm.vue'
 import MetricBackendForm from './forms/MetricBackendForm.vue'
 import RrdForm from './forms/RrdForm.vue'
 import ServiceReferenceLineForm from './forms/ServiceReferenceLineForm.vue'
 
-const { store, thresholds, metricBackendAvailable, titleMacros } = defineProps<{
+const {
+  store,
+  thresholds,
+  metricBackendAvailable,
+  createServicesAvailable,
+  metricBackendDefaultTitle,
+  titleMacros
+} = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
   metricBackendAvailable: boolean
+  createServicesAvailable: boolean
+  /** What the engine expands `$DEFAULT_TITLE$` to for a metric-backend row. */
+  metricBackendDefaultTitle: string
   titleMacros: TitleMacroGroup[]
 }>()
 
@@ -135,6 +147,24 @@ const rowActions: CellAction[] = [
   { id: 'delete', label: _t('Delete'), icon: 'delete' }
 ]
 
+/** Metric-backend rows gain an "Add rule" action once their query is complete. */
+function rowActionsFor(row: DesignerItem): CellAction[] {
+  if (
+    metricBackendAvailable &&
+    createServicesAvailable &&
+    row.type === 'metric_backend' &&
+    isComplete(row)
+  ) {
+    return [
+      ...rowActions,
+      { id: 'add-rule', label: _t('Add rule: Metric backend (Custom query)'), icon: 'add-rule' }
+    ]
+  }
+  return rowActions
+}
+
+const metricBackendRuleItem = ref<MetricBackendItem | null>(null)
+
 const rowDelete = useDeleteWithDependents(store, () => {
   rowSelection.value = {}
 })
@@ -144,6 +174,8 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
     store.clone([row.id])
   } else if (action.id === 'delete') {
     rowDelete.request([row.id])
+  } else if (action.id === 'add-rule' && row.type === 'metric_backend' && isComplete(row)) {
+    metricBackendRuleItem.value = row
   }
 }
 
@@ -256,8 +288,8 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
           <ActionsCell
             column-id="actions"
             vertical-align="middle"
-            :actions="rowActions"
-            :max-visible="2"
+            :actions="rowActionsFor(row)"
+            :max-visible="3"
             @select="onRowAction(row, $event)"
           />
         </template>
@@ -327,6 +359,14 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
       :dependents="rowDelete.pending.value.dependents"
       @confirm="rowDelete.confirm()"
       @close="rowDelete.cancel()"
+    />
+
+    <MetricBackendRuleSlideIn
+      v-if="metricBackendRuleItem !== null"
+      open
+      :item="metricBackendRuleItem"
+      :default-title="metricBackendDefaultTitle"
+      @close="metricBackendRuleItem = null"
     />
   </div>
 </template>

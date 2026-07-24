@@ -136,6 +136,8 @@ function renderBody(mode: 'view' | 'edit', overrides: { displaySettings?: boolea
       palette: PALETTE,
       thresholds: { warning: '#ffd000', critical: '#ff3232' },
       metricBackendAvailable: false,
+      createServicesAvailable: true,
+      metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
       titleMacros: [],
       ...overrides
     }

@@ -45,6 +45,8 @@ const {
   palette,
   thresholds,
   metricBackendAvailable,
+  createServicesAvailable,
+  metricBackendDefaultTitle,
   titleMacros
 } = defineProps<{
   graph: CustomGraphObject
@@ -56,6 +58,8 @@ const {
   palette: readonly string[]
   thresholds: { warning: string; critical: string }
   metricBackendAvailable: boolean
+  createServicesAvailable: boolean
+  metricBackendDefaultTitle: string
   titleMacros: TitleMacroGroup[]
 }>()
 
@@ -301,6 +305,8 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
               :store="store"
               :thresholds="thresholds"
               :metric-backend-available="metricBackendAvailable"
+              :create-services-available="createServicesAvailable"
+              :metric-backend-default-title="metricBackendDefaultTitle"
               :title-macros="titleMacros"
               @add-calculation="slideoutOpen = true"
             />

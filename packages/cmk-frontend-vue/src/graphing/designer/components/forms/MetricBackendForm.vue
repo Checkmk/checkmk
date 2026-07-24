@@ -17,6 +17,12 @@ import type { ConsolidationFunction } from '@/metric-backend/consolidation/types
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import type { DraftMetricBackendItem } from '../../drafts'
+import {
+  DEFAULT_HISTOGRAM_PERCENTILE,
+  DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
+} from '../../metricBackend'
 import type { MetricBackendItem } from '../../types'
 
 const { item, store } = defineProps<{
@@ -25,11 +31,6 @@ const { item, store } = defineProps<{
 }>()
 
 const { _t } = usei18n()
-
-const DEFAULT_HISTOGRAM_PERCENTILE = 90
-const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
-const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
-const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100
 
 type Consolidation = MetricBackendItem['consolidation_function']
 

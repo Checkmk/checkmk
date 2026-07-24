@@ -131,6 +131,8 @@ const PROPS: CustomGraphDesigner = {
   critical_color: '#ff3232',
   logged_in_user: 'me',
   metric_backend_available: false,
+  create_services_available: true,
+  metric_backend_default_title: '$METRIC_NAME$ - $SERIES_ID$',
   title_macros: [{ source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$'] }],
   initial_breadcrumb: [
     { title: 'Customize', link: null },

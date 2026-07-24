@@ -3,15 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.mem import check_memory_element
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.memory import check_element
 from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
-
-check_info = {}
 
 #
 # Example Output:
@@ -19,17 +24,17 @@ check_info = {}
 # .1.3.6.1.4.1.5951.4.1.1.41.4.0  7902
 
 
-def discover_netscaler_mem(info):
-    if info:
-        yield None, {}
+def discover_netscaler_mem(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_netscaler_mem(_no_item, params, info):
-    used_mem_perc, total_mem_mb = map(float, info[0])
+def check_netscaler_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    used_mem_perc, total_mem_mb = map(float, section[0])
     total_mem = total_mem_mb * 1024 * 1024
     used_mem = used_mem_perc / 100.0 * total_mem
 
-    yield check_memory_element(
+    yield from check_element(
         "Usage",
         used_mem,
         total_mem,
@@ -42,14 +47,19 @@ def parse_netscaler_mem(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["netscaler_mem"] = LegacyCheckDefinition(
+snmp_section_netscaler_mem = SimpleSNMPSection(
     name="netscaler_mem",
-    parse_function=parse_netscaler_mem,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41",
         oids=["2", "4"],
     ),
+    parse_function=parse_netscaler_mem,
+)
+
+
+check_plugin_netscaler_mem = CheckPlugin(
+    name="netscaler_mem",
     service_name="Memory",
     discovery_function=discover_netscaler_mem,
     check_function=check_netscaler_mem,

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { fireEvent, render } from '@testing-library/vue'
 
 import CmkTrendChart from '@/network-flow/CmkTrendChart/CmkTrendChart.vue'
 import type { CmkTrendChartProps, TrendChartSeries } from '@/network-flow/CmkTrendChart/types'
@@ -67,6 +67,24 @@ test('assigns distinct palette colors to the first two series', () => {
   ]
   expect(swatches).toHaveLength(2)
   expect(swatches[0]!.style.backgroundColor).not.toBe(swatches[1]!.style.backgroundColor)
+})
+
+test('emits seriesClick with the series name when a clickable legend name is activated', async () => {
+  const { container, emitted } = renderChart({ clickableSeries: true })
+
+  const button = container.querySelector<HTMLButtonElement>(
+    '.network-flow-trend-chart-legend__name--link'
+  )
+  expect(button).not.toBeNull()
+  await fireEvent.click(button!)
+
+  expect(emitted()['seriesClick']).toEqual([['HTTP']])
+})
+
+test('renders plain (non-clickable) legend names by default', () => {
+  const { container } = renderChart()
+
+  expect(container.querySelector('.network-flow-trend-chart-legend__name--link')).toBeNull()
 })
 
 test('draws no path when a series has fewer than two points', () => {

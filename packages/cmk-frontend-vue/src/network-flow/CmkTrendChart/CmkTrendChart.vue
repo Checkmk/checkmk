@@ -16,6 +16,8 @@ import {
 
 const props = defineProps<CmkTrendChartProps>()
 
+const emit = defineEmits<{ seriesClick: [name: string] }>()
+
 // The series keep their (ranked) order; colors are assigned by index and cycle
 // through the palette, so the plot and the legend agree on each series' color.
 const coloredSeries = computed<TrendChartSeriesWithColor[]>(() =>
@@ -36,7 +38,12 @@ const coloredSeries = computed<TrendChartSeriesWithColor[]>(() =>
       />
     </div>
     <div class="network-flow-cmk-trend-chart__legend">
-      <TrendChartLegend :series="coloredSeries" :format-value="formatValue" />
+      <TrendChartLegend
+        :series="coloredSeries"
+        :format-value="formatValue"
+        :clickable="clickableSeries"
+        @name-click="emit('seriesClick', $event)"
+      />
     </div>
   </div>
 </template>

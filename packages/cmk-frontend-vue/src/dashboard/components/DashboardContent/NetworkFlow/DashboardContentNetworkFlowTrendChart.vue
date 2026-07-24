@@ -9,8 +9,9 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
-import { computed, onBeforeMount, ref, watch } from 'vue'
+import { computed, inject, onBeforeMount, ref, watch } from 'vue'
 
+import { autonomousSystemSlideInKey } from '@/dashboard/types/injectionKeys.ts'
 import type { NetworkFlowTrendChartContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkTrendChart, { type TrendChartSeries } from '@/network-flow/CmkTrendChart'
@@ -20,6 +21,25 @@ import type { ContentProps } from '../types.ts'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<NetworkFlowTrendChartContent>>()
+
+// null when the dashboard does not wire it up; series names then stay plain text.
+const openAutonomousSystemSlideIn = inject(autonomousSystemSlideInKey, null)
+
+// The autonomous_systems dimension labels its series "AS<n>"; make those open
+// the AS detail slide-in.
+const clickableSeries = computed(
+  () => props.content.dimension === 'autonomous_systems' && openAutonomousSystemSlideIn !== null
+)
+
+function onSeriesClick(name: string): void {
+  if (!openAutonomousSystemSlideIn) {
+    return
+  }
+  const asn = Number(name.replace(/^AS/, ''))
+  if (!Number.isNaN(asn)) {
+    openAutonomousSystemSlideIn(asn)
+  }
+}
 
 // The trend series are per-minute throughput values; format both the axis ticks
 // and the legend statistics as bits per second, in the mockups' unit style
@@ -80,6 +100,8 @@ watch(dataParameters, () => void fetchData())
         :series="series"
         :display-mode="content.display_mode"
         :format-value="formatValue"
+        :clickable-series="clickableSeries"
+        @series-click="onSeriesClick"
       />
     </div>
   </DashboardContentContainer>

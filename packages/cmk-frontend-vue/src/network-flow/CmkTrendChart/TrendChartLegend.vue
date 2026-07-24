@@ -14,7 +14,11 @@ const { _t } = usei18n()
 defineProps<{
   series: TrendChartSeriesWithColor[]
   formatValue: (value: number) => string
+  /** When true, each series name renders as a button emitting `nameClick`. */
+  clickable?: boolean
 }>()
+
+const emit = defineEmits<{ nameClick: [name: string] }>()
 </script>
 
 <template>
@@ -45,7 +49,15 @@ defineProps<{
             class="network-flow-trend-chart-legend__swatch"
             :style="{ backgroundColor: chartColorCss(item.color) }"
           />
-          <span class="network-flow-trend-chart-legend__name">{{ item.name }}</span>
+          <button
+            v-if="clickable"
+            type="button"
+            class="network-flow-trend-chart-legend__name network-flow-trend-chart-legend__name--link"
+            @click="emit('nameClick', item.name)"
+          >
+            {{ item.name }}
+          </button>
+          <span v-else class="network-flow-trend-chart-legend__name">{{ item.name }}</span>
         </td>
         <td class="network-flow-trend-chart-legend__td network-flow-trend-chart-legend__td--value">
           {{ formatValue(item.minimum) }}
@@ -122,5 +134,20 @@ defineProps<{
 .network-flow-trend-chart-legend__name {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Clickable series name: a bare button styled like CmkLink. */
+.network-flow-trend-chart-legend__name--link {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.network-flow-trend-chart-legend__name--link:hover {
+  color: var(--cmk-link-hover-color, #15d1a0);
 }
 </style>

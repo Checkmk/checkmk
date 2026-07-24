@@ -38,6 +38,8 @@ export interface CmkTrendChartProps {
    * throughput formatter rendering 3_200_000_000 as "3.20 Gbps".
    */
   formatValue: (value: number) => string
+  /** When true, legend series names render as buttons emitting `seriesClick`. */
+  clickableSeries?: boolean
 }
 
 // The per-series palette, cycled by series index. Ordered to match the flow

@@ -3,17 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import {
-  content_wrapper_size,
-  execute_javascript_by_object,
-  get_content_wrapper_object
-} from './utils'
+import { execute_javascript_by_object } from './utils'
 
 //#   +--------------------------------------------------------------------+
 //#   | Mouseover hover menu, used for performance graph popups            |
 //#   '--------------------------------------------------------------------'
 
-type ContainerSize = { height: number | null; width: number | null }
 const HOVER_PORTAL_CLASS = 'cmk-hover-popup-portal'
 let g_hover_menu: HTMLDivElement | null
 
@@ -62,76 +57,7 @@ export function update_position(event_: MouseEvent) {
   }
 
   const hoverSpacer = 8
-
-  // When inside the fixed portal, use viewport-relative clientX/clientY directly.
-  if (g_hover_menu.closest(`.${HOVER_PORTAL_CLASS}`)) {
-    update_position_fixed(event_, hoverSpacer)
-    return
-  }
-
-  // document.body.scrollTop does not work in IE
-  const scrollTop = document.body.scrollTop
-    ? document.body.scrollTop
-    : document.documentElement.scrollTop
-  const scrollLeft = document.body.scrollLeft
-    ? document.body.scrollLeft
-    : document.documentElement.scrollLeft
-
-  let x = event_.clientX
-  let y = event_.clientY
-  const content_wrapper = get_content_wrapper_object()
-  if (content_wrapper) {
-    x = x - content_wrapper.offsetLeft
-    y = y - content_wrapper.offsetTop
-  }
-
-  // hide the menu first to avoid an "up-then-over" visual effect
-  g_hover_menu.style.visibility = 'hidden'
-  g_hover_menu.style.left = scrollLeft + x + hoverSpacer + 'px'
-  g_hover_menu.style.top = scrollTop + y + hoverSpacer + 'px'
-
-  const hoverLeft = parseInt(g_hover_menu.style.left.replace('px', ''))
-  const container_size = content_wrapper_size()
-  let covers_full_width = false
-
-  if (hoverLeft + g_hover_menu.clientWidth > scrollLeft + container_size.width!) {
-    // The hover menu runs out of screen horizontally
-    if (g_hover_menu.clientWidth + hoverSpacer <= x) {
-      // Put the hover menu to the left of the cursor
-      g_hover_menu.style.width = g_hover_menu.clientWidth + 'px'
-      g_hover_menu.style.left = scrollLeft + x - g_hover_menu.clientWidth - hoverSpacer + 'px'
-    } else {
-      // Stretch the hover menu to full screen width
-      stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer)
-      covers_full_width = true
-    }
-  }
-
-  const hoverTop = parseInt(g_hover_menu.style.top.replace('px', ''))
-  if (hoverTop + g_hover_menu.clientHeight > scrollTop + container_size.height!) {
-    // The hover menu runs out of screen vertically
-    if (g_hover_menu.clientHeight + hoverSpacer <= container_size.height!) {
-      // The hover menu fits into the screen vertically
-      if (covers_full_width && g_hover_menu.clientHeight + hoverSpacer < y) {
-        // Put the hover menu with full screen width above the cursor
-        g_hover_menu.style.top = scrollTop + y - g_hover_menu.clientHeight - hoverSpacer + 'px'
-      } else if (!covers_full_width) {
-        // Pull the hover menu as far to the top as needed
-        g_hover_menu.style.top =
-          scrollTop + container_size.height! - g_hover_menu.clientHeight - hoverSpacer + 'px'
-      } else {
-        stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer)
-      }
-    } else {
-      stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer)
-    }
-  }
-
-  g_hover_menu.style.visibility = 'visible'
-}
-
-function update_position_fixed(event_: MouseEvent, hoverSpacer: number) {
-  const menu = g_hover_menu!
+  const menu = g_hover_menu
   const vw = document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
 
@@ -159,29 +85,8 @@ function update_position_fixed(event_: MouseEvent, hoverSpacer: number) {
   menu.style.visibility = 'visible'
 }
 
-function stretch_to_full_width(
-  _hover_menu: HTMLDivElement,
-  container_size: ContainerSize,
-  scrollLeft: number,
-  hoverSpacer: number
-) {
-  g_hover_menu!.style.left = hoverSpacer + scrollLeft + 'px'
-  g_hover_menu!.style.width = container_size.width! - 2 * hoverSpacer + 'px'
-}
-
-function hover_container() {
-  // On dashboard pages, use a fixed portal on document.body to escape
-  // stacking contexts and overflow containers that hide the tooltip.
-  if (document.body.classList.contains('dashboard')) {
-    return ensure_hover_portal()
-  }
-
-  // Return the content wrapper div if it exists, otherwise fall back to the
-  // document body.
-  return get_content_wrapper_object() ?? document.body
-}
-
-function ensure_hover_portal(): HTMLDivElement {
+function hover_container(): HTMLDivElement {
+  // Always use a fixed portal on document.body
   const existing = document.body.querySelector(`.${HOVER_PORTAL_CLASS}`)
   if (existing instanceof HTMLDivElement) return existing
   const portal = document.createElement('div')

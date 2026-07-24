@@ -55,7 +55,6 @@ def show_filter_form(
         html.close_div()
 
         html.hidden_fields()
-    html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
 
     # The filter popup is shown automatically when it has been submitted before on page reload. To
     # know that the user closed the popup after filtering, we have to hook into the close_popup

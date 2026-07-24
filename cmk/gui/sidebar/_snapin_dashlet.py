@@ -92,7 +92,6 @@ class SnapinWidgetIFramePage(Page):
             yield None
         finally:
             html.close_div()
-            html.javascript('cmk.utils.add_simplebar_scrollbar("check_mk_sidebar");')
 
     @staticmethod
     @contextlib.contextmanager

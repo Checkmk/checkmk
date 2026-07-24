@@ -306,7 +306,6 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript(
             f"cmk.valuespecs.listofmultiple_init({json.dumps(varprefix)}, {json.dumps(filters_applied)});"
         )
-        html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
 class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):

@@ -1213,12 +1213,7 @@ class DiscoveryPageRenderer:
 
     def _render_fix_all_element(self, title: str, count: int, href: str) -> None:
         html.open_li()
-        html.open_ts_container(
-            container="a",
-            href=href,
-            function_name="fix_simplebar_scroll_to_id_in_chrome",
-            arguments=None,
-        )
+        html.open_a(href=href)
         html.span(title)
         html.span(str(count), class_="changed" if count else "")
         html.close_a()

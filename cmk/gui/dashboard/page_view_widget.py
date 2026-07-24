@@ -251,7 +251,6 @@ class ViewWidgetIFramePageHelper:
             if is_preview:
                 html.close_div()
             html.close_div()
-            html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
             if is_public:
                 html.javascript("cmk.dashboard.ignore_public_dashboard_clicks();")
 

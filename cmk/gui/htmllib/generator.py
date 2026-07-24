@@ -55,7 +55,6 @@ KnownTSFunction = typing.Literal[
     "render_stats_table",
     "insert_before",
     "lock_and_redirect",
-    "fix_simplebar_scroll_to_id_in_chrome",
     "confirm_on_form_leave",
 ]
 
@@ -734,8 +733,6 @@ class HTMLWriter:
         content_id = "main_page_content"
         css_classes = [] if enable_scrollbar else ["vue-scrolling"]
         self.open_div(id_=content_id, class_=css_classes or None)
-        if enable_scrollbar:
-            self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
 
     def end_page_content(self) -> None:
         self.close_div()

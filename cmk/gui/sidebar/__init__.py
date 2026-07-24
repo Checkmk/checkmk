@@ -541,7 +541,6 @@ class SidebarRenderer:
 
         html.open_body(
             class_=body_classes,
-            onload="cmk.sidebar.initialize_scroll_position(); ",
             data_theme=theme.get(),
         )
 

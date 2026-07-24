@@ -1102,11 +1102,6 @@ class PageMenuPopupsRenderer:
         html.close_div()
         html.close_div()
 
-        if isinstance(entry.item, PageMenuSidePopup):
-            html.final_javascript(
-                "cmk.page_menu.side_popup_add_simplebar_scrollbar(%s);" % json.dumps(popup_id)
-            )
-
 
 def doc_reference_to_page_menu(
     page_menu: PageMenu,

@@ -10,6 +10,7 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
@@ -25,6 +26,7 @@ from cmk.graphing_engine import (
     ScalarOf,
     Service,
     ServiceName,
+    SiteID,
     TimeRange,
     TimeSeries,
 )
@@ -36,7 +38,9 @@ from cmk.gui.graphing._engine_template_graphs import (
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 
-_SERVICE = Service(host_name=HostName("h"), service_name=ServiceName("svc"))
+_SERVICE = Service(
+    host_name=HostName("h"), service_name=ServiceName("svc"), site_id=SiteID("mysite")
+)
 _SPEC = TemplateGraphSpecification(site=None, host_name=HostAddress("h"), service_description="svc")
 _METRIC = "x"
 _DISCOVERY_RANGE = TimeRange(start=0, end=60, step=10)
@@ -122,6 +126,76 @@ def test_template_lifecycle_discover_and_update() -> None:
     # The update fetches the series for the range it is given.
     assert fetch_data.requested_ranges
     assert all(time_range == _DISCOVERY_RANGE for time_range in fetch_data.requested_ranges)
+
+
+def test_template_build_carries_a_per_graph_add_to_specification() -> None:
+    # A built graph carries a copy of the seed specification addressed to that graph by id, so the
+    # add-to endpoints can replay it; the host, service and site are kept from the seed.
+    [built] = build_template_graphs(
+        _SPEC,
+        registered_graphs=[],
+        registered_metrics={},
+        fetch_metric_names=_FakeRRDFetchMetricNames(),
+    )
+    assert built.graph.name == _METRIC
+    assert isinstance(built.specification, TemplateGraphSpecification)
+    # This is a fallback single-metric graph, named after the bare metric by the engine but
+    # resolvable by legacy only as "METRIC_<name>", so that is how the spec must address it.
+    assert built.specification.graph_id == f"METRIC_{_METRIC}"
+    # The id round-trips: replaying the spec yields exactly the graph it was built for.
+    assert [
+        replayed.graph.name
+        for replayed in build_template_graphs(
+            built.specification,
+            registered_graphs=[],
+            registered_metrics={},
+            fetch_metric_names=_FakeRRDFetchMetricNames(),
+        )
+    ] == [_METRIC]
+    assert built.specification.host_name == _SPEC.host_name
+    assert built.specification.service_description == _SPEC.service_description
+    # The seed carried no site; the metric-name fetch resolved it, so the spec is complete.
+    assert built.specification.site == SiteId("mysite")
+
+
+def test_template_build_addresses_plugin_graphs_by_the_plugin_name() -> None:
+    # A graph backed by a registered plug-in is stored under the plug-in's own name, unprefixed.
+    registered_graphs = [
+        graphs_v1.Graph(name="plugin_graph", title=Title("Plugin"), simple_lines=[_METRIC])
+    ]
+    registered_metrics = {
+        _METRIC: metrics_v1.Metric(
+            name=_METRIC,
+            title=Title("X"),
+            unit=metrics_v1.Unit(metrics_v1.DecimalNotation("B")),
+            color=metrics_v1.Color.BLUE,
+        )
+    }
+    [built] = build_template_graphs(
+        TemplateGraphSpecification(
+            site=None,
+            host_name=HostAddress("h"),
+            service_description="svc",
+            destination="dashboard",
+        ),
+        registered_graphs=registered_graphs,
+        registered_metrics=registered_metrics,
+        fetch_metric_names=_FakeRRDFetchMetricNames(),
+    )
+    assert isinstance(built.specification, TemplateGraphSpecification)
+    assert built.specification.graph_id == "plugin_graph"
+    # The id round-trips: replaying the spec yields exactly the graph it was built for.
+    assert [
+        replayed.graph.name
+        for replayed in build_template_graphs(
+            built.specification,
+            registered_graphs=registered_graphs,
+            registered_metrics=registered_metrics,
+            fetch_metric_names=_FakeRRDFetchMetricNames(),
+        )
+    ] == ["plugin_graph"]
+    # Narrowing keeps every other seed field, including the add-to destination.
+    assert built.specification.destination == "dashboard"
 
 
 def test_template_graphs_filter_by_graph_id() -> None:

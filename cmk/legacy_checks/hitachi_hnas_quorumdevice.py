@@ -32,10 +32,7 @@ def check_hitachi_hnas_quorumdevice(item, _no_params, info):
     if status >= len(statusmap):
         return 3, "Quorum Device reports unidentified status %s" % status
 
-    if status == 4:
-        rc = 0
-    else:
-        rc = 1
+    rc = 0 if status == 4 else 1
     return rc, "Quorum Device reports status %s" % statusmap[status]
 
 

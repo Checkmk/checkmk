@@ -211,8 +211,6 @@ ignore = [
 ]
 
 # SIM108 incremental rollout
-"cmk/legacy_checks/**" = ["SIM108"]
-"cmk/legacy_includes/**" = ["SIM108"]
 "non-free/**" = ["SIM108"]
 
 [tool.ruff.lint.mccabe]

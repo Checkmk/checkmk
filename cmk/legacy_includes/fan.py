@@ -11,10 +11,7 @@ from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyResult
 
 # migrated to cmk.plugins.lib/fan.py
 def check_fan(rpm: float, params: Mapping[str, Any] | tuple[float, float]) -> LegacyResult:
-    if isinstance(params, Mapping):
-        param_dict = params
-    else:
-        param_dict = {"lower": params}
+    param_dict = params if isinstance(params, Mapping) else {"lower": params}
 
     levels = param_dict.get("upper", (None, None)) + param_dict.get("lower", (None, None))
     return check_levels(

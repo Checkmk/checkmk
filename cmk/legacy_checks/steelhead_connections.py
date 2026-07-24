@@ -52,10 +52,7 @@ def check_steelhead_connections(item, params, info):
         if value is None:
             continue
 
-        if has_perf:
-            perfdata = [(key, value)]
-        else:
-            perfdata = []
+        perfdata = [(key, value)] if has_perf else []
 
         if params.get(key):
             warn, crit = params[key]

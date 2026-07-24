@@ -164,14 +164,8 @@ def df_check_filesystem_single_coroutine(
         elif isinstance(result, Metric):
             name = result.name
             value = result.value
-            if hasattr(result, "levels"):
-                perflevels = result.levels
-            else:
-                perflevels = None, None
-            if hasattr(result, "boundaries"):
-                perfboundaries = result.boundaries
-            else:
-                perfboundaries = None, None
+            perflevels = result.levels if hasattr(result, "levels") else (None, None)
+            perfboundaries = result.boundaries if hasattr(result, "boundaries") else (None, None)
             perfdata.append((name, value, *perflevels, *perfboundaries))
 
     perfdata.append(("fs_size", size_mb, None, None, 0, None))

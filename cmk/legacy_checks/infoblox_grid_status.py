@@ -22,10 +22,7 @@ def discover_infoblox_grid_status(info):
 def check_infoblox_grid_status(_no_item, _no_params, info):
     master_vip, status = info[0]
     status_readable = status.lower()
-    if status_readable == "online":
-        state = 0
-    else:
-        state = 2
+    state = 0 if status_readable == "online" else 2
 
     return state, f"Status: {status_readable}, Master virtual IP: {master_vip}"
 

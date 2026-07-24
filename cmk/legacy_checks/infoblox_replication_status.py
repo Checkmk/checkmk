@@ -40,10 +40,7 @@ def check_infoblox_replication_status(item, _no_params, info):
     ) in info:
         if ip_addr == item:
             status_readable = status.lower()
-            if status_readable == "online":
-                state = 0
-            else:
-                state = 2
+            state = 0 if status_readable == "online" else 2
 
             return (
                 state,

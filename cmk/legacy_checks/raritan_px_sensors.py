@@ -81,10 +81,7 @@ def parse_raritan_px_sensors(string_table):
 
         # These raritan devices use the PDU-MIB and have no 'isAvailable' information as used
         # in the 'raritan.include' parse function, thus we take the sensor state instead
-        if sensor_state == "-1":
-            availability = "0"
-        else:
-            availability = "1"
+        availability = "0" if sensor_state == "-1" else "1"
 
         pre_parsed.append(
             [

@@ -244,10 +244,7 @@ def check_temperature_trend(
 
             if limit:  # crit levels may not be set, especially lower level
                 diff_to_limit = limit - temp
-                if rate_avg != 0.0:
-                    minutes_left = (diff_to_limit / rate_avg) / 60.0  # fixed: true-division
-                else:
-                    minutes_left = float("inf")
+                minutes_left = diff_to_limit / rate_avg / 60.0 if rate_avg != 0.0 else float("inf")
 
                 def format_minutes(minutes: float) -> str:
                     if minutes > 60:  # hours
@@ -417,10 +414,7 @@ def check_temperature(
                 infotext += dev_levelstext_lower
 
     if dev_status is not None:
-        if dlh == "best":
-            status = min(status, dev_status)
-        else:
-            status = max(status, dev_status)
+        status = min(status, dev_status) if dlh == "best" else max(status, dev_status)
 
     if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
         infotext += ", State on device: %s" % dev_status_name

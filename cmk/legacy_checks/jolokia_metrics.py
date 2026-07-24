@@ -188,16 +188,10 @@ def check_jolokia_metrics_app_state(item, _no_params, info):
 
     # FIXME: this could be nicer.
     if app and "Running" in app:
-        if app["Running"] == "1":
-            app_state = 0
-        else:
-            app_state = 2
+        app_state = 0 if app["Running"] == "1" else 2
     # wenn in app statename steht
     elif app and "stateName" in app:
-        if app["stateName"] == "STARTED":
-            app_state = 0
-        else:
-            app_state = 2
+        app_state = 0 if app["stateName"] == "STARTED" else 2
     if app_state == 3:
         return 3, "data not found in agent output"
     if app_state == 0:

@@ -20,10 +20,7 @@ def discover_palo_alto_sessions(info):
 def check_palo_alto_sessions(_no_item, params, info):
     sessions_supported, total, tcp, udp, icmp, sslproxy = map(int, info[0])
 
-    if sessions_supported == 0:
-        sessions_used_perc = 0.0
-    else:
-        sessions_used_perc = float(total) * 100 / sessions_supported
+    sessions_used_perc = 0.0 if sessions_supported == 0 else float(total) * 100 / sessions_supported
 
     infotext = "%d total active sessions: %d TCP, %d UDP, %d ICMP, %d SSL Proxy." % (
         total,

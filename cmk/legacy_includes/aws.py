@@ -116,10 +116,7 @@ def check_aws_limits(
             yield 1, "Unknown resource %r" % str(resource_key)
             continue
 
-        if p_limit is None:
-            limit_ref = limit
-        else:
-            limit_ref = p_limit
+        limit_ref = limit if p_limit is None else p_limit
 
         infotext = f"{resource_title}: {human_readable_func(amount)} (of max. {human_readable_func(limit_ref)})"
         perfvar = f"aws_{aws_service}_{resource_key}"

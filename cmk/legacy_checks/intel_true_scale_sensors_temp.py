@@ -92,10 +92,7 @@ def parse_intel_true_scale_sensors(string_table):
         sensor_name = " ".join(descr.split(" ")[2:-1])
 
         # We do not known for all sensors. Feel free to extend
-        if ty in ["5", "6"]:
-            factor = 0.001
-        else:
-            factor = 1
+        factor = 0.001 if ty in ["5", "6"] else 1
 
         state, state_readable = map_states[status]
         kwargs = {"dev_status": state, "dev_status_name": state_readable}

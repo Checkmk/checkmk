@@ -29,11 +29,7 @@ def parse_tinkerforge(string_table):
     # provided to us are simply random-generated
 
     def gen_pos(parent, pos):
-        if parent == "0":
-            res = ""
-        else:
-            res = f"{gen_pos(*master_index[parent])}{pos}"
-        return res
+        return "" if parent == "0" else f"{gen_pos(*master_index[parent])}{pos}"
 
     # first, go through all readings and group them by brick(let) type.
     # On this opportunity, also create an index of master bricks which we need

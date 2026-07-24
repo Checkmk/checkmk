@@ -103,6 +103,12 @@ class GraphLineQueryAttribute:
 
 
 @dataclass(frozen=True, kw_only=True)
+class GraphLineGroupByKey:
+    kind: Literal["resource", "scope", "data_point"]
+    key: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class GaugeLast:
     lookback_seconds: float
     type_: Literal["gauge_last"] = "gauge_last"
@@ -196,6 +202,14 @@ class HistogramFractionBetween:
     type_: Literal["histogram_fraction_between"] = "histogram_fraction_between"
 
 
+@dataclass(frozen=True, kw_only=True)
+class HistogramPercentileBy:
+    lookback_seconds: float
+    percentile: float
+    group_by: tuple[GraphLineGroupByKey, ...]
+    type_: Literal["histogram_percentile_by"] = "histogram_percentile_by"
+
+
 type ConsolidationFunction = (
     GaugeLast
     | GaugeMax
@@ -212,6 +226,7 @@ type ConsolidationFunction = (
     | HistogramSumRaw
     | HistogramFractionBelow
     | HistogramFractionBetween
+    | HistogramPercentileBy
 )
 
 

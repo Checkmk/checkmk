@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+//! Config-building helpers for the DB-dependent component tests.
+//! Currently used only by `test_ora_with_db`.
+
 use mk_oracle::config::authentication::{AuthType, Role, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
-use mk_oracle::platform::get_local_instances;
 use mk_oracle::types::{Credentials, InstanceAlias};
 
 /// Mandatory reference endpoint for all DB-dependent tests.
@@ -25,14 +27,6 @@ pub const ORA_ENDPOINT_ENV_VAR: &str = "CI_ORA2_DB_TEST";
 /// The endpoint-iterating tests include it; the explicit-sysdba test
 /// requires it.
 pub const ORA_ENDPOINT_ENV_VAR_SECONDARY: &str = "CI_ORA1_DB_TEST";
-
-/// An Oracle client is installed on this machine: an `ORACLE_HOME` with a
-/// `lib` directory, or an oratab/registry entry.
-pub fn local_oracle_client_present() -> bool {
-    std::env::var("ORACLE_HOME")
-        .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
-        || !get_local_instances().unwrap_or_default().is_empty()
-}
 
 #[cfg(windows)]
 pub mod platform {

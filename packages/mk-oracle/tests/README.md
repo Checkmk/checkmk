@@ -21,13 +21,23 @@ flowchart LR
 ```
 
 - **Unit** — `bazel test //packages/mk-oracle:mk-oracle-lib-test-internal`; pure Rust, no database.
-- **Component** — this directory's `test_ora_sql.rs` / `test_mk_oracle_bin.rs` against a real Oracle DB (see [`docs/test-systems.md`](docs/test-systems.md) for which one).
+- **Component** — this directory's `test_ora_no_db.rs` / `test_ora_discovery.rs` / `test_ora_with_db.rs` / `test_mk_oracle_bin.rs`; the DB-dependent ones run against a real Oracle DB (see [`docs/test-systems.md`](docs/test-systems.md) for which one).
 - **Integration** — `tests/agent_plugin_integration/` at the repo root: Dockerised Oracle Free, exercises the built plugin end-to-end including the legacy-vs-new comparison harness.
 - **Perf / regression** — semi-automated local tiers under `perf/` and `regression/`.
 
 ## Layout
 
-- `test_ora_sql.rs` — main integration suite; connects to every endpoint in `WORKING_ENDPOINTS` and exercises sections, discovery, PDB handling, and custom metrics.
+Split three ways by what each test actually needs, so CI can ship only the
+binary a given host can run:
+
+- `test_ora_no_db.rs` — needs neither a database nor a local Oracle install: runtime/SID
+  detection, plugin creation, configuration and SQL-file resolution. The only binary that
+  runs on hosts with no Oracle access at all (e.g. the Solaris and AIX build machines).
+- `test_ora_discovery.rs` — SID/registry discovery. Reads `/etc/oratab` or the Windows
+  registry directly; needs an Oracle install on the same machine, but no DB connection.
+- `test_ora_with_db.rs` — connects to every endpoint in `WORKING_ENDPOINTS` (the mandatory
+  reference plus the optional secondary one) and exercises sections, discovery, PDB
+  handling, and custom metrics.
 - `test_mk_oracle_bin.rs` — drives the built binary end-to-end (CLI behaviour, agent output).
 - `common/tools.rs` — helpers that build mini `Config`s from an endpoint and, on Windows, patch `PATH`/`TNS_ADMIN` to the bundled OCI runtime.
 - `files/` — fixtures: TNS config under `tns/`, docker compose under `docker/`, and the `test-*.yml` configs.

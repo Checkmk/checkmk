@@ -65,7 +65,7 @@ On a Windows host with the toolchain (e.g. the existing `winagt` node):
 
 ```powershell
 cargo test --release --target x86_64-pc-windows-msvc --no-run
-# → target\x86_64-pc-windows-msvc\release\deps\test_ora_sql-<hash>.exe
+# → target\x86_64-pc-windows-msvc\release\deps\test_ora_with_db-<hash>.exe
 ```
 
 ### 3. Stage on the Oracle host
@@ -82,7 +82,7 @@ $env:CI_ORA2_DB_TEST = "oracle-win-ci:system:${pw}:1521:_::FREE:FREE:_:"
 $env:CI_ORA1_DB_TEST = "oracle-win-ci:sys:${pw}:1521:_:sysdba:FREE:FREE:_:"
 $env:ORACLE_HOME     = "C:\oracle\26ai\dbhomeFree"
 $env:PATH            = "$env:ORACLE_HOME\bin;$env:PATH"
-.\test_ora_sql-<hash>.exe --test-threads=4
+.\test_ora_with_db-<hash>.exe --test-threads=4
 ```
 
 Connection strings for a host with both a 23ai Free and a 19c instance installed:

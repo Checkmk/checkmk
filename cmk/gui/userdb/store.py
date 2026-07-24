@@ -433,26 +433,6 @@ def save_users(
     )
 
 
-def update_user(
-    changed_user: UserId,
-    all_users: Users,
-    user_attributes: Sequence[tuple[str, UserAttribute]],
-    user_connections: Sequence[UserConnectionConfig],
-    now: datetime,
-    *,
-    pprint_value: bool,
-) -> None:
-    _update_users(
-        [changed_user],
-        all_users,
-        user_attributes,
-        user_connections,
-        now=now,
-        pprint_value=pprint_value,
-        call_users_saved_hook=True,
-    )
-
-
 # TODO: Isn't this needed only while generating the contacts.mk?
 #       Check this and move it to the right place
 def _add_custom_macro_attributes(

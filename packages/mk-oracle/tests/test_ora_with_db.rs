@@ -475,7 +475,10 @@ fn test_remote_mini_connection_version() {
         let version_old = r_old.unwrap();
         //check that both methods return the same values
         assert_eq!(version_ok, version_old);
-        assert!(String::from(version_ok).starts_with("2"));
+        assert!(
+            system::convert_to_num_version(&version_ok).is_some(),
+            "not a well-formed version: {version_ok}"
+        );
 
         // check missing db again
         let instances_new = system::WorkInstances::new(&conn, None);

@@ -511,11 +511,10 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
     anon_folder_attributes: dict[str, FolderAttributesForBase] = {}
     for folder_path, folder_attrs in data.folder_attributes.items():
         assert isinstance(folder_attrs, dict)
-        assert list(folder_attrs.keys()) == ["bake_agent_package"]
-
-        anon_folder_attributes[anon_interface.get_folder_path(folder_path)] = {
-            "bake_agent_package": folder_attrs["bake_agent_package"]
-        }
+        # These attributes contain nothing to anonymize, only the folder path does
+        allowed_keys = {"bake_agent_package", "cmk_agent_connection"}
+        assert set(folder_attrs.keys()) - allowed_keys == set()
+        anon_folder_attributes[anon_interface.get_folder_path(folder_path)] = folder_attrs
 
     return HostsStorageData(
         locked_hosts=anon_locked_hosts,

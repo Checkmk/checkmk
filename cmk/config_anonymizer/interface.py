@@ -9,7 +9,7 @@ import string
 from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Literal
+from typing import Literal, overload
 from urllib.parse import urlparse
 
 from cmk.ccc.site import omd_site
@@ -194,7 +194,16 @@ class AnonInterface:
     def get_site_alias(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.SITE_ALIAS)
 
-    def get_customer(self, original: str) -> str:
+    @overload
+    def get_customer(self, original: str) -> str: ...
+
+    @overload
+    def get_customer(self, original: None) -> None: ...
+
+    def get_customer(self, original: str | None) -> str | None:
+        # A global customer (None) has to stay a global customer
+        if original is None:
+            return original
         return self._get_entry(original, ANONTYPE.CUSTOMER)
 
     def get_url(self, original: str) -> str:

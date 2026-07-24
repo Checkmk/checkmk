@@ -131,21 +131,30 @@ def _fake_local_connection(host_list: Sequence[Sequence[str]]) -> Callable:
 
 
 def test_adapter_catalogue_names(tmp_path: Path) -> None:
-    catalogue = _adapter_catalogue(tmp_path)
-    assert {
-        "parameters",
-        "general_info",
-        "omd_config",
+    assert set(_adapter_catalogue(tmp_path)) == {
+        "apache_config",
+        "appliance_info",
+        "bi_runtime_data",
         "checkmk_overview",
+        "core_performance_metrics",
+        "disk_usage",
+        "environment_variables",
+        "file_sizes",
+        "general_info",
         "hw_info",
-        "mkp_inventory",
         "latest_crash_reports",
-    }.issubset(catalogue)
-    # presence based: CEE plugins are not available on community
-    assert "performance_graphs" not in catalogue
-    assert "dcd_state" not in catalogue
-    assert catalogue["general_info"].always
-    assert not catalogue["mkp_inventory"].always
+        "metric_backend_state",
+        "mkp_inventory",
+        "network_state",
+        "omd_config",
+        "os_packages",
+        "otel_license_counts",
+        "parameters",
+        "processes_and_logins",
+        "python_packages",
+        "selinux",
+        "vendor_info",
+    }
 
 
 def test_diagnostics_dump_create(tmp_path: Path) -> None:

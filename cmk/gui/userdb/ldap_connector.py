@@ -90,6 +90,9 @@ from ._connections import (
     ActivePlugins,
     get_connection,
     get_ldap_connections,
+    GroupsToAttributes,
+    GroupsToRoles,
+    GroupsToSync,
     LDAPUserConnectionConfig,
 )
 from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
@@ -1966,20 +1969,31 @@ def _get_groups_of_user(
             assert isinstance(c, LDAPUserConnector)
             connections.add(c)
 
-    # Load all LDAP groups which have a CN matching one contact
-    # group which exists in WATO
-    ldap_groups: GroupMemberships = {}
-    for conn in connections:
-        ldap_groups.update(conn._get_group_memberships(cg_names, nested=nested))
+    dn_names = [n.lower() for n in cg_names if "=" in n]
+    cn_names = [n.lower() for n in cg_names if "=" not in n]
 
-    # Now add the groups the user is a member off
-    group_cns = []
-    for group in ldap_groups.values():
-        if user_cmp_val in group["members"]:
-            assert isinstance(group["cn"], str)
-            group_cns.append(group["cn"])
+    group_ids: list[str] = []
 
-    return group_cns
+    if dn_names:
+        dn_groups: GroupMemberships = {}
+        for conn in connections:
+            dn_groups.update(
+                conn._get_group_memberships(dn_names, filt_attr="distinguishedname", nested=nested)
+            )
+        for dn, group in dn_groups.items():
+            if user_cmp_val in group["members"]:
+                group_ids.append(dn)
+
+    if cn_names:
+        cn_groups: GroupMemberships = {}
+        for conn in connections:
+            cn_groups.update(conn._get_group_memberships(cn_names, nested=nested))
+        for group in cn_groups.values():
+            if user_cmp_val in group["members"]:
+                assert isinstance(group["cn"], str)
+                group_ids.append(group["cn"])
+
+    return group_ids
 
 
 def _group_membership_parameters():
@@ -2441,38 +2455,39 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         ldap_user: LDAPUserSpec,
         user: dict,
     ) -> dict:
+        groups_to_attributes = cast(GroupsToAttributes, params)
         # Which groups need to be checked whether or not the user is a member?
-        cg_names = list({g["cn"] for g in params["groups"]})
+        cg_names = list({g["cn"] for g in groups_to_attributes["groups"]})
 
         # Get the group names the user is member of
-        groups = _get_groups_of_user(
-            connection,
-            user_id,
-            ldap_user,
-            cg_names,
-            params.get("nested", False),
-            params.get("other_connections", []),
-        )
+        # Lowercased since the directory may return the dn/cn in a different case
+        # than the group_spec["cn"] configured by the admin.
+        groups = {
+            g.lower()
+            for g in _get_groups_of_user(
+                connection,
+                user_id,
+                ldap_user,
+                cg_names,
+                groups_to_attributes.get("nested", False),
+                groups_to_attributes.get("other_connections", []),
+            )
+        }
+
+        def _is_member(group_spec: GroupsToSync) -> bool:
+            return group_spec["cn"].lower() in groups
 
         # Now construct the user update dictionary
         update = {}
-
-        # First clean all previously set values from attributes to be synced where
-        # user is not a member of
         user_attrs = dict(get_user_attributes())
-        for group_spec in params["groups"]:
+        for group_spec in groups_to_attributes["groups"]:
             attr_name, value = group_spec["attribute"]
-            if group_spec["cn"] not in groups and attr_name in user and attr_name in user_attrs:
-                # not member, but set -> set to default. Maybe it would be cleaner
-                # to just remove the attribute from the user, but the sync plugin
-                # API does not support this at the moment.
+            if not _is_member(group_spec) and attr_name in user and attr_name in user_attrs:
                 update[attr_name] = user_attrs[attr_name].valuespec().default_value()
 
-        # Set the values of the groups the user is a member of
-        for group_spec in params["groups"]:
+        for group_spec in groups_to_attributes["groups"]:
             attr_name, value = group_spec["attribute"]
-            if group_spec["cn"] in groups:
-                # is member, set the configured value
+            if _is_member(group_spec):
                 update[attr_name] = value
 
         return update
@@ -2490,8 +2505,10 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                             elements=[
                                 (
                                     "cn",
-                                    TextInput(
-                                        title=_("Group<nobr> </nobr>CN"),
+                                    LDAPDistinguishedName(
+                                        title=_(
+                                            "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
+                                        ),
                                         size=40,
                                         allow_empty=False,
                                     ),
@@ -2589,15 +2606,17 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
             for group_spec in group_specs:
                 if isinstance(group_spec, str):
-                    dn = group_spec  # be compatible to old config without connection spec
+                    name = group_spec  # be compatible to old config without connection spec
                 elif not isinstance(group_spec, tuple):
                     continue  # skip non configured ones (old valuespecs allowed None)
                 else:
-                    dn = group_spec[0]
-                dn = dn.lower()  # lower case matching for DNs!
+                    name = group_spec[0]
+
+                lookup = name.lower()
+                group = ldap_groups.get(lookup)
 
                 # if group could be found and user is a member, add the role
-                if dn in ldap_groups and user_cmp_val in ldap_groups[dn]["members"]:
+                if group is not None and user_cmp_val in group["members"]:
                     roles.append(role_id)
 
         # Load default roles from default user profile when the user got no role
@@ -2607,51 +2626,58 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
         return {"roles": roles}
 
-    def fetch_needed_groups_for_groups_to_roles(self, connection, params):
-        # Load the needed LDAP groups, which match the DNs mentioned in the role sync plug-in config
-        ldap_groups = {}
-        for connection_id, group_dns in self._get_groups_to_fetch(connection, params).items():
-            conn = get_connection(connection_id)
-            if conn is None:
-                continue
-            assert isinstance(conn, LDAPUserConnector)
+    def fetch_needed_groups_for_groups_to_roles(
+        self,
+        connection: LDAPUserConnector,
+        params: GroupsToRoles,
+    ) -> dict[str, dict[str, str | list[str]]]:
+        """Load the needed LDAP groups, which match the DNs or CNs provided in the configuration"""
+        groups_to_fetch: dict[str, dict[str, list[str]]] = {}
 
-            ldap_groups.update(
-                dict(
-                    conn._get_group_memberships(
-                        group_dns, filt_attr="distinguishedname", nested=params.get("nested", False)
-                    )
-                )
-            )
+        def _add_group_to_fetch(name: str, connection_id: str) -> None:
+            key = "dn" if "=" in name else "cn"
+            groups_to_fetch.setdefault(
+                connection_id, cast(dict[str, list[str]], {"dn": [], "cn": []})
+            )[key].append(name.lower())
 
-        return ldap_groups
-
-    def _get_groups_to_fetch(self, connection, params):
-        groups_to_fetch: dict[str, list[str]] = {}
         for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:
                     if isinstance(group_spec, tuple):
-                        this_conn_id = group_spec[1]
-                        if this_conn_id is None:
-                            this_conn_id = connection.id
-                        groups_to_fetch.setdefault(this_conn_id, [])
-                        groups_to_fetch[this_conn_id].append(group_spec[0].lower())
+                        connection_id = (
+                            group_spec[1] if group_spec[1] is not None else connection.id
+                        )
+                        name = group_spec[0]
                     else:
-                        # Be compatible to old config format (no connection specified)
-                        this_conn_id = connection.id
-                        groups_to_fetch.setdefault(this_conn_id, [])
-                        groups_to_fetch[this_conn_id].append(group_spec.lower())
-
+                        connection_id = connection.id
+                        name = group_spec
+                    _add_group_to_fetch(name, connection_id)
             elif isinstance(group_specs, str):
                 # Need to be compatible to old config formats
-                this_conn_id = connection.id
-                groups_to_fetch.setdefault(this_conn_id, [])
-                groups_to_fetch[this_conn_id].append(group_specs.lower())
+                _add_group_to_fetch(group_specs, connection.id)
 
-        return groups_to_fetch
+        nested = params.get("nested", False)
+        assert isinstance(nested, bool)
 
-    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
+        ldap_groups = {}
+        for connection_id, group_name in groups_to_fetch.items():
+            conn = get_connection(connection_id)
+            if conn is None:
+                continue
+            assert isinstance(conn, LDAPUserConnector)
+            if group_name["dn"]:
+                for dn, group in conn._get_group_memberships(
+                    group_name["dn"], filt_attr="distinguishedname", nested=nested
+                ).items():
+                    ldap_groups[dn.lower()] = group
+            if group_name["cn"]:
+                for group in conn._get_group_memberships(group_name["cn"], nested=nested).values():
+                    assert isinstance(group["cn"], str)
+                    ldap_groups[group["cn"].lower()] = group
+
+        return ldap_groups
+
+    def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2670,7 +2696,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                                 valuespec=Tuple(
                                     elements=[
                                         LDAPDistinguishedName(
-                                            title=_("Group<nobr> </nobr>DN"),
+                                            title=_(
+                                                "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
+                                            ),
                                             size=80,
                                             allow_empty=False,
                                         ),
@@ -2686,8 +2714,8 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                             ),
                             title=role["alias"],
                             help=_(
-                                "Distinguished Names of the LDAP groups to add users this role. "
-                                "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
+                                "Define Distinguished Names or Common Names of the LDAP groups to add users this role. "
+                                "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or <tt>cmk-users</tt><br>"
                                 "This group must be defined within the scope of the "
                                 '<a href="wato.py?mode=ldap_config&varname=ldap_groupspec">LDAP Group Settings</a>.'
                             ),

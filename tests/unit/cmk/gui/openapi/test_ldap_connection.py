@@ -451,7 +451,38 @@ def test_ldap_connection_endpoints_return_404_in_cse_edition(clients: ClientRegi
     resp.assert_status_code(404)
 
 
-def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
+@pytest.mark.parametrize(
+    "adminx_groups, suffix",
+    [
+        (
+            [{"group_dn": "cmk_AD_admins", "search_in": "this_connection"}],
+            "suffix_3_cn",
+        ),
+        (
+            [
+                {
+                    "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                    "search_in": "this_connection",
+                }
+            ],
+            "suffix_3_dn",
+        ),
+        (
+            [
+                {
+                    "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                    "search_in": "this_connection",
+                },
+                {"group_dn": "cmk_AD_admins", "search_in": "this_connection"},
+            ],
+            "suffix_3_both",
+        ),
+    ],
+    ids=["cn", "dn", "both"],
+)
+def test_create_with_custom_user_role(
+    clients: ClientRegistry, adminx_groups: list[dict[str, str]], suffix: str
+) -> None:
     clients.UserRole.clone(body={"role_id": "admin"})
     resp = clients.LdapConnection.create(
         ldap_data={
@@ -461,7 +492,7 @@ def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
                     "type": "active_directory_manual",
                     "ldap_server": "10.200.3.32",
                 },
-                "connection_suffix": {"state": "enabled", "suffix": "suffix_3"},
+                "connection_suffix": {"state": "enabled", "suffix": suffix},
             },
             "sync_plugins": {
                 "groups_to_roles": {
@@ -478,21 +509,83 @@ def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
                             "search_in": "this_connection",
                         }
                     ],
-                    "adminx": [
-                        {
-                            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
-                            "search_in": "this_connection",
-                        }
-                    ],
+                    "adminx": adminx_groups,
                     "handle_nested": True,
                 },
             },
         }
     )
 
-    assert resp.json["extensions"]["sync_plugins"]["groups_to_roles"]["adminx"] == [
-        {
-            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
-            "search_in": "this_connection",
+    assert resp.json["extensions"]["sync_plugins"]["groups_to_roles"]["adminx"] == adminx_groups
+
+
+@pytest.mark.parametrize(
+    "temperature_unit_groups, suffix",
+    [
+        (
+            [
+                {
+                    "group_cn": "cmk_AD_admins",
+                    "attribute_to_set": "temperature_unit",
+                    "value": "fahrenheit",
+                }
+            ],
+            "suffix_4_cn",
+        ),
+        (
+            [
+                {
+                    "group_cn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                    "attribute_to_set": "temperature_unit",
+                    "value": "fahrenheit",
+                }
+            ],
+            "suffix_4_dn",
+        ),
+        (
+            [
+                {
+                    "group_cn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                    "attribute_to_set": "temperature_unit",
+                    "value": "fahrenheit",
+                },
+                {
+                    "group_cn": "cmk_AD_admins",
+                    "attribute_to_set": "temperature_unit",
+                    "value": "fahrenheit",
+                },
+            ],
+            "suffix_4_both",
+        ),
+    ],
+    ids=["cn", "dn", "both"],
+)
+def test_create_with_temperature_unit_from_group(
+    clients: ClientRegistry, temperature_unit_groups: list[dict[str, str]], suffix: str
+) -> None:
+    resp = clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": suffix},
+            },
+            "sync_plugins": {
+                "groups_to_custom_user_attributes": {
+                    "state": "enabled",
+                    "handle_nested": True,
+                    "groups_to_sync": temperature_unit_groups,
+                },
+            },
         }
-    ]
+    )
+
+    assert (
+        resp.json["extensions"]["sync_plugins"]["groups_to_custom_user_attributes"][
+            "groups_to_sync"
+        ]
+        == temperature_unit_groups
+    )

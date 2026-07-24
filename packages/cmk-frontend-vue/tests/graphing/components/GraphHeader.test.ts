@@ -31,7 +31,7 @@ test('omits the graph title when showTitle is not set', () => {
 })
 
 test('the consolidation dropdown shows the selected function', async () => {
-  render(GraphHeader, { props: { consolidationFn: 'max' } })
+  render(GraphHeader, { props: { showConsolidation: true, consolidationFn: 'max' } })
 
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Graph values' })).toHaveTextContent('Max')
@@ -40,7 +40,9 @@ test('the consolidation dropdown shows the selected function', async () => {
 
 test('selecting a consolidation function emits update:consolidationFn', async () => {
   const user = userEvent.setup()
-  const { emitted } = render(GraphHeader, { props: { consolidationFn: 'avg' } })
+  const { emitted } = render(GraphHeader, {
+    props: { showConsolidation: true, consolidationFn: 'avg' }
+  })
 
   await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
   await user.click(await screen.findByRole('option', { name: 'Max' }))
@@ -99,10 +101,21 @@ test('switching the zoom mode emits update:zoomMode', async () => {
   expect(emitted()['update:zoomMode']).toEqual([['value']])
 })
 
-test('hides the consolidation dropdown and zoom selector when showControls is false', () => {
-  render(GraphHeader, { props: { showControls: false } })
+test('omits the consolidation dropdown unless showConsolidation is set', () => {
+  render(GraphHeader, {})
 
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+})
+
+test('shows the consolidation dropdown when showConsolidation is set', () => {
+  render(GraphHeader, { props: { showConsolidation: true } })
+
+  expect(screen.getByRole('combobox', { name: 'Graph values' })).toBeInTheDocument()
+})
+
+test('hides the zoom selector when showControls is false', () => {
+  render(GraphHeader, { props: { showControls: false } })
+
   expect(screen.queryByRole('switch')).not.toBeInTheDocument()
 })
 

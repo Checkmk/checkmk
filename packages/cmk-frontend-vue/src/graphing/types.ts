@@ -50,6 +50,7 @@ export interface GraphPanelProps {
   // the plot (canvas) size by subtracting its margins.
   figureWidth?: number
   figureHeight?: number
+  showConsolidation?: boolean
   showLegend?: boolean
   legendPosition?: 'bottom' | 'right'
   showBrush?: boolean

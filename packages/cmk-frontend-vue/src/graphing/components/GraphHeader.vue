@@ -32,6 +32,7 @@ const props = withDefaults(
     timeRange?: TimeRange | undefined
     showTimestamp?: boolean | undefined
     showControls?: boolean
+    showConsolidation?: boolean | undefined
     showBurgerMenu?: boolean | undefined
     burgerMenuGroups?: BurgerMenuGroup[] | undefined
   }>(),
@@ -92,7 +93,7 @@ const resolutionLabel = computed(() =>
   <div class="graphing-graph-header">
     <GraphTitle v-if="showTitle" :title="title ?? ''" />
     <div class="graphing-graph-header__controls">
-      <template v-if="showControls">
+      <template v-if="showConsolidation">
         <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
         <CmkDropdown
           v-model="consolidationModel"

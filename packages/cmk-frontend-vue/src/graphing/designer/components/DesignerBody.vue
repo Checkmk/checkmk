@@ -230,7 +230,6 @@ const calculationDelete = useDeleteWithDependents(store)
       :show-brush="mode === 'view'"
       :overview="drawnOverview"
       @update:requested-time-range="requestedTimeRange = $event"
-      @update:consolidation-fn="consolidationFn = $event"
     />
 
     <CmkAlertBox v-if="mode === 'edit' && saveError !== null" variant="error">
@@ -246,7 +245,6 @@ const calculationDelete = useDeleteWithDependents(store)
         :metrics="drawnMetrics"
         :horizontal-lines="data.horizontalLines.value"
         :consolidation-fn="consolidationFn"
-        @update:consolidation-fn="consolidationFn = $event"
         @hover-metric="highlightedMetricName = $event"
       />
 

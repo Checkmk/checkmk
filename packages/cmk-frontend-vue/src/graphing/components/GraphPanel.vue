@@ -109,6 +109,7 @@ const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
           :time-range="dataTimeRange"
           :show-timestamp="showTimestamp"
           :show-controls="interactive"
+          :show-consolidation="showConsolidation"
           :show-burger-menu="showBurgerMenu"
           :burger-menu-groups="burgerMenuGroups"
         />

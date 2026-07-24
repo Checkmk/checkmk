@@ -106,6 +106,7 @@ const overviews = computed(() =>
         :title="graph.title"
         :show-title="true"
         :show-timestamp="true"
+        :show-consolidation="true"
         :show-legend="true"
         :show-brush="true"
         :overview="overviews[i]"

@@ -126,13 +126,6 @@ body.side.main {
       margin-top: 0;
     }
   }
-
-  // needed to place the add_snapin button always at the bottom
-  .simplebar-content {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-  }
 }
 
 #content_area {

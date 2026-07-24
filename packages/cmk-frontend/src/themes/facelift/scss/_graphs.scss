@@ -120,23 +120,6 @@ div.graph {
     margin-top: 8px;
     max-height: 600px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: $simplebar-scrollbar-color transparent;
-
-    &::-webkit-scrollbar {
-      width: $simplebar-track-width;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: $simplebar-scrollbar-color;
-      border: 3px solid transparent;
-      border-radius: 2px;
-      background-clip: padding-box;
-    }
   }
 
   table.legend {

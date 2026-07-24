@@ -9,7 +9,7 @@
 body.dashboard {
   overflow: hidden;
 
-  &.main div#main_page_content:not(.simplebar-scrollable-x) {
+  &.main div#main_page_content {
     padding-bottom: 0;
   }
 
@@ -165,7 +165,7 @@ body.main.dashlet {
   // pages, so their kiosk document also wraps the content in #content_area.
   // That wrapper is main-page chrome and has no place inside a widget: its
   // height: 100% / overflow: hidden clamps and clips the content between
-  // #dashlet_content_wrapper (the SimpleBar scroll container) and the view, so
+  // #dashlet_content_wrapper (the scroll container) and the view, so
   // the widget stops scrolling, and its background / padding-left leak page
   // chrome into the widget. Dropping the box from the layout makes the widget
   // behave as it did before #content_area was introduced.
@@ -198,25 +198,9 @@ body.main.dashlet {
     overflow: hidden;
     background-color: $dashlet-inner-bg-color;
 
-    div#dashlet_content_wrapper[data-simplebar='init'] {
+    div#dashlet_content_wrapper {
       height: 100%;
       overflow: auto;
-
-      &.simplebar-scrollable-x div#data_container {
-        padding-bottom: $simplebar-track-width;
-      }
-
-      &.simplebar-scrollable-y div#data_container {
-        padding-right: $simplebar-track-width;
-      }
-
-      > div.simplebar-track.simplebar-horizontal {
-        height: $simplebar-track-width;
-
-        div.simplebar-scrollbar:before {
-          top: 3px;
-        }
-      }
 
       div.click_shield {
         pointer-events: none;

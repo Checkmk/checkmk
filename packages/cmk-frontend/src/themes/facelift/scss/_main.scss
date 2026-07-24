@@ -1387,47 +1387,45 @@ tr.hidden {
   display: none;
 }
 
-// In the case of both scrollbars being visible, the padding of #main_page_content doesn't work
-// in views, so we need additional padding on the within #data_container.
-// We need this "> .simplebar-*" chain to make sure to only select the direct child div of
-// #main_page_content
-#main_page_content.simplebar-scrollable-x.simplebar-scrollable-y
-  > .simplebar-wrapper
-  > .simplebar-mask
-  > .simplebar-offset
-  > .simplebar-content-wrapper
-  > .simplebar-content
-  > div#data_container {
-  padding-right: $simplebar-track-width;
+// The global scrollbar design, shared by legacy pages and Vue apps alike
+::-webkit-scrollbar {
+  width: $scrollbar-width;
+  height: $scrollbar-width;
 }
 
-.simplebar-scrollbar::before {
-  background: $simplebar-scrollbar-color;
-  border-radius: 2px;
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
-.simplebar-track {
-  &.simplebar-vertical {
-    width: $simplebar-track-width;
+::-webkit-scrollbar-thumb {
+  background-color: $scrollbar-color;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
 
-    div.simplebar-scrollbar::before {
-      left: 3px;
-      width: $simplebar-scrollbar-width;
-    }
+::-webkit-scrollbar-thumb:hover {
+  background-color: $scrollbar-color-hover;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: $scrollbar-color-active;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+// Firefox ignores the ::-webkit-scrollbar rules; give it the same colors via
+// scrollbar-color, which also stops it from tinting the dragged thumb with the
+// system accent color. This must stay Firefox-only (@supports -moz-appearance):
+// in Chromium a non-auto scrollbar-color disables the styling above.
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-color: $scrollbar-color transparent;
   }
-
-  &.simplebar-horizontal {
-    height: $spacing-double;
-
-    div.simplebar-scrollbar:before {
-      top: $spacing-half;
-      height: $simplebar-scrollbar-width;
-    }
-  }
-}
-
-.simplebar-scrollbar.simplebar-visible::before {
-  opacity: 1;
 }
 
 div#row_info {

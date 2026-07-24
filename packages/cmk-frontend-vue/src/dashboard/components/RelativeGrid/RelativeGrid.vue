@@ -191,7 +191,7 @@ watch(enterMissingRuntimeFiltersAction, async () => {
 </script>
 
 <template>
-  <div class="simplebar-content">
+  <div>
     <CmkAlertBox
       v-if="enterMissingRuntimeFiltersAction !== null"
       class="db-relative-grid__missing-filters-dialog"

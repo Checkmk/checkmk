@@ -19,7 +19,10 @@
 
 body.login {
   display: flex;
-  min-height: 100vh;
+
+  /* Bound the height to the viewport so overflowing content scrolls inside
+     #main_page_content instead of scrolling the document. */
+  height: 100vh;
   margin: 0;
   text-align: center;
   vertical-align: middle;
@@ -27,11 +30,7 @@ body.login {
   /* stylelint-disable-next-line selector-id-pattern */
   div#main_page_content {
     display: flex;
-
-    .simplebar-content {
-      display: flex;
-      min-height: 100%;
-    }
+    overflow: auto;
   }
 
   div#login {

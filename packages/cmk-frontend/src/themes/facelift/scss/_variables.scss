@@ -201,7 +201,11 @@ $popup-trigger-active-bg-color: $ux-theme-0;
 $tactical-overview-td-bg-color: $ux-theme-5;
 $server-time-div-bg-color: rgba($grey-4, 0.2);
 $snapin-heading-border-color: rgba($grey-4, 0.2);
-$simplebar-scrollbar-color: rgb(78, 93, 105);
+// Keep in sync with --scrollbar-color in the Vue design tokens
+// (packages/cmk-frontend-vue/src/assets/variables.css)
+$scrollbar-color: $color-mid-grey-60;
+$scrollbar-color-hover: $color-mid-grey-80;
+$scrollbar-color-active: $color-mid-grey-100;
 $popup-border: $popup-border-width solid $success;
 $popup-inner-border: 1px solid rgba(51, 51, 51, 0.2);
 $filter-add-button-hover-brightness: brightness(0);

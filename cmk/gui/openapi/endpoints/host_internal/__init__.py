@@ -16,6 +16,7 @@ import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
@@ -35,7 +36,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.utils.agent_registration import (
     connection_mode_from_host_config,
     HostAgentConnectionMode,
@@ -116,7 +117,7 @@ permission_registry.register(
 def register_host(params: Mapping[str, Any]) -> Response:
     """Register an existing host, ie. link it to a UUID"""
     host_name = params["host_name"]
-    host = _verified_host(folder_tree(), host_name)
+    host = _verified_host(make_folder_tree(active_config), host_name)
     connection_mode = connection_mode_from_host_config(host.effective_attributes())
     _link_with_uuid(
         host_name,
@@ -258,7 +259,7 @@ def link_with_uuid(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     connection_mode = connection_mode_from_host_config(
         _check_host_access_permissions(
-            folder_tree(),
+            make_folder_tree(active_config),
             host_name,
             access_type="write",
         ).effective_attributes()
@@ -290,7 +291,7 @@ def link_with_uuid(params: Mapping[str, Any]) -> Response:
 def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host = _check_host_access_permissions(
-        folder_tree(),
+        make_folder_tree(active_config),
         params["host_name"],
         access_type="read",
     )

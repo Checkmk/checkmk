@@ -24,7 +24,7 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     FolderRulesets,
@@ -58,7 +58,7 @@ def list_rulesets(param: Mapping[str, Any]) -> Response:
     all_sets = (
         FolderRulesets.load_folder_rulesets(param["folder"])
         if param.get("folder")
-        else AllRulesets.load_all_rulesets(folder_tree())
+        else AllRulesets.load_all_rulesets(make_folder_tree(active_config))
     )
 
     def _get_search_options(params: Mapping[str, Any]) -> dict[str, Any]:
@@ -112,7 +112,7 @@ def show_ruleset(param: Mapping[str, Any]) -> Response:
     )
     try:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), ruleset_name
+            make_folder_tree(active_config), ruleset_name
         ).get(ruleset_name)
     except KeyError:
         return ruleset_problem

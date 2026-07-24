@@ -53,7 +53,7 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     save_configuration_entity,
     update_configuration_entity,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -135,7 +135,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
-            folder_tree(),
+            make_folder_tree(active_config),
             user=user,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
@@ -206,7 +206,7 @@ def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Res
     entity_type_specifier = params["entity_type_specifier"]
 
     schema, default_values = get_configuration_entity_schema(
-        entity_type, entity_type_specifier, folder_tree(), user
+        entity_type, entity_type_specifier, make_folder_tree(active_config), user
     )
 
     return serve_json(

@@ -39,9 +39,11 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
         assert user.id is not None
         user_groups = userdb.contactgroups_of_user(user.id)
 
-        entries = self.filter_editable_entries(entries)
-        entries.update({k: v for k, v in entries.items() if v["shared_with"] in user_groups})
-        return entries
+        conditions = self.filter_editable_entries(dict(entries))
+        conditions.update(
+            {k: v for k, v in entries.items() if set(v["shared_with"]).intersection(user_groups)}
+        )
+        return conditions
 
     def filter_editable_entries(
         self, entries: dict[str, PredefinedConditionSpec]

@@ -76,6 +76,10 @@ def _anonymize_groups(
                                     anon_interface.get_generic_mapping(nagvis_map, "nagvis_map")
                                     for nagvis_map in group_spec_value
                                 ]
+                            case "customer":
+                                anon_all_groups_spec["contact"][anon_group_name]["customer"] = (
+                                    anon_interface.get_customer(group_spec_value)
+                                )
                             case _:
                                 raise ValueError(
                                     f"Unknown contact group spec {group_spec_key}  in {group_specs=}"

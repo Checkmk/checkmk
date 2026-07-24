@@ -36,6 +36,13 @@ function constantPoints(value: number | null): (number | null)[] {
   return Array.from({ length: 11 }, () => value)
 }
 
+const PLOT_CLIENT_LEFT = 200
+const PLOT_CLIENT_TOP = 300
+
+function pointAt(x: number, y: number): { x: number; y: number; clientX: number; clientY: number } {
+  return { x, y, clientX: PLOT_CLIENT_LEFT + x, clientY: PLOT_CLIENT_TOP + y }
+}
+
 function mountHover(metrics: Metric[], dataRange = TIME_RANGE): ReturnType<typeof useHover> {
   const xScale = scaleTime()
     .domain([new Date(TIME_RANGE.start * 1000), new Date(TIME_RANGE.end * 1000)])
@@ -74,7 +81,7 @@ describe('useHover — hit-test', () => {
       makeLineMetric('high', constantPoints(90))
     ])
 
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
     const samples = hover.hoverState.value!.samples
     expect(samples.map((sample) => [sample.metricName, sample.isClosest])).toEqual([
@@ -86,11 +93,13 @@ describe('useHover — hit-test', () => {
   test('carries the cursor position and snaps the crosshair near it', () => {
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
 
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
     const state = hover.hoverState.value!
     expect(state.cursorX).toBe(50)
     expect(state.cursorY).toBe(85)
+    expect(state.clientX).toBe(PLOT_CLIENT_LEFT + 50)
+    expect(state.clientY).toBe(PLOT_CLIENT_TOP + 85)
     expect(Math.abs(state.snapX - 50)).toBeLessThanOrEqual(1)
   })
 
@@ -100,7 +109,7 @@ describe('useHover — hit-test', () => {
       makeLineMetric('high', constantPoints(90))
     ])
 
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
     const samples = hover.hoverState.value!.samples
     expect(samples[0]).toMatchObject({
@@ -114,9 +123,9 @@ describe('useHover — hit-test', () => {
 
   test('a cursor outside the plot yields no hover state', () => {
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
-    hover.moveHoverTo({ x: -1, y: 50 })
+    hover.moveHoverTo(pointAt(-1, 50))
 
     expect(hover.hoverState.value).toBeNull()
   })
@@ -128,7 +137,7 @@ describe('useHover — hit-test', () => {
       step: 10
     })
 
-    hover.moveHoverTo({ x: 80, y: 85 })
+    hover.moveHoverTo(pointAt(80, 85))
 
     const state = hover.hoverState.value!
     expect(state.samples[0]).toMatchObject({
@@ -143,7 +152,7 @@ describe('useHover — hit-test', () => {
   test('a column where no metric has a drawn sample keeps the crosshair at the cursor', () => {
     const hover = mountHover([makeLineMetric('empty', constantPoints(null))])
 
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
     const state = hover.hoverState.value!
     expect(state.samples[0]).toMatchObject({ formattedValue: 'n/a', isClosest: false })
@@ -158,7 +167,7 @@ describe('useHover — clearing', () => {
 
   test('clearHover drops the state immediately', () => {
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
     hover.clearHover()
 
@@ -168,7 +177,7 @@ describe('useHover — clearing', () => {
   test('clearHoverAfterDelay drops the state only once the delay elapsed', () => {
     vi.useFakeTimers()
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
 
     hover.clearHoverAfterDelay()
 
@@ -180,7 +189,7 @@ describe('useHover — clearing', () => {
   test('cancelPendingHoverClear keeps the state alive past the delay', () => {
     vi.useFakeTimers()
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
     hover.clearHoverAfterDelay()
 
     hover.cancelPendingHoverClear()
@@ -192,10 +201,10 @@ describe('useHover — clearing', () => {
   test('moving the hover cancels a pending clear', () => {
     vi.useFakeTimers()
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo({ x: 50, y: 85 })
+    hover.moveHoverTo(pointAt(50, 85))
     hover.clearHoverAfterDelay()
 
-    hover.moveHoverTo({ x: 60, y: 85 })
+    hover.moveHoverTo(pointAt(60, 85))
 
     vi.advanceTimersByTime(1000)
     expect(hover.hoverState.value).not.toBeNull()

@@ -25,34 +25,33 @@ function makeSample(overrides: Partial<HoverSample>): HoverSample {
   }
 }
 
+function makeHoverState(overrides: Partial<HoverState>): HoverState {
+  return {
+    cursorX: 5,
+    cursorY: 5,
+    clientX: 105,
+    clientY: 205,
+    snapX: 5,
+    snapTime: 1000,
+    samples: [makeSample({})],
+    ...overrides
+  }
+}
+
 function renderGraphTooltip(hoverState: HoverState | null): ReturnType<typeof render> {
-  return render(GraphTooltip, {
-    props: { hoverState },
-    global: {
-      stubs: {
-        CmkTooltipProvider: { template: '<div><slot /></div>' },
-        CmkTooltip: { template: '<div><slot /></div>' },
-        CmkTooltipTrigger: { template: '<div><slot /></div>' },
-        CmkTooltipContent: { template: '<div><slot /></div>' }
-      }
-    }
-  })
+  return render(GraphTooltip, { props: { hoverState } })
 }
 
 describe('GraphTooltip', () => {
   test('renders one sample per metric with label and formatted value', () => {
-    const hoverState: HoverState = {
-      cursorX: 5,
-      cursorY: 5,
-      snapX: 5,
-      snapTime: 1000,
-      samples: [
-        makeSample({ metricName: 'cpu', label: 'CPU', formattedValue: '42 %' }),
-        makeSample({ metricName: 'mem', label: 'Memory', formattedValue: '1.5 GB' })
-      ]
-    }
-
-    renderGraphTooltip(hoverState)
+    renderGraphTooltip(
+      makeHoverState({
+        samples: [
+          makeSample({ metricName: 'cpu', label: 'CPU', formattedValue: '42 %' }),
+          makeSample({ metricName: 'mem', label: 'Memory', formattedValue: '1.5 GB' })
+        ]
+      })
+    )
 
     expect(screen.getByText('CPU')).toBeInTheDocument()
     expect(screen.getByText('42 %')).toBeInTheDocument()
@@ -61,42 +60,50 @@ describe('GraphTooltip', () => {
   })
 
   test('marks only the closest sample with the emphasis class', () => {
-    const hoverState: HoverState = {
-      cursorX: 5,
-      cursorY: 5,
-      snapX: 5,
-      snapTime: 1000,
-      samples: [
-        makeSample({ metricName: 'cpu', label: 'CPU', isClosest: false }),
-        makeSample({ metricName: 'mem', label: 'Memory', isClosest: true })
-      ]
-    }
+    renderGraphTooltip(
+      makeHoverState({
+        samples: [
+          makeSample({ metricName: 'cpu', label: 'CPU', isClosest: false }),
+          makeSample({ metricName: 'mem', label: 'Memory', isClosest: true })
+        ]
+      })
+    )
 
-    const { container } = renderGraphTooltip(hoverState)
-
-    const emphasized = container.querySelectorAll('.graphing-graph-tooltip__row--is-closest')
+    const emphasized = document.querySelectorAll('.graphing-graph-tooltip__row--is-closest')
     expect(emphasized).toHaveLength(1)
     expect(emphasized[0]!.textContent).toContain('Memory')
   })
 
   test('shows the snap time as weekday, ISO date and 24h clock time', () => {
-    const snapTime = 1781526896
-    const hoverState: HoverState = {
-      cursorX: 5,
-      cursorY: 5,
-      snapX: 5,
-      snapTime,
-      samples: [makeSample({})]
-    }
-
-    renderGraphTooltip(hoverState)
+    renderGraphTooltip(makeHoverState({ snapTime: 1781526896 }))
 
     expect(screen.getByText(/, \d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/)).toBeInTheDocument()
   })
 
-  test('renders no samples without a hover state', () => {
-    const { container } = renderGraphTooltip(null)
+  test('positions the tooltip beside the viewport cursor coordinates', () => {
+    renderGraphTooltip(makeHoverState({ clientX: 105, clientY: 205 }))
 
-    expect(container.querySelectorAll('.graphing-graph-tooltip__row')).toHaveLength(0)
+    const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
+    // jsdom reports a zero-size element, so the position degrades to cursor + offset;
+    // flip and clamp behaviour is covered by the computeTooltipPosition unit tests.
+    expect(tooltip!.style.left).toBe('121px')
+    expect(tooltip!.style.top).toBe('205px')
+  })
+
+  test('keeps the scoped-style attribute when teleported to the body', () => {
+    renderGraphTooltip(makeHoverState({}))
+
+    const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
+    expect(tooltip!.parentElement).toBe(document.body)
+    // Without the scope attribute none of the component's styles would match — the
+    // exact regression the previous reka-ui portal shipped with.
+    const attributeNames = Array.from(tooltip!.attributes).map((attribute) => attribute.name)
+    expect(attributeNames.some((name) => name.startsWith('data-v-'))).toBe(true)
+  })
+
+  test('renders nothing without a hover state', () => {
+    renderGraphTooltip(null)
+
+    expect(document.querySelector('.graphing-graph-tooltip')).toBeNull()
   })
 })

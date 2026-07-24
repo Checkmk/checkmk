@@ -17,6 +17,8 @@ export interface HoverSample {
 export interface HoverState {
   cursorX: number
   cursorY: number
+  clientX: number
+  clientY: number
   snapX: number
   snapTime: number
   samples: HoverSample[]

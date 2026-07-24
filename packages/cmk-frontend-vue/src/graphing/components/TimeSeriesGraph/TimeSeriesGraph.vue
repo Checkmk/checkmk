@@ -271,7 +271,8 @@ function onMouseMove(ev: MouseEvent): void {
   if (selectionBand.value) {
     return
   }
-  moveHoverTo(plotCoords(ev))
+  const point = plotCoords(ev)
+  moveHoverTo(point && { ...point, clientX: ev.clientX, clientY: ev.clientY })
 }
 
 function onPlotMouseDown(ev: MouseEvent): void {

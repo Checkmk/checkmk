@@ -31,6 +31,13 @@ export interface HoverOptions {
   yScale: ScaleLinear<number, number>
 }
 
+export interface HoverPoint {
+  x: number
+  y: number
+  clientX: number
+  clientY: number
+}
+
 export function useHover(options: HoverOptions) {
   const hoverState: Ref<HoverState | null> = ref(null)
 
@@ -41,7 +48,8 @@ export function useHover(options: HoverOptions) {
     drawnStacks = stacks
   }
 
-  function computeHover(cursorX: number, cursorY: number): HoverState | null {
+  function computeHover(point: HoverPoint): HoverState | null {
+    const { x: cursorX, y: cursorY } = point
     if (
       cursorX < 0 ||
       cursorX > options.plotWidth.value ||
@@ -119,7 +127,15 @@ export function useHover(options: HoverOptions) {
     const snapTime = snapSample?.snapTime ?? cursorTime
     const snapX = options.xScale(new Date(snapTime * 1000))
 
-    return { cursorX, cursorY, snapX, snapTime, samples }
+    return {
+      cursorX,
+      cursorY,
+      clientX: point.clientX,
+      clientY: point.clientY,
+      snapX,
+      snapTime,
+      samples
+    }
   }
 
   let hoverClearTimer: ReturnType<typeof setTimeout> | null = null
@@ -141,12 +157,12 @@ export function useHover(options: HoverOptions) {
     hoverState.value = null
   }
 
-  function moveHoverTo(point: { x: number; y: number } | null): void {
+  function moveHoverTo(point: HoverPoint | null): void {
     cancelPendingHoverClear()
     if (!point) {
       return
     }
-    hoverState.value = computeHover(point.x, point.y)
+    hoverState.value = computeHover(point)
   }
 
   onBeforeUnmount(cancelPendingHoverClear)

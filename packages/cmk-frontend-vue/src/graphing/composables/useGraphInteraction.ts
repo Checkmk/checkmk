@@ -6,7 +6,7 @@
 import { type Ref, computed, ref, watch } from 'vue'
 
 import type { PinPayload, TimeRange, ZoomMode, ZoomPayload } from '../components/TimeSeriesGraph'
-import type { RequestedTimeRange } from '../types'
+import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import { useGlobalPin } from './useGlobalPin'
 import { useGraphView } from './useGraphView'
 
@@ -25,7 +25,7 @@ export function useGraphInteraction(
   getBaseline: () => TimeRange | undefined,
   getShowPin: () => boolean = () => false,
   getRequestedTimeRange?: () => RequestedTimeRange,
-  onTimeRangeCommit?: (timeRange: TimeRange) => void
+  onTimeRangeCommit?: (timeRange: TimeRange, kind: TimeRangeCommitKind) => void
 ) {
   const {
     timeRange: viewTimeRange,
@@ -78,7 +78,7 @@ export function useGraphInteraction(
     })
   }
 
-  function commitTimeRange(timeRange: TimeRange): void {
+  function commitTimeRange(timeRange: TimeRange, kind: TimeRangeCommitKind): void {
     // Canvas drag inverts pixels through a continuous scale, so the raw payload is usually
     // fractional, while the shared requestedTimeRange (and the backend) deal only with integers.
     const rounded: RequestedTimeRange = {
@@ -93,25 +93,25 @@ export function useGraphInteraction(
     } else {
       zoomSession.value = { ...zoomSession.value, lastCommittedRequest: rounded }
     }
-    onTimeRangeCommit?.({ ...timeRange, ...rounded })
+    onTimeRangeCommit?.({ ...timeRange, ...rounded }, kind)
   }
 
   function onZoom(payload: ZoomPayload): void {
     handleIntent({ kind: 'zoomTransient', ...payload })
     if (!payload.valueRange) {
-      commitTimeRange(payload.timeRange)
+      commitTimeRange(payload.timeRange, 'changed_timerange_span')
     }
   }
 
   function onPan(payload: { timeRange: TimeRange }): void {
     handleIntent({ kind: 'pan', timeRange: payload.timeRange })
-    commitTimeRange(payload.timeRange)
+    commitTimeRange(payload.timeRange, 'translated_timerange')
   }
 
   function onReset(): void {
     handleIntent({ kind: 'reset' })
     if (zoomSession.value !== null) {
-      onTimeRangeCommit?.(zoomSession.value.resetTarget)
+      onTimeRangeCommit?.(zoomSession.value.resetTarget, 'changed_timerange_span')
     }
     zoomSession.value = null
   }

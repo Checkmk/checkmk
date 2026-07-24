@@ -74,6 +74,14 @@ describe('overviewDomain (center-then-clamp-at-now)', () => {
     expect(nearNowCommitted.end).toBeLessThan(strip.end)
   })
 
+  test('an odd committed span still yields integer bounds (the fetch API rejects fractions)', () => {
+    const strip = overviewDomain({ start: now - DAY - 1, end: now - DAY }, now)
+
+    expect(Number.isInteger(strip.start)).toBe(true)
+    expect(Number.isInteger(strip.end)).toBe(true)
+    expect(strip.end - strip.start).toBe(7)
+  })
+
   test('multiplier thresholds drive the width', () => {
     const at25h = overviewDomain({ start: now - 25 * HOUR, end: now }, now)
     const at8d = overviewDomain({ start: now - 8 * DAY, end: now }, now)
@@ -113,6 +121,16 @@ describe('recenterOverviewDomain (10% edge hold/shift, fixed width)', () => {
 
     expect(result.end - result.start).toBe(1000)
     expect((result.start + result.end) / 2).toBe(100)
+  })
+
+  test('a window with an odd coordinate sum still shifts to integer bounds', () => {
+    const windowWithOddSum = { start: 851, end: 950 }
+
+    const result = recenterOverviewDomain(domain, windowWithOddSum, farFutureNow)
+
+    expect(Number.isInteger(result.start)).toBe(true)
+    expect(Number.isInteger(result.end)).toBe(true)
+    expect(result.end - result.start).toBe(1000)
   })
 
   test('a shift that would pass now is clamped so the end sits at now', () => {

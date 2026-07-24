@@ -14,7 +14,8 @@ import type {
   BurgerMenuGroup,
   GraphPanelEmits,
   GraphPanelProps,
-  RequestedTimeRange
+  RequestedTimeRange,
+  TimeRangeCommitKind
 } from '../types.ts'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
 import GraphHeader from './GraphHeader.vue'
@@ -50,11 +51,14 @@ const {
   () => props.dataTimeRange, // getBaseline
   () => true, // getShowPin; TODO: make this a prop to allow disabling pinning
   () => props.requestedTimeRange, // getRequestedTimeRange
-  (timeRange) =>
-    updateTimeRange({
-      start: timeRange.start,
-      end: timeRange.end
-    }) // onTimeRangeCommit
+  (timeRange, kind) =>
+    updateTimeRange(
+      {
+        start: timeRange.start,
+        end: timeRange.end
+      },
+      kind
+    ) // onTimeRangeCommit
 )
 
 const hiddenMetricNames = defineModel<string[]>('hiddenMetricNames', { default: () => [] })
@@ -73,8 +77,8 @@ const {
   { hiddenMetricNames, hiddenLineNames, highlightedMetricName }
 )
 
-function updateTimeRange(val: RequestedTimeRange) {
-  emit('update:requestedTimeRange', val)
+function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
+  emit('update:requestedTimeRange', val, kind)
 }
 
 function updateConsolidationFunction(val: ConsolidationFn) {
@@ -161,7 +165,7 @@ const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
           :width="figureWidth"
           :plot-left="CANVAS_MARGIN_LEFT"
           :plot-width="figureWidth - CANVAS_MARGIN_HORIZONTAL"
-          @update:requested-time-range="updateTimeRange($event)"
+          @update:requested-time-range="updateTimeRange"
         />
       </div>
 

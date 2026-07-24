@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { area } from 'd3-shape'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
+import type { TimeRangeCommitKind } from '../../types'
 import type { Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
 import {
   type BrushMode,
@@ -31,7 +32,9 @@ const props = defineProps<{
   plotWidth: number // track width (= plot width)
 }>()
 
-const emit = defineEmits<{ 'update:requestedTimeRange': [RequestedTimeRange] }>()
+const emit = defineEmits<{
+  'update:requestedTimeRange': [RequestedTimeRange, TimeRangeCommitKind]
+}>()
 
 const DRAG_THRESHOLD_PX = 4
 const HANDLE_PX = 7 // hit-test half-width for the edge resize handles
@@ -166,7 +169,11 @@ function onUp(): void {
   ) {
     return
   }
-  emit('update:requestedTimeRange', { start: Math.round(next.start), end: Math.round(next.end) })
+  emit(
+    'update:requestedTimeRange',
+    { start: Math.round(next.start), end: Math.round(next.end) },
+    mode === 'move' ? 'translated_timerange' : 'changed_timerange_span'
+  )
 }
 
 onBeforeUnmount(() => {

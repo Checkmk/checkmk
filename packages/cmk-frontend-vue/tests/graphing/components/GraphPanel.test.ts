@@ -167,7 +167,9 @@ test('a zoom intent from the renderer also publishes a requested time range upda
 
   await fireEvent.click(screen.getByTestId('emit-time-zoom'))
 
-  expect(emitted()['update:requestedTimeRange']).toEqual([[{ start: 100, end: 200 }]])
+  expect(emitted()['update:requestedTimeRange']).toEqual([
+    [{ start: 100, end: 200 }, 'changed_timerange_span']
+  ])
 })
 
 test('a value-zoom intent from the renderer does not publish a requested time range update', async () => {
@@ -187,7 +189,9 @@ test('a pan intent from the renderer also publishes a requested time range updat
 
   await fireEvent.click(screen.getByTestId('emit-pan'))
 
-  expect(emitted()['update:requestedTimeRange']).toEqual([[{ start: 300, end: 400 }]])
+  expect(emitted()['update:requestedTimeRange']).toEqual([
+    [{ start: 300, end: 400 }, 'translated_timerange']
+  ])
 })
 
 test('a reset intent from the renderer also publishes a requested time range update', async () => {
@@ -199,8 +203,8 @@ test('a reset intent from the renderer also publishes a requested time range upd
   await fireEvent.click(screen.getByTestId('emit-reset'))
 
   expect(emitted()['update:requestedTimeRange']).toEqual([
-    [{ start: 100, end: 200 }],
-    [{ start: TIME_RANGE.start, end: TIME_RANGE.end }]
+    [{ start: 100, end: 200 }, 'changed_timerange_span'],
+    [{ start: TIME_RANGE.start, end: TIME_RANGE.end }, 'changed_timerange_span']
   ])
 })
 

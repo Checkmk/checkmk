@@ -12,10 +12,12 @@ Registered as the cmk-graph-group custom element via defineCmkComponent in main.
 <script setup lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import { useBrushCoordination } from '../composables/useBrushCoordination'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
+import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import GraphPanel from './GraphPanel.vue'
 import type { ConsolidationFn } from './consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from './constants'
@@ -46,12 +48,40 @@ const requestedTimeRange = useRequestedTimeRange({
 })
 const consolidationFn = ref<ConsolidationFn>('avg')
 
+const brushCoordination = useBrushCoordination(
+  () => Math.floor(Date.now() / 1000),
+  requestedTimeRange.value
+)
+
+function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  brushCoordination.onBrushChange(range, kind)
+  requestedTimeRange.value = range
+}
+
+watch(requestedTimeRange, (range) => {
+  const known = brushCoordination.graphRange.value
+  if (range.start !== known.start || range.end !== known.end) {
+    brushCoordination.onExternalRange(range)
+  }
+})
+
 const { graphs, isLoading, error } = useGraphData(
   () => props.graphs,
   () => requestedTimeRange.value,
   () => props.figure_width - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFn.value,
   () => props.combination_mode
+)
+
+const { graphs: overviewGraphs } = useGraphData(
+  () => props.graphs,
+  () => brushCoordination.brushDomain.value,
+  () => props.figure_width - CANVAS_MARGIN_HORIZONTAL,
+  () => consolidationFn.value,
+  () => props.combination_mode
+)
+const overviews = computed(() =>
+  overviewGraphs.value.map((graph) => ({ metrics: graph.metrics, timeRange: graph.timeRange }))
 )
 </script>
 
@@ -78,12 +108,12 @@ const { graphs, isLoading, error } = useGraphData(
         :show-timestamp="true"
         :show-legend="true"
         :show-brush="true"
-        :overview="{ metrics: graph.metrics, timeRange: graph.timeRange }"
+        :overview="overviews[i]"
         :horizontal-lines="graph.horizontalLines"
         :figure-width="figure_width"
         :add-type="graph?.addType"
         :internal="graph?.internal"
-        @update:requested-time-range="requestedTimeRange = $event"
+        @update:requested-time-range="onPanelTimeRange"
         @update:consolidation-fn="consolidationFn = $event"
       />
     </template>

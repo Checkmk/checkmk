@@ -30,8 +30,8 @@ function clampExtent(start: number, end: number, now: number, earliest?: number)
 }
 
 function centerExtent(window: TimeInterval, width: number): TimeInterval {
-  const center = (window.start + window.end) / 2
-  return { start: center - width / 2, end: center + width / 2 }
+  const start = Math.round((window.start + window.end - width) / 2)
+  return { start, end: start + width }
 }
 
 export function overviewDomain(
@@ -40,7 +40,7 @@ export function overviewDomain(
   earliest?: number
 ): TimeInterval {
   const span = committed.end - committed.start
-  const width = span * overviewMultiplier(span)
+  const width = Math.round(span * overviewMultiplier(span))
   const centered = centerExtent(committed, width)
   return clampExtent(centered.start, centered.end, nowSeconds, earliest)
 }

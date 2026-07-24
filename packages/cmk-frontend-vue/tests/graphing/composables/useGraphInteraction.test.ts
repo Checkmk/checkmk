@@ -160,7 +160,7 @@ test('a time-zoom commits the new time range', () => {
 
   graph.onZoom({ timeRange: ZOOMED })
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(ZOOMED)
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(ZOOMED, 'changed_timerange_span')
 })
 
 test('a fractional zoom payload is rounded before it is committed', () => {
@@ -169,7 +169,10 @@ test('a fractional zoom payload is rounded before it is committed', () => {
 
   graph.onZoom({ timeRange: { start: 1200.6, end: 1499.4, step: 60 } })
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith({ start: 1201, end: 1499, step: 60 })
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
+    { start: 1201, end: 1499, step: 60 },
+    'changed_timerange_span'
+  )
 })
 
 test('the reset control survives the baseline settling at the rounded (not raw) committed range', async () => {
@@ -204,7 +207,7 @@ test('a pan commits the new time range', () => {
 
   graph.onPan({ timeRange: shifted })
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(shifted)
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(shifted, 'translated_timerange')
 })
 
 test('a reset commits the baseline time range', () => {
@@ -215,7 +218,7 @@ test('a reset commits the baseline time range', () => {
 
   graph.onReset()
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE)
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE, 'changed_timerange_span')
 })
 
 test('a reset does not commit when there is no baseline yet', () => {
@@ -254,7 +257,7 @@ test('inspection (and thus the reset control) stays active after the baseline ca
 
   graph.onReset()
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE)
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE, 'changed_timerange_span')
   expect(graph.inspectionActive.value).toBe(false)
 })
 

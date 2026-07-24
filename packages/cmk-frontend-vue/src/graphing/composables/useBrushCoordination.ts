@@ -11,7 +11,7 @@ import {
   recenterOverviewDomain
 } from '../components/GraphBrush/overviewRange'
 import type { TimeRange } from '../components/TimeSeriesGraph/types'
-import type { RequestedTimeRange, TimeInterval } from '../types'
+import type { RequestedTimeRange, TimeInterval, TimeRangeCommitKind } from '../types'
 
 export function useBrushCoordination(
   getNow: () => number,
@@ -43,10 +43,14 @@ export function useBrushCoordination(
     setBrushWindow(range)
   }
 
-  function onBrushChange(range: RequestedTimeRange): void {
+  function onBrushChange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
     setGraphRange(range)
     setBrushWindow(range)
-    syncBrushDomain(range)
+    if (kind === 'changed_timerange_span') {
+      reseedBrushDomain(range)
+    } else {
+      syncBrushDomain(range)
+    }
   }
 
   function onGraphView(view: TimeRange): void {

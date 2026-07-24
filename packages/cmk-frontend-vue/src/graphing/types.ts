@@ -17,6 +17,11 @@ export interface TimeInterval {
 // Distinct from TimeRange, which is what the RRD actually returned.
 export type RequestedTimeRange = TimeInterval
 
+// Whether a committed range was translated (same span, shifted in time) or changed its
+// span. The brush coordination keeps the overview strip fixed under translation and
+// re-derives it (multiplier × span) once the span changed.
+export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_span'
+
 interface BurgerMenuAction {
   label: string
   onClick: () => void
@@ -55,6 +60,6 @@ export interface GraphPanelProps {
 }
 
 export type GraphPanelEmits = {
-  'update:requestedTimeRange': [value: RequestedTimeRange]
+  'update:requestedTimeRange': [value: RequestedTimeRange, kind: TimeRangeCommitKind]
   'update:consolidationFn': [value: ConsolidationFn]
 }

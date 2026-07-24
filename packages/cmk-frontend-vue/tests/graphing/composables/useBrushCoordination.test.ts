@@ -81,24 +81,35 @@ describe('useBrushCoordination — intent handlers', () => {
     const domainBefore = { ...coordination.brushDomain.value }
     const windowInMiddle = { start: NOW - 11 * DAY, end: NOW - 10 * DAY }
 
-    coordination.onBrushChange(windowInMiddle)
+    coordination.onBrushChange(windowInMiddle, 'translated_timerange')
 
     expect(coordination.graphRange.value).toEqual(windowInMiddle)
     expect(coordination.brushWindow.value).toEqual(windowInMiddle)
     expect(coordination.brushDomain.value).toEqual(domainBefore)
   })
 
-  test('onBrushChange shifts the strip when the window reaches the 10% edge', () => {
+  test('a translating commit shifts the strip when the window reaches the 10% edge', () => {
     const coordination = makeCoordination()
     coordination.onExternalRange({ start: NOW - 11 * DAY, end: NOW - 10 * DAY })
     const before = { ...coordination.brushDomain.value }
-    const windowNearRightEdge = { start: NOW - 8 * DAY, end: NOW - 7.5 * DAY }
+    const windowNearRightEdge = { start: NOW - 8.5 * DAY, end: NOW - 7.5 * DAY }
 
-    coordination.onBrushChange(windowNearRightEdge)
+    coordination.onBrushChange(windowNearRightEdge, 'translated_timerange')
 
     expect(coordination.brushDomain.value.end).not.toBe(before.end)
     expect(coordination.brushDomain.value.end - coordination.brushDomain.value.start).toBe(
       before.end - before.start
     )
+  })
+
+  test('a span-changing commit reseeds the strip around the new range', () => {
+    const coordination = makeCoordination()
+    coordination.onExternalRange({ start: NOW - 11 * DAY, end: NOW - 10 * DAY })
+    const widenedWindow = { start: NOW - 12 * DAY, end: NOW - 10 * DAY }
+
+    coordination.onBrushChange(widenedWindow, 'changed_timerange_span')
+
+    // 2d span → 5× multiplier → 10d strip centered on the widened window.
+    expect(coordination.brushDomain.value).toEqual({ start: NOW - 16 * DAY, end: NOW - 6 * DAY })
   })
 })

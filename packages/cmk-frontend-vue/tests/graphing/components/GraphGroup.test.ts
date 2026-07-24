@@ -13,15 +13,21 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
 
-// Stub keeps the test independent of the panel's rendering; the button simulates
-// a local time range interaction (e.g. a brush zoom) reported back to the group.
+// Stub keeps the test independent of the panel's rendering; the buttons simulate local
+// time range interactions reported back to the group: "pan" keeps the span,
+// "zoom" changes it.
 vi.mock('@/graphing/components/GraphPanel.vue', () => ({
   default: {
     props: ['metrics', 'dataTimeRange', 'requestedTimeRange', 'title'],
     emits: ['update:requestedTimeRange', 'update:consolidationFn'],
     template: `<div data-testid="graph-panel">
       <span>{{ title }}</span>
-      <button @click="$emit('update:requestedTimeRange', { start: 100, end: 200 })">zoom</button>
+      <button @click="$emit('update:requestedTimeRange', { start: 1500, end: 2500 }, 'translated_timerange')">
+        pan
+      </button>
+      <button @click="$emit('update:requestedTimeRange', { start: 100, end: 200 }, 'changed_timerange_span')">
+        zoom
+      </button>
     </div>`
   }
 }))
@@ -73,6 +79,10 @@ const FETCHED = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
 
+const requestedRanges = (): { start: number; end: number; step: number }[] =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range)
+
 beforeEach(() => {
   useGlobalTimeRange().setActiveTimeRange(null)
   postSpy = vi.spyOn(client, 'POST')
@@ -117,17 +127,20 @@ test('shows the error message when fetching fails', async () => {
   expect(await screen.findByText('crash')).toBeInTheDocument()
 })
 
-test('fetches with the initial time range from props', async () => {
+test('fetches the graph with the initial range and the overview with the multiplied domain', async () => {
   renderGroup()
 
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
   const body = postSpy.mock.calls[0][1].body
   expect(body.internal).toBe('{"graphs": []}')
   expect(body.consolidation_function).toBe('avg')
-  expect(body.requested_time_range).toEqual({ start: 1_000, end: 2_000, step: 60 })
+  const ranges = requestedRanges()
+  expect(ranges).toContainEqual({ start: 1_000, end: 2_000, step: 60 })
+  // 1000s active span → 7× multiplier → 7000s overview domain centered on the range.
+  expect(ranges).toContainEqual({ start: -2_000, end: 5_000, step: 60 })
 })
 
-test('fetches with the combination mode from props', async () => {
+test('fetches graph and overview with the combination mode from props', async () => {
   render(GraphGroup, {
     props: {
       initial_time_range_start: 1_000,
@@ -137,30 +150,51 @@ test('fetches with the combination mode from props', async () => {
     }
   })
 
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
   expect(postSpy.mock.calls[0][1].body.combination_mode).toBe('stacked')
+  expect(postSpy.mock.calls[1][1].body.combination_mode).toBe('stacked')
 })
 
-test('refetches when the global picker publishes a range', async () => {
+test('refetches graph and overview when the global picker publishes a range', async () => {
   renderGroup()
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
 
   const published = range(9, 10)
   useGlobalTimeRange().setActiveTimeRange(published)
 
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-  const body = postSpy.mock.calls[1][1].body
-  expect(body.requested_time_range.start).toBe(epochSeconds(published.from))
-  expect(body.requested_time_range.end).toBe(epochSeconds(published.to))
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
+  const start = epochSeconds(published.from)
+  const end = epochSeconds(published.to)
+  const ranges = requestedRanges().slice(2)
+  expect(ranges).toContainEqual(expect.objectContaining({ start, end }))
+  // 24h active span → 7× multiplier → the overview reseeds symmetrically around it.
+  expect(ranges).toContainEqual(
+    expect.objectContaining({ start: start - 3 * 86_400, end: end + 3 * 86_400 })
+  )
 })
 
-test('refetches when a panel reports a local time range update', async () => {
+test('a same-span panel commit (move) refetches the graph but keeps the overview fixed', async () => {
   renderGroup()
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
+
+  await fireEvent.click(await screen.findByText('pan'))
+
+  // Only the main graph refetches; the moved window {1500, 2500} sits well inside
+  // the overview domain {-2000, 5000}, so the overview must not be requested again.
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(3))
+  expect(requestedRanges()[2]).toEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(postSpy).toHaveBeenCalledTimes(3)
+})
+
+test('a span-changing panel commit (resize/zoom) reseeds the overview domain', async () => {
+  renderGroup()
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
 
   await fireEvent.click(await screen.findByText('zoom'))
 
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-  const body = postSpy.mock.calls[1][1].body
-  expect(body.requested_time_range).toEqual({ start: 100, end: 200, step: 60 })
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
+  const ranges = requestedRanges().slice(2)
+  expect(ranges).toContainEqual({ start: 100, end: 200, step: 60 })
+  // 100s span → 7× multiplier → 700s overview domain centered on the new range.
+  expect(ranges).toContainEqual({ start: -200, end: 500, step: 60 })
 })

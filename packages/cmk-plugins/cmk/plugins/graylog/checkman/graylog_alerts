@@ -1,4 +1,4 @@
-title: Graylog: Sources
+title: Graylog: Alerts
 agents: graylog
 catalog: app/graylog
 license: GPLv2
@@ -7,7 +7,7 @@ description:
  This check plug-in monitors the count of alerts a Graylog
  instance. It outputs the total number of alerts.
  You can also configure the check plug-in to monitor the number of alerts in a given timeframe.
- You would do that by configuring the "Time for coverage of alerts" option 
+ You would do that by configuring the "Time for coverage of alerts" option
  when configuring the Graylog special agent.
 
 item:

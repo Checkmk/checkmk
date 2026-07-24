@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.mbg_lantime_ng_fan import (
+from cmk.plugins.meinberg.agent_based.mbg_lantime_ng_fan import (
     check_mbg_lantime_ng_fan,
     discover_mbg_lantime_ng_fan,
     parse_mbg_lantime_ng_fan,

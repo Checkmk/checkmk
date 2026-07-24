@@ -33,6 +33,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
@@ -93,8 +94,8 @@ class ModeGroups(WatoMode, abc.ABC):
     def _rules_url(self) -> str:
         raise NotImplementedError
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._groups = self._load_groups()
 
     @override
@@ -251,13 +252,13 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         raise NotImplementedError
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         self._name: GroupName | None = None
         self._new = False
         self.group: GroupSpec = {}
         self._groups: dict[GroupName, GroupSpec] = self._load_groups()
 
-        super().__init__(edition)
+        super().__init__(edition, ctx)
 
     @override
     def _from_vars(self) -> None:

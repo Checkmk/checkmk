@@ -233,7 +233,9 @@ def test_other_mode_titles_plugin_family_section_by_family(
             ),
         ],
     )
-    mode = ModeDownloadAgentsOther(test_edition)
+    mode = ModeDownloadAgentsOther(
+        test_edition, PageContext(config=Config(), request=global_request)
+    )
 
     # A plugin family agents dir gets a family specific title instead of the
     # generic "Agents" that the path based fallback would produce for relpath "".

@@ -19,7 +19,9 @@ from cmk.diagnostics.internal import (
     Topic,
 )
 from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
+from cmk.gui.config import Config
 from cmk.gui.http import request
+from cmk.gui.pages import PageContext
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.wato.pages import diagnostics as diagnostics_page
 
@@ -73,7 +75,9 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.usefixtures("request_context", "fake_discovery")
 def test_vs_diagnostics_builds_from_discovered_plugins() -> None:
     request.set_var("select_site_p_site", "NO_SITE")
-    mode = diagnostics_page.ModeDiagnostics(Edition.COMMUNITY)
+    mode = diagnostics_page.ModeDiagnostics(
+        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+    )
 
     valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())
     elements = dict(valuespec._get_elements())
@@ -108,7 +112,9 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
         ),
     )
     request.set_var("select_site_p_site", "NO_SITE")
-    mode = diagnostics_page.ModeDiagnostics(Edition.COMMUNITY)
+    mode = diagnostics_page.ModeDiagnostics(
+        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+    )
 
     elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())
 
@@ -124,7 +130,9 @@ def test_form_submission_resolves_topic_thresholds() -> None:
     request.set_var("diagnostics_p_topic_Topic_B", DropdownChoice.option_id("off"))
     request.set_var("diagnostics_p_checkmk_server_host", "myserver")
 
-    mode = diagnostics_page.ModeDiagnostics(Edition.COMMUNITY)
+    mode = diagnostics_page.ModeDiagnostics(
+        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+    )
     params = mode._diagnostics_parameters
 
     assert params is not None

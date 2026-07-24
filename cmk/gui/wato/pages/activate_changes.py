@@ -152,8 +152,8 @@ class ModeRevertChanges(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["discard"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._changes = activate_changes.ActivateChanges()
         self._changes.load(list(activation_sites(active_config.sites)))
 
@@ -400,8 +400,8 @@ class ModeActivateChanges(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return []
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._changes = activate_changes.ActivateChanges()
         self._changes.load(list(activation_sites(active_config.sites)))
         self._license_usage_report_validity = get_license_usage_report_validity(

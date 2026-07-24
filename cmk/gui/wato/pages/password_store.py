@@ -20,6 +20,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.utils import oauth2_render_link, oauth2_source_cell
 from cmk.gui.oauth2_connections.watolib.store import is_locked_by_oauth2_connection
+from cmk.gui.pages import PageContext
 from cmk.gui.quick_setup.html import (
     quick_setup_duplication_warning,
     quick_setup_locked_warning,
@@ -98,9 +99,10 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
     def static_permissions() -> Collection[PermissionName]:
         return ["passwords"]
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         super().__init__(
             edition,
+            ctx,
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
@@ -266,10 +268,11 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePasswords
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         self._clone_source: PasswordConfig | None = None
         super().__init__(
             edition,
+            ctx,
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )

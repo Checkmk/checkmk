@@ -79,6 +79,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.search.matchers import (
@@ -331,8 +332,8 @@ class NotificationRuleLinks(NamedTuple):
 
 
 class ABCNotificationsMode(ABCEventsMode[EventRule]):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         declare_notification_plugin_permissions()
 
@@ -886,8 +887,8 @@ class ModeNotifications(ABCNotificationsMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         options = user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
 
@@ -1451,8 +1452,8 @@ def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
 
 
 class ModeAnalyzeNotifications(ModeNotifications):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         options = user.load_file("analyze_notification_display_options", {})
         self._show_bulks = options.get("show_bulks", False)
         self._show_user_rules = options.get("show_user_rules", False)
@@ -1858,8 +1859,8 @@ class AdvancedTestOptions(TypedDict):
 
 
 class ModeTestNotifications(ModeNotifications):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         options = user.load_file("test_notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
 
@@ -2819,8 +2820,8 @@ def _validate_general_opts(general_test_options: GeneralTestOptions, varprefix: 
 
 
 class ABCUserNotificationsMode(ABCNotificationsMode):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
     @override
     def _from_vars(self) -> None:
@@ -3023,8 +3024,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def static_permissions() -> None:
         return None
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         user.need_permission("general.edit_notifications")
 
     @override
@@ -3120,8 +3121,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
 
 class ABCEditNotificationRuleMode(ABCNotificationsMode):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
     @abc.abstractmethod
     def _load_rules(self) -> list[EventRule]:
@@ -3881,8 +3882,8 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
     def static_permissions() -> None:
         return None
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         user.need_permission("general.edit_notifications")
 
     @override

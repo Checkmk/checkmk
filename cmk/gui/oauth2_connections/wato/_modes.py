@@ -34,6 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.site_config import site_is_local
 from cmk.gui.table import Table
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
@@ -477,10 +478,14 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         return None
 
     def __init__(
-        self, edition: Edition, mode_type: SimpleModeType[OAuth2Connection] | None = None
+        self,
+        edition: Edition,
+        ctx: PageContext,
+        mode_type: SimpleModeType[OAuth2Connection] | None = None,
     ) -> None:
         super().__init__(
             edition,
+            ctx,
             mode_type=mode_type or OAuth2ModeType(),
             store=OAuth2ConnectionsConfigFile(),
         )
@@ -663,8 +668,8 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
 
 
 class ModeMicrosoftEntraIdConnections(ModeOAuth2Connections):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, mode_type=MicrosoftEntraIdModeType())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, mode_type=MicrosoftEntraIdModeType())
 
     @classmethod
     @override
@@ -693,10 +698,14 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
         return "edit_oauth2_connection"
 
     def __init__(
-        self, edition: Edition, mode_type: SimpleModeType[OAuth2Connection] | None = None
+        self,
+        edition: Edition,
+        ctx: PageContext,
+        mode_type: SimpleModeType[OAuth2Connection] | None = None,
     ) -> None:
         super().__init__(
             edition,
+            ctx,
             mode_type=mode_type or OAuth2ModeType(),
             store=OAuth2ConnectionsConfigFile(),
         )
@@ -829,8 +838,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
 
 
 class ModeCreateMicrosoftEntraIdConnection(ModeCreateOAuth2Connection):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, mode_type=MicrosoftEntraIdModeType())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, mode_type=MicrosoftEntraIdModeType())
 
     @classmethod
     @override

@@ -31,6 +31,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -55,8 +56,8 @@ class ModeKeyManagement(WatoMode[object]):
     upload_mode = "upload_key"
     download_mode = "download_key"
 
-    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext, key_store: KeypairStore) -> None:
+        super().__init__(edition, ctx)
         self.key_store = key_store
 
     @override
@@ -206,8 +207,8 @@ class ModeKeyManagement(WatoMode[object]):
 class ModeEditKey(WatoMode[object]):
     back_mode: str
 
-    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext, key_store: KeypairStore) -> None:
+        super().__init__(edition, ctx)
         self._minlen = 12
         self.key_store = key_store
 
@@ -309,8 +310,8 @@ class ModeEditKey(WatoMode[object]):
 class ModeUploadKey(WatoMode[object]):
     back_mode: str
 
-    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext, key_store: KeypairStore) -> None:
+        super().__init__(edition, ctx)
         self.key_store = key_store
 
     @override
@@ -479,8 +480,8 @@ class ModeUploadKey(WatoMode[object]):
 class ModeDownloadKey(WatoMode[object]):
     back_mode: str
 
-    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext, key_store: KeypairStore) -> None:
+        super().__init__(edition, ctx)
         self.key_store = key_store
 
     @override

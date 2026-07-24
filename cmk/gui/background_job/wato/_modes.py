@@ -202,7 +202,7 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
 
     @override
     def handle_page(self, ctx: PageContext) -> None:
-        self.action()
+        self.action(ctx)
         super().handle_page(ctx)
 
     @override
@@ -231,8 +231,8 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
         job_manager.show_job_details_from_snapshot(job_snapshot)
         return job_snapshot
 
-    def action(self) -> None:
-        job_details_page = ModeBackgroundJobDetails(self._edition)
+    def action(self, ctx: PageContext) -> None:
+        job_details_page = ModeBackgroundJobDetails(self._edition, ctx)
         action_handler = ActionHandler(job_details_page.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():

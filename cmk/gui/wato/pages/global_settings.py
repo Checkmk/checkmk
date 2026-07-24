@@ -54,6 +54,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -158,17 +159,21 @@ def register(
     mode_registry.register(DefaultModeEditGlobalSetting)
     match_item_generator_registry.register(
         MatchItemGeneratorSettings(
-            "global_settings", _("Global settings"), lambda: DefaultModeEditGlobals(edition)
+            "global_settings",
+            _("Global settings"),
+            lambda: DefaultModeEditGlobals(
+                edition, PageContext(config=active_config, request=request)
+            ),
         )
     )
 
 
 class ABCGlobalSettingsMode(WatoMode):
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         self._search: None | str = None
         self._show_only_modified = False
 
-        super().__init__(edition)
+        super().__init__(edition, ctx)
 
         self._default_values = ABCConfigDomain.get_all_default_globals()
         self._global_settings: GlobalSettings = {}
@@ -404,8 +409,8 @@ class ABCGlobalSettingsMode(WatoMode):
 
 
 class ABCEditGlobalSettingMode(WatoMode):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         # Don't call this in _from_vars. make_global_settings_context might rely on the object
         # being fully initialized.
         context = self.make_global_settings_context(active_config)
@@ -703,11 +708,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def __init__(
         self,
         edition: Edition,
+        ctx: PageContext,
         page_menu_dropdowns_postprocess: Callable[
             [Sequence[PageMenuDropdown]], list[PageMenuDropdown]
         ],
     ) -> None:
-        super().__init__(edition)
+        super().__init__(edition, ctx)
         self._current_settings = dict(load_configuration_settings())
         self._page_menu_dropdowns_postprocess = page_menu_dropdowns_postprocess
 
@@ -810,8 +816,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, list)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, list)
 
 
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):

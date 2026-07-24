@@ -17,6 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import PageMenu
+from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -27,9 +28,10 @@ from cmk.shared_typing.main_menu import NavItem
 class WatoMode[RequestOK](abc.ABC):
     _request_data: Result[RequestOK, None]
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         super().__init__()
         self._edition = edition
+        self._ctx = ctx
         self._from_vars()
         self._request_data = self._parse_data_from_request(request)
 
@@ -96,7 +98,7 @@ class WatoMode[RequestOK](abc.ABC):
         """
 
         if parent_cls := self.parent_mode():
-            breadcrumb = parent_cls(self._edition).breadcrumb()
+            breadcrumb = parent_cls(self._edition, self._ctx).breadcrumb()
         else:
             breadcrumb = Breadcrumb()
 
@@ -157,6 +159,9 @@ class WatoMode[RequestOK](abc.ABC):
         )
         yield from main_module.additional_breadcrumb_items()
 
+    # The `config` argument of the handlers below is transitional: Now that the
+    # mode carries its page context, these callers should read `self._ctx.config`
+    # directly (CMK-35767).
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         """Returns the data structure representing the page menu for this mode"""
         return PageMenu(breadcrumb=breadcrumb)

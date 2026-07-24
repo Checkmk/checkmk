@@ -240,8 +240,8 @@ class ModeFolder(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         try:
             host_name = request.get_ascii_input("host")
         except MKUserError:
@@ -1545,8 +1545,8 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self, edition: Edition, is_new: bool) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext, is_new: bool) -> None:
+        super().__init__(edition, ctx)
         self._is_new = is_new
         self._tree = folder_tree()
         self._folder = self._init_folder()
@@ -1704,8 +1704,8 @@ class ModeEditFolder(ABCFolderMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, is_new=False)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, is_new=False)
 
     @override
     def _init_folder(self) -> Folder:
@@ -1765,8 +1765,8 @@ class ModeCreateFolder(ABCFolderMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, is_new=True)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, is_new=True)
 
     @override
     def _init_folder(self) -> Folder:

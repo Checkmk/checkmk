@@ -11,10 +11,12 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.ccc.version import Edition
+from cmk.gui.config import Config
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
+from cmk.gui.pages import PageContext
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
@@ -80,7 +82,7 @@ def test_match_item_generator_settings(
         MatchItemGeneratorSettings(
             "settings",
             "Settings",
-            lambda: SomeSettingsMode(test_edition),
+            lambda: SomeSettingsMode(test_edition, PageContext(config=Config(), request=request)),
         ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(
@@ -112,7 +114,9 @@ def test_parse_submitted_value_keeps_cleartext_password_for_storage(
     # PasswordVisitor frontend model: (type, password_id, password, encrypted)
     request.set_var("_vue_global_settings", json.dumps(["explicit_password", "", "hunter2", False]))
 
-    submitted = global_settings.ModeEditGlobalSetting(test_edition)._parse_submitted_value()
+    submitted = global_settings.ModeEditGlobalSetting(
+        test_edition, PageContext(config=Config(), request=request)
+    )._parse_submitted_value()
 
     assert isinstance(submitted, tuple)
     password_id_and_value = submitted[2]

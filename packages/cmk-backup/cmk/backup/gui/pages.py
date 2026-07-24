@@ -48,8 +48,8 @@ class ModeBackup(handler.ModeBackup):
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())
 
     @override
     def title(self) -> str:
@@ -106,8 +106,8 @@ class ModeEditBackupJob(handler.ModeEditBackupJob):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupJobState(handler.ModeBackupJobState):
@@ -143,7 +143,7 @@ class PageAjaxBackupJobState(AjaxPage):
         handler.show_job_details(
             handler.PageBackupRestoreState().job
             if ctx.request.var("job") == "restore"
-            else ModeBackupJobState(self._edition).job
+            else ModeBackupJobState(self._edition, ctx).job
         )
         return None
 
@@ -168,8 +168,8 @@ class ModeBackupKeyManagement(handler.ModeBackupKeyManagement):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupEditKey(handler.ModeBackupEditKey):
@@ -188,8 +188,8 @@ class ModeBackupEditKey(handler.ModeBackupEditKey):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupUploadKey(handler.ModeBackupUploadKey):
@@ -208,8 +208,8 @@ class ModeBackupUploadKey(handler.ModeBackupUploadKey):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())
 
     @override
     def _upload_key(self, key_file: str, alias: str, passphrase: Password) -> None:
@@ -238,8 +238,8 @@ class ModeBackupDownloadKey(handler.ModeBackupDownloadKey):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupRestore(handler.ModeBackupRestore):
@@ -258,5 +258,5 @@ class ModeBackupRestore(handler.ModeBackupRestore):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition, key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx, key_store=make_site_backup_keypair_store())

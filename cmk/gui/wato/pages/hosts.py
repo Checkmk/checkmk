@@ -208,10 +208,10 @@ class ABCHostMode(WatoMode, abc.ABC):
     @abc.abstractmethod
     def _init_host(self) -> Host: ...
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         self._host = self._init_host()
         self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
-        super().__init__(edition)
+        super().__init__(edition, ctx)
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

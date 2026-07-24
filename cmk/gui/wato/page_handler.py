@@ -74,7 +74,7 @@ def page_handler(edition: Edition, ctx: PageContext) -> None:
     ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
 
-    mode_instance = mode_registry.get(current_mode, ModeNotImplemented)(edition)
+    mode_instance = mode_registry.get(current_mode, ModeNotImplemented)(edition, ctx)
     mode_instance.ensure_permissions()
 
     display_options.load_from_html(request, html)

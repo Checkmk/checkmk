@@ -58,6 +58,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, RenderMode, StaticIcon
 from cmk.gui.user_sites import activation_sites
@@ -180,7 +181,11 @@ class _SimpleWatoModeBase[T: Mapping[str, Any]](WatoMode):
     """
 
     def __init__(
-        self, edition: Edition, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]
+        self,
+        edition: Edition,
+        ctx: PageContext,
+        mode_type: SimpleModeType[T],
+        store: WatoSimpleConfigFile[T],
     ) -> None:
         self._mode_type = mode_type
         self._store = store
@@ -189,7 +194,7 @@ class _SimpleWatoModeBase[T: Mapping[str, Any]](WatoMode):
         # to be set before it is executed. Therefore we execute the super constructor
         # here.
         # TODO: Make the _from_vars() mechanism more explicit
-        super().__init__(edition)
+        super().__init__(edition, ctx)
 
     def _add_change(
         self,
@@ -416,12 +421,16 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     """Base class for edit modes"""
 
     def __init__(
-        self, edition: Edition, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]
+        self,
+        edition: Edition,
+        ctx: PageContext,
+        mode_type: SimpleModeType[T],
+        store: WatoSimpleConfigFile[T],
     ):
         self._ident: str | None = None
         self._clone: str | None = None
         self._new: bool = True
-        super().__init__(edition, mode_type, store)
+        super().__init__(edition, ctx, mode_type, store)
 
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         raise NotImplementedError

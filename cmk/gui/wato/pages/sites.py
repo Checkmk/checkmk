@@ -308,8 +308,8 @@ class ModeEditSite(WatoMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._site_mgmt = site_management_registry["site_management"]
 
         _site_id_return = request.get_ascii_input("site")
@@ -874,8 +874,8 @@ class ModeEditBrokerConnection(WatoMode):
     def _is_new(self) -> bool:
         return self._edit_id is None
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._site_mgmt = site_management_registry["site_management"]
 
         self._connection: BrokerConnection | None = None
@@ -1079,8 +1079,8 @@ class ModeDistributedMonitoring(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_SITES
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._site_mgmt = site_management_registry["site_management"]
 
     @override
@@ -1954,8 +1954,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         self._site_mgmt = site_management_registry["site_management"]
         self._configured_sites = self._site_mgmt.load_sites()
@@ -2209,8 +2209,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSite
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         self._site_mgmt = site_management_registry["site_management"]
         self._configured_sites = self._site_mgmt.load_sites()

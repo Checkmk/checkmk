@@ -20,6 +20,7 @@ from cmk.utils import paths
 class SetupPermissionsHandler:
     def __init__(self, edition: Edition, ctx: PageContext) -> None:
         self._edition = edition
+        self._ctx = ctx
         self._config = ctx.config
         self._request = ctx.request
         self._category_permissions = {
@@ -70,7 +71,7 @@ class SetupPermissionsHandler:
 
         try:
             if mode:
-                mode_registry[mode](self._edition).ensure_permissions()
+                mode_registry[mode](self._edition, self._ctx).ensure_permissions()
             else:
                 self._check_if_handling_page_triggers_exception(file_name)
             return True

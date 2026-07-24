@@ -16,7 +16,10 @@ from cmk.backup.utils.targets.config import LocalTargetConfig, TargetConfig
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
+from cmk.gui.config import Config as GUIConfig
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 
 
 @pytest.mark.usefixtures("request_context")
@@ -26,7 +29,7 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         store_path = cmk.utils.paths.default_config_dir / "backup_keys.mk"
 
         assert not store_path.exists()
-        mode = ModeBackupEditKey(test_edition)
+        mode = ModeBackupEditKey(test_edition, PageContext(config=GUIConfig(), request=request))
 
         # First create a backup key
         mode._create_key(
@@ -36,7 +39,9 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         assert store_path.exists()
 
         # Then test key existence
-        test_mode = ModeBackupEditKey(test_edition)
+        test_mode = ModeBackupEditKey(
+            test_edition, PageContext(config=GUIConfig(), request=request)
+        )
         keys = test_mode.key_store.load()
         assert len(keys) == 1
 

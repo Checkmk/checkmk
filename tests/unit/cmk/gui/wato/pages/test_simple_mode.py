@@ -15,6 +15,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from cmk.ccc.version import Edition
+from cmk.gui.config import Config
+from cmk.gui.http import request
+from cmk.gui.pages import PageContext
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, TextInput
 from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -73,10 +76,11 @@ class SomeEditMode(SimpleEditMode[SomeSpec]):
     def __init__(
         self,
         edition: Edition,
+        ctx: PageContext,
         mode_type: SimpleModeType[SomeSpec],
         store: WatoSimpleConfigFile[SomeSpec],
     ):
-        super().__init__(edition, mode_type, store)
+        super().__init__(edition, ctx, mode_type, store)
         self.mock = MagicMock(spec=Dictionary)
 
     @override
@@ -126,7 +130,9 @@ def test_page_form_render_entry_valuespec(
         )
     )
 
-    mode = SomeEditMode(test_edition, mode_type, store)
+    mode = SomeEditMode(
+        test_edition, PageContext(config=Config(), request=request), mode_type, store
+    )
     mode._entry = store._value
     mode._new = new
     mode._clone = clone

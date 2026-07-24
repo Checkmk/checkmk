@@ -15,6 +15,8 @@ import pytest
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
+from cmk.gui.http import request
+from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, PermissionName
 from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
@@ -94,7 +96,9 @@ class TestWatoMode:
         main_module_registry,
         test_edition: Edition,
     ):
-        assert list(SomeWatoMode(test_edition).breadcrumb()) == [
+        assert list(
+            SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
+        ) == [
             BreadcrumbItem(title="Hosts", url=None, id="hosts"),
             BreadcrumbItem(
                 title="(Untitled module)",
@@ -127,7 +131,9 @@ class TestWatoMode:
             "additional_breadcrumb_items",
             additional_breadcrumb_items,
         )
-        assert list(SomeWatoMode(test_edition).breadcrumb()) == [
+        assert list(
+            SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
+        ) == [
             BreadcrumbItem(title="Hosts", url=None, id="hosts"),
             BreadcrumbItem(title="In between 1", url=None, id=None),
             BreadcrumbItem(title="In between 2", url="123", id=None),

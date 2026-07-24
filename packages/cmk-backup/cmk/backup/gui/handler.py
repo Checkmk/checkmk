@@ -89,6 +89,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -462,8 +463,10 @@ class ModeBackup(WatoMode[object]):
     def title(self) -> str:
         return _("Site backup")
 
-    def __init__(self, edition: Edition, key_store: keypair_store.KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(
+        self, edition: Edition, ctx: PageContext, key_store: keypair_store.KeypairStore
+    ) -> None:
+        super().__init__(edition, ctx)
         self.key_store = key_store
 
     @override
@@ -753,8 +756,10 @@ class ModeBackup(WatoMode[object]):
 
 
 class ModeEditBackupJob(WatoMode[object]):
-    def __init__(self, edition: Edition, key_store: keypair_store.KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(
+        self, edition: Edition, ctx: PageContext, key_store: keypair_store.KeypairStore
+    ) -> None:
+        super().__init__(edition, ctx)
         self.key_store = key_store
         job_ident = request.get_str_input("job")
         self._received_data_from_frontend = False
@@ -1140,8 +1145,8 @@ def show_job_details(job: MKBackupJob) -> None:
 
 
 class ModeBackupJobState(WatoMode[object]):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._from_vars()
 
     @override
@@ -1889,8 +1894,8 @@ class ModeBackupTargets(WatoMode[object]):
 
 
 class ModeEditBackupTarget(WatoMode[object]):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         target_ident = request.var("target")
 
         self._received_data_from_frontend = False
@@ -2241,8 +2246,10 @@ class RestoreJob(MKBackupJob):
 
 
 class ModeBackupRestore(WatoMode[object]):
-    def __init__(self, edition: Edition, key_store: keypair_store.KeypairStore) -> None:
-        super().__init__(edition)
+    def __init__(
+        self, edition: Edition, ctx: PageContext, key_store: keypair_store.KeypairStore
+    ) -> None:
+        super().__init__(edition, ctx)
         self.key_store = key_store
         self._load_target()
         if self._target:

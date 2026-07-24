@@ -37,6 +37,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
@@ -70,8 +71,8 @@ class ModeAnalyzeConfig(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["analyze_config"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
 

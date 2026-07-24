@@ -33,6 +33,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     ActionResult,
@@ -520,8 +521,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
 
 
 class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.

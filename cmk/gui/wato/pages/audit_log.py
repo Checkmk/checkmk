@@ -55,6 +55,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.userdb.store import load_users
@@ -159,8 +160,8 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
     def static_permissions() -> Collection[PermissionName]:
         return ["auditlog"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         options = get_visitor(
             self._audit_log_options_fs(), VisitorOptions(migrate_values=False, mask_values=False)
         ).to_disk(DEFAULT_VALUE)

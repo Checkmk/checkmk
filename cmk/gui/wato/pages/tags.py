@@ -35,6 +35,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import (
     ActionResult,
@@ -112,8 +113,8 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class ABCTagMode(WatoMode, abc.ABC):
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._tag_config_file = TagConfigFile()
         self._load_effective_config()
 
@@ -523,8 +524,8 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._id = self._get_id()
         self._new = self._is_new_tag()
 
@@ -793,8 +794,8 @@ class ModeEditAuxtag(ABCEditTagMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         if self._new:
             self._aux_tag = cmk.ruleset_matcher.tags.AuxTag(
@@ -888,8 +889,8 @@ class ModeEditTagGroup(ABCEditTagMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         tg = self._tag_config.get_tag_group(TagGroupID(self._id) if self._id else TagGroupID(""))
         self._untainted_tag_group = (

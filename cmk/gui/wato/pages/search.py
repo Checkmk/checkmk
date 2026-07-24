@@ -18,6 +18,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import ActionResult, DynamicIconName, HTTPVariables, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
@@ -50,8 +51,8 @@ class ModeSearch(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._folder = folder_from_request(
             folder_tree(), request.var("folder"), request.get_ascii_input("host")
         )

@@ -19,6 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.table import Table
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.urls import makeuri_contextless
@@ -120,9 +121,10 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         super().__init__(
             edition,
+            ctx,
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
@@ -249,9 +251,10 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePredefinedConditions
 
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         super().__init__(
             edition,
+            ctx,
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )

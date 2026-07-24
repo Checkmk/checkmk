@@ -42,6 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     show_confirm_cancel_dialog,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import (
     load_dynamic_permissions,
     permission_registry,
@@ -265,8 +266,8 @@ class ModeRoleTwoFactor(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         load_dynamic_permissions()
 
     @override
@@ -360,8 +361,8 @@ class ModeEditRole(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         # Make sure that all dynamic permissions are available (e.g. those for custom
         # views)

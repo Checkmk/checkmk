@@ -42,6 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
@@ -228,8 +229,8 @@ class ModeTimeperiods(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._timeperiods = load_timeperiods()
 
     @override
@@ -404,7 +405,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 button_name="upload",
                 save_title=_("Import"),
             )
-        return ModeEditTimeperiod(self._edition).page_menu(config, breadcrumb)
+        return ModeEditTimeperiod(self._edition, self._ctx).page_menu(config, breadcrumb)
 
     def _vs_ical(self) -> Dictionary:
         return Dictionary(
@@ -541,7 +542,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         request.set_var("mode", "edit_timeperiod")
 
-        ModeEditTimeperiod(self._edition).page(config)
+        ModeEditTimeperiod(self._edition, self._ctx).page(config)
 
 
 class ModeEditTimeperiod(WatoMode):

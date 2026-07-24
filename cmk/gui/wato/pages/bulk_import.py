@@ -42,6 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     ActionResult,
@@ -395,8 +396,8 @@ class ModeBulkImport(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._params: dict[str, Any] | None = None
 
     @property
@@ -719,7 +720,7 @@ class ModeBulkImport(WatoMode):
         with html.form_context("preview", method="POST"):
             self._preview_form()
 
-            custom_host_attrs = ModeCustomHostAttrs(self._edition).get_attributes()
+            custom_host_attrs = ModeCustomHostAttrs(self._edition, self._ctx).get_attributes()
             attributes = _attribute_choices(tag_groups, custom_host_attrs)
 
             # first line could be missing in situation of import error

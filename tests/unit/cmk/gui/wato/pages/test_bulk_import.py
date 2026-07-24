@@ -15,9 +15,10 @@ from livestatus import SiteConfigurations
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
+from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import Choices, CustomHostAttrSpec
 from cmk.gui.wato.pages.bulk_import import (
     _attribute_choices,
@@ -195,7 +196,7 @@ def test_bulk_import_csv_parsing(
     host_attributes = all_host_attributes(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
-    mode_bulk_import = ModeBulkImport(test_edition)
+    mode_bulk_import = ModeBulkImport(test_edition, PageContext(config=Config(), request=request))
     request.set_var("attribute_0", "host_name")
     request.set_var("attribute_1", "ipaddress")
 

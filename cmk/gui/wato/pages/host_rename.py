@@ -36,6 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import (
     ActionResult,
     IconNames,
@@ -106,8 +107,8 @@ class ModeBulkRenameHost(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         if not user.may("wato.rename_hosts"):
             raise MKGeneralException(_("You don't have the right to rename hosts"))

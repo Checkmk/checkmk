@@ -12,6 +12,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.oauth.wato._registered_clients_mode import ModeRegisteredOAuthClients
+from cmk.gui.pages import PageContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -34,7 +35,9 @@ def test_page_renders_registered_client_details(
     )
 
     with output_funnel.plugged():
-        ModeRegisteredOAuthClients(test_edition).page(Config())
+        ModeRegisteredOAuthClients(
+            test_edition, PageContext(config=Config(), request=request)
+        ).page(Config())
         written = "".join(output_funnel.drain())
 
     assert registered.client_id in written
@@ -47,7 +50,9 @@ def test_page_renders_registered_client_details(
 @pytest.mark.usefixtures("request_context")
 def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
     with output_funnel.plugged():
-        ModeRegisteredOAuthClients(test_edition).page(Config())
+        ModeRegisteredOAuthClients(
+            test_edition, PageContext(config=Config(), request=request)
+        ).page(Config())
         written = "".join(output_funnel.drain())
 
     assert isinstance(written, str)
@@ -69,7 +74,9 @@ class TestModeRegisteredOAuthClientsAction:
             transactions.ignore()
             request.set_var("_transid", "-1")
 
-            ModeRegisteredOAuthClients(test_edition).action(Config())
+            ModeRegisteredOAuthClients(
+                test_edition, PageContext(config=Config(), request=request)
+            ).action(Config())
 
         assert oauth.client_store().get(registered.client_id) is None
 
@@ -92,7 +99,9 @@ class TestModeRegisteredOAuthClientsAction:
             transactions.ignore()
             request.set_var("_transid", "-1")
 
-            ModeRegisteredOAuthClients(test_edition).action(Config())
+            ModeRegisteredOAuthClients(
+                test_edition, PageContext(config=Config(), request=request)
+            ).action(Config())
 
         assert oauth.client_store().get(checked.client_id) is None
         assert oauth.client_store().get(unchecked.client_id) == unchecked
@@ -112,6 +121,8 @@ class TestModeRegisteredOAuthClientsAction:
         ):
             flask_app.preprocess_request()
 
-            ModeRegisteredOAuthClients(test_edition).action(Config())
+            ModeRegisteredOAuthClients(
+                test_edition, PageContext(config=Config(), request=request)
+            ).action(Config())
 
         assert oauth.client_store().get(registered.client_id) == registered

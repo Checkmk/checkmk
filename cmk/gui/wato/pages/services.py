@@ -528,7 +528,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "body": page_code,
             "datasources": datasources_code,
             "fixall": fix_all_code,
-            "page_menu": self._get_page_menu(discovery_options, host),
+            "page_menu": self._get_page_menu(ctx, discovery_options, host),
             "pending_changes_info": (
                 pending_changes_info := ActivateChanges.get_pending_changes_info(
                     list(ctx.config.sites)
@@ -676,7 +676,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # empty list can mean everything or nothing.
         return () if checkboxes_where_avaliable else EVERYTHING
 
-    def _get_page_menu(self, discovery_options: DiscoveryOptions, host: Host) -> str:
+    def _get_page_menu(
+        self, ctx: PageContext, discovery_options: DiscoveryOptions, host: Host
+    ) -> str:
         """Render the page menu contents to reflect contect changes
 
         The page menu needs to be updated, just like the body of the page. We previously tried an
@@ -684,17 +686,19 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         refresh), but it was a lot more complex to realize and resulted in inconsistencies. This is
         the simpler solution and less error prone.
         """
-        page_menu = service_page_menu(self._get_discovery_breadcrumb(host), host, discovery_options)
+        page_menu = service_page_menu(
+            self._get_discovery_breadcrumb(ctx, host), host, discovery_options
+        )
         with output_funnel.plugged():
             PageMenuRenderer().show(
                 page_menu, hide_suggestions=not user.get_tree_state("suggestions", "all", True)
             )
             return output_funnel.drain()
 
-    def _get_discovery_breadcrumb(self, host: Host) -> Breadcrumb:
+    def _get_discovery_breadcrumb(self, ctx: PageContext, host: Host) -> Breadcrumb:
         with request.stashed_vars():
             request.set_var("host", host.name())
-            mode = ModeDiscovery(self._edition)
+            mode = ModeDiscovery(self._edition, ctx)
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 
     def _get_status_message(

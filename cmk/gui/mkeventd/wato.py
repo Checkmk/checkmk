@@ -62,6 +62,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.search.matchers import (
@@ -305,7 +306,9 @@ def register(
         MatchItemGeneratorSettings(
             "event_console_settings",
             _("Event Console settings"),
-            lambda: ModeEventConsoleSettings(edition),
+            lambda: ModeEventConsoleSettings(
+                edition, PageContext(config=active_config, request=request)
+            ),
         )
     )
 
@@ -1548,13 +1551,13 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 
 class ABCEventConsoleMode(WatoMode, abc.ABC):
-    def __init__(self, edition: Edition) -> None:
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
         config_domain = config_domain_registry[EVENT_CONSOLE]
         assert isinstance(config_domain, ConfigDomainEventConsole)
         self._config_domain = config_domain
         self._paths = ec.create_paths(cmk.utils.paths.omd_root)
         self._rule_packs = list(ec.load_rule_packs(self._paths))
-        super().__init__(edition)
+        super().__init__(edition, ctx)
 
     def _mib_dirs(self) -> Sequence[tuple[Path, str, bool]]:
         # ASN1 MIB source directory candidates. Non existing dirs are ok.
@@ -3278,8 +3281,8 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         self._default_values = self._config_domain.default_globals()
         self._current_settings = dict(load_configuration_settings())
@@ -3418,8 +3421,8 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleSettings
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._need_restart = None
 
     @override

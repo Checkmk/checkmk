@@ -47,6 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import (
@@ -167,8 +168,8 @@ class ModeUsers(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
         self._job = UserSyncBackgroundJob()
         self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
         self._can_create_and_delete_users = edition != Edition.CLOUD
@@ -883,8 +884,8 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return self.mode_url(edit=self._user_id)
 
-    def __init__(self, edition: Edition) -> None:
-        super().__init__(edition)
+    def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        super().__init__(edition, ctx)
 
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.

@@ -2476,10 +2476,7 @@ class AutomationRestart:
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RestartResult:
-        if args:
-            nodes = {HostName(hn) for hn in args}
-        else:
-            nodes = None
+        nodes = {HostName(hn) for hn in args} if args else None
 
         env = AutomationEnvironment.create(app, plugins, loading_result)
         # Rebuild hosts_config from the loaded config rather than reading

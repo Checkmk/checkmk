@@ -315,11 +315,8 @@ class BIHostSearch(ABCBISearch):
         new_conditions = cast(HostConditions, replace_macros(self.conditions, macros))  # type: ignore[call-overload]
         search_matches: list[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
-        if isinstance(self.refer_to, str):
-            # TODO: remove with version 2.3: unconverted legacy refer_to field
-            referred_type = self.refer_to
-        else:
-            referred_type = self.refer_to["type"]
+        # TODO: remove with version 2.3: unconverted legacy refer_to field
+        referred_type = self.refer_to if isinstance(self.refer_to, str) else self.refer_to["type"]
         if referred_type == "host":
             return self._refer_to_host_results(search_matches)
         if referred_type == "child":

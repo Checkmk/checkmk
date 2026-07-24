@@ -990,10 +990,7 @@ def event_match_plugin_output(
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
 
-        if context["WHAT"] == "SERVICE":
-            output = context["SERVICEOUTPUT"]
-        else:
-            output = context["HOSTOUTPUT"]
+        output = context["SERVICEOUTPUT"] if context["WHAT"] == "SERVICE" else context["HOSTOUTPUT"]
         if not r.search(output):
             return "The expression '{}' cannot be found in the plug-in output '{}'".format(
                 rule["match_plugin_output"],

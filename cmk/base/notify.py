@@ -1764,10 +1764,7 @@ def _rbn_match_event(
         event = "x"
     elif notification_type.startswith("ALERTHANDLER ("):
         handler_state = notification_type[14:-1]
-        if handler_state == "OK":
-            event = "as"
-        else:
-            event = "af"
+        event = "as" if handler_state == "OK" else "af"
     else:
         event = event_map.get(last_state, "?") + event_map.get(state, "?")
 
@@ -2131,10 +2128,7 @@ def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> str |
 
     # Call actual script without any arguments
     local_path = cmk.utils.paths.local_notifications_dir / plugin_name
-    if local_path.exists():
-        path = local_path
-    else:
-        path = cmk.utils.paths.notifications_dir / plugin_name
+    path = local_path if local_path.exists() else cmk.utils.paths.notifications_dir / plugin_name
 
     if not path.exists():
         logger.info("Notification plug-in '%(plugin)s' not found", {"plugin": plugin_name})

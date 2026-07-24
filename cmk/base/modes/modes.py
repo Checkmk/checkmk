@@ -372,10 +372,7 @@ class Mode(Option):
             text.append(option_text)
         else:
             for index, paragraph in enumerate(self.long_help):
-                if index == 0:
-                    initial_indent = option_text
-                else:
-                    initial_indent = "    "
+                initial_indent = option_text if index == 0 else "    "
 
                 wrapper = textwrap.TextWrapper(
                     initial_indent=initial_indent,

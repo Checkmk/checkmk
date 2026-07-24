@@ -191,10 +191,7 @@ def _create_rrd(
 
     args = [str(rrd_file_name), "--step", str(step)]
     for nr, varname in enumerate(spec.metric_names, 1):
-        if varname in migration_mapping:
-            source_spec = "=%d" % migration_mapping[varname]
-        else:
-            source_spec = ""
+        source_spec = "=%d" % migration_mapping[varname] if varname in migration_mapping else ""
         args.append(f"DS:{nr}{source_spec}:GAUGE:{heartbeat}:U:U")
     args += rra_config
     args = migration_arguments + args

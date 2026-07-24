@@ -27,6 +27,7 @@ import {
 
 import DashboardBreadcrumb from '@/dashboard/components/DashboardBreadcrumb/DashboardBreadcrumb.vue'
 import DashboardComponent from '@/dashboard/components/DashboardComponent.vue'
+import NetworkFlowAutonomousSystemSlideIn from '@/dashboard/components/DashboardContent/NetworkFlow/AutonomousSystemSlideIn/NetworkFlowAutonomousSystemSlideIn.vue'
 import NetworkFlowHostSlideIn from '@/dashboard/components/DashboardContent/NetworkFlow/HostSlideIn/NetworkFlowHostSlideIn.vue'
 import DashboardFilterSettings from '@/dashboard/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
@@ -57,7 +58,11 @@ import {
   type DashboardModel
 } from '@/dashboard/types/dashboard.ts'
 import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
-import { hostSlideInKey, urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
+import {
+  autonomousSystemSlideInKey,
+  hostSlideInKey,
+  urlParamsKey
+} from '@/dashboard/types/injectionKeys.ts'
 import type { DashboardPageProperties } from '@/dashboard/types/page.ts'
 import type {
   WidgetContent,
@@ -131,6 +136,27 @@ function closeHostSlideIn(): void {
 }
 
 provide(hostSlideInKey, openHostSlideIn)
+
+// Network flow autonomous system detail slide-in, same open/toggle pattern.
+const autonomousSystemSlideInAsn = ref<number | null>(null)
+const autonomousSystemSlideInOpen = computed(() => autonomousSystemSlideInAsn.value !== null)
+
+function openAutonomousSystemSlideIn(asn: number): void {
+  if (autonomousSystemSlideInAsn.value !== null && autonomousSystemSlideInAsn.value !== asn) {
+    autonomousSystemSlideInAsn.value = null
+    void nextTick(() => {
+      autonomousSystemSlideInAsn.value = asn
+    })
+  } else {
+    autonomousSystemSlideInAsn.value = asn
+  }
+}
+
+function closeAutonomousSystemSlideIn(): void {
+  autonomousSystemSlideInAsn.value = null
+}
+
+provide(autonomousSystemSlideInKey, openAutonomousSystemSlideIn)
 
 const dashboardsManager = useDashboardsManager()
 useProvideDashboardConstants(dashboardsManager.constants)
@@ -741,6 +767,11 @@ const reviewFilters = () => {
           :open="hostSlideInOpen"
           :ip="hostSlideInIp"
           @close="closeHostSlideIn"
+        />
+        <NetworkFlowAutonomousSystemSlideIn
+          :open="autonomousSystemSlideInOpen"
+          :asn="autonomousSystemSlideInAsn"
+          @close="closeAutonomousSystemSlideIn"
         />
       </div>
       <div class="db-app__content">

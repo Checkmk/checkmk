@@ -10,7 +10,7 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject, onBeforeMount, ref, watch } from 'vue'
 
-import { hostSlideInKey } from '@/dashboard/types/injectionKeys.ts'
+import { autonomousSystemSlideInKey, hostSlideInKey } from '@/dashboard/types/injectionKeys.ts'
 import type { NetworkFlowTopTableContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkRankedTable from '@/network-flow/CmkRankedTable'
@@ -24,6 +24,7 @@ const props = defineProps<ContentProps<NetworkFlowTopTableContent>>()
 
 // null when the dashboard does not wire it up; cells then stay plain text.
 const openHostSlideIn = inject(hostSlideInKey, null)
+const openAutonomousSystemSlideIn = inject(autonomousSystemSlideInKey, null)
 
 const columns = ref<RankedTableColumn[] | undefined>(undefined)
 const rows = ref<RankedTableRow[] | undefined>(undefined)
@@ -36,16 +37,30 @@ const error = ref<{ variant: 'warning' | 'error'; message: string } | null>(null
 // configuration passes straight through (the assignment is type-checked).
 const barColor = computed<ChartColor>(() => props.content.accent)
 
-// Make the "host" column clickable (host dimensions only) when an opener exists.
+// Make the "host"/"asn" columns clickable to open their slide-ins.
+function isClickable(columnKey: string): boolean {
+  return (
+    (columnKey === 'host' && openHostSlideIn !== null) ||
+    (columnKey === 'asn' && openAutonomousSystemSlideIn !== null)
+  )
+}
+
 const displayColumns = computed<RankedTableColumn[]>(() =>
   (columns.value ?? []).map((column) =>
-    column.key === 'host' && openHostSlideIn ? { ...column, clickable: true } : column
+    isClickable(column.key) ? { ...column, clickable: true } : column
   )
 )
 
 function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
+  const value = String(row[column.key] ?? '')
   if (column.key === 'host' && openHostSlideIn) {
-    openHostSlideIn(String(row[column.key] ?? ''))
+    openHostSlideIn(value)
+  } else if (column.key === 'asn' && openAutonomousSystemSlideIn) {
+    // The cell renders as "AS<n>"; the endpoint wants the numeric ASN.
+    const asn = Number(value.replace(/^AS/, ''))
+    if (!Number.isNaN(asn)) {
+      openAutonomousSystemSlideIn(asn)
+    }
   }
 }
 

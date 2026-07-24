@@ -40,7 +40,22 @@ pub fn get_local_sid_names() -> Vec<String> {
         .unwrap_or_default()
         .into_iter()
         .collect::<Vec<String>>();
-    registry_sids.into_iter().chain(process_sids).collect()
+    registry_sids
+        .into_iter()
+        .map(|s| s.to_string().to_uppercase())
+        .chain(process_sids)
+        .collect()
+}
+
+/// Extracts the SID (regex group 2) from a single process parameter.
+///
+/// The captured SID is upper-cased because Oracle SIDs are case-insensitive while the
+/// Linux process name carries a lower-case variant (e.g. `ora_pmon_test23` -> `TEST23`).
+/// Returns `None` when `param` does not match a known PMON pattern.
+fn capture_sid(re: &Regex, param: &str) -> Option<String> {
+    re.captures(param)
+        .and_then(|c| c.get(2))
+        .map(|m| m.as_str().to_uppercase())
 }
 
 /// Method is similar to `ps -ef | grep <match_string>`
@@ -60,11 +75,7 @@ pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<Stri
                 .last()
                 .map(|s| s.to_string_lossy())
                 .and_then(|s| s.split(' ').next_back().map(|s| s.to_string()))
-                .and_then(|last_param| {
-                    re.captures(&last_param)
-                        .and_then(|c| c.get(2))
-                        .map(|m| m.as_str().to_string())
-                })
+                .and_then(|last_param| capture_sid(&re, &last_param))
         })
         .collect();
 
@@ -173,13 +184,23 @@ mod tests {
     }
 
     #[test]
-    fn test_find_sids_by_processes() {
+    fn test_capture_sid_uppercases_lowercase() {
         let re = Regex::new(SID_MASK).expect("Failed to compile regex");
-        let x = re
-            .captures("ora_pmon_TEST19")
-            .and_then(|c| c.get(2))
-            .map(|m| m.as_str().to_string());
-        assert_eq!(x, Some("TEST19".to_string()));
+        assert_eq!(
+            capture_sid(&re, "ora_pmon_test23"),
+            Some("TEST23".to_string())
+        );
+        assert_eq!(
+            capture_sid(&re, "ora_pmon_Test23"),
+            Some("TEST23".to_string())
+        );
+    }
+
+    #[test]
+    fn test_capture_sid_no_match() {
+        let re = Regex::new(SID_MASK).expect("Failed to compile regex");
+        assert_eq!(capture_sid(&re, "pmon_test"), None);
+        assert_eq!(capture_sid(&re, "some_other_process"), None);
     }
 
     fn parts(inst: LocalInstance, processes: Option<&HashSet<String>>) -> Vec<String> {

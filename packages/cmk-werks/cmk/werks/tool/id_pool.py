@@ -35,11 +35,30 @@ class Paths:
 
 
 def make_paths_object(home: Path) -> Paths:
-    return Paths(
+    paths = Paths(
         legacy_stash_file=home / ".cmk-werk-ids",
-        stash_file=home / ".local/state/cmk-werk-ids-reserved",
-        secret_file=home / ".config/cmk-werk-ids-secret",
+        stash_file=home / ".local/state/cmk-werks/reserved-ids",
+        secret_file=home / ".config/cmk-werks/secret",
     )
+    _migrate_path_locations(home, paths)
+    return paths
+
+
+def _migrate_path_locations(home: Path, paths: Paths) -> None:
+    for old, new in (
+        (home / ".config/cmk-werk-ids-secret", paths.secret_file),
+        (home / ".local/state/cmk-werk-ids-reserved", paths.stash_file),
+    ):
+        if old.exists() and not new.exists():
+            new.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                old.rename(new)
+            except OSError as exc:
+                sys.stderr.write(
+                    f"Warning: could not migrate werk-ids file {old} to {new}: {exc}\n"
+                    f"Please move it manually; this automatic migration will be "
+                    f"removed at the start of September 2026.\n"
+                )
 
 
 def load_legacy_stash_from_file(paths: Paths) -> LegacyStash:

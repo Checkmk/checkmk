@@ -3,44 +3,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, equals, not_exists, SNMPTree, StringTable
-from cmk.legacy_includes.mbg_lantime import (
+from cmk.agent_based.v2 import (
+    all_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    not_exists,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.meinberg.liblantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
 
-check_info = {}
+
+def discover_mbg_lantime_state(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def discover_mbg_lantime_state(info):
-    if info:
-        return [(None, {})]
-    return []
-
-
-def check_mbg_lantime_state(_no_item, params, info):
+def check_mbg_lantime_state(
+    params: Mapping[str, tuple[float, float]], section: StringTable
+) -> CheckResult:
     states = {
-        "0": (2, "not synchronized"),
-        "1": (2, "no good reference clock"),
-        "2": (0, "sync to external reference clock"),
-        "3": (0, "sync to serial reference clock"),
-        "4": (0, "normal operation PPS"),
-        "5": (0, "normal operation reference clock"),
+        "0": (State.CRIT, "not synchronized"),
+        "1": (State.CRIT, "no good reference clock"),
+        "2": (State.OK, "sync to external reference clock"),
+        "3": (State.OK, "sync to serial reference clock"),
+        "4": (State.OK, "normal operation PPS"),
+        "5": (State.OK, "normal operation reference clock"),
     }
-    return check_mbg_lantime_state_common(states, params["stratum"], params["offset"], info)
+    ntp_state, stratum, refclock_name, refclock_offset = section[0]
+    yield from check_mbg_lantime_state_common(
+        states,
+        params["stratum"],
+        params["offset"],
+        ntp_state,
+        stratum,
+        refclock_name,
+        refclock_offset,
+    )
 
 
 def parse_mbg_lantime_state(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mbg_lantime_state"] = LegacyCheckDefinition(
+snmp_section_mbg_lantime_state = SimpleSNMPSection(
     name="mbg_lantime_state",
-    parse_function=parse_mbg_lantime_state,
     detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
         not_exists(".1.3.6.1.4.1.5597.30.0.2.*"),
@@ -49,6 +67,12 @@ check_info["mbg_lantime_state"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.5597.3.1",
         oids=["2", "3", "5", "7"],
     ),
+    parse_function=parse_mbg_lantime_state,
+)
+
+
+check_plugin_mbg_lantime_state = CheckPlugin(
+    name="mbg_lantime_state",
     service_name="LANTIME State",
     discovery_function=discover_mbg_lantime_state,
     check_function=check_mbg_lantime_state,

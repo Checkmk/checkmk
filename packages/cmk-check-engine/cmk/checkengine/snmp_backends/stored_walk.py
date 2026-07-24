@@ -120,11 +120,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def _compare_oids(a: OID, b: OID) -> int:
         aa = StoredWalkSNMPBackend._to_bin_string(a)
         bb = StoredWalkSNMPBackend._to_bin_string(b)
-        if len(aa) <= len(bb) and bb[: len(aa)] == aa:
-            result = 0
-        else:
-            result = (aa > bb) - (aa < bb)
-        return result
+        return 0 if len(aa) <= len(bb) and bb[: len(aa)] == aa else (aa > bb) - (aa < bb)
 
     @staticmethod
     def _to_bin_string(oid: OID) -> tuple[int, ...]:
@@ -147,10 +143,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
             if o.startswith("."):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
-                if len(parts) > 1:
-                    value = parts[1]
-                else:
-                    value = ""
+                value = parts[1] if len(parts) > 1 else ""
                 # Fix for missing starting oids
                 rows.append(("." + o, strip_snmp_value(value)))
                 index += direction

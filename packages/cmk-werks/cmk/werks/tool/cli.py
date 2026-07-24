@@ -464,10 +464,7 @@ def something_in_git_index() -> bool:
 
 
 def list_werk(werk: Werk) -> None:
-    if werk_is_modified(werk.id):
-        bold = TTY_BOLD + TTY_CYAN + "(*) "
-    else:
-        bold = ""
+    bold = TTY_BOLD + TTY_CYAN + "(*) " if werk_is_modified(werk.id) else ""
     _lines, cols = get_tty_size()
     title = werk.content.metadata["title"][: cols - 45]
     sys.stdout.write(

@@ -292,7 +292,7 @@ def watch_loop(
             # Re-read state after deploy to get updated diff base
             diff_base = _get_state_diff_base(site)
 
-            if changed_during_deploy:
+            if changed_during_deploy:  # noqa: SIM108
                 # A user edit or a build-generated file -- never absorb it
                 # silently into the baseline.  Force the next poll to start
                 # another cycle: user edits get deployed, deterministic

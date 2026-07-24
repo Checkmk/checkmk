@@ -348,10 +348,7 @@ def get_url(environ: WSGIEnvironment) -> str:
     # We construct a protocol relative URL so we don't need to know if we are on HTTP or HTTPs.
     # This is important if we are behind a SSL terminating HTTP application proxy, which doesn't
     # forward the protocol used. This solution is more robust in those circumstances.
-    if environ.get("HTTP_HOST"):
-        host_name = environ["HTTP_HOST"]
-    else:
-        host_name = environ["SERVER_NAME"]
+    host_name = environ["HTTP_HOST"] if environ.get("HTTP_HOST") else environ["SERVER_NAME"]
 
     return f"//{host_name}{urllib.parse.quote(environ.get('PATH_INFO', ''))}"
 

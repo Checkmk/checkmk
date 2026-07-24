@@ -104,10 +104,7 @@ def check_branch_mismatch(build_commit: str | None, repo_root: Path) -> str | No
 
     # Branches differ -- try to find the build branch name
     build_branch = _find_branch_for_commit(build_commit, repo_root)
-    if build_branch:
-        source = f"'{build_branch}'"
-    else:
-        source = f"commit {build_commit[:12]}"
+    source = f"'{build_branch}'" if build_branch else f"commit {build_commit[:12]}"
 
     return (
         f"Branch mismatch: you are on '{branch_name}' but site was built from {source}\n"

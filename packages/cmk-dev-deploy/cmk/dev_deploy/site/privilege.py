@@ -57,10 +57,7 @@ def run_as_root(
     Assumes :func:`ensure_sudo` was called earlier so the sudo
     timestamp is cached and no interactive prompt is needed.
     """
-    if os.geteuid() == 0:
-        full_cmd = cmd
-    else:
-        full_cmd = ["sudo", "-n", *cmd]
+    full_cmd = cmd if os.geteuid() == 0 else ["sudo", "-n", *cmd]
     result: subprocess.CompletedProcess[str] = subprocess.run(  # type: ignore[call-overload]
         full_cmd,
         capture_output=True,

@@ -276,10 +276,8 @@ def parse_syslog_message_into_event(line: str, ipaddress: str) -> Event:
             # Nasty: the year is not contained in the message. We cannot simply
             # assume that the message if from the current year.
             lt = localtime()
-            if lt.tm_mon < 6 < month:  # Assume that message is from last year
-                year = lt.tm_year - 1
-            else:
-                year = lt.tm_year  # Assume the current year
+            # Assume that message is from last year, otherwise the current year
+            year = lt.tm_year - 1 if lt.tm_mon < 6 < month else lt.tm_year
 
             hours, minutes, seconds = map(int, timeofday.split(":"))
 

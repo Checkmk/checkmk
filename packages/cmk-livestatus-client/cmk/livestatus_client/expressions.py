@@ -311,10 +311,7 @@ class ListExpression(UnaryExpression):
 
     @override
     def disparity(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
-        if ignore_case:
-            op = ">"
-        else:
-            op = "<"
+        op = ">" if ignore_case else "<"
         return self.op(op, other)
 
     @override

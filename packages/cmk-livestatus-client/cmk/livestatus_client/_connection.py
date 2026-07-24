@@ -1256,10 +1256,7 @@ class MultiSiteConnection(Helpers):
                 stillalive.append(connected_site)  # state unknown, assume still alive
                 continue
             try:
-                if limit is not None:
-                    limit_header = "Limit: %d\n" % limit
-                else:
-                    limit_header = ""
+                limit_header = "Limit: %d\n" % limit if limit is not None else ""
                 r = connected_site.connection.query(query, add_headers + limit_header)
                 if self.prepend_site:
                     for row in r:

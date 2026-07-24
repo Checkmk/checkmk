@@ -368,10 +368,7 @@ def walk_skel(
                 continue
 
             # In depth first search first handle files, then directories
-            if depth_first:
-                entries = filenames + dirnames
-            else:
-                entries = dirnames + filenames
+            entries = filenames + dirnames if depth_first else dirnames + filenames
             for entry in entries:
                 path = dirpath + "/" + entry
                 if path.startswith("./"):
@@ -2435,10 +2432,11 @@ def print_diff(
             arrow = tty.magenta + "->" + tty.normal
             if "c" in status:
                 source_content = file_contents(source_file, site.replacements())
-                if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec B605 # BNS:2b5952
-                    diff = "colordiff"
-                else:
-                    diff = "diff"
+                diff = (
+                    "colordiff"
+                    if os.system("which colordiff > /dev/null 2>&1") == 0  # nosec B605 # BNS:2b5952
+                    else "diff"
+                )
                 subprocess.run(
                     [diff, "-", target_file],
                     close_fds=True,

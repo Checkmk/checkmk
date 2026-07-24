@@ -131,7 +131,6 @@ ignore = [
   "ARG003",
   "ARG004",
   "ARG005",
-  "SIM108",
   "SLF001",
 ]
 "packages/cmk-profiling/*" = [
@@ -145,7 +144,7 @@ ignore = [
   "ARG005",
   "SLF001",
 ]
-"packages/cmk-ec/*" = ["ARG001", "ARG002", "SIM108"]
+"packages/cmk-ec/*" = ["ARG001", "ARG002"]
 "packages/cmk-logwatch/tests/*" = ["ARG001", "ARG002"]
 "packages/cmk-plugins/*" = ["ARG001", "ARG002"]
 "packages/cmk-plugin-apis/*" = ["ARG002"]
@@ -214,12 +213,6 @@ ignore = [
 # SIM108 incremental rollout
 "cmk/legacy_checks/**" = ["SIM108"]
 "cmk/legacy_includes/**" = ["SIM108"]
-"packages/cmk-dev-deploy/**" = ["SIM108"]
-"packages/cmk-check-engine/**" = ["SIM108"]
-"packages/cmk-werks/**" = ["SIM108"]
-"packages/cmk-livestatus-client/**" = ["SIM108"]
-"packages/cmk-notification-plugins/**" = ["SIM108"]
-"omd/packages/omd/**" = ["SIM108"]
 "non-free/**" = ["SIM108"]
 
 [tool.ruff.lint.mccabe]

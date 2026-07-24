@@ -587,10 +587,7 @@ class Graph(NamedTuple):
 
 
 def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) -> list[Graph]:
-    if context["WHAT"] == "HOST":
-        svc_desc = "_HOST_"
-    else:
-        svc_desc = context["SERVICEDESC"]
+    svc_desc = "_HOST_" if context["WHAT"] == "HOST" else context["SERVICEDESC"]
 
     request = requests.Request(
         "GET",

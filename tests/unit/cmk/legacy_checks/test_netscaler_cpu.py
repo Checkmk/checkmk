@@ -13,7 +13,7 @@ import pytest
 import time_machine
 
 import cmk.legacy_checks.netscaler_cpu as netscaler_cpu_plugin
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.netscaler_cpu import (
     check_netscaler_cpu,
     discover_netscaler_cpu,
@@ -28,7 +28,10 @@ def test_parse_netscaler_cpu() -> None:
 
 
 def test_discover_netscaler_cpu() -> None:
-    assert list(discover_netscaler_cpu(_SECTION)) == [("MgmtCPU", {}), ("PacketCPU", {})]
+    assert list(discover_netscaler_cpu(_SECTION)) == [
+        Service(item="MgmtCPU"),
+        Service(item="PacketCPU"),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -60,7 +63,7 @@ def test_check_netscaler_cpu(
     item: str,
     params: Mapping[str, Any],
     string_table: StringTable,
-    expected_results: Sequence[CheckResult],
+    expected_results: Sequence[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     value_store: dict[str, tuple[float, float]] = {}

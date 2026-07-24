@@ -66,21 +66,22 @@ bazel_dep(name = "lcov", version = "2.3.2")
 bazel_dep(name = "zstd", version = "1.5.7")
 
 # rules_sphinx is not yet on BCR
-git_override(
+archive_override(
     module_name = "rules_sphinx",
-    commit = "5df77a3567592ffda069b78297bdd9e5cc01ac3a",
-    remote = "https://github.com/agoessling/rules_sphinx/",
+    integrity = "sha256-pWjims7Jpmcgt+/+6JfdNpS9/Ry67PjIZ5nlK4lTqpA=",
+    strip_prefix = "rules_sphinx-5df77a3567592ffda069b78297bdd9e5cc01ac3a",
+    urls = ["https://github.com/agoessling/rules_sphinx/archive/5df77a3567592ffda069b78297bdd9e5cc01ac3a.tar.gz"],
 )
 
 bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(name = "supply_chain_tools", dev_dependency = True)
 
 # Not yet on BCR
-git_override(
+archive_override(
     module_name = "supply_chain_tools",
-    commit = "3da4107d24d7a19d53d7ffdde77f7de7914d55d7",
-    remote = "https://github.com/bazel-contrib/supply-chain/",
-    strip_prefix = "tools",
+    integrity = "sha256-ulY7+LIhrXWrl80TmcQTv6FBIsj4G9S7fUfv5ASPG4Y=",
+    strip_prefix = "supply-chain-3da4107d24d7a19d53d7ffdde77f7de7914d55d7/tools",
+    urls = ["https://github.com/bazel-contrib/supply-chain/archive/3da4107d24d7a19d53d7ffdde77f7de7914d55d7.tar.gz"],
 )
 
 bazel_dep(name = "bazel_env.bzl", version = "0.5.0", dev_dependency = True)
@@ -108,32 +109,35 @@ bazel_dep(
     dev_dependency = True,
 )
 
-git_override(
+archive_override(
     module_name = "bazel_iwyu",
     # Live on head because of https://github.com/storypku/bazel_iwyu/issues/5
     # even if using master doesn't solve the issue.
-    commit = "1fe9048c30469ac506498c3c740ce47475ad3361",
+    integrity = "sha256-ifv5ytnZ56Kqj12feyhdOoeaSyjGO/ghs6ROagFo0yI=",
     patches = ["//bazel/patches:bazel_iwyu-make_IWYU_executable_configurable.patch"],
-    remote = "https://github.com/storypku/bazel_iwyu.git",
+    strip_prefix = "bazel_iwyu-1fe9048c30469ac506498c3c740ce47475ad3361",
+    urls = ["https://github.com/storypku/bazel_iwyu/archive/1fe9048c30469ac506498c3c740ce47475ad3361.tar.gz"],
 )
 
-git_override(
+archive_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.
-    commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
-    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    integrity = "sha256-BEsUixEeF87mHYw6ru1CBp9zJUYDgjQK/KSRn4JlCUw=",
+    strip_prefix = "bazel-compile-commands-extractor-1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
+    urls = ["https://github.com/hedronvision/bazel-compile-commands-extractor/archive/1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93.tar.gz"],
 )
 
-git_override(
+archive_override(
     module_name = "rules_rust",
     # Fork because patching fails.
-    commit = "05e32ba3c9b8f3a8e4d1d55df82369670fd42b7f",
+    integrity = "sha256-zm5wQ9Y/cVatI4G5AXPnMuawdo2Rllq8idEYEeHeasE=",
     patch_strip = 1,
     patches = [
         # Possibly related: https://github.com/bazelbuild/rules_rust/issues/2677
         "//bazel/patches:rules_rust-ignore_incomplete_workspace_env.patch",
     ],
-    remote = "https://github.com/Synss/rules_rust",
+    strip_prefix = "rules_rust-05e32ba3c9b8f3a8e4d1d55df82369670fd42b7f",
+    urls = ["https://github.com/Synss/rules_rust/archive/05e32ba3c9b8f3a8e4d1d55df82369670fd42b7f.tar.gz"],
 )
 
 single_version_override(

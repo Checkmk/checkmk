@@ -224,10 +224,7 @@ def check_aws_limits_legacy(
             yield Result(state=State.UNKNOWN, summary="Unknown resource %r" % str(resource_key))
             continue
 
-        if p_limit is None:
-            limit_ref = limit
-        else:
-            limit_ref = p_limit
+        limit_ref = limit if p_limit is None else p_limit
 
         if is_valid_aws_limits_perf_data(resource_key):
             yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)

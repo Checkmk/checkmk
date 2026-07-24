@@ -75,17 +75,11 @@ def check_prism_protection_domains(
         yield Result(state=State(state), summary=summary)
     else:
         date = data.get("next_snapshot_time_usecs", None)
-        if not date:
-            date = "N/A"
-        else:
-            # The API reports this in microseconds; render.datetime expects seconds.
-            date = render.datetime(float(date) / 1_000_000)
+        # The API reports this in microseconds; render.datetime expects seconds.
+        date = "N/A" if not date else render.datetime(float(date) / 1_000_000)
 
         remotes = data.get("remote_site_names", [])
-        if not remotes:
-            remote = "no remote site defined"
-        else:
-            remote = ", ".join(remotes)
+        remote = "no remote site defined" if not remotes else ", ".join(remotes)
 
         usage_stats = data.get("usage_stats") or {}
         stats = data.get("stats") or {}

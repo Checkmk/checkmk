@@ -47,10 +47,7 @@ def check_redfish_logicaldrives(item: str, section: RedfishAPIData) -> CheckResu
         raid_type = f"RAID{data.get('Raid', ' Unknown')}"
 
     size = data.get("CapacityBytes")
-    if not size:
-        size = data.get("CapacityMiB") / 1024
-    else:
-        size = size / 1024 / 1024 / 1024
+    size = data.get("CapacityMiB") / 1024 if not size else size / 1024 / 1024 / 1024
 
     volume_msg = f"Raid Type: {raid_type}, Size: {size:0.0f}GB"
     yield Result(state=State(0), summary=volume_msg)

@@ -104,12 +104,9 @@ def core_name(orig: str, core_index: int) -> tuple[str, str]:
     """
     expr = re.compile(r"\d+$")
     match = expr.search(orig)
-    if match is not None:
-        num = match.group(0)
-    else:
-        # fallback: if the cores have odd names, use
-        # consecutive numbers for each call
-        num = str(core_index)
+    # fallback: if the cores have odd names, use
+    # consecutive numbers for each call
+    num = match.group(0) if match is not None else str(core_index)
     return "cpu_core_util_%s" % num, "cpu_core_util_average_%s" % num
 
 

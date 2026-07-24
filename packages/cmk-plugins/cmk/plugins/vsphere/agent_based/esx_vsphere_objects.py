@@ -90,11 +90,8 @@ def check_esx_vsphere_objects(
         yield Result(state=State.CRIT, summary=f"No data about {obj.service_name}")
         return
 
-    if obj.vmtype == "Template":
-        # Templates cannot be powered on, so the state is always OK.
-        state = State.OK
-    else:
-        state = State(params["states"].get(obj.state, 3))
+    # Templates cannot be powered on, so the state is always OK.
+    state = State.OK if obj.vmtype == "Template" else State(params["states"].get(obj.state, 3))
     yield Result(state=state, summary=f"power state: {obj.state}")
 
     if obj.hostsystem:

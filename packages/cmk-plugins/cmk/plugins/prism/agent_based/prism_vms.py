@@ -59,10 +59,7 @@ def check_prism_vms(item: str, params: Mapping[str, Any], section: Section) -> C
     prot_domain = data["protectionDomainName"]
     host_name = data["hostName"]
     memory = render.bytes(data["memoryCapacityInBytes"])
-    if wanted_state == state_text.lower():
-        state = 0
-    else:
-        state = state_value
+    state = 0 if wanted_state == state_text.lower() else state_value
 
     message = f"with status {state_text} - on Host {host_name}"
     yield Result(state=State(state), summary=message)

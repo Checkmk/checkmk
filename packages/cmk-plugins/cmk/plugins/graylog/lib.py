@@ -48,10 +48,7 @@ def deserialize_and_merge_json(string_table: StringTable) -> GraylogRawSection:
 
 
 def handle_iso_utc_to_localtimestamp(iso_8601_time: str) -> int:
-    if len(iso_8601_time) == 20:
-        time_format = "%Y-%m-%dT%H:%M:%SZ"
-    else:
-        time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+    time_format = "%Y-%m-%dT%H:%M:%SZ" if len(iso_8601_time) == 20 else "%Y-%m-%dT%H:%M:%S.%fZ"
     struc_time = time.strptime(iso_8601_time, time_format)
     return calendar.timegm(struc_time)
 

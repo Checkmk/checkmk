@@ -1961,10 +1961,7 @@ def _interface_name(
         elif params["infotext_format"] == "desription_or_alias":
             bracket_info = attributes.descr if attributes.descr else attributes.alias
 
-        if bracket_info:
-            info_interface = "[%s]" % bracket_info
-        else:
-            info_interface = ""
+        info_interface = "[%s]" % bracket_info if bracket_info else ""
     # Display port number or alias in summary_interface if that is not part of the service
     # description anyway
     elif (

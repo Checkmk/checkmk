@@ -40,10 +40,7 @@ def check_prism_vm_status(params: Mapping[str, Any], section: Section) -> CheckR
         prot_dom = "undefined"
     prot_state = section.get("protectionType", "unknown")
 
-    if wanted_state == power.lower():
-        state = 0
-    else:
-        state = state_value
+    state = 0 if wanted_state == power.lower() else state_value
 
     message = f"is in state {power}, defined on {running_on}"
     yield Result(state=State(state), summary=message)

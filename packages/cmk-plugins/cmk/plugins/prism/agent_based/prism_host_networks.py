@@ -62,11 +62,8 @@ def parse_prism_host_networks_pure(
         for element in data:
             name = element.name
             if not name:
-                if element.mac_address:
-                    # try to provide stable sorting without name
-                    name = f"unknown_{element.mac_address}"
-                else:
-                    name = "unknown"
+                # try to provide stable sorting without name
+                name = f"unknown_{element.mac_address}" if element.mac_address else "unknown"
             yield InterfaceElement(name, element)
 
     return [

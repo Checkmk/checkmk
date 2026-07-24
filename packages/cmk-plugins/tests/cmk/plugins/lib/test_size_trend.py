@@ -52,10 +52,7 @@ def _call_size_trend_with(
     result = []
     cm: AbstractContextManager[None]
     for i in range(iterations):
-        if i == 0 and ignore_first_get_rate_error:
-            cm = suppress(GetRateError)
-        else:
-            cm = nullcontext()
+        cm = suppress(GetRateError) if i == 0 and ignore_first_get_rate_error else nullcontext()
         if i > 0:
             if args["timestamp"] is not None:
                 args["timestamp"] += time_inc

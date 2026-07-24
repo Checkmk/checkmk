@@ -953,10 +953,7 @@ class AWSSection(DataCache):
         prepared_tags: Tags = []
         for tag in tags:
             tag_name = tag["Name"]
-            if tag_name.startswith("tag:"):
-                tag_key = tag_name[4:]
-            else:
-                tag_key = tag_name
+            tag_key = tag_name[4:] if tag_name.startswith("tag:") else tag_name
             prepared_tags.extend([{"Key": tag_key, "Value": v} for v in tag["Values"]])
         return prepared_tags
 
@@ -1099,10 +1096,7 @@ class AWSSectionCloudwatch(AWSSection):
         """
         for metric_specs, metric_contents in zip(metrics, raw_content):
             metric_stat = metric_specs.get("MetricStat", {})
-            if metric_stat.get("Stat") == "Sum":
-                period = metric_stat["Period"]
-            else:
-                period = None
+            period = metric_stat["Period"] if metric_stat.get("Stat") == "Sum" else None
             metric_contents["Values"] = [(v, period) for v in metric_contents["Values"]]
 
 
@@ -2415,11 +2409,7 @@ class S3Summary(AWSSection):
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
         # use previous fetched data or fetch it now
-        if colleague_contents.content:
-            bucket_list = colleague_contents.content
-        else:
-            # filter buckets by region
-            bucket_list = S3BucketHelper.list_buckets(self._client)
+        bucket_list: Any = colleague_contents.content or S3BucketHelper.list_buckets(self._client)
 
         # filter buckets by region
         bucket_list = [

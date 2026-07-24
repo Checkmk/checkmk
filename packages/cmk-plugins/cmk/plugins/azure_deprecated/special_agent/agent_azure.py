@@ -688,10 +688,7 @@ class GraphApiClient(BaseApiClient):
             data = []
 
         # the uri is the link to the next page for pagination of results
-        if uri:
-            response = self._get(uri)
-        else:
-            response = self._get("users?$top=%s" % 500)
+        response = self._get(uri) if uri else self._get("users?$top=%s" % 500)
         data += response.get("value", [])
 
         # check if there is a next page, otherwise return result

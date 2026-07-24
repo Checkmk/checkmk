@@ -265,10 +265,7 @@ def fetch_data(
     client: RedfishClient, url: str, component: object, timeout: int | None = None
 ) -> Any:
     """fetch a single data object from Redfish"""
-    if timeout:
-        response_url = client.get(url, timeout=timeout)
-    else:
-        response_url = client.get(url, None)
+    response_url = client.get(url, timeout=timeout) if timeout else client.get(url, None)
     if response_url.status == 200:
         try:
             return response_url.dict

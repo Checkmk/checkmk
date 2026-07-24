@@ -213,10 +213,7 @@ def single_volume_metrics(
             # iscsi_other_latency    milli
             #
             # FIXME The metric system expects milliseconds but should get seconds
-            if protocol in ["fcp", "iscsi"]:
-                divisor = 1.0
-            else:
-                divisor = 1000.0
+            divisor = 1.0 if protocol in ["fcp", "iscsi"] else 1000.0
             delta /= (
                 divisor
                 * base[

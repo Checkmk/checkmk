@@ -147,7 +147,7 @@ ignore = [
 ]
 "packages/cmk-ec/*" = ["ARG001", "ARG002", "SIM108"]
 "packages/cmk-logwatch/tests/*" = ["ARG001", "ARG002"]
-"packages/cmk-plugins/*" = ["ARG001", "ARG002", "SIM108"]
+"packages/cmk-plugins/*" = ["ARG001", "ARG002"]
 "packages/cmk-plugin-apis/*" = ["ARG002"]
 "non-free/packages/cmk-dcd/*" = ["ARG001", "ARG002", "ARG003", "SLF001"]
 "non-free/packages/cmk-mcp/tests/*" = ["SLF001"]

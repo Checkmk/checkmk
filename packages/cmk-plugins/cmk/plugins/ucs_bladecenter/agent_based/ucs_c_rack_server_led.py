@@ -69,10 +69,7 @@ def check_ucs_c_rack_server_led(
     if (led_dict := section.get(item)) is None:
         return
     for k, v in sorted(led_dict.items()):
-        if k == "Color":
-            state_int = params.get(v, 3)
-        else:
-            state_int = 0
+        state_int = params.get(v, 3) if k == "Color" else 0
         state = State(state_int)
         yield Result(state=state, summary=f"{k}: {v}")
 

@@ -54,11 +54,8 @@ pkg_files(
     name = "bin_755",
     srcs = [
         ":check_mk.py",
-        ":cmk-automation-helper.py",
         ":cmk-cert.py",
         ":cmk-config-anonymizer",
-        ":cmk-convert-rrds",
-        ":cmk-general-version-infos",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets.py",
         ":cmk-migrate-oracle-rulesets.py",
@@ -73,11 +70,9 @@ pkg_files(
         ":cmk-piggyback.py",
         ":cmk-piggyback-hub.py",
         ":cmk-pwstore",
-        ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler.py",
         ":cmk-ui-job-scheduler-health",
         ":cmk-validate-config.py",
-        ":cmk-validate-plugins.py",
         ":init-redis.py",
         ":message-broker-certs",
         ":mkevent",
@@ -89,7 +84,6 @@ pkg_files(
     prefix = "bin",
     renames = {
         "check_mk.py": "check_mk",
-        "cmk-automation-helper.py": "cmk-automation-helper",
         "cmk-cert.py": "cmk-cert",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
@@ -98,7 +92,6 @@ pkg_files(
         "cmk-piggyback.py": "cmk-piggyback",
         "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-validate-config.py": "cmk-validate-config",
-        "cmk-validate-plugins.py": "cmk-validate-plugins",
         "init-redis.py": "init-redis",
         "mkp.py": "mkp",
     },
@@ -179,13 +172,6 @@ py_library(
 py_library(
     name = "check_mk_py",
     srcs = ["check_mk.py"],
-    imports = ["."],
-    tags = ["no-mypy"],
-)
-
-py_library(
-    name = "cmk_automation_helper_py",
-    srcs = ["cmk-automation-helper.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )
@@ -273,13 +259,6 @@ py_library(
 )
 
 py_library(
-    name = "cmk_validate_plugins_py",
-    srcs = ["cmk-validate-plugins.py"],
-    imports = ["."],
-    deps = ["//cmk:validate_plugins"],
-)
-
-py_library(
     name = "init_redis_py",
     srcs = ["init-redis.py"],
     imports = ["."],
@@ -323,7 +302,6 @@ sh_library(
     srcs = [
         ".f12",
         "apply_unsign_msi_patch.sh",
-        "cmk-general-version-infos",
         "cmk-monitor-apache",
         "cmk-monitor-broker",
         "cmk-monitor-core",

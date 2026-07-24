@@ -387,6 +387,7 @@ py_library(
 py_wheel(
     name = "wheel",
     distribution = "cmk-ccc",
+    entry_points = {"console_scripts": ["cmk-general-version-infos = cmk.ccc.general_version_infos:main"]},
     strip_path_prefixes = ["packages/cmk-ccc"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",

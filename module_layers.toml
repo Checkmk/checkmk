@@ -1803,18 +1803,15 @@ allows = [
 
 [file_components]
 "bin/check_mk.py" = "cmk.cli"
-"bin/cmk-automation-helper.py" = "cmk.base"
 "bin/cmk-cert.py" = "cmk.gui.cmkcert"
 "bin/message-broker-certs" = "cmk.message_broker_certs"
 "bin/cmk-config-anonymizer.py" = "cmk.config_anonymizer"
-"bin/cmk-convert-rrds" = "cmk.rrd"
 "bin/cmk-create-rrd.py" = "cmk.rrd"
 "bin/cmk-migrate-extension-rulesets.py" = "cmk.update_config"
 "bin/cmk-migrate-oracle-rulesets.py" = "cmk.update_config"
 "bin/cmk-passwd.py" = "cmk.cmkpasswd"
 "bin/cmk-ui-job-scheduler.py" = "cmk.gui"
 "bin/cmk-validate-config.py" = "cmk.validate_config"
-"bin/cmk-validate-plugins.py" = "cmk.validate_plugins"
 "bin/mkeventd.py" = "cmk.ec"
 "omd/packages/appliance/webconf_snapin.py" = "cmk.gui"
 "omd/non-free/packages/cmk-dcd/cmk-dcd.py" = "cmk.dcd.daemon"
@@ -1850,9 +1847,6 @@ allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
 
 [file_dependencies."bin/cmk-piggyback.py"]
 allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
-
-[file_dependencies."bin/cmk-transform-inventory-trees"]
-allows = ["cmk.inventory", "cmk.utils.paths"]
 
 [file_dependencies."bin/init-redis.py"]
 allows = ["cmk.gui.search.index"]

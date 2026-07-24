@@ -418,35 +418,52 @@ function writeMypyIniIfChanged(wsPath: string, content: string): boolean {
   return true
 }
 
+const DMYPY_CLIENT_PID_RE = /dmypy-[a-f0-9]+-(\d+)\.json/
+const DMYPY_CLIENT_CMD_RE = /dmypy\s+(run|check|status|stop|kill|restart|suggest)\b/
+
+interface DmypySelectOptions {
+  killAll: boolean
+  myExtHostPid: number
+  isAlive: (pid: number) => boolean
+}
+
+export function selectDmypyPidsToKill(
+  psLines: string[],
+  { killAll, myExtHostPid, isAlive }: DmypySelectOptions
+): number[] {
+  const pids: number[] = []
+  for (const line of psLines) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    if (DMYPY_CLIENT_CMD_RE.test(trimmed)) continue
+    const pid = parseInt(trimmed.split(/\s+/)[0], 10)
+    if (!pid) continue
+    if (!killAll) {
+      const clientPidMatch = trimmed.match(DMYPY_CLIENT_PID_RE)
+      const clientPid = clientPidMatch ? parseInt(clientPidMatch[1], 10) : null
+      if (!clientPid || clientPid === myExtHostPid || isAlive(clientPid)) continue
+    }
+    pids.push(pid)
+  }
+  return pids
+}
+
 async function killDmypyDaemons(wsPath: string, { killAll = false } = {}): Promise<void> {
   try {
-    let activePid: number | null = null
-    if (!killAll) {
-      const statusFile = path.join(wsPath, '.dmypy.json')
-      try {
-        const status = JSON.parse(fs.readFileSync(statusFile, 'utf8'))
-        if (status.pid && isProcessAlive(status.pid)) {
-          activePid = status.pid
-        }
-      } catch {
-        return
-      }
-      if (!activePid) return
-    }
-
     const output = await safeExecAsync(`ps -eo pid,args | grep '[d]mypy' | grep -F "${wsPath}/"`, {
       timeout: 3000
     })
 
     if (!output) return
 
+    const toKill = selectDmypyPidsToKill(output.split('\n'), {
+      killAll,
+      myExtHostPid: process.pid,
+      isAlive: isProcessAlive
+    })
+
     let killed = 0
-    for (const line of output.split('\n')) {
-      const trimmed = line.trim()
-      if (!trimmed) continue
-      if (/dmypy\s+(run|check|status|stop|kill|restart|suggest)\b/.test(trimmed)) continue
-      const pid = parseInt(trimmed.split(/\s+/)[0], 10)
-      if (!pid || pid === activePid) continue
+    for (const pid of toKill) {
       try {
         process.kill(pid, 'SIGTERM')
         killed++

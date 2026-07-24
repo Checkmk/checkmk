@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { parseVersion, versionAtLeast } from '../../../src/core/version'
-import { buildMypyIniContent } from '../../../src/profiles/python/mypyConfig'
+import { buildMypyIniContent, selectDmypyPidsToKill } from '../../../src/profiles/python/mypyConfig'
 
 describe('parseVersion', () => {
   it('parses three-part version', () => {
@@ -128,5 +128,83 @@ describe('buildMypyIniContent', () => {
     expect(result).toContain('[mypy-tests.*]')
     expect(result).toContain('[mypy-testlib.*]')
     expect(result).toContain('disallow_untyped_defs = false')
+  })
+})
+
+describe('selectDmypyPidsToKill', () => {
+  const hash = '389a6ba29756d77fccde5d65d4a378e3daa5d34d'
+  const daemonLine = (pid: number, extHostPid: number): string =>
+    `${pid} /ws/.venv/bin/python3 /ws/.venv/bin/dmypy --status-file ` +
+    `/home/u/.config/Code/User/workspaceStorage/abc/matangover.mypy/dmypy-${hash}-${extHostPid}.json ` +
+    `run --log-file /home/u/.config/Code/User/workspaceStorage/abc/matangover.mypy/dmypy-${hash}.log ` +
+    `-- --python-executable /ws/.venv/bin/python cmk`
+
+  const myPid = 398482
+
+  it('kills every daemon in killAll mode regardless of owner liveness', () => {
+    const lines = [daemonLine(101, myPid), daemonLine(102, 555), daemonLine(103, 777)]
+    const result = selectDmypyPidsToKill(lines, {
+      killAll: true,
+      myExtHostPid: myPid,
+      isAlive: () => true
+    })
+    expect(result).toEqual([101, 102, 103])
+  })
+
+  it('spares the current window own daemon in periodic mode', () => {
+    const result = selectDmypyPidsToKill([daemonLine(101, myPid)], {
+      killAll: false,
+      myExtHostPid: myPid,
+      isAlive: () => false
+    })
+    expect(result).toEqual([])
+  })
+
+  it('spares a sibling daemon whose owning window is still alive', () => {
+    const result = selectDmypyPidsToKill([daemonLine(102, 555)], {
+      killAll: false,
+      myExtHostPid: myPid,
+      isAlive: (pid) => pid === 555
+    })
+    expect(result).toEqual([])
+  })
+
+  it('kills an orphaned daemon whose owning window is gone', () => {
+    const result = selectDmypyPidsToKill([daemonLine(103, 777)], {
+      killAll: false,
+      myExtHostPid: myPid,
+      isAlive: () => false
+    })
+    expect(result).toEqual([103])
+  })
+
+  it('reclaims only orphans, keeping own and live-sibling daemons', () => {
+    const lines = [daemonLine(101, myPid), daemonLine(102, 555), daemonLine(103, 777)]
+    const result = selectDmypyPidsToKill(lines, {
+      killAll: false,
+      myExtHostPid: myPid,
+      isAlive: (pid) => pid === 555
+    })
+    expect(result).toEqual([103])
+  })
+
+  it('spares a daemon whose owner cannot be determined', () => {
+    const line = '104 /ws/.venv/bin/dmypy --status-file /tmp/weird.json daemon'
+    const result = selectDmypyPidsToKill([line], {
+      killAll: false,
+      myExtHostPid: myPid,
+      isAlive: () => false
+    })
+    expect(result).toEqual([])
+  })
+
+  it('skips transient dmypy client invocations', () => {
+    const client = '200 /ws/.venv/bin/dmypy run -- cmk'
+    const result = selectDmypyPidsToKill([client, daemonLine(103, 777), ''], {
+      killAll: false,
+      myExtHostPid: myPid,
+      isAlive: () => false
+    })
+    expect(result).toEqual([103])
   })
 })

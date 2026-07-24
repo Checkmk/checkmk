@@ -127,7 +127,6 @@ rust_test(
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
-        "tests/files/endpoints.txt",
     ],
     crate = ":mk-oracle-lib",
     data = [
@@ -167,7 +166,6 @@ rust_test_suite(
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
-        "tests/files/endpoints.txt",
     ] + glob([
         "tests/files/orasql_abs/**/*.sql",
         "tests/files/orasql_runtime/**/*.sql",
@@ -182,8 +180,9 @@ rust_test_suite(
         "references/output-xe-no-tnsalias.cfg",
     ],
     env_inherit = [
-        # Optional local-database endpoint; without it the local-connection
-        # tests skip themselves.
+        # CI_ORA2_DB_TEST: mandatory reference endpoint. CI_ORA1_DB_TEST:
+        # optional second endpoint, included by the endpoint-iterating tests
+        # when set.
         "CI_ORA1_DB_TEST",
         "CI_ORA2_DB_TEST",
         "LD_LIBRARY_PATH",

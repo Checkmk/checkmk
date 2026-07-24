@@ -5,9 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import usei18n from 'cmk-ui-library/lib/i18n'
+
 defineProps<{ variant: 'add' | 'remove' }>()
 
 const emit = defineEmits<{ action: [] }>()
+
+const { _t } = usei18n()
+const addPinLabel = _t('Add pin')
+const removePinLabel = _t('Remove pin')
 
 const MINUS_BAR =
   'M9.62421 5.00757C10.1765 5.00757 10.624 5.45523 10.6241 6.00746C10.6238 6.55948 ' +
@@ -23,7 +29,7 @@ function onClick(): void {
   <button
     type="button"
     class="graphing-pin-handle"
-    :aria-label="variant === 'add' ? 'Add pin' : 'Remove pin'"
+    :aria-label="variant === 'add' ? addPinLabel : removePinLabel"
     @click.stop="onClick"
     @mousedown.stop
   >

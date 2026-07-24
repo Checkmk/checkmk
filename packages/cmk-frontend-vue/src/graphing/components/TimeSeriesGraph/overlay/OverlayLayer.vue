@@ -109,7 +109,7 @@ watch(() => props.pinX, redraw)
     class="graphing-overlay-layer"
     :style="{ width: `${plotWidth}px`, height: `${plotHeight}px` }"
   >
-    <canvas ref="overlayCanvas" class="graphing-overlay-layer__canvas" />
+    <canvas ref="overlayCanvas" class="graphing-overlay-layer__canvas" aria-hidden="true" />
     <GraphTooltip :hover-state="hoverState" />
   </div>
 </template>

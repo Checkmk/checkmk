@@ -293,6 +293,17 @@ function onPinActionClick(): void {
 
 const { _t } = usei18n()
 const resetLabel = _t('Reset zoom')
+const fallbackPlotLabel = _t('Time series graph')
+// Accessible name for the plot canvas
+const plotAriaLabel = computed<string>(() => {
+  if (props.options.header.title) {
+    return props.options.header.title
+  }
+  const metricTitles = props.metrics
+    .map((metric) => metric.metadata.title)
+    .filter((title) => title !== '')
+  return metricTitles.length > 0 ? metricTitles.join(', ') : fallbackPlotLabel
+})
 function onResetClick(): void {
   emit('reset')
 }
@@ -352,8 +363,14 @@ watch(
     :style="{ width: `${figureWidth}px`, height: `${figureHeight}px` }"
   >
     <!-- The grid/axes SVG sits first so the data canvas draws on top of it (curves over
-         grid lines, not behind them). -->
-    <svg class="graphing-time-series-graph__svg" :width="figureWidth" :height="figureHeight">
+         grid lines, not behind them). It is visual scaffolding; the plot canvas carries
+         the accessible name for the graph. -->
+    <svg
+      class="graphing-time-series-graph__svg"
+      :width="figureWidth"
+      :height="figureHeight"
+      aria-hidden="true"
+    >
       <defs>
         <!-- Trims the sliding ruler to the plot's bottom strip so off-window labels
              don't spill over the y-axis numbers / margin. -->
@@ -404,6 +421,8 @@ watch(
       ref="canvas"
       class="graphing-time-series-graph__canvas"
       tabindex="0"
+      role="img"
+      :aria-label="plotAriaLabel"
       :style="{ left: `${MARGIN.left}px`, top: `${plotTop}px`, cursor: plotCursor }"
       @mousemove="onMouseMove"
       @mouseleave="clearHoverAfterDelay"

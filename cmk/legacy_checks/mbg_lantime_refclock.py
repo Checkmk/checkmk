@@ -3,13 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 mbg_lantime_refclock_refmode_map = {
     "0": "notavailable",
@@ -28,81 +38,72 @@ mbg_lantime_refclock_gpsstate_map = {
 }
 
 
-def discover_mbg_lantime_refclock(info):
-    if len(info) > 0 and len(info[0]) == 6:
-        return [(None, {})]
-    return []
+def discover_mbg_lantime_refclock(section: StringTable) -> DiscoveryResult:
+    if len(section) > 0 and len(section[0]) == 6:
+        yield Service()
 
 
-def check_mbg_lantime_refclock(item, params, info):
-    if len(info) > 0 and len(info[0]) == 6:
-        ref_mode, gps_state, gps_pos, gps_sat_good, gps_sat_total, _gps_mode = info[0]
+def check_mbg_lantime_refclock(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if not (section and len(section[0]) == 6):
+        yield Result(state=State.UNKNOWN, summary="Got no state information")
+        return
 
-        state = 0
-        state_txt = []
+    ref_mode, gps_state, gps_pos, gps_sat_good, gps_sat_total, _gps_mode = section[0]
 
-        # Handle the reported refclock mode
-        thr_txt = ""
-        if ref_mode in ["0", "3", "6"]:
-            state = max(state, 2)
-            thr_txt = " (!!)"
-        elif ref_mode in ["2", "4", "5"]:
-            state = max(state, 1)
-            thr_txt = " (!)"
-        state_txt.append(
-            "Refclock State: {}{}".format(
-                mbg_lantime_refclock_refmode_map.get(ref_mode, "UNKNOWN"), thr_txt
-            )
-        )
+    # Handle the reported refclock mode
+    if ref_mode in ("0", "3", "6"):
+        refclock_state = State.CRIT
+    elif ref_mode in ("2", "4", "5"):
+        refclock_state = State.WARN
+    else:
+        refclock_state = State.OK
+    yield Result(
+        state=refclock_state,
+        summary=f"Refclock State: {mbg_lantime_refclock_refmode_map.get(ref_mode, 'UNKNOWN')}",
+    )
 
-        # Handle gps state
-        thr_txt = ""
-        if gps_state in ["0", "2"]:
-            state = max(state, 2)
-            thr_txt = " (!!)"
-        state_txt.append(
-            "GPS State: {}{}".format(
-                mbg_lantime_refclock_gpsstate_map.get(gps_state, "UNKNOWN"), thr_txt
-            )
-        )
+    # Handle gps state
+    yield Result(
+        state=State.CRIT if gps_state in ("0", "2") else State.OK,
+        summary=f"GPS State: {mbg_lantime_refclock_gpsstate_map.get(gps_state, 'UNKNOWN')}",
+    )
 
-        # Add gps position
-        state_txt.append(gps_pos)
+    # Add gps position
+    if gps_pos:
+        yield Result(state=State.OK, summary=gps_pos)
 
-        # Handle number of satellites
-        thr_txt = ""
-        warn_lower, crit_lower = params["levels_lower"]
-        if int(gps_sat_good) < crit_lower:
-            state = max(state, 2)
-            thr_txt = " (!!)"
-        elif int(gps_sat_good) < warn_lower:
-            state = max(state, 1)
-            thr_txt = " (!)"
-        state_txt.append(f"Satellites: {gps_sat_good}/{gps_sat_total}{thr_txt}")
-
-        perfdata = [("sat_good", gps_sat_good), ("sat_total", gps_sat_total)]
-
-        return (state, ", ".join(state_txt), perfdata)
-
-    return (3, "Got no state information")
+    # Handle number of satellites
+    yield from check_levels(
+        int(gps_sat_good),
+        levels_lower=params["levels_lower"],
+        metric_name="sat_good",
+        render_func=lambda x: f"{int(x)}/{gps_sat_total}",
+        label="Satellites",
+    )
+    yield Metric("sat_total", int(gps_sat_total))
 
 
 def parse_mbg_lantime_refclock(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
+snmp_section_mbg_lantime_refclock = SimpleSNMPSection(
     name="mbg_lantime_refclock",
-    parse_function=parse_mbg_lantime_refclock,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.2",
         oids=["4", "6", "7", "9", "10", "16"],
     ),
+    parse_function=parse_mbg_lantime_refclock,
+)
+
+
+check_plugin_mbg_lantime_refclock = CheckPlugin(
+    name="mbg_lantime_refclock",
     service_name="LANTIME Refclock",
     discovery_function=discover_mbg_lantime_refclock,
     check_function=check_mbg_lantime_refclock,
     check_default_parameters={
-        "levels_lower": (3, 3),
+        "levels_lower": ("fixed", (3, 3)),
     },
 )

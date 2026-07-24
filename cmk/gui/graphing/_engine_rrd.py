@@ -19,11 +19,13 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
     FetchedData,
+    HostName,
     Metric,
     MetricName,
     PerformanceData,
     RRDMetric,
     Service,
+    ServiceName,
     SiteID,
     TimeRange,
     TimeSeries,
@@ -452,14 +454,20 @@ def parse_performance_data(
 
 @dataclass(frozen=True)
 class EngineRRDFetchMetricNames:
-    service: Service
+    # The single service to resolve, identified by host and service name only: its site is not an
+    # input but resolved from the livestatus rows (prepend_site), so a same host/service on two
+    # sites yields two entries.
+    host_name: HostName
+    service_name: ServiceName
     debug: bool
     registered_translations: Sequence[translations_v1.Translation] = ()
 
     def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
         query = (
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
-            + _service_or_filter([self.service])
+            f"Filter: host_name = {lqencode(self.host_name)}\n"
+            f"Filter: description = {lqencode(self.service_name)}\n"
+            "And: 2\n"
         )
         # prepend_site tags each row with the site its data lives on (as the legacy fetch does), so
         # each resolved service carries its real site - the site scope, if any, is the caller's

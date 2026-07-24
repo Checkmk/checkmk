@@ -15,7 +15,6 @@ from uuid import uuid4
 
 import cmk.gui.graphing._engine_plugins as engine_plugins
 from cmk.ccc.user import UserId
-from cmk.graphing_engine import Service
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     compute_html_graph_ranges,
@@ -311,10 +310,8 @@ def _paint_time_graph_cmk(
             registered_graphs=engine_plugins.registered_graphs(),
             registered_metrics=engine_plugins.registered_metrics(),
             fetch_metric_names=EngineRRDFetchMetricNames(
-                service=Service(
-                    host_name=row["host_name"],
-                    service_name=row.get("service_description", "_HOST_"),
-                ),
+                host_name=row["host_name"],
+                service_name=row.get("service_description", "_HOST_"),
                 debug=debug,
                 registered_translations=engine_plugins.registered_translations(),
             ),

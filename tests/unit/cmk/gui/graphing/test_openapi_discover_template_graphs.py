@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
-from cmk.graphing_engine import Graph, HostName, Service, ServiceName
+from cmk.graphing_engine import Graph, HostName, ServiceName
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
 from cmk.gui.graphing.openapi import discover_template_graphs as discover_module
@@ -62,9 +62,8 @@ def test_discover_template_graphs_passes_the_service_to_the_fetch(
     assert "service" not in captured
     fetch_metric_names = captured["fetch_metric_names"]
     assert isinstance(fetch_metric_names, EngineRRDFetchMetricNames)
-    assert fetch_metric_names.service == Service(
-        host_name=HostName("my-host"), service_name=ServiceName("CPU load")
-    )
+    assert fetch_metric_names.host_name == HostName("my-host")
+    assert fetch_metric_names.service_name == ServiceName("CPU load")
 
 
 def test_discover_template_graphs_filters_by_graph_id(

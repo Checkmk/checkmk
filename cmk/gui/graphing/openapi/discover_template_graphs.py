@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing_engine import HostName, Service, ServiceName
+from cmk.graphing_engine import HostName, ServiceName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.openapi.framework import (
@@ -51,10 +51,8 @@ def discover_template_graphs_v1(
             registered_graphs=registered_graphs(),
             registered_metrics=registered_metrics(),
             fetch_metric_names=EngineRRDFetchMetricNames(
-                service=Service(
-                    host_name=HostName(body.hostname),
-                    service_name=ServiceName(body.service_description),
-                ),
+                host_name=HostName(body.hostname),
+                service_name=ServiceName(body.service_description),
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
             ),

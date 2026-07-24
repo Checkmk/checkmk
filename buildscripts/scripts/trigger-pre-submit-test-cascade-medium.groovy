@@ -63,6 +63,65 @@ void setGerritHashtags(Map args) {
     }
 }
 
+// @NonCPS: runs outside Jenkins CPS so HttpURLConnection (non-Serializable) is safe to hold.
+@NonCPS
+Map gerritGetAccess(String project, String auth_header) {
+    def conn = new URL("https://review.lan.tribe29.com/a/access/?project=${project}").openConnection();
+    conn.setRequestMethod("GET");
+    conn.setRequestProperty("Authorization", auth_header);
+    def http_status = conn.responseCode;
+    def body = (http_status >= 200 && http_status < 300) ? conn.inputStream.text : (conn.errorStream?.text ?: "");
+    return [status: http_status, body: body];
+}
+
+// Matches Gerrit's three ref pattern styles: exact, wildcard (refs/heads/*), and regex (^refs/heads/.*).
+// Mirrors refPatternMatches() in gerrit/plugins/ci-block-banner/.../ci_block_banner.js.
+@NonCPS
+Boolean refPatternMatches(String pattern, String target_ref) {
+    if (pattern == target_ref) {
+        return true;
+    }
+    if (pattern.endsWith("/*")) {
+        return target_ref.startsWith(pattern[0..-2]);
+    }
+    if (pattern.startsWith("^")) {
+        try {
+            return java.util.regex.Pattern.compile(pattern).matcher(target_ref).find();
+        } catch (e) {
+            return false;
+        }
+    }
+    return false;
+}
+
+// The sheriffing "close" action (see src/gerrit_management/manage_gerrit.py) adds a BLOCK
+// rule on the "submit" permission for refs/heads/{branch}. This function detects that state.
+Boolean isBranchSubmitBlocked(String project, String branch) {
+    def is_blocked = false;
+    withGerritHttpCredentials {
+        def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
+        def result = gerritGetAccess(project, auth_header);
+        if (result.status < 200 || result.status >= 300) {
+            error("Gerrit get-access failed (HTTP ${result.status}): ${result.body}");
+        }
+        // Strip Gitiles XSS protection prefix (5 bytes) before parsing.
+        def access_info = new groovy.json.JsonSlurper().parseText(result.body.drop(5));
+        def target_ref = "refs/heads/${branch}";
+        def local = access_info[project]?.local ?: [:];
+        for (entry in local) {
+            if (!refPatternMatches(entry.key, target_ref)) {
+                continue;
+            }
+            def submit_rules = entry.value.permissions?.submit?.rules ?: [:];
+            if (submit_rules.values().any { it.action == "BLOCK" }) {
+                is_blocked = true;
+                break;
+            }
+        }
+    }
+    return is_blocked;
+}
+
 // notify defaults to Gerrit's own default ("ALL") so callers only need to pass
 // it for the intermediate/progress votes we want to keep quiet.
 void voteGerrit(Map args) {
@@ -112,6 +171,7 @@ void main() {
     ];
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
+    def gerrit_project = "check_mk";
 
     print(
         """
@@ -314,7 +374,15 @@ void main() {
 
                         // Try submit; if submit fails roll back all votes to 0.
                         try {
-                            voteGerrit(vote: 2, submit: true, identifier: new_patchset_revision);
+                            // Check right before submit: Gerrit's own submit rejection can't be
+                            // relied on here (see isBranchSubmitBlocked)
+                            // We want to vote but not submit.
+                            if (isBranchSubmitBlocked(gerrit_project, safe_branch_name)) {
+                                voteGerrit(vote: 2, submit: false, identifier: new_patchset_revision);
+                                println("NOT submitted: The branch is currently closed.");
+                            } else {
+                                voteGerrit(vote: 2, submit: true, identifier: new_patchset_revision);
+                            }
                         } catch (e) {
                             for (commit in all_commits_in_chain) {
                                 def changeInfo = all_change_info.get(commit);

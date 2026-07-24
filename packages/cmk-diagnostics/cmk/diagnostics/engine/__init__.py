@@ -49,3 +49,4 @@ from ._unsorted import redact_passwords_in_content as redact_passwords_in_conten
 from ._unsorted import redact_passwords_in_file as redact_passwords_in_file
 from ._unsorted import REDACT_STRING as REDACT_STRING
 from ._unsorted import serialize_wato_parameters as serialize_wato_parameters
+from ._wire import DumpSelection as DumpSelection

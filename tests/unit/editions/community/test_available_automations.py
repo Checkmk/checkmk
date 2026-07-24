@@ -16,6 +16,7 @@ def test_available_automations() -> None:
         "get-services-labels",
         "analyse-service",
         "create-diagnostics-dump",
+        "create-diagnostics-dump-v2",
         "delete-hosts",
         "delete-hosts-known-remote",
         "diag-cmk-agent",

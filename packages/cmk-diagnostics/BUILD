@@ -16,6 +16,7 @@ py_library(
     srcs = [
         "cmk/diagnostics/engine/__init__.py",
         "cmk/diagnostics/engine/_unsorted.py",
+        "cmk/diagnostics/engine/_wire.py",
     ],
     data = [":engine_py_typed"],
     imports = ["."],

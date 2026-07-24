@@ -410,3 +410,17 @@ class CreateDiagnosticsDumpResult(ABCAutomationResult):
 
 
 result_type_registry.register(CreateDiagnosticsDumpResult)
+
+
+@dataclass
+class CreateDiagnosticsDumpV2Result(ABCAutomationResult):
+    output: str
+    tarfile_path: str
+    tarfile_created: bool
+
+    @staticmethod
+    def automation_call() -> AutomationID:
+        return AutomationID("create-diagnostics-dump-v2")
+
+
+result_type_registry.register(CreateDiagnosticsDumpV2Result)

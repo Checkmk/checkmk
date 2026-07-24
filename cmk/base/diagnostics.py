@@ -32,7 +32,7 @@ import requests
 import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
-from cmk.automations.results import CreateDiagnosticsDumpResult
+from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.base_app import CheckmkBaseApp
@@ -55,6 +55,7 @@ from cmk.diagnostics.engine import (
     DiagnosticsElementFilepaths,
     DiagnosticsModesParameters,
     DiagnosticsOptionalParameters,
+    DumpSelection,
     FILE_MAP_CONFIG,
     FILE_MAP_CORE,
     FILE_MAP_LICENSING,
@@ -368,6 +369,36 @@ automation_create_diagnostics_dump = Automation(
 )
 
 
+def handler_v2(
+    app: CheckmkBaseApp,
+    args: Sequence[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: LoadingResult | None,
+) -> CreateDiagnosticsDumpV2Result:
+    buf = io.StringIO()
+    with redirect_stdout(buf), redirect_stderr(buf):
+        log.setup_console_logging()
+        dump = create_diagnostics_dump_v2(
+            app=app,
+            omd_root=cmk.utils.paths.omd_root,
+            diagnostics_dir=cmk.utils.paths.diagnostics_dir,
+            selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
+            loading_result=loading_result,
+        )
+        return CreateDiagnosticsDumpV2Result(
+            output=buf.getvalue(),
+            tarfile_path=str(dump.tarfile_path),
+            tarfile_created=dump.tarfile_created,
+        )
+
+
+automation_create_diagnostics_dump_v2 = Automation(
+    name=AutomationID("create-diagnostics-dump-v2"),
+    handler=handler_v2,
+    result=CreateDiagnosticsDumpV2Result,
+)
+
+
 def create_diagnostics_dump(
     *,
     app: CheckmkBaseApp,
@@ -388,6 +419,29 @@ def create_diagnostics_dump(
         extra_plugins=_legacy_file_plugins(
             parameters or {}, edition=app.edition, tmp_parent=diagnostics_dir
         ),
+        loading_result=loading_result,
+    )
+
+
+def create_diagnostics_dump_v2(
+    *,
+    app: CheckmkBaseApp,
+    omd_root: Path,
+    diagnostics_dir: Path,
+    selection: DumpSelection,
+    loading_result: LoadingResult | None,
+) -> DiagnosticsDump:
+    return _create_dump(
+        app=app,
+        omd_root=omd_root,
+        diagnostics_dir=diagnostics_dir,
+        selected_names=set(selection.plugins),
+        checkmk_server_host=selection.checkmk_server_host,
+        all_parameters={
+            "plugins": sorted(selection.plugins),
+            "checkmk_server_host": selection.checkmk_server_host,
+        },
+        extra_plugins=(),
         loading_result=loading_result,
     )
 

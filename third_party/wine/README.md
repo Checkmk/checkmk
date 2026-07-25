@@ -33,7 +33,8 @@ the artifact's provenance is fully traceable.
 - `patches/` — build patches applied to the source (empty for 11.0).
 - `Dockerfile` — the build environment: FROM the pinned AlmaLinux 8 base plus
   the Wine build toolchain (clang, lld, llvm-dlltool, the mingw-w64 sysroot, and
-  Wine's X11/font/TLS dev libs). Built inline as the first step of the CI job.
+  Wine's X11/font/TLS dev libs) and the AWS CLI used for publishing. Built
+  inline as the first step of the CI job.
 
 ## Building and Publishing
 
@@ -47,8 +48,17 @@ AlmaLinux 8 base), then runs `buildscripts/scripts/build_wine.sh` inside it.
 Keeping the toolchain in this job-local image avoids bloating the shared
 AlmaLinux 8 build image, and baking it at image-build time means the build runs
 without root. `build_wine.sh` builds the tarball and publishes it (with its
-corresponding LGPL source) to the Nexus `upstream-archives` mirror; afterwards
-the `sha256` is updated in `MODULE.bazel`.
+corresponding LGPL source) to the public CI binary-artifacts S3 bucket, under
+
+```
+dl/wine/wine/<version>/linux/<arch>/<variant>/<file>
+```
+
+the same object schema `buildscripts/scripts/extract_llvm.sh` uses. Afterwards
+the `urls` and `sha256` are updated in `MODULE.bazel`; the job prints the public
+URL to pin. Published objects are treated as immutable — a rebuilt artifact that
+differs in content needs a fresh name (bump `<variant>`), so that older
+`MODULE.bazel` pins keep resolving.
 
 To run `create-archive` standalone (e.g. locally), build/enter the `Dockerfile`
 image first (or otherwise provide the toolchain).

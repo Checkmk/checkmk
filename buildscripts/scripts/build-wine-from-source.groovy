@@ -3,11 +3,8 @@
 /// file: build-wine-from-source.groovy
 
 /// Build Wine from source and publish the tarball pinned by
-/// @wine_linux_x86_64 to the Nexus upstream-archives mirror. This replaces the
+/// @wine_linux_x86_64 to the CI binary-artifacts S3 bucket. This replaces the
 /// third-party prebuilt Kron4ek binary with our own from-source build.
-///
-/// TODO: also publish to the public CI binary-artifacts S3 bucket once its
-/// aws_ci_binary_artifacts_* credentials are registered in Jenkins.
 ///
 /// The Wine version and its source checksum are pinned in
 /// third_party/wine/{create-archive,wine.sha256}. Bump them there in a commit,
@@ -17,11 +14,13 @@
 /// The Wine build toolchain lives in a job-local image (third_party/wine/
 /// Dockerfile) built inline as the first step, FROM the pinned AlmaLinux 8 base
 /// (glibc floor 2.28). This keeps the shared build image lean and bakes the
-/// toolchain at image-build time (inherently root), so the build itself needs
-/// no root at runtime -- it just compiles into a tmpdir and uploads to Nexus.
+/// toolchain (and the AWS CLI) at image-build time (inherently root), so the
+/// build itself needs no root at runtime -- it just compiles into a tmpdir and
+/// uploads to S3.
 ///
 /// Credentials:
-///     nexus -> NEXUS_USERNAME / NEXUS_PASSWORD
+///     aws_ci_binary_artifacts_access_key -> AWS_ACCESS_KEY_ID
+///     aws_ci_binary_artifacts_secret_key -> AWS_SECRET_ACCESS_KEY
 
 void main() {
     def safe_branch_name = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy").safe_branch_name();
@@ -33,14 +32,21 @@ void main() {
     dir("${checkout_dir}") {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
             def wine_image = docker.build(image_name, docker_build_args);
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'nexus',
-                    passwordVariable: 'NEXUS_PASSWORD',
-                    usernameVariable: 'NEXUS_USERNAME'),
+            withEnv([
+                "AWS_DEFAULT_REGION=eu-central-1",
+                "AWS_BUCKET_NAME=ci-binary-artifacts-710145618630-eu-central-1-an",
             ]) {
-                wine_image.inside("-v ${checkout_dir}:/checkmk:ro") {
-                    sh("buildscripts/scripts/build_wine.sh");
+                withCredentials([
+                    string(
+                        credentialsId: 'aws_ci_binary_artifacts_access_key',
+                        variable: 'AWS_ACCESS_KEY_ID'),
+                    string(
+                        credentialsId: 'aws_ci_binary_artifacts_secret_key',
+                        variable: 'AWS_SECRET_ACCESS_KEY'),
+                ]) {
+                    wine_image.inside("-v ${checkout_dir}:/checkmk:ro") {
+                        sh("buildscripts/scripts/build_wine.sh");
+                    }
                 }
             }
         }

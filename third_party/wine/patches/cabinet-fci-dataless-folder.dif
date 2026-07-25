@@ -1,0 +1,44 @@
+cabinet: Skip data-less folders when writing FCI cabinets.
+
+A folder that contains only zero-length files has no data blocks and no
+data temp file: add_data_block() returns early for empty input, so
+folder->data.handle stays -1. write_data_blocks() nevertheless seeks it
+unconditionally, handing the application's PFNFCISEEK callback an invalid
+handle; FCIFlushCabinet() then fails with FCIERR_CAB_FILE /
+ERROR_INVALID_HANDLE. Native cabinet.dll writes such cabinets fine (the
+CFFOLDER simply carries cCFData=0).
+
+Hit in practice by WiX v3's light.exe building the Windows agent MSI
+(//agents/wnx:check_mk_agent_msi): its smart cabbing calls
+FCIFlushFolder() before adding the original of a set of duplicate files,
+so product.cab -- whose trailing plugins_cap and python_3.cab are both
+zero-length and therefore content-duplicates -- always ends in a
+data-less folder. Sequence to reproduce:
+
+    FCIAddFile("a", 187 bytes)      -> ok
+    FCIAddFile("b", 140 bytes)      -> ok
+    FCIFlushFolder()                -> ok
+    FCIAddFile("c", 0 bytes)        -> ok
+    FCIAddFile("d", 0 bytes)        -> ok
+    FCIFlushCabinet(FALSE)          -> FALSE, erf {FCIERR_CAB_FILE,
+                                       ERROR_INVALID_HANDLE}
+                                       (seek callback receives handle -1)
+
+Upstream status: not fixed as of wine 11.14 (the hunk applies there with
+offset 1); submit to wine-devel and drop this patch once a pinned Wine
+release carries it. build_msi.sh additionally works around the bug by
+pregenerating product.cab (make_product_cab.py), so the MSI build does
+not depend on this patch -- carrying it fixes the root cause for
+anything else that creates cabinets under this Wine.
+
+--- a/dlls/cabinet/fci.c
++++ b/dlls/cabinet/fci.c
+@@ -608,6 +608,8 @@
+
+     LIST_FOR_EACH_ENTRY( folder, &fci->folders_list, struct folder, entry )
+     {
++        if (list_empty( &folder->blocks_list )) continue;  /* folder of zero-length files only */
++
+         if (fci->seek( folder->data.handle, 0, SEEK_SET, &err, fci->pv ) != 0)
+         {
+             set_error( fci, FCIERR_CAB_FILE, err );

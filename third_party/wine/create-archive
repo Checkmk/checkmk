@@ -102,9 +102,33 @@ strip_debug_info() {
 # list alongside the binaries so the distributed artifact carries its own
 # licence and copyright notices (as the LGPL requires when the binary is
 # conveyed). The corresponding source is the checksum-pinned upstream tarball
-# recorded in BUILDINFO, built by this script.
+# recorded in BUILDINFO plus the applied patches, which travel inside the
+# artifact so the delta against upstream is conveyed with the binary.
 bundle_licence() {
     cp "${SRC}/LICENSE" "${SRC}/COPYING.LIB" "${SRC}/AUTHORS" "${OUT}/"
+    if ls "${SCRIPT_DIR}"/patches/*.dif >/dev/null 2>&1; then
+        mkdir -p "${OUT}/patches"
+        cp "${SCRIPT_DIR}"/patches/*.dif "${OUT}/patches/"
+    fi
+}
+
+# Comma-separated basenames of the patches applied by unpack_and_patch, in the
+# same (glob-sorted) order, or "none" when the patches directory is empty.
+applied_patches() {
+    local names=()
+    local patch
+    for patch in "${SCRIPT_DIR}"/patches/*.dif; do
+        [ -e "${patch}" ] || continue
+        names+=("$(basename "${patch}")")
+    done
+    if [ ${#names[@]} -eq 0 ]; then
+        echo none
+        return
+    fi
+    (
+        IFS=,
+        echo "${names[*]}"
+    )
 }
 
 write_provenance_record() {
@@ -113,6 +137,9 @@ write_provenance_record() {
         echo "license=LGPL-2.1-or-later (see LICENSE, COPYING.LIB)"
         echo "source_url=https://dl.winehq.org/wine/source/${VERSION}/${SRC}.tar.xz"
         echo "source_sha256=$(cut -d' ' -f1 "${SCRIPT_DIR}/wine.sha256")"
+        # The corresponding source of the shipped binary is the pinned upstream
+        # tarball above plus exactly these patches (in third_party/wine/patches).
+        echo "patches=$(applied_patches)"
         echo "configure_args=--enable-archs=i386,x86_64 --without-oss --disable-winemenubuilder --disable-tests"
         echo "host_cc=$(gcc -dumpfullversion 2>/dev/null || gcc -dumpversion)"
         echo "pe_cc=$(clang --version 2>/dev/null | head -1 || echo unknown)"

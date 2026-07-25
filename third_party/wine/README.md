@@ -30,7 +30,13 @@ the artifact's provenance is fully traceable.
 - `wine.sha256` — pinned sha256 of the upstream `wine-11.0.tar.xz` source
   (provenance gate). The upstream sha512 is additionally cross-checked against
   WineHQ's signed `sha512sums.asc` during pinning.
-- `patches/` — build patches applied to the source (empty for 11.0).
+- `patches/` — patches applied to the source before building. Changing this
+  set changes the artifact's content, so a republish needs a fresh name (see
+  _Building and Publishing_). Current set:
+  - `cabinet-fci-dataless-folder.dif` — FCI fails to write cabinets whose
+    final folder holds only zero-length files (WiX smart cabbing produces
+    exactly that for product.cab); one-line fix in `write_data_blocks()`,
+    not yet upstream as of Wine 11.14. Details and repro in the patch header.
 - `Dockerfile` — the build environment: FROM the pinned AlmaLinux 8 base plus
   the Wine build toolchain (clang, lld, llvm-dlltool, the mingw-w64 sysroot, and
   Wine's X11/font/TLS dev libs) and the AWS CLI used for publishing. Built
@@ -71,10 +77,11 @@ tarball, so the distributed binary carries its own license and copyright
 notices.
 
 The **corresponding source** is the exact upstream tarball pinned in
-`wine.sha256` (unmodified — the `patches/` set is empty), together with this
+`wine.sha256` plus the `patches/*.dif` set, together with this
 `create-archive` recipe. `build_wine.sh` publishes that source tarball from the
-**same place** as the binary, so a public download of the binary is accompanied
-by its source, as the LGPL (section 4) requires.
+**same place** as the binary, and the applied patches travel inside the binary
+tarball (`patches/` next to `BUILDINFO`), so a public download of the binary is
+accompanied by its complete source, as the LGPL (section 4) requires.
 
 `create-archive` is our own work. It was informed by studying Kron4ek's publicly
 available Wine-Builds scripts (<https://github.com/Kron4ek/Wine-Builds>, MIT).

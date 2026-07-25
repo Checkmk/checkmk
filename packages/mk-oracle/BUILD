@@ -229,7 +229,6 @@ rust_test(
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
-        "tests/files/endpoints.txt",
     ],
     crate = ":mk-oracle-lib",
     platform = "//bazel/platforms:x86_64-windows-msvc",

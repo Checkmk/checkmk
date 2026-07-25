@@ -19222,6 +19222,19 @@ msgstr "Alter der aufgeschobenen Dateien"
 msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
 
+#, fuzzy
+msgid ""
+"Define Distinguished Names or Common Names of the LDAP groups to add users "
+"this role. e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or "
+"<tt>cmk-users</tt><br>This group must be defined within the scope of the <a "
+"href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group "
+"Settings</a>."
+msgstr ""
+"DN der LDAP-Gruppe, um Benutzer der Rolle zuzuordnen, z.B. <tt>CN=cmk-"
+"users,OU=groups,DC=example,DC=com</tt><br> Diese Gruppe muss innerhalb der "
+"<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP-"
+"Gruppeneinstellungen</a> konfiguriert worden sein."
+
 msgid "Define OAuth parameters"
 msgstr "OAuth-Parameter definieren"
 
@@ -21604,17 +21617,6 @@ msgstr ""
 msgid "Distinguished name for binding"
 msgstr "Eindeutiger Name für die Bindung"
 
-msgid ""
-"Distinguished names of the LDAP groups to add users this role, e. g. "
-"<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> This group must be "
-"defined within the scope of the <a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">LDAP group settings</a>."
-msgstr ""
-"DN der LDAP-Gruppe, um Benutzer der Rolle zuzuordnen, z.B. <tt>CN=cmk-"
-"users,OU=groups,DC=example,DC=com</tt><br> Diese Gruppe muss innerhalb der "
-"<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP-"
-"Gruppeneinstellungen</a> konfiguriert worden sein."
-
 msgid "Distribute response"
 msgstr "Verteile Antwort"
 
@@ -22945,6 +22947,10 @@ msgstr ""
 
 msgid "Earliest entry in journal"
 msgstr "Frühester Eintrag im Journal"
+
+#, fuzzy
+msgid "Eaton UPS: temperature and humidity sensors"
+msgstr "Temperatur/Luftfeuchtigkeit für Eaton UPS"
 
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -28641,11 +28647,8 @@ msgstr "Gruppenpfad"
 msgid "Group patterns"
 msgstr "Gruppierungs-Patterns"
 
-msgid "Group<nobr> </nobr>CN"
-msgstr "Gruppen<nobr> </nobr>CN"
-
-msgid "Group<nobr> </nobr>DN"
-msgstr "Gruppen<nobr> </nobr>DN"
+msgid "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
+msgstr ""
 
 msgid "Grouping"
 msgstr "Gruppierung"
@@ -97437,6 +97440,12 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Group<nobr> </nobr>CN"
+#~ msgstr "Gruppen<nobr> </nobr>CN"
+
+#~ msgid "Group<nobr> </nobr>DN"
+#~ msgstr "Gruppen<nobr> </nobr>DN"
 
 #~ msgid ""
 #~ "This command requires administrator privileges. Once it completes, "

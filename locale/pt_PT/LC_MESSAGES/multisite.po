@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-23 17:47+0000\n"
+"PO-Revision-Date: 2026-07-25 08:11+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -19958,6 +19958,19 @@ msgid "Deferred files in Spool"
 msgstr "Arquivos diferidos no Spool"
 
 #, fuzzy
+msgid ""
+"Define Distinguished Names or Common Names of the LDAP groups to add users "
+"this role. e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or "
+"<tt>cmk-users</tt><br>This group must be defined within the scope of the <a "
+"href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group "
+"Settings</a>."
+msgstr ""
+"Nomes distintos dos grupos LDAP para adicionar usuários a esta função. por "
+"exemplo, <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>>br> Este grupo "
+"deve ser definido dentro do escopo do <a href=\"wato.py?"
+"mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."
+
+#, fuzzy
 msgid "Define OAuth parameters"
 msgstr "Parâmetros por defeito"
 
@@ -22476,18 +22489,6 @@ msgstr "Distinguir tempos dentro e fora do período de notificação"
 msgid "Distinguished name for binding"
 msgstr "Nome distinto para encadernação"
 
-#, fuzzy
-msgid ""
-"Distinguished names of the LDAP groups to add users this role, e. g. "
-"<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> This group must be "
-"defined within the scope of the <a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">LDAP group settings</a>."
-msgstr ""
-"Nomes distintos dos grupos LDAP para adicionar usuários a esta função. por "
-"exemplo, <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>>br> Este grupo "
-"deve ser definido dentro do escopo do <a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."
-
 msgid "Distribute response"
 msgstr "Distribuir a resposta"
 
@@ -23928,6 +23929,10 @@ msgstr ""
 
 msgid "Earliest entry in journal"
 msgstr ""
+
+#, fuzzy
+msgid "Eaton UPS: temperature and humidity sensors"
+msgstr "Temperatura e Humidade para UPS Eaton"
 
 msgid "Edit"
 msgstr "Editar"
@@ -29812,11 +29817,8 @@ msgstr "Caminho de grupo"
 msgid "Group patterns"
 msgstr "Padrões de grupo"
 
-msgid "Group<nobr> </nobr>CN"
-msgstr "Grupo<nobr> </nobr>CN"
-
-msgid "Group<nobr> </nobr>DN"
-msgstr "Grupo<nobr> </nobr>DN"
+msgid "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
+msgstr ""
 
 msgid "Grouping"
 msgstr "Agrupamento"
@@ -94510,6 +94512,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95034,6 +95037,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -101542,6 +101546,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Group<nobr> </nobr>CN"
+#~ msgstr "Grupo<nobr> </nobr>CN"
+
+#~ msgid "Group<nobr> </nobr>DN"
+#~ msgstr "Grupo<nobr> </nobr>DN"
 
 #, fuzzy
 #~ msgid "Modes"

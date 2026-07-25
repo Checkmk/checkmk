@@ -20119,6 +20119,19 @@ msgid "Deferred files in Spool"
 msgstr "Fichiers différés dans le Spool"
 
 #, fuzzy
+msgid ""
+"Define Distinguished Names or Common Names of the LDAP groups to add users "
+"this role. e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or "
+"<tt>cmk-users</tt><br>This group must be defined within the scope of the <a "
+"href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group "
+"Settings</a>."
+msgstr ""
+"Noms distinctifs des groupes LDAP à ajouter aux utilisateurs de ce rôle. Par "
+"exemple, <tt>CN=cmk-users,OU=groups,DC=exemple,DC=com</tt><br>Ce groupe doit "
+"être défini dans le cadre du <a href=\"wato.py?"
+"mode=ldap_config&varname=ldap_groupspec\">Paramètres du groupe LDAP</a>."
+
+#, fuzzy
 msgid "Define OAuth parameters"
 msgstr "Paramètres du modèle"
 
@@ -22654,18 +22667,6 @@ msgstr "Distinguer les temps dans et hors de la période de notification"
 msgid "Distinguished name for binding"
 msgstr "Nom distinctif pour la liaison"
 
-#, fuzzy
-msgid ""
-"Distinguished names of the LDAP groups to add users this role, e. g. "
-"<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> This group must be "
-"defined within the scope of the <a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">LDAP group settings</a>."
-msgstr ""
-"Noms distinctifs des groupes LDAP à ajouter aux utilisateurs de ce rôle. Par "
-"exemple, <tt>CN=cmk-users,OU=groups,DC=exemple,DC=com</tt><br>Ce groupe doit "
-"être défini dans le cadre du <a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">Paramètres du groupe LDAP</a>."
-
 msgid "Distribute response"
 msgstr "Distribuer la réponse"
 
@@ -24132,6 +24133,10 @@ msgstr ""
 
 msgid "Earliest entry in journal"
 msgstr ""
+
+#, fuzzy
+msgid "Eaton UPS: temperature and humidity sensors"
+msgstr "Température et humidité pour les onduleurs Eaton"
 
 msgid "Edit"
 msgstr "Modifier"
@@ -30055,11 +30060,8 @@ msgstr "Chemin du groupe"
 msgid "Group patterns"
 msgstr "Modèles de groupes"
 
-msgid "Group<nobr> </nobr>CN"
-msgstr "Groupe<nobr> </nobr>CN"
-
-msgid "Group<nobr> </nobr>DN"
-msgstr "Groupe<nobr> </nobr>DN"
+msgid "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
+msgstr ""
 
 msgid "Grouping"
 msgstr "Regroupement"
@@ -102555,6 +102557,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Group<nobr> </nobr>CN"
+#~ msgstr "Groupe<nobr> </nobr>CN"
+
+#~ msgid "Group<nobr> </nobr>DN"
+#~ msgstr "Groupe<nobr> </nobr>DN"
 
 #, fuzzy
 #~ msgid "Modes"

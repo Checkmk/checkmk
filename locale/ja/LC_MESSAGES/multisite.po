@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-21 13:38+0000\n"
+"PO-Revision-Date: 2026-07-24 18:47+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -31,9 +31,8 @@ msgstr " %s, 停止期間 %s"
 msgid " (%d times)"
 msgstr " ( %d 回 )"
 
-#, fuzzy
 msgid " (application load balancers only)"
-msgstr "アプリケーションロードバランサー"
+msgstr " (アプリケーションロードバランサーのみ)"
 
 msgid " (copy)"
 msgstr " (複製)"
@@ -212,9 +211,9 @@ msgstr " 次のサイクル開始"
 msgid " next week"
 msgstr " 来週"
 
-#, fuzzy, python-format
+#, python-format
 msgid " notification %s"
-msgstr "通知"
+msgstr " 通知%s"
 
 #, python-format
 msgid " of service %s on host %s"
@@ -7023,7 +7022,6 @@ msgstr "Apache設定"
 msgid "Apache local password file (htpasswd)"
 msgstr "Apacheローカルパスワードファイル(htpasswd)"
 
-#, fuzzy
 msgid ""
 "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus "
 "TCP mode, event daemon config, graphical user interface (GUI) authorization, "
@@ -7031,7 +7029,7 @@ msgid ""
 msgstr ""
 "ApacheモードとTCPアドレスとポート、Core、Liveproxyデーモンとlivestatus TCP"
 "モード、イベントデーモン構成、グラフィカル・ユーザー・インターフェース（GUI）"
-"認証、NSCAモード、TMPファイルシステムモード。 "
+"認証、NSCAモード、TMPファイルシステムモード"
 
 #, fuzzy
 msgid ""
@@ -9491,9 +9489,8 @@ msgstr "バックグラウンドジョブ情報は利用できません"
 msgid "Background job timed out after 3 minutes."
 msgstr "バックグラウンドジョブの詳細"
 
-#, fuzzy
 msgid "Background job timed out due to the global setting "
-msgstr "このグローバル設定を編集することは許可されていません。"
+msgstr "グローバル設定によりバックグラウンドジョブがタイムアウトしました "
 
 msgid "Background jobs"
 msgstr "バックグラウンドジョブ"
@@ -17421,9 +17418,8 @@ msgstr "クリティカルエリア"
 msgid "Critical at"
 msgstr "でクリティカル"
 
-#, fuzzy
 msgid "Critical at USD per day"
-msgstr "後にクリティカル "
+msgstr "CRIT：1日あたりのUSD"
 
 msgid "Critical at a RAM usage of"
 msgstr "のRAM使用量でクリティカル"
@@ -19075,6 +19071,19 @@ msgstr "遅延ファイルの経過時間"
 
 msgid "Deferred files in Spool"
 msgstr "スプール内の遅延ファイル"
+
+#, fuzzy
+msgid ""
+"Define Distinguished Names or Common Names of the LDAP groups to add users "
+"this role. e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or "
+"<tt>cmk-users</tt><br>This group must be defined within the scope of the <a "
+"href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group "
+"Settings</a>."
+msgstr ""
+"ユーザーにこの役割を追加するためのLDAPグループの識別名。例: <tt>CN=cmk-"
+"users,OU=groups,DC=example,DC=com</tt><br>このグループは、<a href=\"wato.py?"
+"mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>のスコープ内"
+"で定義する必要があります。"
 
 #, fuzzy
 msgid "Define OAuth parameters"
@@ -21449,18 +21458,6 @@ msgstr "通知期間の内外の時間を区別する"
 msgid "Distinguished name for binding"
 msgstr "バインディングの識別名"
 
-#, fuzzy
-msgid ""
-"Distinguished names of the LDAP groups to add users this role, e. g. "
-"<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> This group must be "
-"defined within the scope of the <a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">LDAP group settings</a>."
-msgstr ""
-"ユーザーにこの役割を追加するためのLDAPグループの識別名。例: <tt>CN=cmk-"
-"users,OU=groups,DC=example,DC=com</tt><br>このグループは、<a href=\"wato.py?"
-"mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>のスコープ内"
-"で定義する必要があります。"
-
 msgid "Distribute response"
 msgstr "応答を配信する"
 
@@ -22795,6 +22792,10 @@ msgstr ""
 
 msgid "Earliest entry in journal"
 msgstr "日誌の最も新しい項目"
+
+#, fuzzy
+msgid "Eaton UPS: temperature and humidity sensors"
+msgstr "Eaton UPSの温度と湿度"
 
 msgid "Edit"
 msgstr "編集"
@@ -28473,11 +28474,8 @@ msgstr "グループパス"
 msgid "Group patterns"
 msgstr "グループパターン"
 
-msgid "Group<nobr> </nobr>CN"
-msgstr "グループ<nobr> </nobr> CN"
-
-msgid "Group<nobr> </nobr>DN"
-msgstr "グループ<nobr> </nobr>DN"
+msgid "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
+msgstr ""
 
 msgid "Grouping"
 msgstr "グループ化"
@@ -35377,9 +35375,8 @@ msgstr "Ingressパケットドロップ"
 msgid "Inherit from report time range (reporting only)"
 msgstr "レポートの時間範囲から継承(レポートのみ)"
 
-#, fuzzy
 msgid "Inherit settings from"
-msgstr "から継承 "
+msgstr "設定を継承する"
 
 msgid "Inherited from "
 msgstr "から継承 "
@@ -44562,7 +44559,7 @@ msgid "Negative values not allowed"
 msgstr "負の値は不可"
 
 msgid "Negotiate"
-msgstr "交渉する"
+msgstr "取り決める"
 
 #, fuzzy
 msgid "Neighbor ID"
@@ -56642,9 +56639,8 @@ msgstr "ルールの一致と停止"
 msgid "Rule only applies to hosts directly in or below this folder."
 msgstr "ルールは、このフォルダの直下またはそれ以下のホストにのみ適用されます。"
 
-#, fuzzy
 msgid "Rule only applies to hosts matching the label conditions."
-msgstr "ルールはラベル条件に一致するホストにのみ適用されます。 "
+msgstr "ルールはラベル条件に一致するホストにのみ適用されます。"
 
 msgid "Rule only applies to hosts matching the label conditions. "
 msgstr "ルールはラベル条件に一致するホストにのみ適用されます。 "
@@ -91846,9 +91842,8 @@ msgstr "ファイル選択"
 msgid "Empty"
 msgstr "空の"
 
-#, fuzzy
 msgid "AM or PM"
-msgstr " または "
+msgstr "AM または PM"
 
 #, fuzzy
 msgid "Time selection"
@@ -92093,9 +92088,8 @@ msgstr "ストリング"
 msgid "Sharing until"
 msgstr "まで有効"
 
-#, fuzzy
 msgid "expires in %{days} days"
-msgstr " %d 日で"
+msgstr "有効期限まであと %{days} 日"
 
 #, fuzzy
 msgid "expires in 1 day"
@@ -92164,9 +92158,8 @@ msgstr "連絡先グループを選択"
 msgid "Select value..."
 msgstr "ビューを選択"
 
-#, fuzzy
 msgid "(required)"
-msgstr " (必須)"
+msgstr "(必須)"
 
 #, fuzzy
 msgid "Expand all"
@@ -92196,9 +92189,8 @@ msgstr ""
 msgid "Anchor"
 msgstr ""
 
-#, fuzzy
 msgid "Toggle sizing for width"
-msgstr " 待ち "
+msgstr "幅のサイズ切り替え"
 
 msgid "Toggle sizing for height"
 msgstr ""
@@ -93699,10 +93691,9 @@ msgid ""
 "{numberOfSuccessfullyActivatedSites} %{siteWord}"
 msgstr ""
 
-#, fuzzy
 msgid "change"
 msgid_plural "changes"
-msgstr[0] " 変更"
+msgstr[0] "変更"
 
 #, fuzzy
 msgid "Quick activation of pending changes"
@@ -94660,9 +94651,8 @@ msgstr "必須"
 msgid "Set connection information"
 msgstr "ホストの連絡先情報"
 
-#, fuzzy
 msgid "seconds remaining"
-msgstr " 秒 残)"
+msgstr "残り秒数"
 
 #, fuzzy
 msgid "You can save the connection as is, or go back to reauthenticate."
@@ -94823,9 +94813,8 @@ msgstr ""
 msgid "Configuration details:"
 msgstr "設定ファイル"
 
-#, fuzzy
 msgid " | created"
-msgstr "作成されたファイル"
+msgstr " | 作成"
 
 #, fuzzy
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
@@ -96527,6 +96516,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Group<nobr> </nobr>CN"
+#~ msgstr "グループ<nobr> </nobr> CN"
+
+#~ msgid "Group<nobr> </nobr>DN"
+#~ msgstr "グループ<nobr> </nobr>DN"
 
 #, fuzzy
 #~ msgid "Modes"

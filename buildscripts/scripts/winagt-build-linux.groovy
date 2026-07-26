@@ -33,6 +33,7 @@ void main() {
         "//packages/cmk-agent-ctl:cmk-agent-ctl-tests-wine",
         "//packages/mk-sql:mk-sql-tests-wine",
         "//packages/mk-oracle:mk-oracle-tests-wine",
+        "//agents/wnx:watest-wine",
     ];
     // The toolchain's own contract test.
     def toolchain_test_targets = [
@@ -100,17 +101,7 @@ void main() {
             }
 
             stage("Collect test results") {
-                // Merge the bazel test.xml files into results/, then expand
-                // the libtest output the wine tiers stream through their
-                // sh_test into one JUnit testcase per Rust test (the
-                // static-CRT checks stay one testcase per target).
-                sh(
-                    """
-                    set -euo pipefail
-                    BAZEL_TEST_LOGS_DEST=results buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
-                    bazel --run_under="cd \$PWD &&" run //buildscripts/scripts:collect_rust_tests -- results results || :
-                    """
-                );
+                collect_test_results();
             }
         }
 
@@ -148,6 +139,23 @@ void main() {
             ]
         );
     }
+}
+
+/// Merges the bazel test.xml files into results/ and makes them digestible for
+/// the publish step.
+void collect_test_results() {
+    sh(
+        """
+        set -euo pipefail
+        BAZEL_TEST_LOGS_DEST=results buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
+        bazel --run_under="cd \$PWD &&" run //buildscripts/scripts:collect_rust_tests -- results results || :
+        # watest reports through googletest's XML writer, whose
+        # <testsuites disabled= timestamp=> attributes the pytest XSL
+        # of the publish step below rejects.
+        sed -i '/<testsuites /{s/ disabled="[0-9]*"//;s/ timestamp="[^"]*"//;}' \\
+            results/agents/wnx/watest-wine/test.xml || :
+        """
+    );
 }
 
 return this;

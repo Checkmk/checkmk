@@ -5,6 +5,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <fstream>
 
 #include "tools/_misc.h"
 #include "tools/_process.h"
@@ -40,6 +41,33 @@ TEST(UpgradeTest, GetHash) {
 
     EXPECT_EQ(GetOldHashFromIni(ini), ini_expected);
     EXPECT_EQ(GetOldHashFromState(state), state_expected);
+}
+
+TEST(UpgradeTest, GetHashFromReadOnlyFile) {
+    // Regression: GetOldHashFromFile opens the file read-only, so it must be
+    // able to read the hash from a write-protected file (e.g. a Bazel sandbox
+    // input). Opening in|out used to fail at open() and return {}.
+    tst::TempFolder tmp("GetHashFromReadOnlyFile");
+    const auto ini = tmp.path() / ini_name;
+    {
+        std::ofstream ofs(ini, std::ios::binary);
+        ofs << "# Created by Check_MK Agent Bakery.\n"
+            << kIniHashMarker << ini_expected << "\n";
+    }
+
+    // Drop write permissions, and guarantee they are restored even on an
+    // assertion failure: on Windows a read-only file cannot be deleted, so
+    // TempFolder cleanup would otherwise fail.
+    constexpr auto write_perms = fs::perms::owner_write |
+                                 fs::perms::group_write |
+                                 fs::perms::others_write;
+    fs::permissions(ini, write_perms, fs::perm_options::remove);
+    ON_OUT_OF_SCOPE({
+        std::error_code ec;
+        fs::permissions(ini, write_perms, fs::perm_options::add, ec);
+    });
+
+    EXPECT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
 }
 
 TEST(UpgradeTest, GetDefaHash) {

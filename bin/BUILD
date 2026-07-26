@@ -118,22 +118,12 @@ pkg_tar(
         ":bin_750",
         ":bin_755",
         ":cmk-create-rrd",
-        ":cmk-product-usage",
         ":cmk-pwstore",
         ":cmk_link",
         ":mkeventd",
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
-)
-
-pkg_files(
-    name = "cmk-product-usage",
-    srcs = ["//cmk/product_usage:cli.py"],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    renames = {"//cmk/product_usage:cli.py": "bin/cmk-product-usage"},
 )
 
 pkg_files(

@@ -70,7 +70,6 @@ pkg_files(
         ":cmk-ui-job-scheduler-health",
         ":cmk-validate-config.py",
         ":init-redis.py",
-        ":message-broker-certs",
         ":mkevent",
         ":mkp.py",
     ],
@@ -268,6 +267,5 @@ sh_library(
         "cmk-monitor-mknotifyd",
         "cmk-monitor-otel-collector",
         "cmk-ui-job-scheduler-health",
-        "message-broker-certs",
     ],
 )

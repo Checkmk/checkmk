@@ -54,7 +54,6 @@ pkg_files(
     name = "bin_755",
     srcs = [
         ":check_mk.py",
-        ":cmk-cert.py",
         ":cmk-config-anonymizer",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets.py",
@@ -84,7 +83,6 @@ pkg_files(
     prefix = "bin",
     renames = {
         "check_mk.py": "check_mk",
-        "cmk-cert.py": "cmk-cert",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
         "cmk-passwd.py": "cmk-passwd",
@@ -264,15 +262,6 @@ py_library(
     imports = ["."],
     tags = ["no-mypy"],
     deps = ["//cmk/gui/search:index"],
-)
-
-py_library(
-    name = "cmk_cert_py",
-    srcs = ["cmk-cert.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/gui/cmkcert",
-    ],
 )
 
 py_library(

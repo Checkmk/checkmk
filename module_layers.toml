@@ -1807,7 +1807,6 @@ allows = [
 
 [file_components]
 "bin/check_mk.py" = "cmk.cli"
-"bin/cmk-cert.py" = "cmk.gui.cmkcert"
 "bin/message-broker-certs" = "cmk.message_broker_certs"
 "bin/cmk-config-anonymizer.py" = "cmk.config_anonymizer"
 "bin/cmk-create-rrd.py" = "cmk.rrd"

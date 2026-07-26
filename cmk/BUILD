@@ -109,6 +109,7 @@ py_wheel(
         "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
         "cmk-passwd = cmk.cmkpasswd.main:main",
         "cmk-product-usage = cmk.product_usage.cli:main",
+        "cmk-pwstore = cmk.utils.password_store.cli:main",
         "cmk-transform-inventory-trees = cmk.inventory.transformation.__main__:main",
         "cmk-validate-plugins = cmk.validate_plugins:main",
     ]},

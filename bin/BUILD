@@ -66,7 +66,6 @@ pkg_files(
         ":cmk-monitor-otel-collector",
         ":cmk-piggyback.py",
         ":cmk-piggyback-hub.py",
-        ":cmk-pwstore",
         ":cmk-ui-job-scheduler.py",
         ":cmk-ui-job-scheduler-health",
         ":cmk-validate-config.py",
@@ -118,21 +117,11 @@ pkg_tar(
         ":bin_750",
         ":bin_755",
         ":cmk-create-rrd",
-        ":cmk-pwstore",
         ":cmk_link",
         ":mkeventd",
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
-)
-
-pkg_files(
-    name = "cmk-pwstore",
-    srcs = ["//cmk/utils:password_store/cli.py"],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    renames = {"//cmk/utils:password_store/cli.py": "bin/cmk-pwstore"},
 )
 
 # Not shipped — only exists so that static analysis tools (ruff, …)

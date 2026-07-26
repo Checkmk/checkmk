@@ -26,7 +26,7 @@ Retrieve a password from the Checkmk password store.
     return parser.parse_args(args)
 
 
-def main(args: Sequence[str]) -> int:
+def main(args: Sequence[str] = sys.argv[1:]) -> int:
     parsed_args = _parse_args(args)
 
     try:
@@ -36,7 +36,3 @@ def main(args: Sequence[str]) -> int:
         return 1
     sys.stdout.write(password)
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))

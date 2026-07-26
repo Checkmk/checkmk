@@ -104,7 +104,9 @@ def _run_cmkpasswd(
         sys.stdout.write(Htpasswd.serialize_entries([(user_id, pw_hash)]) + "\n")
 
 
-def main(args: Sequence[str]) -> int:
+def main(args: Sequence[str] | None = None) -> int:
+    if args is None:
+        args = sys.argv[1:]
     parsed_args = _parse_args(args)
 
     target_file = HTPASSWD_FILE if not parsed_args.no_file else None

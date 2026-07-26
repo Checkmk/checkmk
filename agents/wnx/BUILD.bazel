@@ -113,6 +113,26 @@ cc_library(
     ],
 )
 
+filegroup(
+    name = "watest_data",
+    srcs = glob([
+        "install/resources/**",
+        "test_files/**",
+    ]),
+    visibility = ["//agents/wnx:__subpackages__"],
+)
+
+cc_library(
+    name = "wnx_player_headers",
+    hdrs = glob(["src/player/*.h"]),
+    strip_include_prefix = "src/player",
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
 cc_library(
     name = "wnx_common",
     srcs = glob(["src/common/*.cpp"]) + [
@@ -184,6 +204,68 @@ cc_library(
         "@asio",
         "@wnx_fmt//:fmt",
         "@wnx_yaml_cpp//:yaml-cpp",
+    ],
+)
+
+cc_binary(
+    name = "watest-windows",
+    testonly = 1,
+    srcs = glob([
+        "watest/*.cpp",
+        "watest/*.h",
+    ]),
+    copts = WNX_COPTS + [
+        # Some test sources include wnx headers without the wnx/ prefix.
+        "/Iagents/wnx/include/wnx",
+    ],
+    linkopts = WNX_DEFAULT_LINKOPTS + [
+        "/SUBSYSTEM:CONSOLE",
+        "/DEFAULTLIB:userenv.lib",
+    ],
+    local_defines = [
+        # Mirrors PreprocessorDefinitions in watest.vcxproj.
+        "WATEST=1",
+        'SOLUTION_DIR=uR\\"(agents/wnx)\\"',
+        'PROJECT_DIR=uR\\"(agents/wnx/watest)\\"',
+        "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING",
+        "_CONSOLE",
+        "UNICODE",
+        "_UNICODE",
+    ],
+    opt = True,
+    platform = "//bazel/platforms:x86_64-windows-msvc",
+    tags = ["manual"],
+    deps = [
+        ":engine",
+        ":wnx_headers",
+        ":wnx_player_headers",
+        "@asio",
+        "@gtest",
+        "@wnx_fmt//:fmt",
+        "@wnx_yaml_cpp//:yaml-cpp",
+    ],
+)
+
+sh_test(
+    name = "watest-wine",
+    size = "large",
+    srcs = ["watest/watest-wine.sh"],
+    args = [
+        "$(rootpath watest/wine-excluded-tests.txt)",
+        "$(rootpath :watest-windows)",
+        "$(rootpath @wine_linux_x86_64//:wine_bin)",
+    ],
+    data = [
+        "watest/wine-excluded-tests.txt",
+        ":watest-windows",
+        ":watest_data",
+        "@wine_linux_x86_64//:wine",
+        "@wine_linux_x86_64//:wine_bin",
+    ],
+    tags = [
+        "manual",
+        # The suite binds loopback ports; concurrent instances collide.
+        "exclusive",
     ],
 )
 

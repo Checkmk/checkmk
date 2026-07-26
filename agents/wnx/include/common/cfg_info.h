@@ -111,8 +111,11 @@ constexpr wchar_t kAppDataCompanyName[] = L"checkmk";
 // defines default behavior of the main thread
 constexpr bool IsOneShotMode() { return true; }
 
-constexpr const KNOWNFOLDERID &kPublicFolderId = FOLDERID_Public;
-constexpr const KNOWNFOLDERID &kWindowsFolderId = FOLDERID_Windows;
+// inline: namespace-scope constexpr references have external linkage (the
+// const-implies-internal rule doesn't apply to references), so without it
+// every including translation unit emits a duplicate definition.
+inline constexpr const KNOWNFOLDERID &kPublicFolderId = FOLDERID_Public;
+inline constexpr const KNOWNFOLDERID &kWindowsFolderId = FOLDERID_Windows;
 
 std::string GetCurrentLogFileName();
 int GetCurrentDebugLevel();

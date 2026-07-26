@@ -60,7 +60,6 @@ public:
                               cfg::groups::kPlugins) {}
     void updateSectionStatus() override;
 #if defined(ENABLE_WHITE_BOX_TESTING)
-    friend class PluginTest;
     FRIEND_TEST(PluginTest, ModulesCmdLine);
 #endif
 };

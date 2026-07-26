@@ -25,7 +25,7 @@ namespace cma::provider {  // to become friendly for wtools classes
 namespace {
 void SetMrpeConfig(const std::vector<std::string> &vec) {
     constexpr std::string_view group = cfg::groups::kMrpe;
-    constexpr std::string_view section = cfg::vars::kMrpeConfig;
+    const std::string_view section = cfg::vars::kMrpeConfig;
     auto yaml = cfg::GetLoadedConfig();
     for (size_t i = 0; i < yaml[group][section].size(); i++)
         yaml[group][section].remove(0);

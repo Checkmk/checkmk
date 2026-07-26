@@ -149,7 +149,7 @@ constexpr size_t kMaxFoldersStackSize = 32;
 
 /// low level API to combine sequences
 enum class Combine { overwrite, merge, merge_value };
-constexpr Combine GetCombineMode(std::string_view name);
+Combine GetCombineMode(std::string_view name);
 void CombineSequence(std::string_view name, YAML::Node target_value,
                      const YAML::Node &source_value, Combine combine);
 

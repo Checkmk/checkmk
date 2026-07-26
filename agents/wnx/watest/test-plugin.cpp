@@ -721,7 +721,7 @@ static const std::vector<cfg::Plugins::ExeUnit> x2_async_low_cache_age = {
 
 static const std::vector<cfg::Plugins::ExeUnit> x3_cmd_with_group_user = {
     //
-    {"???-?.cmd",  // NOLINT
+    {"??\?-?.cmd",  // NOLINT
      "async: yes\n"
      "timeout: 10\n"
      "cache_age: 0\n"

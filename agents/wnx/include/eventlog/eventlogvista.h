@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "EventLogBase.h"
+#include "eventlogbase.h"
 
 namespace cma::evl {
 

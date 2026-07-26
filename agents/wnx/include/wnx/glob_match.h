@@ -15,7 +15,7 @@ namespace cma::tools::gm {
 
 // ?
 template <typename T>
-T MakeQuestionMark();
+T MakeQuestionMark() noexcept;
 template <>
 inline char MakeQuestionMark<char>() noexcept {
     return '?';
@@ -28,7 +28,7 @@ inline wchar_t MakeQuestionMark<wchar_t>() noexcept {
 
 // ^
 template <typename T>
-T MakeCap();
+T MakeCap() noexcept;
 template <>
 inline char MakeCap<char>() noexcept {
     return '^';
@@ -41,7 +41,7 @@ inline wchar_t MakeCap<wchar_t>() noexcept {
 
 // .
 template <typename T>
-T MakeDot();
+T MakeDot() noexcept;
 template <>
 inline char MakeDot<char>() noexcept {
     return '.';
@@ -54,7 +54,7 @@ inline wchar_t MakeDot<wchar_t>() noexcept {
 
 // $
 template <typename T>
-T MakeDollar();
+T MakeDollar() noexcept;
 template <>
 inline char MakeDollar<char>() noexcept {
     return '$';
@@ -67,7 +67,7 @@ inline wchar_t MakeDollar<wchar_t>() noexcept {
 
 // *
 template <typename T>
-T MakeStar();
+T MakeStar() noexcept;
 template <>
 inline char MakeStar<char>() noexcept {
     return '*';
@@ -79,7 +79,7 @@ inline wchar_t MakeStar<wchar_t>() noexcept {
 }
 
 template <typename T>
-inline T MakeBackSlash() noexcept {}
+T MakeBackSlash() noexcept;
 
 template <>
 inline char MakeBackSlash<char>() noexcept {
@@ -145,7 +145,7 @@ namespace cma::tools {
 template <class T>
 inline bool GlobMatch(const T *pattern, const T *target) {
     const auto reg = gm::GlobToRegex(std::basic_string<T>(pattern));
-    std::match_results<std::basic_string<T>::const_iterator> match;
+    std::match_results<typename std::basic_string<T>::const_iterator> match;
     return std::regex_match(std::basic_string<T>(target), match, reg);
 }
 

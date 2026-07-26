@@ -195,11 +195,12 @@ HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
     hdr.aiKeyAlg = ToDword(algorithm_);
 
     auto *insert_ptr = reinterpret_cast<BYTE *>(&hdr);
-    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof BLOBHEADER);
+    key_blob.insert(key_blob.end(), insert_ptr,
+                    insert_ptr + sizeof(BLOBHEADER));
 
     // insert size field
     insert_ptr = reinterpret_cast<BYTE *>(&key_size);
-    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof DWORD);
+    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof(DWORD));
 
     // insert the actual key
     key_blob.insert(key_blob.end(), key, key + key_size);
@@ -236,7 +237,7 @@ std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider) {
     }
     DWORD hash_size = 0;
 
-    if (DWORD sizeof_hashsize = sizeof DWORD;
+    if (DWORD sizeof_hashsize = sizeof(DWORD);
         ::CryptGetHashParam(hash, HP_HASHSIZE,
                             reinterpret_cast<BYTE *>(&hash_size),
                             &sizeof_hashsize, 0) == FALSE) {
@@ -435,7 +436,7 @@ std::optional<cma::ByteVector> Commander::getKey() const {
     }
 
     // return only the key, not the meta info
-    return std::vector(result.begin() + sizeof BLOBHEADER, result.end());
+    return std::vector(result.begin() + sizeof(BLOBHEADER), result.end());
 }
 
 bool Commander::randomizeBuffer(void *buffer, size_t buffer_size) const {

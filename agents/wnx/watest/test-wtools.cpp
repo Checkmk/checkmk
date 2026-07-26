@@ -254,7 +254,7 @@ protected:
             .pid;
     }
 
-    static [[nodiscard]] bool findProcessByPid(uint32_t pid) {
+    [[nodiscard]] static bool findProcessByPid(uint32_t pid) {
         bool found = false;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID == pid) {
@@ -266,7 +266,7 @@ protected:
         return found;
     }
 
-    static [[nodiscard]] bool findProcessByParentPid(uint32_t pid) {
+    [[nodiscard]] static bool findProcessByParentPid(uint32_t pid) {
         bool found = false;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ParentProcessID == pid) {

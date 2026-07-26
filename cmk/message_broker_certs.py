@@ -48,7 +48,9 @@ def _parse_arguments(argv: list[str]) -> Arguments:
     )
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv
     logger = logging.getLogger("cmk-message-broker-certs")
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
     handler.setFormatter(logging.Formatter("%(message)s"))

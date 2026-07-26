@@ -82,6 +82,8 @@ TEST(UpgradeTest, GetDefaHash) {
 TEST(UpgradeTest, PatchOldFilesWithDatHash) {
     ASSERT_TRUE(G_LegacyAgentPresetPath.empty());
 
+    auto temp_fs = tst::TempCfgFs::Create();
+
     tst::TempFolder tmp("PatchOldFilesWithDatHash");
     SetLegacyAgentPath(tmp.path());
     ON_OUT_OF_SCOPE(SetLegacyAgentPath(""));

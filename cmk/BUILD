@@ -105,6 +105,7 @@ py_wheel(
         "cmk-automation-client = cmk.automations.client:main",
         "cmk-automation-helper = cmk.base.automation_helper:main",
         "cmk-cert = cmk.gui.cmkcert.main:main",
+        "cmk-config-anonymizer = cmk.config_anonymizer.main:main",
         "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
         "cmk-transform-inventory-trees = cmk.inventory.transformation.__main__:main",
         "cmk-validate-plugins = cmk.validate_plugins:main",

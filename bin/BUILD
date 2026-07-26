@@ -54,7 +54,6 @@ pkg_files(
     name = "bin_755",
     srcs = [
         ":check_mk.py",
-        ":cmk-config-anonymizer",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets.py",
         ":cmk-migrate-oracle-rulesets.py",

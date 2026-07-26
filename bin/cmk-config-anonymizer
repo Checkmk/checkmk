@@ -1,2 +1,0 @@
-#!/bin/sh
-exec python3 -m cmk.config_anonymizer.main "$@"

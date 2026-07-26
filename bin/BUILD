@@ -64,7 +64,6 @@ pkg_files(
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
         ":cmk-monitor-otel-collector",
-        ":cmk-passwd.py",
         ":cmk-piggyback.py",
         ":cmk-piggyback-hub.py",
         ":cmk-pwstore",
@@ -84,7 +83,6 @@ pkg_files(
         "check_mk.py": "check_mk",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
-        "cmk-passwd.py": "cmk-passwd",
         "cmk-piggyback-hub.py": "cmk-piggyback-hub",
         "cmk-piggyback.py": "cmk-piggyback",
         "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
@@ -261,13 +259,6 @@ py_library(
     imports = ["."],
     tags = ["no-mypy"],
     deps = ["//cmk/gui/search:index"],
-)
-
-py_library(
-    name = "cmk_passwd_py",
-    srcs = ["cmk-passwd.py"],
-    imports = ["."],
-    deps = ["//cmk:cmkpasswd"],
 )
 
 py_library(

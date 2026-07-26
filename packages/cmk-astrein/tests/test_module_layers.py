@@ -144,11 +144,6 @@ def test_component_for_explicit_mapping_bin_check_mk(make_checker: _MakeChecker)
     assert checker.component == Component("cmk.cli")
 
 
-def test_component_for_explicit_mapping_bin_cmk_passwd(make_checker: _MakeChecker) -> None:
-    checker = make_checker("bin/cmk-passwd.py")
-    assert checker.component == Component("cmk.cmkpasswd")
-
-
 def test_component_for_file_without_component(make_checker: _MakeChecker) -> None:
     checker = make_checker("some_random_script.py")
     assert checker.component is None

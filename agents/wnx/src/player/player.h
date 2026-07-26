@@ -21,7 +21,6 @@
 
 namespace cma::player {
 constexpr int kMaxPluginsToExec = 32;
-inline bool SendDataThroughCarrier() {}
 
 // unit to execute one or more executables
 // async
@@ -151,7 +150,9 @@ public:
         DWORD read_in_fact = 0;
         auto count = static_cast<DWORD>(Count);
         auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
-        if (!result) false;
+        if (!result) {
+            return false;
+        }
 
         if (buf_size + read_in_fact != Buf.size()) {
             Buf.resize(buf_size + read_in_fact);

@@ -3539,8 +3539,9 @@ def reload_configuration(
 #   '----------------------------------------------------------------------'
 
 
-def main(omd_root: Path, argv: Sequence[str]) -> None:
+def main() -> None:
     """Main entry and option parsing."""
+    omd_root = Path(os.environ.get("OMD_ROOT", ""))
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
     version_info = get_general_version_infos(omd_root)

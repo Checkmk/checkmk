@@ -134,6 +134,7 @@ py_cmk_test(
 py_wheel(
     name = "wheel",
     distribution = "cmk-ec",
+    entry_points = {"console_scripts": ["mkeventd = cmk.ec.main:main"]},
     strip_path_prefixes = ["packages/cmk-ec"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",

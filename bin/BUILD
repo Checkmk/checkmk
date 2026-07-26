@@ -87,16 +87,6 @@ pkg_files(
 )
 
 pkg_files(
-    name = "mkeventd",
-    srcs = ["mkeventd.py"],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "bin",
-    renames = {"mkeventd.py": "mkeventd"},
-)
-
-pkg_files(
     name = "cmk-create-rrd",
     srcs = ["cmk-create-rrd.py"],
     attributes = pkg_attributes(
@@ -113,7 +103,6 @@ pkg_tar(
         ":bin_755",
         ":cmk-create-rrd",
         ":cmk_link",
-        ":mkeventd",
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
@@ -121,16 +110,6 @@ pkg_tar(
 
 # Not shipped — only exists so that static analysis tools (ruff, …)
 # can discover these .py files via Bazel.
-py_library(
-    name = "mkeventd_main",
-    srcs = ["mkeventd.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/utils:paths",
-        "//packages/cmk-ec",
-    ],
-)
-
 py_library(
     name = "cmk-create-rrd_main",
     srcs = ["cmk-create-rrd.py"],

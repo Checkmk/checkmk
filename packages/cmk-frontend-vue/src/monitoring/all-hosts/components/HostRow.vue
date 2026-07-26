@@ -99,7 +99,7 @@ function toggleSelected(selected: boolean): void {
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host`,
-            target: '_top'
+            target: 'main'
           }
     "
   />
@@ -121,7 +121,7 @@ function toggleSelected(selected: boolean): void {
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_ok`,
-            target: '_top'
+            target: 'main'
           }
     "
   />
@@ -143,7 +143,7 @@ function toggleSelected(selected: boolean): void {
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_warn`,
-            target: '_top'
+            target: 'main'
           }
     "
   />
@@ -165,7 +165,7 @@ function toggleSelected(selected: boolean): void {
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_crit`,
-            target: '_top'
+            target: 'main'
           }
     "
   />
@@ -187,7 +187,7 @@ function toggleSelected(selected: boolean): void {
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_unknown`,
-            target: '_top'
+            target: 'main'
           }
     "
   />
@@ -209,7 +209,7 @@ function toggleSelected(selected: boolean): void {
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_pending`,
-            target: '_top'
+            target: 'main'
           }
     "
   />

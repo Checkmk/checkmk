@@ -136,7 +136,9 @@ def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeSt
     return list(plugins.values())
 
 
-def main(argv: Sequence[str]) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
+    if argv is None:
+        argv = sys.argv[1:]
     args = parse_arguments(argv)
     init_logging()
     logger.info(

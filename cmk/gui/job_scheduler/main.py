@@ -60,7 +60,7 @@ def default_crash_report_callback(_exc: Exception) -> str:
     return crash.ident_to_text()
 
 
-def main(crash_report_callback: Callable[[Exception], str]) -> int:
+def main(crash_report_callback: Callable[[Exception], str] = default_crash_report_callback) -> int:
     try:
         setproctitle("cmk-ui-job-scheduler")
         os.unsetenv("LANG")

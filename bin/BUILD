@@ -66,7 +66,6 @@ pkg_files(
         ":cmk-monitor-otel-collector",
         ":cmk-piggyback.py",
         ":cmk-piggyback-hub.py",
-        ":cmk-ui-job-scheduler.py",
         ":cmk-ui-job-scheduler-health",
         ":cmk-validate-config.py",
         ":init-redis.py",
@@ -83,7 +82,6 @@ pkg_files(
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
         "cmk-piggyback-hub.py": "cmk-piggyback-hub",
         "cmk-piggyback.py": "cmk-piggyback",
-        "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-validate-config.py": "cmk-validate-config",
         "init-redis.py": "init-redis",
         "mkp.py": "mkp",
@@ -207,13 +205,6 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
     ],
-)
-
-py_library(
-    name = "cmk_ui_job_scheduler_py",
-    srcs = ["cmk-ui-job-scheduler.py"],
-    imports = ["."],
-    deps = ["//cmk/gui/job_scheduler"],
 )
 
 py_library(

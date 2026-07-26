@@ -60,7 +60,9 @@ def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
     )
 
 
-def main(args: Sequence[str]) -> int:
+def main(args: Sequence[str] | None = None) -> int:
+    if args is None:
+        args = sys.argv[1:]
     request = parse_args(args)
     logger = init_logging(paths.log_dir)
     now = datetime.now()

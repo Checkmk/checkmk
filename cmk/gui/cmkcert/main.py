@@ -199,7 +199,9 @@ def _run_rotate(
             sys.exit(1)
 
 
-def main(args: Sequence[str]) -> int:
+def main(args: Sequence[str] | None = None) -> int:
+    if args is None:
+        args = sys.argv[1:]
     parsed_args = _parse_args(args)
 
     site_id = os.environ.get("OMD_SITE")

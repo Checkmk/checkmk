@@ -53,7 +53,7 @@ bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.3.1")
 bazel_dep(name = "rules_python", version = "1.4.1")
-bazel_dep(name = "rules_rust", version = "0.65.0")
+bazel_dep(name = "rules_rust", version = "0.68.1")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(name = "rrdtool", version = "1.7.2.cmk.1")
@@ -125,19 +125,6 @@ archive_override(
     integrity = "sha256-BEsUixEeF87mHYw6ru1CBp9zJUYDgjQK/KSRn4JlCUw=",
     strip_prefix = "bazel-compile-commands-extractor-1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
     urls = ["https://github.com/hedronvision/bazel-compile-commands-extractor/archive/1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93.tar.gz"],
-)
-
-archive_override(
-    module_name = "rules_rust",
-    # Fork because patching fails.
-    integrity = "sha256-zm5wQ9Y/cVatI4G5AXPnMuawdo2Rllq8idEYEeHeasE=",
-    patch_strip = 1,
-    patches = [
-        # Possibly related: https://github.com/bazelbuild/rules_rust/issues/2677
-        "//bazel/patches:rules_rust-ignore_incomplete_workspace_env.patch",
-    ],
-    strip_prefix = "rules_rust-05e32ba3c9b8f3a8e4d1d55df82369670fd42b7f",
-    urls = ["https://github.com/Synss/rules_rust/archive/05e32ba3c9b8f3a8e4d1d55df82369670fd42b7f.tar.gz"],
 )
 
 single_version_override(

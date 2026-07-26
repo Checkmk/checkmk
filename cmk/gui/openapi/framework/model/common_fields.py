@@ -35,7 +35,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree
 from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
 from cmk.livestatus_client.types import Column, Table
 
@@ -241,7 +241,14 @@ class _FolderValidation:
 
     @classmethod
     def validate(cls, value: str) -> Folder:
-        tree = folder_tree()
+        # Framework validator entry point: it has no access to the request
+        # config, so it resolves against the global folder tree. Explicit callers
+        # that do have a config should use validate_in_tree() instead (CMK-35767
+        # follow-up: hand the request config to the framework validators too).
+        return cls.validate_in_tree(value, folder_tree())
+
+    @classmethod
+    def validate_in_tree(cls, value: str, tree: FolderTree) -> Folder:
         try:
             if cls._is_hex(value):
                 return tree._by_id(value)

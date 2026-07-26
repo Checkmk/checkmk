@@ -1319,9 +1319,11 @@ std::string ReadHash(std::fstream &ifs) noexcept {
 std::string GetOldHashFromFile(const fs::path &ini,
                                std::string_view marker) noexcept {
     try {
+        // Read-only: unlike PatchHashInFile this never writes, so it must
+        // open without out|write access — otherwise reading the hash from a
+        // read-only file (e.g. a Bazel sandbox input) fails to open at all.
         std::fstream ifs;
-        ifs.open(ini,
-                 std::fstream::binary | std::fstream::in | std::fstream::out);
+        ifs.open(ini, std::fstream::binary | std::fstream::in);
 
         std::string str((std::istreambuf_iterator(ifs)),
                         std::istreambuf_iterator<char>());
@@ -1332,7 +1334,7 @@ std::string GetOldHashFromFile(const fs::path &ini,
             return {};
         }
 
-        ifs.seekp(pos + marker.size());
+        ifs.seekg(pos + marker.size());
 
         return ReadHash(ifs);
     } catch (const std::exception &e) {

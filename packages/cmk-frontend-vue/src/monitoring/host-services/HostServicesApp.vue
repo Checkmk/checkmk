@@ -4,19 +4,85 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table'
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { onMounted, ref } from 'vue'
+
+import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
+
+import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
+import MonitoringTable from '../shared/components/MonitoringTable.vue'
+import { HostServicesApi, type ServiceEntry } from './api/services'
+import HostServicesRow from './components/HostServicesRow.vue'
 
 const { _t } = usei18n()
 
 const props = defineProps<MonitoringHostServicesApp>()
 
+const api = new HostServicesApi()
+
+const services = ref<ServiceEntry[]>([])
+const fetchState = ref<FetchState>('foreground')
+const hasLoaded = ref(false)
+
+const columns: ColumnDef<ServiceEntry>[] = [
+  {
+    accessorKey: 'state',
+    header: _t('State'),
+    enableSorting: false,
+    minSize: 74,
+    maxSize: 100,
+    meta: { justify: 'center' }
+  },
+  {
+    accessorKey: 'name',
+    header: _t('Service'),
+    enableSorting: false,
+    minSize: 150,
+    maxSize: 350
+  },
+  {
+    accessorKey: 'summary',
+    header: _t('Summary'),
+    enableSorting: false,
+    minSize: 200
+  },
+  {
+    accessorKey: 'last_check',
+    header: _t('Last check'),
+    enableSorting: false,
+    minSize: 120,
+    maxSize: 200
+  },
+  {
+    accessorKey: 'last_state_change',
+    header: _t('Last state change'),
+    enableSorting: false,
+    minSize: 120,
+    maxSize: 200
+  }
+]
+
+onMounted(async () => {
+  try {
+    services.value = await api.fetchServices(props.host, props.site)
+  } finally {
+    fetchState.value = 'idle'
+    hasLoaded.value = true
+  }
+})
+
 function navigateToLegacy(): void {
   if (props.legacy_view_button) {
     window.location.href = props.legacy_view_button.url
   }
+}
+
+function rowKey(row: ServiceEntry): string {
+  return row.name
 }
 </script>
 
@@ -28,9 +94,21 @@ function navigateToLegacy(): void {
     </CmkButton>
   </Teleport>
   <div class="monitoring-host-services-app">
-    <p class="monitoring-host-services-app__placeholder">
-      {{ _t('Services of host %{host} on site %{site}', { host, site }) }}
-    </p>
+    <MonitoringTable
+      :rows="services"
+      :fetch-state="fetchState"
+      :has-loaded="hasLoaded"
+      :columns="columns"
+      :filter-state="[]"
+      :get-row-key="rowKey"
+    >
+      <template #row="{ row }">
+        <HostServicesRow :row="row" />
+      </template>
+      <template #empty-state>
+        <MonitoringEmptyState />
+      </template>
+    </MonitoringTable>
   </div>
 </template>
 

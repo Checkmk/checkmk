@@ -65,7 +65,7 @@ function formatTimestamp(iso: string): string {
 <template>
   <div class="monitoring-host-overview-tab">
     <div class="monitoring-host-overview-tab__status-link">
-      <CmkLink :href="data.legacy_host_status_link" target="_top">
+      <CmkLink :href="data.legacy_host_status_link" target="main">
         {{ _t('Show full host status') }}
       </CmkLink>
     </div>

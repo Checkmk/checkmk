@@ -531,8 +531,8 @@ private:
 
 /// Converts string to UTF-8 with error code
 /// Returns empty string on error.
-inline std::string ToUtf8(const std::wstring_view src,
-                          unsigned long &error_code) noexcept;
+std::string ToUtf8(const std::wstring_view src,
+                   unsigned long &error_code) noexcept;
 
 /// Converts to UTF-8 drops error code
 /// This default API used. In most cases we could treat malformed UTF-8 as empty

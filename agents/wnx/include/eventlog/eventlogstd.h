@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include "EventLogBase.h"
+#include "eventlogbase.h"
 namespace cma::evl {
 class MessageResolver {
 public:

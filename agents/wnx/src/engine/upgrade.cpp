@@ -238,7 +238,7 @@ std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle) {
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
     if (::QueryServiceStatusEx(service_handle, SC_STATUS_PROCESS_INFO, buffer,
-                               sizeof SERVICE_STATUS_PROCESS,
+                               sizeof(SERVICE_STATUS_PROCESS),
                                &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return {};
@@ -252,7 +252,7 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
     if (::QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO, buffer,
-                               sizeof SERVICE_STATUS_PROCESS,
+                               sizeof(SERVICE_STATUS_PROCESS),
                                &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return 0;

@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include <Ntsecapi.h>
+#include <ntsecapi.h>
 
 #include "common/wtools_user_control.h"
 #include "tools/_raii.h"

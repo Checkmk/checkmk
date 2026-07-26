@@ -26,7 +26,7 @@
 #include "wnx/logger.h"
 #pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "psapi.lib")
-#pragma comment(lib, "Sensapi.lib")
+#pragma comment(lib, "sensapi.lib")
 #pragma comment(lib, "iphlpapi.lib")
 
 namespace fs = std::filesystem;
@@ -63,7 +63,7 @@ bool ChangeAccessRights(
 
     // Initialize an EXPLICIT_ACCESS structure for the new ACE.
     EXPLICIT_ACCESS ea;
-    ZeroMemory(&ea, sizeof EXPLICIT_ACCESS);
+    ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
     ea.grfAccessPermissions = access_rights;
     ea.grfAccessMode = access_mode;
     ea.grfInheritance = inheritance;
@@ -2469,7 +2469,7 @@ HRESULT ACLInfo::query() noexcept {
 }
 
 HRESULT ACLInfo::addAceToList(ACE_HEADER *ace) noexcept {
-    auto *new_ace = static_cast<AceList *>(malloc(sizeof AceList));
+    auto *new_ace = static_cast<AceList *>(malloc(sizeof(AceList)));
     if (new_ace == nullptr) {
         return S_FALSE;
     }
@@ -3146,7 +3146,7 @@ private:
 
 ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
     const auto acl_size =
-        sizeof ACL + 2 * sizeof ACCESS_ALLOWED_ACE - sizeof DWORD +
+        sizeof(ACL) + 2 * sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) +
         GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
         GetSidLengthRequired(static_cast<UCHAR>(second.count()));
 
@@ -3214,16 +3214,16 @@ bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
     }
 
     sd_ = static_cast<SECURITY_DESCRIPTOR *>(
-        ProcessHeapAlloc(sizeof SECURITY_DESCRIPTOR));
+        ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
     sa_ = static_cast<SECURITY_ATTRIBUTES *>(
-        ProcessHeapAlloc(sizeof SECURITY_ATTRIBUTES));
+        ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
 
     if (acl_ != nullptr && sd_ != nullptr &&
         sa_ != nullptr &&  // <--- alloc check
         ::InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION) ==
             TRUE &&
         ::SetSecurityDescriptorDacl(sd_, TRUE, acl_, FALSE) == TRUE) {
-        sa_->nLength = sizeof SECURITY_ATTRIBUTES;
+        sa_->nLength = sizeof(SECURITY_ATTRIBUTES);
         sa_->lpSecurityDescriptor = sd_;
         sa_->bInheritHandle = FALSE;
         return true;
@@ -3421,7 +3421,7 @@ namespace {
 class MibTcpTable2Wrapper {
 public:
     MibTcpTable2Wrapper() {
-        auto size = static_cast<DWORD>(sizeof MIB_TCPTABLE2);
+        auto size = static_cast<DWORD>(sizeof(MIB_TCPTABLE2));
         reallocateBuffer(size);
 
         while (true) {
@@ -3530,7 +3530,7 @@ ACL* BuildAdminSDAcls {
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
     // The ACE will allow Everyone read access to the key.
-    ZeroMemory(&ea, 2 * sizeof EXPLICIT_ACCESS);
+    ZeroMemory(&ea, 2 * sizeof(EXPLICIT_ACCESS));
     ea[0].grfAccessPermissions = KEY_READ;
     ea[0].grfAccessMode = SET_ACCESS;
     ea[0].grfInheritance = NO_INHERITANCE;
@@ -3587,7 +3587,7 @@ ACL* BuildAdminSDAcls {
     }
 
     // Initialize a security attributes structure.
-    sa.nLength = sizeof SECURITY_ATTRIBUTES;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.lpSecurityDescriptor = pSD;
     sa.bInheritHandle = FALSE;
 
@@ -3681,7 +3681,7 @@ uint32_t ServiceControl::getStatus() const noexcept {
     const auto buffer = reinterpret_cast<BYTE *>(&ssp);
 
     if (::QueryServiceStatusEx(service_, SC_STATUS_PROCESS_INFO, buffer,
-                               sizeof SERVICE_STATUS_PROCESS,
+                               sizeof(SERVICE_STATUS_PROCESS),
                                &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", ::GetLastError());
         return 0;
@@ -3731,8 +3731,8 @@ size_t InternalUsersDb::size() const {
     return users_.size();
 }
 
-inline std::string ToUtf8(const std::wstring_view src,
-                          unsigned long &error_code) noexcept {
+std::string ToUtf8(const std::wstring_view src,
+                   unsigned long &error_code) noexcept {
     const auto in_len = static_cast<int>(src.length());
     const auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
                                                nullptr, 0, nullptr, nullptr);
@@ -3782,10 +3782,10 @@ AdapterInfo ToAdapterInfo(const IP_ADAPTER_ADDRESSES &a) {
         .guid{a.AdapterName},
         .friendly_name{a.FriendlyName},
         .description{a.Description},
-        .if_type{a.IfType},
+        .if_type = a.IfType,
         .receive_speed{_to_speed(a.ReceiveLinkSpeed)},
         .transmit_speed{_to_speed(a.TransmitLinkSpeed)},
-        .oper_status{a.OperStatus},
+        .oper_status = a.OperStatus,
         .mac_address{address},
     };
 }

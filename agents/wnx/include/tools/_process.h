@@ -75,7 +75,7 @@ inline bool RunCommandAndWait(const std::wstring &command,
                               const std::wstring_view work_dir) {
     STARTUPINFOW si = {};
     ::memset(&si, 0, sizeof si);
-    si.cb = sizeof STARTUPINFO;
+    si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi = {};
@@ -110,7 +110,7 @@ inline bool RunCommandAndWait(const std::wstring &command) {
 inline std::optional<uint32_t> RunDetachedCommand(const std::string &command) {
     STARTUPINFOA si = {};
     memset(&si, 0, sizeof si);
-    si.cb = sizeof STARTUPINFO;
+    si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi = {};
@@ -154,7 +154,7 @@ inline std::optional<ProcessInfo> RunStdCommand(
     // windows "boiler plate"
     STARTUPINFOW si = {};
     memset(&si, 0, sizeof si);
-    si.cb = sizeof STARTUPINFO;
+    si.cb = sizeof(STARTUPINFO);
     si.dwFlags = start_flags;
     si.hStdOutput = stdio_handle;
     si.hStdError = stderr_handle;
@@ -205,7 +205,7 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     // windows "boiler plate"
     STARTUPINFOW si = {};
     memset(&si, 0, sizeof si);
-    si.cb = sizeof STARTUPINFO;
+    si.cb = sizeof(STARTUPINFO);
     si.dwFlags = start_flags;
     si.hStdOutput = stdio_handle;
     si.hStdError = stderr_handle;
@@ -260,7 +260,7 @@ inline bool IsElevated() {
 
     TOKEN_ELEVATION elevation{0};
 
-    if (DWORD size = sizeof TOKEN_ELEVATION; ::GetTokenInformation(
+    if (DWORD size = sizeof(TOKEN_ELEVATION); ::GetTokenInformation(
             token, TokenElevation, &elevation, sizeof elevation, &size)) {
         return elevation.TokenIsElevated == TRUE;
     }

@@ -91,7 +91,7 @@ struct CarrierDataHeader {
     [[nodiscard]] auto answerId() const noexcept { return data_id_; }
     [[nodiscard]] auto length() const noexcept { return data_length_; }
     [[nodiscard]] auto fullLength() const noexcept {
-        return data_length_ + sizeof CarrierDataHeader;
+        return data_length_ + sizeof(CarrierDataHeader);
     }
     [[nodiscard]] auto info() const noexcept { return info_; }
     [[nodiscard]] auto type() const noexcept {
@@ -114,8 +114,8 @@ private:
         try {
             const auto length = static_cast<size_t>(data_length);
             // data payload
-            auto *block = new char[length + sizeof CarrierDataHeader];
-            ::memset(block, 0, +sizeof CarrierDataHeader);
+            auto *block = new char[length + sizeof(CarrierDataHeader)];
+            ::memset(block, 0, sizeof(CarrierDataHeader));
             auto *cdh = reinterpret_cast<CarrierDataHeader *>(block);
             cdh->data_length_ = length;
             if (data != nullptr && cdh->data() != nullptr) {

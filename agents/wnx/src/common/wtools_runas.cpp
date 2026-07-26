@@ -3,20 +3,20 @@
 
 #include "common/wtools_runas.h"
 
-#include <Sddl.h>
 #include <UserEnv.h>
 #include <WtsApi32.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
 #include <psapi.h>
+#include <sddl.h>
 #include <winsafer.h>
 
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "wnx/logger.h"
 
-#pragma comment(lib, "Wtsapi32.lib")
-#pragma comment(lib, "Userenv.lib")
+#pragma comment(lib, "wtsapi32.lib")
+#pragma comment(lib, "userenv.lib")
 namespace wtools::runas {
 
 namespace krnl {
@@ -189,7 +189,7 @@ bool SetLookupPrivilege(HANDLE token_handle, const LUID &luid) {
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     if (::AdjustTokenPrivileges(token_handle, FALSE, &tp,
-                                sizeof TOKEN_PRIVILEGES, nullptr,
+                                sizeof(TOKEN_PRIVILEGES), nullptr,
                                 nullptr) == TRUE)
         return true;
 
@@ -379,7 +379,7 @@ HANDLE GetLocalSystemProcessToken() {
     }
 
     // Calculate how many process identifiers were returned.
-    auto process_count = byte_count / sizeof DWORD;
+    auto process_count = byte_count / sizeof(DWORD);
     for (DWORD i = 0; i < process_count; ++i) {
         const DWORD pid = pids[i];
         const HANDLE proc_handle =

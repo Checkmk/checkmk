@@ -88,7 +88,7 @@ namespace {
 std::optional<uint32_t> RunExtension(const std::wstring &command) {
     STARTUPINFOW si = {};
     memset(&si, 0, sizeof si);
-    si.cb = sizeof STARTUPINFO;
+    si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi = {};

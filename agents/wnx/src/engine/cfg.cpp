@@ -1419,7 +1419,7 @@ std::string GetMapNodeName(const YAML::Node &node) {
 }
 }  // namespace
 
-constexpr Combine GetCombineMode(std::string_view name) {
+Combine GetCombineMode(std::string_view name) {
     if (name == groups::kWinPerf) {
         return Combine::merge;
     }

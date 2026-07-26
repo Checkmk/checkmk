@@ -171,7 +171,7 @@ public:
         _was_assigned = true;
     }
 
-    virtual std::string outputForYaml() {
+    std::string outputForYaml() override {
         std::stringstream ss;
         if (_values.size() == 0) return "~";
         for (auto &c : _values) {

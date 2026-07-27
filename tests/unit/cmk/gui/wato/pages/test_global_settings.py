@@ -5,13 +5,11 @@
 
 import json
 from collections.abc import Iterable
-from pathlib import Path
 from typing import override
 
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
@@ -37,7 +35,6 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
-from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
@@ -123,48 +120,51 @@ def test_parse_submitted_value_keeps_cleartext_password_for_storage(
     assert password_id_and_value[1] == "hunter2"
 
 
-def _global_settings_context() -> GlobalSettingsContext:
-    return GlobalSettingsContext(
-        target_site_id=SiteId("test"),
-        edition_of_local_site=Edition.COMMUNITY,
-        site_neutral_log_dir=Path("/tmp"),
-        site_neutral_var_dir=Path("/tmp"),
-        configured_sites=SiteConfigurations({}),
-        configured_graph_timeranges=[],
-    )
-
-
-def _table_row_limit_form_spec() -> Integer:
-    form_spec = ConfigVariableTableRowLimit.value_model(_global_settings_context())
+def _table_row_limit_form_spec(context: GlobalSettingsContext) -> Integer:
+    form_spec = ConfigVariableTableRowLimit.value_model(context)
     assert isinstance(form_spec, Integer)
     return form_spec
 
 
-def test_table_row_limit_uses_form_spec_backend() -> None:
-    assert isinstance(ConfigVariableTableRowLimit.value_model(_global_settings_context()), FormSpec)
+def test_table_row_limit_uses_form_spec_backend(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    assert isinstance(ConfigVariableTableRowLimit.value_model(global_settings_context), FormSpec)
 
 
-def test_table_row_limit_default_matches_general_config() -> None:
-    assert _table_row_limit_form_spec().prefill == DefaultValue(100)
+def test_table_row_limit_default_matches_general_config(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    assert _table_row_limit_form_spec(global_settings_context).prefill == DefaultValue(100)
 
 
-def test_table_row_limit_valid_value_round_trips_as_int() -> None:
+def test_table_row_limit_valid_value_round_trips_as_int(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     visitor = get_visitor(
-        _table_row_limit_form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
+        _table_row_limit_form_spec(global_settings_context),
+        VisitorOptions(migrate_values=False, mask_values=False),
     )
     assert visitor.validate(RawFrontendData(50)) == []
     assert visitor.to_disk(RawFrontendData(50)) == 50
 
 
-def test_table_row_limit_rejects_value_below_minimum() -> None:
+def test_table_row_limit_rejects_value_below_minimum(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     visitor = get_visitor(
-        _table_row_limit_form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
+        _table_row_limit_form_spec(global_settings_context),
+        VisitorOptions(migrate_values=False, mask_values=False),
     )
     assert visitor.validate(RawFrontendData(0))
 
 
-def test_table_row_limit_upgrade_keeps_stored_int() -> None:
-    assert migrate_form_spec_disk_value(_table_row_limit_form_spec(), 42) == 42
+def test_table_row_limit_upgrade_keeps_stored_int(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
+    assert (
+        migrate_form_spec_disk_value(_table_row_limit_form_spec(global_settings_context), 42) == 42
+    )
 
 
 def _valuespec_config_variable() -> ConfigVariable:
@@ -185,11 +185,13 @@ def _form_spec_config_variable() -> ConfigVariable:
     )
 
 
-def test_diff_text_valuespec_value_changed() -> None:
+def test_diff_text_valuespec_value_changed(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     assert (
         _global_settings_diff_text(
             _valuespec_config_variable(),
-            _global_settings_context(),
+            global_settings_context,
             {"test_setting": "before"},
             {"test_setting": "after"},
         )
@@ -197,11 +199,13 @@ def test_diff_text_valuespec_value_changed() -> None:
     )
 
 
-def test_diff_text_form_spec_value_changed() -> None:
+def test_diff_text_form_spec_value_changed(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     assert (
         _global_settings_diff_text(
             _form_spec_config_variable(),
-            _global_settings_context(),
+            global_settings_context,
             {"test_setting": 100},
             {"test_setting": 66},
         )
@@ -209,11 +213,13 @@ def test_diff_text_form_spec_value_changed() -> None:
     )
 
 
-def test_diff_text_first_override_reads_as_added() -> None:
+def test_diff_text_first_override_reads_as_added(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     assert (
         _global_settings_diff_text(
             _form_spec_config_variable(),
-            _global_settings_context(),
+            global_settings_context,
             {},
             {"test_setting": 66},
         )
@@ -221,11 +227,13 @@ def test_diff_text_first_override_reads_as_added() -> None:
     )
 
 
-def test_diff_text_reset_reads_as_removed() -> None:
+def test_diff_text_reset_reads_as_removed(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     assert (
         _global_settings_diff_text(
             _form_spec_config_variable(),
-            _global_settings_context(),
+            global_settings_context,
             {"test_setting": 100},
             {},
         )
@@ -233,7 +241,9 @@ def test_diff_text_reset_reads_as_removed() -> None:
     )
 
 
-def test_diff_text_valuespec_secret_is_redacted() -> None:
+def test_diff_text_valuespec_secret_is_redacted(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     config_variable = ConfigVariable(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
@@ -242,7 +252,7 @@ def test_diff_text_valuespec_secret_is_redacted() -> None:
     )
     diff_text = _global_settings_diff_text(
         config_variable,
-        _global_settings_context(),
+        global_settings_context,
         {"test_setting": "old-secret"},
         {"test_setting": "new-secret"},
     )
@@ -251,7 +261,9 @@ def test_diff_text_valuespec_secret_is_redacted() -> None:
     assert "new-secret" not in diff_text
 
 
-def test_diff_text_form_spec_secret_is_redacted() -> None:
+def test_diff_text_form_spec_secret_is_redacted(
+    global_settings_context: GlobalSettingsContext,
+) -> None:
     config_variable = ConfigVariable(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
@@ -260,7 +272,7 @@ def test_diff_text_form_spec_secret_is_redacted() -> None:
     )
     diff_text = _global_settings_diff_text(
         config_variable,
-        _global_settings_context(),
+        global_settings_context,
         {"test_setting": "old-secret"},
         {"test_setting": "new-secret"},
     )

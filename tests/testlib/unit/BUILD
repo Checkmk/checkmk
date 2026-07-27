@@ -38,6 +38,7 @@ py_library(
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:password_store",
         "//packages/cmk-crash:crash",
+        "//tests/testlib:fake_site",
         "//tests/testlib:rest_api_client",
         "//tests/testlib/common:empty_config",
         "//tests/testlib/common:repo",

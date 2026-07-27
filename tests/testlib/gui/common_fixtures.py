@@ -285,5 +285,9 @@ def patch_theme_context() -> Iterator[None]:
             "cmk.gui.theme.choices.theme_choices",
             return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
         ),
+        patch(
+            "cmk.gui.wato._check_mk_configuration.theme_choices",
+            return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
+        ),
     ):
         yield

@@ -139,11 +139,48 @@ def delete_state(site_root: Path, base_dir: Path = STATE_BASE) -> None:
 # ---------------------------------------------------------------------------
 
 
-def get_current_branch(repo_root: Path) -> str:
-    """Return the current git branch name, or '' if detached HEAD or on error."""
+@dataclass
+class _GitCache:
+    """Memo of the git queries a deploy cycle repeats.
+
+    ``git diff --name-only HEAD`` alone used to run seven times per cycle
+    (change filtering, two skip checks, three per-deployer snapshots, the
+    state save) with an identical result every time, and each caller then
+    re-hashed the files it matched.  Answering all of them from one query
+    also gives the cycle a single consistent view of the working tree, the
+    same guarantee the per-deployer snapshots were already reaching for by
+    running before the deployers rather than after them.
+    """
+
+    repo_root: Path | None = None
+    branch: str | None = None
+    head: str | None = None
+    dirty_files: tuple[str, ...] | None = None
+    file_hashes: dict[str, str] = field(default_factory=dict)
+
+
+_git_cache = _GitCache()
+
+
+def reset_git_cache() -> None:
+    """Discard the memoized git state; called once per deploy cycle."""
+    global _git_cache
+    _git_cache = _GitCache()
+
+
+def _cache_for(repo_root: Path) -> _GitCache:
+    """Return the memo, discarding it when it belongs to another repository."""
+    global _git_cache
+    if _git_cache.repo_root != repo_root:
+        _git_cache = _GitCache(repo_root=repo_root)
+    return _git_cache
+
+
+def _git_stdout(args: list[str], repo_root: Path) -> str | None:
+    """Return stripped stdout of a git command, or None when it fails."""
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            ["git", *args],
             capture_output=True,
             text=True,
             check=False,
@@ -151,47 +188,34 @@ def get_current_branch(repo_root: Path) -> str:
             timeout=GIT_QUICK,
         )
     except (subprocess.TimeoutExpired, OSError):
-        return ""
-    if result.returncode != 0:
-        return ""
-    branch = result.stdout.strip()
-    return "" if branch == "HEAD" else branch
+        return None
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def get_current_branch(repo_root: Path) -> str:
+    """Return the current git branch name, or '' if detached HEAD or on error."""
+    cache = _cache_for(repo_root)
+    if cache.branch is None:
+        branch = _git_stdout(["rev-parse", "--abbrev-ref", "HEAD"], repo_root)
+        cache.branch = "" if branch in (None, "HEAD") else branch
+    return cache.branch
 
 
 def get_head_commit(repo_root: Path) -> str:
     """Return the current HEAD commit hash (40-char SHA), or '' on error."""
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            capture_output=True,
-            text=True,
-            check=False,
-            cwd=str(repo_root),
-            timeout=GIT_QUICK,
-        )
-    except (subprocess.TimeoutExpired, OSError):
-        return ""
-    if result.returncode != 0:
-        return ""
-    return result.stdout.strip()
+    cache = _cache_for(repo_root)
+    if cache.head is None:
+        cache.head = _git_stdout(["rev-parse", "HEAD"], repo_root) or ""
+    return cache.head
 
 
 def get_dirty_files(repo_root: Path) -> list[str]:
     """Return paths of files with unstaged or staged changes relative to HEAD."""
-    try:
-        result = subprocess.run(
-            ["git", "diff", "--name-only", "HEAD"],
-            capture_output=True,
-            text=True,
-            check=False,
-            cwd=str(repo_root),
-            timeout=GIT_QUICK,
-        )
-    except (subprocess.TimeoutExpired, OSError):
-        return []
-    if result.returncode != 0:
-        return []
-    return [line for line in result.stdout.strip().splitlines() if line]
+    cache = _cache_for(repo_root)
+    if cache.dirty_files is None:
+        out = _git_stdout(["diff", "--name-only", "HEAD"], repo_root)
+        cache.dirty_files = tuple(line for line in (out or "").splitlines() if line)
+    return list(cache.dirty_files)
 
 
 def compute_file_hash(filepath: Path) -> str:
@@ -207,15 +231,22 @@ def compute_dirty_hashes(
     repo_root: Path,
     path_prefixes: tuple[str, ...] | None = None,
 ) -> dict[str, str]:
-    """Compute SHA256 hashes for dirty files, optionally filtered by prefix."""
+    """Compute SHA256 hashes for dirty files, optionally filtered by prefix.
+
+    Hashes are memoized per cycle: the deployers' prefix filters overlap,
+    so a file that several of them own would otherwise be read once per
+    deployer.
+    """
     dirty = get_dirty_files(repo_root)
     if path_prefixes is not None:
-        dirty = [f for f in dirty if any(f.startswith(p) for p in path_prefixes)]
+        dirty = [f for f in dirty if f.startswith(path_prefixes)]
+    cache = _cache_for(repo_root)
     result: dict[str, str] = {}
     for relpath in dirty:
-        abs_path = repo_root / relpath
-        if abs_path.is_file():
-            result[relpath] = compute_file_hash(abs_path)
+        if (cached := cache.file_hashes.get(relpath)) is not None:
+            result[relpath] = cached
+        elif (abs_path := repo_root / relpath).is_file():
+            result[relpath] = cache.file_hashes[relpath] = compute_file_hash(abs_path)
     return result
 
 

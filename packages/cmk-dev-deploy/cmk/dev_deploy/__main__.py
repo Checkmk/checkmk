@@ -67,6 +67,7 @@ from cmk.dev_deploy.state.deploy_state import (
     get_current_branch,
     get_head_commit,
     load_state,
+    reset_git_cache,
     STATE_BASE,
     state_file_path,
 )
@@ -197,6 +198,10 @@ def _run_deploy_cycle(
     from cmk.dev_deploy.manifest.staleness import ensure_manifest
 
     _cycle_start = _time.monotonic()
+
+    # Every git query below is answered once and reused for the rest of the
+    # cycle; a watch cycle re-reads the working tree by starting over here.
+    reset_git_cache()
 
     # Ensure the manifest is fresh (this is the only ensure per deploy --
     # site preparation does not read the manifest).  --rebuild-manifest

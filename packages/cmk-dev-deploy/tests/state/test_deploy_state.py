@@ -24,6 +24,7 @@ from cmk.dev_deploy.state.deploy_state import (
     get_dirty_files,
     get_head_commit,
     load_state,
+    reset_git_cache,
     save_state,
     state_file_path,
     STATE_SCHEMA_VERSION,
@@ -594,3 +595,76 @@ class TestGetDirtyFiles:
         ):
             result = get_dirty_files(tmp_path)
         assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Per-cycle git memo tests
+# ---------------------------------------------------------------------------
+
+
+def _counting_run(stdout: str) -> tuple[object, list[list[str]]]:
+    """Return a subprocess.run stand-in plus the list it records commands in."""
+    calls: list[list[str]] = []
+
+    def _run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+    return _run, calls
+
+
+class TestGitCache:
+    """The git queries a deploy cycle repeats are answered once."""
+
+    def test_repeated_queries_run_git_once(self, tmp_path: Path) -> None:
+        run, calls = _counting_run("cmk/a.py\n")
+        with patch("cmk.dev_deploy.state.deploy_state.subprocess.run", run):
+            assert get_dirty_files(tmp_path) == ["cmk/a.py"]
+            assert get_dirty_files(tmp_path) == ["cmk/a.py"]
+            assert get_dirty_files(tmp_path) == ["cmk/a.py"]
+        assert len(calls) == 1
+
+    def test_reset_re_reads_the_working_tree(self, tmp_path: Path) -> None:
+        run, calls = _counting_run("cmk/a.py\n")
+        with patch("cmk.dev_deploy.state.deploy_state.subprocess.run", run):
+            get_dirty_files(tmp_path)
+            reset_git_cache()
+            get_dirty_files(tmp_path)
+        assert len(calls) == 2
+
+    def test_another_repository_re_reads(self, tmp_path: Path) -> None:
+        run, calls = _counting_run("cmk/a.py\n")
+        with patch("cmk.dev_deploy.state.deploy_state.subprocess.run", run):
+            get_dirty_files(tmp_path)
+            get_dirty_files(tmp_path / "elsewhere")
+        assert len(calls) == 2
+
+    def test_head_and_branch_are_separate_queries(self, tmp_path: Path) -> None:
+        run, calls = _counting_run("main\n")
+        with patch("cmk.dev_deploy.state.deploy_state.subprocess.run", run):
+            get_head_commit(tmp_path)
+            get_current_branch(tmp_path)
+            get_head_commit(tmp_path)
+            get_current_branch(tmp_path)
+        assert [cmd[1:3] for cmd in calls] == [["rev-parse", "HEAD"], ["rev-parse", "--abbrev-ref"]]
+
+    def test_overlapping_prefixes_hash_each_file_once(self, tmp_path: Path) -> None:
+        (tmp_path / "cmk").mkdir()
+        (tmp_path / "cmk" / "a.py").write_text("content")
+        hashed: list[Path] = []
+
+        def _hash(path: Path) -> str:
+            hashed.append(path)
+            return "deadbeef"
+
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.get_dirty_files",
+                return_value=["cmk/a.py"],
+            ),
+            patch("cmk.dev_deploy.state.deploy_state.compute_file_hash", _hash),
+        ):
+            first = compute_dirty_hashes(tmp_path, path_prefixes=("cmk/",))
+            second = compute_dirty_hashes(tmp_path, path_prefixes=("cmk/a",))
+        assert first == second == {"cmk/a.py": "deadbeef"}
+        assert hashed == [tmp_path / "cmk" / "a.py"]

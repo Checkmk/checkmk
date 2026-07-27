@@ -15,6 +15,11 @@ Handles two Bazel sandbox issues:
    build time) and must never be read by tests.  The seed manifest is built
    from checked-in data (deploy_specs.toml) plus a test constant for
    install spec extensions.
+
+and one scoping issue:
+
+3. Resets the git memo that ``deploy_state`` keeps for the duration of a
+   deploy cycle, so it cannot leak from one test into the next.
 """
 
 from __future__ import annotations
@@ -23,6 +28,8 @@ import functools
 import sys
 import types
 from unittest.mock import MagicMock
+
+import pytest
 
 # ---------------------------------------------------------------------------
 # 1. Stub out cmk.dev_deploy.privilege
@@ -48,6 +55,7 @@ if "cmk.dev_deploy.site.privilege" not in sys.modules:
 # _compute_categorization_rules() function and the checked-in TOML.
 
 import cmk.dev_deploy.manifest.reader as _reader
+import cmk.dev_deploy.state.deploy_state as _deploy_state
 
 # Install spec extensions: the one piece of Bazel-derived data that tests
 # cannot query.  Changes only when a package switches source languages.
@@ -125,3 +133,16 @@ def _seeded_load_raw() -> dict[str, object]:
 
 
 _reader._load_raw = _seeded_load_raw  # noqa: SLF001
+
+
+# ---------------------------------------------------------------------------
+# 3. Fresh git memo per test
+# ---------------------------------------------------------------------------
+# deploy_state answers a deploy cycle's repeated git queries from a memo.
+# Tests are cycles too, and each brings its own repository (tmp_path) or its
+# own patched git output, so the memo must not survive between them.
+
+
+@pytest.fixture(autouse=True)
+def _fresh_git_cache() -> None:
+    _deploy_state.reset_git_cache()

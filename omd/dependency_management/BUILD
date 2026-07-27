@@ -95,10 +95,16 @@ py_test(
     ],
     data = [
         "manual_dependency_manifest.yml",
+        "//non-free/packages/cmk-update-agent:vendored_wheels",
         "//third_party:third_party_archives",
     ],
     imports = ["."],
     main = ":test_manual_dep_manifest_main.py",
+    # The manifest covers non-free paths, which a GPL checkout does not ship.
+    target_compatible_with = select({
+        "@//:gpl+nonfree_repo": [],
+        "@//:gpl_repo": ["@platforms//:incompatible"],
+    }),
     deps = [
         requirement("pydantic"),
         requirement("pyyaml"),

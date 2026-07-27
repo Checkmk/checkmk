@@ -22,3 +22,51 @@ dependencies:
   - purl: pkg:generic/python@3.13.13
     license: PSF-2.0
     comment: windows python
+
+  - purl: pkg:pypi/idna@3.8
+    license: BSD-3-Clause
+    path: non-free/packages/cmk-update-agent/src/pip/idna-3.8-py3-none-any.whl
+
+  - purl: pkg:pypi/cryptography@37.0.4
+    path: non-free/packages/cmk-update-agent/src/pip/cryptography-37.0.4-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+
+  - purl: pkg:pypi/cffi@1.15.0
+    path: non-free/packages/cmk-update-agent/src/pip/cffi-1.15.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+
+  - purl: pkg:pypi/cerifi@2024.8.30
+    license: MPL-2.0
+    path: non-free/packages/cmk-update-agent/src/pip/certifi-2024.8.30-py3-none-any.whl
+
+  - purl: pkg:pypi/requests@2.31.0
+    path: non-free/packages/cmk-update-agent/src/pip/requests-2.31.0-py3-none-any.whl
+
+  - purl: pkg:pypi/pycparser@2.21
+    license: BSD-3-Clause
+    path: non-free/packages/cmk-update-agent/src/pip/pycparser-2.21-py2.py3-none-any.whl
+
+  - purl: pkg:pypi/setuptools@46.4.0
+    license: MIT
+    path: non-free/packages/cmk-update-agent/src/pip/setuptools-46.4.0-py3-none-any.whl
+
+  - purl: pkg:pypi/PySocks@1.7.1
+    license: BSD-3-Clause
+    path: non-free/packages/cmk-update-agent/src/pip/PySocks-1.7.1-py3-none-any.whl
+
+  - purl: pkg:pypi/wheel@0.34.2
+    path: non-free/packages/cmk-update-agent/src/pip/wheel-0.34.2-py2.py3-none-any.whl
+
+  - purl: pkg:pypi/six@1.15.0
+    path: non-free/packages/cmk-update-agent/src/pip/six-1.15.0-py2.py3-none-any.whl
+
+  - purl: pkg:pypi/altgraph@0.17
+    path: non-free/packages/cmk-update-agent/src/pip/altgraph-0.17-py2.py3-none-any.whl
+
+  - purl: pkg:pypi/urllib3@1.26.20
+    path: non-free/packages/cmk-update-agent/src/pip/urllib3-1.26.20-py2.py3-none-any.whl
+
+  - purl: pkg:pypi/PyInstaller@3.6
+    license: GPL-2.0-or-later
+    path: non-free/packages/cmk-update-agent/src/pip/PyInstaller-3.6.tar.gz
+
+  - purl: pkg:pypi/charset_normalizer@3.3.2
+    path: non-free/packages/cmk-update-agent/src/pip/charset_normalizer-3.3.2-py3-none-any.whl

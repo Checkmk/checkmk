@@ -15,6 +15,11 @@ constant to find every skeleton blocked on the same dependency):
   (discovery/data REST + ``<cmk-graph>`` embedding); enablable first.
 - ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests needing the engine to render on a surface.
 
+`injected_ping_rrds` is the cheapest way to get one: a no-agent host has exactly one service
+with an RRD (PING), and the core holds its RRDs open, so it takes every host it needs in one go
+and pays the site stop/start once. It writes the CMC's ``cmc_single`` layout, so callers have to
+skip the community edition, which stores per-metric files under pnp4nagios instead.
+
 RRD files are written with the site's own ``rrdtool`` (as `tests.integration.core.test_rrd_files`
 reads one), in the core's ``cmc_single`` layout: data sources numbered ``1``, ``2``, … plus a
 ``.info`` sidecar mapping those numbers to metric names. Pass the metric names the service
@@ -35,7 +40,8 @@ import json
 import logging
 import math
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
@@ -88,8 +94,6 @@ _OSCILLATION_PERIOD: Final = 4
 
 
 class GraphDataShape(StrEnum):
-    """The controlled data shapes a graph test fixture can request."""
-
     VARYING = "varying"
     GAPS = "gaps"
     # Oscillates fast enough that MIN, AVERAGE and MAX of a consolidated window differ by
@@ -98,11 +102,6 @@ class GraphDataShape(StrEnum):
 
 
 def service_rrd_path(host_name: str, service_description: str) -> str:
-    """RRD path relative to ``OMD_ROOT`` the core reads for a service's metrics.
-
-    Applies the core's `pnp_cleanup` quoting to both path elements
-    (e.g. "CPU load" -> "CPU_load.rrd").
-    """
     return f"var/check_mk/rrd/{pnp_cleanup(host_name)}/{pnp_cleanup(service_description)}.rrd"
 
 
@@ -111,11 +110,6 @@ def _info_rel_path(rrd_rel_path: str) -> str:
 
 
 def read_rrd_metric_names(site: Site, host_name: str, service_description: str) -> Sequence[str]:
-    """The metric names the core recorded for a service, in data-source order.
-
-    Read them off the existing ``.info`` sidecar and hand them back to `inject_rrd`, so an
-    injected RRD keeps the data-source order the core assigned.
-    """
     info = site.read_file(_info_rel_path(service_rrd_path(host_name, service_description)))
     for line in info.splitlines():
         if line.startswith("METRICS "):
@@ -125,8 +119,6 @@ def read_rrd_metric_names(site: Site, host_name: str, service_description: str) 
 
 @dataclass(frozen=True)
 class InjectedRrd:
-    """An RRD file created on the site for a graph test."""
-
     rel_path: str
     info_rel_path: str
     shape: GraphDataShape
@@ -137,24 +129,20 @@ class InjectedRrd:
 
 
 def _period(shape: GraphDataShape, count: int) -> int:
-    """Samples per oscillation: one slow curve over the whole window, or a fast one."""
     return _OSCILLATION_PERIOD if shape is GraphDataShape.OSCILLATING else max(count, 1)
 
 
 def _value(index: int, period: int, ds_index: int) -> float:
-    """A smoothly varying, always-positive sample value in this data source's band."""
     return ds_index * _BAND_WIDTH + 50.0 + 40.0 * math.sin(2.0 * math.pi * index / period)
 
 
 def _is_gap(index: int, count: int, shape: GraphDataShape) -> bool:
-    """For the 'gaps' shape, drop a contiguous block in the middle third."""
     return shape is GraphDataShape.GAPS and count // 3 <= index < 2 * count // 3
 
 
 def _samples(
     shape: GraphDataShape, *, step: int, start: int, count: int, data_sources: int
 ) -> Sequence[str]:
-    """The ``<timestamp>:<value>:...`` arguments of an rrdtool update, gaps left out."""
     period = _period(shape, count)
     return [
         f"{start + index * step}:"
@@ -175,15 +163,6 @@ def inject_rrd(
     start: int | None = None,
     count: int = _DEFAULT_SAMPLE_COUNT,
 ) -> InjectedRrd:
-    """Write the data shape to a service's RRD at the path the core reads.
-
-    Writes `service_rrd_path` and its ``.info`` sidecar; the service must be monitored (see
-    the module docstring). ``metric_names`` becomes the sidecar's ``METRICS`` line and fixes
-    the data-source order, so it has to list what the service reports. ``start`` defaults to
-    now (the test host's clock) minus the window length so data lands in default relative
-    views; pass an explicit ``start`` (e.g. `DST_FALL_BACK_BERLIN_UTC`, or a few days back to
-    reach a consolidated archive) for a historical window.
-    """
     if start is None:
         start = int(time.time()) - count * step
     rel_path = service_rrd_path(host_name, service_description)
@@ -238,3 +217,93 @@ def discovered_graphs(discovered: Mapping[str, object]) -> Sequence[Graph]:
         internal = ensure_type(ensure_type(definition, dict)["internal"], str)
         graphs.extend(graph_codec().deserialize_graphs(json.loads(internal)))
     return graphs
+
+
+PING_SERVICE: Final = "PING"
+
+_DAY: Final = 86400
+# Inject a window that ends well before "now", so every query the tests make lands outside the
+# finest RRD archive (48h at the core's geometry) and is served consolidated.
+_WINDOW_START_DAYS_AGO: Final = 9
+_WINDOW_DAYS: Final = 6
+
+
+@dataclass(frozen=True, kw_only=True)
+class InjectedPingRrd:
+    host_name: str
+    rrd: InjectedRrd
+
+    @property
+    def gap_start(self) -> int:
+        return self.rrd.start + (self.rrd.count // 3) * self.rrd.step
+
+    def window(self, *, offset_seconds: int, length_seconds: int) -> dict[str, int]:
+        start = self.rrd.start + offset_seconds
+        return {"start": start, "end": start + length_seconds, "step": 300}
+
+
+@contextmanager
+def injected_ping_rrds(
+    site: Site, shapes: Mapping[str, GraphDataShape]
+) -> Iterator[dict[str, InjectedPingRrd]]:
+    host_names = list(shapes)
+    try:
+        for host_name in host_names:
+            site.openapi.hosts.create(
+                hostname=host_name,
+                attributes={
+                    "tag_address_family": "ip-v4-only",
+                    "ipaddress": "127.0.0.1",
+                    "tag_agent": "no-agent",
+                },
+            )
+        site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+        for host_name in host_names:
+            # The first check is what makes the core create the RRD and its .info sidecar, whose
+            # data-source order the injected file has to keep.
+            site.wait_until_service_has_been_checked(host_name, PING_SERVICE)
+
+        metric_names = {
+            host_name: read_rrd_metric_names(site, host_name, PING_SERVICE)
+            for host_name in host_names
+        }
+        start = int(time.time()) - _WINDOW_START_DAYS_AGO * _DAY
+        count = _WINDOW_DAYS * _DAY // _DEFAULT_STEP_SECONDS
+        site.omd("stop")
+        try:
+            injected = {
+                host_name: InjectedPingRrd(
+                    host_name=host_name,
+                    rrd=inject_rrd(
+                        site,
+                        shape,
+                        host_name=host_name,
+                        service_description=PING_SERVICE,
+                        metric_names=metric_names[host_name],
+                        start=start,
+                        count=count,
+                    ),
+                )
+                for host_name, shape in shapes.items()
+            }
+        finally:
+            site.omd("start")
+        yield injected
+    finally:
+        site.openapi.hosts.bulk_delete(host_names)
+        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+
+
+def ping_graph_internal(site: Site, host_name: str) -> Mapping[str, object]:
+    discovered = site.openapi.graph.discover_template_graphs(host_name, PING_SERVICE)
+    assert discovered["graphs"], (
+        f"No graph discovered for {host_name}/{PING_SERVICE}: {discovered['no_data_message']}"
+    )
+    internal: Mapping[str, object] = json.loads(discovered["graphs"][0]["internal"])
+    return internal
+
+
+def data_points_of_every_metric(response: Mapping[str, object]) -> Sequence[Sequence[float | None]]:
+    metrics = response["metrics"]
+    assert isinstance(metrics, list) and metrics, f"No series in the graph data: {response}"
+    return [metric["data_points"] for metric in metrics]

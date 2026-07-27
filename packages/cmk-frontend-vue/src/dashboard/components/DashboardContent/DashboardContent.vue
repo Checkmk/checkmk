@@ -25,16 +25,11 @@ import { CONTENT_FIGURE_TYPES, GRAPH_TYPES, NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
-import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import type { WidgetContent } from '@/dashboard/types/widget'
 
 import type { ContentProps } from './types.ts'
 
 defineProps<ContentProps>()
-
-// The REST endpoints of the new graphing engine are not token-authenticated, so public (token)
-// dashboards keep using the legacy server-rendered graph component.
-const cmkToken = useInjectCmkToken()
 
 function contentTypeToComponent(contentType: string): Component {
   switch (true) {
@@ -60,9 +55,8 @@ function contentTypeToComponent(contentType: string): Component {
       return DashboardContentUserMessages
     case contentType === 'sidebar_element':
       return DashboardContentSidebarElement
-    // These graph widgets render client-side on the new graphing engine; on token-authenticated
-    // (public) dashboards they fall through to their legacy components below, like the remaining
-    // GRAPH_TYPES.
+    // These graph widgets render client-side on the new graphing engine. The remaining
+    // GRAPH_TYPES still fall through to their legacy components below.
     case [
       'performance_graph',
       'single_timeseries',
@@ -70,7 +64,7 @@ function contentTypeToComponent(contentType: string): Component {
       'average_scatterplot',
       'problem_graph',
       'custom_graph'
-    ].includes(contentType) && cmkToken === undefined:
+    ].includes(contentType):
       return DashboardContentTimeSeriesGraph
     case CONTENT_FIGURE_TYPES.includes(contentType):
       return DashboardContentFigure

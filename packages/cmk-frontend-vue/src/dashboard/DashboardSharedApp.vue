@@ -16,6 +16,7 @@ import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
+import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import { type DashboardKey, DashboardLayout } from '@/dashboard/types/dashboard.ts'
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard/types/page.ts'
@@ -42,6 +43,9 @@ provide(urlParamsKey, props.url_params)
 const cmkToken = `0:${props.token_value}`
 useProvideCmkToken(cmkToken)
 useProvideIsPublicDashboard()
+// The graph widgets cannot discover their own graphs here: the filter values they would need
+// are stripped from the spec, so the backend resolved them at page render instead.
+useProvideSharedWidgetGraphs(props.widget_graphs)
 // DashboardComponent injects these to merge context/widget filters (CMK-31671).
 // Shared dashboards have pre-baked filter contexts, so empty values are sufficient.
 useProvideFilterDefinitions({ definitions: {}, groups: {} })

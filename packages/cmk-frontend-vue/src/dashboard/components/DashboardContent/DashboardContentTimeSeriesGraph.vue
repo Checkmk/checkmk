@@ -12,6 +12,8 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 import { computed, onMounted, ref, watch } from 'vue'
 
+import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useInjectSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import type {
   AverageScatterplotContent,
   CombinedGraphContent,
@@ -23,6 +25,7 @@ import type {
 import { GraphFigure } from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
+import { createSharedGraphFetcher } from './sharedGraphFetcher.ts'
 import type { ContentProps } from './types.ts'
 
 type DiscoveredGraph = components['schemas']['ApiDiscoveredGraph']
@@ -44,6 +47,14 @@ const shell = ref<DiscoveredGraph | null>(null)
 const errorMessage = ref<string | null>(null)
 const noDataMessage = ref<string | null>(null)
 const isDiscovering = ref<boolean>(true)
+
+// A shared dashboard authenticates by token: its filter values never reach the browser, so the
+// backend discovers the shells at page render and the data is fetched per widget instead.
+const cmkToken = useInjectCmkToken()
+const sharedWidgetGraphs = useInjectSharedWidgetGraphs()
+const fetchGraph = computed(() =>
+  cmkToken === undefined ? undefined : createSharedGraphFetcher(props.widget_id, cmkToken)
+)
 
 const singleContext = computed(() => {
   const filters = props.effective_filter_context.filters
@@ -171,6 +182,25 @@ const discoverGraphs = async (): Promise<GraphDiscovery> => {
   }
 }
 
+const applyDiscovery = (discovery: GraphDiscovery) => {
+  if ('error' in discovery) {
+    errorMessage.value = discovery.error
+    noDataMessage.value = null
+    shell.value = null
+  } else if (discovery.graphs.length === 0) {
+    // An empty discovery is an expected state (nothing matched / no monitored data),
+    // not an error: show the backend's explanation rather than a failure box.
+    noDataMessage.value = discovery.no_data_message || _t('No graph data available.')
+    errorMessage.value = null
+    shell.value = null
+  } else {
+    shell.value = discovery.graphs[0] ?? null
+    errorMessage.value = null
+    noDataMessage.value = null
+  }
+  isDiscovering.value = false
+}
+
 const loadGraph = async () => {
   const counter = ++requestCounter
   try {
@@ -178,22 +208,7 @@ const loadGraph = async () => {
     if (counter !== requestCounter) {
       return
     }
-    if ('error' in discovery) {
-      errorMessage.value = discovery.error
-      noDataMessage.value = null
-      shell.value = null
-    } else if (discovery.graphs.length === 0) {
-      // An empty discovery is an expected state (nothing matched / no monitored data),
-      // not an error: show the backend's explanation rather than a failure box.
-      noDataMessage.value = discovery.no_data_message || _t('No graph data available.')
-      errorMessage.value = null
-      shell.value = null
-    } else {
-      shell.value = discovery.graphs[0] ?? null
-      errorMessage.value = null
-      noDataMessage.value = null
-    }
-    isDiscovering.value = false
+    applyDiscovery(discovery)
   } catch (error) {
     if (counter !== requestCounter) {
       return
@@ -233,10 +248,14 @@ const discoveryKey = computed(() => {
   }
 })
 
-watch(
-  () => JSON.stringify(discoveryKey.value),
-  () => void loadGraph()
-)
+// Pre-discovered shells are resolved once at page render, so nothing re-discovers them; the
+// filters they were resolved from cannot change on a shared dashboard either.
+if (sharedWidgetGraphs === undefined) {
+  watch(
+    () => JSON.stringify(discoveryKey.value),
+    () => void loadGraph()
+  )
+}
 
 // The figure-based average scatterplot has neither graph render options nor the graph
 // contents' timerange field (its range lives in time_range).
@@ -256,7 +275,13 @@ const combinationMode = computed(() => {
 })
 
 onMounted(() => {
-  void loadGraph()
+  if (sharedWidgetGraphs === undefined) {
+    void loadGraph()
+    return
+  }
+  applyDiscovery(
+    sharedWidgetGraphs[props.widget_id] ?? { error: _t('This graph could not be resolved.') }
+  )
 })
 </script>
 
@@ -290,6 +315,7 @@ onMounted(() => {
         :combination-mode="combinationMode"
         :show-legend="showLegend"
         :show-timestamp="showTimestamp"
+        :fetch-graph="fetchGraph"
       />
     </div>
   </DashboardContentContainer>

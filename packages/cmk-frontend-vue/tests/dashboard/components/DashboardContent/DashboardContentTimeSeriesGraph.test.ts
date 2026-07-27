@@ -6,15 +6,31 @@
 import { render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { defineComponent, h } from 'vue'
 
 import DashboardContentTimeSeriesGraph from '@/dashboard/components/DashboardContent/DashboardContentTimeSeriesGraph.vue'
+import { createSharedGraphFetcher } from '@/dashboard/components/DashboardContent/sharedGraphFetcher'
+import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
+import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
 import type { CustomGraphContent } from '@/dashboard/types/widget.ts'
 
-// The figure owns its own data fetch; stubbing it keeps these tests on the discovery step.
+// The figure owns its own data fetch; stubbing it keeps these tests on the discovery step and on
+// which fetch function the widget hands it.
 vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
   default: {
-    props: ['internal', 'timerange', 'combinationMode', 'showLegend', 'showTimestamp'],
-    template: '<div data-testid="graph-figure">{{ internal }}</div>'
+    props: [
+      'internal',
+      'timerange',
+      'combinationMode',
+      'showLegend',
+      'showTimestamp',
+      'fetchGraph'
+    ],
+    template: `<div
+      data-testid="graph-figure"
+      :data-has-fetch-graph="fetchGraph !== undefined"
+    >{{ internal }}</div>`
   }
 }))
 
@@ -115,5 +131,104 @@ describe('custom graph widget', () => {
     expect(
       await screen.findByText(/Custom graph not found: No custom graph was found\./)
     ).toBeInTheDocument()
+  })
+})
+
+const CMK_TOKEN = '0:the-token'
+
+function renderInSharedDashboard(widgetGraphs: Record<string, SharedWidgetGraphs>) {
+  const wrapper = defineComponent({
+    setup() {
+      useProvideCmkToken(CMK_TOKEN)
+      useProvideSharedWidgetGraphs(widgetGraphs)
+      return () => h(DashboardContentTimeSeriesGraph, baseProps as never)
+    }
+  })
+  return render(wrapper)
+}
+
+describe('graph widget on a shared dashboard', () => {
+  test('renders the pre-discovered shell without discovering itself', async () => {
+    renderInSharedDashboard({
+      w1: {
+        graphs: [{ internal: '{"graphs": []}', title: 'My graph', add_to_specification: null }],
+        no_data_message: null
+      }
+    })
+
+    expect(await screen.findByTestId('graph-figure')).toHaveTextContent('{"graphs": []}')
+    expect(postSpy).not.toHaveBeenCalled()
+  })
+
+  test('shows the backend explanation when nothing was discovered', async () => {
+    renderInSharedDashboard({
+      w1: { graphs: [], no_data_message: 'The service has no matching graphs.' }
+    })
+
+    expect(await screen.findByText('The service has no matching graphs.')).toBeInTheDocument()
+    expect(screen.queryByTestId('graph-figure')).not.toBeInTheDocument()
+  })
+
+  test('shows the discovery error of a widget the backend could not resolve', async () => {
+    renderInSharedDashboard({ w1: { error: 'Host not found' } })
+
+    expect(await screen.findByText('Host not found')).toBeInTheDocument()
+  })
+
+  test('reports widgets missing from the pre-discovered shells', async () => {
+    renderInSharedDashboard({})
+
+    expect(await screen.findByText('This graph could not be resolved.')).toBeInTheDocument()
+  })
+
+  test('hands the figure a fetch function instead of letting it fetch by definition', async () => {
+    renderInSharedDashboard({
+      w1: {
+        graphs: [{ internal: '{"graphs": []}', title: 'My graph', add_to_specification: null }],
+        no_data_message: null
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-has-fetch-graph')).toBe('true')
+  })
+})
+
+describe('createSharedGraphFetcher', () => {
+  test('fetches by widget ID with the dashboard token, never by graph definition', async () => {
+    postSpy.mockResolvedValue({
+      data: {
+        metrics: [],
+        time_range: { start: 1_000, end: 2_000, step: 60 },
+        horizontal_lines: [],
+        warnings: [],
+        errors: []
+      },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    } as never)
+
+    const fetched = await createSharedGraphFetcher('w1', CMK_TOKEN)(
+      { internal: '{"graphs": []}' },
+      {
+        requestedTimeRange: { start: 1_000, end: 2_000, step: 60 },
+        consolidationFunction: 'max',
+        combinationMode: null
+      }
+    )
+
+    // The body is matched exactly: the graph definition must not be part of it.
+    expect(postSpy).toHaveBeenCalledWith(
+      '/domain-types/dashboard/actions/fetch-widget-graph-data/invoke',
+      expect.objectContaining({
+        headers: { Authorization: `CMK-TOKEN ${CMK_TOKEN}` },
+        body: {
+          widget_id: 'w1',
+          requested_time_range: { start: 1_000, end: 2_000, step: 60 },
+          consolidation_function: 'max'
+        }
+      })
+    )
+    expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
   })
 })

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 
 import type {
@@ -14,6 +15,8 @@ import type {
   ResponsiveGridDashboardResponse
 } from './dashboard.ts'
 import type { FilterHTTPVars } from './widget.ts'
+
+type DiscoveredGraph = components['schemas']['ApiDiscoveredGraph']
 
 export interface FilterContext {
   context: {
@@ -55,6 +58,16 @@ export interface DashboardPageProperties {
   logged_in_user: string
 }
 
+/**
+ * The graph shells the backend discovered for one graph widget, or why it could not.
+ *
+ * Mirrors the graph discovery endpoints' response, which the interactive dashboard calls
+ * itself - a shared dashboard has no filter values in the browser to call them with.
+ */
+export type SharedWidgetGraphs =
+  | { graphs: DiscoveredGraph[]; no_data_message: string | null }
+  | { error: string }
+
 export interface SharedDashboardPageProperties {
   dashboard: {
     spec: RelativeGridDashboardResponse | ResponsiveGridDashboardResponse
@@ -63,6 +76,7 @@ export interface SharedDashboardPageProperties {
     title: string
   }
   widget_titles: { [widgetId: string]: string }
+  widget_graphs: { [widgetId: string]: SharedWidgetGraphs }
   dashboard_constants: DashboardConstants
   url_params: FilterHTTPVars
   token_value: string

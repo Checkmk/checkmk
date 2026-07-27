@@ -50,6 +50,37 @@ describe('useGraphView', () => {
     expect(view.inspectionActive.value).toBe(false)
   })
 
+  // There is no per-axis undo.
+  test('one reset clears a time-zoom and a value-zoom together', () => {
+    const view = useGraphView(() => baseline)
+    view.handleIntent({ kind: 'zoomTransient', timeRange: { start: 1200, end: 1500, step: 60 } })
+    view.handleIntent({
+      kind: 'zoomTransient',
+      timeRange: { start: 1200, end: 1500, step: 60 },
+      valueRange: { min: 10, max: 20 }
+    })
+
+    view.handleIntent({ kind: 'reset' })
+
+    expect(view.timeRange.value).toEqual(baseline)
+    expect(view.valueRange.value).toBeNull()
+    expect(view.inspectionActive.value).toBe(false)
+  })
+
+  test('reset after a value-only zoom restores auto-scaled Y and leaves X on the baseline', () => {
+    const view = useGraphView(() => baseline)
+    view.handleIntent({
+      kind: 'zoomTransient',
+      timeRange: baseline,
+      valueRange: { min: 0, max: 50 }
+    })
+
+    view.handleIntent({ kind: 'reset' })
+
+    expect(view.timeRange.value).toEqual(baseline)
+    expect(view.valueRange.value).toBeNull()
+  })
+
   test('a pan shifts the X window but preserves a prior value-zoom', () => {
     const view = useGraphView(() => baseline)
     const valueWindow = { min: 0, max: 50 }

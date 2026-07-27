@@ -48,6 +48,16 @@ describe('prepareValueDomain', () => {
     expect(domainMin).toBeLessThanOrEqual(3)
     expect(domainMax).toBeGreaterThanOrEqual(47)
   })
+
+  test('keeps a band well above zero off the zero line', () => {
+    const { axes, yScale } = setup()
+
+    axes.prepareValueDomain(42, 58)
+
+    const [domainMin, domainMax] = yScale.domain()
+    expect(domainMin).toBeGreaterThan(0)
+    expect(domainMax).toBeGreaterThanOrEqual(58)
+  })
 })
 
 describe('drawTimeAxis', () => {

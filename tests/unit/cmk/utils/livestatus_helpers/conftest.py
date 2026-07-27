@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any
 
 import pytest
 from flask import Flask
@@ -24,14 +22,14 @@ def application_context(app: Flask) -> Iterator[None]:
         yield
 
 
-def make_request_context(app: Flask, environ: dict[str, Any] | None = None) -> RequestContext:
+def make_request_context(app: Flask, environ: dict[str, object] | None = None) -> RequestContext:
     if environ is None:
         environ = create_environ()
     return app.request_context(environ)
 
 
 @contextmanager
-def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterator[None]:
+def request_context(app: Flask, environ: dict[str, object] | None = None) -> Iterator[None]:
     with make_request_context(app, environ):
         from cmk.gui.request_globals import set_global_vars
 
@@ -40,14 +38,14 @@ def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterat
 
 
 @contextmanager
-def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
+def application_and_request_context(environ: dict[str, object] | None = None) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
     with application_context(app), request_context(app, environ):
         yield
 
 
 @contextmanager
-def gui_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
+def gui_context(environ: dict[str, object] | None = None) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
     with application_context(app), request_context(app, environ):
         yield

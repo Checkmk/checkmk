@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 from pytest import MonkeyPatch
@@ -563,7 +561,7 @@ def test_ruleset_matcher_get_host_values_tags(
 def test_ruleset_matcher_get_host_values_tags_duplicate_ids(
     monkeypatch: MonkeyPatch,
     rule_spec: RuleConditionsSpec,
-    expected_result: Sequence[Any],
+    expected_result: Sequence[object],
 ) -> None:
     ts = Scenario()
     add_tag_config = TagConfig.from_config(

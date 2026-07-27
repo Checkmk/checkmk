@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -11,7 +10,6 @@ import time
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 from uuid import UUID
 
 import pytest
@@ -195,7 +193,7 @@ def test_try_update_license_usage_next_run_ts_not_reached(omd_root: Path) -> Non
     ],
 )
 def test__parse_cloud_hosts_or_services(
-    livestatus_response: Sequence[Sequence[Any]],
+    livestatus_response: Sequence[Sequence[object]],
     expected_hosts: int,
     excepted_services: int,
 ) -> None:
@@ -941,7 +939,7 @@ def test_serialize_license_usage_report(omd_root: Path) -> None:
     ],
 )
 def test_license_usage_report(
-    raw_report: Mapping[str, Any],
+    raw_report: Mapping[str, object],
     expected_history: LocalLicenseUsageHistory,
 ) -> None:
     history = LocalLicenseUsageHistory.update(

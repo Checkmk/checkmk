@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
-
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -15,57 +11,63 @@ from cmk.utils import render
 
 
 @pytest.mark.parametrize(
-    ["value", "kwargs", "result"],
+    ["value", "result"],
     [
         (
             5,
-            {},
             "5.00 B",
         ),
         (
-            5,
-            {"unit_prefix_type": render.SIUnitPrefixes, "precision": 0},
-            "5 B",
-        ),
-        (
             2300,
-            {},
             "2.25 KiB",
         ),
         (
             -2300,
-            {},
             "-2.25 KiB",
         ),
         (
             int(3e6),
-            {},
             "2.86 MiB",
         ),
         (
-            int(3e6),
-            {"unit_prefix_type": render.SIUnitPrefixes, "precision": 2, "unit": "B/s"},
-            "3.00 MB/s",
-        ),
-        (
             int(4e9),
-            {},
             "3.73 GiB",
         ),
         (
             int(-5e12),
-            {},
             "-4.55 TiB",
         ),
         (
             int(6e15),
-            {},
             "5.33 PiB",
         ),
     ],
 )
-def test_fmt_bytes(value: int, kwargs: Mapping[str, Any], result: str) -> None:
-    assert render.fmt_bytes(value, **kwargs) == result
+def test_fmt_bytes(value: int, result: str) -> None:
+    assert render.fmt_bytes(value) == result
+
+
+def test_fmt_bytes_si_zero_precision() -> None:
+    assert (
+        render.fmt_bytes(
+            5,
+            unit_prefix_type=render.SIUnitPrefixes,
+            precision=0,
+        )
+        == "5 B"
+    )
+
+
+def test_fmt_bytes_si_rate() -> None:
+    assert (
+        render.fmt_bytes(
+            int(3e6),
+            unit_prefix_type=render.SIUnitPrefixes,
+            precision=2,
+            unit="B/s",
+        )
+        == "3.00 MB/s"
+    )
 
 
 @pytest.mark.parametrize(
@@ -128,22 +130,22 @@ def test_percent_scientific(perc: float, result: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ["value", "kwargs", "result"],
+    ["value", "precision", "result"],
     [
         (
             10000486,
-            {"precision": 5},
+            5,
             "10.00049 M",
         ),
         (
             100000000,
-            {"drop_zeroes": False},
+            2,
             "100.00 M",
         ),
     ],
 )
-def test_fmt_number_with_precision(value: float, kwargs: Mapping[str, Any], result: str) -> None:
-    assert render.fmt_number_with_precision(value, **kwargs) == result
+def test_fmt_number_with_precision(value: float, precision: int, result: str) -> None:
+    assert render.fmt_number_with_precision(value, precision=precision) == result
 
 
 @pytest.mark.parametrize(

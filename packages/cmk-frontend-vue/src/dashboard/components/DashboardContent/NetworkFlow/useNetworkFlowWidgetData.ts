@@ -43,14 +43,31 @@ export function useNetworkFlowWidgetData<TResponse, TData>(
   const data = ref<TData | undefined>(undefined) as Ref<TData | undefined>
   const error = ref<NetworkFlowWidgetError | null>(null)
 
+  // Requests can overlap - a refetch may start while an earlier one is still in
+  // flight - and they are not guaranteed to resolve in order. Only the newest
+  // request may write the state, so a slow earlier response cannot overwrite a
+  // newer one.
+  let generation = 0
+
   const fetchData = async (): Promise<void> => {
-    error.value = null
+    const thisGeneration = ++generation
     try {
       // data is deliberately not reset here: a refetch keeps rendering the
       // previous result until the new one arrives, so the widget does not
       // flicker back into its loading state.
-      data.value = transform(await fetchResponse())
+      const transformed = transform(await fetchResponse())
+      if (thisGeneration !== generation) {
+        return
+      }
+      data.value = transformed
+      // The error is cleared here rather than before the request, so a widget
+      // in an error state stays in it until a request actually succeeds instead
+      // of flashing its stale data back on every attempt.
+      error.value = null
     } catch (e) {
+      if (thisGeneration !== generation) {
+        return
+      }
       error.value =
         e instanceof CmkApiError
           ? { variant: 'warning', message: e.message }

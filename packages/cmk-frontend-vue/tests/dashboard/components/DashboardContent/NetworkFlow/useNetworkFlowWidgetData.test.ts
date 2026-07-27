@@ -131,4 +131,52 @@ describe('useNetworkFlowWidgetData', () => {
     resolveSecond({ count: 2 })
     await vi.waitFor(() => expect(state.data.value).toBe('count: 2'))
   })
+
+  it('ignores a stale response that resolves after a newer one', async () => {
+    let resolveFirst: (response: Response) => void = () => {}
+    const fetchResponse = vi
+      .fn()
+      .mockReturnValueOnce(
+        new Promise<Response>((resolve) => {
+          resolveFirst = resolve
+        })
+      )
+      .mockResolvedValueOnce({ count: 2 })
+    const dataParameters = ref<unknown>({ dimension: 'hosts' })
+
+    const state = renderHarness(fetchResponse, dataParameters)
+    dataParameters.value = { dimension: 'autonomous_systems' }
+    await nextTick()
+    await vi.waitFor(() => expect(state.data.value).toBe('count: 2'))
+
+    resolveFirst({ count: 1 })
+    await nextTick()
+
+    expect(state.data.value).toBe('count: 2')
+  })
+
+  it('keeps the error state until a request actually succeeds', async () => {
+    let resolveSecond: (response: Response) => void = () => {}
+    const fetchResponse = vi
+      .fn()
+      .mockRejectedValueOnce(new CmkApiError('Database unreachable', null, ''))
+      .mockReturnValueOnce(
+        new Promise<Response>((resolve) => {
+          resolveSecond = resolve
+        })
+      )
+    const dataParameters = ref<unknown>({ dimension: 'hosts' })
+
+    const state = renderHarness(fetchResponse, dataParameters)
+    await vi.waitFor(() => expect(state.error.value?.message).toBe('Database unreachable'))
+
+    dataParameters.value = { dimension: 'autonomous_systems' }
+    await nextTick()
+    // Still failing as far as the widget knows, so it keeps showing the alert.
+    expect(state.error.value?.message).toBe('Database unreachable')
+
+    resolveSecond({ count: 2 })
+    await vi.waitFor(() => expect(state.error.value).toBeNull())
+    expect(state.data.value).toBe('count: 2')
+  })
 })

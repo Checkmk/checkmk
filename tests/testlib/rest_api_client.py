@@ -1328,6 +1328,14 @@ class GraphClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def fetch_context_menu(self, add_type: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/fetch_context_menu/invoke",
+            query_params={"add_type": add_type},
+            expect_ok=expect_ok,
+        )
+
     def add_to_visual(
         self,
         specification: Mapping[str, Any],

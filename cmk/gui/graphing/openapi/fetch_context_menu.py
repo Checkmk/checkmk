@@ -59,13 +59,12 @@ ENDPOINT_FETCH_CONTEXT_MENU = VersionedEndpoint(
         method="get",
     ),
     permissions=EndpointPermissions(
-        required=permissions.Undocumented(
-            permissions.AnyPerm(
-                [
-                    permissions.Perm("general.see_all"),
-                    permissions.OkayToIgnorePerm("bi.see_all"),
-                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                ]
+        # Assembling the menu asks every visual type and container page type whether the user may
+        # edit it, so which permissions get checked depends on what is registered.
+        required=permissions.DynamicRuntimePerm(
+            description=(
+                "Checks the edit permission of every visual type and container page type that "
+                "could hold the graph, e.g. general.edit_dashboards."
             )
         )
     ),

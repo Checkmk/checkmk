@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 
 """Unit tests for :mod:`tests.testlib.image_manager`.
@@ -18,11 +17,11 @@ The Docker client and its ``images`` collection are mocked so the tests don't
 touch a real Docker daemon.
 """
 
-from typing import Any
 from unittest.mock import MagicMock
 
 import docker.errors
 import pytest
+from docker import DockerClient
 
 from tests.testlib.image_manager import ABCImageManager, RelayImageManager
 
@@ -36,7 +35,7 @@ class _FakeImageManager(ABCImageManager):
 
     def __init__(
         self,
-        client: Any,
+        client: DockerClient,
         *,
         present: set[str] | None = None,
         build_makes_tag_present: bool = True,

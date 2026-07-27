@@ -12,7 +12,7 @@ test suites, since creating and surfacing them depends on the graph implementati
 
 import pytest
 
-from tests.gui_e2e.testlib.playwright.pom.graphing.rrd_injection import InjectedRrd
+from tests.testlib.graphing import InjectedRrd
 from tests.testlib.site import Site
 
 
@@ -36,7 +36,7 @@ def fixture_graph_hosts_high_density(test_site: Site) -> list[str]:
 
 @pytest.fixture(name="graph_rrd_with_gaps", scope="module")
 def fixture_graph_rrd_with_gaps(test_site: Site) -> InjectedRrd:
-    """An RRD with missing samples; inject via `rrd_injection.inject_rrd` (GAPS)."""
+    """An RRD with missing samples; inject via `graphing.inject_rrd` (GAPS)."""
     pytest.skip("graph_rrd_with_gaps is scaffolding: bind inject_rrd to a monitored service.")
 
 
@@ -46,7 +46,7 @@ def fixture_graph_rrd_dst_boundary(test_site: Site) -> InjectedRrd:
 
     DST is a timezone/window concern, not a data shape: set the user timezone to
     a DST-observing zone (e.g. Europe/Berlin) and inject `VARYING` data starting
-    at `rrd_injection.DST_FALL_BACK_BERLIN_UTC`, bound to a monitored service.
+    at `graphing.DST_FALL_BACK_BERLIN_UTC`, bound to a monitored service.
     Use the fall-back instant: it makes local 02:00-02:59 occur twice, which is
     what the "no duplicate X-axis labels" regression (Werk #14830) needs;
     spring-forward only skips the hour and would not exercise it.

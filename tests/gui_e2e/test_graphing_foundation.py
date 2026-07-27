@@ -11,7 +11,7 @@ from tests.gui_e2e.testlib.playwright.pom.graphing.graph_surfaces import (
     GRAPH_SURFACES,
     surfaces_for_edition,
 )
-from tests.gui_e2e.testlib.playwright.pom.graphing.rrd_injection import service_rrd_path
+from tests.testlib.graphing import service_rrd_path
 from tests.testlib.version import CMKEdition
 
 

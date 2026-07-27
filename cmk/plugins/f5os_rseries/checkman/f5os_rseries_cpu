@@ -1,0 +1,12 @@
+title: F5OS Platform CPU Utilization
+agents: snmp
+catalog: hw/network/f5
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the aggregate CPU utilization of an F5 Networks rSeries appliance
+ running F5OS. Reports current, 5-second, 1-minute, and 5-minute average
+ utilization percentages. The 1-minute average is used for threshold evaluation.
+
+discovery:
+ One service is created per device.

@@ -132,7 +132,10 @@ SECTIONS: Sequence[SectionOptions] = (
         title=Title("Performance: IO stats"),
         help_text=Help(
             "WARNING: This section will increase the load of your Checkmk server and "
-            "may increase load of your Database."
+            "may increase load of your Database. "
+            "To see results, you also have to activate 'Create additional service for "
+            "I/O stats bytes' or 'Create additional service for I/O stats requests' "
+            "in 'Oracle performance discovery'."
         ),
         mode="asynchronous",
     ),

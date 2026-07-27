@@ -10,6 +10,7 @@ This test suite verifies that technical graph rendering errors are properly
 caught and transformed into user-friendly messages using make_mk_missing_data_error().
 """
 
+import re
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -92,14 +93,14 @@ class TestGraphWidgetErrorHandling:
             ),
         ],
     )
-    def test_dashlet_init_catches_and_transforms_graph_exceptions(
+    def test_recipes_transforms_graph_exceptions(
         self,
         request_context: None,
         exception_class: type[Exception],
         exception_message: str,
         expected_error_substring: str,
     ) -> None:
-        """Verify that graph exceptions during dashlet initialization are caught and transformed into MKMissingDataError."""
+        """Verify that graph exceptions are transformed into MKMissingDataError."""
 
         mock_dashlet_spec: TemplateGraphDashletConfig = {
             "type": "performance_graph",
@@ -114,9 +115,33 @@ class TestGraphWidgetErrorHandling:
             mock_graph_spec.return_value = mock_spec_instance
 
             dashlet = TemplateGraphDashlet(dashlet=mock_dashlet_spec)
-            assert dashlet._init_exception is not None
-            assert isinstance(dashlet._init_exception, MKMissingDataError)
-            assert expected_error_substring in str(dashlet._init_exception)
+            with pytest.raises(MKMissingDataError, match=re.escape(expected_error_substring)):
+                dashlet.recipes()
+
+    def test_instantiation_does_not_resolve_the_graph(self, request_context: None) -> None:
+        """Serving a dashboard instantiates every widget; resolving queries the core, so the
+        recipes must only be computed once something asks for them."""
+        mock_dashlet_spec: TemplateGraphDashletConfig = {
+            "type": "performance_graph",
+            "graph_render_options": {},
+            "timerange": "25h",
+            "graph_id": "",
+        }
+
+        with patch.object(TemplateGraphDashlet, "build_graph_specification") as mock_graph_spec:
+            dashlet = TemplateGraphDashlet(dashlet=mock_dashlet_spec)
+            assert mock_graph_spec.call_count == 0
+
+            # Reporting the infos the widget's filters use must stay free of graph resolution.
+            assert dashlet.infos() == ["host", "service"]
+            assert mock_graph_spec.call_count == 0
+
+            dashlet.recipes()
+            assert mock_graph_spec.call_count == 1
+
+            # Resolution is memoized: a second consumer must not query the core again.
+            dashlet.default_display_title()
+            assert mock_graph_spec.call_count == 1
 
     def test_resolve_site_missing_host_provides_specific_message(
         self,

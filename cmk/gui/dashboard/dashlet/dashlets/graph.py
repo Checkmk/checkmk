@@ -179,9 +179,16 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         if "timerange" not in self._dashlet_spec:
             self._dashlet_spec["timerange"] = "25h"  # type: ignore[unreachable]
 
+        self._graph_resolved = False
         self._cached_graph_specification: TGraphSpec | None = None
         self._cached_recipes: Sequence[GraphRecipeWithOverrides] | None = None
-        self._init_exception: Exception | None = None
+        self._resolve_exception: Exception | None = None
+
+    def _resolve_graph(self) -> None:
+        """Build the specification and its recipes once, recording rather than raising failures."""
+        if self._graph_resolved:
+            return
+        self._graph_resolved = True
         try:
             self._cached_graph_specification = self.build_graph_specification(
                 self.context if self.has_context() else {}
@@ -190,7 +197,12 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
                 self._cached_graph_specification, active_config
             )
         except Exception as e:
-            self._init_exception = e
+            self._resolve_exception = e
+
+    def graph_specification(self) -> TGraphSpec | None:
+        """The resolved specification, or None when it could not be built."""
+        self._resolve_graph()
+        return self._cached_graph_specification
 
     @staticmethod
     def _compute_graph_recipes(
@@ -216,12 +228,14 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
             raise make_mk_missing_data_error(reason=_("Failed to calculate a graph recipe.")) from e
 
     def recipes(self) -> Sequence[GraphRecipeWithOverrides]:
+        self._resolve_graph()
         if self._cached_recipes is None:
-            assert self._init_exception is not None
-            raise self._init_exception
+            assert self._resolve_exception is not None
+            raise self._resolve_exception
         return self._cached_recipes
 
     def default_display_title(self) -> str:
+        self._resolve_graph()
         if self._cached_recipes:
             return self._cached_recipes[0].recipe.title
         return self.title()
@@ -312,10 +326,10 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         )
 
     def _get_additional_macros(self) -> Mapping[str, str]:
-        if self._cached_graph_specification is None:
+        if (graph_specification := self.graph_specification()) is None:
             return {}
 
-        site = self._cached_graph_specification.site
+        site = graph_specification.site
         return {"$SITE$": site} if site else {}
 
     @classmethod

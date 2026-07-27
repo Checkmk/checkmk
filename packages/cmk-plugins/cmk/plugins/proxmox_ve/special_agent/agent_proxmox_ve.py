@@ -34,7 +34,6 @@ from zoneinfo import ZoneInfo
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
-from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
 from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo, SubscriptionInfo
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
@@ -398,17 +397,14 @@ def _create_node_sections(
         vm for vm in all_vms.values() if vm["node"] == node["node"] and vm["status"] == "running"
     ]
 
-    has_maxcpu = "maxcpu" in node
-    has_maxmem = "maxmem" in node
     yield (
         "proxmox_ve_node_allocation",
-        SectionNodeAllocation(
-            status=node["status"],
-            node_total_cpu=node["maxcpu"] if has_maxcpu else None,
-            allocated_cpu=sum(vm["maxcpu"] for vm in running_vms) if has_maxcpu else None,
-            node_total_mem=node["maxmem"] if has_maxmem else None,
-            allocated_mem=sum(vm["maxmem"] for vm in running_vms) if has_maxmem else None,
-        ).model_dump_json(),
+        {
+            "status": node["status"],
+            "node_total_cpu": node.get("maxcpu"),
+            "node_total_mem": node.get("maxmem"),
+            "running_vms": running_vms,
+        },
     )
 
     yield (

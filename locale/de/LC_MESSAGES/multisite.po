@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-23 17:47+0000\n"
+"PO-Revision-Date: 2026-07-27 13:47+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -5394,10 +5394,10 @@ msgid "Age of Anti-Virus signature extended database"
 msgstr "Alter der erweiterten Anti-Virus-Signaturdatenbank"
 
 msgid "Age of Intrusion Prevention signature"
-msgstr "Alter der Intrusion-Prevention-Signatur"
+msgstr "Alter der Signatur zur Angriffsprävention"
 
 msgid "Age of Intrusion Prevention signature extended database"
-msgstr "Alter der Intrusion-Prevention-Signatur (erweiterte Datenbank)"
+msgstr "Alter der Signatur zur Angriffsprävention erweiterte Datenbank"
 
 msgid "Age of OS build version"
 msgstr "Alter der OS-Build-Version"
@@ -8176,13 +8176,13 @@ msgid "Autodiscovery"
 msgstr "Auto-Erkennung"
 
 msgid "Autoextend is expected to be OFF"
-msgstr "Automatische Erweiterung erwartet"
+msgstr "Automatische Erweiterung wird als OFF erwartet"
 
 msgid "Autoextend is expected to be ON"
-msgstr "Automatische Erweiterung erwartet"
+msgstr "Automatische Erweiterung wird als ON erwartet"
 
 msgid "Autoextend will be ignored"
-msgstr "Autoextend wird ignoriert"
+msgstr "Automatische Erweiterung wird ignoriert"
 
 msgid "Autoextensible"
 msgstr "Automatisch erweiterbar"
@@ -9366,7 +9366,7 @@ msgid "Azure subscription name"
 msgstr "Name der Azure-Subskription"
 
 msgid "Azure usage details (costs) (deprecated)"
-msgstr "Azure Auslastungsdetails (Kosten) (veraltet)"
+msgstr "Azure-Auslastungsdetails (Kosten) (veraltet)"
 
 msgid "Azure virtual machines"
 msgstr "Virtuelle Maschinen von Azure"
@@ -9557,7 +9557,7 @@ msgid "Backend Conn. requests"
 msgstr "Backend-Verbindungsanfragen"
 
 msgid "Backend Conn. retry"
-msgstr "Backend-Verbindungsversuch"
+msgstr "Erneuter Backend-Verbindungsversuch"
 
 msgid "Backend Conn. reuses"
 msgstr "Wiederverwendungen der Backend-Verbindung"
@@ -9830,7 +9830,7 @@ msgid "Batch ID"
 msgstr "Batch-ID"
 
 msgid "Batch Requests/sec"
-msgstr "Batch-Anfragen/sek"
+msgstr "Batch-Anfragen/sec"
 
 msgid "Batches"
 msgstr "Batches"
@@ -19222,7 +19222,6 @@ msgstr "Alter der aufgeschobenen Dateien"
 msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
 
-#, fuzzy
 msgid ""
 "Define Distinguished Names or Common Names of the LDAP groups to add users "
 "this role. e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or "
@@ -19230,10 +19229,12 @@ msgid ""
 "href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group "
 "Settings</a>."
 msgstr ""
-"DN der LDAP-Gruppe, um Benutzer der Rolle zuzuordnen, z.B. <tt>CN=cmk-"
-"users,OU=groups,DC=example,DC=com</tt><br> Diese Gruppe muss innerhalb der "
-"<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP-"
-"Gruppeneinstellungen</a> konfiguriert worden sein."
+"Legen Sie die Distinguished Names oder Common Names der LDAP-Gruppen fest, "
+"zu denen Benutzer dieser Rolle hinzugefügt werden sollen. z. B. <tt>CN=cmk-"
+"benutzer,OU=groups,DC=example,DC=com</tt><br> oder <tt>cmk-benutzer</tt><br>"
+"Diese Gruppe muss im Rahmen der <a "
+"href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP-"
+"Gruppeneinstellungen</a> definiert sein."
 
 msgid "Define OAuth parameters"
 msgstr "OAuth-Parameter definieren"
@@ -22948,9 +22949,8 @@ msgstr ""
 msgid "Earliest entry in journal"
 msgstr "Frühester Eintrag im Journal"
 
-#, fuzzy
 msgid "Eaton UPS: temperature and humidity sensors"
-msgstr "Temperatur/Luftfeuchtigkeit für Eaton UPS"
+msgstr "Eaton UPS: Temperatur- und Luftfeuchtigkeitssensoren"
 
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -96055,11 +96055,10 @@ msgstr "Das Installationsskript des Relays herunterladen"
 msgid "Install WSL2"
 msgstr "WSL2 installieren"
 
-#, fuzzy
 msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2)."
 msgstr ""
 "Das Relay unter Windows läuft innerhalb von WSL2 (Windows Subsystem for "
-"Linux 2). "
+"Linux 2)."
 
 msgid "Run the command below in an elevated PowerShell to install it."
 msgstr ""

@@ -1,0 +1,12 @@
+title: F5OS PSU
+agents: snmp
+catalog: hw/network/f5
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the power supply units of an F5 Networks rSeries appliance running
+ F5OS. Reports status (Active, Standby, or Fault), input voltage and current,
+ output power, and temperature for each PSU.
+
+discovery:
+ One service is created per power supply unit.

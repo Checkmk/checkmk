@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import functools
+import json
 import operator
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -197,15 +198,26 @@ type ConsolidationFunction = (
 )
 
 
+def canonical_attribute_filter_key(attribute_filter: Mapping[str, object]) -> str:
+    """Stable, hashable identity for an attribute-filter wire mapping."""
+    return json.dumps(attribute_filter, sort_keys=True, separators=(",", ":"))
+
+
 @dataclass(frozen=True)
 class QueryDataKey:
     metric_name: MetricName
-    resource_attributes: tuple[GraphLineQueryAttribute, ...]
-    scope_attributes: tuple[GraphLineQueryAttribute, ...]
-    data_point_attributes: tuple[GraphLineQueryAttribute, ...]
     consolidation_function: ConsolidationFunction
-    # Excluded from key identity: unhashable and redundant with the three lists it derives from.
-    attribute_filter: Mapping[str, object] | None = field(default=None, compare=False)
+    attribute_filter: Mapping[str, object]
+
+    def __hash__(self) -> int:
+        # The filter mapping is unhashable, so identity comes from its canonical serialization.
+        return hash(
+            (
+                self.metric_name,
+                self.consolidation_function,
+                canonical_attribute_filter_key(self.attribute_filter),
+            )
+        )
 
 
 @dataclass(frozen=True)

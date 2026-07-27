@@ -320,7 +320,7 @@ def _paint_time_graph_cmk(
         vue_graphs = [
             asdict(
                 to_cmk_time_series_graph(
-                    graph,
+                    built.graph,
                     size=Size(
                         width=graph_size[0],
                         height=graph_size[1],
@@ -331,7 +331,7 @@ def _paint_time_graph_cmk(
                     add_type=graph_specification.add_visual_type(),
                 )
             )
-            for graph in engine_graphs
+            for built in engine_graphs
         ]
         # TODO: Handle the case of shared dashobards (request.has_var("cmk-token"))
         vue_html = HTMLWriter.render_vue_component(

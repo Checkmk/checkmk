@@ -187,8 +187,8 @@ def test_rrd_metric_site_id_round_trips() -> None:
 
 def test_template_round_trip_is_lossless() -> None:
     codec = graph_codec()
-    built_graphs = _rich_graphs()
-    payload = serialize_graphs(built_graphs)
+    graphs = _rich_graphs()
+    payload = serialize_graphs(graphs)
     # The payload is plain JSON.
     assert json.loads(json.dumps(payload)) == payload
     # Each graph carries its own kind; there is no separate envelope field.

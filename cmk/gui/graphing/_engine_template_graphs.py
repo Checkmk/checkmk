@@ -23,6 +23,7 @@ from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
 
 from ._engine_dispatch import (
+    BuiltGraph,
     CommonGraphOptions,
     EngineGraphDispatcher,
     EvaluatedGraphs,
@@ -56,7 +57,7 @@ def build_template_graphs(
     registered_graphs: Sequence[GraphFromAPI],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     fetch_metric_names: RRDFetchMetricNames,
-) -> Sequence[Graph]:
+) -> Sequence[BuiltGraph]:
     graphs = build_matched_graphs(
         localizer=translate_to_current_language,
         fetch_metric_names=fetch_metric_names,
@@ -67,7 +68,7 @@ def build_template_graphs(
     )
     for graph in graphs:
         _assert_uniform_unit(graph)
-    return graphs
+    return [BuiltGraph(graph=graph, specification=None) for graph in graphs]
 
 
 def evaluate_template_graphs(

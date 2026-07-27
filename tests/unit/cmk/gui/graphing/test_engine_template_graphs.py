@@ -86,12 +86,15 @@ def test_template_lifecycle_discover_and_update() -> None:
     # given. The unclaimed metric becomes a fallback single-metric graph that carries the four threshold
     # rules the engine builds itself.
     fetch_data = _FakeRRDFetchData()
-    graphs = build_template_graphs(
-        _SPEC,
-        registered_graphs=[],
-        registered_metrics={},
-        fetch_metric_names=_FakeRRDFetchMetricNames(),
-    )
+    graphs = [
+        built.graph
+        for built in build_template_graphs(
+            _SPEC,
+            registered_graphs=[],
+            registered_metrics={},
+            fetch_metric_names=_FakeRRDFetchMetricNames(),
+        )
+    ]
     [fallback] = [graph for graph in graphs if graph.name == _METRIC]
     assert [
         rule.curve.quantity.scalar_kind
@@ -124,8 +127,8 @@ def test_template_lifecycle_discover_and_update() -> None:
 def test_template_graphs_filter_by_graph_id() -> None:
     def _build(graph_id: str | None) -> Sequence[str]:
         return [
-            graph.name
-            for graph in build_template_graphs(
+            built.graph.name
+            for built in build_template_graphs(
                 TemplateGraphSpecification(
                     site=None,
                     host_name=HostAddress("h"),

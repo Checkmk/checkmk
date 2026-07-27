@@ -21,6 +21,17 @@ from ._engine_serialization import (
     Json,
     time_range_of,
 )
+from ._graph_specification import GraphSpecification
+
+
+@dataclass(frozen=True)
+class BuiltGraph:
+    # An engine graph bundled with the legacy specification it can be added to (dashboard, report,
+    # graph collection, custom graph). ``specification`` is None for graph kinds that offer no "Add
+    # to" action; otherwise it carries the concrete per-graph specification the add-to endpoints
+    # replay.
+    graph: Graph
+    specification: GraphSpecification | None
 
 
 @dataclass(frozen=True, kw_only=True)

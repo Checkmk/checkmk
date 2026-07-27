@@ -11,6 +11,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.graphing._engine_dispatch import BuiltGraph
 from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing.openapi import discover_template_graphs as discover_module
@@ -18,16 +19,21 @@ from cmk.livestatus_client import MKLivestatusSocketError
 from tests.testlib.rest_api_client import ClientRegistry
 
 
-def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[Graph]]:
-    def _build(specification: TemplateGraphSpecification, **_kwargs: object) -> Sequence[Graph]:
+def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[BuiltGraph]]:
+    def _build(
+        specification: TemplateGraphSpecification, **_kwargs: object
+    ) -> Sequence[BuiltGraph]:
         graph_id = specification.graph_id
-        if graph_id is not None:
-            return [
+        selected = (
+            [
                 graph
                 for graph in graphs
                 if graph.name == graph_id or graph.name == graph_id.removeprefix("METRIC_")
             ]
-        return graphs
+            if graph_id is not None
+            else graphs
+        )
+        return [BuiltGraph(graph=graph, specification=None) for graph in selected]
 
     return _build
 
@@ -60,10 +66,10 @@ def test_discover_template_graphs_passes_the_specification_to_the_fetch(
 ) -> None:
     captured: dict[str, object] = {}
 
-    def _build(specification: TemplateGraphSpecification, **kwargs: object) -> Sequence[Graph]:
+    def _build(specification: TemplateGraphSpecification, **kwargs: object) -> Sequence[BuiltGraph]:
         captured["specification"] = specification
         captured.update(kwargs)
-        return [Graph(name="g", title="t", kind="template")]
+        return [BuiltGraph(graph=Graph(name="g", title="t", kind="template"), specification=None)]
 
     monkeypatch.setattr(discover_module, "build_template_graphs", _build)
 

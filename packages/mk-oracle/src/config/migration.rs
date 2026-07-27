@@ -366,15 +366,18 @@ pub fn convert(
     out.push_str(&format!(
         "# --- Converted from {source_path} at {timestamp} ---\n"
     ));
-    for line in legacy.lines() {
-        out.push_str("# ");
-        out.push_str(line);
-        out.push('\n');
-    }
 
     out.push_str("# --- Known environment variables defined in legacy config ---\n");
     for (name, value) in variables {
-        out.push_str(&format!("# {name} {value}\n"));
+        if name == "DBUSER"
+            || name == "ASMUSER"
+            || name.starts_with("DBUSER_")
+            || name.starts_with("REMOTE_INSTANCE_")
+        {
+            out.push_str(&format!("# {name} ***\n"));
+        } else {
+            out.push_str(&format!("# {name} {value}\n"));
+        }
     }
 
     for (name, value) in &invalid_remotes {
@@ -948,7 +951,7 @@ mod tests {
         assert!(result.starts_with(
             "# --- Converted from /test/mk_oracle.cfg at 2026-06-15 12:00:00 UTC ---\n"
         ));
-        assert!(result.contains("# DBUSER='checkmk:secret::localhost::XE'"));
+        assert!(result.contains("# DBUSER ***"));
         assert!(result.contains("# --- Known environment variables defined in legacy config ---\n"));
         assert!(result.contains("# --- Unified Config ---\n"));
         assert!(result.contains("hostname: localhost"));
@@ -964,19 +967,6 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("DBUSER not defined"), "got: {err}");
-    }
-
-    #[test]
-    fn test_convert_preserves_all_lines() {
-        let legacy = "DBUSER='user:pass:::'\n\
-                       ASMUSER='/::SYSASM:::'\n\
-                       CACHE_MAXAGE=600\n\
-                       REMOTE_INSTANCE_XE='user:pass::host:1521::XE::'\n";
-        let vars = HashMap::from([("DBUSER".into(), "user:pass::::".into())]);
-        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
-        for line in legacy.lines() {
-            assert!(result.contains(&format!("# {line}")), "missing: {line}");
-        }
     }
 
     #[test]

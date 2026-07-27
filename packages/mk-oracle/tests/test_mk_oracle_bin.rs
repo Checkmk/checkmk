@@ -329,14 +329,8 @@ fn test_migrate_config_yaml_structure() {
             .find(|l| l.starts_with(&prefix))
             .map(|l| &l[prefix.len()..])
     };
-    assert_eq!(
-        env_value_of("DBUSER"),
-        Some("c##checkmk:********::localhost:1521:")
-    );
-    assert_eq!(
-        env_value_of("ASMUSER"),
-        Some("asm-user:asm-password:SYSASM:ignored:ignored:")
-    );
+    assert_eq!(env_value_of("DBUSER"), Some("***"));
+    assert_eq!(env_value_of("ASMUSER"), Some("***"));
     assert_eq!(env_value_of("CACHE_MAXAGE"), Some("601"));
     assert_eq!(env_value_of("OLRLOC"), Some("/etc/oracle/olr.loc"));
     // assert_eq!(env_value_of("ONLY_SIDS"), Some("..."));

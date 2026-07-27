@@ -208,7 +208,7 @@ fn log_info_optional(args: &Args, level: log::Level, environment: &Env, log_avai
 }
 fn create_info_text(level: &log::Level, environment: &Env) -> String {
     format!(
-        "\n  - Log level: {}\n  - Log dir: {}\n  - Temp dir: {}\n  - MK_CONFDIR: {}",
+        "\n  - Log level: {}\n  - Log dir: {}\n  - Temp dir: {}\n  - MK_CONFDIR: {}\n  - MK_LIBDIR: {}",
         level,
         environment
             .log_dir()
@@ -219,6 +219,7 @@ fn create_info_text(level: &log::Level, environment: &Env) -> String {
             .unwrap_or_else(|| Path::new("."))
             .display(),
         constants::get_env_value(constants::environment::CONFIG_DIR_ENV_VAR, "undefined"),
+        constants::get_env_value(constants::environment::LIB_DIR_ENV_VAR, "undefined"),
     )
 }
 

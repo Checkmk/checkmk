@@ -30,7 +30,7 @@ pub struct Args {
     /// Sends log to stderr.
     #[arg(short = 'l', long)]
     pub display_log: bool,
-    /// Prints config, parameters, important variables into the log file
+    /// Prints important variables and other environment information into the log file: MK_LIBDIR, MK_CONFDIR, temp dir, lo dir, log level
     #[arg(long)]
     pub print_info: bool,
 

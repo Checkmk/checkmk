@@ -187,7 +187,13 @@ fn test_print_info() {
         .output() // exit code varies: no Oracle runtime on Linux → exit 1
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
-    for expected in ["Log level", "Log dir", "Temp dir", "MK_CONFDIR"] {
+    for expected in [
+        "Log level",
+        "Log dir",
+        "Temp dir",
+        "MK_CONFDIR",
+        "MK_LIBDIR",
+    ] {
         assert!(
             stderr.contains(expected),
             "Missing in --print-info output: {expected}"

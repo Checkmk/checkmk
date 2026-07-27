@@ -300,8 +300,50 @@ class AddToContainerResponse:
 
 
 @api_model
-class ExportRequest(GraphInternalRepresentation):
+class ExportRequest:
+    # Not a GraphInternalRepresentation: the export pages render from the legacy specification, the
+    # same one the add-to actions replay. The consolidation function and the range are the ones the
+    # graph currently shows - unlike the add-to actions, the export does honour them.
+    specification: dict[str, object] = api_field(
+        example={
+            "graph_type": "template",
+            "site": "mysite",
+            "host_name": "my-host",
+            "service_description": "CPU load",
+            "graph_id": "cpu_load",
+        },
+        description=(
+            "The specification of the graph to export, as returned by the discover actions."
+        ),
+    )
     target: Literal["graph_export", "graph_image"] = api_field(
         example="graph_image",
         description="How to export the graph",
+    )
+    consolidation_function: ApiConsolidation = api_field(
+        description="The consolidation function the graph is displayed with.",
+        example="avg",
+        default="max",
+    )
+    time_start: int | None = api_field(
+        description="Start of the displayed range, as a UNIX timestamp. 25 hours ago when omitted.",
+        example=1781524800,
+        default=None,
+    )
+    time_end: int | None = api_field(
+        description="End of the displayed range, as a UNIX timestamp. Now when omitted.",
+        example=1781528400,
+        default=None,
+    )
+
+
+@api_model
+class ExportResponse:
+    download_url: str = api_field(
+        description=(
+            "The URL the browser has to follow to receive the exported file. It answers with a "
+            "Content-Disposition attachment, so following it downloads the file rather than "
+            "leaving the graph."
+        ),
+        example="graph_image.py?request=%7B%22specification%22%3A+%7B%7D%7D",
     )

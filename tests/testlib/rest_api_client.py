@@ -1336,6 +1336,28 @@ class GraphClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def export(
+        self,
+        specification: Mapping[str, Any],
+        target: str,
+        consolidation_function: str = "max",
+        time_start: int | None = None,
+        time_end: int | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/export/invoke",
+            body={
+                "specification": specification,
+                "target": target,
+                "consolidation_function": consolidation_function,
+                "time_start": time_start,
+                "time_end": time_end,
+            },
+            expect_ok=expect_ok,
+        )
+
     def add_to_visual(
         self,
         specification: Mapping[str, Any],

@@ -11,6 +11,17 @@ from cmk.gui.graphing._graph_specification import GraphSpecification, parse_grap
 from cmk.gui.openapi.utils import ProblemException
 
 
+def parse_specification(specification: Mapping[str, object]) -> GraphSpecification:
+    try:
+        return parse_graph_specification(dict(specification))
+    except (ValueError, TypeError, KeyError) as exc:
+        raise ProblemException(
+            status=400,
+            title="Invalid graph specification",
+            detail=f"Cannot parse the graph specification: {exc}",
+        ) from exc
+
+
 class AddableGraph:
     # The add-to backends address a graph by its legacy specification, not by the engine's graph
     # definition: they store the specification and replay it whenever the target is rendered. Only
@@ -21,14 +32,7 @@ class AddableGraph:
 
     @classmethod
     def parse(cls, specification: Mapping[str, object]) -> AddableGraph:
-        try:
-            parsed = parse_graph_specification(dict(specification))
-        except (ValueError, TypeError, KeyError) as exc:
-            raise ProblemException(
-                status=400,
-                title="Invalid graph specification",
-                detail=f"Cannot parse the graph specification: {exc}",
-            ) from exc
+        parsed = parse_specification(specification)
         if (add_type := parsed.add_visual_type()) is None:
             raise ProblemException(
                 status=400,

@@ -33,7 +33,6 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
@@ -265,9 +264,6 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
         entry["id"]: entry for entry in data["cluster"]["resources"] if entry["type"] == "storage"
     }
 
-    ha_manager_status = SectionHaManagerCurrent.from_json_list(
-        data["cluster"]["ha"]["status"]["current"]
-    )
     cluster_name = next(
         (item["name"] for item in data["cluster"]["status"] if item.get("type") == "cluster"),
         "",
@@ -342,7 +338,6 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
             replications,
             all_storages,
             node_storage,
-            ha_manager_status,
             data,
         ):
             sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(content)}\n")
@@ -374,7 +369,6 @@ def _create_node_sections(
     replications: Mapping[str, Any],
     all_storages: Mapping[str, Any],
     node_storage: Mapping[str, Mapping[str, Sequence[StorageLink]]],
-    ha_manager_status: SectionHaManagerCurrent,
     data: Any,
 ) -> Iterable[tuple[str, object]]:
     yield (
@@ -447,7 +441,7 @@ def _create_node_sections(
         },
     )
 
-    yield "proxmox_ve_ha_manager_status", ha_manager_status.model_dump()
+    yield "proxmox_ve_ha_manager_status", data["cluster"]["ha"]["status"]["current"]
     if "mem" in node and "maxmem" in node:
         yield (
             "proxmox_ve_mem_usage",

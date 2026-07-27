@@ -1424,6 +1424,20 @@ class GraphClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def discover_custom_graphs(
+        self,
+        custom_graph: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/discover_custom_graphs/invoke",
+            body={
+                "custom_graph": custom_graph,
+            },
+            expect_ok=expect_ok,
+        )
+
     def discover_problem_percentage_graphs(
         self,
         context: Mapping[str, Mapping[str, str]],

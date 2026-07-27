@@ -6,6 +6,7 @@ py_cmk_test(
     size = "small",
     srcs = [
         "test_apache_status.py",
+        "test_isc_dhcpd.py",
     ],
     tags = ["legacy-python"],
     use_project_pytest_config = True,

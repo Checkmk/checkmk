@@ -1,0 +1,13 @@
+title: F5OS Tenant
+agents: snmp
+catalog: hw/network/f5
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the operational state of BIG-IP tenant instances running on an F5
+ Networks rSeries appliance. Alerts when a tenant is not in the Running state.
+ Transient states (Starting, Stopping) yield WARNING; all other non-running
+ states yield CRITICAL.
+
+discovery:
+ One service is created per tenant instance.

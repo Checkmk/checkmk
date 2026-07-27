@@ -17,7 +17,7 @@ from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.user_connection_config_types import (
     ConfigurableUserConnectionSpec,
     HtpasswdUserConnectionConfig,
@@ -191,8 +191,18 @@ def distributed_saml_supported() -> bool:
 def _connection_available_on_site(
     connection_config: Mapping[str, object], site_config: SiteConfiguration
 ) -> bool:
-    if site_is_local(site_config):
-        return True
+    """Whether the connection may be used on the site.
+
+    In the ultimatemt edition a customer-scoped connection is only synchronized to
+    and may only log users in on the sites of its customer; a globally scoped
+    connection is available on every site. The central site belongs to the provider
+    customer like any other site. Outside the ultimatemt edition the customer API
+    stub treats every scope as global.
+
+    This resolves the customer's sites through `sites.mk` and therefore only works
+    on the central site; :func:`_may_authenticate_on_current_site` answers the
+    question for the site running this code, including remote sites.
+    """
     _customer_api = customer_api()
     customer = _customer_api.get_customer_id(connection_config)
     if _customer_api.is_global(customer):
@@ -287,13 +297,15 @@ def sites_with_dangling_login_reference(
     connection_id: str,
     customer: str | None,
 ) -> list[SiteId]:
-    """Sites that reference the connection for login but would no longer receive it.
+    """Sites that reference the connection for login but could no longer use it.
 
     In the ultimatemt edition a connection is only synchronized to the sites of its
-    customer (or to all sites if it is scoped globally). A remote site that explicitly
-    lists the connection in its ``authentication_connections`` but belongs to a
-    different customer would be left with a dead login reference. The central site is
-    exempt: as the configuration master it always has every connection.
+    customer (or to all sites if it is scoped globally) and may only log users in on
+    those sites. A site that explicitly lists the connection in its
+    ``authentication_connections`` but belongs to a different customer would be left
+    with a dead login reference. The central site is no exception: it always holds the
+    connection's configuration as the configuration master, but for login it belongs
+    to the provider customer like any other site.
 
     Sites using the ``("all", [types])`` shorthand (or lacking the key, which defaults
     to it) resolve their connections dynamically and simply skip connections that are
@@ -312,7 +324,6 @@ def sites_with_dangling_login_reference(
         site_id
         for site_id, site_config in site_configs.items()
         if site_id not in receiving_sites
-        and not site_is_local(site_config)
         and _explicitly_references_connection(site_config, connection_id)
     ]
 
@@ -330,15 +341,14 @@ def login_connections_of_other_customer(
     site, so the login reference would be dead after the change. The IDs of such
     connections are returned (deduplicated, in reference order).
 
-    The central site is exempt: as the configuration master it always has every
-    connection. Connections the site references but that no longer exist are ignored;
-    they are dangling for an unrelated reason and not this check's concern.
+    The central site is no exception: it always holds every connection's configuration
+    as the configuration master, but for login it belongs to the provider customer
+    like any other site. Connections the site references but that no longer exist are
+    ignored; they are dangling for an unrelated reason and not this check's concern.
 
     Outside the ultimatemt edition the customer API stub treats every scope as global,
     so this always returns an empty list.
     """
-    if site_is_local(site_config):
-        return []
     auth_connections = site_config["authentication_connections"]
     if not isinstance(auth_connections, list):
         # "disabled" references nothing; the ("all", [types]) form is
@@ -382,18 +392,41 @@ def _resolve_authentication_connections(
     return resolved
 
 
+def _may_authenticate_on_current_site(connection_config: Mapping[str, object]) -> bool:
+    """Whether the connection may log users in on the site running this code.
+
+    In the ultimatemt edition a customer-scoped connection may only log users in
+    on the sites of its customer. The central site is no exception: it holds every
+    connection's configuration as the configuration master, but for login it
+    belongs to the provider customer like any other site. Unlike
+    :func:`_connection_available_on_site` this also works on remote sites, where
+    `sites.mk` (and with it the customer-to-site mapping) is not available.
+
+    Outside the ultimatemt edition the customer API stub treats every scope as
+    global, so this always returns True.
+    """
+    _customer_api = customer_api()
+    customer = _customer_api.get_customer_id(connection_config)
+    return _customer_api.is_global(customer) or _customer_api.is_current_customer(customer)
+
+
 def get_saml_connections_for_current_site() -> dict[str, SAMLUserConnectionConfig]:
     """SAML connections available for login authentication on the current site.
 
     Returns the connections explicitly listed in the site's
-    `authentication_connections`. On the central site the data lives in
-    `sites.mk`; on a remote site it arrives via the global
-    `authentication_connections` populated by `get_site_globals()`.
+    `authentication_connections` that are scoped globally or to the site's own
+    customer. On the central site the data lives in `sites.mk`; on a remote site
+    it arrives via the global `authentication_connections` populated by
+    `get_site_globals()`.
     """
-    return _resolve_authentication_connections(
-        effective_authentication_connections(active_config.sites[omd_site()]),
-        get_active_saml_connections(),
-    )
+    return {
+        connection_id: connection
+        for connection_id, connection in _resolve_authentication_connections(
+            effective_authentication_connections(active_config.sites[omd_site()]),
+            get_active_saml_connections(),
+        ).items()
+        if _may_authenticate_on_current_site(connection)
+    }
 
 
 UserConnections = list[ConfigurableUserConnectionSpec] | Sequence[ConfigurableUserConnectionSpec]

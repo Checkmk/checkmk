@@ -260,9 +260,8 @@ impl Section {
     ///   so the search roots are still used.
     ///
     /// Each candidate may be either a file or a directory;
-    /// in the directory case the lookup stem is the custom-metric item name
-    /// (or the section header name for predefined sections). Version variants
-    /// follow the `<name>@<min_version>.sql` convention.
+    /// in the directory case the lookup stem is [`Self::query_name`]. Version
+    /// variants follow the `<name>@<min_version>.sql` convention.
     fn resolve_path_query(
         &self,
         instance_version: InstanceNumVersion,
@@ -283,7 +282,7 @@ impl Section {
                 log::info!(
                     "Resolved `path:` {:?} for section '{}' to SQL file {:?}",
                     path,
-                    self.display_name(),
+                    self.query_name(),
                     &sql_file
                 );
                 Some(contents)
@@ -308,17 +307,15 @@ impl Section {
             Some(format!(
                 "Could not find a SQL file for section '{}' at the provided `path:` \
                 {:?}; tried candidates {:?}",
-                self.display_name(),
+                self.query_name(),
                 configured_path,
                 candidates
             ))
         } else if self.is_custom_metric() && self.inline_sql.is_none() {
+            let name = self.query_name();
             Some(format!(
-                "No SQL for custom metric '{}': it has neither an inline `sql:` nor a \
-                `path:`, and no '{}.sql' was found in the SQL search dirs {:?}",
-                self.display_name(),
-                self.directory_lookup_stem(),
-                candidates
+                "No SQL for custom metric '{name}': it has neither an inline `sql:` nor a \
+                `path:`, and no '{name}.sql' was found in the SQL search dirs {candidates:?}"
             ))
         } else {
             None
@@ -338,10 +335,7 @@ impl Section {
         instance_version: InstanceNumVersion,
     ) -> Option<(PathBuf, String)> {
         let (dir, stem): (PathBuf, String) = if candidate.is_dir() {
-            (
-                candidate.to_path_buf(),
-                self.directory_lookup_stem().to_owned(),
-            )
+            (candidate.to_path_buf(), self.query_name().to_owned())
         } else {
             let parent = candidate.parent()?.to_path_buf();
             let stem = candidate.file_stem()?.to_str()?.to_owned();
@@ -350,15 +344,11 @@ impl Section {
         read_versioned_query(&dir, &stem, instance_version)
     }
 
-    /// Stem used when `path:` resolves to a directory: the custom-metric item
-    /// name for custom metrics, the section header name otherwise.
-    fn directory_lookup_stem(&self) -> &str {
-        self.display_name()
-    }
-
-    /// Name this section goes by in logs and file lookups: the custom-metric
-    /// item name where there is one, the section header name otherwise.
-    fn display_name(&self) -> &str {
+    /// The name of this section's query: the custom-metric item name where
+    /// there is one, the section header name otherwise. It both identifies the
+    /// section in the query-resolution logs and serves as the `<stem>.sql` file
+    /// name when `path:` resolves to a directory.
+    fn query_name(&self) -> &str {
         self.item_value
             .as_ref()
             .map(|iv| iv.as_str())

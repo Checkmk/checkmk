@@ -9,7 +9,6 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
@@ -62,9 +61,6 @@ const installCommand = computed(() => {
           )
         }}
       </CmkParagraph>
-      <CmkAlertBox variant="info">
-        {{ _t('Note that the installation requires administrator privileges.') }}
-      </CmkAlertBox>
 
       <GenerateToken
         v-model="ott"

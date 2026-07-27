@@ -1029,7 +1029,7 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds timeout) {
 }
 
 namespace {
-constexpr std::chrono::milliseconds time_grane{250};
+constexpr std::chrono::milliseconds updater_time_grane{50};
 }  // namespace
 
 void TheMiniBox::readAndAppend(HANDLE read_handle) {
@@ -1043,21 +1043,6 @@ void TheMiniBox::readAndAppend(HANDLE read_handle) {
               wtools::ToUtf8(exec_));
 }
 
-bool TheMiniBox::waitForBreakLoop(std::chrono::milliseconds timeout) {
-    if (timeout < time_grane) {
-        XLOG::d("Plugin '{}' hits timeout", wtools::ToUtf8(exec_));
-        return true;
-    }
-
-    if (waitForStop(time_grane)) {
-        XLOG::d("Plugin '{}' gets signal stop [{}], timeout left [{}ms]!",
-                wtools::ToUtf8(exec_), stop_set_, timeout.count());
-        return true;
-    }
-
-    return false;
-}
-
 /// Modified version to be used by Updater
 bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     if (stop_set_) {
@@ -1068,39 +1053,49 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     auto remaining_timeout = timeout;
 
     const auto pid = getProcessId();
+    // We provide not empty output
+    constexpr std::string_view text{
+        "<<<cmk_update_agent_alive>>>\nThis marker is added by the Windows agent to by pass the exit state check of cmk-update-agent.It's not consumed by any check on Checkmk server side.\n"};
+    std::vector<char> buf{text.begin(), text.end()};
+    tools::AddVector(process_->getData(), buf);
     while (remaining_timeout > std::chrono::milliseconds::zero()) {
         readAndAppend(read_handle);
-        if (waitForStop(time_grane)) {
+        if (waitForStop(updater_time_grane)) {
             break;
         }
 
         // Check if process has exited
         auto [exitCode, error] = wtools::GetProcessExitCode(pid);
-        if (error == 0 && exitCode != STILL_ACTIVE) {
+        if (error == ERROR_INVALID_PARAMETER ||
+            (error == 0 && exitCode != STILL_ACTIVE)) {
             // Process has exited, read any remaining data
+            // ERROR_INVALID_PARAMETER is a special case, it means that the
+            // process has already exited and we cannot get its exit code. In
+            // this case, we will just log that the exit code is unknown.
             readWhatLeft();
-            if (process_->getData().empty()) {
-                setPhantomResult();
-            }
+            XLOG::d.i("Updater success {}",
+                      error == ERROR_INVALID_PARAMETER
+                          ? "Exit code is unknown"
+                          : fmt::format("Process exits {}", exitCode));
             return true;
         }
-        remaining_timeout -= time_grane;
+        remaining_timeout -= updater_time_grane;
     }
 
-    // Timeout expired or break condition met
-    readWhatLeft();
     auto [exitCode, error] = wtools::GetProcessExitCode(pid);
-    if (error == 0 && exitCode != STILL_ACTIVE && process_->getData().empty()) {
-        setPhantomResult();
-    }
+    // Timeout expired or break condition met
+    // we do not care too much about updater data:
+    // timeout is abnormal
+    // external break, no sense to process - kill too
     failed_ = remaining_timeout <= std::chrono::milliseconds::zero();
-    if (error != 0 || exitCode == STILL_ACTIVE) {
-        // Process is running or status is unknown
-        process_->kill(true);
-        XLOG::l("Process '{}' [{}] is killed", wtools::ToUtf8(exec_), pid);
+    if (error == ERROR_INVALID_PARAMETER ||
+        (error == 0 && exitCode != STILL_ACTIVE)) {
+        XLOG::d.i("Updater timeout and already terminated");
     } else {
-        XLOG::t("Process '{}' [{}] exits with [{}]", wtools::ToUtf8(exec_), pid,
-                exitCode);
+        XLOG::l.i(
+            "Updater timeout and to be killed due to {}. Error = {} Exit code = {}",
+            failed_ ? "timeout" : "external break", error, exitCode);
+        process_->kill(true);
     }
 
     return true;
@@ -1302,8 +1297,12 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
         duration_cast<std::chrono::seconds>(data_age).count(), cacheAge(),
         data_ok, going_to_be_old, is_phantom);
     if (!data_ok) {
-        XLOG::d("Data '{}' is too old, age is '{}' seconds", path(),
-                duration_cast<std::chrono::seconds>(data_age).count());
+        if (data_.empty()) {
+            XLOG::d("No data");
+        } else {
+            XLOG::d("Data '{}' is too old, age is '{}' seconds", path(),
+                    duration_cast<std::chrono::seconds>(data_age).count());
+        }
     }
 
     // execution phase
@@ -1315,9 +1314,6 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
             XLOG::d.i("plugin '{}' is marked for restart", path());
             markAsForRestart();
         }
-    }
-    if (is_phantom) {
-        return {};
     }
 
     // we always return data even if data is OLD
@@ -1582,6 +1578,7 @@ std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
                                                   bool start_immediately) {
     std::vector<char> result;
 
+    XLOG::d.i("Run async plugins");
     int count = 0;
     for (auto &plugin : plugins | std::views::values) {
         if (!plugin.async() || !provider::config::IsRunAsync(plugin)) {

@@ -11,22 +11,20 @@ from pathlib import Path
 
 import rrdtool  # type: ignore[import-not-found]
 
-from cmk.rrd import RRDPaths
-from cmk.rrd.create_rrd import create_rrd
-from cmk.utils.log import verbosity_to_log_level
-
-
-def _set_log_level(verbosity: int) -> None:
-    logging.getLogger().setLevel(verbosity_to_log_level(verbosity))
+from .. import RRDPaths
+from ._main import create_rrd
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        prog="cmk-create-rrd",
+    parser = argparse.ArgumentParser(prog="cmk-create-rrd")
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+        help="set the logging level (default: INFO)",
     )
-    parser.add_argument("-v", "--verbose", action="count", default=0)
     args = parser.parse_args()
-    _set_log_level(args.verbose)
+    logging.getLogger().setLevel(args.log_level)
 
     omd_root = Path(os.environ.get("OMD_ROOT", ""))
     create_rrd(rrdtool, omd_root, RRDPaths.from_omd_root(omd_root))

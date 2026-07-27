@@ -107,6 +107,7 @@ py_wheel(
         "cmk-cert = cmk.gui.cmkcert.main:main",
         "cmk-config-anonymizer = cmk.config_anonymizer.main:main",
         "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
+        "cmk-create-rrd = cmk.rrd.create_rrd.__main__:main",
         "cmk-passwd = cmk.cmkpasswd.main:main",
         "cmk-product-usage = cmk.product_usage.cli:main",
         "cmk-pwstore = cmk.utils.password_store.cli:main",

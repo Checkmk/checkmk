@@ -1816,7 +1816,6 @@ allows = [
 
 [file_components]
 "bin/check_mk.py" = "cmk.cli"
-"bin/cmk-create-rrd.py" = "cmk.rrd"
 "bin/cmk-migrate-extension-rulesets.py" = "cmk.update_config"
 "bin/cmk-migrate-oracle-rulesets.py" = "cmk.update_config"
 "bin/cmk-validate-config.py" = "cmk.validate_config"

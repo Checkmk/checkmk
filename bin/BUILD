@@ -86,22 +86,11 @@ pkg_files(
     },
 )
 
-pkg_files(
-    name = "cmk-create-rrd",
-    srcs = ["cmk-create-rrd.py"],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "bin",
-    renames = {"cmk-create-rrd.py": "cmk-create-rrd"},
-)
-
 pkg_tar(
     name = "pkg_tar",
     srcs = [
         ":bin_750",
         ":bin_755",
-        ":cmk-create-rrd",
         ":cmk_link",
     ],
     stamp = 1,
@@ -110,13 +99,6 @@ pkg_tar(
 
 # Not shipped — only exists so that static analysis tools (ruff, …)
 # can discover these .py files via Bazel.
-py_library(
-    name = "cmk-create-rrd_main",
-    srcs = ["cmk-create-rrd.py"],
-    imports = ["."],
-    deps = ["//cmk/rrd"],
-)
-
 py_library(
     name = "check_mk_py",
     srcs = ["check_mk.py"],

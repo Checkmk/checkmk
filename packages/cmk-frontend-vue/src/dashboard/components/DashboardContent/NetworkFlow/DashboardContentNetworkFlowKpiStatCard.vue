@@ -6,10 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import { CmkApiError } from 'cmk-ui-library/lib/error'
-import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
-import { computed, onBeforeMount, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import type { NetworkFlowKpiStatCardContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
@@ -17,8 +15,8 @@ import CmkKpiStatCard, { type DeltaSemantics } from '@/network-flow/CmkKpiStatCa
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'
+import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
-const { _t } = usei18n()
 const props = defineProps<ContentProps<NetworkFlowKpiStatCardContent>>()
 
 // How each metric presents itself: the unit formatting follows the metric
@@ -57,12 +55,6 @@ interface CardData {
   series: number[]
 }
 
-const data = ref<CardData | undefined>(undefined)
-// A backend-reported condition (flow monitoring disabled, database unreachable,
-// query failed) is an expected state shown as a warning; anything unexpected is
-// an error - mirroring how the ntop widget distinguishes severity.
-const error = ref<{ variant: 'warning' | 'error'; message: string } | null>(null)
-
 const presentation = computed(() => METRIC_PRESENTATION[props.content.metric])
 
 function buildCardData(value: number, previousValue: number, series: number[]): CardData {
@@ -85,32 +77,16 @@ function buildCardData(value: number, previousValue: number, series: number[]): 
   }
 }
 
-const fetchData = async (): Promise<void> => {
-  error.value = null
-  try {
-    const response = await dashboardAPI.computeNetworkFlowKpiStatCardData(
+const { data, error } = useNetworkFlowWidgetData(
+  () =>
+    dashboardAPI.computeNetworkFlowKpiStatCardData(
       props.content,
       props.effective_filter_context.filters
-    )
-    data.value = buildCardData(
-      response.value.value,
-      response.value.previous_value,
-      response.value.series
-    )
-  } catch (e) {
-    error.value =
-      e instanceof CmkApiError
-        ? { variant: 'warning', message: e.message }
-        : { variant: 'error', message: _t('Failed to load the widget data') }
-  }
-}
-
-onBeforeMount(() => void fetchData())
-
-const dataParameters = computed(() =>
-  JSON.stringify({ filters: props.effective_filter_context.filters, content: props.content })
+    ),
+  (response) =>
+    buildCardData(response.value.value, response.value.previous_value, response.value.series),
+  () => ({ filters: props.effective_filter_context.filters, content: props.content })
 )
-watch(dataParameters, () => void fetchData())
 </script>
 
 <template>

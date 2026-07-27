@@ -6,9 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, onBeforeMount, ref, watch } from 'vue'
 
 import type { NetworkFlowDonutContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
@@ -16,6 +14,7 @@ import CmkDonutChart, { type ChartColor, type DonutSlice } from '@/network-flow/
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'
+import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<NetworkFlowDonutContent>>()
@@ -24,12 +23,6 @@ const props = defineProps<ContentProps<NetworkFlowDonutContent>>()
 // config. Slices cycle through the accent palette; the aggregated "Other" tail
 // always uses the neutral grey.
 const SLICE_PALETTE: ChartColor[] = ['green', 'blue', 'magenta', 'yellow', 'orange', 'purple']
-
-const slices = ref<DonutSlice[] | undefined>(undefined)
-// A backend-reported condition (flow monitoring disabled, database unreachable,
-// query failed) is an expected state shown as a warning; anything unexpected is
-// an error - mirroring how the ntop widget distinguishes severity.
-const error = ref<{ variant: 'warning' | 'error'; message: string } | null>(null)
 
 function buildSlices(
   computedSlices: { label: string; value: number }[],
@@ -51,28 +44,12 @@ function buildSlices(
   return result
 }
 
-const fetchData = async (): Promise<void> => {
-  error.value = null
-  try {
-    const response = await dashboardAPI.computeNetworkFlowDonutData(
-      props.content,
-      props.effective_filter_context.filters
-    )
-    slices.value = buildSlices(response.value.slices, response.value.total)
-  } catch (e) {
-    error.value =
-      e instanceof CmkApiError
-        ? { variant: 'warning', message: e.message }
-        : { variant: 'error', message: _t('Failed to load the widget data') }
-  }
-}
-
-onBeforeMount(() => void fetchData())
-
-const dataParameters = computed(() =>
-  JSON.stringify({ filters: props.effective_filter_context.filters, content: props.content })
+const { data: slices, error } = useNetworkFlowWidgetData(
+  () =>
+    dashboardAPI.computeNetworkFlowDonutData(props.content, props.effective_filter_context.filters),
+  (response) => buildSlices(response.value.slices, response.value.total),
+  () => ({ filters: props.effective_filter_context.filters, content: props.content })
 )
-watch(dataParameters, () => void fetchData())
 </script>
 
 <template>

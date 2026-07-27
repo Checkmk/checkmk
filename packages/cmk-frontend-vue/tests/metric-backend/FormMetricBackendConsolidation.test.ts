@@ -16,12 +16,24 @@ afterEach(cleanup)
 function renderConsolidation(initial: {
   aggregationLookback?: number
   aggregationHistogramPercentile?: number
+  aggregationHistogramThresholdForFractionBelow?: number
+  aggregationHistogramLowerThresholdForFractionBetween?: number
+  aggregationHistogramUpperThresholdForFractionBetween?: number
   metricTypes?: string[]
   backendValidation?: ValidationMessages
 }) {
   const models = {
     aggregationLookback: ref(initial.aggregationLookback ?? 120),
     aggregationHistogramPercentile: ref(initial.aggregationHistogramPercentile ?? 90),
+    aggregationHistogramThresholdForFractionBelow: ref(
+      initial.aggregationHistogramThresholdForFractionBelow ?? 0
+    ),
+    aggregationHistogramLowerThresholdForFractionBetween: ref(
+      initial.aggregationHistogramLowerThresholdForFractionBetween ?? 0
+    ),
+    aggregationHistogramUpperThresholdForFractionBetween: ref(
+      initial.aggregationHistogramUpperThresholdForFractionBetween ?? 100
+    ),
     metricTypes: ref(initial.metricTypes ?? []),
     backendValidation: ref<ValidationMessages>(initial.backendValidation ?? [])
   }
@@ -35,6 +47,15 @@ function renderConsolidation(initial: {
         <FormMetricBackendConsolidation
           v-model:aggregation-lookback="models.aggregationLookback.value"
           v-model:aggregation-histogram-percentile="models.aggregationHistogramPercentile.value"
+          v-model:aggregation-histogram-threshold-for-fraction-below="
+            models.aggregationHistogramThresholdForFractionBelow.value
+          "
+          v-model:aggregation-histogram-lower-threshold-for-fraction-between="
+            models.aggregationHistogramLowerThresholdForFractionBetween.value
+          "
+          v-model:aggregation-histogram-upper-threshold-for-fraction-between="
+            models.aggregationHistogramUpperThresholdForFractionBetween.value
+          "
           v-model:backend-validation="models.backendValidation.value"
           :metric-types="models.metricTypes.value"
         />
@@ -153,6 +174,49 @@ test('editing the quantile writes the percentile back as a percentage', async ()
   await waitFor(() => expect(models.aggregationHistogramPercentile.value).toBe(50))
 })
 
+test('editing the fraction-below threshold writes it back to its model', async () => {
+  const models = renderConsolidation({
+    aggregationHistogramThresholdForFractionBelow: 0,
+    metricTypes: ['histogram']
+  })
+
+  await userEvent.click(chip())
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Fraction below' }))
+
+  const threshold = screen.getByLabelText('Threshold')
+  await userEvent.clear(threshold)
+  await userEvent.type(threshold, '42')
+  await userEvent.keyboard('{Escape}')
+
+  await waitFor(() => expect(models.aggregationHistogramThresholdForFractionBelow.value).toBe(42))
+})
+
+test('editing the fraction-between thresholds writes them back to their models', async () => {
+  const models = renderConsolidation({
+    aggregationHistogramLowerThresholdForFractionBetween: 0,
+    aggregationHistogramUpperThresholdForFractionBetween: 100,
+    metricTypes: ['histogram']
+  })
+
+  await userEvent.click(chip())
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Fraction between' }))
+
+  const lower = screen.getByLabelText('Lower threshold')
+  await userEvent.clear(lower)
+  await userEvent.type(lower, '10')
+  const upper = screen.getByLabelText('Upper threshold')
+  await userEvent.clear(upper)
+  await userEvent.type(upper, '20')
+  await userEvent.keyboard('{Escape}')
+
+  await waitFor(() => {
+    expect(models.aggregationHistogramLowerThresholdForFractionBetween.value).toBe(10)
+    expect(models.aggregationHistogramUpperThresholdForFractionBetween.value).toBe(20)
+  })
+})
+
 test('the displayed type follows the resolved metric types', async () => {
   const models = renderConsolidation({ metricTypes: [] })
 
@@ -174,6 +238,9 @@ test('backend validation for the lookback is surfaced and its replacement applie
         metric_name: null,
         aggregation_lookback: 1,
         aggregation_histogram_percentile: 90,
+        aggregation_histogram_threshold_for_fraction_below: 0,
+        aggregation_histogram_lower_threshold_for_fraction_between: 0,
+        aggregation_histogram_upper_threshold_for_fraction_between: 100,
         service_name_template: ''
       }
     }
@@ -182,4 +249,38 @@ test('backend validation for the lookback is surfaced and its replacement applie
 
   expect(await screen.findByText('Aggregation lookback must be at least 1 second.')).toBeVisible()
   expect(models.aggregationLookback.value).toBe(1)
+})
+
+test('backend validation for the fraction-between lower threshold is surfaced and its replacement applied', async () => {
+  const models = renderConsolidation({
+    aggregationHistogramLowerThresholdForFractionBetween: 50,
+    aggregationHistogramUpperThresholdForFractionBetween: 10,
+    metricTypes: ['histogram']
+  })
+
+  models.backendValidation.value = [
+    {
+      message: 'The lower threshold must be below the upper threshold.',
+      location: ['aggregation_histogram_lower_threshold_for_fraction_between'],
+      replacement_value: {
+        metric_name: null,
+        resource_attributes: [],
+        scope_attributes: [],
+        data_point_attributes: [],
+        aggregation_lookback: 120,
+        aggregation_histogram_percentile: 90,
+        aggregation_histogram_threshold_for_fraction_below: 0,
+        aggregation_histogram_lower_threshold_for_fraction_between: 5,
+        aggregation_histogram_upper_threshold_for_fraction_between: 10,
+        service_name_template: ''
+      }
+    }
+  ] as unknown as ValidationMessages
+  await nextTick()
+
+  expect(
+    await screen.findByText('The lower threshold must be below the upper threshold.')
+  ).toBeVisible()
+  expect(models.aggregationHistogramLowerThresholdForFractionBetween.value).toBe(5)
+  expect(models.aggregationHistogramUpperThresholdForFractionBetween.value).toBe(10)
 })

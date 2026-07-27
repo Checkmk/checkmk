@@ -383,6 +383,9 @@ const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   metric_name: null,
   aggregation_lookback: 0,
   aggregation_histogram_percentile: 0,
+  aggregation_histogram_threshold_for_fraction_below: 0,
+  aggregation_histogram_lower_threshold_for_fraction_between: 0,
+  aggregation_histogram_upper_threshold_for_fraction_between: 0,
   service_name_template: ''
 }
 

@@ -1016,6 +1016,15 @@
             "aggregation_histogram_percentile": {
               "type": "number"
             },
+            "aggregation_histogram_threshold_for_fraction_below": {
+              "type": "number"
+            },
+            "aggregation_histogram_lower_threshold_for_fraction_between": {
+              "type": "number"
+            },
+            "aggregation_histogram_upper_threshold_for_fraction_between": {
+              "type": "number"
+            },
             "service_name_template": {
               "type": "string"
             }
@@ -1025,6 +1034,9 @@
             "metric_name",
             "aggregation_lookback",
             "aggregation_histogram_percentile",
+            "aggregation_histogram_threshold_for_fraction_below",
+            "aggregation_histogram_lower_threshold_for_fraction_between",
+            "aggregation_histogram_upper_threshold_for_fraction_between",
             "service_name_template"
           ]
         }

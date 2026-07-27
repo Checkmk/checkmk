@@ -19,6 +19,9 @@ import { type ValidationMessages } from '@/form/private/validation'
 
 import {
   DEFAULT_HISTOGRAM_PERCENTILE,
+  DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
   buildConsolidationFunction,
   consolidationFunctionFromWire
 } from '@/graph-designer/consolidation'
@@ -82,13 +85,52 @@ const aggregationHistogramPercentile = computed<number>({
   }
 })
 
+const aggregationHistogramThresholdForFractionBelow = computed<number>({
+  get: () =>
+    consolidation.value.function === 'histogram_fraction_below'
+      ? (consolidation.value.threshold ?? DEFAULT_THRESHOLD_FOR_FRACTION_BELOW)
+      : DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+  set: (value) => {
+    if (consolidation.value.function === 'histogram_fraction_below') {
+      consolidation.value = { ...consolidation.value, threshold: value }
+    }
+  }
+})
+
+const aggregationHistogramLowerThresholdForFractionBetween = computed<number>({
+  get: () =>
+    consolidation.value.function === 'histogram_fraction_between'
+      ? (consolidation.value.lower_threshold ?? DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN)
+      : DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  set: (value) => {
+    if (consolidation.value.function === 'histogram_fraction_between') {
+      consolidation.value = { ...consolidation.value, lower_threshold: value }
+    }
+  }
+})
+
+const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
+  get: () =>
+    consolidation.value.function === 'histogram_fraction_between'
+      ? (consolidation.value.upper_threshold ?? DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN)
+      : DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  set: (value) => {
+    if (consolidation.value.function === 'histogram_fraction_between') {
+      consolidation.value = { ...consolidation.value, upper_threshold: value }
+    }
+  }
+})
+
 const consolidationFunction = computed<ConsolidationFunction | null>({
   get: () => consolidationFunctionFromWire(consolidation.value),
   set: (value) => {
     consolidation.value = buildConsolidationFunction(
       value,
       aggregationLookback.value,
-      aggregationHistogramPercentile.value
+      aggregationHistogramPercentile.value,
+      aggregationHistogramThresholdForFractionBelow.value,
+      aggregationHistogramLowerThresholdForFractionBetween.value,
+      aggregationHistogramUpperThresholdForFractionBetween.value
     )
   }
 })
@@ -121,6 +163,15 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
       <FormMetricBackendConsolidation
         v-model:aggregation-lookback="aggregationLookback"
         v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
+        v-model:aggregation-histogram-threshold-for-fraction-below="
+          aggregationHistogramThresholdForFractionBelow
+        "
+        v-model:aggregation-histogram-lower-threshold-for-fraction-between="
+          aggregationHistogramLowerThresholdForFractionBetween
+        "
+        v-model:aggregation-histogram-upper-threshold-for-fraction-between="
+          aggregationHistogramUpperThresholdForFractionBetween
+        "
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
         :backend-validation="props.backendValidation ?? []"

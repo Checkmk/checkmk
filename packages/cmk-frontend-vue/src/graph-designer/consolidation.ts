@@ -9,6 +9,9 @@ import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
 
 export const DEFAULT_HISTOGRAM_PERCENTILE = 90
+export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
+export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
+export const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100
 
 export function consolidationFunctionFromWire(
   wire: WireConsolidationFunction
@@ -29,7 +32,10 @@ export function consolidationFunctionFromWire(
 export function buildConsolidationFunction(
   consolidationFunction: ConsolidationFunction | null,
   lookbackSeconds: number,
-  percentile: number
+  percentile: number,
+  thresholdForFractionBelow: number,
+  lowerThresholdForFractionBetween: number,
+  upperThresholdForFractionBetween: number
 ): WireConsolidationFunction {
   switch (consolidationFunction?.function) {
     case 'gauge_max':
@@ -87,26 +93,21 @@ export function buildConsolidationFunction(
         percentile: 0
       }
     case 'histogram_fraction_below':
-      // This form only carries a single "percentile" number end to end (see
-      // aggregationHistogramPercentile in FormMetricBackendCustomQuery.vue); it has no
-      // plumbing yet for a distinct threshold, so a real value never reaches here.
       return {
         type: 'histogram',
         function: 'histogram_fraction_below',
         lookback_seconds: lookbackSeconds,
         percentile: 0,
-        threshold: 0
+        threshold: thresholdForFractionBelow
       }
     case 'histogram_fraction_between':
-      // Same limitation as histogram_fraction_below, doubled: this form has no plumbing
-      // for either a lower or an upper threshold.
       return {
         type: 'histogram',
         function: 'histogram_fraction_between',
         lookback_seconds: lookbackSeconds,
         percentile: 0,
-        lower_threshold: 0,
-        upper_threshold: 0
+        lower_threshold: lowerThresholdForFractionBetween,
+        upper_threshold: upperThresholdForFractionBetween
       }
     case 'gauge_last':
     default:

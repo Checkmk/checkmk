@@ -56,6 +56,18 @@ const aggregationLookback = defineModel<number>('aggregationLookback', { require
 const aggregationHistogramPercentile = defineModel<number>('aggregationHistogramPercentile', {
   required: true
 })
+const aggregationHistogramThresholdForFractionBelow = defineModel<number>(
+  'aggregationHistogramThresholdForFractionBelow',
+  { required: true }
+)
+const aggregationHistogramLowerThresholdForFractionBetween = defineModel<number>(
+  'aggregationHistogramLowerThresholdForFractionBetween',
+  { required: true }
+)
+const aggregationHistogramUpperThresholdForFractionBetween = defineModel<number>(
+  'aggregationHistogramUpperThresholdForFractionBetween',
+  { required: true }
+)
 const consolidationFunction = defineModel<ConsolidationFunction | null>('consolidationFunction', {
   default: null
 })
@@ -68,24 +80,37 @@ const availableTypes = computed<MetricType[]>(() => props.metricTypes.filter(isM
 
 // A previously persisted function pick wins; only a line without one yet (new or old
 // saved data) falls back to deriving from the metric's first available type.
+function paramsFor(fn: ConsolidationFunction): ConsolidationModel['params'] {
+  switch (fn.function) {
+    case 'histogram_quantile':
+      return { quantile: aggregationHistogramPercentile.value / 100 }
+    case 'histogram_fraction_below':
+      return { fractionBelowThreshold: aggregationHistogramThresholdForFractionBelow.value }
+    case 'histogram_fraction_between':
+      return {
+        fractionLowerThreshold: aggregationHistogramLowerThresholdForFractionBetween.value,
+        fractionUpperThreshold: aggregationHistogramUpperThresholdForFractionBetween.value
+      }
+    default:
+      return {}
+  }
+}
+
 function buildModel(): ConsolidationModel {
   const fn =
     consolidationFunction.value ??
     defaultFunction(availableTypes.value[0] ?? FALLBACK_TYPE, SUPPORTED_FUNCTIONS)
   return {
     ...fn,
-    params:
-      fn.function === 'histogram_quantile'
-        ? { quantile: aggregationHistogramPercentile.value / 100 }
-        : {},
+    params: paramsFor(fn),
     lookbackSeconds: aggregationLookback.value
   }
 }
 
 const model = ref<ConsolidationModel>(buildModel())
 
-// Mirror the editable pill values back to the persisted fields. The percentile
-// belongs to the quantile function only, so other types leave it untouched.
+// Mirror the editable pill values back to the persisted fields. Each param
+// belongs to its own function only, so other types leave it untouched.
 watch(
   model,
   (value) => {
@@ -96,6 +121,31 @@ watch(
       const percentile = value.params.quantile * 100
       if (percentile !== aggregationHistogramPercentile.value) {
         aggregationHistogramPercentile.value = percentile
+      }
+    }
+    if (
+      value.function === 'histogram_fraction_below' &&
+      value.params.fractionBelowThreshold !== undefined &&
+      value.params.fractionBelowThreshold !== aggregationHistogramThresholdForFractionBelow.value
+    ) {
+      aggregationHistogramThresholdForFractionBelow.value = value.params.fractionBelowThreshold
+    }
+    if (value.function === 'histogram_fraction_between') {
+      if (
+        value.params.fractionLowerThreshold !== undefined &&
+        value.params.fractionLowerThreshold !==
+          aggregationHistogramLowerThresholdForFractionBetween.value
+      ) {
+        aggregationHistogramLowerThresholdForFractionBetween.value =
+          value.params.fractionLowerThreshold
+      }
+      if (
+        value.params.fractionUpperThreshold !== undefined &&
+        value.params.fractionUpperThreshold !==
+          aggregationHistogramUpperThresholdForFractionBetween.value
+      ) {
+        aggregationHistogramUpperThresholdForFractionBetween.value =
+          value.params.fractionUpperThreshold
       }
     }
     const fn = consolidationFunctionOf(value)
@@ -111,21 +161,44 @@ watch(
 
 const validationMessages = ref<string[]>([])
 
+const VALIDATED_LOCATIONS = [
+  'aggregation_lookback',
+  'aggregation_histogram_percentile',
+  'aggregation_histogram_threshold_for_fraction_below',
+  'aggregation_histogram_lower_threshold_for_fraction_between',
+  'aggregation_histogram_upper_threshold_for_fraction_between'
+] as const
+
 immediateWatch(
   () => backendValidation.value,
   (newValidation: ValidationMessages | undefined) => {
     validationMessages.value = []
     newValidation?.forEach((message) => {
       const location = message.location[0]
-      if (location !== 'aggregation_lookback' && location !== 'aggregation_histogram_percentile') {
+      if (!(VALIDATED_LOCATIONS as readonly string[]).includes(location ?? '')) {
         return
       }
       validationMessages.value.push(message.message)
       const replacement = message.replacement_value as MetricBackendCustomQuery
-      if (location === 'aggregation_lookback') {
-        aggregationLookback.value = replacement.aggregation_lookback
-      } else {
-        aggregationHistogramPercentile.value = replacement.aggregation_histogram_percentile
+      switch (location) {
+        case 'aggregation_lookback':
+          aggregationLookback.value = replacement.aggregation_lookback
+          break
+        case 'aggregation_histogram_percentile':
+          aggregationHistogramPercentile.value = replacement.aggregation_histogram_percentile
+          break
+        case 'aggregation_histogram_threshold_for_fraction_below':
+          aggregationHistogramThresholdForFractionBelow.value =
+            replacement.aggregation_histogram_threshold_for_fraction_below
+          break
+        case 'aggregation_histogram_lower_threshold_for_fraction_between':
+          aggregationHistogramLowerThresholdForFractionBetween.value =
+            replacement.aggregation_histogram_lower_threshold_for_fraction_between
+          break
+        case 'aggregation_histogram_upper_threshold_for_fraction_between':
+          aggregationHistogramUpperThresholdForFractionBetween.value =
+            replacement.aggregation_histogram_upper_threshold_for_fraction_between
+          break
       }
     })
     if (validationMessages.value.length > 0) {

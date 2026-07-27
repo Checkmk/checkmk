@@ -199,6 +199,9 @@ function formulaOf(graphLine: GraphLine): string {
 
 const dataQueryAggregationLookbackDefault = 120
 const dataQueryAggregationHistogramPercentile = 90
+const dataQueryAggregationHistogramThresholdForFractionBelow = 0
+const dataQueryAggregationHistogramLowerThresholdForFractionBetween = 0
+const dataQueryAggregationHistogramUpperThresholdForFractionBetween = 100
 const dataQuery = ref<Query>({
   metricName: null,
   consolidationFunction: {
@@ -212,6 +215,24 @@ function consolidationPercentile(cf: WireConsolidationFunction): number {
   return cf.function === 'histogram_quantile'
     ? cf.percentile
     : dataQueryAggregationHistogramPercentile
+}
+
+function consolidationThresholdForFractionBelow(cf: WireConsolidationFunction): number {
+  return cf.function === 'histogram_fraction_below'
+    ? (cf.threshold ?? dataQueryAggregationHistogramThresholdForFractionBelow)
+    : dataQueryAggregationHistogramThresholdForFractionBelow
+}
+
+function consolidationLowerThresholdForFractionBetween(cf: WireConsolidationFunction): number {
+  return cf.function === 'histogram_fraction_between'
+    ? (cf.lower_threshold ?? dataQueryAggregationHistogramLowerThresholdForFractionBetween)
+    : dataQueryAggregationHistogramLowerThresholdForFractionBetween
+}
+
+function consolidationUpperThresholdForFractionBetween(cf: WireConsolidationFunction): number {
+  return cf.function === 'histogram_fraction_between'
+    ? (cf.upper_threshold ?? dataQueryAggregationHistogramUpperThresholdForFractionBetween)
+    : dataQueryAggregationHistogramUpperThresholdForFractionBetween
 }
 
 const dataMetric = ref<Metric>({
@@ -919,6 +940,12 @@ const slideInAPI = {
           attribute_filter: graphLineQuery.value.attribute_filter,
           aggregation_lookback: cf.lookback_seconds,
           aggregation_histogram_percentile: consolidationPercentile(cf),
+          aggregation_histogram_threshold_for_fraction_below:
+            consolidationThresholdForFractionBelow(cf),
+          aggregation_histogram_lower_threshold_for_fraction_between:
+            consolidationLowerThresholdForFractionBetween(cf),
+          aggregation_histogram_upper_threshold_for_fraction_between:
+            consolidationUpperThresholdForFractionBetween(cf),
           service_name_template:
             graphLineQuery.value.custom_title || graphLineQuery.value.auto_title
         }
@@ -956,6 +983,12 @@ function validateFormMetricBackendCustomQuery(
   const metricName = query?.metricName ?? graphLineQuery?.metric_name
   const aggregationLookback = cf?.lookback_seconds
   const aggregationHistogramPercentile = cf ? consolidationPercentile(cf) : undefined
+  const aggregationHistogramLowerThreshold = cf
+    ? consolidationLowerThresholdForFractionBetween(cf)
+    : undefined
+  const aggregationHistogramUpperThreshold = cf
+    ? consolidationUpperThresholdForFractionBetween(cf)
+    : undefined
   if (metricName !== undefined && (metricName === null || metricName.trim() === '')) {
     validationMessages.push({
       message: 'Metric name cannot be empty',
@@ -978,6 +1011,22 @@ function validateFormMetricBackendCustomQuery(
       message: 'Aggregation histogram percentile must be between 0 and 100.',
       location: ['aggregation_histogram_percentile'],
       replacement_value: { aggregation_histogram_percentile: aggregationHistogramPercentile }
+    })
+  }
+  if (
+    aggregationHistogramLowerThreshold !== undefined &&
+    aggregationHistogramUpperThreshold !== undefined &&
+    aggregationHistogramLowerThreshold >= aggregationHistogramUpperThreshold
+  ) {
+    validationMessages.push({
+      message: 'The lower threshold must be below the upper threshold.',
+      location: ['aggregation_histogram_lower_threshold_for_fraction_between'],
+      replacement_value: {
+        aggregation_histogram_lower_threshold_for_fraction_between:
+          aggregationHistogramLowerThreshold,
+        aggregation_histogram_upper_threshold_for_fraction_between:
+          aggregationHistogramUpperThreshold
+      }
     })
   }
   return validationMessages

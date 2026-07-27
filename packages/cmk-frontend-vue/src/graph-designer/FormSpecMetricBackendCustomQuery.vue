@@ -41,7 +41,10 @@ const consolidation = computed<WireConsolidationFunction>({
     buildConsolidationFunction(
       pickedFunction.value,
       data.value.aggregation_lookback,
-      data.value.aggregation_histogram_percentile
+      data.value.aggregation_histogram_percentile,
+      data.value.aggregation_histogram_threshold_for_fraction_below,
+      data.value.aggregation_histogram_lower_threshold_for_fraction_between,
+      data.value.aggregation_histogram_upper_threshold_for_fraction_between
     ),
   set: (value) => {
     pickedFunction.value = consolidationFunctionFromWire(value)
@@ -51,7 +54,21 @@ const consolidation = computed<WireConsolidationFunction>({
       aggregation_histogram_percentile:
         value.function === 'histogram_quantile'
           ? value.percentile
-          : data.value.aggregation_histogram_percentile
+          : data.value.aggregation_histogram_percentile,
+      aggregation_histogram_threshold_for_fraction_below:
+        value.function === 'histogram_fraction_below'
+          ? (value.threshold ?? data.value.aggregation_histogram_threshold_for_fraction_below)
+          : data.value.aggregation_histogram_threshold_for_fraction_below,
+      aggregation_histogram_lower_threshold_for_fraction_between:
+        value.function === 'histogram_fraction_between'
+          ? (value.lower_threshold ??
+            data.value.aggregation_histogram_lower_threshold_for_fraction_between)
+          : data.value.aggregation_histogram_lower_threshold_for_fraction_between,
+      aggregation_histogram_upper_threshold_for_fraction_between:
+        value.function === 'histogram_fraction_between'
+          ? (value.upper_threshold ??
+            data.value.aggregation_histogram_upper_threshold_for_fraction_between)
+          : data.value.aggregation_histogram_upper_threshold_for_fraction_between
     }
   }
 })

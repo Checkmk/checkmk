@@ -116,17 +116,10 @@ const metricName = computed<string | null>({
   set: (value) => store.replace({ ...item, metric_name: value })
 })
 
-// The REST item carries the filter as an opaque object; the pill editor speaks the typed shape.
 const attributeFilter = computed<AttributeFilter | undefined>({
-  get: () => item.attribute_filter as unknown as AttributeFilter,
-  set: (value) => {
-    if (value !== undefined) {
-      store.replace({
-        ...item,
-        attribute_filter: value as unknown as MetricBackendItem['attribute_filter']
-      })
-    }
-  }
+  get: () => item.attribute_filter,
+  set: (value) =>
+    store.replace({ ...item, attribute_filter: value ?? { type: 'and', conjuncts: [] } })
 })
 
 const aggregationLookback = computed<number>({
@@ -175,6 +168,7 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
       <FormMetricBackendAttributes
         v-model:attribute-filter="attributeFilter"
         :metric-name="metricName"
+        :operators="['eq', 'exists']"
       />
       <FormMetricBackendConsolidation
         v-model:aggregation-lookback="aggregationLookback"

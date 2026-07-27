@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Callable
 from types import SimpleNamespace
-from typing import Any
 
 import psycopg
 import pytest
@@ -24,7 +22,7 @@ class _FakeCursor:
     def __init__(self, rows: list[tuple[int]]) -> None:
         self._rows = rows
         self.sql: str | None = None
-        self.params: tuple[Any, ...] | None = None
+        self.params: tuple[object, ...] | None = None
 
     def __enter__(self) -> _FakeCursor:
         return self
@@ -32,7 +30,7 @@ class _FakeCursor:
     def __exit__(self, *_: object) -> None:
         return None
 
-    def execute(self, sql: str, params: tuple[Any, ...]) -> None:
+    def execute(self, sql: str, params: tuple[object, ...]) -> None:
         self.sql = sql
         self.params = params
 
@@ -58,7 +56,7 @@ def _wire(
     monkeypatch: pytest.MonkeyPatch,
     *,
     git_werks: list[tuple[int, Class]],
-    from_env: Any,
+    from_env: Callable[[object], object],
 ) -> None:
     """Stub the branch label, the ``.werks`` index, the git walk and the DB."""
     monkeypatch.setattr(check_gaps, "read_branch_version", lambda _p: "3.0.0")
@@ -79,11 +77,11 @@ def _wire(
     monkeypatch.setattr(MetabasePostgres, "from_env", classmethod(from_env))
 
 
-def _db_returning(db_werk_ids: list[int]) -> Any:
+def _db_returning(db_werk_ids: list[int]) -> Callable[[object], _FakeDb]:
     return lambda _cls: _FakeDb([(wid,) for wid in db_werk_ids])
 
 
-def _db_raising(exc: Exception) -> Any:
+def _db_raising(exc: Exception) -> Callable[[object], None]:
     def _raise(_cls: object) -> None:
         raise exc
 
@@ -156,7 +154,7 @@ def test_main_exit_2_on_git_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """A git failure (e.g. --repo is not a git repo) exits 2, not 1."""
     monkeypatch.setattr(check_gaps, "read_branch_version", lambda _p: "3.0.0")
 
-    def _raise(_r: object, since: Any = None, until: Any = None) -> Any:
+    def _raise(_r: object, since: object = None, until: object = None) -> object:
         raise subprocess.CalledProcessError(128, ["git", "log"])
 
     monkeypatch.setattr(walk, "walk_werk_adds", _raise)

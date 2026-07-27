@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Verify Table.upsert / Table.apply_schema delegate correctly."""
 
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
 
 from tests.qa_metrics.db.table import Table
 from tests.unit.qa_metrics._db_stubs import FakeDb
@@ -21,7 +18,7 @@ class _DemoRow:
     id_: int
     name: str
 
-    def to_db_dict(self) -> Mapping[str, Any]:
+    def to_db_dict(self) -> Mapping[str, object]:
         return asdict(self)
 
 

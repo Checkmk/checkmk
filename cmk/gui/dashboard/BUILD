@@ -62,6 +62,7 @@ py_library(
         "//cmk/gui/data_source",
         "//cmk/gui/fields",
         "//cmk/gui/graphing",
+        "//cmk/gui/graphing:openapi",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/framework:types",

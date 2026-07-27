@@ -26,12 +26,8 @@ import { ref, watch } from 'vue'
 import type { ValidationMessages } from '@/form'
 
 import FormAttributeFilter from './attribute-filter/FormAttributeFilter.vue'
-import type {
-  AttributeFilterModel,
-  AttributeKind,
-  Condition,
-  Operator
-} from './attribute-filter/types'
+import { SUPPORTED_OPERATORS } from './attribute-filter/types'
+import type { AttributeFilterModel, AttributeKind, Condition } from './attribute-filter/types'
 import {
   ATTRIBUTE_KIND_ORDER,
   type AttributeKindKey,
@@ -49,13 +45,11 @@ const props = withDefaults(
     metricName?: string | null
     staticResourceAttributeKeys?: string[] | null
     indent?: boolean
-    operators?: Operator[]
   }>(),
   {
     metricName: null,
     staticResourceAttributeKeys: null,
-    indent: false,
-    operators: () => ['eq']
+    indent: false
   }
 )
 
@@ -238,7 +232,7 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
         <FormAttributeFilter
           v-model="filterModel"
           :allow-or="false"
-          :operators="props.operators"
+          :operators="SUPPORTED_OPERATORS"
           :query-suggestions="querySuggestions"
           :query-value-suggestions="queryValueSuggestions"
           :resolve-attribute-kind="resolveAttributeKind"

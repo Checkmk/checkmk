@@ -168,7 +168,6 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
       <FormMetricBackendAttributes
         v-model:attribute-filter="attributeFilter"
         :metric-name="metricName"
-        :operators="['eq', 'exists']"
       />
       <FormMetricBackendConsolidation
         v-model:aggregation-lookback="aggregationLookback"

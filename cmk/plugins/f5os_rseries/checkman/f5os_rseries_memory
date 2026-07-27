@@ -1,0 +1,12 @@
+title: F5OS Platform Memory Utilization
+agents: snmp
+catalog: hw/network/f5
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the platform memory utilization of an F5 Networks rSeries appliance
+ running F5OS. Reports used, free, available, and total memory in bytes, plus
+ the percentage used. Thresholds apply to the used percentage.
+
+discovery:
+ One service is created per device.

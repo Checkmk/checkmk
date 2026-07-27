@@ -15,9 +15,14 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
 from cmk.gui.type_defs import IconNames
 
+from .._engine_discovery import DiscoveredGraphs
 from .._engine_dispatch import BuiltGraph, serialize_graphs
 
 type ApiConsolidation = Literal["min", "max", "avg"]
+
+# How a combined graph folds the same metric across its matched services: aggregate
+# (sum/average/min/max) or show each service separately (lines/stacked).
+type ApiCombinationMode = Literal["lines", "stacked", "sum", "average", "min", "max"]
 
 
 @api_model
@@ -146,6 +151,13 @@ class GraphsDiscoverResponse:
         example="There is no registered metric named 'cpu_utilization'.",
     )
 
+    @classmethod
+    def from_discovered(cls, discovered: DiscoveredGraphs) -> Self:
+        return cls(
+            graphs=[ApiDiscoveredGraph.from_built(built) for built in discovered.graphs],
+            no_data_message=discovered.no_data_message,
+        )
+
 
 @api_model
 class GraphFetchRequest:
@@ -159,16 +171,14 @@ class GraphFetchRequest:
     consolidation_function: ApiConsolidation = api_field(
         description="The consolidation function to use for RRD data.", example="avg"
     )
-    combination_mode: Literal["lines", "stacked", "sum", "average", "min", "max"] | None = (
-        api_field(
-            description=(
-                "How to combine the same metric across services for a combined graph: aggregate "
-                "(sum/average/min/max) or show each service separately (lines/stacked). Defaults "
-                "to sum. Ignored by other graph types."
-            ),
-            example="sum",
-            default=None,
-        )
+    combination_mode: ApiCombinationMode | None = api_field(
+        description=(
+            "How to combine the same metric across services for a combined graph: aggregate "
+            "(sum/average/min/max) or show each service separately (lines/stacked). Defaults "
+            "to sum. Ignored by other graph types."
+        ),
+        example="sum",
+        default=None,
     )
 
 

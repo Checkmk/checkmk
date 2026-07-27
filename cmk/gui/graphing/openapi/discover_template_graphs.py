@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing_engine import HostName, ServiceName
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointDoc,
@@ -21,12 +19,10 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import MKLivestatusException
 
-from .._engine_plugins import registered_graphs, registered_metrics, registered_translations
-from .._engine_rrd import EngineRRDFetchMetricNames
-from .._engine_template_graphs import build_template_graphs
+from .._engine_discovery import discover_template_graphs
 from .._graph_templates import TemplateGraphSpecification
 from ._family import GRAPH_FAMILY
-from .models import ApiDiscoveredGraph, GraphsDiscoverResponse
+from .models import GraphsDiscoverResponse
 
 
 @api_model
@@ -48,24 +44,15 @@ def discover_template_graphs_v1(
 ) -> GraphsDiscoverResponse:
     """Discover the data-less template graph definitions of a service"""
     try:
-        graphs = build_template_graphs(
+        discovered = discover_template_graphs(
             TemplateGraphSpecification(
                 site=None,
                 host_name=body.hostname,
                 service_description=body.service_description,
                 graph_id=body.graph_id,
             ),
-            registered_graphs=registered_graphs(),
-            registered_metrics=registered_metrics(),
-            fetch_metric_names=EngineRRDFetchMetricNames(
-                host_name=HostName(body.hostname),
-                service_name=ServiceName(body.service_description),
-                debug=active_config.debug,
-                registered_translations=registered_translations(),
-            ),
+            debug=active_config.debug,
         )
-    except MKMissingDataError as exc:
-        return GraphsDiscoverResponse(graphs=[], no_data_message=str(exc))
     except MKLivestatusException as exc:
         raise ProblemException(
             status=503,
@@ -79,18 +66,7 @@ def discover_template_graphs_v1(
             detail=f"Failed to discover graphs: {exc}",
         ) from exc
 
-    if not graphs:
-        return GraphsDiscoverResponse(
-            graphs=[],
-            no_data_message=(
-                f"The service '{body.service_description}' of host '{body.hostname}' has no "
-                "matching template graphs."
-            ),
-        )
-    return GraphsDiscoverResponse(
-        graphs=[ApiDiscoveredGraph.from_built(built) for built in graphs],
-        no_data_message=None,
-    )
+    return GraphsDiscoverResponse.from_discovered(discovered)
 
 
 ENDPOINT_DISCOVER_TEMPLATE_GRAPHS = VersionedEndpoint(

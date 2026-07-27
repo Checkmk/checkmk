@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointDoc,
@@ -23,21 +25,37 @@ from ._serialize import (
     api_time_range_to_engine,
     evaluated_to_response,
 )
-from .models import GraphFetchRequest, GraphFetchResponse
+from .models import (
+    ApiCombinationMode,
+    ApiConsolidation,
+    ApiTimeRange,
+    GraphFetchRequest,
+    GraphFetchResponse,
+)
 
 
-def fetch_graph_data_v1(body: GraphFetchRequest) -> GraphFetchResponse:
-    """Fetch the data for a graph definition over a requested time range"""
-    time_range = api_time_range_to_engine(body.requested_time_range)
+def evaluate_graph_to_response(
+    internal: Mapping[str, object],
+    *,
+    requested_time_range: ApiTimeRange,
+    consolidation_function: ApiConsolidation,
+    combination_mode: ApiCombinationMode | None,
+) -> GraphFetchResponse:
+    """Evaluate the serialized definition of exactly one graph into its fetched data.
+
+    Shared with the token-authenticated dashboard widget fetch, so both resolve their data the
+    same way and only differ in how they get hold of the definition.
+    """
+    time_range = api_time_range_to_engine(requested_time_range)
     options: dict[str, object] = {
-        "consolidation_function": api_consolidation_to_engine(body.consolidation_function),
+        "consolidation_function": api_consolidation_to_engine(consolidation_function),
         "time_range": time_range,
         "destination": None,
     }
-    if body.combination_mode is not None:
-        options["combination_mode"] = body.combination_mode
+    if combination_mode is not None:
+        options["combination_mode"] = combination_mode
     try:
-        evaluated = evaluate_graphs(body.internal, options)
+        evaluated = evaluate_graphs(internal, options)
     except MKLivestatusException as exc:
         raise ProblemException(
             status=503,
@@ -60,6 +78,16 @@ def fetch_graph_data_v1(body: GraphFetchRequest) -> GraphFetchResponse:
         evaluated.graphs[0],
         fallback_time_range=time_range,
         diagnostics=evaluated.diagnostics,
+    )
+
+
+def fetch_graph_data_v1(body: GraphFetchRequest) -> GraphFetchResponse:
+    """Fetch the data for a graph definition over a requested time range"""
+    return evaluate_graph_to_response(
+        body.internal,
+        requested_time_range=body.requested_time_range,
+        consolidation_function=body.consolidation_function,
+        combination_mode=body.combination_mode,
     )
 
 

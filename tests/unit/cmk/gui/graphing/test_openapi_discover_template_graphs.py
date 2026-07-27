@@ -11,10 +11,10 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.graphing import _engine_discovery as discovery_module
 from cmk.gui.graphing._engine_dispatch import BuiltGraph
 from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing.openapi import discover_template_graphs as discover_module
 from cmk.livestatus_client import MKLivestatusSocketError
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -59,7 +59,7 @@ def test_discover_template_graphs_exposes_the_add_to_specification(
             )
         ]
 
-    monkeypatch.setattr(discover_module, "build_template_graphs", _build)
+    monkeypatch.setattr(discovery_module, "build_template_graphs", _build)
 
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load"
@@ -73,7 +73,7 @@ def test_discover_template_graphs_omits_the_specification_when_there_is_none(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        discover_module,
+        discovery_module,
         "build_template_graphs",
         _fake_build([Graph(name="g", title="t", kind="template")]),
     )
@@ -90,7 +90,7 @@ def test_discover_template_graphs_emits_fetchable_graphs(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        discover_module,
+        discovery_module,
         "build_template_graphs",
         _fake_build([Graph(name="g", title="t", kind="template")]),
     )
@@ -119,7 +119,7 @@ def test_discover_template_graphs_passes_the_specification_to_the_fetch(
         captured.update(kwargs)
         return [BuiltGraph(graph=Graph(name="g", title="t", kind="template"), specification=None)]
 
-    monkeypatch.setattr(discover_module, "build_template_graphs", _build)
+    monkeypatch.setattr(discovery_module, "build_template_graphs", _build)
 
     clients.Graph.discover_template_graphs(hostname="my-host", service_description="CPU load")
     assert captured["specification"] == TemplateGraphSpecification(
@@ -135,7 +135,7 @@ def test_discover_template_graphs_filters_by_graph_id(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        discover_module,
+        discovery_module,
         "build_template_graphs",
         _fake_build(
             [
@@ -157,7 +157,7 @@ def test_discover_template_graphs_unknown_graph_id_is_empty_state(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        discover_module,
+        discovery_module,
         "build_template_graphs",
         _fake_build([Graph(name="cpu_load", title="CPU load", kind="template")]),
     )
@@ -173,7 +173,7 @@ def test_discover_template_graphs_unknown_graph_id_is_empty_state(
 def test_discover_template_graphs_no_graphs_is_empty_state(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(discover_module, "build_template_graphs", _fake_build([]))
+    monkeypatch.setattr(discovery_module, "build_template_graphs", _fake_build([]))
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load"
     )
@@ -187,7 +187,7 @@ def test_discover_template_graphs_missing_data_is_empty_state(
     def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
         raise MKMissingDataError("As soon as you add your Checkmk server ...")
 
-    monkeypatch.setattr(discover_module, "build_template_graphs", _raise)
+    monkeypatch.setattr(discovery_module, "build_template_graphs", _raise)
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load"
     )
@@ -201,7 +201,7 @@ def test_discover_template_graphs_livestatus_failure_is_503(
     def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
         raise MKLivestatusSocketError("connection refused")
 
-    monkeypatch.setattr(discover_module, "build_template_graphs", _raise)
+    monkeypatch.setattr(discovery_module, "build_template_graphs", _raise)
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load", expect_ok=False
     )

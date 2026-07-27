@@ -11,6 +11,7 @@ agents/plugins/mk_tinkerforge.py
 cmk/plugins/collection/agents/apache_status.py
 cmk/plugins/collection/agents/isc_dhcpd.py
 cmk/plugins/files/agents/mk_filestats.py
+cmk/plugins/jolokia/agents/mk_jolokia.py
 cmk/plugins/mongodb/agents/mk_mongodb.py
 cmk/plugins/nginx/agents/nginx_status.py
 cmk/plugins/plesk/agents/plesk_backups.py
@@ -29,6 +30,7 @@ tests/unit/cmk/plugins/collection/agents/test_isc_dhcpd.py
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/subdir/testfile2.html
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/testfile1.txt
 tests/unit/cmk/plugins/files/agents/test_mk_filestats.py
+tests/unit/cmk/plugins/jolokia/agents/test_mk_jolokia.py
 tests/unit/cmk/plugins/mongodb/agents/datasets/mk_mongodb/OWNERS
 tests/unit/cmk/plugins/mongodb/agents/datasets/mk_mongodb/mongo_output_arbiter-3.4.21.json
 tests/unit/cmk/plugins/mongodb/agents/datasets/mk_mongodb/mongo_output_arbiter-3.6.13.json

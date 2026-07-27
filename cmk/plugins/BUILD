@@ -19,6 +19,7 @@ py_library(
     ) + [
         "//cmk/plugins/collection/agents",
         "//cmk/plugins/files/agents",
+        "//cmk/plugins/jolokia/agents",
         "//cmk/plugins/mongodb/agents",
         "//cmk/plugins/mtr/agents",
         "//cmk/plugins/nginx/agents",

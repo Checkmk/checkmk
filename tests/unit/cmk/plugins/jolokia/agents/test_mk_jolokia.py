@@ -7,8 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Mapping
-from contextlib import AbstractContextManager
+from typing import ContextManager, Mapping
 
 import pytest
 
@@ -24,7 +23,7 @@ def test_missing_config_basic(removed: str) -> None:
 
 
 def test_missing_config_auth() -> None:
-    def missing_keys(key_string: str) -> AbstractContextManager[object]:
+    def missing_keys(key_string: str) -> ContextManager[object]:
         msg_pattern = r"Missing key\(s\): %s in configuration for UnitTest" % key_string
         return pytest.raises(ValueError, match=msg_pattern)
 

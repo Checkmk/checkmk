@@ -43,7 +43,9 @@ try:
 
     # These days urllib3 would be included directly, but we leave it as it is for the moment
     # for compatibility reasons - at least for the agent plugin here.
-    from requests.packages import urllib3
+    # The type: ignore carries unused-ignore because the requests stub only declares
+    # requests.packages.urllib3 in some of the mypy targets this file is checked in.
+    from requests.packages import urllib3  # type: ignore[attr-defined, unused-ignore]
 except ImportError:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
@@ -345,7 +347,7 @@ class JolokiaInstance:
             try:
                 config[key] = type_(val)
             except ValueError:
-                raise ValueError(err_msg % (f"Invalid {key} {val!r}"))
+                raise ValueError(err_msg % ("Invalid %s %r" % (key, val)))
 
         if config.get("server") == "use fqdn":
             config["server"] = socket.getfqdn()
@@ -566,7 +568,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
 
     # Tomcat reports requestCount per servlet; sum them per web application.
     if path == "*:j2eeType=Servlet,*/requestCount":
-        totals: dict[tuple[Any, ...], int] = {}
+        totals = {}  # type: dict[tuple[Any, ...], int]
         for subinstance, request_count in item_list:
             totals[subinstance] = totals.get(subinstance, 0) + request_count
         item_list = list(totals.items())
@@ -612,7 +614,9 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):  # type: ignore
     except IndexError:
         return []
 
-    return [(f"{urllib.parse.quote(mbean_exp)}/{path}", path, itemspec) for mbean_exp in paths]
+    return [
+        ("%s/%s" % (urllib.parse.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths
+    ]
 
 
 def _process_queries(inst, queries):

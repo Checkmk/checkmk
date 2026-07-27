@@ -137,9 +137,6 @@ test.each(graphLineTypesExceptQuery)('Graph line of type %s can be edited', (lin
       line_type: 'line',
       mirrored: false,
       metric_name: 'test_metric',
-      resource_attributes: [],
-      scope_attributes: [],
-      data_point_attributes: [],
       consolidation_function: {
         type: 'histogram',
         function: 'histogram_quantile',
@@ -240,9 +237,6 @@ test("Graph line of type 'query' has 'Add rule: Metric backend (Custom query)' b
       line_type: 'line',
       mirrored: false,
       metric_name: 'test_metric',
-      resource_attributes: [],
-      scope_attributes: [],
-      data_point_attributes: [],
       consolidation_function: {
         type: 'histogram',
         function: 'histogram_quantile',
@@ -324,9 +318,6 @@ test("Graph line of type 'query' does not have Color picker button", () => {
       line_type: 'line',
       mirrored: false,
       metric_name: 'test_metric',
-      resource_attributes: [],
-      scope_attributes: [],
-      data_point_attributes: [],
       consolidation_function: {
         type: 'histogram',
         function: 'histogram_quantile',
@@ -404,9 +395,6 @@ test("Graph line of type 'query' has help text", () => {
       line_type: 'line',
       mirrored: false,
       metric_name: 'test_metric',
-      resource_attributes: [],
-      scope_attributes: [],
-      data_point_attributes: [],
       consolidation_function: {
         type: 'histogram',
         function: 'histogram_quantile',
@@ -484,9 +472,6 @@ test("Graph line of type 'query' has inline help text", () => {
       line_type: 'line',
       mirrored: false,
       metric_name: 'test_metric',
-      resource_attributes: [],
-      scope_attributes: [],
-      data_point_attributes: [],
       consolidation_function: {
         type: 'histogram',
         function: 'histogram_quantile',
@@ -574,9 +559,6 @@ test("a query graph line's single attribute filter is copied when the line is cl
       line_type: 'line',
       mirrored: false,
       metric_name: 'test_metric',
-      resource_attributes: [{ key: 'service.name', value: 'frontend' }],
-      scope_attributes: [{ key: 'otel.library.name', value: 'http' }],
-      data_point_attributes: [],
       attribute_filter: attributeFilter,
       consolidation_function: {
         type: 'histogram',

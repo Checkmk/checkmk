@@ -201,9 +201,6 @@ const dataQueryAggregationLookbackDefault = 120
 const dataQueryAggregationHistogramPercentile = 90
 const dataQuery = ref<Query>({
   metricName: null,
-  resourceAttributes: [],
-  scopeAttributes: [],
-  dataPointAttributes: [],
   consolidationFunction: {
     type: 'gauge',
     function: 'gauge_last',
@@ -323,9 +320,6 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
         metric_name: graphLine.metric_name,
-        resource_attributes: graphLine.resource_attributes ?? [],
-        scope_attributes: graphLine.scope_attributes ?? [],
-        data_point_attributes: graphLine.data_point_attributes ?? [],
         ...(graphLine.attribute_filter !== undefined
           ? { attribute_filter: graphLine.attribute_filter }
           : {}),
@@ -454,9 +448,6 @@ async function addQuery() {
       line_type: 'line',
       mirrored: false,
       metric_name: dataQuery.value.metricName,
-      resource_attributes: dataQuery.value.resourceAttributes,
-      scope_attributes: dataQuery.value.scopeAttributes,
-      data_point_attributes: dataQuery.value.dataPointAttributes,
       ...(dataQuery.value.attributeFilter !== undefined
         ? { attribute_filter: dataQuery.value.attributeFilter }
         : {}),
@@ -464,9 +455,6 @@ async function addQuery() {
     })
     dataQuery.value = {
       metricName: null,
-      resourceAttributes: [],
-      scopeAttributes: [],
-      dataPointAttributes: [],
       consolidationFunction: {
         type: 'gauge',
         function: 'gauge_last',
@@ -1240,9 +1228,6 @@ const graphDesignerContentAsJson = computed(() => {
             {{ _t('Query') }}:
             <FormMetricBackendCustomQuery
               v-model:metric-name="graphLine.metric_name"
-              v-model:resource-attributes="graphLine.resource_attributes!"
-              v-model:scope-attributes="graphLine.scope_attributes!"
-              v-model:data-point-attributes="graphLine.data_point_attributes!"
               v-model:attribute-filter="graphLine.attribute_filter"
               v-model:consolidation="graphLine.consolidation_function"
               :backend-validation="validateFormMetricBackendCustomQuery(undefined, graphLine)"
@@ -1347,9 +1332,6 @@ const graphDesignerContentAsJson = computed(() => {
       <div>
         <FormMetricBackendCustomQuery
           v-model:metric-name="dataQuery.metricName"
-          v-model:resource-attributes="dataQuery.resourceAttributes"
-          v-model:scope-attributes="dataQuery.scopeAttributes"
-          v-model:data-point-attributes="dataQuery.dataPointAttributes"
           v-model:attribute-filter="dataQuery.attributeFilter"
           v-model:consolidation="dataQuery.consolidationFunction"
           :backend-validation="validateFormMetricBackendCustomQuery(dataQuery)"

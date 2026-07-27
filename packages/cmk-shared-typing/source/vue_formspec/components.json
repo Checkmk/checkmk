@@ -983,24 +983,6 @@
       },
       "required": ["authority_url", "display_name"]
     },
-    "metric_backend_attribute": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": ["key", "value"]
-    },
-    "metric_backend_attributes": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/metric_backend_attribute"
-      }
-    },
     "metric_backend_custom_query": {
       "id": "metric_backend_custom_query",
       "type": "object",
@@ -1024,15 +1006,6 @@
                   "type": "string"
                 }
               ]
-            },
-            "resource_attributes": {
-              "$ref": "#/$defs/metric_backend_attributes"
-            },
-            "scope_attributes": {
-              "$ref": "#/$defs/metric_backend_attributes"
-            },
-            "data_point_attributes": {
-              "$ref": "#/$defs/metric_backend_attributes"
             },
             "attribute_filter": {
               "$ref": "../attribute_filter.json"
@@ -1069,15 +1042,6 @@
             "type": {
               "const": "dcd_metric_backend_filter",
               "default": "dcd_metric_backend_filter"
-            },
-            "resource_attributes": {
-              "$ref": "#/$defs/metric_backend_attributes"
-            },
-            "scope_attributes": {
-              "$ref": "#/$defs/metric_backend_attributes"
-            },
-            "data_point_attributes": {
-              "$ref": "#/$defs/metric_backend_attributes"
             },
             "attribute_filter": {
               "$ref": "../attribute_filter.json"

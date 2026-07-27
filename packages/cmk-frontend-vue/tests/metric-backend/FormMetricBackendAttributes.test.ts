@@ -6,7 +6,6 @@
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/vue'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import type { GraphLineQueryAttributes } from 'cmk-shared-typing/typescript/graph_designer'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
@@ -40,43 +39,32 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-interface Models {
-  resource: ReturnType<typeof ref<GraphLineQueryAttributes>>
-  scope: ReturnType<typeof ref<GraphLineQueryAttributes>>
-  data_point: ReturnType<typeof ref<GraphLineQueryAttributes>>
-  attributeFilter: ReturnType<typeof ref<AttributeFilter | null | undefined>>
-}
+type AttributeFilterModel = ReturnType<typeof ref<AttributeFilter | null | undefined>>
 
-function renderAttributes(initial: {
-  resource?: GraphLineQueryAttributes
-  scope?: GraphLineQueryAttributes
-  data_point?: GraphLineQueryAttributes
-  attributeFilter?: AttributeFilter | null
-}): Models {
-  const models: Models = {
-    resource: ref(initial.resource ?? []),
-    scope: ref(initial.scope ?? []),
-    data_point: ref(initial.data_point ?? []),
-    attributeFilter: ref(initial.attributeFilter)
-  }
+function renderAttributes(attributeFilter?: AttributeFilter | null): AttributeFilterModel {
+  const model = ref<AttributeFilter | null | undefined>(attributeFilter)
   const wrapper = defineComponent({
     components: { FormMetricBackendAttributes },
     setup() {
-      return { models }
+      return { model }
     },
     template: `
       <table><tbody>
-        <FormMetricBackendAttributes
-          v-model:resource-attributes="models.resource.value"
-          v-model:scope-attributes="models.scope.value"
-          v-model:data-point-attributes="models.data_point.value"
-          v-model:attribute-filter="models.attributeFilter.value"
-        />
+        <FormMetricBackendAttributes v-model:attribute-filter="model" />
       </tbody></table>
     `
   })
   render(wrapper)
-  return models
+  return model
+}
+
+const THREE_ATTRIBUTES: AttributeFilter = {
+  type: 'and',
+  conjuncts: [
+    { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'frontend' },
+    { type: 'equals', key: { kind: 'scope', name: 'otel.library.name' }, value: 'http' },
+    { type: 'equals', key: { kind: 'data_point', name: 'http.method' }, value: 'GET' }
+  ]
 }
 
 function pillLabels(): string[] {
@@ -110,12 +98,8 @@ async function openKeyFilter(): Promise<HTMLElement> {
   return screen.getByRole('textbox', { name: 'filter' })
 }
 
-test('renders all preloaded attributes as pills', () => {
-  renderAttributes({
-    resource: [{ key: 'service.name', value: 'frontend' }],
-    scope: [{ key: 'otel.library.name', value: 'http' }],
-    data_point: [{ key: 'http.method', value: 'GET' }]
-  })
+test('renders the filter conditions as pills', () => {
+  renderAttributes(THREE_ATTRIBUTES)
 
   const labels = pillLabels()
   expect(labels).toHaveLength(3)
@@ -129,11 +113,7 @@ test('renders all preloaded attributes as pills', () => {
 })
 
 test('removing a pill removes it and leaves the other pills untouched', async () => {
-  renderAttributes({
-    resource: [{ key: 'service.name', value: 'frontend' }],
-    scope: [{ key: 'otel.library.name', value: 'http' }],
-    data_point: [{ key: 'http.method', value: 'GET' }]
-  })
+  renderAttributes(THREE_ATTRIBUTES)
 
   await userEvent.click(
     within(pillFor('otel.library.name')).getByRole('button', { name: 'Remove condition' })
@@ -152,8 +132,8 @@ test('removing a pill removes it and leaves the other pills untouched', async ()
   expect(labels.some((label) => label.includes('otel.library.name'))).toBe(false)
 })
 
-test('selecting a key writes it to the matching attribute list', async () => {
-  const models = renderAttributes({})
+test('a key with no value keeps the emitted filter empty', async () => {
+  const model = renderAttributes()
 
   const filterInput = await openKeyFilter()
   await userEvent.type(filterInput, 'service')
@@ -161,67 +141,31 @@ test('selecting a key writes it to the matching attribute list', async () => {
   await screen.findByRole('option', { name: 'service' })
   await userEvent.click(screen.getByRole('option', { name: 'service.name' }))
 
+  // The key is set, but with no value the condition is invalid, so the filter stays empty.
   await waitFor(() => {
-    expect(models.resource.value).toEqual([{ key: 'service.name', value: '' }])
+    expect(model.value).toEqual({ type: 'and', conjuncts: [] })
   })
-  // The key reaches the list, but with no value the condition is invalid, so the filter stays empty.
-  expect(models.attributeFilter.value).toEqual({ type: 'and', conjuncts: [] })
 })
 
-const threeListInitial = {
-  resource: [{ key: 'service.name', value: 'frontend' }],
-  scope: [{ key: 'otel.library.name', value: 'http' }],
-  data_point: [{ key: 'http.method', value: 'GET' }]
-}
-const threeListFilter = {
-  type: 'and',
-  conjuncts: [
-    { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'frontend' },
-    { type: 'equals', key: { kind: 'scope', name: 'otel.library.name' }, value: 'http' },
-    { type: 'equals', key: { kind: 'data_point', name: 'http.method' }, value: 'GET' }
-  ]
-} satisfies AttributeFilter
-
-// A null filter (Python None from older configs) and an absent one must both derive from the three lists.
-test.each([
-  { name: 'three lists', initial: threeListInitial, expected: threeListFilter },
-  {
-    name: 'three lists, null filter',
-    initial: { ...threeListInitial, attributeFilter: null },
-    expected: threeListFilter
-  },
-  {
-    name: 'no attributes',
-    initial: {},
-    expected: { type: 'and', conjuncts: [] } satisfies AttributeFilter
-  }
-])('emits the single attribute filter derived from $name', ({ initial, expected }) => {
-  expect(renderAttributes(initial).attributeFilter.value).toEqual(expected)
+test('emits an empty AND (match everything) when there are no attributes', () => {
+  expect(renderAttributes().value).toEqual({ type: 'and', conjuncts: [] })
 })
 
-test.each([
-  {
-    name: 'a null filter (derived from the three lists)',
-    initial: { ...threeListInitial, attributeFilter: null },
-    keys: ['service.name', 'otel.library.name', 'http.method']
-  },
-  {
-    name: 'a provided filter',
-    initial: {
-      attributeFilter: {
-        type: 'and',
-        conjuncts: [
-          { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'frontend' },
-          { type: 'exists', key: { kind: 'scope', name: 'otel.library.name' } }
-        ]
-      } satisfies AttributeFilter
-    },
-    keys: ['service.name', 'otel.library.name']
-  }
-])('initializes the pills from $name', ({ initial, keys }) => {
-  renderAttributes(initial)
+test('initializes the pills from a provided attribute filter, including exists', () => {
+  renderAttributes({
+    type: 'and',
+    conjuncts: [
+      { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'frontend' },
+      { type: 'exists', key: { kind: 'scope', name: 'otel.library.name' } }
+    ]
+  })
 
   const labels = pillLabels()
-  expect(labels).toHaveLength(keys.length)
-  expect(labels).toEqual(expect.arrayContaining(keys.map((key) => expect.stringContaining(key))))
+  expect(labels).toHaveLength(2)
+  expect(labels).toEqual(
+    expect.arrayContaining([
+      expect.stringContaining('service.name'),
+      expect.stringContaining('otel.library.name')
+    ])
+  )
 })

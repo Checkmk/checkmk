@@ -11,8 +11,7 @@ import {
   buildAutocompleteContext,
   fromAttributeFilter,
   fromModel,
-  toAttributeFilter,
-  toModel
+  toAttributeFilter
 } from '@/metric-backend/attributeFilterAdapter'
 
 let counter = 0
@@ -34,27 +33,22 @@ const lists: ThreeLists = {
   ]
 }
 
-describe('toModel', () => {
-  test('concatenates resource -> scope -> data_point into one AND group', () => {
-    const model = toModel(lists, newId)
-
-    expect(model).toHaveLength(1)
-    expect(model[0]!.conditions.map((c) => [c.attributeKind, c.key, c.value, c.operator])).toEqual([
-      ['resource', 'service.name', 'frontend', 'eq'],
-      ['scope', 'otel.library.name', 'http', 'eq'],
-      ['data_point', 'http.method', 'GET', 'eq'],
-      ['data_point', 'http.route', '/api', 'eq']
-    ])
-  })
-
-  test('produces an empty model for empty lists', () => {
-    expect(toModel({ resource: [], scope: [], data_point: [] }, newId)).toEqual([])
-  })
-})
+function modelFromLists(source: ThreeLists): AttributeFilterModel {
+  const conditions: Condition[] = (['resource', 'scope', 'data_point'] as const).flatMap((kind) =>
+    source[kind].map((attr) => ({
+      id: newId(),
+      attributeKind: kind,
+      key: attr.key,
+      operator: 'eq' as const,
+      value: attr.value
+    }))
+  )
+  return conditions.length === 0 ? [] : [{ id: newId(), conditions }]
+}
 
 describe('fromModel', () => {
   test('buckets conditions back into the three lists by attributeKind', () => {
-    expect(fromModel(toModel(lists, newId))).toEqual(lists)
+    expect(fromModel(modelFromLists(lists))).toEqual(lists)
   })
 
   test('drops conditions with no attributeKind or empty key (pills still being created)', () => {
@@ -70,16 +64,11 @@ describe('fromModel', () => {
       data_point: []
     })
   })
-
-  test('round-trips a model through fromModel -> toModel preserving content', () => {
-    const model = toModel(lists, newId)
-    expect(fromModel(toModel(fromModel(model), newId))).toEqual(lists)
-  })
 })
 
 describe('buildAutocompleteContext', () => {
   test('emits per-type cascading attrs plus metric name and static keys', () => {
-    const context = buildAutocompleteContext(toModel(lists, newId), {
+    const context = buildAutocompleteContext(modelFromLists(lists), {
       metricName: 'http_requests',
       staticResourceAttributeKeys: ['service.name']
     })
@@ -128,7 +117,7 @@ describe('buildAutocompleteContext', () => {
 
 describe('toAttributeFilter', () => {
   test('encodes one AND group', () => {
-    expect(toAttributeFilter(toModel(lists, newId))).toEqual({
+    expect(toAttributeFilter(modelFromLists(lists))).toEqual({
       type: 'and',
       conjuncts: [
         { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'frontend' },
@@ -244,7 +233,7 @@ describe('fromAttributeFilter', () => {
   })
 
   test('round-trips a model through toAttributeFilter -> fromAttributeFilter', () => {
-    const model = toModel(lists, newId)
+    const model = modelFromLists(lists)
     const shape = (m: AttributeFilterModel) =>
       m.map((g) => g.conditions.map((c) => [c.attributeKind, c.key, c.value, c.operator]))
     expect(shape(fromAttributeFilter(toAttributeFilter(model), newId))).toEqual(shape(model))

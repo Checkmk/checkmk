@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import type { GraphLineQueryAttributes } from 'cmk-shared-typing/typescript/graph_designer'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import {
@@ -32,13 +31,10 @@ import {
   ATTRIBUTE_KIND_ORDER,
   type AttributeKindKey,
   KEY_IDENTS,
-  type ThreeLists,
   VALUE_IDENTS,
   buildAutocompleteContext,
   fromAttributeFilter,
-  fromModel,
-  toAttributeFilter,
-  toModel
+  toAttributeFilter
 } from './attributeFilterAdapter'
 
 const { _t } = usei18n()
@@ -58,24 +54,9 @@ const props = withDefaults(
 
 const backendValidation = defineModel<ValidationMessages>('backendValidation', { default: [] })
 
-const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
-  default: []
-})
-const scopeAttributes = defineModel<GraphLineQueryAttributes>('scopeAttributes', {
-  default: []
-})
-const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttributes', {
-  default: []
-})
 const attributeFilter = defineModel<AttributeFilter | undefined>('attributeFilter', {
   default: undefined
 })
-
-const LOCATION_TO_KIND: Record<string, AttributeKindKey> = {
-  resource_attributes: 'resource',
-  scope_attributes: 'scope',
-  data_point_attributes: 'data_point'
-}
 
 const SECTION_TITLES: Record<AttributeKindKey, TranslatedString> = {
   resource: _t('Resource'),
@@ -83,19 +64,9 @@ const SECTION_TITLES: Record<AttributeKindKey, TranslatedString> = {
   data_point: _t('Data point')
 }
 
-// The pill model is the UI's source of truth; a config predating the single
-// filter arrives without it, so derive the pills from the three lists instead.
+// The flat pill model is the UI's single source of truth.
 const filterModel = ref<AttributeFilterModel>(
-  attributeFilter.value
-    ? fromAttributeFilter(attributeFilter.value, () => randomId())
-    : toModel(
-        {
-          resource: resourceAttributes.value,
-          scope: scopeAttributes.value,
-          data_point: dataPointAttributes.value
-        },
-        () => randomId()
-      )
+  attributeFilter.value ? fromAttributeFilter(attributeFilter.value, () => randomId()) : []
 )
 // Populate the filter up front so an unedited form still submits it (watch fires only on change).
 attributeFilter.value = toAttributeFilter(filterModel.value)
@@ -113,30 +84,10 @@ function cacheKeyKind(name: string, attributeKind: AttributeKindKey): void {
   }
 }
 
-function attributesEqual(a: GraphLineQueryAttributes, b: GraphLineQueryAttributes): boolean {
-  return (
-    a.length === b.length &&
-    a.every((attr, i) => attr.key === b[i]!.key && attr.value === b[i]!.value)
-  )
-}
-
-// Only reassign a list model when its derived content actually changed, so an
-// in-progress (key-less) pill or an unrelated edit does not churn the parent
-// models with fresh array references on every keystroke.
 watch(
   filterModel,
   (model) => {
     attributeFilter.value = toAttributeFilter(model)
-    const lists = fromModel(model)
-    if (!attributesEqual(lists.resource, resourceAttributes.value)) {
-      resourceAttributes.value = lists.resource
-    }
-    if (!attributesEqual(lists.scope, scopeAttributes.value)) {
-      scopeAttributes.value = lists.scope
-    }
-    if (!attributesEqual(lists.data_point, dataPointAttributes.value)) {
-      dataPointAttributes.value = lists.data_point
-    }
   },
   { deep: true }
 )
@@ -151,19 +102,7 @@ watch(
 immediateWatch(
   () => backendValidation.value,
   (newValidation: ValidationMessages | undefined) => {
-    validationMessages.value = []
-    if (!newValidation || newValidation.length === 0) {
-      return
-    }
-    const lists: ThreeLists = fromModel(filterModel.value)
-    newValidation.forEach((message) => {
-      validationMessages.value.push(message.message)
-      const attributeKind = LOCATION_TO_KIND[message.location[0] ?? '']
-      if (attributeKind !== undefined) {
-        lists[attributeKind] = message.replacement_value as GraphLineQueryAttributes
-      }
-    })
-    filterModel.value = toModel(lists, () => randomId())
+    validationMessages.value = (newValidation ?? []).map((message) => message.message)
   }
 )
 
@@ -258,37 +197,24 @@ function clearAttributeSelection(): void {
 }
 
 function hasInvalidAttributes(): boolean {
-  return (
-    resourceAttributes.value.some((attr) => attr.value.trim() === '') ||
-    scopeAttributes.value.some((attr) => attr.value.trim() === '') ||
-    dataPointAttributes.value.some((attr) => attr.value.trim() === '')
-  )
+  return filterModel.value
+    .flatMap((group) => group.conditions)
+    .some(
+      (condition) => condition.key && condition.operator === 'eq' && condition.value.trim() === ''
+    )
 }
 
 function getValidationMessages(): ValidationMessages {
-  const messages: ValidationMessages = []
-  if (resourceAttributes.value.some((attr) => attr.value.trim() === '')) {
-    messages.push({
-      message: 'Resource attribute values cannot be empty.',
-      location: ['resource_attributes'],
-      replacement_value: resourceAttributes.value
-    })
+  if (!hasInvalidAttributes()) {
+    return []
   }
-  if (scopeAttributes.value.some((attr) => attr.value.trim() === '')) {
-    messages.push({
-      message: 'Scope attribute values cannot be empty.',
-      location: ['scope_attributes'],
-      replacement_value: scopeAttributes.value
-    })
-  }
-  if (dataPointAttributes.value.some((attr) => attr.value.trim() === '')) {
-    messages.push({
-      message: 'Data point attribute values cannot be empty.',
-      location: ['data_point_attributes'],
-      replacement_value: dataPointAttributes.value
-    })
-  }
-  return messages
+  return [
+    {
+      message: 'Attribute values cannot be empty.',
+      location: ['attribute_filter'],
+      replacement_value: attributeFilter.value ?? { type: 'and', conjuncts: [] }
+    }
+  ]
 }
 
 defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessages })

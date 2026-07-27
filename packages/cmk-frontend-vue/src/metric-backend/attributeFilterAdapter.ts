@@ -8,7 +8,6 @@ import type {
   AttributeFilterEquals as SharedAttributeFilterEquals,
   AttributeFilterExists as SharedAttributeFilterExists
 } from 'cmk-shared-typing/typescript/attribute_filter'
-import type { GraphLineQueryAttributes } from 'cmk-shared-typing/typescript/graph_designer'
 
 import {
   type AttributeFilterModel,
@@ -16,6 +15,9 @@ import {
   type Condition,
   isConditionValid
 } from './attribute-filter/types'
+
+// Flat key/value attribute list, as the autocomplete REST context and readonly rendering use it.
+type GraphLineQueryAttributes = Array<{ key: string; value: string }>
 
 // Pill kinds match the shared model's kinds verbatim, so a condition's kind crosses unchanged.
 export type AttributeKindKey = Exclude<AttributeKind, null>
@@ -97,26 +99,11 @@ export const VALUE_IDENTS: Record<AttributeKindKey, string> = {
   data_point: 'monitored_data_point_attributes_values_backend'
 }
 
+// Display-only grouping of the flat filter model by attribute kind (readonly rendering).
 export interface ThreeLists {
   resource: GraphLineQueryAttributes
   scope: GraphLineQueryAttributes
   data_point: GraphLineQueryAttributes
-}
-
-export function toModel(lists: ThreeLists, newId: () => string): AttributeFilterModel {
-  const conditions: Condition[] = []
-  for (const attributeKind of ATTRIBUTE_KIND_ORDER) {
-    for (const attr of lists[attributeKind]) {
-      conditions.push({
-        id: newId(),
-        attributeKind,
-        key: attr.key,
-        operator: 'eq',
-        value: attr.value
-      })
-    }
-  }
-  return conditions.length === 0 ? [] : [{ id: newId(), conditions }]
 }
 
 // The three lists cannot express OR, so all groups flatten together.

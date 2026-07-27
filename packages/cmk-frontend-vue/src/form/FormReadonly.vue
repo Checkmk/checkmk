@@ -216,11 +216,7 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
 
   const attributeLists = value.attribute_filter
     ? fromModel(fromAttributeFilter(value.attribute_filter, () => randomId()))
-    : {
-        resource: value.resource_attributes ?? [],
-        scope: value.scope_attributes ?? [],
-        data_point: value.data_point_attributes ?? []
-      }
+    : { resource: [], scope: [], data_point: [] }
 
   const resourceRow = renderAttributes('Resource Attributes', attributeLists.resource)
   if (resourceRow) {

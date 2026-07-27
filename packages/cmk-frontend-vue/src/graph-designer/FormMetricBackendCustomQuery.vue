@@ -6,10 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import {
-  type GraphLineQueryAttributes,
-  type ConsolidationFunction as WireConsolidationFunction
-} from 'cmk-shared-typing/typescript/graph_designer'
+import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
@@ -34,9 +31,6 @@ const { _t } = usei18n()
 
 export interface Query {
   metricName: string | null
-  resourceAttributes: GraphLineQueryAttributes
-  scopeAttributes: GraphLineQueryAttributes
-  dataPointAttributes: GraphLineQueryAttributes
   attributeFilter?: AttributeFilter
   consolidationFunction: WireConsolidationFunction
 }
@@ -64,15 +58,6 @@ immediateWatch(
 
 const metricName = defineModel<string | null>('metricName', { default: null })
 const metricTypes = defineModel<string[]>('metricTypes', { default: () => [] })
-const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
-  default: []
-})
-const scopeAttributes = defineModel<GraphLineQueryAttributes>('scopeAttributes', {
-  default: []
-})
-const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttributes', {
-  default: []
-})
 const attributeFilter = defineModel<AttributeFilter | undefined>('attributeFilter', {
   default: undefined
 })
@@ -130,9 +115,6 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
         </td>
       </tr>
       <FormMetricBackendAttributes
-        v-model:resource-attributes="resourceAttributes"
-        v-model:scope-attributes="scopeAttributes"
-        v-model:data-point-attributes="dataPointAttributes"
         v-model:attribute-filter="attributeFilter"
         :metric-name="metricName"
       />

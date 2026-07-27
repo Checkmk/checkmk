@@ -170,9 +170,6 @@ test('backend validation for the lookback is surfaced and its replacement applie
       location: ['aggregation_lookback'],
       replacement_value: {
         metric_name: null,
-        resource_attributes: [],
-        scope_attributes: [],
-        data_point_attributes: [],
         aggregation_lookback: 1,
         aggregation_histogram_percentile: 90,
         service_name_template: ''

@@ -61,9 +61,6 @@ const consolidation = computed<WireConsolidationFunction>({
   <FormMetricBackendCustomQuery
     :id="componentId"
     v-model:metric-name="data.metric_name"
-    v-model:resource-attributes="data.resource_attributes!"
-    v-model:scope-attributes="data.scope_attributes!"
-    v-model:data-point-attributes="data.data_point_attributes!"
     v-model:attribute-filter="data.attribute_filter"
     v-model:consolidation="consolidation"
     :backend-validation="props.backendValidation"

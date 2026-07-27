@@ -58,24 +58,6 @@
     "graph_line_metric_name": {
       "type": "string"
     },
-    "graph_line_query_attribute": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": ["key", "value"]
-    },
-    "graph_line_query_attributes": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/graph_line_query_attribute"
-      }
-    },
     "graph_line_query": {
       "type": "object",
       "title": "query",
@@ -94,15 +76,6 @@
         },
         "metric_name": {
           "$ref": "#/$defs/graph_line_metric_name"
-        },
-        "resource_attributes": {
-          "$ref": "#/$defs/graph_line_query_attributes"
-        },
-        "scope_attributes": {
-          "$ref": "#/$defs/graph_line_query_attributes"
-        },
-        "data_point_attributes": {
-          "$ref": "#/$defs/graph_line_query_attributes"
         },
         "consolidation_function": {
           "$ref": "#/$defs/consolidation_function"

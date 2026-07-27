@@ -48,7 +48,7 @@ bill_of_materials(
 )
 
 py_pytest_main(
-    name = "__test__",
+    name = "test_licenses_main",
     args = [
         "omd/dependency_management/test_licenses.py",
     ],
@@ -60,7 +60,7 @@ py_test(
     srcs = [
         "cyclonedx.py",
         "test_licenses.py",
-        ":__test__.py",
+        "test_licenses_main.py",
     ],
     data = [
         "automatically_researched_licenses.json",
@@ -68,11 +68,42 @@ py_test(
         ":list_of_dependencies",
     ],
     imports = ["."],
-    main = ":__test__.py",
+    main = ":test_licenses_main.py",
     deps = [
-        ":__test__",
+        ":test_licenses_main",
         requirement("pydantic"),
         requirement("pytest"),
+    ],
+)
+
+py_pytest_main(
+    name = "test_manual_dep_manifest_main",
+    args = [
+        "omd/dependency_management/test_manual_dependency_manifest.py",
+    ],
+    deps = [requirement("pytest")],
+)
+
+py_test(
+    name = "test_manual_dep_manifest",
+    srcs = [
+        "cyclonedx.py",
+        "list_dependencies.py",
+        "pnpm_parser.py",
+        "test_manual_dependency_manifest.py",
+        ":test_manual_dep_manifest_main.py",
+    ],
+    data = [
+        "manual_dependency_manifest.yml",
+        "//third_party:third_party_archives",
+    ],
+    imports = ["."],
+    main = ":test_manual_dep_manifest_main.py",
+    deps = [
+        requirement("pydantic"),
+        requirement("pyyaml"),
+        requirement("toml"),
+        ":test_manual_dep_manifest_main",
     ],
 )
 

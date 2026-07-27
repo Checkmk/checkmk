@@ -183,6 +183,7 @@ class CustomManifestEntry(BaseModel):
     license_: SPDXId = Field(validation_alias="license")
     cpe: str | None = None
     comment: str | None = None
+    path: Path | None = None
 
     def component(self, path: Path) -> Component:
         return Component(

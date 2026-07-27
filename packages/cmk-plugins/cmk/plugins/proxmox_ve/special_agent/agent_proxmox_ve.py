@@ -36,7 +36,6 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
@@ -98,37 +97,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("hostname", help="Name of the Proxmox VE instance to query.")
     return parser.parse_args(argv)
-
-
-def find_storage_for_vmid(
-    all_vms: Mapping[str, Mapping[str, object]],
-    vmid: str,
-    config: Mapping[str, str],
-) -> MutableMapping[str, MutableSequence[StorageLink]]:
-    storage_links: MutableMapping[str, MutableSequence[StorageLink]] = {}
-
-    vm_info = all_vms.get(vmid)
-    if vm_info is None:
-        return storage_links
-    vm_type = vm_info.get("type")
-    pattern = ("ide", "scsi", "sata", "virtio") if vm_type == "qemu" else ("mp", "rootfs")
-
-    for key, value in config.items():
-        if not key.startswith(pattern):
-            continue
-
-        storage_name = value.partition(":")[0]
-        size = ""
-        for part in value.split(","):
-            if part.startswith("size="):
-                size = part[5:]
-                break
-
-        storage_links.setdefault(storage_name, []).append(
-            StorageLink(type=key, size=size, vmid=vmid)
-        )
-
-    return storage_links
 
 
 def hostname_matches_node(hostname: str, node_name: str) -> bool:
@@ -277,22 +245,24 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
         if item.get("type") == "node" and item.get("name")
     }
 
-    node_storage: MutableMapping[str, MutableMapping[str, MutableSequence[StorageLink]]] = {}
+    node_vm_disks: MutableMapping[str, MutableSequence[Mapping[str, object]]] = {}
     for node in data["nodes"]:
         if (timezone := node["time"].get("timezone")) is not None:
             node_timezones[node["node"]] = timezone
         # only lxc and qemu can have snapshots
         for vm in node.get("lxc", []) + node.get("qemu", []):
-            snapshot_data[str(vm["vmid"])] = {
+            vmid = str(vm["vmid"])
+            snapshot_data[vmid] = {
                 "snaptimes": [x["snaptime"] for x in vm["snapshot"] if "snaptime" in x],
             }
-            config_lock_data[str(vm["vmid"])] = {
+            config_lock_data[vmid] = {
                 "lock": vm["config"].get("lock"),
             }
 
-            vm_storage = find_storage_for_vmid(all_vms, str(vm["vmid"]), vm["config"])
-            for storage_name, links in vm_storage.items():
-                node_storage.setdefault(node["node"], {}).setdefault(storage_name, []).extend(links)
+            if (vm_info := all_vms.get(vmid)) is not None:
+                node_vm_disks.setdefault(node["node"], []).append(
+                    {"vmid": vmid, "disks": _disk_config(vm_info["type"], vm["config"])}
+                )
 
     def date_to_utc(naive_string: str, tz: str) -> str:
         """
@@ -335,7 +305,7 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
             node_cluster_mapping,
             replications,
             all_storages,
-            node_storage,
+            node_vm_disks,
             data,
         ):
             sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(content)}\n")
@@ -366,7 +336,7 @@ def _create_node_sections(
     node_cluster_mapping: Mapping[str, Any],
     replications: Mapping[str, Any],
     all_storages: Mapping[str, Any],
-    node_storage: Mapping[str, Mapping[str, Sequence[StorageLink]]],
+    node_vm_disks: Mapping[str, Sequence[Mapping[str, object]]],
     data: Any,
 ) -> Iterable[tuple[str, object]]:
     yield (
@@ -420,15 +390,15 @@ def _create_node_sections(
 
     yield (
         "proxmox_ve_node_storage",
-        SectionNodeStorages(
-            node=node["node"],
-            storages=[
+        {
+            "node": node["node"],
+            "storages": [
                 storage_data
                 for storage_data in all_storages.values()
                 if storage_data.get("node", "") == node["node"]
             ],
-            storage_links=node_storage.get(node["node"], {}),
-        ).model_dump(),
+            "vm_disks": node_vm_disks.get(node["node"], []),
+        },
     )
 
     yield (
@@ -459,6 +429,17 @@ def _backup_timezone(
     except KeyError:
         # get the first value of the first key
         return next(iter(node_timezones.values()), "UTC")
+
+
+def _disk_config(vm_type: str, config: Mapping[str, object]) -> dict[str, str]:
+    # Only forward the disk entries: the rest of the config holds free text and
+    # secrets (description, cloud-init credentials, ...) that the section does not need.
+    prefixes = ("ide", "scsi", "sata", "virtio") if vm_type == "qemu" else ("mp", "rootfs")
+    return {
+        key: value
+        for key, value in config.items()
+        if key.startswith(prefixes) and isinstance(value, str)
+    }
 
 
 def _create_vm_sections(

@@ -14,6 +14,7 @@ import pytest
 from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
     _backup_timezone,
     _create_vm_sections,
+    _disk_config,
     hostname_matches_node,
     node_piggyback_host,
     parse_arguments,
@@ -694,3 +695,46 @@ def test_create_vm_sections_unknown_uptime() -> None:
     assert section_name == "proxmox_ve_vm_info"
     assert isinstance(section, dict)
     assert section["uptime"] is None
+
+
+@pytest.mark.parametrize(
+    "vm_type, config, expected",
+    [
+        pytest.param(
+            "qemu",
+            {
+                "scsi0": "local-zfs:vm-100-disk-0,size=16G",
+                "virtio1": "local:vm-100-disk-1,size=8G",
+                "cores": 2,
+                "onboot": 1,
+                "description": "free text",
+                "cipassword": "secret",
+                "sshkeys": "ssh-rsa AAAA",
+            },
+            {
+                "scsi0": "local-zfs:vm-100-disk-0,size=16G",
+                "virtio1": "local:vm-100-disk-1,size=8G",
+            },
+            id="qemu_keeps_only_disks",
+        ),
+        pytest.param(
+            "lxc",
+            {
+                "rootfs": "local:vm-137-disk-0,size=8G",
+                "mp0": "local:vm-137-disk-1,size=4G",
+                "scsi0": "local:vm-137-disk-2,size=2G",
+                "memory": 512,
+            },
+            {
+                "rootfs": "local:vm-137-disk-0,size=8G",
+                "mp0": "local:vm-137-disk-1,size=4G",
+            },
+            id="lxc_keeps_only_mountpoints",
+        ),
+        pytest.param("qemu", {"scsi0": 1}, {}, id="non_string_disk_value_is_dropped"),
+    ],
+)
+def test_vm_config_forwards_only_disk_entries(
+    vm_type: str, config: Mapping[str, object], expected: Mapping[str, str]
+) -> None:
+    assert _disk_config(vm_type, config) == expected

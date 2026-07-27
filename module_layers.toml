@@ -1820,7 +1820,6 @@ allows = [
 "bin/check_mk.py" = "cmk.cli"
 "bin/cmk-migrate-extension-rulesets.py" = "cmk.update_config"
 "bin/cmk-migrate-oracle-rulesets.py" = "cmk.update_config"
-"bin/cmk-validate-config.py" = "cmk.validate_config"
 "omd/packages/appliance/webconf_snapin.py" = "cmk.gui"
 "omd/non-free/packages/cmk-dcd/cmk-dcd.py" = "cmk.dcd.daemon"
 "omd/non-free/packages/cmk-dcd/dcd.py" = "cmk.dcd.daemon"

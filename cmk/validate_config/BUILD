@@ -3,7 +3,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "validate_config",
-    srcs = glob(["**/*.py"]),
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = ["__main__.py"],
+    ),
     imports = ["../.."],
     tags = [
         "deballast-keep=//cmk/gui:app",  # GUI plugin tree loaded at runtime to populate the config/ruleset registries
@@ -22,5 +25,19 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:tty",
         requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "__main__",
+    srcs = ["__main__.py"],
+    imports = ["../.."],
+    visibility = ["//cmk:__pkg__"],
+    deps = [
+        ":validate_config",
+        "//cmk/base",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-wsgi",
     ],
 )

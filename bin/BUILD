@@ -67,7 +67,6 @@ pkg_files(
         ":cmk-piggyback.py",
         ":cmk-piggyback-hub.py",
         ":cmk-ui-job-scheduler-health",
-        ":cmk-validate-config.py",
         ":mkevent",
         ":mkp.py",
     ],
@@ -81,7 +80,6 @@ pkg_files(
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
         "cmk-piggyback-hub.py": "cmk-piggyback-hub",
         "cmk-piggyback.py": "cmk-piggyback",
-        "cmk-validate-config.py": "cmk-validate-config",
         "mkp.py": "mkp",
     },
 )
@@ -163,21 +161,6 @@ py_library(
         "//cmk/utils",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
-    ],
-)
-
-py_library(
-    name = "cmk_validate_config_py",
-    srcs = ["cmk-validate-config.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/base/config",
-        "//cmk/gui:app",
-        "//cmk/utils:paths",
-        "//cmk/utils:redis",
-        "//cmk/validate_config",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-wsgi",
     ],
 )
 

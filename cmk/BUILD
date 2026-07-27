@@ -87,6 +87,7 @@ py_wheel(
         "cmk-product-usage = cmk.product_usage.cli:main",
         "cmk-pwstore = cmk.utils.password_store.cli:main",
         "cmk-ui-job-scheduler = cmk.gui.job_scheduler.main:main",
+        "cmk-validate-config = cmk.validate_config.__main__:main",
         "cmk-validate-plugins = cmk.validate_plugins:main",
         "init-redis = cmk.gui.search.index:main",
         "message-broker-certs = cmk.message_broker_certs:main",

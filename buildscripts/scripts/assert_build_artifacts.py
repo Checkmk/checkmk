@@ -122,14 +122,19 @@ def build_meta_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[
         yield hash_file(csv_file_name), internal_only
 
 
+def latest_version_alias(args: Args) -> str:
+    if args.version_agnostic:
+        return "latest"
+    return f"{Version.from_str(args.version).base}-latest"
+
+
 def build_meta_file_latest_mapping(
     args: Args, loaded_yaml: dict, file_type: MetaFileExtension
 ) -> dict[str, str]:
-    base_version = Version.from_str(args.version).base
     return {
-        meta_file_name(
-            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest", file_type
-        ): meta_file_name(edition, args.version, file_type)
+        meta_file_name(edition, latest_version_alias(args), file_type): meta_file_name(
+            edition, args.version, file_type
+        )
         for edition in loaded_yaml["editions"]
         if edition not in loaded_yaml.get("internal_editions", [])
     }

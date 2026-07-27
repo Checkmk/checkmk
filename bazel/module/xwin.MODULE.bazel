@@ -19,15 +19,18 @@ _CRT_VERSION = "14.44.17.14"
 
 _SDK_VERSION = "10.0.26100"
 
+_PACKAGE_REVISION = "0"
+
 xwin_sysroot = use_repo_rule("//bazel/toolchains/cc/xwin:xwin_sysroot.bzl", "xwin_sysroot")
 
 xwin_sysroot(
     name = "xwin_sysroot",
     crt_version = _CRT_VERSION,
     sdk_version = _SDK_VERSION,
-    sysroot_sha256 = "75c83668046d0c19914c2f415a38c52077531e8b33eebc2929d7c3d20286ccbd",
-    sysroot_url = (UPSTREAM_MIRROR_URL + "xwin-sysroot-crt{crt}-sdk{sdk}-x86_64.tar.xz").format(
+    sysroot_sha256 = "82c82577e2afb16e6779d6c667c973d4acd25c046837e7168f377136646cd988",
+    sysroot_url = (UPSTREAM_MIRROR_URL + "xwin-sysroot-crt{crt}-sdk{sdk}-x86_64-r{rev}.tar.xz").format(
         crt = _CRT_VERSION,
+        rev = _PACKAGE_REVISION,
         sdk = _SDK_VERSION,
     ),
     vs_manifest_version = _VS_MANIFEST_VERSION,

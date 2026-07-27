@@ -14,10 +14,10 @@ environment (see below).
 
 Layout produced under @xwin_sysroot:
     crt/include/**         MSVC CRT headers (vcruntime.h, stdio.h, ...)
-    crt/lib/x86_64/**      MSVC CRT link libs (libcmt, libucrt, oldnames, ...)
+    crt/lib/x86_64/**      MSVC CRT link libs (libcmt, libcmtd, oldnames, ...)
     sdk/include/**         Windows SDK headers (Windows.h, winsock2.h, ...)
     sdk/lib/um/x86_64/**   User-mode SDK import libs (kernel32, ws2_32, ...)
-    sdk/lib/ucrt/x86_64/** Universal C Runtime link libs
+    sdk/lib/ucrt/x86_64/** Universal C Runtime link libs (libucrt, libucrtd)
 
 A pre-splatted archive of the pinned sysroot is preferred from the internal
 mirror: it goes through Bazel's downloader (repository cache, integrity
@@ -29,11 +29,12 @@ To (re)create and publish the mirror archive after bumping the pins in
 bazel/module/xwin.MODULE.bazel:
 
     xwin --accept-license --temp --manifest-version <M> \\
-        --crt-version <CRT> --sdk-version <SDK> splat --output sysroot
+        --crt-version <CRT> --sdk-version <SDK> \\
+        splat --include-debug-libs --output sysroot
     find sysroot -type l -lname . -delete
     tar -C sysroot --sort=name --owner=0 --group=0 --numeric-owner \\
         --mtime='2026-01-01 00:00:00Z' -cf - crt sdk \\
-        | xz -T0 -6 > xwin-sysroot-crt<CRT>-sdk<SDK>-x86_64.tar.xz
+        | xz -T0 -6 > xwin-sysroot-crt<CRT>-sdk<SDK>-x86_64-r<REV>.tar.xz
 
 then upload it to the upstream-archives Nexus repository and update
 sysroot_sha256 in bazel/module/xwin.MODULE.bazel.
@@ -97,6 +98,7 @@ def _xwin_sysroot_impl(rctx):
             "--sdk-version",
             rctx.attr.sdk_version,
             "splat",
+            "--include-debug-libs",
             "--output",
             ".",
         ],

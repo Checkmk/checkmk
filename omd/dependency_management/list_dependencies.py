@@ -180,7 +180,7 @@ class CustomManifestEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     purl: Annotated[PUrl, PlainValidator(PUrl.from_str)]
-    license_: SPDXId = Field(validation_alias="license")
+    license_: SPDXId | None = Field(default=None, validation_alias="license")
     cpe: str | None = None
     comment: str | None = None
     path: Path | None = None
@@ -190,7 +190,7 @@ class CustomManifestEntry(BaseModel):
             type_="library",
             purl=self.purl,
             files=frozenset({path}),
-            license_info=LicenseInfo(id_=self.license_, text=None),
+            license_info=LicenseInfo(id_=self.license_, text=None) if self.license_ else None,
             cpe=self.cpe,
         )
 

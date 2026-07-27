@@ -24,6 +24,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
@@ -287,3 +288,22 @@ def test_get_rule_options_from_catalog_value_unknown_type() -> None:
     }
     with pytest.raises(TypeError):
         rulesets.get_rule_options_from_catalog_value(disk_value)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_predefined_conditions_allows_id_with_dash(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        PredefinedConditionStore,
+        "choices",
+        lambda self: [("my-condition-1", "My condition")],
+    )
+
+    rulesets._create_rule_conditions_catalog_topic(
+        locked_conditions=None,
+        tree=FolderTree(config=HostsAndFoldersConfig.from_config(active_config)),
+        rule_spec_name="only_hosts",
+        rule_spec_item=None,
+        is_service_rule=False,
+    )

@@ -1,7 +1,6 @@
 #!groovy
 
-/// TODO: rename
-/// file: test-integration-redfish.groovy
+/// file: test-system-redfish.groovy
 
 void main() {
     check_job_parameters([

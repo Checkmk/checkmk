@@ -43,6 +43,12 @@ function clamp(value: number, lo: number, hi: number): number {
   return Math.min(Math.max(value, lo), hi)
 }
 
+// A drag is tracked on the window, so it can end outside the plot, and d3 scales
+// extrapolate past their range rather than saturating.
+export function clampPixelToPlot(pixel: number, plotExtent: number): number {
+  return clamp(pixel, 0, plotExtent)
+}
+
 export function selectionRect(
   mode: ZoomMode,
   points: SelectionPoints,

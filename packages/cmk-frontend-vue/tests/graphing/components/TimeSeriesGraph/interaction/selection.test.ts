@@ -6,9 +6,38 @@
 import { describe, expect, test } from 'vitest'
 
 import {
+  clampPixelToPlot,
   clampSpan,
   selectionRect
 } from '@/graphing/components/TimeSeriesGraph/interaction/selection'
+
+describe('clampPixelToPlot', () => {
+  const plotExtent = 200
+
+  test('holds a pixel past the far edge at the plot extent', () => {
+    const pixelPastTheFarEdge = 900
+
+    const clamped = clampPixelToPlot(pixelPastTheFarEdge, plotExtent)
+
+    expect(clamped).toBe(200)
+  })
+
+  test('holds a pixel before the near edge at zero', () => {
+    const pixelBeforeTheNearEdge = -500
+
+    const clamped = clampPixelToPlot(pixelBeforeTheNearEdge, plotExtent)
+
+    expect(clamped).toBe(0)
+  })
+
+  test('leaves a pixel inside the plot untouched', () => {
+    const pixelInsideThePlot = 120
+
+    const clamped = clampPixelToPlot(pixelInsideThePlot, plotExtent)
+
+    expect(clamped).toBe(120)
+  })
+})
 
 describe('clampSpan', () => {
   test('widens a sub-floor range about its centre', () => {

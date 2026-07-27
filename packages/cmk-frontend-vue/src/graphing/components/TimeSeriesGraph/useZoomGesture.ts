@@ -6,7 +6,12 @@
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import { type Ref, computed, onBeforeUnmount, ref } from 'vue'
 
-import { type SelectionPoints, clampSpan, selectionRect } from './interaction/selection'
+import {
+  type SelectionPoints,
+  clampPixelToPlot,
+  clampSpan,
+  selectionRect
+} from './interaction/selection'
 import type { TimeRange, ZoomMode, ZoomPayload } from './types'
 
 // A drag shorter than this on the active axis is treated as a click, not a zoom.
@@ -73,12 +78,16 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     if (!drag) {
       return
     }
+    // Thresholding the clamped pixels keeps a drag whose visible part is sub-threshold a
+    // click, however far outside the plot the cursor travelled.
     if (options.zoomMode() === 'value') {
-      if (Math.abs(drag.y1 - drag.y0) < DRAG_THRESHOLD_PX) {
+      const fromY = clampPixelToPlot(drag.y0, options.plotHeight.value)
+      const toY = clampPixelToPlot(drag.y1, options.plotHeight.value)
+      if (Math.abs(toY - fromY) < DRAG_THRESHOLD_PX) {
         return
       }
-      const valueA = options.yScale.invert(drag.y0)
-      const valueB = options.yScale.invert(drag.y1)
+      const valueA = options.yScale.invert(fromY)
+      const valueB = options.yScale.invert(toY)
       const [min, max] = clampSpan(
         [Math.min(valueA, valueB), Math.max(valueA, valueB)],
         options.minValueRange()
@@ -86,12 +95,14 @@ export function useZoomGesture(options: ZoomGestureOptions) {
       options.onZoom({ timeRange: options.timeRange(), valueRange: { min, max } })
       return
     }
-    if (Math.abs(drag.x1 - drag.x0) < DRAG_THRESHOLD_PX) {
+    const fromX = clampPixelToPlot(Math.min(drag.x0, drag.x1), options.plotWidth.value)
+    const toX = clampPixelToPlot(Math.max(drag.x0, drag.x1), options.plotWidth.value)
+    if (toX - fromX < DRAG_THRESHOLD_PX) {
       return
     }
     const range = options.timeRange()
-    const timeA = (options.xScale.invert(Math.min(drag.x0, drag.x1)) as Date).getTime() / 1000
-    const timeB = (options.xScale.invert(Math.max(drag.x0, drag.x1)) as Date).getTime() / 1000
+    const timeA = (options.xScale.invert(fromX) as Date).getTime() / 1000
+    const timeB = (options.xScale.invert(toX) as Date).getTime() / 1000
     const [start, end] = clampSpan([timeA, timeB], options.minTimeRange())
     // step is carried unchanged: a time-zoom-in redraws held data, so it only feeds the
     // tick-density heuristic, never a refetch.

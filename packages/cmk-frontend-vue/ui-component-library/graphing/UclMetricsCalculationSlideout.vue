@@ -105,9 +105,7 @@ const seed: GraphItem[] = [
     mirrored: false,
     visible: true,
     metric_name: 'span.latency',
-    resource_attributes: [],
-    scope_attributes: [],
-    data_point_attributes: [],
+    attribute_filter: { type: 'and', conjuncts: [] },
     consolidation_function: {
       type: 'histogram_quantile',
       lookback_seconds: 300,

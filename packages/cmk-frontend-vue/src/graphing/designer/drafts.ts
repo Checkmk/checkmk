@@ -127,9 +127,7 @@ export function newMetricBackendDraft(id: ItemId): DraftMetricBackendItem {
     mirrored: false,
     visible: true,
     metric_name: null,
-    resource_attributes: [],
-    scope_attributes: [],
-    data_point_attributes: [],
+    attribute_filter: { type: 'and', conjuncts: [] },
     consolidation_function: { type: 'gauge_last', lookback_seconds: 300 }
   }
 }

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -28,7 +29,6 @@ const { _t } = usei18n()
 const DEFAULT_HISTOGRAM_PERCENTILE = 90
 
 type Consolidation = MetricBackendItem['consolidation_function']
-type QueryAttributes = MetricBackendItem['resource_attributes']
 
 // The picker edits function, lookback and percentile independently and speaks the grouped
 // {type, function} shape, while the item stores the flat engine union — so map between them
@@ -101,19 +101,17 @@ const metricName = computed<string | null>({
   set: (value) => store.replace({ ...item, metric_name: value })
 })
 
-const resourceAttributes = computed<QueryAttributes>({
-  get: () => [...item.resource_attributes],
-  set: (value) => store.replace({ ...item, resource_attributes: value })
-})
-
-const scopeAttributes = computed<QueryAttributes>({
-  get: () => [...item.scope_attributes],
-  set: (value) => store.replace({ ...item, scope_attributes: value })
-})
-
-const dataPointAttributes = computed<QueryAttributes>({
-  get: () => [...item.data_point_attributes],
-  set: (value) => store.replace({ ...item, data_point_attributes: value })
+// The REST item carries the filter as an opaque object; the pill editor speaks the typed shape.
+const attributeFilter = computed<AttributeFilter | undefined>({
+  get: () => item.attribute_filter as unknown as AttributeFilter,
+  set: (value) => {
+    if (value !== undefined) {
+      store.replace({
+        ...item,
+        attribute_filter: value as unknown as MetricBackendItem['attribute_filter']
+      })
+    }
+  }
 })
 
 const aggregationLookback = computed<number>({
@@ -160,9 +158,7 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
         </td>
       </tr>
       <FormMetricBackendAttributes
-        v-model:resource-attributes="resourceAttributes"
-        v-model:scope-attributes="scopeAttributes"
-        v-model:data-point-attributes="dataPointAttributes"
+        v-model:attribute-filter="attributeFilter"
         :metric-name="metricName"
       />
       <FormMetricBackendConsolidation

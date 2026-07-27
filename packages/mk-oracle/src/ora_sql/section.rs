@@ -283,28 +283,53 @@ impl Section {
                 log::info!(
                     "Resolved `path:` {:?} for section '{}' to SQL file {:?}",
                     path,
-                    self.item_value
-                        .as_ref()
-                        .map(|iv| iv.as_str())
-                        .unwrap_or(&self.header_name),
+                    self.display_name(),
                     &sql_file
                 );
                 Some(contents)
             }
             None => {
-                log::info!(
-                    "Could not find a SQL file for section '{}' at the provided `path:` \
-                    {:?}; tried candidates {:?}",
-                    self.item_value
-                        .as_ref()
-                        .map(|iv| iv.as_str())
-                        .unwrap_or(&self.header_name),
-                    path,
-                    &candidates
-                );
+                self.log_unresolved_path(&candidates);
                 None
             }
         }
+    }
+
+    /// Report a SQL-file lookup — but only where it says something.
+    fn log_unresolved_path(&self, candidates: &[PathBuf]) {
+        if let Some(report) = self.unresolved_path_report(candidates) {
+            log::info!("{}", report);
+        }
+    }
+
+    /// The message for [`Self::log_unresolved_path`], or `None` to stay quiet.
+    fn unresolved_path_report(&self, candidates: &[PathBuf]) -> Option<String> {
+        if let Some(configured_path) = self.configured_path() {
+            Some(format!(
+                "Could not find a SQL file for section '{}' at the provided `path:` \
+                {:?}; tried candidates {:?}",
+                self.display_name(),
+                configured_path,
+                candidates
+            ))
+        } else if self.is_custom_metric() && self.inline_sql.is_none() {
+            Some(format!(
+                "No SQL for custom metric '{}': it has neither an inline `sql:` nor a \
+                `path:`, and no '{}.sql' was found in the SQL search dirs {:?}",
+                self.display_name(),
+                self.directory_lookup_stem(),
+                candidates
+            ))
+        } else {
+            None
+        }
+    }
+
+    /// The user-supplied `path:`, if the config carries a non-empty one.
+    fn configured_path(&self) -> Option<&Path> {
+        self.path
+            .as_deref()
+            .filter(|path| !path.as_os_str().is_empty())
     }
 
     fn resolve_candidate(
@@ -328,10 +353,22 @@ impl Section {
     /// Stem used when `path:` resolves to a directory: the custom-metric item
     /// name for custom metrics, the section header name otherwise.
     fn directory_lookup_stem(&self) -> &str {
+        self.display_name()
+    }
+
+    /// Name this section goes by in logs and file lookups: the custom-metric
+    /// item name where there is one, the section header name otherwise.
+    fn display_name(&self) -> &str {
         self.item_value
             .as_ref()
             .map(|iv| iv.as_str())
             .unwrap_or(&self.header_name)
+    }
+
+    /// Custom metrics are the sections that carry an item value; everything
+    /// else is a builtin section backed by a factory query.
+    fn is_custom_metric(&self) -> bool {
+        self.item_value.is_some()
     }
 
     fn find_known_query(
@@ -842,6 +879,91 @@ oracle:
             runtime.inline_sql(),
             Some("select 'details:fallback' from dual")
         );
+    }
+
+    #[test]
+    fn test_configured_path_ignores_unset_and_empty_path() {
+        // Only a non-empty `path:` counts as configured: the "missing SQL file"
+        // report hangs off this, and builtin sections carry no `path:` at all.
+        let builtin = Section::new(&section::SectionBuilder::new("instance").build(), 0);
+        assert!(builtin.configured_path().is_none());
+
+        let empty = Section::new(
+            &section::SectionBuilder::new("instance").path("").build(),
+            0,
+        );
+        assert!(empty.configured_path().is_none());
+
+        let configured = Section::new(
+            &section::SectionBuilder::new("instance")
+                .path("queries/instance.sql")
+                .build(),
+            0,
+        );
+        assert_eq!(
+            configured.configured_path(),
+            Some(Path::new("queries/instance.sql"))
+        );
+    }
+
+    /// Builtin (`instance`) or custom-metric (`item_value` set) section, with
+    /// the given `path:` and inline `sql:` applied when non-empty.
+    fn section_for_report(custom: bool, path: &str, sql: &str) -> Section {
+        let mut builder = section::SectionBuilder::new("instance");
+        if custom {
+            builder = builder.set_item_value(ItemValue::from("product_price".to_string()));
+        }
+        if !path.is_empty() {
+            builder = builder.path(path);
+        }
+        if !sql.is_empty() {
+            builder = builder.sql(sql);
+        }
+        Section::new(&builder.build(), 0)
+    }
+
+    #[test]
+    fn test_no_report_for_builtin_section_without_path() {
+        // CMK-37173: builtin sections have no `path:`, fall back to their
+        // factory query, and must not be reported as missing a SQL file.
+        for sql in ["", "select 1 from dual"] {
+            assert_eq!(
+                section_for_report(false, "", sql).unresolved_path_report(&[]),
+                None
+            );
+        }
+    }
+
+    #[test]
+    fn test_no_report_for_custom_metric_falling_back_to_inline_sql() {
+        // The inline `sql:` carries the metric, so the lookup miss is expected.
+        assert_eq!(
+            section_for_report(true, "", "select 1 from dual").unresolved_path_report(&[]),
+            None
+        );
+    }
+
+    #[test]
+    fn test_report_for_custom_metric_without_inline_sql() {
+        // Neither `path:` nor `sql:`: this metric ends up with no query at all,
+        // so it must be reported.
+        let report = section_for_report(true, "", "")
+            .unresolved_path_report(&[PathBuf::from("/etc/check_mk")])
+            .expect("custom metric without inline sql must be reported");
+        assert!(report.contains("product_price"), "{report}");
+        assert!(report.contains("/etc/check_mk"), "{report}");
+    }
+
+    #[test]
+    fn test_report_for_configured_path_that_does_not_resolve() {
+        // An explicit `path:` was asked for and not found — report it for
+        // builtin sections and custom metrics alike, inline `sql:` or not.
+        for (custom, sql) in [(false, ""), (true, ""), (true, "select 1 from dual")] {
+            let report = section_for_report(custom, "queries/missing.sql", sql)
+                .unresolved_path_report(&[])
+                .expect("configured path must be reported");
+            assert!(report.contains("queries/missing.sql"), "{report}");
+        }
     }
 
     fn section_with_pdb_patterns(patterns: &[&str]) -> Section {

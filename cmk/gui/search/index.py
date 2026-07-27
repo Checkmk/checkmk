@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from logging import getLogger
 from typing import TypedDict
 
 from cmk.ccc.store import locked
@@ -17,6 +18,15 @@ def request_rebuild() -> None:
         current_requests = _read_update_requests()
         current_requests["rebuild"] = True
         _PATH_UPDATE_REQUESTS.write_text(json.dumps(current_requests))
+
+
+def main() -> None:
+    """Entry point for the ``init-redis`` script: request a Setup search index rebuild."""
+    logger = getLogger("init-redis")
+    try:
+        request_rebuild()
+    except Exception:
+        logger.exception("Failed to request building of Setup search index")
 
 
 def request_update(change_action_name: str) -> None:

@@ -113,6 +113,7 @@ py_wheel(
         "cmk-transform-inventory-trees = cmk.inventory.transformation.__main__:main",
         "cmk-ui-job-scheduler = cmk.gui.job_scheduler.main:main",
         "cmk-validate-plugins = cmk.validate_plugins:main",
+        "init-redis = cmk.gui.search.index:main",
         "message-broker-certs = cmk.message_broker_certs:main",
     ]},
     requires = [

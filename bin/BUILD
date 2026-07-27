@@ -68,7 +68,6 @@ pkg_files(
         ":cmk-piggyback-hub.py",
         ":cmk-ui-job-scheduler-health",
         ":cmk-validate-config.py",
-        ":init-redis.py",
         ":mkevent",
         ":mkp.py",
     ],
@@ -83,7 +82,6 @@ pkg_files(
         "cmk-piggyback-hub.py": "cmk-piggyback-hub",
         "cmk-piggyback.py": "cmk-piggyback",
         "cmk-validate-config.py": "cmk-validate-config",
-        "init-redis.py": "init-redis",
         "mkp.py": "mkp",
     },
 )
@@ -220,14 +218,6 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-wsgi",
     ],
-)
-
-py_library(
-    name = "init_redis_py",
-    srcs = ["init-redis.py"],
-    imports = ["."],
-    tags = ["no-mypy"],
-    deps = ["//cmk/gui/search:index"],
 )
 
 py_library(

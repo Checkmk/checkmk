@@ -1849,9 +1849,6 @@ allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
 [file_dependencies."bin/cmk-piggyback.py"]
 allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
 
-[file_dependencies."bin/init-redis.py"]
-allows = ["cmk.gui.search.index"]
-
 [file_dependencies."bin/mkbackup"]
 allows = ["@ccc", "cmk.backup", "cmk.utils"]
 

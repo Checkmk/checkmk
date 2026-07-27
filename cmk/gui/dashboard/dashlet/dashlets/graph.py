@@ -41,6 +41,7 @@ from cmk.gui.graphing import (
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._engine_discovery import discover_template_graphs, DiscoveredGraphs
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -165,6 +166,20 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
 
     @abc.abstractmethod
     def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
+
+    @abc.abstractmethod
+    def discover_graphs(
+        self, *, debug: bool, user_permissions: UserPermissions
+    ) -> DiscoveredGraphs:
+        """The data-less engine graphs this widget renders.
+
+        The client-side graph widgets fetch their data for these definitions; the server-side
+        rendering path goes through `recipes` instead. Only the graph specification is needed
+        here, so a widget whose legacy recipes cannot be computed still resolves its graphs.
+
+        What discovery needs of the configuration is passed in rather than read from the active
+        config, so the token-authenticated fetch can supply it from the API context.
+        """
 
     def __init__(
         self,
@@ -324,6 +339,14 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             graph_id=graph_id,
             destination=GraphDestinations.dashlet,
         )
+
+    def discover_graphs(
+        self, *, debug: bool, user_permissions: UserPermissions
+    ) -> DiscoveredGraphs:
+        if (graph_specification := self.graph_specification()) is None:
+            assert self._resolve_exception is not None
+            raise self._resolve_exception
+        return discover_template_graphs(graph_specification, debug=debug)
 
     def _get_additional_macros(self) -> Mapping[str, str]:
         if (graph_specification := self.graph_specification()) is None:

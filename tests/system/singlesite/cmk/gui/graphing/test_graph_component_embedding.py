@@ -3,10 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Vue component embedding and props (R1.2 Area 1). Skipped skeletons (CMK-35973).
+"""Vue component embedding (R1.2 Area 1). Skipped skeletons (CMK-35973).
 
-Backend-only: assert on the rendered page HTML, so enablable as soon as the backend
-embeds <cmk-graph>. Fetch the page via site.openapi/requests and parse with BeautifulSoup.
+Backend-only: assert on the rendered page HTML, so enablable as soon as the backend embeds the
+component. Fetch the page via site.openapi/requests and parse with BeautifulSoup. Note the
+registered element is ``cmk-graph-group``, not ``cmk-graph``.
+
+CE-02 (the payload itself) is covered by unit tests instead: the embedded data attribute holds
+only the title plus the opaque ``internal`` definition, and the lines and scalars come from a
+separate fetch_data call - neither needs a site. See
+`tests/unit/cmk/gui/graphing/test_frontend.py` for the attribute and
+`test_openapi_fetch_graph_data.py` for the fetched payload.
 """
 
 import pytest
@@ -22,17 +29,6 @@ def test_service_page_embeds_cmk_graph_without_legacy_markup(site: Site) -> None
     Do: create a host with a known check (e.g. PING), discover+check; fetch the page HTML.
     Assert: HTTP 200; >=1 <cmk-graph>; no legacy container (div.graph_container/
     graph_with_timeranges) for the same graph.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)
-def test_cmk_graph_data_attribute_is_valid_discovery_result(site: Site) -> None:
-    """CE-02 (R1.2 Area 1): the data attribute is a complete, valid discovery result.
-
-    Do: as CE-01; extract the data attribute of the first <cmk-graph>.
-    Assert: valid JSON with a non-empty title, >=1 line def with a non-empty expression,
-    and a scalars map (possibly empty).
     """
     pytest.fail("CMK-35973 skeleton: body not implemented")
 

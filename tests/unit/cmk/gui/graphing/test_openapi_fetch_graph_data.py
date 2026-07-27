@@ -10,9 +10,36 @@ import pytest
 
 from livestatus import MKLivestatusSocketError
 
-from cmk.graphing_engine import ConsolidationFunction, EvaluatedGraph, Graph, TimeRange
-from cmk.gui.graphing._engine_dispatch import EvaluatedGraphs, serialize_graphs
+from cmk.graphing_engine import (
+    AutoPrecision,
+    ConsolidationFunction,
+    Curve,
+    CurveAttributes,
+    DecimalNotation,
+    EvaluatedGraph,
+    FetchedData,
+    Graph,
+    HostName,
+    Line,
+    Metric,
+    MetricName,
+    PerformanceData,
+    RRDMetric,
+    Rule,
+    ScalarKind,
+    ScalarOf,
+    ServiceName,
+    TimeRange,
+    TimeSeries,
+    Unit,
+)
+from cmk.gui.graphing._engine_dispatch import (
+    CommonGraphOptions,
+    EvaluatedGraphs,
+    serialize_graphs,
+)
 from cmk.gui.graphing._engine_rrd import FetchDiagnostics, QueryLimitReached
+from cmk.gui.graphing._engine_template_graphs import evaluate_template_graphs
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import api_consolidation_to_engine, evaluated_to_response
 from cmk.gui.graphing.openapi.fetch_graph_data import fetch_graph_data_v1
@@ -186,3 +213,69 @@ def test_fetch_graph_data_omits_combination_mode_when_not_requested(
         )
     )
     assert "combination_mode" not in captured["options"]
+
+
+def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    metric = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
+    )
+    graph = Graph(
+        name="g",
+        title="My Graph",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=metric,
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                ),
+                inverse=False,
+            )
+        ],
+        rules=[
+            Rule(
+                curve=Curve(
+                    quantity=ScalarOf(metric=metric, scalar_kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(title="Warning", unit=unit, color="#ffcc00"),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    time_range = TimeRange(start=0, end=30, step=10)
+
+    def _fetch_data(
+        metrics: Sequence[Metric],
+        *,
+        consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
+    ) -> Mapping[Metric, Sequence[FetchedData]]:
+        return {
+            rrd_metric: [
+                FetchedData(
+                    performance_data=PerformanceData(value=5.0, warning=80.0),
+                    time_series=TimeSeries(time_range=time_range, values=[1.0, None, 3.0]),
+                )
+            ]
+            for rrd_metric in metrics
+            if isinstance(rrd_metric, RRDMetric)
+        }
+
+    [evaluated] = evaluate_template_graphs(
+        graphs=[graph],
+        options=CommonGraphOptions(
+            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
+        ),
+        fetch_data=_fetch_data,
+    )
+    response = evaluated_to_response(
+        evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
+    )
+
+    [line] = response.metrics
+    assert line.metadata.title == "Line"
+    assert line.metadata.color == "#0000ff"
+    assert line.data_points == [1.0, None, 3.0]
+    [horizontal_line] = response.horizontal_lines
+    assert (horizontal_line.value, horizontal_line.color) == (80.0, "#ffcc00")

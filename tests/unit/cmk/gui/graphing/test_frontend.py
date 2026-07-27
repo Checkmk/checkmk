@@ -14,8 +14,12 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     IECNotation,
+    Line,
     MetricName,
     RRDMetric,
+    Rule,
+    ScalarKind,
+    ScalarOf,
     ServiceName,
     SINotation,
     Stack,
@@ -24,6 +28,7 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
+from cmk.gui.graphing._engine_serialization import graph_codec
 from cmk.gui.graphing._frontend import (
     global_time_picker_props,
     resolve_default_time_range_seconds,
@@ -142,3 +147,43 @@ def test_start_of_week_choices_match_first_day_of_week() -> None:
     assert isinstance(valuespec, DropdownChoice)
     configurable_days = {value for value, _title in valuespec.choices() if value is not None}
     assert configurable_days == {day.value for day in FirstDayOfWeek}
+
+
+def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
+    graph = Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        stacks=[
+            Stack(
+                members=[
+                    Curve(
+                        quantity=_RRD, attributes=CurveAttributes(title="m", unit=_UNIT, color="#m")
+                    )
+                ],
+                inverse=False,
+            )
+        ],
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
+                ),
+                inverse=False,
+            )
+        ],
+        rules=[
+            Rule(
+                curve=Curve(
+                    quantity=ScalarOf(metric=_RRD, scalar_kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(title="warn", unit=_UNIT, color="#w"),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    result = to_cmk_time_series_graph(graph, size=_SIZE)
+
+    assert result.options.header.title == "My Graph"
+    [restored] = graph_codec().deserialize_graphs(json.loads(result.internal))
+    assert restored == graph

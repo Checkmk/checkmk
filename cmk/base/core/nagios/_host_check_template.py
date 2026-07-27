@@ -111,12 +111,6 @@ def main() -> int:
         loading_result = config.perform_post_config_loading_actions(
             raw_config,
             edition=app.edition,
-            # Passing these files here is the result of a refactoring.
-            # I think we should be passing the paths corresponding to
-            # the latest _active_ config, though.
-            autochecks_dir=cmk.utils.paths.autochecks_dir,
-            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-            builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
         )
 
         secrets = load_secrets_file(

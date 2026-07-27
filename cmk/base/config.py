@@ -595,9 +595,6 @@ def load(
     loading_result = perform_post_config_loading_actions(
         raw_config,
         edition=edition,
-        autochecks_dir=cmk.utils.paths.autochecks_dir,
-        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
     )
 
     if validate_hosts:
@@ -624,9 +621,6 @@ def perform_post_config_loading_actions(
     loaded_context: Mapping[str, Any],
     *,
     edition: cmk_version.Edition,
-    autochecks_dir: Path,
-    discovered_host_labels_dir: Path,
-    builtin_host_labels_file: Path,
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
@@ -644,9 +638,9 @@ def perform_post_config_loading_actions(
         edition,
         hosts_config,
         host_tags,
-        autochecks_dir=autochecks_dir,
-        discovered_host_labels_dir=discovered_host_labels_dir,
-        builtin_host_labels_file=builtin_host_labels_file,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
     )
 
     set_global_logwatch_config(
@@ -1305,7 +1299,12 @@ class ConfigCache:
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
         self._cache_section_name_of: dict[str, str] = {}
 
-        self._autochecks_memoizer = AutochecksMemoizer(self._autochecks_dir)
+        # Public + mutable: the keepalive checker reassigns this per command to point
+        # at the per-serial helper config dir. Long term we should detach the
+        # autochecks lookup from ConfigCache entirely (pass `get_autochecks` /
+        # AutochecksMemoizer to check_table and friends) so the dir can flow in
+        # as a function argument instead of being stored on the cache.
+        self.autochecks_memoizer = AutochecksMemoizer(self._autochecks_dir)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=self._host_tags.host_tags_maps,
@@ -1350,11 +1349,6 @@ class ConfigCache:
             parser=str,
         )
         return self
-
-    @property
-    def autochecks_memoizer(self) -> AutochecksMemoizer:
-        # can't be Final because it is set in self.initialize() :-(
-        return self._autochecks_memoizer
 
     def make_passive_service_name_config(
         self,

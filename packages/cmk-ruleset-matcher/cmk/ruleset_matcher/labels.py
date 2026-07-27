@@ -316,12 +316,18 @@ class LabelManager:
     ) -> None:
         self._nodes_of: Final = nodes_of
         self._label_config: Final = label_config
-        self._discovered_host_labels_dir = discovered_host_labels_dir
-        self._builtin_host_labels_file = builtin_host_labels_file
+        # Public + mutable: the keepalive checker reassigns these per command to point
+        # at the per-serial helper config dir. Long term we should detach the label file
+        # lookups from LabelManager and pass the paths through the call chain at the points
+        # where labels are actually read.
+        # Once this is immutable, see if we should make 'discovered_labels_of_host' private again.
+        self.discovered_host_labels_dir = discovered_host_labels_dir
+        self.builtin_host_labels_file = builtin_host_labels_file
         self.explicit_host_labels: Mapping[HostName, Labels] = explicit_host_labels
 
         self.__labels_of_host: dict[HostName, Labels] = {}
         self.__builtin_host_labels: Labels | None = None
+        self.__builtin_host_labels_path: Path | None = None
 
     def labels_of_host(self, hostname: HostName) -> Labels:
         """Returns the effective set of host labels from all available sources
@@ -360,20 +366,24 @@ class LabelManager:
     def _builtin_host_labels(self) -> Labels:
         # Read once per file path; re-read when the keepalive checker repoints
         # builtin_host_labels_file at a per-serial helper config dir.
-        if self.__builtin_host_labels is None:
+        if (
+            self.__builtin_host_labels is None
+            or self.__builtin_host_labels_path != self.builtin_host_labels_file
+        ):
+            self.__builtin_host_labels_path = self.builtin_host_labels_file
             self.__builtin_host_labels = BuiltinHostLabelsStore(
-                self._builtin_host_labels_file
+                self.builtin_host_labels_file
             ).load()
         return self.__builtin_host_labels
 
-    # I am not sure if this really should be public, currently the checkengine needs it
+    # I am not sure if this really should be public (see above).
     def discovered_labels_of_host(self, hostname: HostName) -> Sequence[HostLabel]:
         return (
-            DiscoveredHostLabelsStore(hostname, self._discovered_host_labels_dir).load()
+            DiscoveredHostLabelsStore(hostname, self.discovered_host_labels_dir).load()
             if (nodes := self._nodes_of.get(hostname)) is None
             else merge_cluster_labels(
                 [
-                    DiscoveredHostLabelsStore(node, self._discovered_host_labels_dir).load()
+                    DiscoveredHostLabelsStore(node, self.discovered_host_labels_dir).load()
                     for node in nodes
                 ]
             )

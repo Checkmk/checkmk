@@ -440,7 +440,7 @@ oracle:
         assert_eq!(table[0], "<<<oracle_instance>>>");
         assert_eq!(table[1], "<<<oracle_instance:sep(124)>>>");
         assert!(
-            table[2].starts_with("REMOTE_INSTANCE_ABSENT|FAILURE|ERROR: ORA-"),
+            table[2].starts_with("ABSENT|FAILURE|ERROR: ORA-"),
             "Unexpected output: {:?}",
             table
         );

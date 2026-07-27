@@ -450,7 +450,7 @@ fn connect_spots(
                 Err(e) => {
                     log::error!("Error connecting to instance: {}", e);
                     anyhow::bail!(
-                        "REMOTE_INSTANCE_{}|FAILURE|ERROR: {} ",
+                        "{}|FAILURE|ERROR: {} ",
                         name,
                         e.to_string().replace("OCI Error: ", "")
                     )

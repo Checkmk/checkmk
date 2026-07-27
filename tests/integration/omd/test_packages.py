@@ -336,21 +336,31 @@ def test_unixcat(site: Site) -> None:
 
 @pytest.mark.medium_test_chain
 @pytest.mark.parametrize(
-    "distro,expectation",
+    "distro,expected_tokens",
     (
-        ("aix", "64-bit XCOFF executable or object modul"),
-        ("solaris", "ELF 64-bit LSB executable, x86-64, version 1 (Solaris), dynamically linked"),
+        ("aix", ("64-bit XCOFF executable or object modul",)),
+        (
+            "solaris",
+            ("ELF 64-bit LSB executable", "x86-64", "(Solaris)", "dynamically linked"),
+        ),
     ),
 )
-def test_mk_oracle_exotic_distros(distro: str, expectation: str, site: Site) -> None:
+def test_mk_oracle_exotic_distros(
+    distro: str, expected_tokens: tuple[str, ...], site: Site
+) -> None:
     # Use `file -k` (keep-going) so all matching magic rules are reported, not just the
     # highest-scored one. Older libmagic (e.g. file 5.41 on Ubuntu 22.04) mis-scores the AIX
     # XCOFF64 binary as "JPEG 2000 image" and would otherwise hide the correct XCOFF match.
     process = site.run(
         ["file", "-k", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
     )
+    # Matches from separate rules are joined with a literal "\012- " separator, so a token
+    # may still straddle one; drop the separators before looking for the tokens.
     normalized_stdout = process.stdout.replace("\\012- ", "")
-    assert expectation in normalized_stdout, process.stdout
+    if missing := [token for token in expected_tokens if token not in normalized_stdout]:
+        raise AssertionError(
+            f"'file -k' output for mk-oracle.{distro} is missing {missing}: {process.stdout}"
+        )
 
 
 @pytest.mark.medium_test_chain

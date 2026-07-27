@@ -24,7 +24,11 @@ import GraphHeader from './GraphHeader.vue'
 import TimeSeriesGraph from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
 import type { ConsolidationFn } from './consolidation'
-import { CANVAS_MARGIN_HORIZONTAL, CANVAS_MARGIN_LEFT } from './constants'
+import {
+  CANVAS_MARGIN_HORIZONTAL,
+  CANVAS_MARGIN_LEFT,
+  MIN_ZOOM_TIME_RANGE_SECONDS
+} from './constants'
 import GraphLegend from './legend/GraphLegend.vue'
 
 const { _t } = usei18n()
@@ -147,7 +151,7 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
           :value-range="viewValueRange"
           :zoom-mode="zoomMode"
           :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
-          :min-time-range="null"
+          :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
           :min-value-range="null"
           :inspecting="inspectionActive"
           :pan-enabled="interactive"

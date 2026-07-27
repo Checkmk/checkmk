@@ -183,3 +183,23 @@ describe('useZoomGesture — a drag ending outside the plot', () => {
     expect(onZoom).not.toHaveBeenCalled()
   })
 })
+
+describe('useZoomGesture — minimum span', () => {
+  test('widens a sub-minute selection to the minimum span about its centre', () => {
+    const { api, onZoom } = mountGesture('time', { minTimeRange: 60 })
+
+    // 10px of a 200px/1000s plot is 50s, under the 60s floor.
+    drag(api, [100, 30], [110, 30])
+
+    expect(onZoom).toHaveBeenCalledWith({ timeRange: { start: 1495, end: 1555, step: 60 } })
+  })
+
+  test('a further zoom inside an already-floored window leaves it unchanged', () => {
+    const flooredWindow: TimeRange = { start: 1000, end: 1060, step: 60 }
+    const { api, onZoom } = mountGesture('time', { minTimeRange: 60, timeRange: flooredWindow })
+
+    drag(api, [80, 30], [120, 30])
+
+    expect(onZoom).toHaveBeenCalledWith({ timeRange: flooredWindow })
+  })
+})

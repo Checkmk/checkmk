@@ -28,6 +28,7 @@ selected objects:
 """
 
 import itertools
+import json
 import logging
 import pprint
 import time
@@ -167,6 +168,8 @@ class CMKOpenApiSession(requests.Session):
         self.relays = RelayAPI(self)
         self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
         self.metric_backend = MetricBackendAPI(self)
+        self.graph = GraphAPI(self)
+        self.custom_graph = CustomGraphAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -355,6 +358,17 @@ class AgentReceiverApiSession(requests.Session):
 class BaseAPI:
     def __init__(self, session: CMKOpenApiSession) -> None:
         self.session = session
+
+    def _post_internal_action(self, url: str, body: Mapping[str, Any]) -> dict[str, Any]:
+        response = self.session.post(url, api_version=APIVersion.INTERNAL, json=body)
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
 
 
 class ARBaseAPI:
@@ -2147,6 +2161,74 @@ class MetricBackendAPI(BaseAPI):
 
     def enable(self, site_id: str) -> None:
         self._request(site_id, "enabled")
+
+
+type Consolidation = Literal["min", "max", "avg"]
+
+
+class GraphAPI(BaseAPI):
+    """The graph discovery and data endpoints of the new graphing engine.
+
+    Only registered at `APIVersion.INTERNAL`. Host metrics are discovered by passing the
+    `_HOST_` sentinel as the service description.
+    """
+
+    def _post(self, action: str, body: Mapping[str, Any]) -> dict[str, Any]:
+        return self._post_internal_action(f"domain-types/graph/actions/{action}/invoke", body)
+
+    def discover_template_graphs(
+        self,
+        host_name: str,
+        service_description: str,
+        graph_id: str | None = None,
+    ) -> dict[str, Any]:
+        return self._post(
+            "discover_template_graphs",
+            {
+                "hostname": host_name,
+                "service_description": service_description,
+                "graph_id": graph_id,
+            },
+        )
+
+    def fetch_data(
+        self,
+        internal: Mapping[str, Any],
+        requested_time_range: Mapping[str, int],
+        consolidation_function: Consolidation,
+    ) -> dict[str, Any]:
+        return self._post(
+            "fetch_data",
+            {
+                # "internal" is a JSON-encoded string on the wire, not a nested object.
+                "internal": json.dumps(internal),
+                "requested_time_range": requested_time_range,
+                "consolidation_function": consolidation_function,
+            },
+        )
+
+
+class CustomGraphAPI(BaseAPI):
+    """The custom-graph data endpoint, the only way to graph metric-backend (OTel) data."""
+
+    def fetch_data(
+        self,
+        data_sources: Sequence[Mapping[str, Any]],
+        graph_options: Mapping[str, Any],
+        requested_time_range: Mapping[str, int],
+        consolidation_function: Consolidation,
+    ) -> dict[str, Any]:
+        return self._post_internal_action(
+            "domain-types/custom_graph/actions/fetch_data/invoke",
+            {
+                "content": {
+                    "graph_options": graph_options,
+                    "data_sources": data_sources,
+                },
+                "requested_time_range": requested_time_range,
+                "consolidation_function": consolidation_function,
+            },
+        )
 
 
 class AgentReceiverRelayAPI(ARBaseAPI):

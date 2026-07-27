@@ -36,7 +36,6 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import CannotRecover, ProxmoxVeAPI
@@ -367,25 +366,12 @@ def _create_node_sections(
 
     yield (
         "proxmox_ve_replication",
-        SectionReplication(
-            node=node["node"],
-            cluster=node_cluster_mapping.get(node["node"]),
-            replications=[
-                Replication(
-                    id=repl["id"],
-                    source=repl["source"],
-                    target=repl["target"],
-                    schedule=repl.get("schedule"),
-                    last_sync=repl["last_sync"],
-                    last_try=repl["last_try"],
-                    next_sync=repl["next_sync"],
-                    duration=repl["duration"],
-                    error=repl.get("error"),
-                )
-                for repl in replications.get(node["node"], [])
-            ],
-            cluster_has_replications=bool(data["cluster"]["replication"]),
-        ).model_dump_json(),
+        {
+            "node": node["node"],
+            "cluster": node_cluster_mapping.get(node["node"]),
+            "replications": replications.get(node["node"], []),
+            "cluster_has_replications": bool(data["cluster"]["replication"]),
+        },
     )
 
     yield (

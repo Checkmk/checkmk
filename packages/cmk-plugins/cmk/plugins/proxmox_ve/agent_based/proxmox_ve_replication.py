@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
-import json
 from collections.abc import Sequence
 from typing import Literal, TypedDict
 
@@ -30,7 +29,7 @@ class Params(TypedDict):
 
 
 def parse_proxmox_ve_replication(string_table: StringTable) -> SectionReplication:
-    return SectionReplication.model_validate_json(json.loads(string_table[0][0]))
+    return SectionReplication.model_validate_json(string_table[0][0])
 
 
 agent_section_proxmox_ve_replication = AgentSection(

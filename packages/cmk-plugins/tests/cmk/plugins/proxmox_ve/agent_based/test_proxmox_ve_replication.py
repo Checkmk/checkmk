@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
+
 import pytest
 
 from cmk.agent_based.v2 import (
@@ -18,8 +20,50 @@ from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_replication import (
     check_proxmox_ve_replication,
     discover_proxmox_ve_replication,
     Params,
+    parse_proxmox_ve_replication,
 )
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
+
+
+def test_parse_proxmox_ve_replication() -> None:
+    raw = {
+        "node": "node1",
+        "cluster": "cluster1",
+        "replications": [
+            {
+                "id": "r1",
+                "source": "local-lvm:vm-100-disk-1",
+                "target": "node2",
+                "schedule": "*/5 * * * *",
+                "last_sync": 1700000000,
+                "last_try": 1700000300,
+                "next_sync": 1700000600,
+                "duration": 300.0,
+                "error": "Connection timed out",
+            },
+        ],
+        "cluster_has_replications": True,
+    }
+
+    assert parse_proxmox_ve_replication([[json.dumps(raw)]]) == SectionReplication(
+        node="node1",
+        cluster="cluster1",
+        replications=[
+            Replication(
+                id="r1",
+                source="local-lvm:vm-100-disk-1",
+                target="node2",
+                schedule="*/5 * * * *",
+                last_sync=1700000000,
+                last_try=1700000300,
+                next_sync=1700000600,
+                duration=300.0,
+                error="Connection timed out",
+            ),
+        ],
+        cluster_has_replications=True,
+    )
+
 
 SECTION_NO_REPLICATIONS = SectionReplication(
     node="node1",

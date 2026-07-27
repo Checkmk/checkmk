@@ -6,7 +6,6 @@
 import json
 from collections.abc import Sequence
 from dataclasses import asdict
-from typing import Literal
 
 from tzlocal import get_localzone_name
 
@@ -15,6 +14,7 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.type_defs import GraphTimerange
 from cmk.shared_typing.cmk_time_series_graph import (
+    AddTo,
     CmkTimeSeriesGraph,
     GraphHeader,
     GraphOptions,
@@ -26,6 +26,7 @@ from cmk.shared_typing.cmk_time_series_graph import (
 from cmk.shared_typing.global_time_picker import CustomGraphTimeRange, GlobalTimePickerProps
 
 from ._engine_dispatch import serialize_graphs
+from ._graph_specification import GraphSpecification
 
 
 def default_time_range_seconds() -> int:
@@ -47,6 +48,14 @@ _DEFAULT_INTERACTION = Interaction(
 )
 
 
+def _add_to(specification: GraphSpecification | None) -> AddTo | None:
+    # A graph offers an add-to action exactly if its specification declares an add-to type: the type
+    # is what the context menu is assembled for, the specification is what the actions replay.
+    if specification is None or (add_type := specification.add_visual_type()) is None:
+        return None
+    return AddTo(type=add_type, specification=specification.model_dump())
+
+
 def to_cmk_time_series_graph(
     graph: Graph,
     *,
@@ -57,7 +66,7 @@ def to_cmk_time_series_graph(
     show_graph_time: bool = True,
     x_axis: XAxis | None = None,
     y_axis: YAxis | None = None,
-    add_type: Literal["pnpgraph", "custom_graph", "combined_graph"] | None = None,
+    add_to_specification: GraphSpecification | None = None,
 ) -> CmkTimeSeriesGraph:
     """Translate an engine graph definition into the shared ``CmkTimeSeriesGraph``."""
     return CmkTimeSeriesGraph(
@@ -72,7 +81,7 @@ def to_cmk_time_series_graph(
         ),
         interaction=interaction,
         internal=json.dumps(serialize_graphs([graph])),
-        add_type=add_type,
+        add_to=_add_to(add_to_specification),
     )
 
 

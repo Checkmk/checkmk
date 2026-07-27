@@ -10,8 +10,8 @@
       "anyOf": [{ "$ref": "#/$defs/time_range" }, { "type": "null" }]
     },
     "internal": { "type": "string" },
-    "add_type": {
-      "anyOf": [{ "type": "string" }, { "type": "null" }]
+    "add_to": {
+      "anyOf": [{ "$ref": "#/$defs/add_to" }, { "type": "null" }]
     }
   },
   "required": ["size", "options", "interaction", "internal"],
@@ -91,6 +91,15 @@
         "step": { "type": "integer" }
       },
       "required": ["start", "end", "step"]
+    },
+    "add_to": {
+      "title": "AddTo",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "specification": { "type": "object", "additionalProperties": true }
+      },
+      "required": ["type", "specification"]
     }
   }
 }

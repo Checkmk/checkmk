@@ -94,16 +94,16 @@ function updateConsolidationFunction(val: ConsolidationFn) {
 
 const yAxis = computed(() => deriveYAxis(props.metrics))
 
-const showBurgerMenu = computed(() => !!props.addType)
+const showBurgerMenu = computed(() => !!props.addTo)
 const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
 
 if (showBurgerMenu.value) {
-  loadMenu(props.addType!)
+  loadMenu(props.addTo!.type)
     .then((groups) => {
       burgerMenuGroups.value = groups
     })
     .catch((err) => {
-      throw new Error(`Failed to load menu for addType "${props.addType}": ${err.message}`)
+      throw new Error(`Failed to load menu for add type "${props.addTo!.type}": ${err.message}`)
     })
 }
 

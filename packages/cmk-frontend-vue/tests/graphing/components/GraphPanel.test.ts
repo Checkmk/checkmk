@@ -176,7 +176,7 @@ test('renders GraphBurgerMenu when showBurgerMenu is true', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addType: 'test',
+      addTo: { type: 'test', specification: {} },
       internal: 'test'
     }
   })
@@ -197,7 +197,7 @@ test('a do-action from the header runs the callback with the panel internal stat
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addType: 'test',
+      addTo: { type: 'test', specification: {} },
       internal: 'panel-internal-state'
     }
   })

@@ -80,3 +80,5 @@ def test_to_cmk_time_series_graph_shell() -> None:
     assert result.time_range is None
     # The internal field is the opaque JSON serialization of the graph definition envelope.
     assert result.internal == json.dumps(serialize_graphs([graph]))
+    # A shell built without a specification offers no add-to action at all.
+    assert result.add_to is None

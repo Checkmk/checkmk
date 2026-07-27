@@ -328,7 +328,7 @@ def _paint_time_graph_cmk(
                     ),
                     show_pin=display_config.show_pin,
                     show_graph_time=display_config.show_time_range_previews,
-                    add_type=graph_specification.add_visual_type(),
+                    add_to_specification=built.specification,
                 )
             )
             for built in engine_graphs

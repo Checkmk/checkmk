@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, readonly, ref, watch } from 'vue'
@@ -15,7 +15,7 @@ import type { RequestedTimeRange } from '../types'
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
 // the resolved graph.
-export type GraphDataDefinition = Pick<CmkTimeSeriesGraph, 'internal' | 'add_type'> &
+export type GraphDataDefinition = Pick<CmkTimeSeriesGraph, 'internal' | 'add_to'> &
   Partial<Pick<CmkTimeSeriesGraph, 'options'>>
 
 // How a combined graph folds the same metric across its matched services: aggregate
@@ -27,7 +27,9 @@ export interface ResolvedGraph {
   metrics: Metric[]
   timeRange: TimeRange
   horizontalLines: HorizontalLine[]
-  addType?: string | null | undefined
+  // The add-to type the context menu is assembled for and the specification its actions replay;
+  // absent for graphs that offer no add-to action.
+  addTo?: AddTo | null | undefined
   internal: string
 }
 
@@ -90,7 +92,7 @@ export function useGraphData(
             metrics: fetched.metrics,
             timeRange: fetched.time_range,
             horizontalLines: fetched.horizontal_lines,
-            addType: definition.add_type,
+            addTo: definition.add_to,
             internal: definition.internal
           }
         })

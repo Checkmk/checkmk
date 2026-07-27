@@ -28,6 +28,7 @@ void notify_error(error) {
     def projectname = currentBuild.fullProjectName;
 
     def email_address_team_werks = ["benedikt.seidl@checkmk.com"];
+    def email_address_test_coverage = ["joerg.herbel@checkmk.com"];
 
     try {
         def isChangeValidation = projectname.contains("cv");
@@ -82,6 +83,11 @@ void notify_error(error) {
             /// Inform QA if something's wrong with those jobs
             if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
                 notify_emails.addAll(env.TEAM_QA_MAIL.replaceAll(',', ' ').split(' ').grep());
+            }
+
+            /// Inform maintainers of the test coverage job
+            if (projectname.contains("create-coverage")) {
+                notify_emails.addAll(email_address_test_coverage);
             }
 
             /// fallback - for investigation

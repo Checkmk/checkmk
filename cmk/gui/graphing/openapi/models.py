@@ -11,12 +11,11 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Json
 
-from cmk.graphing_engine import Graph
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
 from cmk.gui.type_defs import IconNames
 
-from .._engine_dispatch import serialize_graphs
+from .._engine_dispatch import BuiltGraph, serialize_graphs
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 
@@ -107,12 +106,28 @@ class ApiDiscoveredGraph:
         description="The localized graph title, for the graph header.",
         example="CPU utilization",
     )
+    add_to_specification: dict[str, object] | None = api_field(
+        description=(
+            "The specification identifying this one graph, to be passed to the add_to_visual and "
+            "add_to_container actions unchanged. Null for graph kinds that offer no add-to action."
+        ),
+        example={
+            "graph_type": "template",
+            "site": "mysite",
+            "host_name": "my-host",
+            "service_description": "CPU load",
+            "graph_id": "cpu_load",
+        },
+    )
 
     @classmethod
-    def from_graph(cls, graph: Graph) -> Self:
+    def from_built(cls, built: BuiltGraph) -> Self:
         return cls(
-            internal=json.dumps(serialize_graphs([graph])),
-            title=graph.title,
+            internal=json.dumps(serialize_graphs([built.graph])),
+            title=built.graph.title,
+            add_to_specification=(
+                None if built.specification is None else built.specification.model_dump()
+            ),
         )
 
 

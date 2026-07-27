@@ -88,7 +88,7 @@ def discover_template_graphs_v1(
             ),
         )
     return GraphsDiscoverResponse(
-        graphs=[ApiDiscoveredGraph.from_graph(built.graph) for built in graphs],
+        graphs=[ApiDiscoveredGraph.from_built(built) for built in graphs],
         no_data_message=None,
     )
 

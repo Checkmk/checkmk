@@ -38,6 +38,54 @@ def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[BuiltGraph]]:
     return _build
 
 
+def test_discover_template_graphs_exposes_the_add_to_specification(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The add-to actions address a graph by its specification, so discovery has to hand it out.
+    specification = TemplateGraphSpecification(
+        site=None,
+        host_name=HostName("my-host"),
+        service_description="CPU load",
+        graph_id="METRIC_cpu_load",
+    )
+
+    def _build(
+        _specification: TemplateGraphSpecification, **_kwargs: object
+    ) -> Sequence[BuiltGraph]:
+        return [
+            BuiltGraph(
+                graph=Graph(name="cpu_load", title="CPU load", kind="template"),
+                specification=specification,
+            )
+        ]
+
+    monkeypatch.setattr(discover_module, "build_template_graphs", _build)
+
+    resp = clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load"
+    )
+
+    [graph] = resp.json["graphs"]
+    assert graph["add_to_specification"] == specification.model_dump()
+
+
+def test_discover_template_graphs_omits_the_specification_when_there_is_none(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        discover_module,
+        "build_template_graphs",
+        _fake_build([Graph(name="g", title="t", kind="template")]),
+    )
+
+    resp = clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load"
+    )
+
+    [graph] = resp.json["graphs"]
+    assert graph["add_to_specification"] is None
+
+
 def test_discover_template_graphs_emits_fetchable_graphs(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:

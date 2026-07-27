@@ -60,8 +60,12 @@ class VerbatimCopy:
     source: Path
 
 
-DumpItem = tuple[PurePosixPath, GeneratedContent | VerbatimCopy]
-"""One file of the dump: the relative path inside the dump archive and its content"""
+@dataclass(frozen=True)
+class DumpItem:
+    """One file of the dump: the relative path inside the dump archive and its content"""
+
+    path: PurePosixPath
+    content: GeneratedContent | VerbatimCopy
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,12 +79,10 @@ class DiagnosticsPlugin:
     """
 
     name: str
+    topic: Topic
     description: Help
     """Short human friendly description, shown in the GUI"""
     sensitivity: Sensitivity
-    topic: Topic
     always: bool = False
     """Collected in every dump; not deselectable"""
-    needs_checkmk_server_host: bool = False
-    """Whether the handler reads :meth:`CollectContext.resolve_checkmk_server_host`"""
     handler: Callable[[CollectContext], Iterable[DumpItem]]

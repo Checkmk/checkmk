@@ -33,6 +33,48 @@ export interface ResolvedGraph {
   internal: string
 }
 
+/** What a data source is asked to fetch, beyond the graph definition itself. */
+export interface GraphFetchParams {
+  requestedTimeRange: { start: number; end: number; step: number }
+  consolidationFunction: ConsolidationFn
+  combinationMode: GraphCombinationMode | null
+}
+
+export interface FetchedGraph {
+  metrics: Metric[]
+  timeRange: TimeRange
+  horizontalLines: HorizontalLine[]
+}
+
+/**
+ * Fetches one graph's data. The session-authenticated default sends the definition to the graph
+ * fetch endpoint; hosts that cannot use it - a shared dashboard authenticates by token and never
+ * lets the browser name what to fetch - supply their own.
+ */
+export type GraphDataFetcher = (
+  definition: GraphDataDefinition,
+  params: GraphFetchParams
+) => Promise<FetchedGraph>
+
+export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) => {
+  const fetched = unwrap(
+    await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
+      params: { header: { 'Content-Type': 'application/json' } },
+      body: {
+        internal: definition.internal,
+        requested_time_range: params.requestedTimeRange,
+        consolidation_function: params.consolidationFunction,
+        combination_mode: params.combinationMode
+      }
+    })
+  )
+  return {
+    metrics: fetched.metrics,
+    timeRange: fetched.time_range,
+    horizontalLines: fetched.horizontal_lines
+  }
+}
+
 function computeStep(start: number, end: number, canvasWidth: number): number {
   return Math.max(60, Math.ceil((end - start) / canvasWidth))
 }
@@ -46,7 +88,8 @@ export function useGraphData(
   getRequestedTimeRange: () => RequestedTimeRange,
   getCanvasWidth: () => number,
   getConsolidationFn: () => ConsolidationFn,
-  getCombinationMode: () => GraphCombinationMode | null = () => null
+  getCombinationMode: () => GraphCombinationMode | null = () => null,
+  fetchGraph: GraphDataFetcher = fetchGraphDataByDefinition
 ): {
   graphs: Readonly<Ref<ResolvedGraph[]>>
   isLoading: Readonly<Ref<boolean>>
@@ -76,22 +119,16 @@ export function useGraphData(
 
       graphsRef.value = await Promise.all(
         definitions.map(async (definition) => {
-          const fetched = unwrap(
-            await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
-              params: { header: { 'Content-Type': 'application/json' } },
-              body: {
-                internal: definition.internal,
-                requested_time_range: requestedTimeRange,
-                consolidation_function: consolidationFunction,
-                combination_mode: combinationMode
-              }
-            })
-          )
+          const fetched = await fetchGraph(definition, {
+            requestedTimeRange,
+            consolidationFunction,
+            combinationMode
+          })
           return {
             title: definition.options?.header.title ?? '',
             metrics: fetched.metrics,
-            timeRange: fetched.time_range,
-            horizontalLines: fetched.horizontal_lines,
+            timeRange: fetched.timeRange,
+            horizontalLines: fetched.horizontalLines,
             addTo: definition.add_to,
             internal: definition.internal
           }

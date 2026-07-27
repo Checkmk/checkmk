@@ -140,6 +140,23 @@ test('forwards the combination mode to fetch_data', async () => {
   expect(postSpy.mock.calls[0][1].body.combination_mode).toBe('stacked')
 })
 
+test('a provided fetchGraph replaces the default fetch', async () => {
+  const fetchGraph = vi.fn().mockResolvedValue({
+    metrics: FETCHED.metrics,
+    timeRange: FETCHED.time_range,
+    horizontalLines: []
+  })
+
+  renderFigure({ fetchGraph })
+
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+  expect(postSpy).not.toHaveBeenCalled()
+  expect(fetchGraph).toHaveBeenCalledWith(
+    { internal: '{"graphs": []}' },
+    expect.objectContaining({ consolidationFunction: 'max', combinationMode: null })
+  )
+})
+
 test('a pan fetches the panned window', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')

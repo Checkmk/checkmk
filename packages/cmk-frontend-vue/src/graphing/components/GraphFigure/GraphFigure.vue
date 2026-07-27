@@ -11,7 +11,7 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { useGraphData } from '../../composables/useGraphData'
+import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useGraphData'
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange, TimeRange } from '../../types.ts'
@@ -72,7 +72,8 @@ const { graphs, isLoading, error } = useGraphData(
   () => requestedTimeRange.value,
   () => plotWidth.value,
   () => CONSOLIDATION_FUNCTION,
-  () => props.combinationMode
+  () => props.combinationMode,
+  props.fetchGraph ?? fetchGraphDataByDefinition
 )
 const graph = computed(() => graphs.value[0] ?? null)
 

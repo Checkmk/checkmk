@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { GraphCombinationMode } from '../../composables/useGraphData'
+import type { GraphCombinationMode, GraphDataFetcher } from '../../composables/useGraphData'
 import type { BurgerMenuGroup } from '../../types'
 import type { TimerangeModel } from './computeEpochTimeRange'
 
@@ -20,4 +20,9 @@ export interface GraphFigureProps {
   showTimestamp?: boolean
   showBurgerMenu?: boolean
   burgerMenuGroups?: BurgerMenuGroup[]
+  /**
+   * Called for every fetch to get the graph's data; defaults to posting the definition to the
+   * session-authenticated graph fetch endpoint.
+   */
+  fetchGraph?: GraphDataFetcher | undefined
 }

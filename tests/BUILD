@@ -28,22 +28,6 @@ py_library(
 )
 
 py_library(
-    name = "agent-integration",
-    testonly = True,
-    srcs = glob(
-        include = [
-            "agent-integration/**/*.py",
-        ],
-    ),
-    imports = [".."],
-    deps = [
-        "//tests/testlib/common:repo",
-        requirement("docker"),
-        requirement("pytest"),
-    ],
-)
-
-py_library(
     name = "agent_plugin_integration",
     testonly = True,
     srcs = glob(

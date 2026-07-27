@@ -23,7 +23,6 @@ const TOP_LEVEL_TEST_TREES = [
   'tests/code_quality',
   'tests/agent-plugin-unit',
   'tests/agent_plugin_integration',
-  'tests/agent-integration',
   'tests/extension_compatibility',
   'tests/system/redfish',
   'tests/packaging'

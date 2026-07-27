@@ -193,9 +193,9 @@ if [[ "$RUN" == true ]]; then
     rc_options=$(bazel coverage --announce_rc 2>&1 || true)
     RESOURCE_FLAGS=()
     grep -q -- "--local_resources=cpu=" <<<"$rc_options" ||
-        RESOURCE_FLAGS+=("--local_resources=cpu=HOST_CPUS*.67")
+        RESOURCE_FLAGS+=("--local_resources=cpu=HOST_CPUS*.5")
     grep -q -- "--local_resources=memory=" <<<"$rc_options" ||
-        RESOURCE_FLAGS+=("--local_resources=memory=HOST_RAM*.67")
+        RESOURCE_FLAGS+=("--local_resources=memory=HOST_RAM*.5")
     echo "Resource flags: ${RESOURCE_FLAGS[*]:-(none, all configured via rc files)}"
 
     # --test_tag_filters must re-exclude manual tests: they are excluded from

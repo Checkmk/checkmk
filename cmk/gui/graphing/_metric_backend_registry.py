@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -39,9 +39,7 @@ class BackendQueryBuilder(Protocol):
         self,
         *,
         metric_name: str,
-        resource_attributes: Sequence[tuple[str, str]],
-        scope_attributes: Sequence[tuple[str, str]],
-        data_point_attributes: Sequence[tuple[str, str]],
+        attribute_filter: Mapping[str, object],
         consolidation_function: ConsolidationFunction,
     ) -> Quantity: ...
 

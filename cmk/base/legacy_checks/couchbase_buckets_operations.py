@@ -25,7 +25,12 @@ def parse_couchbase_buckets_operations(string_table):
 
 
 def discover_couchbase_buckets_operations(section):
-    yield from ((item, {}) for item, data in section.items() if "ops" in data)
+    yield from ((item, {}) for item, data in section.items() if item is not None and "ops" in data)
+
+
+def discover_couchbase_buckets_operations_total(section):
+    if (aggregate := section.get(None)) is not None and "ops" in aggregate:
+        yield None, {}
 
 
 def check_couchbase_buckets_operations(item, params, parsed):
@@ -105,7 +110,7 @@ check_info["couchbase_buckets_operations.total"] = LegacyCheckDefinition(
     name="couchbase_buckets_operations_total",
     service_name="Couchbase Bucket Operations",
     sections=["couchbase_buckets_operations"],
-    discovery_function=discover_couchbase_buckets_operations,
+    discovery_function=discover_couchbase_buckets_operations_total,
     check_function=check_couchbase_buckets_operations,
     check_ruleset_name="couchbase_ops_buckets",
 )

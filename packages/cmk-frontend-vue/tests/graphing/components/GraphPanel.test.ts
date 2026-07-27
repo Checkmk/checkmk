@@ -9,6 +9,7 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { loadMenu } from '@/graphing/api/burgerMenu.ts'
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
+import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 import type { BurgerMenuCallable, RequestedTimeRange } from '@/graphing/types'
 
 vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
@@ -19,12 +20,17 @@ vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'time_range', 'inspecting'],
-    emits: ['zoom', 'pan', 'reset'],
+    props: ['metrics', 'time_range', 'inspecting', 'highlightedMetricName', 'showPin', 'pinTime'],
+    emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
       <span data-testid="view-start">{{ time_range.start }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
+      <span data-testid="highlighted">{{ highlightedMetricName }}</span>
+      <span data-testid="show-pin">{{ showPin }}</span>
+      <span data-testid="pin-time">{{ pinTime }}</span>
+      <span data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
+      <span data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
       <span
         data-testid="emit-time-zoom"
         @click="$emit('zoom', { timeRange: { start: 100, end: 200, step: 10 } })"
@@ -41,6 +47,23 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
     </div>`
   }
 }))
+
+// The panel always arms the pin, so it is stubbed to keep these tests off the network.
+vi.mock('@/graphing/composables/useGlobalPin', async () => {
+  const { computed, ref } = await import('vue')
+  const pinTimeState = ref<number | null>(null)
+  const globalPin = {
+    pinTime: computed(() => pinTimeState.value),
+    ensurePinLoaded: vi.fn(),
+    setPin: vi.fn((time: number) => {
+      pinTimeState.value = time
+    }),
+    clearPin: vi.fn(() => {
+      pinTimeState.value = null
+    })
+  }
+  return { useGlobalPin: () => globalPin }
+})
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
   notation: 'decimal',
@@ -63,8 +86,33 @@ function makeMetric(name: string, title: string): Metric {
 const CPU = makeMetric('cpu', 'CPU')
 const MEM = makeMetric('mem', 'Memory')
 
+function renderPanelWithLegend(metrics: Metric[], hiddenMetricNames: string[] = []) {
+  return render(GraphPanel, {
+    props: {
+      metrics,
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      hiddenMetricNames,
+      showLegend: true
+    }
+  })
+}
+
+/** The legend's visibility toggle for a metric; it is labelled with the metric's title. */
+function eyeButtonFor(metricTitle: string): HTMLElement {
+  return screen.getByRole('button', { name: metricTitle })
+}
+
+/** The legend row for a metric; hovering it is what emits the highlight. */
+function legendRowFor(metricTitle: string): HTMLElement {
+  return screen.getByRole('row', { name: new RegExp(metricTitle) })
+}
+
+// The mocked pin is a module-level singleton, so it has to be cleared between tests.
 beforeEach(() => {
   vi.mocked(loadMenu).mockResolvedValue([])
+  useGlobalPin().clearPin()
+  vi.clearAllMocks()
 })
 
 afterEach(() => {
@@ -88,6 +136,31 @@ test('renders the legend when showLegend is true', () => {
     }
   })
   expect(document.querySelector('.graphing-graph-panel__legend')).toBeInTheDocument()
+})
+
+test('renders the context view when showBrush is set and an overview is supplied', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      showBrush: true,
+      overview: { metrics: [CPU], timeRange: TIME_RANGE }
+    }
+  })
+  expect(document.querySelector('.graphing-graph-brush')).toBeInTheDocument()
+})
+
+test('does not render the context view when showBrush is not set', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      overview: { metrics: [CPU], timeRange: TIME_RANGE }
+    }
+  })
+  expect(document.querySelector('.graphing-graph-brush')).not.toBeInTheDocument()
 })
 
 test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {
@@ -293,4 +366,137 @@ test('a metric hidden via the hiddenMetricNames model is filtered from the rende
 
   expect(screen.getByTestId('time-series-graph')).toHaveTextContent('Memory')
   expect(screen.getByTestId('time-series-graph')).not.toHaveTextContent('CPU')
+})
+
+test('toggling a metric requests no new data', async () => {
+  const { emitted } = render(GraphPanel, {
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      showLegend: true
+    }
+  })
+  await fireEvent.click(eyeButtonFor('CPU'))
+
+  expect(emitted()['update:requestedTimeRange']).toBeUndefined()
+})
+
+test('un-hiding a metric restores it to the renderer, and so to the tooltip', async () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      hiddenMetricNames: ['cpu'],
+      showLegend: true
+    }
+  })
+  await fireEvent.click(eyeButtonFor('CPU'))
+
+  expect(screen.getByTestId('time-series-graph')).toHaveTextContent('CPU,Memory')
+})
+
+test('toggling two of five metrics hides exactly those two', async () => {
+  const metrics = [
+    makeMetric('cpu', 'CPU'),
+    makeMetric('mem', 'Memory'),
+    makeMetric('disk', 'Disk'),
+    makeMetric('net', 'Network'),
+    makeMetric('swap', 'Swap')
+  ]
+  render(GraphPanel, {
+    props: {
+      metrics,
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      showLegend: true
+    }
+  })
+
+  await fireEvent.click(eyeButtonFor('CPU'))
+  await fireEvent.click(eyeButtonFor('Network'))
+
+  expect(screen.getByTestId('time-series-graph')).toHaveTextContent('Memory,Disk,Swap')
+})
+
+test('hovering a legend row propagates the highlight to the renderer', async () => {
+  renderPanelWithLegend([CPU, MEM])
+  const cpuRow = legendRowFor('CPU')
+
+  await fireEvent.mouseEnter(cpuRow)
+
+  expect(screen.getByTestId('highlighted')).toHaveTextContent('cpu')
+})
+
+test('leaving a legend row clears the highlight again', async () => {
+  renderPanelWithLegend([CPU, MEM])
+  const cpuRow = legendRowFor('CPU')
+  await fireEvent.mouseEnter(cpuRow)
+
+  await fireEvent.mouseLeave(cpuRow)
+
+  expect(screen.getByTestId('highlighted')).toBeEmptyDOMElement()
+})
+
+test('hiding every metric replaces the graph with an empty state', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      hiddenMetricNames: ['cpu', 'mem'],
+      showLegend: true
+    }
+  })
+
+  expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
+  expect(screen.queryByTestId('time-series-graph')).not.toBeInTheDocument()
+})
+
+test('bringing one metric back clears the empty state', async () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      hiddenMetricNames: ['cpu', 'mem'],
+      showLegend: true
+    }
+  })
+
+  await fireEvent.click(eyeButtonFor('CPU'))
+
+  expect(screen.queryByText('All metrics are hidden')).not.toBeInTheDocument()
+  expect(screen.getByTestId('time-series-graph')).toHaveTextContent('CPU')
+})
+
+// Without this the persisted pin is loaded but never drawn.
+test('the renderer is told to offer the pin affordance', () => {
+  render(GraphPanel, {
+    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+  })
+
+  expect(screen.getByTestId('show-pin')).toHaveTextContent('true')
+})
+
+test('a pin intent from the renderer stores the pinned time', async () => {
+  render(GraphPanel, {
+    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+  })
+
+  await fireEvent.click(screen.getByTestId('emit-pin-create'))
+
+  expect(screen.getByTestId('pin-time')).toHaveTextContent('1234')
+})
+
+test('acting on an existing pin removes it', async () => {
+  render(GraphPanel, {
+    props: { metrics: [CPU], dataTimeRange: TIME_RANGE, requestedTimeRange: REQUESTED }
+  })
+  await fireEvent.click(screen.getByTestId('emit-pin-create'))
+
+  await fireEvent.click(screen.getByTestId('emit-pin-action'))
+
+  expect(screen.getByTestId('pin-time')).toBeEmptyDOMElement()
 })

@@ -127,6 +127,27 @@ test('hovering a metric row emits hoverMetric with the name, mouseleave emits nu
   expect(emitted()['hoverMetric']).toEqual([['cpu'], [null]])
 })
 
+// An entry that jumps position when clicked is impossible to re-find.
+test('hiding a metric leaves the row order untouched', () => {
+  const disk = makeMetric('disk', 'Disk', [1, 2, 3])
+
+  const { container } = render(GraphLegend, {
+    props: { metrics: [CPU, MEM, disk], hiddenMetricNames: ['mem'] }
+  })
+
+  const names = Array.from(container.querySelectorAll('.graphing-graph-legend__name')).map((el) =>
+    el.textContent?.trim()
+  )
+  expect(names).toEqual(['Disk', 'Memory', 'CPU'])
+})
+
+test('a hidden metric keeps its entry, with its toggle showing it is off', () => {
+  render(GraphLegend, { props: { metrics: [CPU, MEM], hiddenMetricNames: ['cpu'] } })
+
+  expect(screen.getByRole('button', { name: 'CPU' })).toHaveAttribute('aria-pressed', 'false')
+  expect(screen.getByRole('button', { name: 'Memory' })).toHaveAttribute('aria-pressed', 'true')
+})
+
 test('horizontal lines render with their name and value', () => {
   const line: HorizontalLine = { name: 'Warning', value: 80, color: '#ffaa00' }
   render(GraphLegend, { props: { metrics: [CPU], horizontalLines: [line] } })

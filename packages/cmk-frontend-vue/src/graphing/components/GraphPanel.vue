@@ -164,6 +164,7 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
             font_size_pt: 10
           }"
           :highlighted-metric-name="highlightedMetricName"
+          :show-pin="true"
           :pin-time="pinTime"
           @zoom="onZoom"
           @pan="onPan"

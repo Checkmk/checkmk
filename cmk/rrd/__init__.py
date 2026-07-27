@@ -10,11 +10,14 @@ from ._config import (
     RRDConfig,
     RRDObjectConfig,
 )
+from ._const import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from ._fs import RRDPaths
 from ._interface import RRDInterface
 from ._rrd import RRDConverter, RRDCreator, RRDSpec
 
 __all__ = [
+    "RRD_DEFAULT_CONFIG",
+    "RRD_HEARTBEAT",
     "RRDConfig",
     "RRDConverter",
     "RRDCreator",

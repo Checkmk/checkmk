@@ -15,8 +15,10 @@ import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
+    props: ['panEnabled'],
     emits: ['zoom', 'pan', 'reset'],
     template: `<div data-testid="time-series-graph">
+      <span data-testid="pan-enabled">{{ panEnabled }}</span>
       <button
         data-testid="emit-pan"
         @click="$emit('pan', { timeRange: { start: 500, end: 900, step: 60 } })"
@@ -134,6 +136,14 @@ test('a reset after a pan re-resolves the configured range', async () => {
   // The configured range ("last 4 hours") resolves relative to now, far past the panned window.
   const requestedRange = postSpy.mock.calls[2][1].body.requested_time_range
   expect(requestedRange.end).toBeGreaterThan(900)
+})
+
+test('carries no context view but keeps panning enabled', async () => {
+  renderFigure()
+  await screen.findByTestId('time-series-graph')
+
+  expect(document.querySelector('.graphing-graph-brush')).not.toBeInTheDocument()
+  expect(screen.getByTestId('pan-enabled')).toHaveTextContent('true')
 })
 
 test('shows the timestamp only when requested', async () => {

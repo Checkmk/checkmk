@@ -100,9 +100,6 @@ void main() {
                 }
                 def independent_command = item.COMMAND.replace("${checkout_dir}", "JOB_SPECIFIC_SPACE_PLACEHOLDER");
                 def relative_job_name = "${branch_base_folder}/cv/test-gerrit-single"
-                if (env.USE_K8S_GERRIT == "1") {
-                    relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-k8s"
-                }
 
                 smart_stage(
                     name: stepName,

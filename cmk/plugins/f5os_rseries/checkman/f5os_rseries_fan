@@ -1,0 +1,12 @@
+title: F5OS Fan Speed
+agents: snmp
+catalog: hw/network/f5
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the speed in RPM of each fan in the fan tray of an F5 Networks rSeries
+ appliance running F5OS. Alerts when a fan speed drops below a lower threshold,
+ indicating a stalled or failed fan.
+
+discovery:
+ One service is created per fan (Fan 1 through Fan 8 on the r5800 model).

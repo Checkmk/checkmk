@@ -12,7 +12,7 @@ import time
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from statistics import fmean
-from typing import assert_never
+from typing import assert_never, Final
 
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import translations as translations_v1
@@ -35,7 +35,7 @@ from cmk.graphing_engine import (
 )
 from cmk.gui import sites
 from cmk.gui.log import logger
-from cmk.livestatus_client import lqencode, MKLivestatusNotFoundError
+from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
 
 def _timestamps(time_range: TimeRange) -> Sequence[int]:
@@ -418,6 +418,9 @@ def _parse_perf_data(
     return raw_perf_data, check_command
 
 
+HOST_PSEUDO_SERVICE: Final = ServiceName("_HOST_")
+
+
 def _service_or_filter(services: Sequence[Service]) -> str:
     query = ""
     for service in services:
@@ -427,6 +430,58 @@ def _service_or_filter(services: Sequence[Service]) -> str:
     if len(services) > 1:
         query += f"Or: {len(services)}\n"
     return query
+
+
+def _host_or_filter(services: Sequence[Service]) -> str:
+    query = "".join(f"Filter: name = {lqencode(service.host_name)}\n" for service in services)
+    if len(services) > 1:
+        query += f"Or: {len(services)}\n"
+    return query
+
+
+@dataclass(frozen=True)
+class _ObjectQuery:
+    # One livestatus query over the table the requested objects live on - the table switch
+    # livestatus_lql makes for the legacy fetch, on the same "_HOST_" sentinel. Host metrics live on
+    # the hosts table, which has no description column, so they are filtered by host name alone.
+    lql: str
+    on_hosts_table: bool
+
+    def parse_row(
+        self, row: Sequence[LivestatusColumn], site_id: SiteID | None = None
+    ) -> tuple[Service, Sequence[LivestatusColumn]]:
+        # The query selects its key columns ahead of the requested ones: the host column on either
+        # table, plus `description` on the services table.
+        if self.on_hosts_table:
+            service_name, num_keys = HOST_PSEUDO_SERVICE, 1
+        else:
+            service_name, num_keys = ServiceName(str(row[1])), 2
+        return (
+            Service(site_id=site_id, host_name=HostName(str(row[0])), service_name=service_name),
+            row[num_keys:],
+        )
+
+
+def _object_queries(services: Sequence[Service], columns: Sequence[str]) -> Iterator[_ObjectQuery]:
+    # A mixed set of host and service metrics needs one query per table.
+    hosts: list[Service] = []
+    matched: list[Service] = []
+    for service in services:
+        if service.service_name == HOST_PSEUDO_SERVICE:
+            hosts.append(service)
+        else:
+            matched.append(service)
+    if hosts:
+        yield _ObjectQuery(
+            lql=f"GET hosts\nColumns: name {' '.join(columns)}\n" + _host_or_filter(hosts),
+            on_hosts_table=True,
+        )
+    if matched:
+        yield _ObjectQuery(
+            lql=f"GET services\nColumns: host_name description {' '.join(columns)}\n"
+            + _service_or_filter(matched),
+            on_hosts_table=False,
+        )
 
 
 def parse_performance_data(
@@ -463,36 +518,26 @@ class EngineRRDFetchMetricNames:
     registered_translations: Sequence[translations_v1.Translation] = ()
 
     def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
-        query = (
-            "GET services\nColumns: host_name description perf_data metrics check_command\n"
-            f"Filter: host_name = {lqencode(self.host_name)}\n"
-            f"Filter: description = {lqencode(self.service_name)}\n"
-            "And: 2\n"
-        )
         # prepend_site tags each row with the site its data lives on (as the legacy fetch does), so
         # each resolved service carries its real site - the site scope, if any, is the caller's
         # (an only_sites context). The graph built from these services thereby carries the site on
         # its metrics (for per-site fetching and tuning scoping), and a same host/service on two
         # sites is kept apart as two entries.
         result: dict[Service, frozenset[MetricName]] = {}
-        with sites.prepend_site():
-            for (
-                row_site,
-                host_name,
-                description,
-                perf_data_string,
-                rrd_metrics,
-                check_command,
-            ) in sites.live().query(query):
-                raw = parse_performance_data(
-                    perf_data_string, check_command, rrd_metrics, debug=self.debug
-                )
-                service = Service(
-                    site_id=SiteID(str(row_site)), host_name=host_name, service_name=description
-                )
-                result[service] = translate_metric_names(
-                    raw.check_command, list(raw.values), self.registered_translations
-                )
+        for query in _object_queries(
+            [Service(host_name=self.host_name, service_name=self.service_name)],
+            ["perf_data", "metrics", "check_command"],
+        ):
+            with sites.prepend_site():
+                for row_site, *row in sites.live().query(query.lql):
+                    service, values = query.parse_row(row, SiteID(str(row_site)))
+                    perf_data_string, rrd_metrics, check_command = values
+                    raw = parse_performance_data(
+                        perf_data_string, check_command, rrd_metrics, debug=self.debug
+                    )
+                    result[service] = translate_metric_names(
+                        raw.check_command, list(raw.values), self.registered_translations
+                    )
         return result
 
 
@@ -717,27 +762,19 @@ class EngineRRDFetchData:
             )
             if not site_services:
                 continue
-            query = (
-                "GET services\nColumns: host_name description perf_data check_command\n"
-                + _service_or_filter(site_services)
-            )
             # prepend_site reveals which site each row came from (as in the legacy fetch_graph_row):
             # a metric whose site is unknown up front is thereby scoped to the site its data lives on
             # for the time-series fetch. The performance data is keyed by the metric's own site, so a
             # same host/service matched on two sites keeps a distinct entry per site.
-            with sites.only_sites(self._only_sites(group_site)), sites.prepend_site():
-                for (
-                    row_site,
-                    host_name,
-                    description,
-                    perf_data_string,
-                    check_command,
-                ) in sites.live().query(query):
-                    service = Service(host_name=host_name, service_name=description)
-                    result[(group_site, service)] = parse_performance_data(
-                        perf_data_string, check_command, debug=self.debug
-                    )
-                    site_of_service[service] = SiteID(str(row_site))
+            for query in _object_queries(site_services, ["perf_data", "check_command"]):
+                with sites.only_sites(self._only_sites(group_site)), sites.prepend_site():
+                    for row_site, *row in sites.live().query(query.lql):
+                        service, values = query.parse_row(row)
+                        perf_data_string, check_command = values
+                        result[(group_site, service)] = parse_performance_data(
+                            perf_data_string, check_command, debug=self.debug
+                        )
+                        site_of_service[service] = SiteID(str(row_site))
         return result, site_of_service
 
     def _fetch_time_series(
@@ -787,24 +824,18 @@ class EngineRRDFetchData:
                 f"rrddata:{name}:{name}.{consolidation_function}:{data_range}"
                 for name in metric_names
             ]
-            query = "GET services\nColumns: host_name description " + " ".join(columns) + "\n"
-            for ref in refs:
-                query += f"Filter: host_name = {lqencode(ref.host_name)}\n"
-                query += f"Filter: description = {lqencode(ref.service_name)}\n"
-                query += "And: 2\n"
-            if len(refs) > 1:
-                query += f"Or: {len(refs)}\n"
-            with sites.only_sites(site_id), contextlib.suppress(MKLivestatusNotFoundError):
-                for row in sites.live().query(query):
-                    ref = Service(host_name=row[0], service_name=row[1])
-                    for metric in metrics_by_service.get(ref, []):
-                        column = row[2 + column_of[str(metric.metric_name)]]
-                        if not column:
-                            continue
-                        result[metric] = EngineTimeSeries(
-                            time_range=TimeRange(
-                                start=int(column[0]), end=int(column[1]), step=int(column[2])
-                            ),
-                            values=column[3:],
-                        )
+            for query in _object_queries(refs, columns):
+                with sites.only_sites(site_id), contextlib.suppress(MKLivestatusNotFoundError):
+                    for row in sites.live().query(query.lql):
+                        service, values = query.parse_row(row)
+                        for metric in metrics_by_service.get(service, []):
+                            column = values[column_of[str(metric.metric_name)]]
+                            if not column:
+                                continue
+                            result[metric] = EngineTimeSeries(
+                                time_range=TimeRange(
+                                    start=int(column[0]), end=int(column[1]), step=int(column[2])
+                                ),
+                                values=column[3:],
+                            )
         return result

@@ -1,0 +1,13 @@
+title: F5OS Platform Temperature
+agents: snmp
+catalog: hw/network/f5
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the platform inlet/ambient temperature sensors on an F5 Networks
+ rSeries appliance running F5OS. Reports the current, average, minimum, and
+ maximum temperature readings in degrees Celsius.
+
+discovery:
+ One service is created per temperature sensor row in the platform temperature
+ table.

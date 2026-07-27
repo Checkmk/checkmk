@@ -23,6 +23,7 @@ tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
 tests/agent-plugin-unit/test_mk_logwatch.py
 tests/agent-plugin-unit/test_mk_podman.py
+tests/agent-plugin-unit/test_mk_tinkerforge.py
 tests/unit/cmk/plugins/collection/agents/test_apache_status.py
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/subdir/testfile2.html
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/testfile1.txt

@@ -176,7 +176,9 @@ pub fn init(args: ArgsOs) -> Result<(OracleConfig, Env)> {
             user_file
         );
     };
-    log::info!("Using main config {main_file:?} merged with user config {user_file:?}");
+    if user_file.exists() {
+        log::info!("Using main config {main_file:?} merged with user config {user_file:?}");
+    }
     Ok((OracleConfig::from_yaml(&config)?, environment))
 }
 

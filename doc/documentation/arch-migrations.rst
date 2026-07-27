@@ -203,12 +203,12 @@ Centralized ``bin/BUILD`` to self-contained CLI entry points
 ============================================================
 
 :Phase: starting
-:Owner: Respective components / Team CI for acceptance of the concept.
+:Owner: Moritz Kiemer.
 :Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``
-:New: TBD. Roughly: ``bin/`` in the repo does not exist. Each package declares its shipped own entry points and a corrensponding package below ``omd/`` packages it to the versions ``bin/``
-:References: Should be in line with the `dev/packaging separation <https://docs.google.com/document/d/1qTkevom3WPbMTTfCqHHyk7CU3yTXE_EsraLmHIXK634/edit?tab=t.0#heading=h.kbcx3rpyu15o>`_ 
+:New: ``bin/`` in the repo does not exist. Each package declares its shipped own entry points via the ``entry_points`` argument to the ``py_wheel`` rule.
+:References: 35b24d32b5e4559a999e3dfba489e289477d94d5
 
-Next step here is to align on an concrete pattern that we want to adopt.
+Next step here is migrate the remaining elements in ``bin/``.
 
 Monolith decomposition: dissolve global ``BaseConfig`` and ``ConfigCache``
 ==========================================================================

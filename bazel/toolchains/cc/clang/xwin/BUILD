@@ -41,6 +41,7 @@ cc_toolchain(
     known_features = [
         ":replace_legacy_action_configs",
         ":parse_showincludes",
+        ":strip_all_symbols",
         "//bazel/toolchains/cc/clang/args/msvc:features",
         "//bazel/toolchains/cc/clang/xwin/args/mode:features",
     ],
@@ -53,6 +54,12 @@ cc_feature(
     name = "replace_legacy_action_configs",
     args = [],
     feature_name = "experimental_replace_legacy_action_config_features",
+)
+
+# A PE binary has no symbol table to strip; its debug info lives in the .pdb.
+cc_feature(
+    name = "strip_all_symbols",
+    feature_name = "strip_all_symbols",
 )
 
 cc_feature(

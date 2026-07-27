@@ -1,23 +1,23 @@
 dependencies:
   - purl: pkg:generic/asio@1.34.2
     license: BSL-1.0
-    comment: third_party/asio
+    path: third_party/asio/asio-1.34.2-patched.tar.gz
 
   - purl: pkg:generic/fmt@11.1.4
     license: MIT
-    comment: third_party/fmt
+    path: third_party/fmt/fmt-11.1.4.tar.gz
 
   - purl: pkg:generic/yaml-cpp@0.8.0
     license: MIT
-    comment: third_party/yaml-cpp
+    path: third_party/yaml-cpp/yaml-cpp-0.8.0.tar.gz
 
   - purl: pkg:generic/simpleini@2af65fc
     license: MIT
-    comment: third_party/simpleini
+    path: third_party/simpleini/simpleini-2af65fc.tar.gz
 
   - purl: pkg:generic/openhardwaremonitor@0.9.6
     license: MPL-2.0
-    comment: third_party/openhardwaremonitor
+    path: third_party/openhardwaremonitor/openhardwaremonitor-0.9.6.zip
 
   - purl: pkg:generic/python@3.13.13
     license: PSF-2.0

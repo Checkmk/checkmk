@@ -65,6 +65,26 @@ py_cmk_test(
     ],
 )
 
+py_cmk_test(
+    name = "test_manual_dep_manifest",
+    srcs = [
+        "cyclonedx.py",
+        "list_dependencies.py",
+        "pnpm_parser.py",
+        "test_manual_dependency_manifest.py",
+    ],
+    data = [
+        "manual_dependency_manifest.yml",
+        "//third_party:third_party_archives",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("pydantic"),
+        requirement("pyyaml"),
+        requirement("toml"),
+    ],
+)
+
 py_binary(
     name = "research_licenses",
     srcs = [

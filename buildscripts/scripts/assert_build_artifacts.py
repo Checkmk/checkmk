@@ -135,19 +135,6 @@ def build_meta_file_latest_mapping(
     }
 
 
-def build_csv_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
-    base_version = Version.from_str(args.version).base
-    return {
-        meta_file_name(
-            edition,
-            f"{'' if args.version_agnostic else f'{base_version}-'}latest",
-            "csv",
-        ): meta_file_name(edition, args.version, "csv")
-        for edition in loaded_yaml["editions"]
-        if edition not in loaded_yaml.get("internal_editions", [])
-    }
-
-
 def file_exists_on_download_server(
     filename: str, version: Version, credentials: Credentials
 ) -> bool:

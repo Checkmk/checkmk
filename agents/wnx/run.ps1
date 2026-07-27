@@ -31,6 +31,13 @@ $argSkipSqlTest = $false
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (Test-Path $vswhere) {
     $msbuild_exe = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+    # vswhere reports failures (e.g. 0x80070583, broken VS installer) on
+    # stdout: validate we really got an existing MSBuild.exe, not error text.
+    if ($LASTEXITCODE -ne 0 -or !$msbuild_exe -or !(Test-Path $msbuild_exe -ErrorAction SilentlyContinue)) {
+        Write-Host "vswhere failed to locate MSBuild: '$msbuild_exe' (exit code $LASTEXITCODE)" -Fore Red
+        Write-Host "Visual Studio installation on this machine is broken, repair it (VS Installer)" -Fore Red
+        exit 33
+    }
     Write-Host "msbuild is $msbuild_exe" -Fore White
 }
 else {

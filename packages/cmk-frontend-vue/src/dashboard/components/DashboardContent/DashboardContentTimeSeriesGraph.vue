@@ -15,6 +15,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type {
   AverageScatterplotContent,
   CombinedGraphContent,
+  CustomGraphContent,
   PerformanceGraphContent,
   ProblemGraphContent,
   SingleTimeseriesContent
@@ -35,6 +36,7 @@ const props =
       | CombinedGraphContent
       | AverageScatterplotContent
       | ProblemGraphContent
+      | CustomGraphContent
     >
   >()
 
@@ -152,6 +154,17 @@ const discoverGraphs = async (): Promise<GraphDiscovery> => {
           }
         })
       )
+    case 'custom_graph':
+      // A custom graph carries its own data sources (including their filter contexts), so the
+      // dashboard's filter context does not take part in its discovery.
+      return unwrap(
+        await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
+          params: { header: { 'Content-Type': 'application/json' } },
+          body: {
+            custom_graph: content.custom_graph
+          }
+        })
+      )
     default:
       staticAssertNever(content)
       return { graphs: [] }
@@ -212,6 +225,8 @@ const discoveryKey = computed(() => {
       }
     case 'problem_graph':
       return { context: props.effective_filter_context.filters }
+    case 'custom_graph':
+      return { custom_graph: content.custom_graph }
     default:
       staticAssertNever(content)
       return {}

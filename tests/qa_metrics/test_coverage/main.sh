@@ -154,6 +154,13 @@ if [[ "$RUN" == true ]]; then
     #     untested push.py) are never imported by its tests, so coverage.py
     #     collects no data and the aspect_rules_py test runner crashes with
     #     NoDataError, failing a target whose tests all pass.
+    #   * omd is dropped: its py_tests cover license/BOM tooling, not shipped
+    #     source code. test_licenses would even fail the run: its
+    #     list_of_dependencies data dep generates an SBOM of the whole product
+    #     payload, so building the test's runfiles builds the Rust agent
+    #     controller -- coverage-instrumented, since //packages matches the
+    #     instrumentation filter -- and that link fails (undefined gcov
+    #     references in the static musl link).
     #   * From tests/, only keep openapi, agent-plugin-unit, unit. In particular,
     #     we don't want integration or system tests. They are currently anyway not
     #     bazelized, but even if they were, we wouldn't want to include them in
@@ -169,6 +176,7 @@ if [[ "$RUN" == true ]]; then
         $t
         except attr("srcs", "-doctest-runner\.py", $t)
         except //tests/unit/qa_metrics/...
+        except //omd/...
         except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
     ' >"$PY_TEST_TARGETS"
 

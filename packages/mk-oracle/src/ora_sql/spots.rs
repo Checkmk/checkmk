@@ -143,7 +143,7 @@ fn _make_work_result_error(opened: OpenedSpot, e: &anyhow::Error) -> OpenedSpotW
     (
         opened,
         Err(anyhow::anyhow!(
-            "REMOTE_INSTANCE_{}|FAILURE|WARNING: {} ",
+            "{}|FAILURE|WARNING: {} ",
             target.display_name(),
             e.to_string().replace("OCI Error: ", "")
         )),

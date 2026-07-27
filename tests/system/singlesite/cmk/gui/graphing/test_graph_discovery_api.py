@@ -19,20 +19,14 @@ import pytest
 from tests.testlib.graphing import discovered_graphs, SKIP_PENDING_GRAPH_BACKEND
 from tests.testlib.site import Site
 
-# The two custom checks below are classical Monitoring checks, which the SaaS edition does not run.
 pytestmark = pytest.mark.skip_if_edition("cloud")
 
-# The core adds the PING service only to a host that ends up with no services of its own (see
-# cmk.base.nonfree.cmc._services), so the classical checks need a host to themselves - on one host
-# they would suppress the very service the claiming case is about.
 _PING_HOST = "graph-discovery-ping"
 _CUSTOM_CHECKS_HOST = "graph-discovery-custom"
 
-# The only service a no-agent host gets, and the one whose metrics the shipped plugins draw.
 _PING_SERVICE = "PING"
 _NO_METRICS_SERVICE = "Discovery without metrics"
 _UNCLAIMED_METRICS_SERVICE = "Discovery with unclaimed metrics"
-# Metric names no graph plugin draws and no metric plugin registers.
 _UNCLAIMED_METRICS = ("unclaimed_one", "unclaimed_two")
 
 _HOST_ATTRIBUTES = {
@@ -94,7 +88,6 @@ def test_discovery_of_a_service_without_perfdata_returns_no_graphs(site: Site) -
         _CUSTOM_CHECKS_HOST, _NO_METRICS_SERVICE
     )
 
-    # An expected empty state, not an error: the service simply reports no metrics.
     assert discovered["graphs"] == []
     assert discovered["no_data_message"]
 

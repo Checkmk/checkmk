@@ -73,10 +73,7 @@ void main() {
                 )
             }
 
-            smart_stage(
-                name: "Upload to download server",
-                condition: push_to_registry,
-            ) {
+            stage(name: 'Upload to download server') {
                 [tarball_name, sbom_name].each { filename ->
                     artifacts_helper.upload_via_rsync(
                         "${artifact_directory}",

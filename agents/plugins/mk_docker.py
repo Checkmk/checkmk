@@ -43,38 +43,14 @@ import sys
 import time
 from shutil import which
 
-# The "import docker" checks below result in agent sections being created. This
-# is a way to end the plugin in case it is being executed on a non docker host
-if (
-    not os.path.isfile("/var/lib/docker")
-    and not os.path.isfile("/var/run/docker")
-    and not which("docker")
-):
-    sys.stderr.write("mk_docker.py: Does not seem to be a docker host. Terminating.\n")
-    sys.exit(1)
-
 try:
     import docker
     import docker.utils.socket
-except ImportError:
-    sys.stdout.write(
-        "<<<docker_node_info:sep(124)>>>\n"
-        "@docker_version_info|{}\n"
-        '{"Critical": "Error: mk_docker requires the docker library.'
-        ' Please install it on the monitored system (%s install docker)."}\n'
-        % ("pip3" if sys.version_info.major == 3 else "pip")
-    )
-    sys.exit(0)
 
-if int(docker.__version__.split(".", 1)[0]) < 2:
-    sys.stdout.write(
-        "<<<docker_node_info:sep(124)>>>\n"
-        "@docker_version_info|{}\n"
-        '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
-        ' Please install it on the monitored system (%s install docker)."}\n'
-        % ("pip3" if sys.version_info.major == 3 else "pip")
-    )
-    sys.exit(0)
+    HAS_DOCKERLIB = True
+except ImportError:
+    HAS_DOCKERLIB = False
+
 
 DEBUG = "--debug" in sys.argv[1:]
 
@@ -740,6 +716,34 @@ def _call_single_containers_sections(client, config, container_id):
 
 
 def main():
+    # The HAS_DOCKERLIB check below result in agent sections being created. This
+    # is a way to end the plugin in case it is being executed on a non docker host
+    if (
+        not os.path.isfile("/var/lib/docker")
+        and not os.path.isfile("/var/run/docker")
+        and not which("docker")
+    ):
+        sys.stderr.write("mk_docker.py: Does not seem to be a docker host. Terminating.\n")
+        return 1
+
+    if not HAS_DOCKERLIB:
+        sys.stdout.write(
+            "<<<docker_node_info:sep(124)>>>\n"
+            "@docker_version_info|{}\n"
+            '{"Critical": "Error: mk_docker requires the docker library.'
+            ' Please install it on the monitored system (pip3 install docker)."}\n'
+        )
+        return 0
+
+    if int(docker.__version__.split(".", 1)[0]) < 2:
+        sys.stdout.write(
+            "<<<docker_node_info:sep(124)>>>\n"
+            "@docker_version_info|{}\n"
+            '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
+            ' Please install it on the monitored system (pip3 install docker)."}\n'
+        )
+        return 0
+
     args = parse_arguments()
     config = get_config(args.config_file)
 
@@ -756,6 +760,8 @@ def main():
     call_node_sections(client, config)
 
     call_container_sections(client, config)
+
+    return 1
 
 
 if __name__ == "__main__":

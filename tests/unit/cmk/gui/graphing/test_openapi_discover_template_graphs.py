@@ -12,7 +12,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
-from cmk.gui.graphing._engine_template_graphs import matches_graph_id
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing.openapi import discover_template_graphs as discover_module
 from cmk.livestatus_client import MKLivestatusSocketError
@@ -21,8 +20,13 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[Graph]]:
     def _build(specification: TemplateGraphSpecification, **_kwargs: object) -> Sequence[Graph]:
-        if specification.graph_id is not None:
-            return [graph for graph in graphs if matches_graph_id(graph, specification.graph_id)]
+        graph_id = specification.graph_id
+        if graph_id is not None:
+            return [
+                graph
+                for graph in graphs
+                if graph.name == graph_id or graph.name == graph_id.removeprefix("METRIC_")
+            ]
         return graphs
 
     return _build

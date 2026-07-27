@@ -121,7 +121,9 @@ impl TargetId {
         let instance_name = TargetId::get_string(keys::INSTANCE_NAME, yaml, conn)
             .as_deref()
             .map(InstanceName::from);
-        let sid = TargetId::get_string(keys::SID, yaml, conn).and_then(|s| resolve_env_ref(&s));
+        let sid = TargetId::get_string(keys::SID, yaml, conn)
+            .and_then(|s| resolve_env_ref(&s))
+            .and_then(|s| s.to_uppercase().into());
         let alias = yaml
             .get_string(keys::ALIAS)
             .and_then(|s| resolve_env_ref(&s))
@@ -383,6 +385,13 @@ connection:
   port: 1521
   sid: FREE
 "#;
+
+        pub const CONNECTION_WITH_LOWERCASE_SID: &str = r#"
+connection:
+  hostname: "localhost"
+  port: 1521
+  sid: free
+"#;
     }
 
     #[test]
@@ -408,5 +417,15 @@ connection:
         assert_eq!(target.standalone_sid(), Some(&Sid::from("FREE")));
         assert_eq!(target.service_name(), None);
         assert_eq!(target.instance_name(), None);
+    }
+
+    /// SIDs are case-insensitive in Oracle; `from_yaml` upper-cases them so a config
+    /// value and the process-detected SID resolve to the same instance.
+    #[test]
+    fn test_target_sid_is_uppercased() {
+        let target = TargetId::from_yaml(&create_yaml(data::CONNECTION_WITH_LOWERCASE_SID))
+            .unwrap()
+            .unwrap();
+        assert_eq!(target.standalone_sid(), Some(&Sid::from("FREE")));
     }
 }

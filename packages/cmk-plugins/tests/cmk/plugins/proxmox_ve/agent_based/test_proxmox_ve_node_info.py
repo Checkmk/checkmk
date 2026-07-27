@@ -17,19 +17,22 @@ from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_info import (
 )
 from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo
 
+_VMS = [{"vmid": vmid, "type": "lxc"} for vmid in (103, 101, 108, 105, 104)] + [
+    {"vmid": vmid, "type": "qemu"} for vmid in (102, 9000, 106, 109)
+]
+
 NODE_DATA = parse_proxmox_ve_node_info(
     [
         [
             json.dumps(
                 {
-                    "lxc": ["103", "101", "108", "105", "104"],
-                    "version": "6.2-15",
-                    "qemu": ["102", "9000", "106", "109"],
                     "status": "online",
+                    "version": {"version": "6.2-15"},
                     "subscription": {
-                        "next_due_date": "2021-07-03",
+                        "nextduedate": "2021-07-03",
                         "status": "active",
                     },
+                    "vms": _VMS,
                 }
             )
         ]
@@ -41,11 +44,10 @@ NODE_DATA_NO_SUBSCRIPTION = parse_proxmox_ve_node_info(
         [
             json.dumps(
                 {
-                    "lxc": ["103", "101", "108", "105", "104"],
-                    "version": "6.2-15",
-                    "qemu": ["102", "9000", "106", "109"],
                     "status": "online",
+                    "version": {"version": "6.2-15"},
                     "subscription": {},
+                    "vms": _VMS,
                 }
             )
         ]

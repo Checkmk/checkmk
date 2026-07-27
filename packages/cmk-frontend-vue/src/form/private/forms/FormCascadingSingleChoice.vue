@@ -23,6 +23,8 @@ import { computed, ref, toRaw, watch } from 'vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
 const props = defineProps<{
@@ -156,6 +158,11 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
         />
       </template>
       <template v-if="activeElement !== null">
+        <FormRequired
+          v-if="!rendersRequiredLabelItself(activeElement.spec)"
+          :spec="activeElement.spec"
+          :space="'before'"
+        />
         <CmkSpace size="small" />
         <CmkHelpText :help="untranslated(activeElement.spec.help)" />
       </template>

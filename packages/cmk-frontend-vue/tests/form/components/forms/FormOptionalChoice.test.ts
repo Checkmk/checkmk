@@ -161,6 +161,36 @@ test('FormOptionalChoice without title renders own help', async () => {
   expect(screen.getAllByRole('button', { name: '?' })).toHaveLength(1)
 })
 
+test('FormOptionalChoice shows required tag of revealed element without label', async () => {
+  const labelLessIntegerSpec: FormSpec.Integer = { ...integerSpec, label: null }
+  const specWithLabelLessInteger: FormSpec.OptionalChoice = {
+    ...spec,
+    parameter_form: labelLessIntegerSpec
+  }
+  await renderForm({
+    spec: specWithLabelLessInteger,
+    data: null,
+    backendValidation: []
+  })
+
+  expect(screen.queryByText('(required)')).toBeNull()
+
+  const element = screen.getByRole<HTMLInputElement>('checkbox', { name: 'optional choice label' })
+  await fireEvent.click(element)
+
+  expect(screen.getAllByText('(required)')).toHaveLength(1)
+})
+
+test('FormOptionalChoice renders required tag only once for element with label', async () => {
+  await renderForm({
+    spec,
+    data: 23,
+    backendValidation: []
+  })
+
+  expect(screen.getAllByText('(required)')).toHaveLength(1)
+})
+
 test('FormOptionalChoice enables/disables option', async () => {
   await renderForm({
     spec,

@@ -14,6 +14,8 @@ import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { ref, watch } from 'vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages } from '@/form/private/validation'
 
 const props = defineProps<{
@@ -57,6 +59,11 @@ watch(checkboxValue, (newValue: boolean) => {
 
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="untranslated(spec.i18n.label)" />
+  <FormRequired
+    v-if="data !== null && !rendersRequiredLabelItself(spec.parameter_form)"
+    :spec="spec.parameter_form"
+    :space="'before'"
+  />
   <CmkHelpText :help="untranslated(spec.title ? '' : spec.help)" />
   <CmkInlineValidation :validation="localValidation"></CmkInlineValidation>
   <FormIndent v-if="data !== null">

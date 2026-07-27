@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormEdit from '@/form/FormEdit.vue'
@@ -144,6 +144,50 @@ test('FormCascadingSingleChoice keeps previously inserted data', async () => {
 
   // now the other value should still be there, not the default value
   expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
+})
+
+test('FormCascadingSingleChoice shows required tag of revealed element without label', async () => {
+  const labelLessStringFormSpec: FormSpec.String = { ...stringFormSpec, label: null }
+  const specWithLabelLessString: FormSpec.CascadingSingleChoice = {
+    ...spec,
+    elements: [
+      {
+        name: 'stringChoice',
+        title: 'stringChoiceTitle',
+        default_value: 'bar',
+        parameter_form: labelLessStringFormSpec
+      },
+      {
+        name: 'integerChoice',
+        title: 'integerChoiceTitle',
+        default_value: 5,
+        parameter_form: integerFormSpec
+      }
+    ]
+  }
+  await renderForm({
+    spec: specWithLabelLessString,
+    data: ['integerChoice', 5],
+    backendValidation: []
+  })
+
+  await waitFor(() => expect(screen.queryByText('(required)')).toBeNull())
+
+  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
+  await fireEvent.click(element)
+  await fireEvent.click(await screen.findByText('stringChoiceTitle'))
+
+  await waitFor(() => expect(screen.getAllByText('(required)')).toHaveLength(1))
+})
+
+test('FormCascadingSingleChoice renders required tag only once for element with label', async () => {
+  await renderForm({
+    spec,
+    data: ['stringChoice', 'some_value'],
+    backendValidation: []
+  })
+
+  await waitFor(() => expect(screen.getAllByText('(required)')).toHaveLength(1))
 })
 
 test('FormCascadingSingleChoice checks validators', async () => {

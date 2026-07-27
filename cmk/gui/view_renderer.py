@@ -185,7 +185,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 hide_suggestions=not user.get_tree_state("suggestions", "all", True),
                 user_role_ids=user.role_ids,
             )
-            if request.has_var("vue-graphing-enabled"):
+            if self.view.renders_engine_graphs:
                 self._render_global_time_picker()
             html.begin_page_content()
 
@@ -600,7 +600,7 @@ class GUIViewRenderer(ABCViewRenderer):
             display_options.enabled(display_options.D)
             and painter_options.painter_option_graph_time_form_enabled()
         ):
-            if not request.has_var("vue-graphing-enabled"):
+            if not self.view.renders_engine_graphs:
                 display_dropdown.topics.insert(
                     0,
                     PageMenuTopic(
@@ -758,15 +758,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _render_global_time_picker(self) -> None:
         if not PainterOptions.get_instance().painter_options_permitted():
-            return
-        # Only render the picker if a graph is actually shown. Graph painters mark
-        # themselves via printable == "time_graph"; the pnp_timerange painter option
-        # cannot serve as the marker here since it is dropped from the painters'
-        # options when vue graphing is enabled.
-        if not any(
-            cell.printable() == "time_graph"
-            for cell in [*self.view.group_cells, *self.view.row_cells]
-        ):
             return
         render_global_time_picker(
             active_config.graph_timeranges,

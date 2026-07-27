@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict
+from typing import Final
 
 from tzlocal import get_localzone_name
 
@@ -27,6 +28,15 @@ from cmk.shared_typing.global_time_picker import CustomGraphTimeRange, GlobalTim
 
 from ._engine_dispatch import serialize_graphs
 from ._graph_specification import GraphSpecification
+
+# A view carrying one of these is driven by the global time picker rather than the
+# pnp_timerange painter option, and must not auto-reload.
+ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset({"svc_pnpgraph"})
+
+
+def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:
+    """Whether any of the given painters renders through the graph engine."""
+    return any(ident in ENGINE_GRAPH_PAINTER_IDENTS for ident in painter_idents)
 
 
 def default_time_range_seconds() -> int:

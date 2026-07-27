@@ -33,6 +33,7 @@ from cmk.gui.graphing import (
     render_deferred_graphs_html,
     render_graphs_html,
     resolve_user_size,
+    TemplateGraphSpecification,
     vs_graph_render_options,
 )
 from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
@@ -186,14 +187,6 @@ _GRAPH_VIEWS = {
 }
 
 
-def _with_graph_time_range_option(options: list[str], request: Request) -> list[str]:
-    # With vue graphing, the graph time range comes from the global time picker
-    # instead of the pnp_timerange painter option.
-    if request.has_var("vue-graphing-enabled"):
-        return options
-    return ["pnp_timerange", *options]
-
-
 def _paint_time_graph_cmk(
     row: Row,
     cell: Cell,
@@ -211,6 +204,7 @@ def _paint_time_graph_cmk(
     painter_options: PainterOptions,
     show_time_range_previews: bool | None = None,
     require_historic_metrics: bool = True,
+    render_with_engine: bool = False,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -281,6 +275,22 @@ def _paint_time_graph_cmk(
             "Maybe metrics processing is disabled."
         )
 
+    graph_specification = get_template_graph_specification(
+        site_id=row["site"],
+        host_name=row["host_name"],
+        service_name=row.get("service_description", "_HOST_"),
+    )
+
+    if render_with_engine:
+        return "", _render_engine_graph_group(
+            row,
+            graph_specification,
+            display_config,
+            graph_size=graph_size,
+            raw_time_range=raw_time_range,
+            debug=debug,
+        )
+
     # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
     # Unfortunately, we have no access to this information here. Regarding the rows, we could
     # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -290,11 +300,6 @@ def _paint_time_graph_cmk(
     # for now, we randomize. See also CMK-13840.
     display_id = str(uuid4())
 
-    graph_specification = get_template_graph_specification(
-        site_id=row["site"],
-        host_name=row["host_name"],
-        service_name=row.get("service_description", "_HOST_"),
-    )
     env = GraphEnvironment(
         registered_metrics=registered_metrics,
         registered_graphs=registered_graphs,
@@ -304,47 +309,9 @@ def _paint_time_graph_cmk(
         debug=debug,
         show_graph_ids=bool(painter_options.get("show_internal_graph_and_metric_ids")),
     )
-    vue_html: HTML | str = ""
-    if request.has_var("vue-graphing-enabled"):
-        engine_graphs = build_template_graphs(
-            graph_specification,
-            registered_graphs=engine_plugins.registered_graphs(),
-            registered_metrics=engine_plugins.registered_metrics(),
-            fetch_metric_names=EngineRRDFetchMetricNames(
-                host_name=row["host_name"],
-                service_name=row.get("service_description", "_HOST_"),
-                debug=debug,
-                registered_translations=engine_plugins.registered_translations(),
-            ),
-        )
-        vue_graphs = [
-            asdict(
-                to_cmk_time_series_graph(
-                    built.graph,
-                    size=Size(
-                        width=graph_size[0],
-                        height=graph_size[1],
-                        mode="resizable" if display_config.resizable else "fixed",
-                    ),
-                    show_pin=display_config.show_pin,
-                    show_graph_time=display_config.show_time_range_previews,
-                    add_to_specification=built.specification,
-                )
-            )
-            for built in engine_graphs
-        ]
-        # TODO: Handle the case of shared dashobards (request.has_var("cmk-token"))
-        vue_html = HTMLWriter.render_vue_component(
-            "cmk-graph-group",
-            {
-                "initial_time_range_start": raw_time_range[0],
-                "initial_time_range_end": raw_time_range[1],
-                "graphs": vue_graphs,
-            },
-        )
 
     if request.has_var("cmk-token"):
-        return "", vue_html + render_graphs_html(
+        return "", render_graphs_html(
             graph_specification,
             ranges,
             display_config,
@@ -353,13 +320,61 @@ def _paint_time_graph_cmk(
             graph_timeranges=graph_timeranges,
             display_id=display_id,
         )
-    return "", vue_html + render_deferred_graphs_html(
+    return "", render_deferred_graphs_html(
         graph_specification,
         ranges,
         display_config,
         env,
         size=graph_size,
         display_id=display_id,
+    )
+
+
+def _render_engine_graph_group(
+    row: Row,
+    graph_specification: TemplateGraphSpecification,
+    display_config: GraphDisplayConfigHTML,
+    *,
+    graph_size: tuple[float, float],
+    raw_time_range: tuple[int, int],
+    debug: bool,
+) -> HTML:
+    """Render the graph-engine (Vue) graph group for a row's template graphs."""
+    engine_graphs = build_template_graphs(
+        graph_specification,
+        registered_graphs=engine_plugins.registered_graphs(),
+        registered_metrics=engine_plugins.registered_metrics(),
+        fetch_metric_names=EngineRRDFetchMetricNames(
+            host_name=row["host_name"],
+            service_name=row.get("service_description", "_HOST_"),
+            debug=debug,
+            registered_translations=engine_plugins.registered_translations(),
+        ),
+    )
+    vue_graphs = [
+        asdict(
+            to_cmk_time_series_graph(
+                built.graph,
+                size=Size(
+                    width=graph_size[0],
+                    height=graph_size[1],
+                    mode="resizable" if display_config.resizable else "fixed",
+                ),
+                show_pin=display_config.show_pin,
+                show_graph_time=display_config.show_time_range_previews,
+                add_to_specification=built.specification,
+            )
+        )
+        for built in engine_graphs
+    ]
+    # TODO: Handle the case of shared dashboards (request.has_var("cmk-token"))
+    return HTMLWriter.render_vue_component(
+        "cmk-graph-group",
+        {
+            "initial_time_range_start": raw_time_range[0],
+            "initial_time_range_end": raw_time_range[1],
+            "graphs": vue_graphs,
+        },
     )
 
 
@@ -425,7 +440,7 @@ class PainterServiceGraphs(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return _with_graph_time_range_option(["graph_render_options"], self.request)
+        return ["pnp_timerange", "graph_render_options"]
 
     @property
     def parameters(self) -> MigrateNotUpdated:
@@ -479,7 +494,7 @@ class PainterHostGraphs(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return _with_graph_time_range_option(["graph_render_options"], self.request)
+        return ["pnp_timerange", "graph_render_options"]
 
     @property
     def parameters(self) -> MigrateNotUpdated:
@@ -559,7 +574,8 @@ class PainterSvcPnpgraph(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return _with_graph_time_range_option(["show_internal_graph_and_metric_ids"], self.request)
+        # No pnp_timerange: the engine takes its time range from the global time picker.
+        return ["show_internal_graph_and_metric_ids"]
 
     @property
     def parameters(self) -> Transform:
@@ -582,6 +598,7 @@ class PainterSvcPnpgraph(Painter):
             backend_time_series_fetcher=metric_backend_registry[
                 METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
+            render_with_engine=True,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -615,7 +632,7 @@ class PainterHostPnpgraph(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return _with_graph_time_range_option([], self.request)
+        return ["pnp_timerange"]
 
     @property
     def parameters(self) -> Transform:

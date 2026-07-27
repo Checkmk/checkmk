@@ -5,10 +5,11 @@
  */
 import { render } from '@testing-library/vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
 import {
+  NETWORK_FLOW_REFRESH_INTERVAL_MS,
   type NetworkFlowWidgetData,
   useNetworkFlowWidgetData
 } from '@/dashboard/components/DashboardContent/NetworkFlow/useNetworkFlowWidgetData'
@@ -24,9 +25,9 @@ interface Response {
 function renderHarness(
   fetchResponse: () => Promise<Response>,
   dataParameters: Ref<unknown> = ref('unchanged')
-): NetworkFlowWidgetData<string> {
+): NetworkFlowWidgetData<string> & { unmount: () => void } {
   let state: NetworkFlowWidgetData<string> | undefined = undefined
-  render(
+  const { unmount } = render(
     defineComponent({
       setup() {
         state = useNetworkFlowWidgetData(
@@ -38,7 +39,7 @@ function renderHarness(
       }
     })
   )
-  return state!
+  return { ...state!, unmount }
 }
 
 describe('useNetworkFlowWidgetData', () => {
@@ -178,5 +179,93 @@ describe('useNetworkFlowWidgetData', () => {
     resolveSecond({ count: 2 })
     await vi.waitFor(() => expect(state.error.value).toBeNull())
     expect(state.data.value).toBe('count: 2')
+  })
+
+  describe('auto-reload', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('reloads at the refresh interval', async () => {
+      const fetchResponse = vi.fn().mockResolvedValue({ count: 1 })
+
+      renderHarness(fetchResponse)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchResponse).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS)
+      expect(fetchResponse).toHaveBeenCalledTimes(2)
+
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS)
+      expect(fetchResponse).toHaveBeenCalledTimes(3)
+    })
+
+    it('keeps the previous data across a reload', async () => {
+      const fetchResponse = vi
+        .fn()
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValueOnce({ count: 2 })
+
+      const state = renderHarness(fetchResponse)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(state.data.value).toBe('count: 1')
+
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS)
+      expect(state.data.value).toBe('count: 2')
+    })
+
+    it('skips reloading while the document is hidden', async () => {
+      const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
+      const fetchResponse = vi.fn().mockResolvedValue({ count: 1 })
+
+      renderHarness(fetchResponse)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchResponse).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS * 3)
+      expect(fetchResponse).toHaveBeenCalledTimes(1)
+
+      // Becoming visible again reloads right away instead of waiting out the
+      // rest of the interval.
+      hidden.mockReturnValue(false)
+      document.dispatchEvent(new Event('visibilitychange'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchResponse).toHaveBeenCalledTimes(2)
+    })
+
+    it('stops reloading once the widget is unmounted', async () => {
+      const fetchResponse = vi.fn().mockResolvedValue({ count: 1 })
+
+      const state = renderHarness(fetchResponse)
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS)
+      expect(fetchResponse).toHaveBeenCalledTimes(2)
+
+      state.unmount()
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS * 3)
+
+      expect(fetchResponse).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not restart the timer when a request resolves after unmount', async () => {
+      let resolvePending: (response: Response) => void = () => {}
+      const fetchResponse = vi.fn().mockReturnValue(
+        new Promise<Response>((resolve) => {
+          resolvePending = resolve
+        })
+      )
+
+      const state = renderHarness(fetchResponse)
+      state.unmount()
+
+      resolvePending({ count: 1 })
+      await vi.advanceTimersByTimeAsync(NETWORK_FLOW_REFRESH_INTERVAL_MS * 3)
+
+      expect(fetchResponse).toHaveBeenCalledTimes(1)
+      expect(state.data.value).toBeUndefined()
+    })
   })
 })

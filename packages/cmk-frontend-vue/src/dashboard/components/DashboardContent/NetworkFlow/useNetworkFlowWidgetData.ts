@@ -5,7 +5,14 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type Ref, computed, onBeforeMount, ref, watch } from 'vue'
+import useTimer from 'cmk-ui-library/lib/useTimer'
+import { type Ref, computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+/**
+ * How often the widgets reload their data. The dashboard has no configurable
+ * refresh interval, so this matches what the graph and figure widgets use.
+ */
+export const NETWORK_FLOW_REFRESH_INTERVAL_MS = 60_000
 
 /**
  * A backend-reported condition (flow monitoring disabled, database unreachable,
@@ -25,8 +32,9 @@ export interface NetworkFlowWidgetData<TData> {
 /**
  * Data fetching shared by the network flow widgets.
  *
- * Fetches on mount and refetches whenever the widget's data parameters (its
- * content configuration and the effective filter context) change.
+ * Fetches on mount, reloads every NETWORK_FLOW_REFRESH_INTERVAL_MS, and
+ * refetches whenever the widget's data parameters (its content configuration
+ * and the effective filter context) change.
  *
  * @param fetchResponse - performs the request; called with no arguments so the
  * caller can close over its reactive props
@@ -62,8 +70,10 @@ export function useNetworkFlowWidgetData<TResponse, TData>(
       data.value = transformed
       // The error is cleared here rather than before the request, so a widget
       // in an error state stays in it until a request actually succeeds instead
-      // of flashing its stale data back on every attempt.
+      // of flashing its stale data back on every attempt. An error state
+      // therefore recovers on its own with the next successful reload.
       error.value = null
+      timer.reportSuccess()
     } catch (e) {
       if (thisGeneration !== generation) {
         return
@@ -72,13 +82,40 @@ export function useNetworkFlowWidgetData<TResponse, TData>(
         e instanceof CmkApiError
           ? { variant: 'warning', message: e.message }
           : { variant: 'error', message: _t('Failed to load the widget data') }
+      // Back off instead of hammering a flow database that keeps refusing.
+      timer.reportFailure()
     }
   }
+
+  // A hidden tab does not need current data, and the queries are not cheap.
+  // Coming back into view fetches once so the widget is up to date right away
+  // rather than after the rest of the interval.
+  const reload = (): void => {
+    if (document.hidden) {
+      return
+    }
+    void fetchData()
+  }
+
+  const timer = useTimer(reload, NETWORK_FLOW_REFRESH_INTERVAL_MS)
 
   onBeforeMount(() => void fetchData())
 
   const serializedDataParameters = computed(() => JSON.stringify(dataParameters()))
   watch(serializedDataParameters, () => void fetchData())
+
+  onMounted(() => {
+    timer.start()
+    document.addEventListener('visibilitychange', reload)
+  })
+
+  onBeforeUnmount(() => {
+    // Invalidate in-flight requests before stopping the timer: reporting their
+    // outcome afterwards would restart it and leak the interval.
+    generation++
+    timer.stop()
+    document.removeEventListener('visibilitychange', reload)
+  })
 
   return { data, error }
 }

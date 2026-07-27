@@ -6,9 +6,7 @@
 """One consistent way to reach a graph regardless of which surface hosts it.
 
 Resolves the container scoping a graph, absorbing surface-specific concerns
-(dashboard-widget scoping, designer-preview container, iframe boundaries). The
-selector for the rendered graph component itself (`graph_root`) is a skeleton
-until the new engine renders on a surface.
+(dashboard-widget scoping, designer-preview container, iframe boundaries).
 """
 
 import logging
@@ -20,13 +18,15 @@ from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
 
-# Container of the current (legacy) graph rendering; swapped for the new
-# engine's container once the component lands. Uses the always-present
-# ``div.graph`` rather than the ``div.graph_with_timeranges`` wrapper, which is
-# absent on the forecast and dashboard-widget surfaces (show_time_range_previews
-# defaults to False there).
+# Container of the legacy graph rendering. Uses the always-present ``div.graph`` rather
+# than the ``div.graph_with_timeranges`` wrapper, which is absent on the forecast and
+# dashboard-widget surfaces (show_time_range_previews defaults to False there).
 _GRAPH_CONTAINER_SELECTOR = "div.graph:not(.preview)"
 _DESIGNER_PREVIEW_SELECTOR = "#graph_0"
+
+# The engine mounts one graph group per painter, holding a panel per graph it resolved.
+_ENGINE_GRAPH_GROUP_SELECTOR = ".graphing-graph-group"
+_ENGINE_GRAPH_PANEL_SELECTOR = ".graphing-graph-panel"
 
 
 class GraphAccessor:
@@ -67,13 +67,42 @@ class GraphAccessor:
             case _:
                 raise ValueError(f"Unknown graph containment: {containment!r}")
 
-    def graph_root(self, containment: GraphContainment, **kwargs: object) -> Locator:
-        """Return the rendered graph component within its container.
+    def engine_graph_group(
+        self,
+        containment: GraphContainment = GraphContainment.PAGE_DIRECT,
+        *,
+        widget: Locator | None = None,
+        iframed: bool = False,
+    ) -> Locator:
+        """Return the engine's graph group scoping every graph of one painter."""
+        match containment:
+            case GraphContainment.PAGE_DIRECT:
+                return self._owner.main_area.locator(_ENGINE_GRAPH_GROUP_SELECTOR)
+            case GraphContainment.DASHBOARD_WIDGET:
+                if widget is None:
+                    raise ValueError(
+                        "A widget locator is required for DASHBOARD_WIDGET containment."
+                    )
+                if iframed:
+                    return widget.frame_locator("iframe").locator(_ENGINE_GRAPH_GROUP_SELECTOR)
+                return widget.locator(_ENGINE_GRAPH_GROUP_SELECTOR)
+            case _:
+                raise ValueError(f"The engine does not render on containment: {containment!r}")
 
-        Skeleton: descend from `container(...)` into the component root once the
-        new graph engine exposes a stable selector/hook.
+    def graph_root(
+        self,
+        containment: GraphContainment = GraphContainment.PAGE_DIRECT,
+        *,
+        widget: Locator | None = None,
+        iframed: bool = False,
+    ) -> Locator:
+        """Return every graph the engine rendered on this surface.
+
+        Matches multiple elements, so a single-element action raises Playwright
+        strict-mode: anchor the count first with ``expect(loc).to_have_count(n)`` (which
+        auto-waits for each graph to render, unlike ``.all()`` / ``.count()``), then
+        address them via ``.nth(i)``.
         """
-        raise NotImplementedError(
-            "graph_root is scaffolding: complete once the graph component "
-            "exposes its selector/hook contract."
+        return self.engine_graph_group(containment, widget=widget, iframed=iframed).locator(
+            _ENGINE_GRAPH_PANEL_SELECTOR
         )

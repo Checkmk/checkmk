@@ -5,8 +5,8 @@
 
 """Forecast graph and graph collection surfaces (R1.3 Areas 6, 7). Skipped (CMK-35973).
 
-Complete once the engine renders: reach the surface via the ForecastGraph / GraphCollection
-POMs and assert the new engine is used (no ajax_render_graph) via GraphInteractions.
+Complete once the engine renders on these surfaces: reach them via the ForecastGraph /
+GraphCollection POMs and GraphAccessor.graph_root.
 """
 
 import pytest

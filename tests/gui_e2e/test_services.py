@@ -147,35 +147,9 @@ def test_no_errors_on_combined_graphs_page(
     # ), "There are broken graphs on the 'Combined graphs - Service search' page"
 
 
-# --- Graphing engine skeletons (CMK-35973): R1.1 D-03 and R1.3 Areas 1, 2, 9 -------
-# Complete once the engine renders: reach the graph via GraphAccessor and assert via
-# GraphInteractions (CMK-35972), e.g. assert_old_engine_unused -> no ajax_render_graph.
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_service_graph_canvas_renders_and_survives_time_range_change(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """D-03 (R1.1 Area 1): a service graph renders and re-renders after a time-range change.
-
-    Do: open a service with well-known metrics, wait for the canvas; change to a longer
-    range and wait for re-render.
-    Assert: initial render shows a canvas, no brokengraph, no JS error; after the change the
-    data endpoint returns 200, the canvas stays, no brokengraph/JS error.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_service_graphs_use_new_engine(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """SG-01 (R1.3 Area 1): service graphs render through the new engine, not the legacy path.
-
-    Do: open the service detail page for a service with known perfdata.
-    Assert: >=1 new engine component visible; no ajax_render_graph; no JS errors.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+# --- Graphing engine skeletons (CMK-35973): R1.3 Areas 1, 2, 9 --------------------
+# Complete once the engine renders on these surfaces: reach the graph via
+# GraphAccessor.graph_root.
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
@@ -186,18 +160,6 @@ def test_service_graphs_have_titles_and_legend_no_broken(
 
     Do: as SG-01; wait until all graph components finish loading.
     Assert: titles and the legend table present in each component; zero broken-graph.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_combined_graphs_use_new_engine(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """CO-01 (R1.3 Area 2): each combined-graph card renders through the new engine.
-
-    Do: filter Services to a known metric, select "All metrics of same type in one graph".
-    Assert: every card has a new engine component; no ajax_render_graph.
     """
     pytest.fail("CMK-35973 skeleton: body not implemented")
 
@@ -215,26 +177,13 @@ def test_combined_graphs_have_no_broken_graphs(
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_graph_hover_preview_uses_new_engine(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """HP-01 (R1.3 Area 9): the hover-preview popup renders through the new engine.
-
-    Do: on the services-of-host view, register a request listener and hover the graph icon
-    for a service with known perfdata.
-    Assert: a popup with a new engine component appears; no ajax_render_graph during/after
-    the hover; no JS errors.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
 def test_graph_hover_preview_renders_and_closes(
     dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
 ) -> None:
     """HP-02 (R1.3 Area 9): the hover-preview popup renders content and closes cleanly.
 
-    Do: as HP-01; wait for the popup graph to finish loading.
+    Do: hover the graph icon of a service with known perfdata on the services-of-host
+    view; wait for the popup graph to finish loading.
     Assert: canvas and SVG axes present in the popup component; no broken-graph; moving the
     cursor away closes it cleanly.
     """

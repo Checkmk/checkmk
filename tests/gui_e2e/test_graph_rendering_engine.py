@@ -6,7 +6,7 @@
 """Rendering engine: hover tooltip, theme, resize (R1.2).
 
 Skipped skeletons (CMK-35973). Complete once the engine renders: reach the graph via
-GraphAccessor and assert through GraphInteractions (CMK-35972 foundation).
+GraphAccessor.graph_root and assert through the page-objects in timeseries_graph.py.
 ``graph_hosts_with_varying_data`` supplies hosts with real metric data.
 
 """

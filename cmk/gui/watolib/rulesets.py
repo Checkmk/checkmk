@@ -77,8 +77,6 @@ from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope
 from cmk.rulesets.v1.form_specs import MultipleChoice as MultipleChoiceAPI
 from cmk.rulesets.v1.form_specs import MultipleChoiceElement as MultipleChoiceElementAPI
 from cmk.rulesets.v1.form_specs import RegularExpression as RegularExpressionAPI
-from cmk.rulesets.v1.form_specs import SingleChoice as SingleChoiceAPI
-from cmk.rulesets.v1.form_specs import SingleChoiceElement as SingleChoiceElementAPI
 from cmk.rulesets.v1.form_specs import String as StringAPI
 from cmk.server_side_calls_backend.config_processing import (
     GlobalProxiesWithLookup,
@@ -2457,10 +2455,12 @@ def _create_rule_conditions_catalog_topic(
                             CascadingSingleChoiceElementAPI(
                                 name="predefined",
                                 title=Title("Predefined conditions"),
-                                parameter_form=SingleChoiceAPI(
+                                parameter_form=SingleChoiceExtendedAPI[str](
                                     title=Title("Predefined condition"),
                                     elements=[
-                                        SingleChoiceElementAPI(name=n, title=Title("%s") % t)
+                                        SingleChoiceElementExtendedAPI(
+                                            name=n, title=Title("%s") % t
+                                        )
                                         for n, t in PredefinedConditionStore().choices()
                                     ],
                                 ),

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-23 19:47+0000\n"
+"PO-Revision-Date: 2026-07-27 13:47+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
 "de/>\n"
 "Language: de\n"
@@ -4935,9 +4935,8 @@ msgstr ""
 "Administratoren (mit der Berechtigung \"Schreibrecht auf alle vordefinierten "
 "Bedingungen\")"
 
-#, fuzzy
 msgid "Adva Optical Transport laser power"
-msgstr "Adva Optical Transport Laser Leistung"
+msgstr "Adva Optical Transport Laserleistung"
 
 msgid "Advanced condition simulation"
 msgstr "Erweiterte Simulation der Bedingungen"
@@ -5196,13 +5195,11 @@ msgstr "Alter der Anti-Virus-Signatur"
 msgid "Age of Anti-Virus signature extended database"
 msgstr "Alter der erweiterten Anti-Virus-Signaturdatenbank"
 
-#, fuzzy
 msgid "Age of Intrusion Prevention signature"
-msgstr "Alter der Intrusion-Prevention-Signatur"
+msgstr "Alter der Signatur zur Angriffsprävention"
 
-#, fuzzy
 msgid "Age of Intrusion Prevention signature extended database"
-msgstr "Alter der Intrusion-Prevention-Signatur (erweiterte Datenbank)"
+msgstr "Alter der Signatur zur Angriffsprävention erweiterte Datenbank"
 
 msgid "Age of OS build version"
 msgstr "Alter der OS-Build-Version"
@@ -6369,7 +6366,6 @@ msgstr ""
 "darüber hinaus beliebige E-Mail-Adressen als Ziel für den Bericht "
 "auszuwählen."
 
-#, fuzzy
 msgid ""
 "Allows querying the metric backend (OpenTelemetry) from the custom graph "
 "editor. When disabled, only RRD-based metrics are available in the custom "
@@ -6828,11 +6824,9 @@ msgstr "Verfügbarkeit dieser Aggregation analysieren"
 msgid "Analyse predictive monitoring for this service"
 msgstr "Prognosebasiertes Monitoring für diesen Service analysieren"
 
-#, fuzzy
 msgid "Analysis: recent notifications"
 msgstr "Analyse: aktuellste Benachrichtigungen"
 
-#, fuzzy
 msgid "Analysis: test notifications"
 msgstr "Analyse: Benachrichtigungen testen"
 
@@ -7644,9 +7638,8 @@ msgstr "Attribut-Match-Wert darf nicht leer sein"
 msgid "Attribute name"
 msgstr "Attribut-Name"
 
-#, fuzzy
 msgid "Attribute sync connections"
-msgstr "Aktive Verbindungen"
+msgstr "Verbindungen für die Attribut-Synchronisation"
 
 msgid "Attribute sync plug-ins"
 msgstr "Sync-Plugins für Attribute"
@@ -7814,19 +7807,15 @@ msgstr "Autorisierungen pro DB-Sicherheitsgruppe"
 msgid "Auto (default)"
 msgstr "Auto (Standard)"
 
-#, fuzzy
 msgid "Auto close off"
 msgstr "Auto-Close aus"
 
-#, fuzzy
 msgid "Auto close on"
 msgstr "Auto-Close an"
 
-#, fuzzy
 msgid "Auto shrink off"
 msgstr "Auto-Shrink aus"
 
-#, fuzzy
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
 
@@ -7860,17 +7849,14 @@ msgstr "Automatischer Start"
 msgid "Auto-start services"
 msgstr "Services automatisch starten"
 
-#, fuzzy
 msgid "Autoextend is expected to be OFF"
-msgstr "Automatische Erweiterung erwartet"
+msgstr "Automatische Erweiterung wird als OFF erwartet"
 
-#, fuzzy
 msgid "Autoextend is expected to be ON"
-msgstr "Automatische Erweiterung erwartet"
+msgstr "Automatische Erweiterung wird als ON erwartet"
 
-#, fuzzy
 msgid "Autoextend will be ignored"
-msgstr "Autoextend wird ignoriert"
+msgstr "Automatische Erweiterung wird ignoriert"
 
 msgid "Automatic"
 msgstr "Automatisch"
@@ -7887,7 +7873,6 @@ msgstr "Automatisches Aktivieren"
 msgid "Automatic agent updates"
 msgstr "Automatische Agenten-Updates"
 
-#, fuzzy
 msgid "Automatic deletion"
 msgstr "Automatisches Löschen"
 
@@ -7932,11 +7917,10 @@ msgstr "Automatische Übernahme"
 msgid "Automatic updates"
 msgstr "Automatische Updates"
 
-#, fuzzy
 msgid "Automatic: use existing user, if available. Otherwise create new user."
 msgstr ""
-"Automatisch: Vorhandenen Benutzer verwenden, falls vorhanden. Andernfalls "
-"erstellen Sie einen neuen Benutzer."
+"Automatisch: vorhandenen Benutzer verwenden, falls vorhanden. Andernfalls "
+"einen neuen Benutzer erstellen."
 
 msgid "Automatically activate changes"
 msgstr "Änderungen automatisch aktivieren"
@@ -7967,14 +7951,12 @@ msgstr ""
 "Automatisch Check zur Service-Erkennung auslösen, wenn Service-Konfiguration "
 "geändert wurde"
 
-#, fuzzy
 msgid "Automatically select best type of backend"
 msgstr "Automatisch besten Backend-Typ auswählen"
 
 msgid "Automatically stores the host key with no manual input requirement"
 msgstr "Automatisches Hinterlegen des Host-Schlüssel ohne manuelle Eingabe"
 
-#, fuzzy
 msgid "Automatically update agents at <i>Activate changes</i>, if necessary"
 msgstr ""
 "Agenten bei <i>Änderungen aktivieren</i> automatisch aktualisieren, falls "
@@ -8049,13 +8031,11 @@ msgstr "Verfügbarkeitslevels:"
 msgid "Availability of"
 msgstr "Verfügbarkeit von"
 
-#, fuzzy
 msgid "Availability of host $RANGE_TITLE$"
 msgstr "Verfügbarkeit von Host $RANGE_TITLE$"
 
-#, fuzzy
 msgid "Availability of the services"
-msgstr "Verfügbarkeit von Services"
+msgstr "Verfügbarkeit der Services"
 
 msgid "Availability options"
 msgstr "Optionen für Verfügbarkeit"
@@ -8063,9 +8043,8 @@ msgstr "Optionen für Verfügbarkeit"
 msgid "Availability table"
 msgstr "Verfügbarkeitstabelle"
 
-#, fuzzy
 msgid "Availability timeline"
-msgstr "Verfügbarkeits-Timeline"
+msgstr "Verfügbarkeitszeitreihe"
 
 msgid "Available"
 msgstr "Verfügbar"
@@ -8073,7 +8052,6 @@ msgstr "Verfügbar"
 msgid "Available (missing)"
 msgstr "Verfügbar (fehlend)"
 
-#, fuzzy
 msgid "Available Memory"
 msgstr "Verfügbarer Speicher"
 
@@ -8110,7 +8088,6 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
-#, fuzzy
 msgid "Average CPU value over"
 msgstr "Durchschnittlicher CPU-Wert über"
 
@@ -8216,12 +8193,11 @@ msgstr ""
 "Durchschnittliche Latenz, die der Azure-Speicher für eine erfolgreiche "
 "Anfrage benötigt"
 
-#, fuzzy
 msgid ""
 "Average latency used by Azure storage to process a successful request in "
 "milliseconds"
 msgstr ""
-"Durchschnittliche Latenzzeit, die der Azure-Speicher zur Verarbeitung einer "
+"Durchschnittliche Latenz, die der Azure-Speicher zur Verarbeitung einer "
 "erfolgreichen Anfrage benötigt, in Millisekunden"
 
 msgid "Average message count lower levels"
@@ -8774,34 +8750,27 @@ msgstr "Azure DB Speicher"
 msgid "Azure DB storage (deprecated)"
 msgstr "Azure DB Speicher (veraltet)"
 
-#, fuzzy
 msgid "Azure Firewall SNAT utilization"
 msgstr "SNAT-Auslastung des Azure Firewalls"
 
-#, fuzzy
 msgid "Azure Firewall health"
 msgstr "Gesundheit des Azure Firewalls"
 
-#, fuzzy
 msgid "Azure Firewall latency"
 msgstr "Latenz des Azure Firewalls"
 
-#, fuzzy
 msgid "Azure Firewall throughput"
 msgstr "Durchsatz des Azure Firewalls"
 
 msgid "Azure Firewalls"
 msgstr "Azure Firewalls"
 
-#, fuzzy
 msgid "Azure Load Balancer SNAT consumption"
-msgstr "Azure Load Balancer SNAT-Auslastung"
+msgstr "Azure Load Balancer SNAT-Verbrauch"
 
-#, fuzzy
 msgid "Azure Load Balancer byte count"
 msgstr "Azure Load Balancer Byte-Zähler"
 
-#, fuzzy
 msgid "Azure Load Balancer health"
 msgstr "Azure Load Balancer Gesundheit"
 
@@ -8841,7 +8810,6 @@ msgstr "Azure Traffic Manager QPS"
 msgid "Azure Traffic Manager QPS (deprecated)"
 msgstr "Azure Traffic Manager Anfragen pro Sekunde (QPS) (veraltet)"
 
-#, fuzzy
 msgid "Azure Traffic Manager probe state"
 msgstr "Azure Traffic Manager Prüfzustand"
 
@@ -8854,7 +8822,6 @@ msgstr "Azure VM Burst CPU Credits"
 msgid "Azure VM burst CPU credits (deprecated)"
 msgstr "Azure VM Burst CPU Credits (veraltet)"
 
-#, fuzzy
 msgid "Azure VM disk"
 msgstr "Azure VM Festplatte"
 
@@ -8879,7 +8846,6 @@ msgstr "Azure Agent-Info"
 msgid "Azure agent info (deprecated)"
 msgstr "Azure Agent-Info (veraltet)"
 
-#, fuzzy
 msgid "Azure app registration"
 msgstr "Azure App-Registrierung"
 
@@ -8892,7 +8858,6 @@ msgstr "Azure Datenbank-Verbindungen (veraltet)"
 msgid "Azure databases"
 msgstr "Azure-Datenbanken"
 
-#, fuzzy
 msgid "Azure network IO"
 msgstr "Azure Netzwerk-E/A"
 
@@ -8908,9 +8873,8 @@ msgstr "Azure Services gefunden!"
 msgid "Azure services to monitor"
 msgstr "Zu überwachende Azure-Dienste"
 
-#, fuzzy
 msgid "Azure state"
-msgstr "Azure-Speicher"
+msgstr "Azure-Zustand"
 
 msgid "Azure storage"
 msgstr "Azure-Speicher"
@@ -8921,36 +8885,29 @@ msgstr "Azure Speicherkonten"
 msgid "Azure storage accounts (deprecated)"
 msgstr "Azure Speicherkonten (veraltet)"
 
-#, fuzzy
 msgid "Azure storage data flow"
 msgstr "Azure Speicherdatenfluss"
 
-#, fuzzy
 msgid "Azure storage data flow (deprecated)"
 msgstr "Azure Speicherdatenfluss (veraltet)"
 
-#, fuzzy
 msgid "Azure storage performance"
 msgstr "Azure Speicher-Performance"
 
-#, fuzzy
 msgid "Azure storage performance (deprecated)"
 msgstr "Azure Speicher-Performance (veraltet)"
 
-#, fuzzy
 msgid "Azure storage usage"
-msgstr "Azure Speicherauslastung"
+msgstr "Azure-Speicherauslastung"
 
-#, fuzzy
 msgid "Azure storage usage (deprecated)"
-msgstr "Azure Speicherauslastung (veraltet)"
+msgstr "Azure-Speicherauslastung (veraltet)"
 
 msgid "Azure subscription"
 msgstr "Azure-Subskription"
 
-#, fuzzy
 msgid "Azure subscription ID"
-msgstr "Azure-Subskription"
+msgstr "Azure-Subskriptions-ID"
 
 msgid "Azure subscription info"
 msgstr "Azure Subskriptions-Info"
@@ -8958,13 +8915,11 @@ msgstr "Azure Subskriptions-Info"
 msgid "Azure subscription name"
 msgstr "Name der Azure-Subskription"
 
-#, fuzzy
 msgid "Azure usage details (costs)"
-msgstr "Azure Auslastungsdetails (Kosten)"
+msgstr "Azure-Auslastungsdetails (Kosten)"
 
-#, fuzzy
 msgid "Azure usage details (costs) (deprecated)"
-msgstr "Azure Auslastungsdetails (Kosten) (veraltet)"
+msgstr "Azure-Auslastungsdetails (Kosten) (veraltet)"
 
 msgid "Azure virtual machines"
 msgstr "Virtuelle Maschinen von Azure"
@@ -9020,13 +8975,11 @@ msgstr "BI"
 msgid "BI - Checkmk Business Intelligence"
 msgstr "BI - Checkmk Business Intelligence"
 
-#, fuzzy
 msgid "BI aggregation"
-msgstr "BI-Aggregationen"
+msgstr "BI-Aggregat"
 
-#, fuzzy
 msgid "BI aggregation group"
-msgstr "BI Aggregationsgruppen"
+msgstr "BI-Aggregatgruppe"
 
 msgid "BI aggregation groups"
 msgstr "BI Aggregationsgruppen"
@@ -9037,9 +8990,8 @@ msgstr "Baum der BI-Aggregationsgruppen"
 msgid "BI aggregations"
 msgstr "BI-Aggregationen"
 
-#, fuzzy
 msgid "BI aggregations affected by one host"
-msgstr "BI Aggregationen betroffen von einem Host"
+msgstr "BI-Aggregate betroffen von einem Host"
 
 #, python-format
 msgid "BI aggregations containing this %(object_type)s"
@@ -9060,9 +9012,8 @@ msgstr "BI-Kompilierung"
 msgid "BI configuration"
 msgstr "BI-Konfiguration"
 
-#, fuzzy
 msgid "BI configuration packs"
-msgstr "Bi Konfigurationspakete"
+msgstr "BI-Konfigurationspakete"
 
 msgid "BI host details"
 msgstr "BI Host-Details"
@@ -9076,9 +9027,8 @@ msgstr "BI Paket"
 msgid "BI pack ID"
 msgstr "BI Paket-ID"
 
-#, fuzzy
 msgid "BI pack properties"
-msgstr "BI Paketeingenschaften"
+msgstr "BI-Paketeigenschaften"
 
 msgid "BI packs"
 msgstr "BI-Pakete"
@@ -9120,59 +9070,45 @@ msgstr "Zurück zu Ansicht"
 msgid "Back to view with checkboxes reset"
 msgstr "Zurück zur Ansicht und Checkboxen zurücksetzen"
 
-#, fuzzy
 msgid "Backend IP config"
 msgstr "Backend IP-Konfiguration"
 
-#, fuzzy
 msgid "Backend conn. failures"
 msgstr "Backend-Verbindungsprobleme"
 
-#, fuzzy
 msgid "Backend conn. not attempted"
-msgstr "Backend-Verbindung nicht versucht"
+msgstr "Backend-Verbindung nicht angestrebt"
 
-#, fuzzy
 msgid "Backend conn. recycles"
 msgstr "Backend-Verbindung wiederverwendet"
 
-#, fuzzy
 msgid "Backend conn. requests"
 msgstr "Backend-Verbindungsanfragen"
 
-#, fuzzy
 msgid "Backend conn. retry"
 msgstr "Erneuter Backend-Verbindungsversuch"
 
-#, fuzzy
 msgid "Backend conn. reuses"
 msgstr "Wiederverwendungen der Backend-Verbindung"
 
-#, fuzzy
 msgid "Backend conn. success"
 msgstr "Erfolgreiche Backend-Verbindung"
 
-#, fuzzy
 msgid "Backend conn. too many"
 msgstr "zu viele Backend-Verbindungen"
 
-#, fuzzy
 msgid "Backend conn. was closed"
-msgstr "Backend-Verbindung wurde beendet"
+msgstr "Backend-Verbindung wurde geschlossen"
 
-#, fuzzy
 msgid "Backend connection errors"
 msgstr "Fehler bei der Backend-Verbindung"
 
-#, fuzzy
 msgid "Backend pool"
 msgstr "Backend-Pool"
 
-#, fuzzy
 msgid "Backend pools"
 msgstr "Backend-Pools"
 
-#, fuzzy
 msgid "Backend port"
 msgstr "Backend-Port"
 
@@ -9262,7 +9198,6 @@ msgstr "Sicherungs-ID"
 msgid "Backups"
 msgstr "Sicherungen"
 
-#, fuzzy
 msgid "Bad requests received"
 msgstr "Ungültige Anfragen empfangen"
 
@@ -9350,7 +9285,6 @@ msgstr "Balkendiagramm"
 msgid "Bar graphics representing the state history"
 msgstr "Balkendiagramm, dass die Zustands-Historie darstellt"
 
-#, fuzzy
 msgid "Barracuda: mail queue"
 msgstr "Barracuda: Mail-Warteschlange"
 
@@ -9414,9 +9348,8 @@ msgstr "BasicAuth-Einstellungen"
 msgid "BasicAuth settings (optional)"
 msgstr "BasicAuth Einstellungen (optional)"
 
-#, fuzzy
 msgid "Batch Requests/sec"
-msgstr "Batch-Anfragen/sek"
+msgstr "Batch-Anfragen/sec"
 
 msgid "Battery capacity"
 msgstr "Batteriekapazität"
@@ -9427,7 +9360,6 @@ msgstr "Batterieströme"
 msgid "Battery electrical current"
 msgstr "Elektrischer Batteriestrom"
 
-#, fuzzy
 msgid "Battery levels"
 msgstr "Batterie-Levels"
 
@@ -9437,19 +9369,15 @@ msgstr "Batterietemperatur"
 msgid "Battery time remaining"
 msgstr "Verbleibende Betriebsdauer der Batterie"
 
-#, fuzzy
 msgid "Bazel cache password"
 msgstr "Bazel Cache-Passwort"
 
-#, fuzzy
 msgid "Bazel cache port"
 msgstr "Bazel Cache-Port"
 
-#, fuzzy
 msgid "Bazel cache user"
 msgstr "Bazel Cache-Benutzer"
 
-#, fuzzy
 msgid "Bazel cache version"
 msgstr "Bazel Cache-Version"
 
@@ -9583,23 +9511,18 @@ msgstr "Blöcke lesen"
 msgid "Blue"
 msgstr "Blau"
 
-#, fuzzy
 msgid "BlueCat Command Server settings"
-msgstr "BlueCat Command-Server-Einstellungen"
+msgstr "BlueCat Command Server-Einstellungen"
 
-#, fuzzy
 msgid "BlueCat DHCP settings"
 msgstr "BlueCat DHCP-Einstellungen"
 
-#, fuzzy
 msgid "BlueCat DNS settings"
 msgstr "BlueCat DNS-Einstellungen"
 
-#, fuzzy
 msgid "BlueCat HA settings"
 msgstr "BlueCat HA-Einstellungen"
 
-#, fuzzy
 msgid "BlueCat NTP settings"
 msgstr "BlueCat NTP-Einstellungen"
 
@@ -9730,20 +9653,18 @@ msgstr "Bucket-Größe"
 msgid "Buckets"
 msgstr "Buckets"
 
-#, fuzzy
 msgid "Buckets only: levels for disk queue drain rate"
 msgstr "Nur für Buckets: Levels für die Abbaurate der Festplattenwarteschlange"
 
-#, fuzzy
 msgid "Buckets only: levels for disk queue fill rate"
 msgstr ""
 "Nur für Buckets: Levels für die Auffüllrate der Festplattenwarteschlange"
 
-#, fuzzy
 msgid "Buckets only: levels for length of disk write queue"
-msgstr "Nur für Buckets: Levels für die Länge der Festplattenwarteschlange"
+msgstr ""
+"Nur für Buckets: Levels für die Länge der schreibenden "
+"Festplattenwarteschlange"
 
-#, fuzzy
 msgid "Buckets only: levels for number of items fetched from disk"
 msgstr ""
 "Nur für Buckets: Levels für Anzahl an abgerufenen Items von einer Festplatte"
@@ -9778,7 +9699,6 @@ msgstr "Bulks außerhalb der Zeitperiode bilden"
 msgid "Build bulks up to"
 msgstr "Bulks bilden bis zu"
 
-#, fuzzy
 msgid "Build cache"
 msgstr "Build Cache"
 
@@ -9863,11 +9783,9 @@ msgstr "Bulk-Umbenennung"
 msgid "Bulk renaming of hosts"
 msgstr "Bulk-Umbenennung von Hosts"
 
-#, fuzzy
 msgid "Bulk walk: limit SNMP OID ranges"
 msgstr "Bulk-Walk: SNMP-OID-Bereiche begrenzen"
 
-#, fuzzy
 msgid "Bulk walk: number of OIDs per bulk"
 msgstr "Bulk-Walk: Anzahl von OIDs pro Bulk"
 
@@ -10048,7 +9966,6 @@ msgstr ""
 "Durchschnitten. Damit erreichen Sie dass ein Check auf langfristige "
 "Veränderungen reagiert und nicht auf 1-Minuten-Ereignisse."
 
-#, fuzzy
 msgid ""
 "By activating this checkbox, the complete combined rule conditions will be "
 "inverted. That means that this rule will be executed, if at least one of the "
@@ -10059,9 +9976,9 @@ msgstr ""
 "Durch Aktivierung dieser Checkbox werden die kompletten kombinierten "
 "Regelbedingungen umgekehrt. Das bedeutet, dass diese Regel ausgeführt wird, "
 "wenn mindestens eine der Bedingungen <b>nicht</b> zutrifft. Dies kann z.B. "
-"genutzt werden, um ein Regelpaket zu überspringen, wenn der Meldungstext "
-"<tt>ORA-</tt> nicht enthält. Bitte beachten: Wenn eine invertierte Regel "
-"greift, kann es nie Match-Gruppen geben."
+"genutzt werden, um ein Regelpaket zu überspringen, wenn der Meldungstext <tt>"
+"ORA-</tt> nicht enthält. Bitte beachten: Wenn eine invertierte Regel greift, "
+"kann es nie Match-Gruppen geben."
 
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
@@ -10204,7 +10121,6 @@ msgstr ""
 "Option können Sie Checkmk so einstellen, dass es den momentan reservierten "
 "aber ungenutzten Platz von der Berechnung des benutzten Platzes ausschließt."
 
-#, fuzzy
 msgid ""
 "By default, Checkmk uses command line calls of Net-SNMP tools like snmpget "
 "or snmpwalk to gather SNMP information. For each request a new command line "
@@ -10304,7 +10220,6 @@ msgstr ""
 "pro Stunde (%(per_minute)s pro Minute) begrenzt, können Sie das Monitoring "
 "auf einzelne Ressourcengruppen und Ressourcen beschränken."
 
-#, fuzzy
 msgid ""
 "By default, certificate validation is disabled, because it is not security-"
 "relevant at this stage, see <a href=\"https://checkmk.com/werk/14715\" "
@@ -10504,7 +10419,6 @@ msgstr ""
 "einiger bekannter Speicherorte. Stattdessen können Sie hier einen "
 "vollständigen Pfad angeben."
 
-#, fuzzy
 msgid ""
 "By default, the agent updater communicates with the Agent Bakery of the "
 "central site to update the agent. If you want to make the agent updater "
@@ -10981,13 +10895,11 @@ msgstr "CPU-Last Durchschnitt der letzten 5 Minuten"
 msgid "CPU load average of last minute"
 msgstr "CPU-Last Durchschnitt der letzten Minute"
 
-#, fuzzy
 msgid "CPU load via WMI"
-msgstr "CPU-Last via WMI"
+msgstr "CPU-Last über WMI"
 
-#, fuzzy
 msgid "CPU memory used"
-msgstr "verwendeter CPU Speicher"
+msgstr "verwendeter CPU-Speicher"
 
 msgid "CPU model"
 msgstr "CPU-Modell"
@@ -11001,7 +10913,6 @@ msgstr "prozentuale CPU Auslastung"
 msgid "CPU rescale maximum load"
 msgstr "Neuskalierung der maximalen CPU-Last"
 
-#, fuzzy
 msgid "CPU rescale maximum load is unspecified."
 msgstr "Skalierung der maximalen CPU-Last ist nicht spezifiziert."
 
@@ -11022,7 +10933,6 @@ msgstr "CPU-Ressourcen: Namespace"
 msgid "CPU resources: StatefulSet"
 msgstr "CPU-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "CPU resources: cluster"
 msgstr "CPU-Ressourcen: Cluster"
 
@@ -11113,41 +11023,32 @@ msgstr "CPU-Auslastung (Einzelwert)"
 msgid "CPU utilization (user, system)"
 msgstr "CPU-Auslastung (Benutzer, System)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait & levels)"
 msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten & Levels)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait)"
 msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest & levels)"
-msgstr "CPU-Auslastung (Benutzer, System, E/A wartend, Gast & Level)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Gast & Levels)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest)"
 msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Gast)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest, steal & levels)"
-msgstr "CPU-Auslastung (Benutzer, System, E/A wartend, Gast, Steal & Level)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Gast, Steal & Levels)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest, steal)"
-msgstr "CPU-Auslastung (Benutzer, System, E/A wartend, Gast, Steal)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Gast, Steal)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, steal & levels)"
-msgstr "CPU-Auslastung (Benutzer, System, E/A wartend, Steal & Level)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Steal & Level)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, steal)"
-msgstr "CPU-Auslastung (Benutzer, System, E/A wartend, Steal)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Steal)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, idle, I/O wait)"
-msgstr "CPU-Auslastung (Benutzer, System, Leerlauf, E/A wartend)"
+msgstr "CPU-Auslastung (Benutzer, System, Leerlauf, E/A-Warten)"
 
 msgid "CPU utilization (user, system, idle, nice)"
 msgstr "CPU-Auslastung (Benutzer, System, Leerlauf, Nice)"
@@ -11158,7 +11059,7 @@ msgstr "CPU-Auslastung (Benutzer, System, Unterbrechung)"
 msgid "CPU utilization for simple devices"
 msgstr "CPU-Auslastung für einfache Geräte"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "CPU utilization is delivered by the operating system as a per CPU core "
 "basis. Thus each core contributes with 100% at full utilization, producing a "
@@ -11187,7 +11088,6 @@ msgstr "CPU-Auslastung in der letzten Minute"
 msgid "CPU utilization last second"
 msgstr "CPU-Auslastung in der letzten Sekunde"
 
-#, fuzzy
 msgid "CPU utilization levels"
 msgstr "CPU-Auslastungslevels"
 
@@ -11200,7 +11100,6 @@ msgstr "CPU-Auslastung von Geräten mit Modulen"
 msgid "CPU utilization on Linux/Unix"
 msgstr "CPU-Auslastung für Linux/Unix"
 
-#, fuzzy
 msgid "CPU utilization: cluster"
 msgstr "CPU-Auslastung: Cluster"
 
@@ -11216,9 +11115,8 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "CRC-Fehler"
 
-#, fuzzy
 msgid "CRC errors (ID 199)"
-msgstr "CRC-Fehler (id 199)"
+msgstr "CRC-Fehler (ID 199)"
 
 msgid "CRC errors rate"
 msgstr "CRC Fehlerrate"
@@ -11235,9 +11133,8 @@ msgstr "Crit - wenn dieser Router nicht benutzt wird"
 msgid "CRIT at"
 msgstr "CRIT bei"
 
-#, fuzzy
 msgid "CRIT pattern"
-msgstr "CRIT Pattern"
+msgstr "CRIT-Pattern"
 
 msgid "CRIT services of host"
 msgstr "CRIT-Services von Host"
@@ -11251,11 +11148,9 @@ msgstr "CRIT-Services der Instanz"
 msgid "CRITICAL"
 msgstr "KRITISCH"
 
-#, fuzzy
 msgid "CRT/PEM file"
 msgstr "CRT/PEM-Datei"
 
-#, fuzzy
 msgid "CSV file"
 msgstr "CSV-Datei"
 
@@ -11265,21 +11160,17 @@ msgstr "CTIO-Timeouts"
 msgid "CTIO transmission errors"
 msgstr "CTIO-Transmissionsfehler"
 
-#, fuzzy
 msgid "CUPS printer queues (Linux)"
-msgstr "CUPS Druckerwarteschlangen (Linux)"
+msgstr "CUPS-Druckerwarteschlangen (Linux)"
 
-#, fuzzy
 msgid "CUPS queue"
-msgstr "CUPS Warteschlange"
+msgstr "CUPS-Warteschlange"
 
-#, fuzzy
 msgid "CURDEPTH: the number of messages currently on the queue."
 msgstr ""
 "CURDEPTH: Anzahl von Meldungen, die sich aktuell in der Warteschlange "
 "befinden."
 
-#, fuzzy
 msgid ""
 "CURDEPTH_PERC: percentage (CURDEPTH/MAXDEPTH) of the number of messages "
 "currently on the queue."
@@ -11336,14 +11227,13 @@ msgstr "Zwischengespeichert"
 msgid "Cached agent data"
 msgstr "Gecachte Agentendaten"
 
-#, fuzzy
 msgid ""
 "Cached data from Business Intelligence. Contains states, downtimes, "
 "acknowledgments and service periods for all hosts/services included in a BI "
 "aggregation."
 msgstr ""
 "Im Cache gespeicherte Daten aus der Business Intelligence. Enthält Zustände, "
-"Wartungszeiten, Quittierungen und Serviceoerioden für alle in einem BI-"
+"Wartungszeiten, Quittierungen und Serviceperioden für alle in einem BI-"
 "Aggregat enthaltenen Hosts/Services."
 
 msgid "Cached memory"
@@ -11830,7 +11720,6 @@ msgstr "Verbleibende Kapazität"
 msgid "Capacity usage"
 msgstr "Kapazitätsauslastung"
 
-#, fuzzy
 msgid "Capacity: array capacity & utilization"
 msgstr "Kapazität: Array-Kapazität & Auslastung"
 
@@ -11872,7 +11761,6 @@ msgstr "Groß-/Kleinschreibung"
 msgid "Case translation"
 msgstr "Groß/Kleinschreibung umwandeln"
 
-#, fuzzy
 msgid "Cash register"
 msgstr "Kasse"
 
@@ -11927,7 +11815,6 @@ msgstr "Ceph MGRs"
 msgid "Ceph OSDs"
 msgstr "Ceph OSDs"
 
-#, fuzzy
 msgid "Ceph status"
 msgstr "Ceph-Status"
 
@@ -11943,7 +11830,6 @@ msgstr "Zertifikatskette"
 msgid "Certificate chain (root / intermediate certificate)"
 msgstr "Zertifikatskette (Root / Zwischenzertifikat)"
 
-#, fuzzy
 msgid "Certificate checking"
 msgstr "Überprüfung von Zertifikaten"
 
@@ -11954,9 +11840,8 @@ msgid "Certificate for encrypted authentication request responses (PEM)"
 msgstr ""
 "Zertifikat für verschlüsselte Antworten auf Authentifizierungsanfragen (PEM)"
 
-#, fuzzy
 msgid "Certificate key file"
-msgstr "Zertifikat- und Schlüsseldatei"
+msgstr "Zertifikatsschlüsseldatei"
 
 msgid "Certificate overview"
 msgstr "Zertifikatsübersicht"
@@ -11982,11 +11867,9 @@ msgstr "Zertifikate für HTTPS-Verifizierung"
 msgid "Change"
 msgstr "Änderung"
 
-#, fuzzy
 msgid "Change CRITICAL state to"
 msgstr "CRITICAL-Zustand ändern zu"
 
-#, fuzzy
 msgid "Change OK state to"
 msgstr "OK-Zustand ändern zu"
 
@@ -12005,7 +11888,6 @@ msgstr "Berechnungsoptionen ändern"
 msgid "Change contact:"
 msgstr "Ändere Kontakt:"
 
-#, fuzzy
 msgid "Change context info to"
 msgstr "Kontextinformation ändern zu"
 
@@ -12278,9 +12160,8 @@ msgstr "Alle Häkchen setzen/entfernen"
 msgid "Check DNS service"
 msgstr "Prüfe DNS Service"
 
-#, fuzzy
 msgid "Check FTP service"
-msgstr "Prüfe SFTP-Dienst"
+msgstr "Prüfe FTP-Service"
 
 msgid "Check HTML form submit"
 msgstr "Einreichung des HTML-Formulars prüfen"
@@ -12309,7 +12190,6 @@ msgstr ""
 "werden soll. Bitte verwenden Sie stattdessen das neue \"Check HTTP "
 "Webdienst\"."
 
-#, fuzzy
 msgid ""
 "Check HTTP: use HTTPS instead of HTTP for SSL/TLS connections (deprecated/"
 "ineffective)"
@@ -12317,9 +12197,8 @@ msgstr ""
 "Check HTTP: Verwende HTTPS anstelle von HTTP für SSL/TLS-Verbindungen "
 "(veraltet/ineffektiv)"
 
-#, fuzzy
 msgid "Check IMAP/EWS/GraphApi mailboxes"
-msgstr "IMAP/EWS/GraphApi Mailboxes prüfen"
+msgstr "IMAP/EWS/GraphApi Mailboxen prüfen"
 
 msgid "Check LDAP service access"
 msgstr "Zugriff auf LDAP-Service prüfen"
@@ -12340,9 +12219,8 @@ msgstr "Check Point VSID-Verkehrsrate"
 msgid "Check Point powersupply"
 msgstr "Check Point Netzteil"
 
-#, fuzzy
 msgid "Check SFTP service"
-msgstr "Prüfe SFTP-Dienst"
+msgstr "Prüfe SFTP-Service"
 
 msgid "Check SMB share access"
 msgstr "Zugriff auf SMB Share prüfen"
@@ -12356,7 +12234,6 @@ msgstr "SQL-Datenbank prüfen"
 msgid "Check SSH service"
 msgstr "SSH-Dienst überwachen"
 
-#, fuzzy
 msgid "Check SSL certificate age"
 msgstr "Prüfe Alter des SSL-Zertifikates"
 
@@ -12499,7 +12376,6 @@ msgstr "Nur die aufgelisteten Mailboxen überprüfen"
 msgid "Check origin and parameters"
 msgstr "Check-Ursprung und -Parameter"
 
-#, fuzzy
 msgid "Check parameter"
 msgstr "Check-Parameter"
 
@@ -12539,7 +12415,6 @@ msgstr "Ablaufzeit für Check-Plugin"
 msgid "Check plug-ins matching"
 msgstr "Übereinstimmende Check-Plugins"
 
-#, fuzzy
 msgid "Check point firewall connections"
 msgstr "Check Point Firewall-Verbindungen"
 

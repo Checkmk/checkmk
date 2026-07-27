@@ -96,7 +96,7 @@ async fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
     match config.exec(&environment).await {
         Ok(output) => {
             print!("{output}");
-            log::info!("Success");
+            log::info!("Successfully executed");
             0
         }
         Err(e) => {

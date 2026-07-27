@@ -33,13 +33,12 @@ afterEach(() => {
 })
 
 describe('RunMsiInstaller', () => {
-  test('shows administrator privileges notice (not root)', () => {
+  test('instructs to use an elevated PowerShell prompt (not root)', () => {
     mountWithWizardContext(RunMsiInstaller, baseProps)
 
-    expect(
-      screen.getByText(/Note that the installation requires administrator privileges/)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/elevated PowerShell prompt/)).toBeInTheDocument()
     expect(screen.queryByText(/root privileges/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/requires administrator privileges/)).not.toBeInTheDocument()
   })
 
   test('install command is not present before token generation', () => {

@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
@@ -60,9 +59,6 @@ const installCommand = computed(() => {
           )
         }}
       </CmkParagraph>
-      <CmkAlertBox variant="info">
-        {{ _t('Note that the installation requires administrator privileges.') }}
-      </CmkAlertBox>
 
       <GenerateToken
         v-model="ott"

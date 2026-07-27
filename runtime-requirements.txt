@@ -417,16 +417,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.55 \
-    --hash=sha256:ab2d18d00fd0ceb7110c3659176b9306e009a313dbc5fcc5bd8734253f115157 \
-    --hash=sha256:c8f23355b4eff538a9c04e09666c6defb5013051de23ca826559906787253188
+boto3==1.43.56 \
+    --hash=sha256:57c90df9fb026f2e6ae22530861198130203733c5c9ec4e5cca3a4037f5a8db4 \
+    --hash=sha256:feb699d4ab241ef5c1b80bb58277be2aaad365cd4b672d7817e0bc59ee45131b
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.55 \
-    --hash=sha256:46e8d9f457a804948abf45a22add963ebaaa6c2765c2f1c26ff3b534309d7a58 \
-    --hash=sha256:b7ceb3070dffb64cc1cfdda3c32db538eb143c46ad9e9e781b0d8f90c9246f37
+botocore==1.43.56 \
+    --hash=sha256:6c01f85f0ff9863076f4c761e74ee3aa96c5ccc1ad09fc1efd62ef8f2d22bf57 \
+    --hash=sha256:aafc741f1b10f6fd63253eaf6ea029680c1ff436d87e1b8969d62aefa0c76976
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -842,9 +842,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fastapi==0.139.2 \
-    --hash=sha256:333145a6891e9b5b3cfceb69baf817e8240cde4d4588ae5a10bf56ffacb6255e \
-    --hash=sha256:b9ad015a835173d59865e2f5d8296fbc2b317bf56a2ba1a5bfbdd03de2fd4b1c
+fastapi==0.140.0 \
+    --hash=sha256:e951c0a0d9540bf5d9a2a9e078fd415da2ab7e312d435139e7d9e2e7fe9f0b23 \
+    --hash=sha256:f338951b82fd74ca8f843163aec43ea1a1ce84d515415a50fa98fa25572a5544
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1016,9 +1016,9 @@ gitdb==4.0.12 \
     # via
     #   -c requirements.txt
     #   gitpython
-gitpython==3.1.55 \
-    --hash=sha256:781e3b1624dad81b24e9524bf0297b69786a0706db2cbceec1e2b05c38e5152f \
-    --hash=sha256:7c9ec1e69c158c081632ab35c41471e302c96db2ae42165036a5d2403378812e
+gitpython==3.1.57 \
+    --hash=sha256:4ccf7d73c10f5c9e76043fbb2675ac5a1b3ff5b41e648f56bcbed5f63792ecaf \
+    --hash=sha256:c493ec57c0ef6b19743798b6a5af859c71814b524e7e6f97baa2f8e658961488
     # via
     #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
@@ -3244,9 +3244,9 @@ pytokens==0.4.1 \
     # via
     #   -c requirements.txt
     #   black
-pytz==2026.2 \
-    --hash=sha256:04156e608bee23d3792fd45c94ae47fae1036688e75032eea2e3bf0323d1f126 \
-    --hash=sha256:0e60b47b29f21574376f218fe21abc009894a2321ea16c6754f3cad6eb7cdd6a
+pytz==2026.3.post1 \
+    --hash=sha256:2211d3fcf9a797d3405cac96ac7f61d80e6a644f72a3309607282fe8a2010c5d \
+    --hash=sha256:dd95840dd199baea12d9cc096a1d452caa6596a1c1e4b5f3dbd1541855d5e815
     # via
     #   -c requirements.txt
     #   pysaml2
@@ -3362,9 +3362,9 @@ recurring-ical-events==3.8.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-redfish==3.3.6 \
-    --hash=sha256:0bdd4d16c49eb2b97c5a288f0f41c3b1222a2546a7fef8543c3feef91e24d355 \
-    --hash=sha256:4880b82047debf8e634ab0022b9e97360e74842073ea6b1716b9b705dbe66ed8
+redfish==3.3.7 \
+    --hash=sha256:13de852857e17c59aa5bdfe629ca6e8f05ccd6b854d55560cca37814749c32a5 \
+    --hash=sha256:64eb404a418baf9b9f9ce1d26cdcc9ea2094ebd39085a1edd135f073619179f6
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -3763,15 +3763,15 @@ tenacity==9.1.4 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   opsgenie-sdk
-tqdm==4.69.0 \
-    --hash=sha256:700c5e85dcd5f009dd6222588a29180a193a748247a5d855b4d67db93d79a53b \
-    --hash=sha256:9979978912be667a6ef21fd5d8abf54e324e63d82f7f43c360792ebc2bc4e622
+tqdm==4.69.1 \
+    --hash=sha256:0a654b96f7a2660cceb615b56f307ec2bef96c515409014a429a561981ab52b4 \
+    --hash=sha256:2be21080a0ce17e902c2f1baeb6a74bf551b67bbdfa4bc0109fad471d0b4cb0d
     # via
     #   -c requirements.txt
     #   pysmb
-typeguard==4.5.2 \
-    --hash=sha256:5a16dcac23502039299c97c8941651bc33d7ea8cc4b2f7d6bbb1b528f6eea423 \
-    --hash=sha256:fcf9de18bd945cdb4c7b996e12b4c51ce83f92f191314a6d7cf1739586ec98cf
+typeguard==4.6.0 \
+    --hash=sha256:79878165bb86f2cf5d41d159a0ff1792a796cf496882d2fe1b1c6c7049b9cdd7 \
+    --hash=sha256:e7414f09111317de3e335de92cd397c5c0ca00b1cc1676de12e1d444a79b3f21
     # via
     #   -c requirements.txt
     #   inflect

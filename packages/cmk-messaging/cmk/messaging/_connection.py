@@ -254,6 +254,7 @@ class Channel[ModelT: BaseModel]:
             _properties: pika.spec.BasicProperties,
             body: bytes,
         ) -> None:
+            assert method.delivery_tag is not None
             callback(
                 self,
                 DeliveryTag(method.delivery_tag),

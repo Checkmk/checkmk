@@ -176,14 +176,13 @@ test('renders GraphBurgerMenu when showBurgerMenu is true', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification: {} },
-      internal: 'test'
+      addTo: { type: 'test', specification: {} }
     }
   })
   expect(screen.getByRole('button')).toBeInTheDocument()
 })
 
-test('a do-action from the header runs the callback with the panel internal state', async () => {
+test('a do-action from the header runs the callback with the graph the backends address', async () => {
   const onClick: BurgerMenuCallable = vi.fn()
   vi.mocked(loadMenu).mockResolvedValue([
     {
@@ -191,21 +190,27 @@ test('a do-action from the header runs the callback with the panel internal stat
       actions: [{ label: 'Export as JSON', ariaLabel: 'Export as JSON', onClick }]
     }
   ])
+  const specification = { graph_type: 'template', graph_id: 'cpu_load' }
 
   render(GraphPanel, {
     props: {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification: {} },
-      internal: 'panel-internal-state'
+      addTo: { type: 'test', specification }
     }
   })
 
   await fireEvent.click(screen.getByRole('button'))
   await fireEvent.click(await screen.findByRole('button', { name: 'Export as JSON' }))
 
-  expect(onClick).toHaveBeenCalledWith('panel-internal-state')
+  // The add-to actions replay the specification; the export additionally needs the shown range.
+  expect(onClick).toHaveBeenCalledWith({
+    specification,
+    timeStart: REQUESTED.start,
+    timeEnd: REQUESTED.end,
+    consolidationFunction: 'max'
+  })
 })
 
 test('renders title when showTitle is true', () => {

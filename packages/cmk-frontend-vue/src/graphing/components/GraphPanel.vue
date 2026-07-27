@@ -108,7 +108,14 @@ if (showBurgerMenu.value) {
 }
 
 const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
-  await onClick(props.internal!)
+  // The add-to actions replay the specification, the export builds its request around it and the
+  // displayed range, so every action is handed the graph as the backends address it.
+  await onClick({
+    specification: props.addTo!.specification,
+    timeStart: props.requestedTimeRange.start,
+    timeEnd: props.requestedTimeRange.end,
+    consolidationFunction: activeConsolidationFunction.value
+  })
 }
 </script>
 

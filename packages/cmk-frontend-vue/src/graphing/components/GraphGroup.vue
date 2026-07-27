@@ -113,7 +113,6 @@ const overviews = computed(() =>
         :horizontal-lines="graph.horizontalLines"
         :figure-width="figure_width"
         :add-to="graph?.addTo"
-        :internal="graph?.internal"
         @update:requested-time-range="onPanelTimeRange"
         @update:consolidation-fn="consolidationFn = $event"
       />

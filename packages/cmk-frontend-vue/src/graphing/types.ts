@@ -25,7 +25,17 @@ export type RequestedTimeRange = TimeInterval
 // re-derives it (multiplier × span) once the span changed.
 export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_span'
 
-export type BurgerMenuCallable = (internal: string) => Promise<void>
+// The graph a burger-menu action acts on: the add-to backends store the specification and replay
+// it, the export builds the request the legacy popup builds - out of the specification and the
+// range the graph currently shows.
+export interface BurgerMenuGraph {
+  specification: Record<string, unknown>
+  timeStart: number
+  timeEnd: number
+  consolidationFunction: ConsolidationFn
+}
+
+export type BurgerMenuCallable = (graph: BurgerMenuGraph) => Promise<void>
 interface BurgerMenuAction {
   label: string
   ariaLabel: string
@@ -62,7 +72,6 @@ export interface GraphPanelProps {
   // Coarse, wider, end-anchored dataset for the navigator brush (separate fetch / mock).
   overview?: { metrics: Metric[]; timeRange: TimeRange } | undefined
   addTo?: AddTo | null | undefined
-  internal?: string | null | undefined
 }
 
 export type GraphPanelEmits = {

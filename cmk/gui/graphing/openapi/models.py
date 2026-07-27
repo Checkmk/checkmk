@@ -250,7 +250,19 @@ class GraphInternalRepresentation:
 
 
 @api_model
-class AddToRequest(GraphInternalRepresentation):
+class AddToRequest:
+    # Not a GraphInternalRepresentation: the add-to backends store the legacy specification and
+    # replay it when the target is rendered, so the engine's graph definition is of no use here.
+    specification: dict[str, object] = api_field(
+        example={
+            "graph_type": "template",
+            "site": "mysite",
+            "host_name": "my-host",
+            "service_description": "CPU load",
+            "graph_id": "cpu_load",
+        },
+        description="The specification of the graph to add, as returned by the discover actions.",
+    )
     family: str = api_field(
         example="graph_collection",
         description="The family collection where to add the graph to.",
@@ -258,6 +270,17 @@ class AddToRequest(GraphInternalRepresentation):
     id: str = api_field(
         example="my_graph_collection",
         description="The id of the collection to add the graph to.",
+    )
+
+
+@api_model
+class AddToContainerResponse:
+    sidebar_reload_required: bool = api_field(
+        description=(
+            "Whether the sidebar has to be reloaded. Adding to a container the user does not own "
+            "clones it first, which makes a new page appear in the sidebar."
+        ),
+        example=False,
     )
 
 

@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping
 from logging import getLogger
-from typing import Any
 
 import pytest
 
@@ -93,7 +90,7 @@ def _instantiate_ruleset(
     ruleset_name: str,
     param_value: object,
     rulespec: Rulespec | None = None,
-    conditions: Mapping[str, Any] | None = None,
+    conditions: Mapping[str, object] | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, rulespec=rulespec)
     folder = tree.root_folder()

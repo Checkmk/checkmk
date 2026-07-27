@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import logging
-from typing import Any, cast
+from pathlib import Path
+from typing import cast
+
+from pytest import MonkeyPatch
 
 from cmk.ccc.site import SiteId
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
@@ -16,8 +17,8 @@ from cmk.update_config.plugins.actions.migrate_site_changes_schema import (
 )
 
 
-def _legacy_record(**overrides: Any) -> dict[str, Any]:
-    defaults: dict[str, Any] = {
+def _legacy_record(**overrides: object) -> dict[str, object]:
+    defaults: dict[str, object] = {
         "id": "abc",
         "action_name": "edit-host",
         "text": "Changed host",
@@ -102,7 +103,7 @@ def test_action_migrates_persisted_records() -> None:
         store._path.unlink(missing_ok=True)
 
 
-def test_action_no_op_when_directory_missing(tmp_path: Any, monkeypatch: Any) -> None:
+def test_action_no_op_when_directory_missing(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     # Pointing wato_var_dir at an empty / non-existent directory must not
     # raise.
     monkeypatch.setattr(

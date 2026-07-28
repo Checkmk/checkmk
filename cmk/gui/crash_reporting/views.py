@@ -9,7 +9,6 @@ import json
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Literal, override
 
-import cmk.livestatus_client as livestatus
 from cmk.crash import read_occurrences
 from cmk.gui import query_filters
 from cmk.gui.config import Config
@@ -50,9 +49,10 @@ from cmk.livestatus_client import (
     DeleteCrashReport,
     MKLivestatusNotFoundError,
     OnlySites,
-    Query,
-    QuerySpecification,
 )
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.crashreports import Crashreports
+from cmk.livestatus_client.types import escape_filename
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
@@ -161,16 +161,16 @@ class CrashReportsRowTable(RowTableLivestatus):
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
             headers = ["site", "crash_info"]
-            columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
 
             try:
                 raw_row = query_row(
                     Query(
-                        QuerySpecification(
-                            table="crashreports",
-                            columns=columns,
-                            headers="Filter: id = %s" % livestatus.lqencode(crash_info["crash_id"]),
-                        )
+                        [
+                            Crashreports.file.dynamic(
+                                "crash_info", escape_filename(f"{file_path}/crash.info")
+                            )
+                        ],
+                        Crashreports.id == crash_info["crash_id"],
                     ),
                     only_sites=only_sites,
                     limit=None,
@@ -187,11 +187,8 @@ class CrashReportsRowTable(RowTableLivestatus):
     ) -> Iterator[dict[str, str]]:
         rows = query_livestatus(
             Query(
-                QuerySpecification(
-                    table="crashreports",
-                    columns=["id", "component"],
-                    headers=filter_headers or "",
-                )
+                [Crashreports.id, Crashreports.component],
+                extra_headers=[filter_headers] if filter_headers else (),
             ),
             only_sites=only_sites,
             limit=None,

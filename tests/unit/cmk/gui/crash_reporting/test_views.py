@@ -8,6 +8,7 @@ import json
 import pytest
 
 from cmk.gui.crash_reporting.views import CrashReportsRowTable, PainterCrashException
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.mark.parametrize(
@@ -81,3 +82,39 @@ def test_parse_rows_skips_crash_report_with_unreadable_time() -> None:
     )
 
     assert [row["crash_id"] for row in rows] == ["readable"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_crash_report_rows_queries(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    crash_info = json.dumps({"crash_type": "gui", "crash_id": "abc-123"}).encode()
+    mock_livestatus.add_table(
+        "crashreports",
+        [
+            {
+                "id": "abc-123",
+                "component": "gui",
+                "file:crash_info:gui/abc-123/crash.info": crash_info,
+            }
+        ],
+    )
+    with mock_livestatus(expect_status_query=True) as live:
+        live.expect_query("GET crashreports\nColumns: id component")
+        live.expect_query(
+            "GET crashreports\n"
+            "Columns: file:crash_info:gui/abc-123/crash.info\n"
+            "Filter: id = abc-123\n"
+            "ColumnHeaders: off"
+        )
+        rows = list(
+            CrashReportsRowTable().get_crash_report_rows(only_sites=None, filter_headers="")
+        )
+    assert rows == [
+        {
+            "site": "NO_SITE",
+            "crash_id": "abc-123",
+            "crash_type": "gui",
+            "crash_info": crash_info,
+        }
+    ]

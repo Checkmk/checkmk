@@ -10,11 +10,13 @@ from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequenc
 from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckResult,
     DiscoveryResult,
     get_rate,
     GetRateError,
     IgnoreResultsError,
+    LevelsT,
     Metric,
     render,
     Result,
@@ -527,7 +529,13 @@ def check_netapp_vs_traffic(
     latency_calc_ref: Mapping,
     now: float,
     value_store: MutableMapping[str, Any],
+    levels: Mapping[str, LevelsT[float]] | None = None,
 ) -> CheckResult:
+    """Report the counters of one protocol.
+
+    `levels` maps the name of a metric to the upper levels to apply to it. Metrics that
+    are not mentioned are reported without levels.
+    """
     protoname, values = protocol_map.get(protocol_name, (None, None))
     if protoname is None or values is None:
         return None
@@ -554,11 +562,13 @@ def check_netapp_vs_traffic(
                 int(item_counters[what]) * scale,
                 raise_overflow=True,
             )
-            yield Result(
-                state=State.OK,
-                summary=f"{protoname} {perftext}: {format_func(rate)}",
+            yield from check_levels(
+                rate,
+                levels_upper=levels.get(perfname) if levels else None,
+                metric_name=perfname,
+                render_func=format_func,
+                label=f"{protoname} {perftext}",
             )
-            yield Metric(name=perfname, value=rate)
         except IgnoreResultsError:
             yield Result(state=State.OK, summary=f"{protoname} {perftext}: -")
 

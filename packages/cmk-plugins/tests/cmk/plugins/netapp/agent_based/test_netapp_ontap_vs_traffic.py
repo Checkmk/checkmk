@@ -84,7 +84,7 @@ def test_check_netapp_ontap_vs_traffic_iscsi_latency(monkeypatch: pytest.MonkeyP
     )
 
     with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
-        result = list(check_netapp_ontap_vs_traffic("svm1", section))
+        result = list(check_netapp_ontap_vs_traffic("svm1", {}, section))
 
     assert result == [
         Result(state=State.OK, summary="iSCSI avg. Read latency: 1.74 ms"),
@@ -95,6 +95,38 @@ def test_check_netapp_ontap_vs_traffic_iscsi_latency(monkeypatch: pytest.MonkeyP
         Metric("iscsi_read_data", 0.0),
         Result(state=State.OK, summary="iSCSI write data: 0 B"),
         Metric("iscsi_write_data", 0.0),
+    ]
+
+
+def test_check_netapp_ontap_vs_traffic_latency_levels(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The levels of the ruleset are in seconds, the unit of the latency metrics."""
+    value_store = {
+        "iscsi_lif.average_read_latency": (0, 0.0),
+        "iscsi_lif.read_data": (LAST_TIME_EPOCH, 0),
+    }
+    monkeypatch.setattr(ontap_vs_traffic, "get_value_store", lambda: value_store)
+
+    section = _iscsi_lif_section(
+        {
+            # 33473556901556 / 19186784006 == 1744.62 us == 0.00174 s
+            "average_read_latency": 33473556901556,
+            "iscsi_read_ops": 19186784006,
+            "read_data": 0,
+        }
+    )
+    params = {"read_latency_levels": ("fixed", (0.001, 0.005))}
+
+    with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
+        result = list(check_netapp_ontap_vs_traffic("svm1", params, section))
+
+    assert result == [
+        Result(
+            state=State.WARN,
+            summary="iSCSI avg. Read latency: 1.74 ms (warn/crit at 1.00 ms/5.00 ms)",
+        ),
+        Metric("iscsi_read_latency", 0.001744615298274495, levels=(0.001, 0.005)),
+        Result(state=State.OK, summary="iSCSI read data: 0 B"),
+        Metric("iscsi_read_data", 0.0),
     ]
 
 
@@ -117,7 +149,7 @@ def test_check_netapp_ontap_vs_traffic_iscsi_latency_without_operations(
     )
 
     with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
-        result = list(check_netapp_ontap_vs_traffic("svm1", section))
+        result = list(check_netapp_ontap_vs_traffic("svm1", {}, section))
 
     assert result == [
         Result(state=State.OK, summary="iSCSI avg. Read latency: -"),

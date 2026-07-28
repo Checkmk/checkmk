@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import Any, override
+from typing import override
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -154,14 +154,16 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     def _fill_collector_receiver_properties(
         self,
         receiver_type: str,
-        properties: dict[str, Any],
+        properties: dict[str, object],
         new_password_data: list[dict[str, str]] | None = None,
     ) -> None:
         """Fill in receiver properties form and create new passwords if needed."""
         self.receiver_protocol_endpoint_checkbox(receiver_type).check()
-        if properties["endpoint"]["encryption"]:
+        endpoint = properties["endpoint"]
+        assert isinstance(endpoint, dict)
+        if endpoint["encryption"]:
             self.encrypt_communication_with_tls_checkbox(receiver_type).check()
-        socket_addr = properties["endpoint"]["socket_address"]
+        socket_addr = endpoint["socket_address"]
         sa_type = socket_addr["type"]
         self.socket_address_dropdown(receiver_type).click()
         label_map: dict[str, str | re.Pattern[str]] = {
@@ -173,11 +175,11 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         if sa_type == "custom":
             self.ip_address_or_hostname_textfield(receiver_type).fill(socket_addr["address"])
             self.port_textfield(receiver_type).fill(str(socket_addr["port"]))
-        if properties["endpoint"]["auth"]["type"] != "none":
+        if endpoint["auth"]["type"] != "none":
             self.authentication_method_dropdown(receiver_type).click()
             self.dropdown_option(receiver_type, "Basic Authentication").click()
             passwords_by_title = {p["title"]: p for p in (new_password_data or [])}
-            for user_data in properties["endpoint"]["auth"]["userlist"]:
+            for user_data in endpoint["auth"]["userlist"]:
                 self.add_new_credentials_button(receiver_type).click()
                 self.fill_last_locator(
                     self.username_textfield(receiver_type), user_data["username"]
@@ -187,10 +189,10 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
                     self.add_new_password(receiver_type, passwords_by_title[password_title])
                 self.click_on_last_locator(self.password_dropdown(receiver_type))
                 self.dropdown_option(receiver_type, password_title, exact=True).click()
-        if properties["endpoint"].get("event_console"):
+        if endpoint.get("event_console"):
             self.send_logs_to_event_console_checkbox(receiver_type).check()
             self.resource_attribute_for_hostname_computation_textfield(receiver_type).fill(
-                properties["endpoint"]["event_console"]["host_name_resource_attribute_key"]
+                endpoint["event_console"]["host_name_resource_attribute_key"]
             )
 
     def fill_collector_configuration_form_and_save(
@@ -198,9 +200,9 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         collector_id: str,
         collector_title: str,
         site_id: str,
-        grpc_receiver_properties: dict[str, Any] | None = None,
+        grpc_receiver_properties: dict[str, object] | None = None,
         grpc_password_data: list[dict[str, str]] | None = None,
-        http_receiver_properties: dict[str, Any] | None = None,
+        http_receiver_properties: dict[str, object] | None = None,
         http_password_data: list[dict[str, str]] | None = None,
     ) -> None:
         logger.info("Fill in the 'OpenTelemetry Collector' form")

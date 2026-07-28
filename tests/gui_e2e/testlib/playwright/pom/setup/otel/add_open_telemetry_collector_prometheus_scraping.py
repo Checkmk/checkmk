@@ -2,9 +2,12 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import re
-from typing import Any, override
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import override
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -15,6 +18,21 @@ from tests.gui_e2e.testlib.playwright.pom.setup.otel.open_telemetry_collector_pr
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class CollectorScrapeTarget:
+    address: str
+    port: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class CollectorScrapeConfig:
+    job_name: str
+    scrape_interval: int
+    encryption: bool
+    metrics_path: str
+    targets: Sequence[CollectorScrapeTarget]
 
 
 class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
@@ -122,31 +140,31 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     def _fill_collector_scrape_properties(
         self,
-        properties: dict[str, Any],
+        config: CollectorScrapeConfig,
     ) -> None:
         self.add_new_scraper_configuration_button.click()
-        self.job_name_textfield.fill(properties["job_name"])
-        self.scrape_interval_textfield.fill(str(properties["scrape_interval"]))
-        if properties["encryption"]:
+        self.job_name_textfield.fill(config.job_name)
+        self.scrape_interval_textfield.fill(str(config.scrape_interval))
+        if config.encryption:
             self.encrypt_communication_with_tls_checkbox.check()
-        self.metrics_path_textfield.fill(properties["metrics_path"])
-        for target in properties["targets"]:
+        self.metrics_path_textfield.fill(config.metrics_path)
+        for target in config.targets:
             self.add_new_target_button.click()
-            self.fill_last_locator(self.ip_address_or_hostname_textfield, target["address"])
-            self.fill_last_locator(self.port_textfield, str(target["port"]))
+            self.fill_last_locator(self.ip_address_or_hostname_textfield, target.address)
+            self.fill_last_locator(self.port_textfield, str(target.port))
 
     def fill_collector_configuration_form_and_save(
         self,
         collector_id: str,
         collector_title: str,
         site_id: str,
-        collector_properties: dict[str, Any],
+        collector_config: CollectorScrapeConfig,
     ) -> None:
         logger.info("Fill in the 'Prometheus Scraper' form")
         self.unique_id_textfield.fill(collector_id)
         self.title_textfield.fill(collector_title)
         self.site_restriction_checkbox(site_id).check()
-        self._fill_collector_scrape_properties(collector_properties)
+        self._fill_collector_scrape_properties(collector_config)
 
         logger.info("Save the OpenTelemetry Collector configuration")
         self.save_configuration_button.click()

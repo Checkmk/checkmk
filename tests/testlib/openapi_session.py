@@ -1761,8 +1761,8 @@ class OtelCollectorAPI(BaseAPI):
         site_ids: Sequence[str],
         title: str,
         disabled: bool,
-        receiver_protocol_grpc: dict[str, Any] | None = None,
-        receiver_protocol_http: dict[str, Any] | None = None,
+        receiver_protocol_grpc: Mapping[str, Any] | None = None,
+        receiver_protocol_http: Mapping[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> requests.Response:
         """Create an OpenTelemetry collector receivers via REST API."""

@@ -346,7 +346,12 @@ module = ["cmc_proto.*"]
 disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
-module = ["*.metric_backend.*"]
+module = [
+  "*.metric_backend.*",
+  "*.otel.*",
+  "*.otel_collector.*",
+  "*.telemetry.*",
+]
 disallow_any_explicit = true
 
 # meraki has no type annotations; with explicit_package_bases=true and mypy 1.19+, following it

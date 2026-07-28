@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Container, Mapping, Sequence
-from dataclasses import dataclass
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -40,35 +39,30 @@ def _matches(
     return any(name in available for name in names)
 
 
-@dataclass(frozen=True, kw_only=True)
-class _GraphMatch:
-    metric_names: Sequence[MetricName]
-    matched: bool
+type _GraphPlugin = (
+    graphs_v1.Graph
+    | graphs_v1.Bidirectional
+    | graphs_v2_unstable.Graph
+    | graphs_v2_unstable.Bidirectional
+)
+
+# A plug-in's independently matchable parts paired with the metric names they draw: one part for a
+# plain graph, the lower and the upper one for a bidirectional graph. The names depend on the plug-in
+# alone, so they are resolved once and then matched against each service's available names.
+type _MatchableParts = Sequence[
+    tuple[graphs_v1.Graph | graphs_v2_unstable.Graph, Sequence[MetricName]]
+]
 
 
-def _walk(
-    graph: (
-        graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | graphs_v2_unstable.Graph
-        | graphs_v2_unstable.Bidirectional
-    ),
-    available: Container[MetricName],
-) -> _GraphMatch:
+def _matchable_parts(graph: _GraphPlugin) -> _MatchableParts:
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            names = drawn_metric_names_of_graph(graph)
-            return _GraphMatch(metric_names=names, matched=_matches(graph, names, available))
+            return [(graph, drawn_metric_names_of_graph(graph))]
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            lower_names = drawn_metric_names_of_graph(graph.lower)
-            upper_names = drawn_metric_names_of_graph(graph.upper)
-            return _GraphMatch(
-                metric_names=list({*lower_names, *upper_names}),
-                matched=(
-                    _matches(graph.lower, lower_names, available)
-                    or _matches(graph.upper, upper_names, available)
-                ),
-            )
+            return [
+                (graph.lower, drawn_metric_names_of_graph(graph.lower)),
+                (graph.upper, drawn_metric_names_of_graph(graph.upper)),
+            ]
 
 
 def _add_predictive_lines(
@@ -129,14 +123,6 @@ def _add_predictive_lines(
     )
 
 
-type _GraphPlugin = (
-    graphs_v1.Graph
-    | graphs_v1.Bidirectional
-    | graphs_v2_unstable.Graph
-    | graphs_v2_unstable.Bidirectional
-)
-
-
 _FALLBACK_SCALAR_KINDS = (
     ScalarKind.WARNING,
     ScalarKind.CRITICAL,
@@ -165,11 +151,7 @@ def build_matched_graphs(
     # The metric-name fetch returns the services tagged with their resolved site; build from those so
     # the metrics carry it.
     resolved = list(names_by_service)
-    available: frozenset[MetricName] = (
-        frozenset[MetricName]().union(*names_by_service.values())
-        if names_by_service
-        else frozenset()
-    )
+    available = frozenset[MetricName]().union(*names_by_service.values())
     single_service = resolved[0] if len(resolved) == 1 else None
     matched_graphs: list[Graph] = []
     claimed: set[MetricName] = set()
@@ -219,10 +201,14 @@ def build_matched_graphs(
         ]
 
     for plugin in registered_graphs:
-        walks = [_walk(plugin, names) for names in names_by_service.values()]
-        if not any(walk.matched for walk in walks):
+        parts = _matchable_parts(plugin)
+        if not any(
+            _matches(part, names, service_names)
+            for service_names in names_by_service.values()
+            for part, names in parts
+        ):
             continue
-        claimed.update(walks[0].metric_names)
+        claimed.update(name for _part, names in parts for name in names)
         _collect(
             parse_graph_from_api(
                 plugin,

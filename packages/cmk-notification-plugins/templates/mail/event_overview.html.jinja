@@ -78,27 +78,27 @@
             <td>&nbsp;</td>
         </tr>
         </table>
-        <table role="presentation"
-               width="100%"
-               align="center"
-               style="max-width:600px;
-                      border-collapse:collapse;
-                      font-size:14px;
-                      margin:0 auto">
-            <tr>
-                <td style="background-color:#f6f6f6;
-                           padding:10px;
-                           word-wrap:break-word;
-                           overflow-wrap:break-word;
-                           word-break:break-word;
-                           line-height:1.4">
-                    {% if data.get('LONGSERVICEOUTPUT_HTML') %}
-                        {{ macros.replace_statemarker(data.get('LONGSERVICEOUTPUT_HTML')) }}
-                    {% else %}
-                        No details available
-                    {% endif %}
-                </td>
-            </tr>
+    <table role="presentation"
+           width="100%"
+           align="center"
+           style="max-width:600px;
+                  border-collapse:collapse;
+                  font-size:14px;
+                  margin:0 auto">
+        <tr>
+            <td style="background-color:#f6f6f6;
+                       padding:10px;
+                       word-wrap:break-word;
+                       overflow-wrap:break-word;
+                       word-break:break-word;
+                       line-height:1.4">
+                {% if data.get('LONGSERVICEOUTPUT_HTML') %}
+                    {{ macros.replace_statemarker(data.get('LONGSERVICEOUTPUT_HTML')) }}
+                {% else %}
+                    No details available
+                {% endif %}
+            </td>
+        </tr>
         </table>
     {% else %}
         </table>

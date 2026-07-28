@@ -417,16 +417,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.56 \
-    --hash=sha256:57c90df9fb026f2e6ae22530861198130203733c5c9ec4e5cca3a4037f5a8db4 \
-    --hash=sha256:feb699d4ab241ef5c1b80bb58277be2aaad365cd4b672d7817e0bc59ee45131b
+boto3==1.43.57 \
+    --hash=sha256:115ed9cac409d9b57e2437b52fdb4286660d12a2bd44a0f48d530e68623d09a7 \
+    --hash=sha256:549c95e45f9b04cf0c69727632dbdda23b84dcd3d0ed7981c6aaff72ef9cb5af
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.56 \
-    --hash=sha256:6c01f85f0ff9863076f4c761e74ee3aa96c5ccc1ad09fc1efd62ef8f2d22bf57 \
-    --hash=sha256:aafc741f1b10f6fd63253eaf6ea029680c1ff436d87e1b8969d62aefa0c76976
+botocore==1.43.57 \
+    --hash=sha256:001a5653bebc03b862bde2da63bad4adb0b30072a3f247aba4daae5aa097b546 \
+    --hash=sha256:319c6d79f66c3f3f2b538f7dcdc90e410a15a7bfced1db06479134947e629482
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -842,9 +842,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fastapi==0.140.0 \
-    --hash=sha256:e951c0a0d9540bf5d9a2a9e078fd415da2ab7e312d435139e7d9e2e7fe9f0b23 \
-    --hash=sha256:f338951b82fd74ca8f843163aec43ea1a1ce84d515415a50fa98fa25572a5544
+fastapi==0.140.7 \
+    --hash=sha256:09a640af2d29006345e1f28e4f031fa60f89b1a75d29f26070f3afa677d66cce \
+    --hash=sha256:960bb9696d8fd19dff488aa4f67f276364542cfcce9f7e68a82fe49dce126626
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -3763,9 +3763,9 @@ tenacity==9.1.4 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   opsgenie-sdk
-tqdm==4.69.1 \
-    --hash=sha256:0a654b96f7a2660cceb615b56f307ec2bef96c515409014a429a561981ab52b4 \
-    --hash=sha256:2be21080a0ce17e902c2f1baeb6a74bf551b67bbdfa4bc0109fad471d0b4cb0d
+tqdm==4.70.0 \
+    --hash=sha256:55b0b0dbd97462d06ebee91e4dac24ed4d4702be82b24f07e6c1d27e08cea220 \
+    --hash=sha256:7f585706bfddbdebf89daac705b2dfcc16890130727d3197ca62c732b4310953
     # via
     #   -c requirements.txt
     #   pysmb

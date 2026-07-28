@@ -110,7 +110,7 @@ def test_license_str_to_html() -> None:
 class MyDocTemplate(SimpleDocTemplate):
     """Custom DocTemplate configured for handling of table of contents"""
 
-    def __init__(self, filename: str, **kw: object) -> None:
+    def __init__(self, filename: str, **kw: Any) -> None:
         self.allowSplitting = 0
         SimpleDocTemplate.__init__(self, filename, **kw)
         template = PageTemplate("normal", [Frame(2.5 * cm, 2.5 * cm, 15 * cm, 25 * cm, id="F1")])

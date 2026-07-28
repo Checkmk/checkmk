@@ -18,5 +18,4 @@ def make_app() -> CheckmkBaseApp:
         create_core=create_core,
         licensing_handler_factory=CommunityLicensingHandler.make,
         make_fetcher_trigger=lambda *a, **kw: PlainFetcherTrigger(omd_root=omd_root),
-        core_performance_settings=lambda _: {},
     )

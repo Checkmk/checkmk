@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from cmk.base.configlib.loaded_config import BaseConfig
@@ -43,4 +43,3 @@ class CheckmkBaseApp:
     ]
     licensing_handler_factory: Callable[[], LicensingHandler]
     make_fetcher_trigger: FetcherTriggerFactory
-    core_performance_settings: Callable[[BaseConfig], Mapping[str, int]]

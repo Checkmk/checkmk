@@ -35,7 +35,7 @@ def _make_context(
         omd_root=omd_root,
         omd_config=omd_config or {},
         all_parameters={"plugins": ["general_info"], "checkmk_server_host": ""},
-        core_performance_settings={},
+        base_config={},
         resolve_checkmk_server_host=lambda: checkmk_server_host,
         site_internal_auth_header=lambda: "InternalToken deadbeef",
         log=None,  # type: ignore[arg-type]  # not used

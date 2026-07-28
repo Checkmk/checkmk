@@ -21,6 +21,13 @@ from cmk.diagnostics.internal import (
 from cmk.plugins.diagnostics.lib.topics import TOPIC_PERFORMANCE
 from cmk.profiling.backend import PROFILE_ID_RE, PROFILE_SUFFIXES
 
+_CMC_SETTING_KEYS = {
+    "cmc_check_helpers",
+    "cmc_fetcher_helpers",
+    "cmc_checker_helpers",
+    "cmc_real_time_helpers",
+}
+
 
 def _collect_core_performance_metrics(context: CollectContext) -> Iterable[DumpItem]:
     result = livestatus.LocalConnection().query("GET status\nColumnHeaders: on")
@@ -29,7 +36,9 @@ def _collect_core_performance_metrics(context: CollectContext) -> Iterable[DumpI
         for i in range(len(result[0]))
         if (key := result[0][i]) not in ["license_usage_history"]
     }
-    performance_data.update(context.core_performance_settings)
+    for key in _CMC_SETTING_KEYS.intersection(context.base_config):
+        performance_data[key] = context.base_config[key]
+
     yield DumpItem(
         PurePosixPath("perfdata.json"),
         GeneratedContent(json.dumps(performance_data, sort_keys=True, indent=4).encode()),

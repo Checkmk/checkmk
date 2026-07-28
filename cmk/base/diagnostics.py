@@ -14,6 +14,7 @@ import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import fields
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
@@ -328,7 +329,7 @@ def _create_dump(
         omd_root=omd_root,
         omd_config=omd_config,
         all_parameters=all_parameters,
-        core_performance_settings=app.core_performance_settings(loaded_config),
+        base_config={f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)},
         resolve_checkmk_server_host=_make_host_resolver(checkmk_server_host),
         site_internal_auth_header=lambda: (
             "InternalToken %s" % (SiteInternalSecret().secret.b64_str)

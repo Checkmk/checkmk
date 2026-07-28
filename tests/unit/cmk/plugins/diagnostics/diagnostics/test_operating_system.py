@@ -30,7 +30,7 @@ def _make_context(tmp_path: Path) -> CollectContext:
         omd_root=tmp_path,
         omd_config={},
         all_parameters={},
-        core_performance_settings={},
+        base_config={},
         resolve_checkmk_server_host=lambda: "checkmk_server",
         site_internal_auth_header=lambda: "InternalToken deadbeef",
         log=None,  # type: ignore[arg-type]  # not used

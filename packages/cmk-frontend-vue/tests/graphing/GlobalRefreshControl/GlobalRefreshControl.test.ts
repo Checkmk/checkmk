@@ -82,6 +82,23 @@ test('paused state shows the time of the last refresh tick', async () => {
   expect(screen.getByText('Last refresh: 10:34:19')).toBeInTheDocument()
 })
 
+test('the last refresh time stays put while paused instead of following the clock', async () => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date(2026, 6, 9, 10, 33, 49))
+  render(GlobalRefreshControl)
+  useGlobalRefresh().setRefreshPaused(false)
+  vi.advanceTimersByTime(30_000)
+  useGlobalRefresh().setRefreshPaused(true)
+  await nextTick()
+  await nextTick()
+  const timeOfLastRefresh = screen.getByText(/Last refresh/).textContent!
+
+  vi.advanceTimersByTime(10 * 60_000)
+  await nextTick()
+
+  expect(screen.getByText(/Last refresh/)).toHaveTextContent(timeOfLastRefresh)
+})
+
 test('the last refresh time is omitted when never refreshed', () => {
   render(GlobalRefreshControl)
 

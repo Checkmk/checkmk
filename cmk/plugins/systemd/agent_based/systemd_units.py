@@ -292,7 +292,10 @@ class UnitStatus:
 
     @classmethod
     def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
-        name = entry[0][1].split(".", 1)[0]
+        # A unit name may itself contain dots (e.g. "hapee-3.2-lb.service"), so strip
+        # only the trailing type suffix. Splitting on the first dot would mangle the
+        # name and break the match with the `[all]` section (see UnitEntry.try_parse).
+        name = entry[0][1].rsplit(".", 1)[0]
         enabled_status = entry[1][3].rstrip(";)") if len(entry[1]) >= 4 else None
 
         time_line = next((line for line in entry if line[0].lstrip().startswith("Active:")), [])

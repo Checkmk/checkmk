@@ -11,8 +11,9 @@ from unittest.mock import MagicMock, patch
 
 import cmk.gui.valuespec as vs
 from cmk.gui.type_defs import DynamicIconName
+from cmk.gui.utils.output_funnel import output_funnel
 
-from .utils import expect_validate_failure, expect_validate_success
+from .utils import expect_validate_failure, expect_validate_success, request_var
 
 # A few types below are plain lies...
 ICON: vs.IconSelectorModel = {"icon": DynamicIconName("crash"), "emblem": None}
@@ -110,6 +111,47 @@ class TestValueSpecFloat:
         #   default values. When saving this rule now, your previous settings
         #   will be overwritten. Problem was: The type is <class 'NoneType'>,
         #   but should be str or dict.
+
+    @patch(
+        "cmk.gui.theme._theme_type.Theme.detect_icon_path",
+        return_value="some_random_icon_path.svg",
+    )
+    def test_render_input_complain_phase_keeps_stored_icon(
+        self, _mock_icon_path: MagicMock, request_context: None
+    ) -> None:
+        """In the complain phase the surrounding valuespecs render their default value
+        (None) instead of the stored one, so the icon has to be recovered from the HTML
+        vars. Otherwise a single invalid entry blanks out all icons of a list."""
+        with request_var(icon_value="crash", icon_emblem_value="add"), output_funnel.plugged():
+            vs.IconSelector().render_input("icon", None)
+            rendered = output_funnel.drain()
+
+        assert 'value="crash"' in rendered
+        assert 'value="add"' in rendered
+
+    @patch(
+        "cmk.gui.theme._theme_type.Theme.detect_icon_path",
+        return_value="some_random_icon_path.svg",
+    )
+    def test_render_input_back_url_excludes_form_vars(
+        self, _mock_icon_path: MagicMock, request_context: None
+    ) -> None:
+        """The back URL of the popup must not carry the form vars of the surrounding
+        valuespec: with long lists the request line grows beyond the web server limit."""
+        with (
+            request_var(
+                mode="edit_configvar",
+                varname="user_icons_and_actions",
+                ve_1_1_p_icon_value="crash",
+            ),
+            output_funnel.plugged(),
+        ):
+            vs.IconSelector().render_input("ve_1_1_p_icon", None)
+            rendered = output_funnel.drain()
+
+        # both are url encoded within the back parameter
+        assert "mode%3Dedit_configvar" in rendered
+        assert "%3Dcrash" not in rendered
 
     # TODO: empty_img should be renamed to "default_icon" (?)
     # internally there is still a lot of hard coded "empty" stuff.

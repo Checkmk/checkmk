@@ -7807,11 +7807,16 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         return {"icon": DynamicIconName("empty") if value is None else value, "emblem": None}
 
     def render_input(self, varprefix: str, value: IconSelectorModel) -> None:
-        icon_dict = self._transform_icon_str(value)
+        icon: str | None
+        emblem: str | None
+        if isinstance(value, dict):
+            icon, emblem = value.get("icon"), value.get("emblem")
+        else:
+            icon, emblem = value, None
 
-        self._render_input(varprefix, icon_dict["icon"])
+        self._render_input(varprefix, icon)
         if self._with_emblem:
-            self._render_input(varprefix + "_emblem", icon_dict["emblem"])
+            self._render_input(varprefix + "_emblem", emblem)
 
     def _render_input(self, varprefix: str, value: str | None) -> None:
         # Handle complain phase with validation errors correctly and get the value
@@ -7841,11 +7846,15 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                     ("varprefix", varprefix),
                     ("allow_empty", "1" if self._allow_empty else "0"),
                     ("show_builtin_icons", "1" if self._show_builtin_icons else "0"),
-                    ("back", makeuri(request, [])),
+                    ("back", self._back_url(varprefix)),
                 ],
             ),
             resizable=True,
         )
+
+    @staticmethod
+    def _back_url(varprefix: str) -> str:
+        return makeuri(request, [], remove_prefix=varprefix.split("_", 1)[0] + "_")
 
     def render_popup_input(self, varprefix: str, value: str | None) -> None:
         html.open_div(class_="icons", id_="%s_icons" % varprefix)

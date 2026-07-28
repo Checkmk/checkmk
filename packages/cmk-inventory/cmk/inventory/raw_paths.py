@@ -51,7 +51,7 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
         )
     path = raw.strip(".").split(".")
     sanitized_path = _sanitize_path(path[:-1])
-    if ":" in path[-2]:
+    if len(path) > 1 and ":" in path[-2]:
         source = TreeSource.table
         sanitized_path = sanitized_path[:-1]
     else:

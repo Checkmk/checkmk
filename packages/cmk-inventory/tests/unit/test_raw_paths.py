@@ -42,6 +42,15 @@ from cmk.inventory.trees import SDKey, SDNodeName, SDPath
             "hardware",
         ),
         (
+            ".hardware",
+            InventoryPath(
+                path=(),
+                source=TreeSource.attributes,
+                key=SDKey("hardware"),
+            ),
+            "",
+        ),
+        (
             ".hardware.cpu.",
             InventoryPath(
                 path=(SDNodeName("hardware"), SDNodeName("cpu")),

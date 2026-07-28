@@ -31,7 +31,7 @@ RUN apk update && \
 # install checkmk-dev-tools to run ci-artifacts
 # install pyyaml to parse editions.yml and stages.yml
 RUN pip3 install --break-system-packages \
-    "checkmk-dev-tools==2.2.0" \
+    "checkmk-dev-tools==2.4.0" \
     "pyyaml==6.0.2"
 
 # verify installation

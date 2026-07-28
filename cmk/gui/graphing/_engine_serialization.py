@@ -158,7 +158,7 @@ def _display_from_json(data: object) -> CurveAttributes | None:
     return None if data is None else _attributes_from_json(data)
 
 
-def _rrd_metric_to_json(quantity: Quantity, codec: QuantityCodec) -> Json:
+def _rrd_metric_to_json(quantity: Quantity, _codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, RRDMetric)
     return {
         "site_id": quantity.site_id,
@@ -173,7 +173,7 @@ def _rrd_metric_to_json(quantity: Quantity, codec: QuantityCodec) -> Json:
     }
 
 
-def _rrd_metric_from_json(data: Mapping[str, object], codec: QuantityCodec) -> RRDMetric:
+def _rrd_metric_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> RRDMetric:
     consolidation_function = data["consolidation_function"]
     site_id = data.get("site_id")
     return RRDMetric(
@@ -189,12 +189,12 @@ def _rrd_metric_from_json(data: Mapping[str, object], codec: QuantityCodec) -> R
     )
 
 
-def _constant_to_json(quantity: Quantity, codec: QuantityCodec) -> Json:
+def _constant_to_json(quantity: Quantity, _codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, Constant)
     return {"value": quantity.value, "display": _display_to_json(quantity.display)}
 
 
-def _constant_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Constant:
+def _constant_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> Constant:
     return Constant(_as_number(data["value"]), _display_from_json(data["display"]))
 
 
@@ -336,6 +336,15 @@ class GraphCodec:
             source_id=None if source_id is None else ensure_type(source_id, str),
         )
 
+    def _stack_to_json(self, stack: Stack) -> Json:
+        return {
+            "members": [self._curve_to_json(member) for member in stack.members],
+            "inverse": stack.inverse,
+            "reference": (
+                None if stack.reference is None else self._curve_to_json(stack.reference)
+            ),
+        }
+
     def _stack_from_json(self, data: object) -> Stack:
         data = _as_mapping(data)
         reference = data["reference"]
@@ -345,11 +354,17 @@ class GraphCodec:
             reference=None if reference is None else self._curve_from_json(reference),
         )
 
+    def _line_to_json(self, line: Line) -> Json:
+        return {"curve": self._curve_to_json(line.curve), "inverse": line.inverse}
+
     def _line_from_json(self, data: object) -> Line:
         data = _as_mapping(data)
         return Line(
             curve=self._curve_from_json(data["curve"]), inverse=ensure_type(data["inverse"], bool)
         )
+
+    def _rule_to_json(self, rule: Rule) -> Json:
+        return {"curve": self._curve_to_json(rule.curve), "inverse": rule.inverse}
 
     def _rule_from_json(self, data: object) -> Rule:
         data = _as_mapping(data)
@@ -365,24 +380,9 @@ class GraphCodec:
             "vertical_range": (
                 None if graph.vertical_range is None else self._range_to_json(graph.vertical_range)
             ),
-            "stacks": [
-                {
-                    "members": [self._curve_to_json(member) for member in stack.members],
-                    "inverse": stack.inverse,
-                    "reference": (
-                        None if stack.reference is None else self._curve_to_json(stack.reference)
-                    ),
-                }
-                for stack in graph.stacks
-            ],
-            "lines": [
-                {"curve": self._curve_to_json(line.curve), "inverse": line.inverse}
-                for line in graph.lines
-            ],
-            "rules": [
-                {"curve": self._curve_to_json(rule.curve), "inverse": rule.inverse}
-                for rule in graph.rules
-            ],
+            "stacks": [self._stack_to_json(stack) for stack in graph.stacks],
+            "lines": [self._line_to_json(line) for line in graph.lines],
+            "rules": [self._rule_to_json(rule) for rule in graph.rules],
         }
 
     def deserialize_graph(self, data: object) -> Graph:

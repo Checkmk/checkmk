@@ -340,8 +340,8 @@ fn make_job_data(spots: Vec<Spot<Opened>>, query_blocks: &[QueryBlock]) -> Vec<J
     let job_count = spots.len();
     let chunk_size = query_blocks.len().div_ceil(job_count);
     let chunks = query_blocks.chunks(chunk_size);
-    log::debug!(
-        "Job data: {} query blocks, {} jobs, chunk size {}, {} chunks",
+    println!(
+        "{} {} {} {}",
         query_blocks.len(),
         job_count,
         chunk_size,

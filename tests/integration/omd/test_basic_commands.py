@@ -36,6 +36,7 @@ def test_basic_commands(site: Site) -> None:
         ["dig", "-v"],
         ["file", "--help"],
         ["host", "-V"],
+        ["journalctl", "--version"],
         ["nc", "-h"],
         # ["nmap", "--help"], # not present in build images
         ["nslookup", "help"],
@@ -43,6 +44,7 @@ def test_basic_commands(site: Site) -> None:
         ["php", "--help"],
         ["php-cgi", "--help"],
         ["resolvectl", "--help"],
+        ["rpm", "--version"],
         ["rpmbuild", "--help"],
         ["which", "scp"],
         ["ssh", "-V"],
@@ -76,6 +78,16 @@ def test_additional_os_command_availability(site: Site, command: list[str]) -> N
         )
     ):
         pytest.skip("'nc' is not available in this image")
+
+    # 'journalctl' is not available on Debian 11/12 build images (confirmed missing there;
+    # present on Debian 10)
+    if command[0] == "journalctl" and os.environ.get("DISTRO", "").startswith(
+        (
+            "debian-11",
+            "debian-12",
+        )
+    ):
+        pytest.skip("'journalctl' is not available in this image")
 
     # Commands executed here should return with exit code 0
     site.check_output(command)

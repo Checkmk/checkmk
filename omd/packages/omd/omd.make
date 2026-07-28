@@ -25,6 +25,7 @@ ifneq ($(filter sles15% el9 el10 trixie, $(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/dig
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/host
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/journalctl
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/nc
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/nmap
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/nslookup
@@ -34,6 +35,7 @@ ifneq ($(filter sles15% el9 el10 trixie, $(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/php5
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/php5-cgi
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/resolvectl
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/rpm
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/rpmbuild
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/scp
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/ssh

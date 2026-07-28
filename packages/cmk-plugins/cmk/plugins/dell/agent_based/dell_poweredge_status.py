@@ -47,8 +47,8 @@ def check_dell_poweredge_status(section: StringTable) -> CheckResult:
     yield Result(state=state, summary=summary)
 
 
-def parse_dell_poweredge_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_dell_poweredge_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 snmp_section_dell_poweredge_status = SimpleSNMPSection(

@@ -221,7 +221,7 @@ def make_main_menu(
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
                 icon=visual["icon"],
-                main_menu_search_terms=visual["main_menu_search_terms"],
+                main_menu_search_terms=visual.get("main_menu_search_terms") or [],
                 loading_transition=loading_transition,
             )
         )

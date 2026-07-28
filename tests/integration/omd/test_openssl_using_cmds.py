@@ -18,6 +18,14 @@ from tests.testlib.site import Site
         "pdftoppm -v",
         "nslookup -version",
         "rpmbuild --version",
+        "rpm --version",
+        pytest.param(
+            "journalctl --version",
+            marks=pytest.mark.skipif(
+                os.environ.get("DISTRO", "").startswith(("debian-11", "debian-12")),
+                reason="'journalctl' is not available on Debian 11/12 build images",
+            ),
+        ),
         pytest.param(
             "zypper",
             marks=pytest.mark.skipif(

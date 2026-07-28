@@ -3,9 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from livestatus import LivestatusResponse, LivestatusRow
 
+from cmk.bi.actions import BICallARuleActionSerialized
+from cmk.bi.search import BIHostSearchSerialized
+from cmk.bi.type_defs import (
+    AggrConfigDict,
+    BIPackConfig,
+    ComputationConfigDict,
+    GroupConfigDict,
+    HostChoice,
+    HostConditions,
+    NodeDict,
+)
 from cmk.ccc.hostaddress import HostName
+from cmk.ruleset_matcher.tags import TagGroupID, TagID
 
 bi_structure_states = {
     HostName("heute"): (
@@ -648,472 +662,465 @@ bi_service_period_status_rows = [
     ]
 ]
 
-bi_packs_config = {
-    "packs": [
-        {
-            "aggregations": [
-                {
-                    "aggregation_visualization": {
-                        "ignore_rule_styles": False,
-                        "layout_id": "builtin_default",
-                        "line_style": "round",
+bi_sample_packs: Sequence[BIPackConfig] = [
+    BIPackConfig(
+        id="default",
+        title="Default Pack",
+        contact_groups=[],
+        public=True,
+        aggregations=[
+            AggrConfigDict(
+                id="default_aggregation",
+                comment="",
+                groups=GroupConfigDict(names=["Hosts"], paths=[]),
+                node=NodeDict(
+                    action=BICallARuleActionSerialized(
+                        params={"arguments": ["$HOSTNAME$"]},
+                        rule_id="host",
+                        type="call_a_rule",
+                    ),
+                    search=BIHostSearchSerialized(
+                        conditions=HostConditions(
+                            host_choice=HostChoice(type="all_hosts"),
+                            host_folder="",
+                            host_label_groups=[],
+                            host_tags={TagGroupID("tcp"): TagID("tcp")},
+                        ),
+                        refer_to="host",
+                        type="host_search",
+                    ),
+                ),
+                computation_options=ComputationConfigDict(
+                    disabled=False,
+                    escalate_downtimes_as_warn=False,
+                    use_hard_states=False,
+                ),
+                aggregation_visualization={
+                    "ignore_rule_styles": False,
+                    "layout_id": "builtin_default",
+                    "line_style": "round",
+                },
+            )
+        ],
+        rules=[
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "applications",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "ASM|ORACLE|proc",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Applications",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "checkmk",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "Check_MK|Uptime",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Check_MK",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "filesystem",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "fs_$FS$$",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
                     },
-                    "computation_options": {
-                        "disabled": False,
-                        "escalate_downtimes_as_warn": False,
-                        "use_hard_states": False,
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "Filesystem$FS$$",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
                     },
-                    "groups": {"names": ["Hosts"], "paths": []},
-                    "id": "default_aggregation",
-                    "node": {
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "Mount options of $FS$$",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    },
+                ],
+                "params": {"arguments": ["HOSTNAME", "FS"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "$FS$",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "filesystems",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "Disk|MD",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    },
+                    {
                         "action": {
                             "params": {"arguments": ["$HOSTNAME$"]},
-                            "rule_id": "host",
+                            "rule_id": "multipathing",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
+                    },
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$", "$1$"]},
+                            "rule_id": "filesystem",
                             "type": "call_a_rule",
                         },
                         "search": {
                             "conditions": {
-                                "host_choice": {"type": "all_hosts"},
+                                "host_choice": {"pattern": "$HOSTNAME$", "type": "host_name_regex"},
                                 "host_folder": "",
                                 "host_label_groups": [],
-                                "host_tags": {"tcp": "tcp"},
+                                "host_tags": {},
+                                "service_label_groups": [],
+                                "service_regex": "fs_(.*)",
                             },
-                            "refer_to": "host",
-                            "type": "host_search",
+                            "type": "service_search",
                         },
                     },
-                }
-            ],
-            "contact_groups": [],
-            "id": "default",
-            "public": True,
-            "rules": [
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "applications",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "ASM|ORACLE|proc",
-                                "type": "state_of_service",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$", "$1$"]},
+                            "rule_id": "filesystem",
+                            "type": "call_a_rule",
+                        },
+                        "search": {
+                            "conditions": {
+                                "host_choice": {"pattern": "$HOSTNAME$", "type": "host_name_regex"},
+                                "host_folder": "",
+                                "host_label_groups": [],
+                                "host_tags": {},
+                                "service_label_groups": [],
+                                "service_regex": "Filesystem(.*)",
                             },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Applications",
+                            "type": "service_search",
+                        },
                     },
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Disk & Filesystems",
                 },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "checkmk",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "Check_MK|Uptime",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Check_MK",
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "general",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {"host_regex": "$HOSTNAME$", "type": "state_of_host"},
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "filesystem",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "fs_$FS$$",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "Uptime",
+                            "type": "state_of_service",
                         },
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "Filesystem$FS$$",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "Mount options of $FS$$",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                    ],
-                    "params": {"arguments": ["HOSTNAME", "FS"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "$FS$",
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "filesystems",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "Disk|MD",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "checkmk",
+                            "type": "call_a_rule",
                         },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "multipathing",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$", "$1$"]},
-                                "rule_id": "filesystem",
-                                "type": "call_a_rule",
-                            },
-                            "search": {
-                                "conditions": {
-                                    "host_choice": {
-                                        "pattern": "$HOSTNAME$",
-                                        "type": "host_name_regex",
-                                    },
-                                    "host_folder": "",
-                                    "host_label_groups": [],
-                                    "host_tags": {},
-                                    "service_label_groups": [],
-                                    "service_regex": "fs_(.*)",
-                                },
-                                "type": "service_search",
-                            },
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$", "$1$"]},
-                                "rule_id": "filesystem",
-                                "type": "call_a_rule",
-                            },
-                            "search": {
-                                "conditions": {
-                                    "host_choice": {
-                                        "pattern": "$HOSTNAME$",
-                                        "type": "host_name_regex",
-                                    },
-                                    "host_folder": "",
-                                    "host_label_groups": [],
-                                    "host_tags": {},
-                                    "service_label_groups": [],
-                                    "service_regex": "Filesystem(.*)",
-                                },
-                                "type": "service_search",
-                            },
-                        },
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Disk & Filesystems",
+                        "search": {"type": "empty"},
                     },
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "General State",
                 },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "general",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {"host_regex": "$HOSTNAME$", "type": "state_of_host"},
-                            "search": {"type": "empty"},
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "hardware",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "IPMI|RAID",
+                            "type": "state_of_service",
                         },
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "Uptime",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Hardware",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "host",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "general",
+                            "type": "call_a_rule",
                         },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "checkmk",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "General State",
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "hardware",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "IPMI|RAID",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Hardware",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "performance",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "host",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "general",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "filesystems",
+                            "type": "call_a_rule",
                         },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "performance",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "filesystems",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "networking",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "applications",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "logfiles",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "hardware",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                        {
-                            "action": {
-                                "params": {"arguments": ["$HOSTNAME$"]},
-                                "rule_id": "other",
-                                "type": "call_a_rule",
-                            },
-                            "search": {"type": "empty"},
-                        },
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Host $HOSTNAME$",
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "logfiles",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "LOG",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Logfiles",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "networking",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "multipathing",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "Multipath",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Multipathing",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "applications",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "networking",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "NFS|Interface|TCP",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Networking",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "logfiles",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "other",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "type": "state_of_remaining_services",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Other",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "hardware",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
                     },
-                },
-                {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
-                    "computation_options": {"disabled": False},
-                    "id": "performance",
-                    "node_visualization": {"style_config": {}, "type": "none"},
-                    "nodes": [
-                        {
-                            "action": {
-                                "host_regex": "$HOSTNAME$",
-                                "service_regex": "CPU|Memory|Vmalloc|Kernel|Number of threads",
-                                "type": "state_of_service",
-                            },
-                            "search": {"type": "empty"},
-                        }
-                    ],
-                    "params": {"arguments": ["HOSTNAME"]},
-                    "properties": {
-                        "comment": "",
-                        "docu_url": "",
-                        "icon": "",
-                        "state_messages": {},
-                        "title": "Performance",
+                    {
+                        "action": {
+                            "params": {"arguments": ["$HOSTNAME$"]},
+                            "rule_id": "other",
+                            "type": "call_a_rule",
+                        },
+                        "search": {"type": "empty"},
                     },
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Host $HOSTNAME$",
                 },
-            ],
-            "title": "Default Pack",
-        }
-    ]
-}
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "logfiles",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "LOG",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Logfiles",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "multipathing",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "Multipath",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Multipathing",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "networking",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "NFS|Interface|TCP",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Networking",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "other",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "type": "state_of_remaining_services",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Other",
+                },
+            },
+            {
+                "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                "computation_options": {"disabled": False},
+                "id": "performance",
+                "node_visualization": {"style_config": {}, "type": "none"},
+                "nodes": [
+                    {
+                        "action": {
+                            "host_regex": "$HOSTNAME$",
+                            "service_regex": "CPU|Memory|Vmalloc|Kernel|Number of threads",
+                            "type": "state_of_service",
+                        },
+                        "search": {"type": "empty"},
+                    }
+                ],
+                "params": {"arguments": ["HOSTNAME"]},
+                "properties": {
+                    "comment": "",
+                    "docu_url": "",
+                    "icon": "",
+                    "state_messages": {},
+                    "title": "Performance",
+                },
+            },
+        ],
+    )
+]
 
 LEGACY_BI_PACKS_CONFIG_STRING = """
 bi_packs['default'] = {

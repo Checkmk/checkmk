@@ -3,19 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
 
 from cmk.bi.packs import BIAggregationPacks
+from cmk.bi.type_defs import BIPackConfig
 
 
 class MockBIAggregationPack(BIAggregationPacks):
-    def __init__(self, config: dict[Any, Any]) -> None:
+    def __init__(self, packs_data: Iterable[BIPackConfig]) -> None:
         super().__init__(Path(""))
-        self._load_config(config)
+        self._cleanup_and_load_packs(packs_data)
 
     def load_config(self) -> None:
         pass

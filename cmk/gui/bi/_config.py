@@ -19,9 +19,9 @@ from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.compiler import BICompiler
-from cmk.bi.packs import BIAggregationPack, BIPackConfig
+from cmk.bi.packs import BIAggregationPack
 from cmk.bi.rule import BIRule, BIRuleSchema
-from cmk.bi.type_defs import AggrConfigDict
+from cmk.bi.type_defs import AggrConfigDict, BIPackConfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId

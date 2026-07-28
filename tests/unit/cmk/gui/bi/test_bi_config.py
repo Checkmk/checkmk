@@ -121,7 +121,7 @@ class ModeBIEditRuleFake(ModeBIEditRule):
         self._rule_id = None
         self._new = True
 
-        self._bi_packs = MockBIAggregationPack(sample_config.bi_packs_config)
+        self._bi_packs = MockBIAggregationPack(sample_config.bi_sample_packs)
         self._bi_pack = None
 
 

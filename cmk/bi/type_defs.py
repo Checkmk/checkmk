@@ -96,7 +96,8 @@ HostRegexMatches = dict[str, tuple[str, ...]]
 
 class HostChoice(TypedDict):
     type: Literal["all_hosts", "host_name_regex", "host_alias_regex"]
-    pattern: str
+    # only the regex choices carry a pattern, see BIAllHostsChoiceSchema
+    pattern: NotRequired[str]
 
 
 class HostConditions(TypedDict):
@@ -109,3 +110,13 @@ class HostConditions(TypedDict):
 class HostServiceConditions(HostConditions):
     service_regex: str
     service_label_groups: LabelGroups
+
+
+class BIPackConfig(TypedDict):
+    id: str
+    title: str
+    comment: NotRequired[str]
+    contact_groups: list[str]
+    public: bool
+    rules: NotRequired[list[dict[str, Any]]]
+    aggregations: NotRequired[list[AggrConfigDict]]

@@ -91,4 +91,4 @@ def dummy_bi_rule() -> Iterator[BIRule]:
 def bi_packs_sample_config() -> Iterator[BIAggregationPacks]:
     from .bi_test_data import sample_config
 
-    yield MockBIAggregationPack(sample_config.bi_packs_config)
+    yield MockBIAggregationPack(sample_config.bi_sample_packs)

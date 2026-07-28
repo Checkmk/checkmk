@@ -7,9 +7,9 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any, NamedTuple, NotRequired, TypedDict
+from typing import Any, NamedTuple
 
 from marshmallow import pre_dump
 
@@ -25,17 +25,15 @@ from cmk.bi.fields import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.rule_interface import bi_rule_id_registry
-from cmk.bi.sample_configs import bi_sample_config
+from cmk.bi.sample_configs import bi_sample_packs
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIHostSearch, BIServiceSearch
-from cmk.bi.type_defs import AggrConfigDict
+from cmk.bi.type_defs import BIPackConfig
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.fields import String
 from cmk.utils.paths import var_dir
-
-_ContactgroupName = str
 
 
 class DeleteErrorUsedByAggregation(MKGeneralException):
@@ -72,16 +70,6 @@ class RuleReferencesResult(NamedTuple):
 #   |                     |_|   \__,_|\___|_|\_\___/                       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-
-
-class BIPackConfig(TypedDict):
-    id: str
-    title: str
-    comment: NotRequired[str]
-    contact_groups: list[_ContactgroupName]
-    public: bool
-    rules: NotRequired[list[dict[str, Any]]]
-    aggregations: NotRequired[list[AggrConfigDict]]
 
 
 class BIAggregationPack:
@@ -309,15 +297,14 @@ class BIAggregationPacks:
 
     def load_config(self) -> None:
         if not self._bi_configuration_file.exists():
-            self._load_config(bi_sample_config)
+            self._cleanup_and_load_packs(bi_sample_packs)
             return
-        self._load_config(store.load_object_from_file(self._bi_configuration_file, default=None))
+        self._cleanup_and_load_packs(
+            store.load_object_from_file(self._bi_configuration_file, default=None)["packs"]
+        )
 
-    def _load_config(self, config: dict) -> None:
+    def _cleanup_and_load_packs(self, packs_data: Iterable[BIPackConfig]) -> None:
         self.cleanup()
-        self._instantiate_packs(config["packs"])
-
-    def _instantiate_packs(self, packs_data: list[BIPackConfig]) -> None:
         self.packs = {pack["id"]: BIAggregationPack(pack) for pack in packs_data}
 
     def save_config(self) -> None:

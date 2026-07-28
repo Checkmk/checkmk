@@ -9,6 +9,9 @@
       "$ref": "#/$defs/attribute_filter_exists"
     },
     {
+      "$ref": "#/$defs/attribute_filter_not"
+    },
+    {
       "$ref": "#/$defs/attribute_filter_and"
     },
     {
@@ -63,6 +66,20 @@
         }
       },
       "required": ["type", "key"]
+    },
+    "attribute_filter_not": {
+      "type": "object",
+      "title": "attribute_filter_not",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["not"]
+        },
+        "condition": {
+          "$ref": "#"
+        }
+      },
+      "required": ["type", "condition"]
     },
     "attribute_filter_and": {
       "type": "object",

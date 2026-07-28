@@ -393,6 +393,7 @@ impl SpotBuilder {
             endpoint.conn().port().clone(),
             endpoint.auth().clone(),
             endpoint.target_id().cloned(),
+            endpoint.conn().timeout(),
         ));
         self
     }
@@ -403,6 +404,7 @@ impl SpotBuilder {
             custom_instance.conn().port().clone(),
             custom_instance.auth().clone(),
             custom_instance.target_id().cloned(),
+            custom_instance.conn().timeout(),
         ));
         self
     }

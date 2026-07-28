@@ -20,6 +20,7 @@ use crate::types::{
 };
 
 use crate::config::{authentication::Authentication, target::TargetId};
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct Target {
@@ -28,6 +29,9 @@ pub struct Target {
     pub auth: Authentication,
 
     target_id: Option<TargetId>,
+    /// Connect timeout embedded as `CONNECT_TIMEOUT` in the TNS descriptor.
+    /// Zero means "not set" (Oracle client default applies).
+    timeout: Duration,
 }
 
 impl Target {
@@ -36,12 +40,14 @@ impl Target {
         port: Port,
         auth: Authentication,
         target_id: Option<TargetId>,
+        timeout: Duration,
     ) -> Self {
         Target {
             host,
             port,
             auth,
             target_id,
+            timeout,
         }
     }
 
@@ -183,9 +189,17 @@ impl Target {
 
         let connect_data = connect_data_parts.join(" ");
 
+        // Embed the configured connect timeout so a silent/hung listener fails fast instead of
+        // waiting for the Oracle client default (~60s). Omitted when zero (client default applies).
+        let timeout_part = if self.timeout.is_zero() {
+            String::new()
+        } else {
+            format!("(CONNECT_TIMEOUT = {}) ", self.timeout.as_secs())
+        };
+
         let conn_string = format!(
-            "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = {})(PORT = {})) (CONNECT_DATA = {}))",
-            self.host, self.port, connect_data
+            "(DESCRIPTION = {}(ADDRESS = (PROTOCOL = TCP)(HOST = {})(PORT = {})) (CONNECT_DATA = {}))",
+            timeout_part, self.host, self.port, connect_data
         );
 
         conn_string
@@ -221,6 +235,7 @@ authentication:
     fn target_with_target_id(target_id: Option<TargetId>) -> Target {
         Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id,
             port: Port(1521),
             auth: Authentication::default(),
@@ -245,6 +260,7 @@ authentication:
     fn test_make_connection_string_service_type_instance() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("my_service")))
                 .service_type(Some(&ServiceType::from("dedicated")))
@@ -276,6 +292,7 @@ authentication:
     fn test_make_connection_string_all() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("my_service")))
                 .service_type(Some(&ServiceType::from("dedicated")))
@@ -308,6 +325,7 @@ authentication:
     fn test_make_connection_string_empty() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new().build(),
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -323,6 +341,7 @@ authentication:
     fn test_make_connection_string_service() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("oRcl")))
                 .build(),
@@ -347,6 +366,7 @@ authentication:
     ) -> Target {
         Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(service_name)
                 .instance_name(instance_name)
@@ -412,6 +432,7 @@ authentication:
     fn test_make_tns_connection_string_service_instance() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("FREE.test")))
                 .service_type(Some(&ServiceType::from("dedicated")))
@@ -433,6 +454,7 @@ authentication:
         let service_name = Some(ServiceName::from("ORCL"));
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(service_name.as_ref())
                 .build(),
@@ -451,6 +473,7 @@ authentication:
     fn test_make_tns_connection_string_instance() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .instance_name(Some(&InstanceName::from("orcl")))
                 .build(),
@@ -468,6 +491,7 @@ authentication:
     fn test_make_tns_connection_string_all() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("my_service")))
                 .service_type(Some(&ServiceType::from("dedicated")))
@@ -491,6 +515,7 @@ authentication:
     fn test_make_tns_connection_string_service_type_instance() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("ORCL")))
                 .service_type(Some(&ServiceType::from("shared")))
@@ -511,6 +536,7 @@ authentication:
     fn test_make_tns_connection_string_sid() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new().sid(Some("ORCL")).build(),
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -527,6 +553,7 @@ authentication:
     fn test_make_tns_connection_string_service_sid() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("MY_SERVICE")))
                 .sid(Some("ORCL"))
@@ -546,6 +573,7 @@ authentication:
     fn test_make_tns_connection_string_service_instance_sid() {
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
             target_id: TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("MY_SERVICE")))
                 .instance_name(Some(&InstanceName::from("INST")))
@@ -560,5 +588,35 @@ authentication:
             target.make_connection_string(None, ConnectionStringType::Tns).unwrap(),
             "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = MY_SERVICE) (INSTANCE_NAME = INST) (SID = ORCL)))"
         );
+    }
+
+    #[test]
+    fn test_make_tns_connect_string_embeds_connect_timeout() {
+        let target = Target::new(
+            HostName::from("localhost".to_owned()),
+            Port(1521),
+            Authentication::default(),
+            TargetIdBuilder::new().sid(Some("ORCL")).build(),
+            Duration::from_secs(7),
+        );
+        assert_eq!(
+            target.make_connection_string(None, ConnectionStringType::Tns).unwrap(),
+            "(DESCRIPTION = (CONNECT_TIMEOUT = 7) (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SID = ORCL)))"
+        );
+    }
+
+    #[test]
+    fn test_make_tns_connect_string_omits_zero_connect_timeout() {
+        let target = Target::new(
+            HostName::from("localhost".to_owned()),
+            Port(1521),
+            Authentication::default(),
+            TargetIdBuilder::new().sid(Some("ORCL")).build(),
+            Duration::from_secs(0),
+        );
+        assert!(!target
+            .make_connection_string(None, ConnectionStringType::Tns)
+            .unwrap()
+            .contains("CONNECT_TIMEOUT"));
     }
 }

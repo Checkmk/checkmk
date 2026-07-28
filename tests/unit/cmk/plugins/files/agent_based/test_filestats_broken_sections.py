@@ -3,15 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
-
-from typing import Any
 
 import pytest
 
@@ -20,6 +15,8 @@ from cmk.plugins.files.agent_based.filestats import (
     check_filestats,
     discover_filestats,
     parse_filestats,
+    Section,
+    SummaryInfo,
 )
 
 
@@ -40,12 +37,12 @@ def string_table_fixture() -> list[list[str]]:
 
 
 @pytest.fixture(name="parsed")
-def parsed_fixture(string_table: list[list[str]]) -> dict[str, Any]:
+def parsed_fixture(string_table: list[list[str]]) -> Section:
     """Parsed filestats data with broken sections"""
     return parse_filestats(string_table)
 
 
-def test_discover_filestats(parsed: dict[str, Any]) -> None:
+def test_discover_filestats(parsed: Section) -> None:
     """Test filestats discovery finds all valid subsections"""
     discovered = list(discover_filestats(parsed))
     assert len(discovered) == 4
@@ -62,7 +59,7 @@ def test_discover_filestats(parsed: dict[str, Any]) -> None:
         assert isinstance(service, Service)
 
 
-def test_check_filestats_ok_subsection(parsed: dict[str, Any]) -> None:
+def test_check_filestats_ok_subsection(parsed: Section) -> None:
     """Test filestats check for working subsection with count"""
     result = list(check_filestats("ok subsection", {}, parsed))
     assert len(result) == 2  # Result + Metric
@@ -76,28 +73,28 @@ def test_check_filestats_ok_subsection(parsed: dict[str, Any]) -> None:
     assert result[1].value == 23.0
 
 
-def test_check_filestats_missing_count(parsed: dict[str, Any]) -> None:
+def test_check_filestats_missing_count(parsed: Section) -> None:
     """Test filestats check for subsection missing count field"""
     result = list(check_filestats("missing count", {}, parsed))
     # Should return empty generator (no results) when count is missing
     assert len(result) == 0
 
 
-def test_check_filestats_complete_mess(parsed: dict[str, Any]) -> None:
+def test_check_filestats_complete_mess(parsed: Section) -> None:
     """Test filestats check for subsection with malformed JSON"""
     result = list(check_filestats("complete mess", {}, parsed))
     # Should return empty generator when parsing fails completely
     assert len(result) == 0
 
 
-def test_check_filestats_empty_subsection(parsed: dict[str, Any]) -> None:
+def test_check_filestats_empty_subsection(parsed: Section) -> None:
     """Test filestats check for subsection with empty data"""
     result = list(check_filestats("empty subsection", {}, parsed))
     # Should return empty generator when no summary data available
     assert len(result) == 0
 
 
-def test_check_filestats_nonexistent_item(parsed: dict[str, Any]) -> None:
+def test_check_filestats_nonexistent_item(parsed: Section) -> None:
     """Test filestats check for non-existent subsection"""
     result = list(check_filestats("nonexistent", {}, parsed))
     assert len(result) == 0
@@ -118,13 +115,13 @@ def test_parse_filestats_structure(string_table: list[list[str]]) -> None:
     variety, data = parsed["ok subsection"]
     assert variety == "count_only"
     assert len(data) == 1
-    assert data[0] == {"type": "summary", "count": 23}
+    assert data[0] == SummaryInfo(type="summary", count=23)
 
     # Check structure for missing count subsection
     variety, data = parsed["missing count"]
     assert variety == "count_only"
     assert len(data) == 1
-    assert data[0] == {"type": "summary", "foobar": 42}
+    assert dict(data[0]) == {"type": "summary", "foobar": 42}
 
     # Check structure for malformed subsection (should be empty due to SyntaxError)
     variety, data = parsed["complete mess"]
@@ -135,7 +132,7 @@ def test_parse_filestats_structure(string_table: list[list[str]]) -> None:
     variety, data = parsed["empty subsection"]
     assert variety == "count_only"
     assert len(data) == 1
-    assert data[0] == {}
+    assert not data[0]
 
 
 def test_check_filestats_with_parameters() -> None:
@@ -183,5 +180,5 @@ def test_filestats_parsing_error_handling() -> None:
 
     # Should only have the 2 valid JSON objects
     assert len(data) == 2
-    assert data[0] == {"type": "summary", "count": 42}
-    assert data[1] == {"valid": "again", "count": 5}
+    assert dict(data[0]) == {"type": "summary", "count": 42}
+    assert dict(data[1]) == {"valid": "again", "count": 5}

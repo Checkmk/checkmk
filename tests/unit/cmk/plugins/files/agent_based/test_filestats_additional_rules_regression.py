@@ -3,15 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
-
-from typing import Any
 
 import pytest
 
@@ -19,7 +14,10 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.files.agent_based.filestats import (
     check_filestats,
     discover_filestats,
+    is_file_info,
+    is_summary_info,
     parse_filestats,
+    Section,
 )
 
 
@@ -49,12 +47,12 @@ def _string_table() -> list[list[str]]:
 @pytest.fixture(name="parsed")
 def _parsed(
     string_table: list[list[str]],
-) -> dict[str, tuple[str, list[dict[str, Any]]]]:
+) -> Section:
     return parse_filestats(string_table)
 
 
 def test_parse_filestats_additional_rules_regression(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     assert "foo" in parsed
 
@@ -63,12 +61,12 @@ def test_parse_filestats_additional_rules_regression(
     assert len(reported_lines) == 6  # 5 files + 1 summary
 
     # Check summary data
-    summary = [item for item in reported_lines if item.get("type") == "summary"][0]
+    summary = [item for item in reported_lines if is_summary_info(item)][0]
     assert summary["count"] == 5
     assert summary["type"] == "summary"
 
     # Check file data
-    files = [item for item in reported_lines if item.get("type") == "file"]
+    files = [item for item in reported_lines if is_file_info(item)]
     assert len(files) == 5
 
     # Verify specific file details
@@ -89,7 +87,7 @@ def test_parse_filestats_additional_rules_regression(
 
 
 def test_discover_filestats_additional_rules_regression(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     result = list(discover_filestats(parsed))
     assert result == [Service(item="foo")]
@@ -103,7 +101,7 @@ def _get_text(r: Result | Metric) -> str:
 
 
 def test_check_filestats_additional_rules_regression_basic(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
@@ -136,7 +134,7 @@ def test_check_filestats_additional_rules_regression_basic(
 
 
 def test_check_filestats_additional_rules_regression_size_thresholds(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),  # Very small thresholds to trigger alerts
@@ -158,7 +156,7 @@ def test_check_filestats_additional_rules_regression_size_thresholds(
 
 
 def test_check_filestats_additional_rules_regression_sys_related_files(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
@@ -206,7 +204,7 @@ def test_check_filestats_additional_rules_regression_sys_related_files(
 
 
 def test_check_filestats_additional_rules_regression_remaining_files(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
@@ -240,7 +238,7 @@ def test_check_filestats_additional_rules_regression_remaining_files(
 
 
 def test_check_filestats_additional_rules_regression_file_details(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
@@ -286,7 +284,7 @@ def test_check_filestats_additional_rules_regression_file_details(
 
 
 def test_check_filestats_additional_rules_regression_age_thresholds(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
@@ -305,7 +303,7 @@ def test_check_filestats_additional_rules_regression_age_thresholds(
 
 
 def test_check_filestats_additional_rules_regression_missing_item(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+    parsed: Section,
 ) -> None:
     result = list(check_filestats("NonExistent", {}, parsed))
     assert result == []

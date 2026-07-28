@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import ast
 import contextlib
 import re
-from collections.abc import Generator, Mapping
-from typing import Any
+from collections.abc import Callable, Generator, Mapping, Sequence
+from typing import Any, Literal, ReadOnly, TypedDict, TypeIs
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -74,7 +72,28 @@ def _render_age(age: float) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def parse_filestats(string_table: StringTable) -> dict[str, tuple[str, list[dict[str, Any]]]]:
+class FileInfo(TypedDict, total=False):
+    type: ReadOnly[Literal["file"]]
+    path: ReadOnly[str]
+    stat_status: ReadOnly[str | None]
+    size: ReadOnly[int | None]
+    age: ReadOnly[int | None]
+    mtime: ReadOnly[int | None]
+
+
+class SummaryInfo(TypedDict, total=False):
+    type: ReadOnly[Literal["summary"]]
+    count: ReadOnly[int]
+
+
+FileStatsInfo = FileInfo | SummaryInfo
+
+Section = Mapping[str, tuple[str, Sequence[FileStatsInfo]]]
+
+_MetricKey = Literal["size", "age"]
+
+
+def parse_filestats(string_table: StringTable) -> Section:
     sections_info: dict[tuple[str, str], list[str]] = {}
     current: list[str] = []  # should never be used, but better safe than sorry
     for line in string_table:
@@ -93,12 +112,24 @@ def parse_filestats(string_table: StringTable) -> dict[str, tuple[str, list[dict
     }
 
 
-def _parse_filestats_load_lines(info: list[str]) -> list[dict[str, Any]]:
-    list_of_dicts: list[dict[str, Any]] = []
+def _parse_filestats_load_lines(info: list[str]) -> list[FileStatsInfo]:
+    list_of_dicts: list[FileStatsInfo] = []
     for line in info:
         with contextlib.suppress(SyntaxError):
             list_of_dicts.append(ast.literal_eval(line))
     return list_of_dicts
+
+
+def is_file_info(entry: FileStatsInfo) -> TypeIs[FileInfo]:
+    return entry.get("type") == "file"
+
+
+def is_summary_info(entry: FileStatsInfo) -> TypeIs[SummaryInfo]:
+    return entry.get("type") == "summary"
+
+
+def _metric_value(file_info: FileInfo, key: _MetricKey) -> int | None:
+    return file_info.get("size") if key == "size" else file_info.get("age")
 
 
 # .
@@ -114,8 +145,11 @@ def _parse_filestats_load_lines(info: list[str]) -> list[dict[str, Any]]:
 #   '----------------------------------------------------------------------'
 
 
-def check_filestats_count(
-    count: int, params: Mapping[str, Any], show_files: bool, reported_lines: list[dict[str, Any]]
+def check_filestats_count(  # type: ignore[explicit-any]
+    count: int,
+    params: Mapping[str, Any],
+    show_files: bool,
+    reported_lines: Sequence[FileStatsInfo],
 ) -> CheckResult:
     """common check result - used by main and count_only check"""
     results = list(
@@ -132,7 +166,9 @@ def check_filestats_count(
     assert isinstance(result, Result)
 
     if show_files and result.state != State.OK:
-        file_details = "\n".join(f"[{l['path']}]" for l in reported_lines if l.get("path"))
+        file_details = "\n".join(
+            f"[{l['path']}]" for l in reported_lines if is_file_info(l) and l.get("path")
+        )
         yield Result(
             state=result.state,
             summary=result.summary,
@@ -146,7 +182,7 @@ def check_filestats_count(
 _STATE_MARKERS = {State.OK: "", State.WARN: "(!)", State.CRIT: "(!!)", State.UNKNOWN: "(?)"}
 
 
-def _get_levels(
+def _get_levels(  # type: ignore[explicit-any]
     params: Mapping[str, Any], key: str, label: str
 ) -> tuple[FixedLevelsT[float] | None, FixedLevelsT[float] | None]:
     return (
@@ -167,32 +203,38 @@ def _check_state(
     return State.OK
 
 
-def check_filestats_extremes(
-    files: list[dict[str, Any]], params: Mapping[str, Any], show_files: bool = False
+def check_filestats_extremes(  # type: ignore[explicit-any]
+    files: Sequence[FileInfo], params: Mapping[str, Any], show_files: bool = False
 ) -> Generator[Result | Metric, None, list[str]]:
     """common check result - used by main and extremes_only check"""
     if not files:
         return []
     long_output: dict[str, str] = {}
-    for key, hr_function, minlabel, maxlabel in (
+    metrics: Sequence[tuple[_MetricKey, Callable[[float], str], str, str]] = (
         ("size", render.disksize, "smallest", "largest"),
         ("age", render.timespan, "newest", "oldest"),
-    ):
-        files_with_metric = [f for f in files if f.get(key) is not None]
+    )
+    for key, hr_function, minlabel, maxlabel in metrics:
+        files_with_metric = sorted(
+            ((f, value) for f in files if (value := _metric_value(f, key)) is not None),
+            key=lambda file_and_value: file_and_value[1],
+        )
         if not files_with_metric:
             continue
 
-        files_with_metric.sort(key=lambda f: f.get(key, 0))
-        for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
-            if key == "age" and efile[key] < 0:
+        for (efile, value), label in (
+            (files_with_metric[0], minlabel),
+            (files_with_metric[-1], maxlabel),
+        ):
+            if key == "age" and value < 0:
                 yield Result(
                     state=State.UNKNOWN,
-                    summary=f"[{efile['path']}] {label.title()}: {_render_age(efile[key])}, {_FUTURE_MTIME_MESSAGE}",
+                    summary=f"[{efile['path']}] {label.title()}: {_render_age(value)}, {_FUTURE_MTIME_MESSAGE}",
                 )
                 continue
             levels_upper, levels_lower = _get_levels(params, key, label)
             yield from check_levels(
-                efile[key],
+                value,
                 levels_upper=levels_upper,
                 levels_lower=levels_lower,
                 render_func=hr_function,
@@ -203,26 +245,28 @@ def check_filestats_extremes(
             continue
 
         min_levels_upper, min_levels_lower = _get_levels(params, key, minlabel)
-        for efile in files_with_metric:
-            state = _check_state(efile[key], min_levels_upper, min_levels_lower)
+        for efile, value in files_with_metric:
+            state = _check_state(value, min_levels_upper, min_levels_lower)
             if state == State.OK:
                 break
             if efile["path"] not in long_output:
+                age, size = efile.get("age"), efile.get("size")
                 long_output[efile["path"]] = "Age: {}, Size: {}{}".format(
-                    _render_age(efile["age"]),
-                    render.disksize(efile["size"]),
+                    "N/A" if age is None else _render_age(age),
+                    "N/A" if size is None else render.disksize(size),
                     _STATE_MARKERS[state],
                 )
 
         max_levels_upper, max_levels_lower = _get_levels(params, key, maxlabel)
-        for efile in reversed(files_with_metric):
-            state = _check_state(efile[key], max_levels_upper, max_levels_lower)
+        for efile, value in reversed(files_with_metric):
+            state = _check_state(value, max_levels_upper, max_levels_lower)
             if state == State.OK:
                 break
             if efile["path"] not in long_output:
+                age, size = efile.get("age"), efile.get("size")
                 long_output[efile["path"]] = "Age: {}, Size: {}{}".format(
-                    _render_age(efile["age"]),
-                    render.disksize(efile["size"]),
+                    "N/A" if age is None else _render_age(age),
+                    "N/A" if size is None else render.disksize(size),
                     _STATE_MARKERS[state],
                 )
 
@@ -242,13 +286,11 @@ def check_filestats_extremes(
 #   '----------------------------------------------------------------------'
 
 
-def check_filestats(
-    item: str, params: Mapping[str, Any], section: dict[str, tuple[str, list[dict[str, Any]]]]
-) -> CheckResult:
+def check_filestats(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # type: ignore[explicit-any]
     if not (data := section.get(item)):
         return
     _output_variety, reported_lines = data
-    sumry = [s for s in reported_lines if s.get("type") == "summary"]
+    sumry = [s for s in reported_lines if is_summary_info(s)]
     count = sumry[0].get("count", None) if sumry else None
 
     # only WARN/CRIT files are shown
@@ -257,7 +299,7 @@ def check_filestats(
     if count is not None:
         yield from check_filestats_count(count, params, show_files, reported_lines)
 
-    files = [i for i in reported_lines if i.get("type") == "file"]
+    files = [i for i in reported_lines if is_file_info(i)]
 
     if not files:
         return
@@ -267,7 +309,7 @@ def check_filestats(
 
     additional_rules = params.get("additional_rules", {})
 
-    matching_files: dict[str, dict[str, Any]] = {}
+    matching_files: dict[str, dict[str, Any]] = {}  # type: ignore[explicit-any]
     remaining_files = []
     for efile in files:
         for display_name, file_expression, rules in additional_rules:
@@ -317,9 +359,7 @@ def check_filestats(
         yield Result(state=State.OK, notice="\n".join(remaining_files_output))
 
 
-def check_filestats_single(
-    item: str, params: Mapping[str, Any], section: dict[str, tuple[str, list[dict[str, Any]]]]
-) -> CheckResult:
+def check_filestats_single(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:  # type: ignore[explicit-any]
     if not (data := section.get(item)):
         return
     _output_variety, reported_lines = data
@@ -329,13 +369,17 @@ def check_filestats_single(
             summary="Received multiple filestats per single file service. Please check agent plug-in configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service.",
         )
 
-    single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
+    single_stat = [i for i in reported_lines if is_file_info(i)][0]
     if single_stat.get("size") is None and single_stat.get("age") is None:
         yield Result(state=State.OK, summary=f"Status: {single_stat.get('stat_status')}")
         return
 
-    for key, hr_function in (("size", render.disksize), ("age", render.timespan)):
-        if (value := single_stat.get(key)) is None:
+    render_funcs: Sequence[tuple[_MetricKey, Callable[[float], str]]] = (
+        ("size", render.disksize),
+        ("age", render.timespan),
+    )
+    for key, hr_function in render_funcs:
+        if (value := _metric_value(single_stat, key)) is None:
             continue
 
         if key == "age" and value < 0:
@@ -355,15 +399,11 @@ def check_filestats_single(
         )
 
 
-def discover_filestats(
-    section: dict[str, tuple[str, list[dict[str, Any]]]],
-) -> DiscoveryResult:
+def discover_filestats(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item, data in section.items() if data[0] != "single_file")
 
 
-def discover_filestats_single(
-    section: dict[str, tuple[str, list[dict[str, Any]]]],
-) -> DiscoveryResult:
+def discover_filestats_single(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item, data in section.items() if data[0] == "single_file")
 
 

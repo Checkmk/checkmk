@@ -2547,10 +2547,10 @@ def _create_rule_conditions_catalog_topic(
                             CascadingSingleChoiceElementAPI(
                                 name="predefined",
                                 title=Title("Predefined conditions"),
-                                parameter_form=SingleChoiceAPI(
+                                parameter_form=SingleChoiceExtendedAPI(
                                     title=Title("Predefined condition"),
                                     elements=[
-                                        SingleChoiceElementAPI(
+                                        SingleChoiceElementExtendedAPI(
                                             name=n, title=Title("%(title)s") % {"title": t}
                                         )
                                         for n, t in PredefinedConditionStore().choices()

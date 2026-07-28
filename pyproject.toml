@@ -348,6 +348,7 @@ disallow_untyped_calls = false
 [[tool.mypy.overrides]]
 module = [
   "*.metric_backend.*",
+  "*.network_flow.*",
   "*.otel.*",
   "*.otel_collector.*",
   "*.relay.*",

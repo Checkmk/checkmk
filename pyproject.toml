@@ -319,6 +319,7 @@ disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 module = [
+  "*.liveproxyd.*",
   "*.metric_backend.*",
   "*.mknotifyd.*",
   "*.network_flow.*",

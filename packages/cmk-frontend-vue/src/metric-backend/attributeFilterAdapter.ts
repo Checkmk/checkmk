@@ -13,6 +13,7 @@ import {
   type AttributeFilterModel,
   type AttributeKind,
   type Condition,
+  type Operator,
   isConditionValid
 } from './attribute-filter/types'
 
@@ -24,14 +25,52 @@ export type AttributeKindKey = Exclude<AttributeKind, null>
 
 export const ATTRIBUTE_KIND_ORDER: AttributeKindKey[] = ['resource', 'scope', 'data_point']
 
-type SharedLeaf = SharedAttributeFilterEquals | SharedAttributeFilterExists
+type PositiveLeaf = SharedAttributeFilterEquals | SharedAttributeFilterExists
+type SharedLeaf = PositiveLeaf | { type: 'not'; condition: PositiveLeaf }
+type AttributeKey = SharedAttributeFilterEquals['key']
+
+// Every operator paired with its negation; the wire encodes a negation as not(<positive>).
+const NEGATION_PAIRS: readonly (readonly [Operator, Operator])[] = [
+  ['eq', 'neq'],
+  ['contains', 'not_contains'],
+  ['starts_with', 'not_starts_with'],
+  ['ends_with', 'not_ends_with'],
+  ['regex', 'not_regex'],
+  ['exists', 'not_exists']
+]
+
+function negationOf(operator: Operator): Operator | undefined {
+  return NEGATION_PAIRS.find(([positive]) => positive === operator)?.[1]
+}
+
+function positiveOf(operator: Operator): Operator | undefined {
+  return NEGATION_PAIRS.find(([, negated]) => negated === operator)?.[0]
+}
+
+function isPositiveLeaf(filter: AttributeFilter): filter is PositiveLeaf {
+  return filter.type === 'equals' || filter.type === 'exists'
+}
 
 function assertLeaf(filter: AttributeFilter): SharedLeaf {
   // The pill UI only represents an OR of ANDs; deeper nesting has no pill form.
-  if (filter.type !== 'equals' && filter.type !== 'exists') {
-    throw new Error(`attribute filter is not in disjunctive normal form: ${filter.type}`)
+  if (isPositiveLeaf(filter)) {
+    return filter
   }
-  return filter
+  if (filter.type === 'not' && isPositiveLeaf(filter.condition)) {
+    return { type: 'not', condition: filter.condition }
+  }
+  throw new Error(`attribute filter is not in disjunctive normal form: ${filter.type}`)
+}
+
+function positiveLeaf(operator: Operator, key: AttributeKey, value: string): PositiveLeaf {
+  switch (operator) {
+    case 'eq':
+      return { type: 'equals', key, value }
+    case 'exists':
+      return { type: 'exists', key }
+    default:
+      throw new Error(`attribute-filter operator '${operator}' has no backend representation`)
+  }
 }
 
 function conditionToLeaf(condition: Condition): SharedLeaf {
@@ -39,16 +78,11 @@ function conditionToLeaf(condition: Condition): SharedLeaf {
     throw new Error('cannot encode an incomplete attribute-filter condition')
   }
   const key = { kind: condition.attributeKind, name: condition.key }
-  switch (condition.operator) {
-    case 'eq':
-      return { type: 'equals', key, value: condition.value }
-    case 'exists':
-      return { type: 'exists', key }
-    default:
-      throw new Error(
-        `attribute-filter operator '${condition.operator}' has no backend representation`
-      )
+  const positive = positiveOf(condition.operator)
+  if (positive !== undefined) {
+    return { type: 'not', condition: positiveLeaf(positive, key, condition.value) }
   }
+  return positiveLeaf(condition.operator, key, condition.value)
 }
 
 // An empty model becomes an empty AND, which the backend treats as "match everything".
@@ -64,12 +98,14 @@ export function toAttributeFilter(model: AttributeFilterModel): AttributeFilter 
 }
 
 function leafToCondition(leaf: SharedLeaf, newId: () => string): Condition {
+  const positive = leaf.type === 'not' ? leaf.condition : leaf
+  const operator = positive.type === 'equals' ? 'eq' : 'exists'
   return {
     id: newId(),
-    attributeKind: leaf.key.kind,
-    key: leaf.key.name,
-    operator: leaf.type === 'equals' ? 'eq' : 'exists',
-    value: leaf.type === 'equals' ? leaf.value : ''
+    attributeKind: positive.key.kind,
+    key: positive.key.name,
+    operator: leaf.type === 'not' ? negationOf(operator)! : operator,
+    value: 'value' in positive ? positive.value : ''
   }
 }
 

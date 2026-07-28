@@ -5,7 +5,12 @@
  */
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 
-import type { AttributeFilterModel, Condition } from '@/metric-backend/attribute-filter/types'
+import type {
+  AttributeFilterModel,
+  AttributeKind,
+  Condition,
+  Operator
+} from '@/metric-backend/attribute-filter/types'
 import {
   type ThreeLists,
   buildAutocompleteContext,
@@ -173,6 +178,23 @@ describe('toAttributeFilter', () => {
     })
   })
 
+  test.each<[Operator, string, AttributeFilter]>([
+    [
+      'not_exists',
+      '',
+      { type: 'not', condition: { type: 'exists', key: { kind: 'scope', name: 'a' } } }
+    ],
+    [
+      'neq',
+      'v',
+      { type: 'not', condition: { type: 'equals', key: { kind: 'scope', name: 'a' }, value: 'v' } }
+    ]
+  ])('encodes the negated operator %s as a not(...) node', (operator, value, expected) => {
+    expect(
+      toAttributeFilter(group({ id: 'a', attributeKind: 'scope', key: 'a', operator, value }))
+    ).toEqual(expected)
+  })
+
   test('drops incomplete conditions before encoding', () => {
     const model = group(
       { id: 'a', attributeKind: null, key: '', operator: 'eq', value: '' },
@@ -230,6 +252,25 @@ describe('fromAttributeFilter', () => {
       ],
       [['resource', 'k3', 'eq']]
     ])
+  })
+
+  test.each<[AttributeFilter, [AttributeKind, string, Operator, string]]>([
+    [
+      { type: 'exists', key: { kind: 'resource', name: 'service.name' } },
+      ['resource', 'service.name', 'not_exists', '']
+    ],
+    [
+      { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'v' },
+      ['resource', 'service.name', 'neq', 'v']
+    ]
+  ])('decodes a not(...) node into the matching negated operator', (condition, expected) => {
+    const filter: AttributeFilter = { type: 'not', condition }
+
+    expect(
+      fromAttributeFilter(filter, newId).flatMap((g) =>
+        g.conditions.map((c) => [c.attributeKind, c.key, c.operator, c.value])
+      )
+    ).toEqual([expected])
   })
 
   test('round-trips a model through toAttributeFilter -> fromAttributeFilter', () => {

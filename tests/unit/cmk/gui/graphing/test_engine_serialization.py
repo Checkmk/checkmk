@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+
+import pytest
 
 from cmk.graphing_engine import (
     AutoPrecision,
@@ -24,6 +26,7 @@ from cmk.graphing_engine import (
     MetricName,
     MinimalRange,
     Product,
+    Quantity,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -202,3 +205,50 @@ def test_template_round_trip_is_lossless() -> None:
     # The source id survives the round-trip; untagged curves stay untagged.
     assert restored[0].stacks[0].members[0].source_id == "A"
     assert restored[0].stacks[0].members[1].source_id is None
+
+
+_ROUND_TRIP_METRIC = RRDMetric(
+    site_id=SiteID("mysite"),
+    host_name=HostName("h"),
+    service_name=ServiceName("svc"),
+    metric_name=MetricName("m"),
+    consolidation_function=ConsolidationFunction.MIN,
+)
+_ROUND_TRIP_DISPLAY = CurveAttributes(
+    title="display",
+    unit=Unit(notation=IECNotation("B"), precision=StrictPrecision(3)),
+    color="#010203",
+)
+# One sample per quantity kind the engine codec registers, with EVERY field set to a non-default
+# value: a field dropped from either direction of the codec comes back as its default and fails the
+# equality assertion. test_every_engine_quantity_kind_is_covered keeps this in step with the codec.
+_ENGINE_QUANTITY_SAMPLES: Mapping[str, Quantity] = {
+    "rrd_metric": _ROUND_TRIP_METRIC,
+    "constant": Constant(23.5, _ROUND_TRIP_DISPLAY),
+    "scalar_of": ScalarOf(
+        metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL, color="#040506"
+    ),
+    "sum": Sum([_ROUND_TRIP_METRIC, Constant(1.0)], _ROUND_TRIP_DISPLAY),
+    "product": Product([_ROUND_TRIP_METRIC, Constant(2.0)], _ROUND_TRIP_DISPLAY),
+    "difference": Difference(
+        minuend=_ROUND_TRIP_METRIC, subtrahend=Constant(3.0), display=_ROUND_TRIP_DISPLAY
+    ),
+    "fraction": Fraction(
+        dividend=_ROUND_TRIP_METRIC, divisor=Constant(4.0), display=_ROUND_TRIP_DISPLAY
+    ),
+}
+
+
+@pytest.mark.parametrize("kind", sorted(_ENGINE_QUANTITY_SAMPLES))
+def test_engine_quantity_round_trips_every_field(kind: str) -> None:
+    quantity = _ENGINE_QUANTITY_SAMPLES[kind]
+    codec = graph_codec()
+    serialized = json.loads(json.dumps(codec.serialize_quantity(quantity)))
+    assert serialized["kind"] == kind
+    assert codec.deserialize_quantity(serialized) == quantity
+
+
+def test_every_engine_quantity_kind_is_covered() -> None:
+    # The engine stays de/serialization-free, so a quantity's fields are mirrored by hand in the
+    # codec. A new quantity kind must arrive with a round-trip sample above, or this fails.
+    assert set(_ENGINE_QUANTITY_SAMPLES) == set(graph_codec().quantity_kinds())

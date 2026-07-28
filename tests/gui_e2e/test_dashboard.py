@@ -34,7 +34,6 @@ from tests.gui_e2e.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     WidgetType,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 from tests.testlib.site import Site
 
 
@@ -625,33 +624,3 @@ def test_dashboard_created_by_another_user(
             users_page = Users(dashboard_page.page)
             users_page.delete_user(new_user_data.user_id, test_site.openapi.users)
             users_page.activate_changes(test_site)
-
-
-# --- Graphing engine skeletons (CMK-35973): R1.3 Area 8, dashboard graph widgets ---
-# Complete once the engine renders: locate the widget via the dashboard POM and the
-# DashboardGraphWidget accessor (CMK-35972), then assert the new engine is used
-# (no ajax_render_graph, no legacy standalone canvas).
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_metric_graph_dashlet_uses_new_engine(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """DW-01 (R1.3 Area 8): a metric & graph dashlet renders through the new engine.
-
-    Do: create a dashboard with a metric & graph dashlet for a service with perfdata; open it.
-    Assert: the dashlet has a new engine component; no ajax_render_graph; no JS errors.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_alert_notifications_dashlet_uses_new_engine(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """DW-02 (R1.3 Area 8): an alert & notifications dashlet renders through the new engine.
-
-    Do: as DW-01 but using the alert & notifications dashlet.
-    Assert: new engine component in the dashlet; no legacy standalone canvas; no JS errors.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")

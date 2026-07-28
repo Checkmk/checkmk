@@ -16,16 +16,6 @@ from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_forecast_graph_uses_new_engine(dashboard_page: MainDashboard, forecast_graph: str) -> None:
-    """FG-01 (R1.3 Area 6): a saved forecast graph renders through the new engine.
-
-    Do: navigate to a saved forecast graph for a service with enough history.
-    Assert: new engine component present; no ajax_render_graph; no JS errors.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
 def test_forecast_graph_shows_historical_and_forecast_series(
     dashboard_page: MainDashboard, forecast_graph: str
 ) -> None:
@@ -41,10 +31,10 @@ def test_forecast_graph_shows_historical_and_forecast_series(
 def test_graph_collection_renders_every_slot(
     dashboard_page: MainDashboard, graph_collection: str
 ) -> None:
-    """GC-01 (R1.3 Area 7): every graph in a collection renders through the new engine.
+    """GC-01 (R1.3 Area 7): every graph in a collection renders.
 
     Do: navigate to a saved graph collection (>=2 graphs).
-    Assert: every slot has a new engine component; no ajax_render_graph; no JS errors.
+    Assert: every slot has a rendered graph; no JS errors.
     """
     pytest.fail("CMK-35973 skeleton: body not implemented")
 

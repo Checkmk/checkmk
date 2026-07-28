@@ -36,5 +36,5 @@ name/summary on the canvas.
 - Writing the a11y assertions themselves is out of scope for this foundation.
 - Skipped skeletons for these aspects live in
   `tests/gui_e2e/test_graph_accessibility.py` (CMK-35973): aspects 1, 3-8 each have a
-  skeleton there; aspect 2 is covered by `LT-01` and aspect 9 by `TM-01`/`TM-02` in
-  `test_graph_rendering_engine.py`.
+  skeleton there. Aspect 2 is covered by `LT-01`; aspect 9 (theme parity) has no test -
+  its skeletons were dropped along with `test_graph_rendering_engine.py`.

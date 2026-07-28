@@ -6,9 +6,8 @@
 """Accessibility skeletons for the graph surfaces (CMK-35973).
 
 Skeletons for the a11y aspects in tests/gui_e2e/docs/graph_accessibility.md that need the
-engine's selector/hook contract. Aspect 2 is covered by LT-01 and aspect 9 by TM-01/TM-02
-in test_graph_rendering_engine.py; aspects 1, 3-8 live here. Complete via GraphAccessor
-and the graph page-objects in pom/graphing/timeseries_graph.py.
+engine's selector/hook contract. Aspect 2 is covered by LT-01; aspects 1, 3-8 live here.
+Complete via GraphAccessor and the graph page-objects in pom/graphing/timeseries_graph.py.
 """
 
 import pytest

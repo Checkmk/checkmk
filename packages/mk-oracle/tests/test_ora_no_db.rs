@@ -451,7 +451,8 @@ mod find_sids {
         const TEST_MASK: &str = r"^(/usr/lib/systemd/systemd)(.*)$";
         let sids = find_sids_by_processes(Some(TEST_MASK)).unwrap();
         assert!(sids.len() > 2);
-        assert!(sids.contains("-logind"));
+        // Upper case: the scan upper-cases every captured SID.
+        assert!(sids.contains("-LOGIND"));
     }
 
     #[test]

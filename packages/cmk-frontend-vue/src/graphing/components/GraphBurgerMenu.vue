@@ -7,16 +7,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
+import { BOTTOM_SCREEN_MARGIN } from './constants'
 
-withDefaults(defineProps<{ groups?: BurgerMenuGroup[] }>(), { groups: () => [] })
+const props = withDefaults(defineProps<{ groups?: BurgerMenuGroup[]; scrollable?: boolean }>(), {
+  groups: () => [],
+  scrollable: true
+})
 
 const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
+const dropdownMaxHeight = ref<number | null>(null)
 
 function onDocumentClick(e: MouseEvent) {
   if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
@@ -24,8 +29,29 @@ function onDocumentClick(e: MouseEvent) {
   }
 }
 
+function updateDropdownMaxHeight() {
+  if (!props.scrollable || !containerRef.value) {
+    dropdownMaxHeight.value = null
+    return
+  }
+  dropdownMaxHeight.value =
+    window.innerHeight - containerRef.value.getBoundingClientRect().bottom - BOTTOM_SCREEN_MARGIN
+}
+
+watch(isOpen, (open) => {
+  if (open) {
+    updateDropdownMaxHeight()
+    window.addEventListener('resize', updateDropdownMaxHeight)
+  } else {
+    window.removeEventListener('resize', updateDropdownMaxHeight)
+  }
+})
+
 document.addEventListener('click', onDocumentClick)
-onUnmounted(() => document.removeEventListener('click', onDocumentClick))
+onUnmounted(() => {
+  document.removeEventListener('click', onDocumentClick)
+  window.removeEventListener('resize', updateDropdownMaxHeight)
+})
 
 function doAction(onClick: BurgerMenuCallable) {
   emit('doAction', onClick)
@@ -39,12 +65,22 @@ function doAction(onClick: BurgerMenuCallable) {
       class="graphing-graph-burger-menu__trigger"
       :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
       :aria-expanded="isOpen"
+      tabindex="0"
       @click="isOpen = !isOpen"
     >
       <CmkMultitoneIcon name="burger-menu" primary-color="font" size="small" />
     </button>
 
-    <div v-if="isOpen" class="graphing-graph-burger-menu__dropdown">
+    <div
+      v-if="isOpen"
+      class="graphing-graph-burger-menu__dropdown"
+      :class="{ 'graphing-graph-burger-menu__dropdown_scrollable': scrollable }"
+      :style="
+        scrollable && dropdownMaxHeight !== null
+          ? { maxHeight: `${dropdownMaxHeight}px` }
+          : undefined
+      "
+    >
       <ul
         v-for="group in groups"
         :key="group.heading"
@@ -123,6 +159,10 @@ function doAction(onClick: BurgerMenuCallable) {
   box-shadow:
     0 2px 8px rgb(0 0 0 / 12%),
     0 0 0 1px rgb(0 0 0 / 6%);
+}
+
+.graphing-graph-burger-menu__dropdown_scrollable {
+  overflow-y: auto;
 }
 
 .graphing-graph-burger-menu__group {

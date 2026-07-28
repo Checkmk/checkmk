@@ -28,23 +28,29 @@ use sysinfo::System;
 /// Group 2: the SID name (e.g. `TEST19`)
 const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
-/// Retrieves local Oracle SIDs from the registry and running processes.
-/// On Windows, it checks the registry for Oracle instances and also looks for PMON processes.
+/// Retrieves local Oracle SIDs.
+/// On Windows: union of registry (SOFTWARE\Oracle) instances and detected processes.
+/// On Unix: only SIDs with a running PMON process; oratab is consulted later
+/// (`find_oracle_home`) solely to resolve ORACLE_HOME, not for discovery.
 pub fn get_local_sid_names() -> Vec<String> {
-    let instances = get_instances(None).unwrap_or_default();
-    let registry_sids = instances
-        .into_iter()
-        .map(|i| i.name.to_string())
-        .collect::<Vec<String>>();
     let process_sids = find_sids_by_processes(Some(SID_MASK))
         .unwrap_or_default()
         .into_iter()
-        .collect::<Vec<String>>();
-    registry_sids
-        .into_iter()
-        .map(|s| s.to_string().to_uppercase())
-        .chain(process_sids)
-        .collect()
+        .map(|i| i.to_uppercase())
+        .collect::<HashSet<String>>();
+    if cfg!(windows) {
+        let mut sids = process_sids;
+        sids.extend(
+            get_instances(None)
+                .unwrap_or_default()
+                .into_iter()
+                .map(|i| i.name.to_string().to_uppercase()),
+        );
+        sids.into_iter().collect()
+    } else {
+        // On Unix, monitor every running PMON SID (oratab only resolves ORACLE_HOME later).
+        process_sids.into_iter().collect()
+    }
 }
 
 /// Extracts the SID (regex group 2) from a single process parameter.

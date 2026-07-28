@@ -560,6 +560,10 @@ oracle:
       max_connections: 5
       use_host_client: never
       IGNORE_DB_NAME: 13 # wrong value for normal config, just to test params
+      permissions_check: no
+      permissions_safe_entries: 
+        - "A"
+        - "B"
     authentication:
       username: "foo"
       password: "bar"
@@ -761,6 +765,8 @@ piggyback:
         assert_eq!(c.options().max_connections(), MaxConnections::from(5));
         assert_eq!(c.options().use_host_client(), &UseHostClient::Never);
         assert_eq!(c.options().max_queries(), MaxQueries::from(16));
+        assert!(!c.options().permissions_check());
+        assert_eq!(c.options().permissions_safe_entries(), ["A", "B"]);
         assert_eq!(
             c.target_id(),
             TargetIdBuilder::new()

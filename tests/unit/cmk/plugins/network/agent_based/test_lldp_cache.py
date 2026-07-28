@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Sequence
-from typing import Any
 
 import pytest
 
@@ -20,6 +17,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.network.agent_based.lldp_cache import (
     host_label_lldp_cache,
     inventorize_lldp_cache,
+    InventoryParams,
     Lldp,
     LldpGlobal,
     LldpNeighbor,
@@ -266,23 +264,21 @@ LLDP_NEIGHBOR_ATTRIBUTE = TableRow(
 
 
 @pytest.mark.parametrize(
-    "section, params, expected",
+    "section, expected",
     [
         (
             Lldp(lldp_global=LLDP_GLOBAL, lldp_neighbors=[]),
-            {},
             [LLDP_GLOBAL_ATTRIBUTE],
         ),
         (
             LLDP,
-            {},
             [LLDP_GLOBAL_ATTRIBUTE, LLDP_NEIGHBOR_ATTRIBUTE],
         ),
     ],
     ids=["no neighbors", "with neighbors"],
 )
-def test_inventorize_lldp_cache(section: Lldp, params: Any, expected: InventoryResult) -> None:  # type: ignore[misc]
-    parsed = list(inventorize_lldp_cache(params=params, section=section))
+def test_inventorize_lldp_cache(section: Lldp, expected: InventoryResult) -> None:
+    parsed = list(inventorize_lldp_cache(params=InventoryParams(), section=section))
     assert parsed == expected
 
 

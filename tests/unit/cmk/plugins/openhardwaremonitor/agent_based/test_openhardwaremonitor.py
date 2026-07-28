@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -88,5 +85,5 @@ def test_check_openhardwaremonitor_unknown_item() -> None:
     assert list(check_openhardwaremonitor_clock("does-not-exist", {}, parsed)) == []
 
 
-def _expected_results_unused(_x: Any) -> None:
+def _expected_results_unused(_x: object) -> None:
     pass

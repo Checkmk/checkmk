@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 import time_machine
@@ -61,7 +59,7 @@ def test_discover_arris_cmts_cpu() -> None:
 )
 def test_check_arris_cmts_cpu(
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: StringTable,
     expected: Sequence[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,

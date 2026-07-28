@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,7 +11,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -85,9 +83,9 @@ def test_discover_mongodb_mem_1_regression(
 )
 def test_check_mongodb_mem_1_regression(
     item: str | None,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     string_table: StringTable,
-    expected_results: Sequence[Any],
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for mongodb_mem regression test."""
     parsed = parse_mongodb_mem(string_table)

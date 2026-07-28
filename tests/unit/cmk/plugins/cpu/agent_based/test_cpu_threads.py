@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
-
-from typing import Any
 
 import pytest
 
@@ -23,8 +20,7 @@ def test_cpu_threads() -> None:
         num_cpus=4,
         threads=Threads(count=1234),
     )
-    params: dict[str, Any] = {}
-    result = set(check_cpu_threads(params, section))
+    result = set(check_cpu_threads({}, section))
     assert result == {
         Metric("threads", 1234.0),
         Result(state=State.OK, summary="1234"),
@@ -37,8 +33,7 @@ def test_cpu_threads_max_threads() -> None:
         num_cpus=4,
         threads=Threads(count=1234, max=2468),
     )
-    params: dict[str, Any] = {}
-    result = set(check_cpu_threads(params, section))
+    result = set(check_cpu_threads({}, section))
     assert result == {
         Metric("thread_usage", 50.0),
         Metric("threads", 1234.0),

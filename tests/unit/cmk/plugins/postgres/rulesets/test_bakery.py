@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
-from typing import Any
 
 import pytest
 
@@ -67,7 +65,7 @@ def test_migrate(old: object, expected: dict[str, object]) -> None:
         ),
     ],
 )
-def test_forth_outdated(from_disk: dict[str, Any], expected: object) -> None:
+def test_forth_outdated(from_disk: dict[str, object], expected: object) -> None:
     got = migrate_instance(from_disk)
     assert got == expected
 
@@ -95,6 +93,6 @@ def test_forth_outdated(from_disk: dict[str, Any], expected: object) -> None:
         ),
     ],
 )
-def test_forth_up_to_date(from_disk: dict[str, Any]) -> None:
+def test_forth_up_to_date(from_disk: dict[str, object]) -> None:
     got = migrate_instance(from_disk)
     assert got == from_disk

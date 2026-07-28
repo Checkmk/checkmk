@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -60,7 +58,10 @@ def test_discover_md(string_table: StringTable, expected_discoveries: Sequence[S
     ],
 )
 def test_check_md(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, object],
+    string_table: StringTable,
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for md check."""
     parsed = parse_md(string_table)

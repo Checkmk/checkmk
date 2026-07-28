@@ -3,25 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.silverpeak.agent_based.silverpeak_VX6000 import (
     check_silverpeak,
     discover_silverpeak_VX6000,
     parse_silverpeak,
+    Section,
 )
 
 
-def parsed() -> Mapping[str, Any]:
+def parsed() -> Section:
     """Return parsed data from actual parse function."""
     result = parse_silverpeak(
         [
@@ -130,10 +127,4 @@ def test_silverpeak_VX6000_parse_function() -> None:
 
 
 def test_silverpeak_VX6000_discovery_empty_section() -> None:
-    """Test discovery with empty section."""
-    empty_section: dict[str, Any] = {}
-
-    discoveries = list(discover_silverpeak_VX6000(empty_section))
-
-    # Should not discover anything for empty section
-    assert len(discoveries) == 0
+    assert not list(discover_silverpeak_VX6000({}))

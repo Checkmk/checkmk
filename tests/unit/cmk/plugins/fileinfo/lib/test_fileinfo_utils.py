@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 import time
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 import time_machine
@@ -280,7 +278,7 @@ def test_fileinfo_groups_get_group_name_error(
 )
 @time_machine.travel("2021-07-12 12:00")
 def test_check_fileinfo_data(
-    file_stat: FileinfoItem, reftime: int, params: dict[str, Any], expected_result: CheckResult
+    file_stat: FileinfoItem, reftime: int, params: dict[str, object], expected_result: CheckResult
 ) -> None:
     result = list(check_fileinfo_data(file_stat, reftime, params))
 

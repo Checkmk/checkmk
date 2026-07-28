@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 from pytest import mark, param
 
@@ -104,6 +102,6 @@ def test_discovery_winperf_ts_sessions(section: StringTable, expected: Discovery
     ],
 )
 def test_check_winperf_ts_sessions(
-    section: StringTable, params: Mapping[str, Any], expected: CheckResult
+    section: StringTable, params: Mapping[str, object], expected: CheckResult
 ) -> None:
     assert list(check_winperf_ts_sessions(params, section)) == expected

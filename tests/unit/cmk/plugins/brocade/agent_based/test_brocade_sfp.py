@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -83,7 +81,7 @@ def test_discover_brocade_sfp() -> None:
 )
 def test_check_brocade_sfp(
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert (

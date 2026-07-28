@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -240,6 +238,6 @@ def test_discover_pse_poe(section: Section, expected: DiscoveryResult) -> None:
     ],
 )
 def test_check_pse_poe(
-    item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
+    item: str, params: Mapping[str, object], section: Section, expected: CheckResult
 ) -> None:
     assert list(check_pse_poe(item, params, section)) == expected

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,7 +11,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -126,7 +124,7 @@ def test_discover_mongodb_cluster_balancer_regression(string_table: StringTable)
     ],
 )
 def test_check_mongodb_cluster_databases_regression(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_checks: list[str]
+    item: str, params: Mapping[str, object], string_table: StringTable, expected_checks: list[str]
 ) -> None:
     parsed = parse_mongodb_cluster(string_table)
     result = list(check_mongodb_cluster_databases(item, params, parsed))

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -172,7 +170,9 @@ def test_check_ieee_302_3ad_specific(
         ),
     ],
 )
-def test_check_interfaces_number(params: Mapping[str, Any], expected_result: list[Result]) -> None:
+def test_check_interfaces_number(
+    params: Mapping[str, object], expected_result: list[Result]
+) -> None:
     input_section = {
         "bond0": Bond(
             status="up",

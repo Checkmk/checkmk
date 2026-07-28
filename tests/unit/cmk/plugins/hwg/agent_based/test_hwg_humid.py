@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.hwg.agent_based.hwg_humidity import (
@@ -42,9 +39,8 @@ def test_check_hwg_humidity_normal_levels() -> None:
     ]
 
     parsed = parse_hwg(string_table)
-    params: dict[str, Any] = {"levels": (60.0, 70.0)}
 
-    result = list(check_hwg_humidity("1", params, parsed))
+    result = list(check_hwg_humidity("1", {"levels": (60.0, 70.0)}, parsed))
 
     # Should return Result, Metric, and description Result
     assert len(result) == 3
@@ -70,9 +66,8 @@ def test_check_hwg_humidity_warning_level() -> None:
     ]
 
     parsed = parse_hwg(string_table)
-    params: dict[str, Any] = {"levels": (60.0, 70.0)}
 
-    result = list(check_hwg_humidity("2", params, parsed))
+    result = list(check_hwg_humidity("2", {"levels": (60.0, 70.0)}, parsed))
 
     # Should return Result, Metric, and description Result
     assert len(result) == 3
@@ -95,9 +90,8 @@ def test_check_hwg_humidity_critical_level() -> None:
     ]
 
     parsed = parse_hwg(string_table)
-    params: dict[str, Any] = {"levels": (60.0, 70.0)}
 
-    result = list(check_hwg_humidity("3", params, parsed))
+    result = list(check_hwg_humidity("3", {"levels": (60.0, 70.0)}, parsed))
 
     # Should return Result, Metric, and description Result
     assert len(result) == 3
@@ -120,9 +114,8 @@ def test_check_hwg_humidity_device_status() -> None:
     ]
 
     parsed = parse_hwg(string_table)
-    params: dict[str, Any] = {"levels": (60.0, 70.0)}
 
-    result = list(check_hwg_humidity("1", params, parsed))
+    result = list(check_hwg_humidity("1", {"levels": (60.0, 70.0)}, parsed))
 
     # Should return Result, Metric, and description Result
     assert len(result) == 3
@@ -140,10 +133,9 @@ def test_check_hwg_humidity_missing_item() -> None:
     ]
 
     parsed = parse_hwg(string_table)
-    params: dict[str, Any] = {"levels": (60.0, 70.0)}
 
     # Try to check a sensor that doesn't exist
-    result = list(check_hwg_humidity("999", params, parsed))
+    result = list(check_hwg_humidity("999", {"levels": (60.0, 70.0)}, parsed))
 
     # Should return empty (no results for missing sensor)
     assert result == []

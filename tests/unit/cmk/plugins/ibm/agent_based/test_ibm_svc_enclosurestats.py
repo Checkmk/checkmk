@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -22,6 +18,7 @@ from cmk.plugins.ibm.agent_based.ibm_svc_enclosurestats import (
     discover_ibm_svc_enclosurestats_power,
     discover_ibm_svc_enclosurestats_temp,
     parse_ibm_svc_enclosurestats,
+    Section,
 )
 from cmk.plugins.lib.temperature import TempParamDict
 
@@ -32,7 +29,7 @@ _TEMP_CONFIG_NOTICE = Result(
 
 
 @pytest.fixture(name="parsed")
-def _parsed() -> Mapping[str, Any]:
+def _parsed() -> Section:
     """
     IBM SVC enclosure stats data with power and temperature metrics.
     Each enclosure provides power consumption (watts) and temperature readings (Celsius/Fahrenheit).
@@ -54,7 +51,7 @@ def _parsed() -> Mapping[str, Any]:
     return parse_ibm_svc_enclosurestats(string_table)
 
 
-def test_parse_ibm_svc_enclosurestats(parsed: Mapping[str, Any]) -> None:
+def test_parse_ibm_svc_enclosurestats(parsed: Section) -> None:
     """Test parsing of IBM SVC enclosure stats data."""
     assert len(parsed) == 4
 
@@ -75,7 +72,7 @@ def test_parse_ibm_svc_enclosurestats(parsed: Mapping[str, Any]) -> None:
     assert parsed["4"].temp_f == 71
 
 
-def test_discover_ibm_svc_enclosurestats_power(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_enclosurestats_power(parsed: Section) -> None:
     """Test discovery of power monitoring services."""
     result = list(discover_ibm_svc_enclosurestats_power(parsed))
     assert len(result) == 4
@@ -85,7 +82,7 @@ def test_discover_ibm_svc_enclosurestats_power(parsed: Mapping[str, Any]) -> Non
     assert Service(item="4") in result
 
 
-def test_discover_ibm_svc_enclosurestats_temp(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_enclosurestats_temp(parsed: Section) -> None:
     """Test discovery of temperature monitoring services."""
     result = list(discover_ibm_svc_enclosurestats_temp(parsed))
     assert len(result) == 4
@@ -95,7 +92,7 @@ def test_discover_ibm_svc_enclosurestats_temp(parsed: Mapping[str, Any]) -> None
     assert Service(item="4") in result
 
 
-def test_check_ibm_svc_enclosurestats_power_basic(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_enclosurestats_power_basic(parsed: Section) -> None:
     """Test basic power monitoring check."""
     result = list(check_ibm_svc_enclosurestats_power("1", parsed))
     assert result == [
@@ -104,7 +101,7 @@ def test_check_ibm_svc_enclosurestats_power_basic(parsed: Mapping[str, Any]) -> 
     ]
 
 
-def test_check_ibm_svc_enclosurestats_power_all_enclosures(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_enclosurestats_power_all_enclosures(parsed: Section) -> None:
     """Test power monitoring for all enclosures."""
     assert list(check_ibm_svc_enclosurestats_power("1", parsed)) == [
         Result(state=State.OK, summary="207 Watt"),
@@ -124,7 +121,7 @@ def test_check_ibm_svc_enclosurestats_power_all_enclosures(parsed: Mapping[str, 
     ]
 
 
-def test_check_ibm_svc_enclosurestats_temp_default_levels(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_enclosurestats_temp_default_levels(parsed: Section) -> None:
     """Test temperature monitoring with default levels."""
     params: TempParamDict = {"levels": (35.0, 40.0)}
     result = list(_check_ibm_svc_enclosurestats_temp("1", params, parsed, {}))
@@ -135,7 +132,7 @@ def test_check_ibm_svc_enclosurestats_temp_default_levels(parsed: Mapping[str, A
     ]
 
 
-def test_check_ibm_svc_enclosurestats_temp_all_enclosures(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_enclosurestats_temp_all_enclosures(parsed: Section) -> None:
     """Test temperature monitoring for all enclosures."""
     params: TempParamDict = {"levels": (35.0, 40.0)}
 
@@ -185,7 +182,7 @@ def test_check_ibm_svc_enclosurestats_temp_critical_levels() -> None:
     ]
 
 
-def test_check_ibm_svc_enclosurestats_missing_item(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_enclosurestats_missing_item(parsed: Section) -> None:
     """Test checks with missing enclosure items."""
     missing_params: TempParamDict = {"levels": (35.0, 40.0)}
     assert list(check_ibm_svc_enclosurestats_power("999", parsed)) == []

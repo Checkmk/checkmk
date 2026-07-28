@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -42,11 +41,11 @@ from cmk.plugins.rittal.lib.cmciii import SensorType, Variable
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.rittal.agent_based.cmciii_temp_in_out.get_value_store",
-        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+        lambda: typing.cast(typing.MutableMapping[str, object], {}),
     )
     monkeypatch.setattr(
         "cmk.plugins.rittal.agent_based.cmciii_temp.get_value_store",
-        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+        lambda: typing.cast(typing.MutableMapping[str, object], {}),
     )
 
 

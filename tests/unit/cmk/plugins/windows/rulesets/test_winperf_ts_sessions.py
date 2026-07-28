@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from contextlib import nullcontext
-from typing import Any
 
 import pytest
 
@@ -29,7 +27,7 @@ from cmk.plugins.windows.rulesets.winperf_ts_sessions import rule_spec_winperf_t
     ],
 )
 def test_rule_spec_winperf_ts_sessions_levels_migrated(
-    rule: dict[str, Any], expected_exception: bool
+    rule: dict[str, object], expected_exception: bool
 ) -> None:
     """Test that rules from before ruleset migration are still readable"""
     valuespec = convert_to_legacy_rulespec(

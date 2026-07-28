@@ -3,25 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.windows.agent_based import wmi_webservices
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 
 @pytest.fixture(name="parsed")
-def fixture_parsed() -> Mapping[str, Any]:
+def fixture_parsed() -> WMISection:
     """Parsed WMI data fixture for WMI Web Services."""
     string_table = [
         [
@@ -64,7 +60,7 @@ def fixture_parsed() -> Mapping[str, Any]:
     return parse_wmi_table(string_table)
 
 
-def test_wmi_webservices_discovery(parsed: Mapping[str, Any]) -> None:
+def test_wmi_webservices_discovery(parsed: WMISection) -> None:
     """Test discovery function returns correct items."""
     result = list(wmi_webservices.discover_wmi_webservices(parsed))
 
@@ -75,7 +71,7 @@ def test_wmi_webservices_discovery(parsed: Mapping[str, Any]) -> None:
     assert discovered_services == expected_services
 
 
-def test_wmi_webservices_check_default_site(parsed: Mapping[str, Any]) -> None:
+def test_wmi_webservices_check_default_site(parsed: WMISection) -> None:
     """Test WMI Web Services check function for Default Web Site."""
     # Based on the original dataset, Default Web Site has 0 connections
     result = list(wmi_webservices.check_wmi_webservices("Default Web Site", parsed))
@@ -86,7 +82,7 @@ def test_wmi_webservices_check_default_site(parsed: Mapping[str, Any]) -> None:
     ]
 
 
-def test_wmi_webservices_check_exchange_backend(parsed: Mapping[str, Any]) -> None:
+def test_wmi_webservices_check_exchange_backend(parsed: WMISection) -> None:
     """Test WMI Web Services check function for Exchange Back End."""
     # Based on the original dataset, Exchange Back End has 11 connections
     result = list(wmi_webservices.check_wmi_webservices("Exchange Back End", parsed))

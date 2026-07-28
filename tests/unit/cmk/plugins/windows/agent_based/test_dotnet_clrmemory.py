@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -1460,7 +1458,7 @@ def test_discover_dotnet_clrmemory(
 )
 def test_check_dotnet_clrmemory(
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     info: StringTable,
     expected_results: Sequence[Result | Metric],
 ) -> None:

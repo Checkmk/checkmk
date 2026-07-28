@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -466,7 +464,7 @@ def test_discover_fjdarye_disks(
 def test_check_fjdarye_disks(
     section: SectionFjdaryeDisk,
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     check_result: CheckResult,
 ) -> None:
     assert list(check_fjdarye_disks(item, params, section)) == check_result

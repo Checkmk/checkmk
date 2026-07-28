@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 import time_machine
@@ -59,7 +57,7 @@ def test_parse_avaya_88xx_cpu_empty_returns_none() -> None:
     ],
 )
 def test_check_avaya_88xx_cpu(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: StringTable,
     expected: Sequence[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,

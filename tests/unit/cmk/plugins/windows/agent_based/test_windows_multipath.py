@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -112,7 +110,7 @@ def test_discover_windows_multipath(
     ],
 )
 def test_check_windows_multipath(
-    params: Mapping[str, Any], info: list[list[str]], expected_results: list[Result]
+    params: Mapping[str, object], info: list[list[str]], expected_results: list[Result]
 ) -> None:
     """Test check function for windows_multipath check."""
     parsed = parse_windows_multipath(info)

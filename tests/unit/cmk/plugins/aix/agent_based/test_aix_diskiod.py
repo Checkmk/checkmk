@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-
-from typing import Any
 
 import pytest
 
@@ -33,7 +30,7 @@ def test_parse_aix_diskiod() -> None:
 
 
 def test_check_disk() -> None:
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
     now = 1647029464.27418
 
     with pytest.raises(IgnoreResultsError):
@@ -48,7 +45,7 @@ def test_check_disk() -> None:
 
 
 def _test_check_aix_diskiod(item, section_1, section_2, check_func):
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
 
     # fist call: initialize value store
     with pytest.raises(IgnoreResultsError):

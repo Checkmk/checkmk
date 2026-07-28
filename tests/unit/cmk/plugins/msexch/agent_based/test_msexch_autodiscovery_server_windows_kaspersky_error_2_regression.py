@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -11,15 +10,13 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Service
 from cmk.plugins.msexch.agent_based import msexch_autodiscovery
 from cmk.plugins.windows.agent_based import libwmi as wmi
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 
 @pytest.fixture
@@ -29,7 +26,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def parsed() -> Mapping[str, Any]:
+def parsed() -> WMISection:
     """Create parsed Microsoft Exchange Autodiscovery data using actual parse function."""
     string_table = [
         [
@@ -69,14 +66,14 @@ def parsed() -> Mapping[str, Any]:
     return parse_wmi_table(string_table)
 
 
-def test_msexch_autodiscovery_discovery(parsed: Mapping[str, Any]) -> None:
+def test_msexch_autodiscovery_discovery(parsed: WMISection) -> None:
     """Test Microsoft Exchange Autodiscovery discovery function."""
     result = list(msexch_autodiscovery.discover_msexch_autodiscovery(parsed))
     assert result == [Service(item=None)]
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_msexch_autodiscovery_check(parsed: Mapping[str, Any]) -> None:
+def test_msexch_autodiscovery_check(parsed: WMISection) -> None:
     """Test Microsoft Exchange Autodiscovery check function."""
     # The rate calculation gets GetRateError on first run due to initialization
     with pytest.raises(GetRateError):

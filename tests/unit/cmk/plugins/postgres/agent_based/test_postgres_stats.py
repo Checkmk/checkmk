@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-
-from typing import Any
 
 from cmk.agent_based.v2 import IgnoreResults, Result, Service, State
 from cmk.plugins.postgres.agent_based import postgres_stats
@@ -113,7 +110,7 @@ def test_check_postgres_stats_oldest_table() -> None:
 
 
 def _test_never_checked_nothing():
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
     assert list(postgres_stats._check_never_checked("", [], {}, value_store, NOW)) == [
         Result(state=State.OK, summary="No never checked tables"),
     ]
@@ -122,7 +119,7 @@ def _test_never_checked_nothing():
 
 
 def _test_never_checked_tables_never_seen():
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
     assert list(
         postgres_stats._check_never_checked(
             "loved",
@@ -143,7 +140,7 @@ def _test_never_checked_tables_never_seen():
 
 
 def _test_never_checked_tables_warn():
-    value_store: dict[str, Any] = {"item": NOW - 24.23 * 3600}
+    value_store: dict[str, object] = {"item": NOW - 24.23 * 3600}
     assert list(
         postgres_stats._check_never_checked(
             "loved",

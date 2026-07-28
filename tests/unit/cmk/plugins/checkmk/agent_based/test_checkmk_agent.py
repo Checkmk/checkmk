@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 import json
 from collections.abc import Iterable, Mapping
 from datetime import datetime, UTC
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -1076,7 +1074,7 @@ def test_get_error_result() -> None:
     ],
 )
 def test_check_plugins(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section_plugins: PluginSection | None,
     expected_result: CheckResult,
 ) -> None:

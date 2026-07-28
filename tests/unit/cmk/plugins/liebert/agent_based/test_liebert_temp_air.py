@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import datetime
-import typing
 
 import pytest
 import time_machine
@@ -135,7 +132,7 @@ def test_check_liebert_temp_air(
 
 
 def test_check_liebert_temp_air_trend() -> None:
-    value_store: dict[str, typing.Any] = {}
+    value_store: dict[str, object] = {}
     params: TempParamDict = PARAMETERS.copy()
     trend_compute: TrendComputeDict = {"period": 60}
     params["trend_compute"] = trend_compute

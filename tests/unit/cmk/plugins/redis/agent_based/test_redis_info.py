@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Mapping
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -116,7 +114,7 @@ def test_discover_redis_info(section: Section, expected: DiscoveryResult) -> Non
     ],
 )
 def test_check_redis_info(
-    item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
+    item: str, params: Mapping[str, object], section: Section, expected: CheckResult
 ) -> None:
     with time_machine.travel(
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
@@ -206,7 +204,7 @@ def test_discover_redis_info_persistence(section, expected):
     ],
 )
 def test_check_redis_info_persistence(
-    item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
+    item: str, params: Mapping[str, object], section: Section, expected: CheckResult
 ) -> None:
     with time_machine.travel(
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
@@ -273,6 +271,6 @@ def test_discover_redis_info_clients(section: Section, expected: DiscoveryResult
     ],
 )
 def test_check_redis_info_clients(
-    params: Mapping[str, Any], section: Section, expected: CheckResult
+    params: Mapping[str, object], section: Section, expected: CheckResult
 ) -> None:
     assert list(check_redis_info_clients("127.0.0.1:6379", params, section)) == expected

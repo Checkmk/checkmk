@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -11,8 +10,6 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -30,6 +27,7 @@ from cmk.plugins.ibm.agent_based.ibm_svc_nodestats import (
     discover_ibm_svc_nodestats_diskio,
     discover_ibm_svc_nodestats_iops,
     parse_ibm_svc_nodestats,
+    Section,
 )
 
 
@@ -39,7 +37,7 @@ def patched_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(name="parsed")
-def _parsed() -> Mapping[str, Any]:
+def _parsed() -> Section:
     """
     IBM SVC node stats data with multiple services: disk I/O, IOPS, latency, CPU, and cache.
     Provides metrics for VDisks, MDisks, and Drives per node.
@@ -87,7 +85,7 @@ def _parsed() -> Mapping[str, Any]:
     return parse_ibm_svc_nodestats(string_table)
 
 
-def test_parse_ibm_svc_nodestats(parsed: Mapping[str, Any]) -> None:
+def test_parse_ibm_svc_nodestats(parsed: Section) -> None:
     """Test parsing of IBM SVC node statistics."""
     assert "BLUBBSVC01" in parsed
     assert parsed["BLUBBSVC01"].cpu_pc == 1.0
@@ -122,21 +120,21 @@ def test_parse_ibm_svc_nodestats(parsed: Mapping[str, Any]) -> None:
     assert parsed["BLUBBSVC02"].cpu_pc == 1.0
 
 
-def test_discover_ibm_svc_nodestats_cache(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_cache(parsed: Section) -> None:
     """Test discovery of cache monitoring services."""
     result = list(discover_ibm_svc_nodestats_cache(parsed))
 
     assert result == [Service(item="BLUBBSVC01")]
 
 
-def test_discover_ibm_svc_nodestats_cpu(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_cpu(parsed: Section) -> None:
     """Test discovery of CPU utilization services."""
     result = list(discover_ibm_svc_nodestats_cpu(parsed))
 
     assert sorted(s.item or "" for s in result) == ["BLUBBSVC01", "BLUBBSVC02"]
 
 
-def test_discover_ibm_svc_nodestats_diskio(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_diskio(parsed: Section) -> None:
     """Test discovery of disk I/O monitoring services."""
     result = list(discover_ibm_svc_nodestats_diskio(parsed))
 
@@ -150,7 +148,7 @@ def test_discover_ibm_svc_nodestats_diskio(parsed: Mapping[str, Any]) -> None:
     )
 
 
-def test_discover_ibm_svc_nodestats_iops(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_iops(parsed: Section) -> None:
     """Test discovery of IOPS monitoring services."""
     result = list(discover_ibm_svc_nodestats_iops(parsed))
 
@@ -164,7 +162,7 @@ def test_discover_ibm_svc_nodestats_iops(parsed: Mapping[str, Any]) -> None:
     )
 
 
-def test_discover_ibm_svc_nodestats_disk_latency(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_disk_latency(parsed: Section) -> None:
     """Test discovery of disk latency monitoring services."""
     result = list(discover_ibm_svc_nodestats_disk_latency(parsed))
 
@@ -178,7 +176,7 @@ def test_discover_ibm_svc_nodestats_disk_latency(parsed: Mapping[str, Any]) -> N
     )
 
 
-def test_check_ibm_svc_nodestats_cache(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_cache(parsed: Section) -> None:
     """Test cache usage monitoring."""
     result = list(check_ibm_svc_nodestats_cache("BLUBBSVC01", parsed))
     assert result == [
@@ -192,7 +190,7 @@ def test_check_ibm_svc_nodestats_cache(parsed: Mapping[str, Any]) -> None:
 
 
 @pytest.mark.usefixtures("patched_value_store")
-def test_check_ibm_svc_nodestats_cpu(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_cpu(parsed: Section) -> None:
     """Test CPU utilization monitoring."""
     params: ibm_svc_nodestats.IbmSvcNodeStatsCpuParams = {"levels": (90.0, 95.0)}
     result = list(check_ibm_svc_nodestats_cpu("BLUBBSVC01", params, parsed))
@@ -209,7 +207,7 @@ def test_check_ibm_svc_nodestats_cpu(parsed: Mapping[str, Any]) -> None:
     ]
 
 
-def test_check_ibm_svc_nodestats_diskio_vdisks(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_diskio_vdisks(parsed: Section) -> None:
     """Test disk I/O monitoring for VDisks."""
     result = list(check_ibm_svc_nodestats_diskio("VDisks BLUBBSVC01", parsed))
 
@@ -220,7 +218,7 @@ def test_check_ibm_svc_nodestats_diskio_vdisks(parsed: Mapping[str, Any]) -> Non
     ]
 
 
-def test_check_ibm_svc_nodestats_diskio_mdisks(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_diskio_mdisks(parsed: Section) -> None:
     """Test disk I/O monitoring for MDisks."""
     result = list(check_ibm_svc_nodestats_diskio("MDisks BLUBBSVC01", parsed))
 
@@ -231,7 +229,7 @@ def test_check_ibm_svc_nodestats_diskio_mdisks(parsed: Mapping[str, Any]) -> Non
     ]
 
 
-def test_check_ibm_svc_nodestats_diskio_drives(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_diskio_drives(parsed: Section) -> None:
     """Test disk I/O monitoring for Drives."""
     result = list(check_ibm_svc_nodestats_diskio("Drives BLUBBSVC01", parsed))
 
@@ -242,7 +240,7 @@ def test_check_ibm_svc_nodestats_diskio_drives(parsed: Mapping[str, Any]) -> Non
     ]
 
 
-def test_check_ibm_svc_nodestats_iops_vdisks(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_iops_vdisks(parsed: Section) -> None:
     """Test IOPS monitoring for VDisks."""
     result = list(check_ibm_svc_nodestats_iops("VDisks BLUBBSVC01", parsed))
 
@@ -253,7 +251,7 @@ def test_check_ibm_svc_nodestats_iops_vdisks(parsed: Mapping[str, Any]) -> None:
     ]
 
 
-def test_check_ibm_svc_nodestats_iops_mdisks(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_iops_mdisks(parsed: Section) -> None:
     """Test IOPS monitoring for MDisks."""
     result = list(check_ibm_svc_nodestats_iops("MDisks BLUBBSVC01", parsed))
 
@@ -264,7 +262,7 @@ def test_check_ibm_svc_nodestats_iops_mdisks(parsed: Mapping[str, Any]) -> None:
     ]
 
 
-def test_check_ibm_svc_nodestats_iops_drives(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_iops_drives(parsed: Section) -> None:
     """Test IOPS monitoring for Drives."""
     result = list(check_ibm_svc_nodestats_iops("Drives BLUBBSVC01", parsed))
 
@@ -275,7 +273,7 @@ def test_check_ibm_svc_nodestats_iops_drives(parsed: Mapping[str, Any]) -> None:
     ]
 
 
-def test_check_ibm_svc_nodestats_disk_latency_vdisks(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_disk_latency_vdisks(parsed: Section) -> None:
     """Test disk latency monitoring for VDisks."""
     result = list(check_ibm_svc_nodestats_disk_latency("VDisks BLUBBSVC01", parsed))
 
@@ -286,7 +284,7 @@ def test_check_ibm_svc_nodestats_disk_latency_vdisks(parsed: Mapping[str, Any]) 
     ]
 
 
-def test_check_ibm_svc_nodestats_disk_latency_mdisks(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_disk_latency_mdisks(parsed: Section) -> None:
     """Test disk latency monitoring for MDisks."""
     result = list(check_ibm_svc_nodestats_disk_latency("MDisks BLUBBSVC01", parsed))
 
@@ -297,7 +295,7 @@ def test_check_ibm_svc_nodestats_disk_latency_mdisks(parsed: Mapping[str, Any]) 
     ]
 
 
-def test_check_ibm_svc_nodestats_disk_latency_drives(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_disk_latency_drives(parsed: Section) -> None:
     """Test disk latency monitoring for Drives."""
     result = list(check_ibm_svc_nodestats_disk_latency("Drives BLUBBSVC01", parsed))
 
@@ -308,7 +306,7 @@ def test_check_ibm_svc_nodestats_disk_latency_drives(parsed: Mapping[str, Any]) 
     ]
 
 
-def test_check_ibm_svc_nodestats_missing_items(parsed: Mapping[str, Any]) -> None:
+def test_check_ibm_svc_nodestats_missing_items(parsed: Section) -> None:
     """Test checks with missing node/service items return empty results."""
     assert list(check_ibm_svc_nodestats_cache("NonExistentNode", parsed)) == []
     assert list(check_ibm_svc_nodestats_diskio("NonExistentService", parsed)) == []

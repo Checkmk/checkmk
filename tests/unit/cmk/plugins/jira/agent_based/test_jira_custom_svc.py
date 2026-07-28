@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -693,9 +691,9 @@ def test_discover_jira_custom_svc(
 )
 @patch("cmk.plugins.jira.agent_based.jira_custom_svc.get_value_store")
 def test_check_jira_custom_svc(
-    mock_value_store: Any,
+    mock_value_store: MagicMock,
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     string_table: StringTable,
     expected_results: Sequence[Result | Metric],
 ) -> None:

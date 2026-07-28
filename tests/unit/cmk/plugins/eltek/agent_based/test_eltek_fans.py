@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Sequence
-from typing import Any
 
 import pytest
 
@@ -85,7 +83,7 @@ def test_discover_eltek_fans(info: StringTable, expected_discoveries: Sequence[S
     ],
 )
 def test_check_eltek_fans(
-    item: str, params: dict[str, Any], info: list[list[str]], expected_results: Any
+    item: str, params: dict[str, object], info: list[list[str]], expected_results: object
 ) -> None:
     """Test check function for eltek_fans check."""
     parsed = parse_eltek_fans(info)

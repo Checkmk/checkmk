@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import typing
 
 import pytest
@@ -50,7 +48,7 @@ AGENT_OUTPUT_1 = [
 
 @pytest.fixture(name="empty_value_store")
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    store: typing.MutableMapping[str, typing.Any] = {}
+    store: typing.MutableMapping[str, object] = {}
     monkeypatch.setattr(
         "cmk.plugins.cpu.agent_based.cpu_utilization_os.get_value_store",
         lambda: store,

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 import time_machine
@@ -63,13 +61,13 @@ def test_discover_hr_cpu() -> None:
     ],
 )
 def test_check_hr_cpu(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     parsed: StringTable,
     expected_output: CheckResult,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
 
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
     monkeypatch.setattr(hr_cpu_plugin, "get_value_store", lambda: value_store)
 
     with time_machine.travel("2026-01-01 00:00:00", tick=False):

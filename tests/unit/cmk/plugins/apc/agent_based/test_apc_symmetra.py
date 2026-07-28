@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Callable, Mapping
-from typing import Any
 
 import pytest
 
@@ -324,7 +322,7 @@ def test_check_temp(
 )
 def test_discovery(
     string_table: apc_symmetra.ExtendedStringTable,
-    discovery_func: Callable[[Mapping[str, Any]], DiscoveryResult],
+    discovery_func: Callable[[Mapping[str, object]], DiscoveryResult],
     expected: list[Service],
 ) -> None:
     assert list(discovery_func(apc_symmetra.parse_apc_symmetra(string_table))) == expected

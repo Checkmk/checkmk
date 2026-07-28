@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
-
-from typing import Any
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.memory.agent_based.mem_linux import (
@@ -48,7 +44,7 @@ def test_check_mem_linux_normal_usage() -> None:
         "Dirty": 1024,  # 1MB dirty
     }
 
-    params: dict[str, Any] = {
+    params: dict[str, object] = {
         "levels_virtual": ("perc_used", (80.0, 90.0)),
         "levels_total": ("perc_used", (120.0, 150.0)),
     }
@@ -80,7 +76,7 @@ def test_check_mem_linux_high_usage() -> None:
         "Dirty": 1024,  # 1MB dirty
     }
 
-    params: dict[str, Any] = {
+    params: dict[str, object] = {
         "levels_virtual": ("perc_used", (80.0, 90.0)),
         "levels_total": ("perc_used", (120.0, 150.0)),
     }
@@ -109,7 +105,7 @@ def test_check_mem_linux_with_swap_usage() -> None:
         "Writeback": 512,  # 512KB writeback
     }
 
-    params: dict[str, Any] = {
+    params: dict[str, object] = {
         "levels_virtual": ("perc_used", (80.0, 90.0)),
         "levels_total": ("perc_used", (120.0, 150.0)),
     }
@@ -135,7 +131,7 @@ def test_check_mem_linux_missing_optional_fields() -> None:
         # Missing: SReclaimable, SwapCached, Writeback, etc.
     }
 
-    params: dict[str, Any] = {
+    params: dict[str, object] = {
         "levels_virtual": ("perc_used", (80.0, 90.0)),
     }
 
@@ -155,10 +151,14 @@ def test_check_mem_linux_missing_optional_fields() -> None:
 
 def test_check_mem_linux_empty_section() -> None:
     """Test check function for mem_linux with empty section."""
-    section: dict[str, Any] = {}
-
-    params: dict[str, Any] = {
-        "levels_virtual": ("perc_used", (80.0, 90.0)),
-    }
-
-    assert list(check_mem_linux(params, section)) == []
+    assert (
+        list(
+            check_mem_linux(
+                {
+                    "levels_virtual": ("perc_used", (80.0, 90.0)),
+                },
+                {},
+            )
+        )
+        == []
+    )

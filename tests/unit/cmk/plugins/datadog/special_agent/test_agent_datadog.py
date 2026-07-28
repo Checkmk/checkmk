@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import datetime
 import json
 import time
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -111,10 +108,12 @@ class MockDatadogAPI:
     def post_request(
         self,
         api_endpoint: str,
-        body: Mapping[str, Any],
+        body: Mapping[str, object],
         version: str = "v1",
     ) -> requests.Response:
-        if (resp := self.page_to_data.get(body["page"].get("cursor"))) is None:
+        page = body["page"]
+        assert isinstance(page, dict)
+        if (resp := self.page_to_data.get(page.get("cursor"))) is None:
             raise RuntimeError
         if self._returned_too_many_requests:
             return self._response(HTTPStatus.OK, json_data=resp)

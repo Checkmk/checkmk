@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -173,7 +171,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, URLProxy
     ],
 )
 def test_datadog_argument_parsing(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected_result: Sequence[str],
 ) -> None:
     commands = list(

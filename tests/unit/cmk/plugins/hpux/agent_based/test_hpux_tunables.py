@@ -3,15 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Callable
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.hpux.agent_based.hpux_tunables import (
     check_hpux_tunables_maxfiles_lim,
     check_hpux_tunables_nkthread,
@@ -69,7 +74,7 @@ _INFO = [
     ],
 )
 def test_discover_hpux_tunables(
-    discovery_function: Callable[[Any], Any], expected_discoveries: list[Any]
+    discovery_function: Callable[[object], DiscoveryResult], expected_discoveries: list[object]
 ) -> None:
     """Test discovery functions for hpux_tunables checks."""
     parsed = parse_hpux_tunables(_INFO)
@@ -131,9 +136,9 @@ def test_discover_hpux_tunables(
     ],
 )
 def test_check_hpux_tunables(
-    check_function: Callable[[dict[str, Any], Any], Any],
-    params: dict[str, Any],
-    expected_results: list[Any],
+    check_function: Callable[[dict[str, object], object], CheckResult],
+    params: dict[str, object],
+    expected_results: list[object],
 ) -> None:
     """Test check functions for hpux_tunables checks."""
     parsed = parse_hpux_tunables(_INFO)

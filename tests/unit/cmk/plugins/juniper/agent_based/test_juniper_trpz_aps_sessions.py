@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -766,8 +763,7 @@ def test__check_common_juniper_trpz_aps_sessions_single(
     node_sections: Mapping[str, Section], expected_results: CheckResult
 ) -> None:
     now = 1600000000
-    vs: dict[str, Any] = {}
-    results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
+    results = list(_check_common_juniper_trpz_aps_sessions({}, now, "ap1", node_sections))
     assert results == expected_results
 
 
@@ -805,8 +801,7 @@ def test__check_common_juniper_trpz_aps_sessions_cluster(
     node_sections: Mapping[str, Section], expected_results: CheckResult
 ) -> None:
     now = 1600000000
-    vs: dict[str, Any] = {}
-    results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
+    results = list(_check_common_juniper_trpz_aps_sessions({}, now, "ap1", node_sections))
     assert results == expected_results
 
 

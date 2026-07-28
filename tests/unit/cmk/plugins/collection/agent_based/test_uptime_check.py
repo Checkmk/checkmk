@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 import datetime
 from collections.abc import Mapping, Sequence
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -377,7 +375,7 @@ _EXPECTED_FIXED_LEVELS = [
     ],
 )
 def test_uptime_levels_diff_api_versions(
-    params: Mapping[str, Any], expected: list[Result | Metric]
+    params: Mapping[str, object], expected: list[Result | Metric]
 ) -> None:
     """Check that the uptime library can handle different API versions for level definitions.
     Can be removed when all the rulesets of the checks using the library are migrated to v2."""

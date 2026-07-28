@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
-from typing import Any
 
 import pytest
 from snap7.type import Areas
@@ -201,7 +199,7 @@ def test__cast_values(
     values: list[dict[str, str | None | int]],
     start_address: int,
     area_value: bytes,
-    expected_value: list[tuple[str, str, Any]],
+    expected_value: list[tuple[str, str, object]],
 ) -> None:
     assert _cast_values(values, start_address, bytearray(area_value)) == expected_value
 

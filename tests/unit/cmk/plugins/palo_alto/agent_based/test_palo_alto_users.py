@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -101,7 +99,7 @@ def test_discover() -> None:
     ],
 )
 def test_check(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: Section,
     expected_result: CheckResult,
 ) -> None:
@@ -139,7 +137,7 @@ def test_check(
     ],
 )
 def test_cluster_check(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: Mapping[str, Section | None],
     expected_result: CheckResult,
 ) -> None:

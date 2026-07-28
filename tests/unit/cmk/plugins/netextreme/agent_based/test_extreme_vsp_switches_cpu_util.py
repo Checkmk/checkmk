@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 import datetime
 from collections.abc import Mapping, Sequence
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -91,7 +89,7 @@ def test_discover_vsp_switches_cpu_util(
 )
 def test_check_vsp_switches_cpu_util(
     string_table: StringTable,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected_check_result: Sequence[Result],
     empty_value_store: None,
 ) -> None:

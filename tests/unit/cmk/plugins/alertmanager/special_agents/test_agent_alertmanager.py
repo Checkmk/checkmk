@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
-
-from typing import Any
 
 import pytest
 
@@ -66,18 +63,8 @@ RESULT = {
 }
 
 
-@pytest.mark.parametrize(
-    "data, ignore_alerts, result",
-    [
-        (DATA, ignore_params, RESULT),
-    ],
-)
-def test_agent_alertmanager_parse(
-    data: dict[str, Any],
-    ignore_alerts: agent_alertmanager.IgnoreAlerts,
-    result: agent_alertmanager.Groups,
-) -> None:
-    assert agent_alertmanager.parse_rule_data(data["groups"], ignore_alerts) == result
+def test_agent_alertmanager_parse() -> None:
+    assert agent_alertmanager.parse_rule_data(DATA["groups"], ignore_params) == RESULT
 
 
 @pytest.mark.parametrize(

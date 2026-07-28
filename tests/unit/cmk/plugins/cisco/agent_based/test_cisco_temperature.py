@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 import typing
@@ -164,7 +163,7 @@ TABLE_INVALID: Sequence[StringTable] = [
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.cisco.agent_based.cisco_temperature.get_value_store",
-        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+        lambda: typing.cast(typing.MutableMapping[str, object], {}),
     )
 
 

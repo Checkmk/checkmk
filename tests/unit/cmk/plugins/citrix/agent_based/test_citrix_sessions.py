@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -56,7 +54,7 @@ def test_discover_citrix_sessions(
     ],
 )
 def test_check_citrix_sessions(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     string_table: StringTable,
     expected_results: Sequence[Result | Metric],
 ) -> None:

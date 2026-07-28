@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,7 +11,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -53,7 +51,7 @@ def test_discover_enterasys_powersupply_regression(
     ],
 )
 def test_check_enterasys_powersupply_regression(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_status: str
+    item: str, params: Mapping[str, Sequence[int]], string_table: StringTable, expected_status: str
 ) -> None:
     """Test check function for enterasys_powersupply regression test."""
     parsed = parse_enterasys_powersupply(string_table)

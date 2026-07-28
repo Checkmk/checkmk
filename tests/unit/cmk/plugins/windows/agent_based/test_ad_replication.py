@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
 import time_machine
 
@@ -114,7 +111,7 @@ def test_ad_replication_discovery() -> None:
 def test_ad_replication_check_ok() -> None:
     """Test check function with OK status."""
     section = parse_ad_replication(test_info)
-    params: dict[str, Any] = {"failure_levels": (15, 20)}
+    params: dict[str, object] = {"failure_levels": (15, 20)}
 
     result = list(check_ad_replication("HAM/SADS003", params, section))
     assert result == [Result(state=State.OK, summary="All replications are OK.")]
@@ -124,7 +121,7 @@ def test_ad_replication_check_ok() -> None:
 def test_ad_replication_check_warn() -> None:
     """Test check function with warning status."""
     section = parse_ad_replication(test_info)
-    params: dict[str, Any] = {"failure_levels": (-1, 2)}
+    params: dict[str, object] = {"failure_levels": (-1, 2)}
 
     result = list(check_ad_replication("HAM/SADS015", params, section))
 

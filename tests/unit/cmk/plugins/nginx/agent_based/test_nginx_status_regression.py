@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from __future__ import annotations
@@ -13,7 +12,7 @@ from __future__ import annotations
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 from collections.abc import Callable, Mapping
-from typing import Any, NamedTuple
+from typing import NamedTuple
 from unittest import mock
 
 from cmk.agent_based.v2 import Result, Service
@@ -25,13 +24,13 @@ from cmk.plugins.nginx.agent_based.nginx_status import (
 
 
 class _MockValueStore:
-    def __init__(self, getter: Callable[..., Any]) -> None:
+    def __init__(self, getter: Callable[..., object]) -> None:  # type: ignore[explicit-any]
         self._getter = getter
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: object = None) -> object:
         return self._getter(key, default)
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: object) -> None:
         pass
 
 
@@ -39,7 +38,7 @@ class _MockVSManager(NamedTuple):
     active_service_interface: _MockValueStore
 
 
-def mock_item_state(mock_state: Mapping[str, Any]) -> mock._patch[Any]:
+def mock_item_state(mock_state: Mapping[str, object]) -> mock._patch[object]:
     target = "cmk.agent_based.v1.value_store._active_host_value_store"
     getter = mock_state.get if isinstance(mock_state, dict) else mock_state
     return mock.patch(target, _MockVSManager(_MockValueStore(getter)))  # type: ignore[arg-type]

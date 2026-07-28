@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
 
 from cmk.agent_based.v2 import Attributes, TableRow
 from cmk.plugins.omd.agent_based import inventory_checkmk_server
@@ -142,7 +139,7 @@ SECTION_LIVESTATUS_STATUS = {
         "service_checks_rate": "2.28431",
     },
 }
-SECTION_OMD_STATUS: dict[str, dict[str, Any]] = {
+SECTION_OMD_STATUS: dict[str, dict[str, object]] = {
     "cisco": {
         "stopped": [
             "mkeventd",

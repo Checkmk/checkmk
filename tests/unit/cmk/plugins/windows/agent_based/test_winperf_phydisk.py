@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable, Mapping
-from typing import Any
 
 import pytest
 
@@ -236,7 +233,7 @@ def test_discover_winperf_phydisk() -> None:
 
 
 def test_compute_rates_single_disk_without_frequency() -> None:
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
@@ -254,7 +251,7 @@ def test_compute_rates_single_disk_without_frequency() -> None:
 
 
 def test_compute_rates_single_disk_with_frequency() -> None:
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
@@ -271,15 +268,15 @@ def test_compute_rates_single_disk_with_frequency() -> None:
     )
 
 
-def _test_check_winperf_phydisk(
+def _test_check_winperf_phydisk[T: diskstat.Section | Mapping[str, diskstat.Section]](
     item: str,
-    section_1: diskstat.Section | Mapping[str, diskstat.Section],
-    section_2: diskstat.Section | Mapping[str, diskstat.Section],
+    section_1: T,
+    section_2: T,
     check_func: Callable[
         [
             str,
-            Mapping[str, Any],
-            Any,
+            Mapping[str, object],
+            T,
         ],
         CheckResult,
     ],
@@ -325,10 +322,10 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     ["item", "SUMMARY"],
 )
 def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
-    section_1 = {
+    section_1: diskstat.Section = {
         item: DISK_HALF,
     }
-    section_2 = {
+    section_2: diskstat.Section = {
         item: DISK,
     }
     _test_check_winperf_phydisk(
@@ -344,10 +341,10 @@ def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
     ["item", "SUMMARY"],
 )
 def test_cluster_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
-    section_1 = {
+    section_1: diskstat.Section = {
         item: DISK_HALF,
     }
-    section_2 = {
+    section_2: diskstat.Section = {
         item: DISK,
     }
     _test_check_winperf_phydisk(

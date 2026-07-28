@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -117,7 +115,7 @@ def test_discovery_function() -> None:
 )
 def test_check_function(
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected: CheckResult,
 ) -> None:
     assert list(check_gude_relayport(item, params, parse_gude_relayport(_STRING_TABLE))) == expected

@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from datetime import timedelta
-from typing import Any
 
 import pytest
 
@@ -668,7 +666,7 @@ def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) 
     ],
 )
 def test_discover_host_labels_of_systemd_units(
-    params: Sequence[Mapping[str, Any]], expected: Sequence[HostLabel]
+    params: Sequence[Mapping[str, object]], expected: Sequence[HostLabel]
 ) -> None:
     assert (
         list(
@@ -744,7 +742,7 @@ def test_discover_host_labels_only_for_matching_units() -> None:
     ],
 )
 def test_discover_host_labels_no_labels_for_non_matching_units(
-    params: Sequence[Mapping[str, Any]],
+    params: Sequence[Mapping[str, object]],
 ) -> None:
     assert (
         list(

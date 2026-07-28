@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-
-from typing import Any
 
 from cmk.agent_based.v2 import Service
 from cmk.plugins.postgres.agent_based.postgres_stat_database import (
     discover_postgres_stat_database,
     discover_postgres_stat_database_size,
     parse_postgres_stat_database,
+    Section,
 )
 
 # from SUP-12594
@@ -25,7 +23,7 @@ datid;datname;numbackends;xact_commit;xact_rollback;blks_read;blks_hit;tup_retur
 18054;postgres;1;36645;1;1054;13223743;20917633;7315546;21;1234;14;7779119"""
 
 
-def section() -> Any:
+def section() -> Section:
     return parse_postgres_stat_database([line.split(";") for line in SECTION_RAW.split("\n")])
 
 

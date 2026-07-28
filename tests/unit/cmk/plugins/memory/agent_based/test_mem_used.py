@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -51,7 +49,7 @@ def test_check_discovery_total_zero() -> None:
 
 
 @pytest.mark.parametrize(
-    "label,used,total,levels,kwargs,expected",
+    "label,used,total,levels,expected",
     [
         # all variants of "no levels"
         (
@@ -59,7 +57,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             None,
-            {},
             [
                 Result(
                     state=State.OK,
@@ -72,7 +69,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             "ignore",
-            {},
             [
                 Result(
                     state=State.OK,
@@ -85,7 +81,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             ("ignore", None),
-            {},
             [
                 Result(
                     state=State.OK,
@@ -98,7 +93,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             ("ignore", (None, None)),
-            {},
             [
                 Result(
                     state=State.OK,
@@ -112,7 +106,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             ("perc_used", (50, 69)),
-            {},
             [
                 Result(
                     state=State.WARN,
@@ -125,7 +118,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             ("perc_free", (60, 50)),
-            {},
             [
                 Result(
                     state=State.CRIT,
@@ -138,7 +130,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             ("abs_used", (10 * KILO, 20 * MEGA)),
-            {},
             [
                 Result(
                     state=State.CRIT,
@@ -151,7 +142,6 @@ def test_check_discovery_total_zero() -> None:
             23 * MEGA,
             42 * MEGA,
             ("abs_free", (20 * MEGA, 5 * MEGA)),
-            {},
             [
                 Result(
                     state=State.WARN,
@@ -162,48 +152,6 @@ def test_check_discovery_total_zero() -> None:
                 ),
             ],
         ),
-        # see if we get a metric, and show free
-        (
-            "Longterm",
-            23 * MEGA,
-            42 * MEGA,
-            ("perc_free", (60, 50)),
-            {"metric_name": "my_memory", "show_free": True},
-            [
-                Result(
-                    state=State.CRIT,
-                    summary=(
-                        "Longterm: 45.24% free - 19.0 MiB of 42.0 MiB"
-                        " (warn/crit below 60.00%/50.00% free)"
-                    ),
-                ),
-                Metric(
-                    "my_memory",
-                    23 * MEGA,
-                    levels=(17616076.8, 22020096.0),
-                    boundaries=(0, 42 * MEGA),
-                ),
-            ],
-        ),
-        # different total label
-        (
-            "Longterm",
-            23 * 1024**2,
-            42 * 1024**2,
-            ("perc_free", (60, 50)),
-            {
-                "label_total": "Hirn",
-            },
-            [
-                Result(
-                    state=State.CRIT,
-                    summary=(
-                        "Longterm: 54.76% - 23.0 MiB of 42.0 MiB Hirn"
-                        " (warn/crit below 60.00%/50.00% free)"
-                    ),
-                )
-            ],
-        ),
     ],
 )
 def test_check_memory_element(
@@ -211,11 +159,55 @@ def test_check_memory_element(
     used: float,
     total: float,
     levels: memory.MemoryLevels | None,
-    kwargs: Mapping[str, Any],
     expected: CheckResult,
 ) -> None:
-    result = list(memory.check_element(label, used, total, levels, **kwargs))
+    result = list(memory.check_element(label, used, total, levels))
     assert result == expected
+
+
+def test_check_memory_element_metric_name_and_show_free() -> None:
+    assert list(
+        memory.check_element(
+            label="Longterm",
+            used=23 * MEGA,
+            total=42 * MEGA,
+            levels=("perc_free", (60, 50)),
+            show_free=True,
+            metric_name="my_memory",
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary=(
+                "Longterm: 45.24% free - 19.0 MiB of 42.0 MiB (warn/crit below 60.00%/50.00% free)"
+            ),
+        ),
+        Metric(
+            "my_memory",
+            23 * MEGA,
+            levels=(17616076.8, 22020096.0),
+            boundaries=(0, 42 * MEGA),
+        ),
+    ]
+
+
+def test_check_memory_element_label_total() -> None:
+    assert list(
+        memory.check_element(
+            label="Longterm",
+            used=23 * MEGA,
+            total=42 * MEGA,
+            levels=("perc_free", (60, 50)),
+            label_total="Hirn",
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary=(
+                "Longterm: 54.76% - 23.0 MiB of 42.0 MiB Hirn (warn/crit below 60.00%/50.00% free)"
+            ),
+        )
+    ]
 
 
 MEMINFO_MINI = {  # minimal not failing case

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 import time_machine
@@ -101,7 +99,7 @@ from cmk.plugins.apc.agent_based.apc_symmetra_test import check_apc_test
 )
 def test_check_apc_test(
     info: StringTable,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected_results: Sequence[Result],
 ) -> None:
     """Handle different dates correctly."""

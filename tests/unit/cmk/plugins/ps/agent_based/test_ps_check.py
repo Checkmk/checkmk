@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -12,7 +11,7 @@ import datetime
 import itertools
 import time
 from collections.abc import Sequence
-from typing import Any, NamedTuple
+from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -1299,12 +1298,13 @@ def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None)
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
 
-    params: dict[str, Any] = {
+    single_cpulevels = (45.0, 80.0)
+    params: dict[str, object] = {
         "process": "~.*firefox",
         "process_info": "text",
         "cpu_rescale_max": True,
         "levels": (1, 1, 99999, 99999),
-        "single_cpulevels": (45.0, 80.0),
+        "single_cpulevels": single_cpulevels,
     }
 
     def run_check_ps_common_with_elapsed_time(check_time, cputime):
@@ -1370,11 +1370,11 @@ def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None)
             ),
         ),
     ]
-    if cpu_util >= params["single_cpulevels"][0]:
+    if cpu_util >= single_cpulevels[0]:
         reference.insert(
             8,
             Result(
-                state=State.WARN if cpu_util < params["single_cpulevels"][1] else State.CRIT,
+                state=State.WARN if cpu_util < single_cpulevels[1] else State.CRIT,
                 summary=single_msg,
             ),
         )

@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Sequence
-from typing import Any
 
 import pytest
 
@@ -426,7 +423,7 @@ def test_check_with_if64() -> None:
 
 
 def _get_check_result(section: bf.Section, item: str) -> list[IgnoreResults | Metric | Result]:
-    value_store: dict[str, Any] = {}
+    value_store: dict[str, object] = {}
 
     for i in range(10):
         # initialize all 10 rates

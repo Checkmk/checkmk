@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -158,7 +156,7 @@ HOST_CONFIG = HostConfig(
     ],
 )
 def test_argument_parsing(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected_args: Sequence[SpecialAgentCommand],
 ) -> None:
     """Tests if all required arguments are present."""

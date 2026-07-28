@@ -3,17 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import MutableMapping
-from typing import Any
 
 from cmk.agent_based.v2 import Metric, Result
 from cmk.plugins.mssql.agent_based.mssql_counters_locks_per_batch import _check_base
 
 
 def test_check_base_rate_computation() -> None:
-    value_store: MutableMapping[str, Any] = {}
+    value_store: MutableMapping[str, object] = {}
     item = "MSSQL_VEEAMSQL2012"
 
     # First call initializes the rates

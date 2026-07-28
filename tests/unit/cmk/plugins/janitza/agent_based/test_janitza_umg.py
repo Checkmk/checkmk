@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.janitza.agent_based.janitza_umg import (
@@ -25,7 +22,7 @@ def _section(frequency: float) -> Section:
     )
 
 
-def _states(params: Mapping[str, Any], frequency: float) -> list[State]:
+def _states(params: Mapping[str, object], frequency: float) -> list[State]:
     return [
         r.state
         for r in check_janitza_umg_freq("1", params, _section(frequency))

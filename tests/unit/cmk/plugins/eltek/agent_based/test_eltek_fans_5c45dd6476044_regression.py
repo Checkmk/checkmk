@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -11,7 +10,6 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
 import pytest
 
@@ -119,7 +117,7 @@ def test_eltek_fans_discovery_scenarios(
     ],
 )
 def test_eltek_fans_check_scenarios(
-    test_data: StringTable, item: str, params: dict[str, Any], expected_result: Any
+    test_data: StringTable, item: str, params: dict[str, object], expected_result: object
 ) -> None:
     """Test check function with various scenarios."""
     parsed = parse_eltek_fans(test_data)

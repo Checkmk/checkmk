@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -95,6 +93,8 @@ def test_discovery_tsm_scratch() -> None:
         ),
     ],
 )
-def test_check_tsm_scratch(data: Section, params: Mapping[str, Any], expected: CheckResult) -> None:
+def test_check_tsm_scratch(
+    data: Section, params: Mapping[str, object], expected: CheckResult
+) -> None:
     checked = check_tsm_scratch("inst / lib", params, data)
     assert list(checked) == expected

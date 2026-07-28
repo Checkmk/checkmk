@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -63,7 +61,10 @@ def test_discover_mongodb_instance(
     ],
 )
 def test_check_mongodb_instance(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, object],
+    string_table: StringTable,
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for mongodb_instance check."""
     parsed = parse_mongodb_instance(string_table)

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -686,7 +684,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
     ],
 )
 def test_check_http_argument_parsing(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     host_config: HostConfig,
     expected_args: Sequence[object],
 ) -> None:
@@ -734,7 +732,7 @@ def test_check_http_argument_parsing(
     ],
 )
 def test_check_http_service_description(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     expected_description: str,
 ) -> None:
     http_params = HttpParams.model_validate(params)

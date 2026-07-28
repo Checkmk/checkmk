@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any, cast
+from typing import cast
 
 import pytest
 
@@ -198,7 +197,7 @@ def test_epower_check(
     table: StringTable,
     section: SimpleSNMPSection,
     item: str,
-    params: Any,
+    params: dict[str, object],
     result: CheckResult,
 ) -> None:
     parsed = cast(dict[str, int], section.parse_function([table]))

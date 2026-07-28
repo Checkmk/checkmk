@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -46,7 +44,7 @@ from cmk.plugins.mssql.agent_based.mssql_counters_transactions import (
     discovery_mssql_counters_transactions,
 )
 
-ValueStore = dict[str, Any]
+ValueStore = dict[str, object]
 
 error_string_table_crash = [
     ["None", "None", "MSSQLSERVER", "Some Error"],
@@ -538,7 +536,7 @@ def test_check_mssql_locks_per_batch(
     expected_results: Sequence[Result | Metric | IgnoreResults],
 ) -> None:
     # re-run check_locks_per_batch_base() once in order to get rates
-    vs: dict[str, Any] = {}
+    vs: dict[str, object] = {}
     results = []
     for time in range(2):
         for result in check_locks_per_batch_base(vs, item, params, section, time * 60):

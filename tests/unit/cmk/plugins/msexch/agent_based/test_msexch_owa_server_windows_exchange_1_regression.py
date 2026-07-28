@@ -3,23 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
-
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Service
 from cmk.plugins.msexch.agent_based import msexch_owa
 from cmk.plugins.windows.agent_based import libwmi as wmi
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection, WMITable
 
 
 @pytest.fixture
@@ -29,7 +23,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(name="parsed")
-def fixture_parsed() -> Mapping[str, Any]:
+def fixture_parsed() -> WMISection:
     """Parsed WMI data fixture for Microsoft Exchange OWA."""
     string_table = [
         [
@@ -64,14 +58,14 @@ def fixture_parsed() -> Mapping[str, Any]:
     return parse_wmi_table(string_table)
 
 
-def test_msexch_owa_discovery(parsed: Mapping[str, Any]) -> None:
+def test_msexch_owa_discovery(parsed: WMISection) -> None:
     """Test discovery function returns correct items."""
     result = list(msexch_owa.discover_msexch_owa(parsed))
     assert result == [Service(item=None)]
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_msexch_owa_check(parsed: Mapping[str, Any]) -> None:
+def test_msexch_owa_check(parsed: WMISection) -> None:
     """Test Microsoft Exchange OWA check function."""
     # The rate calculation gets GetRateError on first run due to initialization
     with pytest.raises(GetRateError):
@@ -126,12 +120,16 @@ def test_msexch_owa_discovery_empty_section() -> None:
 
 def test_msexch_owa_check_no_data() -> None:
     """Test check function with no data."""
-    parsed: Mapping[str, Any] = {"": {}}
-
-    try:
-        result = list(msexch_owa.check_msexch_owa(parsed))
-        # Should have empty results or raise an error
-        assert len(result) >= 0
-    except Exception:
-        # Exception is expected with no data
-        pass
+    assert not list(
+        msexch_owa.check_msexch_owa(
+            {
+                "": WMITable(
+                    "",
+                    headers=[],
+                    key_field=None,
+                    timestamp=None,
+                    frequency=None,
+                )
+            }
+        )
+    )

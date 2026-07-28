@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -96,9 +94,9 @@ STRING_TABLE = [
 )
 def test_check_postgres_stat_database_size(
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: StringTable,
-    expected_result: Sequence[Any],
+    expected_result: Sequence[object],
 ) -> None:
     assert (
         list(

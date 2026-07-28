@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,7 +11,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -21,7 +19,7 @@ from cmk.plugins.mysql.agent_based import mysql
 
 
 @pytest.fixture
-def parsed() -> Mapping[str, Mapping[str, Any]]:
+def parsed() -> Mapping[str, Mapping[str, object]]:
     """Create parsed MySQL data using actual parse function."""
     string_table = [
         ["[[mysql]]"],
@@ -52,24 +50,24 @@ def parsed() -> Mapping[str, Mapping[str, Any]]:
     return mysql.parse_mysql(string_table)
 
 
-def test_mysql_version_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_version_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
     discovery_func = mysql._discover_keys({"version"})
     result = list(discovery_func(parsed))
     assert result == [Service(item="mysql")]
 
 
-def test_mysql_version_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_version_check(parsed: Mapping[str, Mapping[str, object]]) -> None:
     result = list(mysql.check_mysql_version("mysql", parsed))
     assert result == [Result(state=State.OK, summary="Version: Cheesgrater Edition")]
 
 
-def test_mysql_sessions_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_sessions_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
     result = list(mysql.discover_mysql_sessions(parsed))
     assert result == [Service(item="mysql")]
 
 
 def test_mysql_sessions_check(
-    parsed: Mapping[str, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, Mapping[str, object]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Pre-populate value store to avoid GetRateError
     value_store: dict[str, object] = {"mysql.sessions": (0, 2)}
@@ -102,7 +100,7 @@ def test_mysql_sessions_check(
     assert result[5].name == "connect_rate"
 
 
-def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
     discovery_func = mysql._discover_keys(
         {"Max_used_connections", "max_connections", "Threads_connected"}
     )
@@ -110,7 +108,7 @@ def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, Any]]) ->
     assert result == [Service(item="mysql")]
 
 
-def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, object]]) -> None:
     params = {"perc_used": (75, 80), "perc_conn_threads": (40, 50)}
     result = list(mysql.check_mysql_connections("mysql", params, parsed))
 
@@ -140,14 +138,14 @@ def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, Any]]) -> Non
     assert isinstance(result[6], Metric) and result[6].name == "connections_conn_threads"
 
 
-def test_mysql_innodb_io_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_innodb_io_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
     discovery_func = mysql._discover_keys({"Innodb_data_read"})
     result = list(discovery_func(parsed))
     assert result == [Service(item="mysql")]
 
 
 def test_mysql_innodb_io_check(
-    parsed: Mapping[str, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, Mapping[str, object]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Pre-populate value store to avoid GetRateError
     value_store: dict[str, object] = {"read": (0.0, 1024), "write": (0.0, 2048)}

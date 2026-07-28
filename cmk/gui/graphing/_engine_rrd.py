@@ -564,14 +564,24 @@ class EngineRRDFetchData:
             consolidation_function=consolidation_function,
             time_range=time_range,
         )
-        result: dict[Metric, Sequence[FetchedData]] = {}
+        return self._assemble(rrd_metrics, performance_data, time_series)
+
+    def _assemble(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        performance_data: Mapping[RRDMetric, PerformanceData],
+        time_series: Mapping[RRDMetric, EngineTimeSeries],
+    ) -> Mapping[Metric, Sequence[FetchedData]]:
+        # A metric the fetch resolved neither performance data nor a series for is left out
+        # altogether, so the quantity evaluates as absent rather than as an empty curve.
+        assembled: dict[Metric, Sequence[FetchedData]] = {}
         for metric in rrd_metrics:
             data = performance_data.get(metric)
             series = time_series.get(metric)
             if data is None and series is None:
                 continue
-            result[metric] = [FetchedData(performance_data=data, time_series=series)]
-        return result
+            assembled[metric] = [FetchedData(performance_data=data, time_series=series)]
+        return assembled
 
     def _translated_performance_data(
         self,

@@ -85,7 +85,7 @@ function toggleSelected(selected: boolean): void {
     column-id="num_services"
     :value="row.num_services"
     :tag-properties="
-      row.num_services === 0
+      !row.num_services
         ? undefined
         : {
             variant: 'fill',
@@ -94,7 +94,7 @@ function toggleSelected(selected: boolean): void {
           }
     "
     :linked-to="
-      row.num_services === 0
+      !row.num_services
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host`,
@@ -107,7 +107,7 @@ function toggleSelected(selected: boolean): void {
     column-id="num_services_ok"
     :value="row.num_services_ok"
     :tag-properties="
-      row.num_services_ok === 0
+      !row.num_services_ok
         ? undefined
         : {
             variant: 'weighted',
@@ -116,7 +116,7 @@ function toggleSelected(selected: boolean): void {
           }
     "
     :linked-to="
-      row.num_services_ok === 0
+      !row.num_services_ok
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_ok`,
@@ -129,7 +129,7 @@ function toggleSelected(selected: boolean): void {
     column-id="num_services_warn"
     :value="row.num_services_warn"
     :tag-properties="
-      row.num_services_warn === 0
+      !row.num_services_warn
         ? undefined
         : {
             variant: 'weighted',
@@ -138,7 +138,7 @@ function toggleSelected(selected: boolean): void {
           }
     "
     :linked-to="
-      row.num_services_warn === 0
+      !row.num_services_warn
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_warn`,
@@ -151,7 +151,7 @@ function toggleSelected(selected: boolean): void {
     column-id="num_services_crit"
     :value="row.num_services_crit"
     :tag-properties="
-      row.num_services_crit === 0
+      !row.num_services_crit
         ? undefined
         : {
             variant: 'weighted',
@@ -160,7 +160,7 @@ function toggleSelected(selected: boolean): void {
           }
     "
     :linked-to="
-      row.num_services_crit === 0
+      !row.num_services_crit
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_crit`,
@@ -173,7 +173,7 @@ function toggleSelected(selected: boolean): void {
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
     :tag-properties="
-      row.num_services_unknown === 0
+      !row.num_services_unknown
         ? undefined
         : {
             variant: 'weighted',
@@ -182,7 +182,7 @@ function toggleSelected(selected: boolean): void {
           }
     "
     :linked-to="
-      row.num_services_unknown === 0
+      !row.num_services_unknown
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_unknown`,
@@ -195,7 +195,7 @@ function toggleSelected(selected: boolean): void {
     column-id="num_services_pending"
     :value="row.num_services_pending"
     :tag-properties="
-      row.num_services_pending === 0
+      !row.num_services_pending
         ? undefined
         : {
             variant: 'weighted',
@@ -204,7 +204,7 @@ function toggleSelected(selected: boolean): void {
           }
     "
     :linked-to="
-      row.num_services_pending === 0
+      !row.num_services_pending
         ? undefined
         : {
             href: `view.py?host=${row.name}&view_name=host_pending`,

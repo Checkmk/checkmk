@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -26,6 +26,7 @@ from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
     HostFilter,
+    HostOptionalField,
     HostSort,
     HostSortColumn,
     HostSortDirection,
@@ -46,25 +47,63 @@ _DEFAULT_LIMIT = 1_000
 
 _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
 
+_DEFAULT_FIELDS: frozenset[HostOptionalField] = frozenset(
+    {
+        HostOptionalField.ADDRESS,
+        HostOptionalField.NUM_SERVICES,
+        HostOptionalField.NUM_SERVICES_OK,
+        HostOptionalField.NUM_SERVICES_WARN,
+        HostOptionalField.NUM_SERVICES_CRIT,
+        HostOptionalField.NUM_SERVICES_UNKNOWN,
+        HostOptionalField.NUM_SERVICES_PENDING,
+    }
+)
+
 
 @api_model
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
     state: HostStateLabel = api_field(description="Host state", example="UP")
-    address: str = api_field(description="Primary IP address", example="10.0.0.1")
-    alias: str = api_field(description="Host alias", example="Web Server")
     site_id: str = api_field(description="Site ID", example="local")
-    num_services: int = api_field(description="Total number of services", example=48)
-    num_services_ok: int = api_field(description="Number of services in OK state", example=42)
-    num_services_warn: int = api_field(description="Number of services in WARNING state", example=3)
-    num_services_crit: int = api_field(
-        description="Number of services in CRITICAL state", example=1
+    address: str | ApiOmitted = api_field(
+        description="Primary IP address",
+        example="10.0.0.1",
+        default_factory=ApiOmitted,
     )
-    num_services_unknown: int = api_field(
-        description="Number of services in UNKNOWN state", example=0
+    alias: str | ApiOmitted = api_field(
+        description="Host alias",
+        example="Web Server",
+        default_factory=ApiOmitted,
     )
-    num_services_pending: int = api_field(
-        description="Number of services in PENDING state", example=2
+    num_services: int | ApiOmitted = api_field(
+        description="Total number of services",
+        example=48,
+        default_factory=ApiOmitted,
+    )
+    num_services_ok: int | ApiOmitted = api_field(
+        description="Number of services in OK state",
+        example=42,
+        default_factory=ApiOmitted,
+    )
+    num_services_warn: int | ApiOmitted = api_field(
+        description="Number of services in WARNING state",
+        example=3,
+        default_factory=ApiOmitted,
+    )
+    num_services_crit: int | ApiOmitted = api_field(
+        description="Number of services in CRITICAL state",
+        example=1,
+        default_factory=ApiOmitted,
+    )
+    num_services_unknown: int | ApiOmitted = api_field(
+        description="Number of services in UNKNOWN state",
+        example=0,
+        default_factory=ApiOmitted,
+    )
+    num_services_pending: int | ApiOmitted = api_field(
+        description="Number of services in PENDING state",
+        example=2,
+        default_factory=ApiOmitted,
     )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
@@ -80,19 +119,31 @@ class HostEntry:
     )
 
     @classmethod
-    def from_domain(cls, host: Host) -> Self:
+    def from_domain(cls, host: Host, fields: Set[HostOptionalField]) -> Self:
         return cls(
             name=host.name,
             state=host.state_label,
-            address=host.address,
-            alias=host.alias,
             site_id=host.site_id,
-            num_services=host.service_counts.total,
-            num_services_ok=host.service_counts.ok,
-            num_services_warn=host.service_counts.warn,
-            num_services_crit=host.service_counts.crit,
-            num_services_unknown=host.service_counts.unknown,
-            num_services_pending=host.service_counts.pending,
+            address=host.address if HostOptionalField.ADDRESS in fields else ApiOmitted(),
+            alias=host.alias if HostOptionalField.ALIAS in fields else ApiOmitted(),
+            num_services=host.service_counts.total
+            if HostOptionalField.NUM_SERVICES in fields
+            else ApiOmitted(),
+            num_services_ok=host.service_counts.ok
+            if HostOptionalField.NUM_SERVICES_OK in fields
+            else ApiOmitted(),
+            num_services_warn=host.service_counts.warn
+            if HostOptionalField.NUM_SERVICES_WARN in fields
+            else ApiOmitted(),
+            num_services_crit=host.service_counts.crit
+            if HostOptionalField.NUM_SERVICES_CRIT in fields
+            else ApiOmitted(),
+            num_services_unknown=host.service_counts.unknown
+            if HostOptionalField.NUM_SERVICES_UNKNOWN in fields
+            else ApiOmitted(),
+            num_services_pending=host.service_counts.pending
+            if HostOptionalField.NUM_SERVICES_PENDING in fields
+            else ApiOmitted(),
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )
@@ -103,6 +154,10 @@ class HostsPageMeta:
     limit: int | None = api_field(description="Applied row limit.", example=1000)
     matched: int = api_field(description="Total matched hosts", example=42)
     total: int = api_field(description="Total number of hosts", example=1234)
+    fields: Set[HostOptionalField] = api_field(
+        description="Applied optional fields.",
+        example=["address", "num_services"],
+    )
 
 
 @api_model
@@ -150,6 +205,14 @@ class HostsRequestBody:
         description="Boolean filter expression tree. Omit to return all hosts.",
         default_factory=ApiOmitted,
     )
+    fields: frozenset[HostOptionalField] | ApiOmitted = api_field(
+        description=(
+            f"Optional field names to include. Allowed values: {HostOptionalField.options()}. "
+            "Omit to return default fields."
+        ),
+        example=["address", "num_services"],
+        default_factory=ApiOmitted,
+    )
 
 
 def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
@@ -179,6 +242,7 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
         query="" if isinstance(body.q, ApiOmitted) else body.q,
         sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         filters=parsed_filters,
+        fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
     )
 
 
@@ -189,6 +253,7 @@ def _handle_list_hosts(
     query: str = "",
     sorters: Sequence[HostSort] = _DEFAULT_SORT,
     filters: HostFilter = HostFilter(""),
+    fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
 ) -> HostsResponse:
     hosts = host_repo.fetch(
         limit=limit,
@@ -205,11 +270,12 @@ def _handle_list_hosts(
         matched_host_count = total_host_count
 
     return HostsResponse(
-        hosts=[HostEntry.from_domain(host) for host in hosts],
+        hosts=[HostEntry.from_domain(host, fields) for host in hosts],
         meta=HostsPageMeta(
             limit=limit,
             matched=matched_host_count,
             total=total_host_count,
+            fields=fields,
         ),
     )
 

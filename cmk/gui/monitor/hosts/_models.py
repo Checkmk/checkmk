@@ -78,6 +78,21 @@ class HostOverview(Host):
     labels: dict[str, HostLabelValue] = dataclasses.field(default_factory=dict)
 
 
+class HostOptionalField(enum.StrEnum):
+    ADDRESS = "address"
+    ALIAS = "alias"
+    NUM_SERVICES = "num_services"
+    NUM_SERVICES_OK = "num_services_ok"
+    NUM_SERVICES_WARN = "num_services_warn"
+    NUM_SERVICES_CRIT = "num_services_crit"
+    NUM_SERVICES_UNKNOWN = "num_services_unknown"
+    NUM_SERVICES_PENDING = "num_services_pending"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
+
+
 class HostSortColumn(enum.StrEnum):
     NAME = "name"
     ALIAS = "alias"

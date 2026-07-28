@@ -330,7 +330,6 @@ class TestMonitorHostsFilters:
 
         assert resp.json["hosts"] == [
             {
-                "alias": "Today",
                 "address": "127.0.0.1",
                 "name": "heute",
                 "num_services": 10,
@@ -344,6 +343,56 @@ class TestMonitorHostsFilters:
                 "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
             },
         ]
+
+
+class TestMonitorHostsFields:
+    def test_non_default_field_omitted(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
+
+        assert _NON_DEFAULT_FIELD not in host
+        assert _NON_DEFAULT_FIELD not in resp.json["meta"]["fields"]
+
+    def test_non_default_fields_specified(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=[_NON_DEFAULT_FIELD])
+
+        host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
+
+        assert _NON_DEFAULT_FIELD in host
+        assert _NON_DEFAULT_FIELD in resp.json["meta"]["fields"]
 
 
 class TestMonitorHostOverviewAuth:
@@ -640,6 +689,7 @@ class TestMonitorHostsReschedule:
 
 
 _LIMIT = 1000
+_NON_DEFAULT_FIELD = "alias"
 _HOSTS = [
     {
         "name": "heute",

@@ -25,7 +25,7 @@ export interface NumberTagProps {
 }
 
 export interface NumberCellProps {
-  value: number
+  value: number | undefined
   linkedTo?: CellLink | undefined
   decimals?: number | undefined
   tagProperties?: NumberTagProps | undefined
@@ -35,6 +35,9 @@ export interface NumberCellProps {
 const props = defineProps<NumberCellProps>()
 
 const valueString = computed(() => {
+  if (props.value === undefined) {
+    return 'n/a' as TranslatedString
+  }
   return props.value.toFixed(props.decimals ?? 0) as TranslatedString
 })
 </script>

@@ -31,7 +31,13 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
 function makeHostsResponse(hosts: HostEntry[], meta: Partial<HostsPageMeta> = {}): HostsResponse {
   return {
     hosts,
-    meta: { limit: DEFAULT_BATCH_SIZE, matched: hosts.length, total: hosts.length, ...meta }
+    meta: {
+      limit: DEFAULT_BATCH_SIZE,
+      matched: hosts.length,
+      total: hosts.length,
+      fields: [],
+      ...meta
+    }
   }
 }
 

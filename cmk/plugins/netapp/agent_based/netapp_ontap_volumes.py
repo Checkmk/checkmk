@@ -224,7 +224,10 @@ def _generate_volume_metrics(
             ]
 
         yield from single_volume_metrics(
-            counters_keys, volume_counter.model_dump(), value_store, now
+            counters_keys,
+            volume_counter.model_dump(),
+            value_store,
+            now,
         )
 
 

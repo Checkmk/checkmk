@@ -296,7 +296,7 @@ def test_check_netapp_vs_traffic():
                     "average_read_latency",
                     "iscsi_read_latency",
                     "avg. Read latency",
-                    0.001,
+                    0.000001,
                     lambda x: "%.2f ms" % (x * 1000),
                 ),
                 ("read_data", "iscsi_read_data", "read data", 1, render.bytes),
@@ -305,22 +305,25 @@ def test_check_netapp_vs_traffic():
     }
 
     latency_calc_ref = {
-        "iscsi": {
+        "iscsi_lif": {
             "average_read_latency": "iscsi_read_ops",
         },
     }
 
     item_counters = {
-        "iscsi_read_ops": 100000,
+        "iscsi_read_ops": 5000,
         "read_data": 100000,
-        "average_read_latency": 10000,
+        # cumulative average counter in microseconds: 10_000_000 / 5_000 == 2_000 us per op
+        "average_read_latency": 10000000,
     }
 
     value_store = {
+        # the latency counter is rated against the operations counter, so its "time"
+        # slot holds the last operations count, not a timestamp
+        #                                    last ops, last scaled value
+        "iscsi_lif.average_read_latency": (0, 0.0),
         #                 last time, last value
-        "iscsi_lif.read_ops": (LAST_TIME_EPOCH, 2000),
         "iscsi_lif.read_data": (LAST_TIME_EPOCH, 2000),
-        "iscsi_lif.average_read_latency": (LAST_TIME_EPOCH, 10),
     }
 
     with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
@@ -331,8 +334,8 @@ def test_check_netapp_vs_traffic():
         )
 
         assert result == [
-            Result(state=State.OK, summary="iSCSI avg. Read latency: 0.00 ms"),
-            Metric("iscsi_read_latency", 0.0),
+            Result(state=State.OK, summary="iSCSI avg. Read latency: 2.00 ms"),
+            Metric("iscsi_read_latency", 0.002),
             Result(state=State.OK, summary="iSCSI read data: 27 B"),
             Metric("iscsi_read_data", 27.22222222222222),
         ]

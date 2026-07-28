@@ -20,8 +20,8 @@ def inventory_dell_poweredge_status(info):
     return []
 
 
-def parse_dell_poweredge_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_dell_poweredge_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["dell_poweredge_status"] = LegacyCheckDefinition(

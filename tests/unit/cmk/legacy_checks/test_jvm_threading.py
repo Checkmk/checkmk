@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,15 +11,14 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckResult
 from cmk.legacy_checks import jolokia_jvm_threading as jvm_threading
 
-Section = Mapping[str, Any]
+Section = Mapping[str, object]
 
 
 def _section_pool() -> Section:
@@ -69,7 +67,9 @@ def test_discover_jolokia_jvm_threading() -> None:
 
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_rate")
-def test_check_jolokia_jvm_threading_basic(mock_get_rate: Any, mock_get_value_store: Any) -> None:
+def test_check_jolokia_jvm_threading_basic(
+    mock_get_rate: MagicMock, mock_get_value_store: MagicMock
+) -> None:
     """Test main check with basic parameters"""
     # Mock the rate calculation to return 0.0 for ThreadRate
     mock_get_rate.return_value = 0.0
@@ -103,7 +103,7 @@ def test_check_jolokia_jvm_threading_basic(mock_get_rate: Any, mock_get_value_st
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_rate")
 def test_check_jolokia_jvm_threading_no_daemon_levels(
-    mock_get_rate: Any, mock_get_value_store: Any
+    mock_get_rate: MagicMock, mock_get_value_store: MagicMock
 ) -> None:
     """Test main check without daemon thread levels"""
     mock_get_rate.return_value = 0.0

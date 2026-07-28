@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
 import datetime
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import time_machine
@@ -134,7 +131,7 @@ def test_check_cups_queues_pm_active_printer() -> None:
 
     parsed = parse_cups_queues(string_table)
 
-    params: dict[str, Any] = {
+    params: dict[str, object] = {
         "disabled_since": 2,
         "is_idle": 0,
         "job_age": (360, 720),
@@ -204,7 +201,7 @@ def test_check_cups_queues_pm_idle_printer() -> None:
 
     parsed = parse_cups_queues(string_table)
 
-    params: dict[str, Any] = {
+    params: dict[str, object] = {
         "disabled_since": 2,
         "is_idle": 0,
         "job_age": (360, 720),

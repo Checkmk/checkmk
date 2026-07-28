@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -14,7 +13,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -51,14 +49,15 @@ def _string_table() -> list[list[str]]:
 
 
 @pytest.fixture(name="parsed")
-def _parsed(string_table: list[list[str]]) -> Mapping[str, Any]:
+def _parsed(string_table: list[list[str]]) -> Mapping[str, object]:
     return f5_bigip_vserver.parse_f5_bigip_vserver(string_table)
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_parse_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -> None:
+def test_parse_f5_bigip_vserver_division_regression(parsed: Mapping[str, object]) -> None:
     assert "VS_BM" in parsed
     vs_data = parsed["VS_BM"]
+    assert isinstance(vs_data, dict)
 
     assert vs_data["status"] == "1"
     assert vs_data["enabled"] == "1"
@@ -78,13 +77,13 @@ def test_parse_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -
     assert vs_data["packet_velocity_asic"] == [0]
 
 
-def test_discover_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -> None:
+def test_discover_f5_bigip_vserver_division_regression(parsed: Mapping[str, object]) -> None:
     result = list(f5_bigip_vserver.discover_f5_bigip_vserver(parsed))
     assert result == [("VS_BM", {})]
 
 
 def test_check_f5_bigip_vserver_division_regression_basic(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Pre-populate value store to avoid rate calculation errors on first run
     value_store: dict[str, object] = {
@@ -131,13 +130,15 @@ def test_check_f5_bigip_vserver_division_regression_basic(
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_check_f5_bigip_vserver_division_regression_missing_item(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_division_regression_missing_item(
+    parsed: Mapping[str, object],
+) -> None:
     result = list(f5_bigip_vserver.check_f5_bigip_vserver("NonExistent", {}, parsed))
     assert result == []
 
 
 def test_check_f5_bigip_vserver_division_regression_with_params(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Pre-populate value store
     value_store: dict[str, object] = {

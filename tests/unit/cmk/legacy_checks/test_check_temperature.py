@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime as dt
 from collections.abc import Iterable
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import pytest
 import time_machine
@@ -222,7 +221,7 @@ class Entry(NamedTuple):
     growth: float
     seconds_elapsed: float
     wato_dict: TrendComputeDict
-    expected: Any
+    expected: object
 
 
 _WATO_DICT: TrendComputeDict = {

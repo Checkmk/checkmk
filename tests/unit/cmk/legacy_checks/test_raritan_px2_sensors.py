@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from .checktestlib import Check
+from cmk.legacy_checks.raritan_px2_sensors import (
+    check_raritan_sensors_humidity,
+    discover_raritan_px2_sensors_humidity,
+)
+from cmk.legacy_includes.raritan import parse_raritan_sensors
 
 pytestmark = pytest.mark.checks
 
@@ -53,7 +56,7 @@ _SECTION = {
 
 def test_parse_raritan_px2_sensors() -> None:
     assert (
-        Check("raritan_px2_sensors").run_parse(
+        parse_raritan_sensors(
             [
                 ["2", "1", "", "10", "-1", "7", "1", "0", "100", "150", "350", "300"],
                 ["1", "2", "", "11", "7", "9", "0", "40", "10", "15", "90", "85"],
@@ -67,7 +70,7 @@ def test_parse_raritan_px2_sensors() -> None:
 
 
 def test_discover_raritan_px2_sensors_humidity() -> None:
-    assert list(Check("raritan_px2_sensors_humidity").run_discovery(_SECTION)) == [
+    assert list(discover_raritan_px2_sensors_humidity(_SECTION)) == [
         ("Sensor 2", None),
         ("Sensor 4", None),
     ]
@@ -137,7 +140,7 @@ def test_check_raritan_px2_sensors_humidity(
 ) -> None:
     assert (
         list(
-            Check("raritan_px2_sensors_humidity").run_check(
+            check_raritan_sensors_humidity(
                 item,
                 params,
                 _SECTION,

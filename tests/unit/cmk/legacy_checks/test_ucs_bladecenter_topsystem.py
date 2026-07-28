@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -40,7 +38,7 @@ from cmk.legacy_checks.ucs_bladecenter_topsystem import (
     ],
 )
 def test_discover_ucs_bladecenter_topsystem(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
 ) -> None:
     """Test discovery function for ucs_bladecenter_topsystem check."""
     parsed = parse_ucs_bladecenter_topsystem(string_table)
@@ -77,7 +75,10 @@ def test_discover_ucs_bladecenter_topsystem(
     ],
 )
 def test_check_ucs_bladecenter_topsystem(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, object],
+    string_table: StringTable,
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for ucs_bladecenter_topsystem check."""
     parsed = parse_ucs_bladecenter_topsystem(string_table)

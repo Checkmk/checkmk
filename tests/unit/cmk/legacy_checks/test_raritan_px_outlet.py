@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="redundant-expr"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -11,7 +10,6 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
 from cmk.legacy_checks.raritan_px_outlets import (
     check_raritan_px_outlets,
@@ -20,7 +18,7 @@ from cmk.legacy_checks.raritan_px_outlets import (
 )
 
 
-def parsed() -> dict[str, Any]:
+def parsed() -> dict[str, object]:
     """Parse raritan_px_outlets test data using actual parse function."""
     string_table = [
         [
@@ -115,6 +113,7 @@ def test_raritan_px_outlets_parse_scaling() -> None:
 
     # Verify scaling is applied correctly
     outlet_3 = test_data["3"]
+    assert isinstance(outlet_3, dict)
     assert outlet_3["current"] == 0.003  # 3 / 1000
     assert outlet_3["voltage"] == 0.003  # 3 / 1000
     assert outlet_3["power"] == 3.0  # No scaling

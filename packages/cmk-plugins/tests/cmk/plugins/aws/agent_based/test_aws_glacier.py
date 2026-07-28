@@ -3,18 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.aws.agent_based.aws_glacier import check_aws_glacier_archives as check_aws_glacier
-from cmk.plugins.aws.agent_based.aws_glacier import discover_aws_glacier, parse_aws_glacier
+from cmk.plugins.aws.agent_based.aws_glacier import discover_aws_glacier, Params, parse_aws_glacier
 
 
 @pytest.mark.parametrize(
@@ -545,7 +543,10 @@ def test_discover_aws_glacier(
     ],
 )
 def test_check_aws_glacier(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Params,
+    string_table: StringTable,
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for aws_glacier check."""
     parsed = parse_aws_glacier(string_table)

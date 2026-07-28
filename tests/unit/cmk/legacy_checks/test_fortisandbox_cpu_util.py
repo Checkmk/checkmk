@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -40,7 +38,7 @@ def test_parse_fortisandbox_cpu_util_keeps_stringtable(string_table: StringTable
     ],
 )
 def test_discover_fortisandbox_cpu_util(
-    parsed: StringTable, expected: Sequence[tuple[None, Mapping[str, Any]]]
+    parsed: StringTable, expected: Sequence[tuple[None, Mapping[str, object]]]
 ) -> None:
     assert list(discover_fortisandbox_cpu_util(parsed)) == expected
 
@@ -75,9 +73,9 @@ def test_discover_fortisandbox_cpu_util(
     ],
 )
 def test_check_fortisandbox_cpu_util(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: StringTable,
-    expected: Sequence[tuple[int, str, list[tuple[Any, ...]]]],
+    expected: Sequence[tuple[int, str, list[tuple[object, ...]]]],
 ) -> None:
     assert list(check_fortisandbox_cpu_util(None, params, section)) == expected
 

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 import time_machine
@@ -104,14 +102,14 @@ def test_discover_emc_vplex_cpu() -> None:
     ],
 )
 def test_check_emc_vplex_cpu(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: Mapping[str, int],
     expected_output: CheckResult,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
 
     item = "director1"
-    value_store: Mapping[str, Any] = {}
+    value_store: Mapping[str, object] = {}
     monkeypatch.setattr(emc_vplex_cpu_plugin, "get_value_store", lambda: value_store)
     with time_machine.travel("2026-01-01 00:00:00", tick=False):
         result = list(check_emc_vplex_cpu(item, params, section))

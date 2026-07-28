@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -14,8 +13,6 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
-
 import pytest
 import time_machine
 
@@ -23,7 +20,7 @@ from cmk.legacy_checks import innovaphone_priports_l1
 
 
 @pytest.fixture(name="parsed", scope="module")
-def fixture_parsed() -> dict[str, Any]:
+def fixture_parsed() -> dict[str, object]:
     string_table = [
         ["Foo", "1", "0", "23"],  # item, state, sigloss, slip
         ["Bar", "2", "42", "23"],  # item, state, sigloss, slip
@@ -45,7 +42,7 @@ def test_parse_innovaphone_priports_l1() -> None:
     assert result == expected
 
 
-def test_discover_innovaphone_priports_l1(parsed: dict[str, Any]) -> None:
+def test_discover_innovaphone_priports_l1(parsed: dict[str, object]) -> None:
     result = list(innovaphone_priports_l1.discover_innovaphone_priports_l1(parsed))
 
     # Only "Bar" should be discovered because it has state != 1
@@ -54,7 +51,7 @@ def test_discover_innovaphone_priports_l1(parsed: dict[str, Any]) -> None:
 
 @time_machine.travel(60.0)
 def test_check_innovaphone_priports_l1_down_state(
-    parsed: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: dict[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check function for item in Down state (state=1)"""
     # Pre-populate value store to avoid GetRateError on first run
@@ -80,7 +77,7 @@ def test_check_innovaphone_priports_l1_down_state(
 
 @time_machine.travel(60.0)
 def test_check_innovaphone_priports_l1_up_state(
-    parsed: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: dict[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check function for item in UP state (state=2) with signal loss"""
     # Pre-populate value store to simulate rate calculation

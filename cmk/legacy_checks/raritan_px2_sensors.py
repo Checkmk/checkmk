@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
@@ -91,7 +91,7 @@ check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_px2_sensors_humidity(parsed):
+def discover_raritan_px2_sensors_humidity(parsed) -> Iterable[tuple[str, None]]:
     return inventory_raritan_sensors(parsed, "humidity")
 
 

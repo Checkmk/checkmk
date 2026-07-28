@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -11,7 +10,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any, NamedTuple
+from typing import NamedTuple
 from unittest import mock
 
 from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
@@ -46,7 +45,7 @@ class Check:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
-    def default_parameters(self) -> Mapping[str, Any]:
+    def default_parameters(self) -> Mapping[str, object]:
         return self.info.check_default_parameters or {}
 
     def run_parse(self, info: list) -> object:
@@ -54,14 +53,14 @@ class Check:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
         return self.info.parse_function(info)
 
-    def run_discovery(self, info: object) -> Any:
+    def run_discovery(self, info: object) -> object:
         if self.info.discovery_function is None:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"
             )
         return self.info.discovery_function(info)
 
-    def run_check(self, item: object, params: object, info: object) -> Any:
+    def run_check(self, item: object, params: object, info: object) -> object:
         if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
         return self.info.check_function(item, params, info)

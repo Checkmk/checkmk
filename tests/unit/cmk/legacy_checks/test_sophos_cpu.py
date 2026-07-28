@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -56,7 +54,7 @@ def test_discover_sophos_cpu_always_yields_single_service(parsed: int | None) ->
     ],
 )
 def test_check_sophos_cpu(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     parsed: int,
     expected: tuple[int, str, Sequence[tuple[str, int, float, float, int, int]]],
 ) -> None:

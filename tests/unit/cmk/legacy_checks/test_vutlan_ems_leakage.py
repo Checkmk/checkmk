@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
@@ -50,7 +48,7 @@ from cmk.legacy_checks.vutlan_ems_leakage import (
     ],
 )
 def test_discover_vutlan_ems_leakage(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
 ) -> None:
     """Test discovery function for vutlan_ems_leakage check."""
     parsed = parse_vutlan_ems_leakage(string_table)
@@ -116,7 +114,10 @@ def test_discover_vutlan_ems_leakage(
     ],
 )
 def test_check_vutlan_ems_leakage(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, object],
+    string_table: StringTable,
+    expected_results: Sequence[object],
 ) -> None:
     """Test check function for vutlan_ems_leakage check."""
     parsed = parse_vutlan_ems_leakage(string_table)

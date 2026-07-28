@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -16,7 +15,6 @@
 """Unit tests for f5_bigip_snat F5 BigIP Source NAT monitoring - Pattern 5."""
 
 import time
-from typing import Any
 
 import pytest
 
@@ -58,12 +56,12 @@ def _f5_bigip_snat_string_table() -> StringTable:
 
 
 @pytest.fixture(name="f5_bigip_snat_parsed")
-def _f5_bigip_snat_parsed(f5_bigip_snat_string_table: StringTable) -> dict[str, dict[str, Any]]:
+def _f5_bigip_snat_parsed(f5_bigip_snat_string_table: StringTable) -> dict[str, dict[str, object]]:
     """Parsed F5 BigIP SNAT data."""
     return f5_bigip_snat.parse_f5_bigip_snat(f5_bigip_snat_string_table)
 
 
-def test_discover_f5_bigip_snat(f5_bigip_snat_parsed: dict[str, dict[str, Any]]) -> None:
+def test_discover_f5_bigip_snat(f5_bigip_snat_parsed: dict[str, dict[str, object]]) -> None:
     """Test discovery function for F5 BigIP SNAT."""
     result = list(f5_bigip_snat.discover_f5_bigip_snat(f5_bigip_snat_parsed))
     # Should discover all SNAT entries including zero value ones
@@ -92,7 +90,7 @@ def test_discover_f5_bigip_snat(f5_bigip_snat_parsed: dict[str, dict[str, Any]])
 
 
 def test_check_f5_bigip_snat_as2_proxy(
-    f5_bigip_snat_parsed: dict[str, dict[str, Any]],
+    f5_bigip_snat_parsed: dict[str, dict[str, object]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function for AS2_proxy (zero traffic scenario)."""
@@ -125,7 +123,7 @@ def test_check_f5_bigip_snat_as2_proxy(
 
 
 def test_check_f5_bigip_snat_keycomp_high_traffic(
-    f5_bigip_snat_parsed: dict[str, dict[str, Any]],
+    f5_bigip_snat_parsed: dict[str, dict[str, object]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function for keycomp (high traffic scenario)."""
@@ -158,7 +156,7 @@ def test_check_f5_bigip_snat_keycomp_high_traffic(
 
 
 def test_check_f5_bigip_snat_outbound_snat_large_numbers(
-    f5_bigip_snat_parsed: dict[str, dict[str, Any]],
+    f5_bigip_snat_parsed: dict[str, dict[str, object]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function for Outbound_SNAT (very large numbers scenario)."""
@@ -208,7 +206,7 @@ def test_check_f5_bigip_snat_outbound_snat_large_numbers(
 
 
 def test_check_f5_bigip_snat_with_thresholds(
-    f5_bigip_snat_parsed: dict[str, dict[str, Any]],
+    f5_bigip_snat_parsed: dict[str, dict[str, object]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function with configured thresholds."""
@@ -238,7 +236,7 @@ def test_check_f5_bigip_snat_with_thresholds(
 
 
 def test_check_f5_bigip_snat_nonexistent_item(
-    f5_bigip_snat_parsed: dict[str, dict[str, Any]],
+    f5_bigip_snat_parsed: dict[str, dict[str, object]],
 ) -> None:
     """Test check function with nonexistent SNAT item."""
     result = list(f5_bigip_snat.check_f5_bigip_snat("nonexistent_snat", {}, f5_bigip_snat_parsed))

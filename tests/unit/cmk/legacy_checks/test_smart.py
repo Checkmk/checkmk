@@ -3,25 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 from cmk.legacy_checks.smart import (
     check_smart_temp,
     discover_smart_temp,
 )
 from cmk.legacy_includes.temperature import TempParamType
-from cmk.plugins.smart.agent_based.smart import parse_raw_values
+from cmk.plugins.smart.agent_based.smart import parse_raw_values, Section
 
 
-def parsed() -> Mapping[str, Any]:
+def parsed() -> Section:
     """Return parsed data from actual parse function."""
     return parse_raw_values(
         [
@@ -89,7 +85,7 @@ def parsed() -> Mapping[str, Any]:
     )
 
 
-def parsed_no_temp() -> Mapping[str, Any]:
+def parsed_no_temp() -> Section:
     """Return parsed data without temperature sensors."""
     return parse_raw_values(
         [

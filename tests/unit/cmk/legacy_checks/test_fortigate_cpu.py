@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -60,9 +58,9 @@ def test_discover_fortigate_cpu() -> None:
     ],
 )
 def test_check_fortigate_cpu(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: StringTable,
-    expected: tuple[int, str, list[tuple[Any, ...]]],
+    expected: tuple[int, str, list[tuple[object, ...]]],
 ) -> None:
     assert check_fortigate_cpu(None, params, section) == expected
 

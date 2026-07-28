@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -14,7 +13,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -31,7 +29,7 @@ def _string_table() -> list[list[list[str]]]:
 
 
 @pytest.fixture(name="parsed")
-def _parsed(string_table: list[list[list[str]]]) -> Mapping[str, Any]:
+def _parsed(string_table: list[list[list[str]]]) -> Mapping[str, object]:
     return parse_fortigate_sslvpn(string_table)
 
 
@@ -51,12 +49,12 @@ def test_parse_fortigate_sslvpn(string_table: list[list[list[str]]]) -> None:
     assert result == expected
 
 
-def test_discover_fortigate_sslvpn(parsed: Mapping[str, Any]) -> None:
+def test_discover_fortigate_sslvpn(parsed: Mapping[str, object]) -> None:
     result = list(discover_fortigate_sslvpn(parsed))
     assert result == [("root", {})]
 
 
-def test_check_fortigate_sslvpn_thresholds(parsed: Mapping[str, Any]) -> None:
+def test_check_fortigate_sslvpn_thresholds(parsed: Mapping[str, object]) -> None:
     params = {
         "tunnel_levels": (4, 7)  # Only tunnels support thresholds
     }
@@ -87,7 +85,7 @@ def test_check_fortigate_sslvpn_thresholds(parsed: Mapping[str, Any]) -> None:
         assert result[3][2] == [("active_vpn_tunnels", 6, 4, 7, 0.0, 20.0)]
 
 
-def test_check_fortigate_sslvpn_with_tunnel_levels(parsed: Mapping[str, Any]) -> None:
+def test_check_fortigate_sslvpn_with_tunnel_levels(parsed: Mapping[str, object]) -> None:
     params = {"tunnel_levels": (5, 10)}
     result = list(check_fortigate_sslvpn("root", params, parsed))
 
@@ -131,7 +129,7 @@ def test_check_fortigate_sslvpn_disabled_state() -> None:
     assert "Tunnels: 0" in result[3][1]
 
 
-def test_check_fortigate_sslvpn_critical_tunnel_levels(parsed: Mapping[str, Any]) -> None:
+def test_check_fortigate_sslvpn_critical_tunnel_levels(parsed: Mapping[str, object]) -> None:
     params = {"tunnel_levels": (3, 5)}
     result = list(check_fortigate_sslvpn("root", params, parsed))
 
@@ -171,7 +169,7 @@ def test_check_fortigate_sslvpn_multiple_domains() -> None:
     assert "Tunnels: 1" in branch1_result[3][1]
 
 
-def test_check_fortigate_sslvpn_missing_item(parsed: Mapping[str, Any]) -> None:
+def test_check_fortigate_sslvpn_missing_item(parsed: Mapping[str, object]) -> None:
     result = list(check_fortigate_sslvpn("nonexistent", {}, parsed))
     assert result == []
 

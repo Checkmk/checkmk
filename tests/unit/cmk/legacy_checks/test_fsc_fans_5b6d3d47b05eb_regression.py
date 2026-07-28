@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -13,7 +12,6 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
 import pytest
 
@@ -34,12 +32,12 @@ def string_table_fixture() -> list[list[str]]:
 
 
 @pytest.fixture(name="parsed")
-def parsed_fixture(string_table: list[list[str]]) -> dict[str, Any]:
+def parsed_fixture(string_table: list[list[str]]) -> dict[str, object]:
     """Parsed FSC fan data"""
     return parse_fsc_fans(string_table)
 
 
-def test_discover_fsc_fans(parsed: dict[str, Any]) -> None:
+def test_discover_fsc_fans(parsed: dict[str, object]) -> None:
     """Test FSC fan discovery finds valid fans"""
     discovered = list(discover_fsc_fans(parsed))
     assert len(discovered) == 1
@@ -47,7 +45,7 @@ def test_discover_fsc_fans(parsed: dict[str, Any]) -> None:
     assert discovered[0][1] == {}  # Empty parameters
 
 
-def test_check_fsc_fans_normal_speed(parsed: dict[str, Any]) -> None:
+def test_check_fsc_fans_normal_speed(parsed: dict[str, object]) -> None:
     """Test FSC fan check with normal fan speed"""
     params = {"lower": (2000, 1000)}  # warn below 2000, crit below 1000
     result = list(check_fsc_fans("FAN1 SYS", params, parsed))
@@ -59,7 +57,7 @@ def test_check_fsc_fans_normal_speed(parsed: dict[str, Any]) -> None:
     assert message == "Speed: 4140 RPM"
 
 
-def test_check_fsc_fans_warning_speed(parsed: dict[str, Any]) -> None:
+def test_check_fsc_fans_warning_speed(parsed: dict[str, object]) -> None:
     """Test FSC fan check with low fan speed (warning)"""
     # Set high thresholds to trigger warning
     params = {"lower": (5000, 4000)}  # warn below 5000, crit below 4000
@@ -72,7 +70,7 @@ def test_check_fsc_fans_warning_speed(parsed: dict[str, Any]) -> None:
     assert "below" in message.lower() or "warn" in message.lower()
 
 
-def test_check_fsc_fans_critical_speed(parsed: dict[str, Any]) -> None:
+def test_check_fsc_fans_critical_speed(parsed: dict[str, object]) -> None:
     """Test FSC fan check with critically low fan speed"""
     # Set very high thresholds to trigger critical
     params = {"lower": (6000, 5000)}  # warn below 6000, crit below 5000
@@ -84,7 +82,7 @@ def test_check_fsc_fans_critical_speed(parsed: dict[str, Any]) -> None:
     assert "4140" in message
 
 
-def test_check_fsc_fans_legacy_tuple_params(parsed: dict[str, Any]) -> None:
+def test_check_fsc_fans_legacy_tuple_params(parsed: dict[str, object]) -> None:
     """Test FSC fan check with legacy tuple parameters"""
     # Legacy format: (warn_lower, crit_lower)
     params = (2000, 1000)
@@ -96,7 +94,7 @@ def test_check_fsc_fans_legacy_tuple_params(parsed: dict[str, Any]) -> None:
     assert "4140" in message
 
 
-def test_check_fsc_fans_missing_fan(parsed: dict[str, Any]) -> None:
+def test_check_fsc_fans_missing_fan(parsed: dict[str, object]) -> None:
     """Test FSC fan check for non-existent fan"""
     params = {"lower": (2000, 1000)}
     result = list(check_fsc_fans("NONEXISTENT", params, parsed))
@@ -152,7 +150,7 @@ def test_check_fsc_fans_zero_speed() -> None:
 
 def test_discover_fsc_fans_empty_data() -> None:
     """Test FSC fan discovery with empty data"""
-    empty_parsed: dict[str, Any] = {}
+    empty_parsed: dict[str, object] = {}
     discovered = list(discover_fsc_fans(empty_parsed))
     assert len(discovered) == 0
 

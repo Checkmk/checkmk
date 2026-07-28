@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -14,7 +13,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -102,15 +100,16 @@ def _string_table() -> list[list[str]]:
 
 
 @pytest.fixture(name="parsed")
-def _parsed(string_table: list[list[str]]) -> Mapping[str, Any]:
+def _parsed(string_table: list[list[str]]) -> Mapping[str, object]:
     return f5_bigip_vserver.parse_f5_bigip_vserver(string_table)
 
 
-def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
+def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, object]) -> None:
     assert len(parsed) == 4
 
     # Check available virtual server
     vs_available = parsed["/Common/sight-seeing.wurmhole.univ"]
+    assert isinstance(vs_available, dict)
     assert vs_available["status"] == "1"  # available
     assert vs_available["enabled"] == "1"  # enabled
     assert vs_available["detail"] == "The virtual server is available"
@@ -118,6 +117,7 @@ def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
 
     # Check unknown state virtual server with connections_rate
     vs_unknown_with_rate = parsed["/Common/www.wurmhole.univ_HTTP2HTTPS"]
+    assert isinstance(vs_unknown_with_rate, dict)
     assert vs_unknown_with_rate["status"] == "4"  # unknown availability
     assert vs_unknown_with_rate["enabled"] == "1"  # enabled
     assert vs_unknown_with_rate["ip_address"] == "212.59.120.73"
@@ -125,6 +125,7 @@ def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
 
     # Check starfleet.space with in/out traffic
     vs_starfleet = parsed["/Common/starfleet.space"]
+    assert isinstance(vs_starfleet, dict)
     assert vs_starfleet["status"] == "4"  # unknown availability
     assert vs_starfleet["enabled"] == ""  # empty enabled state (unknown)
     assert vs_starfleet["detail"] == "To infinity and beyond!"
@@ -133,7 +134,7 @@ def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
     assert vs_starfleet["if_in_octets"] == [32]
 
 
-def test_discover_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
+def test_discover_f5_bigip_vserver_regression(parsed: Mapping[str, object]) -> None:
     result = list(f5_bigip_vserver.discover_f5_bigip_vserver(parsed))
 
     expected_items = [
@@ -150,7 +151,7 @@ def test_discover_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None
 
 
 def test_check_f5_bigip_vserver_regression_unknown_state(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Pre-populate value store for items that need it
     value_store: dict[str, object] = {"connections_rate.0": (0, 42)}
@@ -181,7 +182,7 @@ def test_check_f5_bigip_vserver_regression_unknown_state(
 
 
 def test_check_f5_bigip_vserver_regression_with_rate(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Pre-populate value store for rate calculations
     value_store: dict[str, object] = {"connections_rate.0": (0, 42)}
@@ -212,7 +213,7 @@ def test_check_f5_bigip_vserver_regression_with_rate(
 
 
 def test_check_f5_bigip_vserver_regression_missing_item(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Test item that was discovered but doesn't produce any check results
     value_store: dict[str, object] = {}
@@ -222,7 +223,7 @@ def test_check_f5_bigip_vserver_regression_missing_item(
 
 
 def test_check_f5_bigip_vserver_regression_unknown_enabled_state(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Test starfleet.space which has empty enabled state (unknown)
     value_store: dict[str, object] = {"if_out_pkts.0": (0, 42), "if_in_octets.0": (0, 32)}
@@ -244,7 +245,7 @@ def test_check_f5_bigip_vserver_regression_unknown_enabled_state(
 
 
 def test_check_f5_bigip_vserver_regression_with_thresholds(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Test starfleet.space with threshold parameters
     value_store: dict[str, object] = {"if_out_pkts.0": (0, 42), "if_in_octets.0": (0, 32)}
@@ -274,7 +275,7 @@ def test_check_f5_bigip_vserver_regression_with_thresholds(
 
 
 def test_check_f5_bigip_vserver_regression_available_basic(
-    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+    parsed: Mapping[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Test the basic available virtual server
     value_store: dict[str, object] = {}

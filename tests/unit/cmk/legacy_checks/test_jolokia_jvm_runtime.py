@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,7 +11,6 @@
 # test by something more appropriate.
 
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 import time_machine
@@ -40,7 +38,7 @@ def _string_table() -> list[list[str]]:
 
 
 @pytest.fixture(name="parsed")
-def _parsed(string_table: list[list[str]]) -> Mapping[str, Any]:
+def _parsed(string_table: list[list[str]]) -> Mapping[str, object]:
     return parse_jolokia_jvm_runtime(string_table)
 
 
@@ -53,14 +51,14 @@ def test_parse_jolokia_jvm_runtime(string_table: list[list[str]]) -> None:
     assert result == expected
 
 
-def test_discover_jolokia_jvm_runtime(parsed: Mapping[str, Any]) -> None:
+def test_discover_jolokia_jvm_runtime(parsed: Mapping[str, object]) -> None:
     """Test discovery function for JVM runtime check."""
     result = list(discover_jolokia_jvm_runtime(parsed))
     assert result == [("MyJIRA", {})]
 
 
 @time_machine.travel("2019-10-11 08:32:51")
-def test_check_jolokia_jvm_runtime_uptime(parsed: Mapping[str, Any]) -> None:
+def test_check_jolokia_jvm_runtime_uptime(parsed: Mapping[str, object]) -> None:
     """Test uptime check with time mocking to ensure consistent results."""
     result = list(check_jolokia_jvm_runtime_uptime("MyJIRA", {}, parsed))
 
@@ -81,7 +79,7 @@ def test_check_jolokia_jvm_runtime_uptime(parsed: Mapping[str, Any]) -> None:
     assert uptime_metric[1] == pytest.approx(34502.762)
 
 
-def test_check_jolokia_jvm_runtime_uptime_missing_item(parsed: Mapping[str, Any]) -> None:
+def test_check_jolokia_jvm_runtime_uptime_missing_item(parsed: Mapping[str, object]) -> None:
     """Test check function with missing item."""
     result = list(check_jolokia_jvm_runtime_uptime("nonexistent", {}, parsed))
     assert result == []

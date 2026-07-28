@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import TypedDict
 
 import pytest
 
-from .checktestlib import Check
-
-pytestmark = pytest.mark.checks
+from cmk.legacy_checks.raritan_pdu_plugs import (
+    check_raritan_pdu_plugs,
+    CombinedParams,
+    discover_raritan_pdu_plugs,
+    parse_raritan_pdu_plugs,
+)
 
 _SECTION = {
     "1": {"outlet_name": "outlet1", "state": "on"},
@@ -25,7 +27,7 @@ _SECTION = {
 
 def test_parse_raritan_pdu_plugs() -> None:
     assert (
-        Check("raritan_pdu_plugs").run_parse(
+        parse_raritan_pdu_plugs(
             [
                 ["1", "outlet1", "7"],
                 ["2", "outlet2", "8"],
@@ -41,7 +43,7 @@ def test_parse_raritan_pdu_plugs() -> None:
 
 
 def test_discover_raritan_pdu_plugs() -> None:
-    assert list(Check("raritan_pdu_plugs").run_discovery(_SECTION)) == [
+    assert list(discover_raritan_pdu_plugs(_SECTION)) == [
         (
             "1",
             {"discovered_state": "on"},
@@ -63,11 +65,6 @@ def test_discover_raritan_pdu_plugs() -> None:
             {"discovered_state": "on"},
         ),
     ]
-
-
-class CombinedParams(TypedDict, total=False):
-    required_state: str
-    discovered_state: str
 
 
 @pytest.mark.parametrize(
@@ -144,7 +141,7 @@ def test_check_raritan_pdu_plugs(
 ) -> None:
     assert (
         list(
-            Check("raritan_pdu_plugs").run_check(
+            check_raritan_pdu_plugs(
                 item,
                 params,
                 _SECTION,

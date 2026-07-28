@@ -5,14 +5,24 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Generator, Mapping
+from typing import ReadOnly, TypedDict
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith
+from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
 from cmk.legacy_includes.raritan import raritan_pdu_plug_state
 
 check_info = {}
 
+Section = Mapping[str, Mapping[str, str]]
 
-def parse_raritan_pdu_plugs(string_table):
+
+class CombinedParams(TypedDict, total=False):
+    required_state: ReadOnly[str | None]
+    discovered_state: ReadOnly[str]
+
+
+def parse_raritan_pdu_plugs(string_table: StringTable) -> Section:
     parsed = {}
 
     for outlet_label, outlet_name, outlet_state in string_table:
@@ -22,13 +32,17 @@ def parse_raritan_pdu_plugs(string_table):
     return parsed
 
 
-def discover_raritan_pdu_plugs(parsed):
+def discover_raritan_pdu_plugs(parsed: Section) -> Generator[tuple[str, dict[str, str]]]:
     for key, value in parsed.items():
         if (state := value["state"]) != "unknown":
             yield key, {"discovered_state": state}
 
 
-def check_raritan_pdu_plugs(item, params, parsed):
+def check_raritan_pdu_plugs(
+    item: str,
+    params: CombinedParams,
+    parsed: Section,
+) -> Generator[tuple[int, str]]:
     if not (data := parsed.get(item)):
         return
 

@@ -214,7 +214,7 @@ def make_main_menu(
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
                 icon=migrate_to_dynamic_icon(visual["icon"]),
-                main_menu_search_terms=list(visual["main_menu_search_terms"]),
+                main_menu_search_terms=list(visual.get("main_menu_search_terms") or []),
                 loading_transition=SharedLoadingTransition(loading_transition)
                 if loading_transition
                 else None,

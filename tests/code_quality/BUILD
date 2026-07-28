@@ -18,6 +18,7 @@ py_library(
     imports = ["../.."],
     deps = [
         "//tests/testlib/common:repo",
+        requirement("pydantic"),
         requirement("pytest"),
         requirement("isort"),
         requirement("requirements-parser"),

@@ -153,6 +153,16 @@ def get_summary_check(
     return check_summary
 
 
+# The ONTAP REST API reports them in microseconds like everything else, so they would
+# have to be divided here. They are deliberately not: the metric translation of
+# netapp_ontap_volumes scales them by 1e-6 instead.
+# See translation_netapp_ontap_volumes in cmk/plugins/collection/graphing/translations.py.
+#
+# The latency of these protocols is emitted unconverted, the metric translation of the
+# calling check plugin takes care of the unit.
+PROTOCOLS_WITHOUT_LATENCY_CONVERSION = frozenset({"fcp", "iscsi"})
+
+
 def single_volume_metrics(
     counter_names: Sequence[tuple[str, str, str]],
     counter_values: Mapping[str, float],
@@ -190,7 +200,6 @@ def single_volume_metrics(
             base[counter_name.replace("total_", "")] = 1.0 if delta == 0.0 else float(delta)
 
         if mode in ["read", "write"] and field == "latency":
-            # See https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
             # for scaling issues:
             # read_latency           micro
             # write_latency          micro
@@ -205,16 +214,16 @@ def single_volume_metrics(
             # san_write_latency      micro
             # san_other_latency      micro
             #
-            # === 7-Mode environments only ===
-            # fcp_read_latency       milli
-            # fcp_write_latency      milli
-            # fcp_other_latency      milli
-            # iscsi_read_latency     milli
-            # iscsi_write_latency    milli
-            # iscsi_other_latency    milli
+            # === the SAN protocols, in milliseconds on 7-Mode and in microseconds
+            # === on ONTAP, are left to the metric translation of the check plugin
+            # fcp_read_latency
+            # fcp_write_latency
+            # fcp_other_latency
+            # iscsi_read_latency
+            # iscsi_write_latency
+            # iscsi_other_latency
             #
-            # FIXME The metric system expects milliseconds but should get seconds
-            if protocol in ["fcp", "iscsi"]:
+            if protocol in PROTOCOLS_WITHOUT_LATENCY_CONVERSION:
                 divisor = 1.0
             else:
                 divisor = 1000.0

@@ -128,14 +128,14 @@ def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
                     "average_read_latency",
                     "iscsi_read_latency",
                     "avg. Read latency",
-                    0.001,
+                    0.000001,
                     lambda x: "%.2f ms" % (x * 1000),
                 ),
                 (
                     "average_write_latency",
                     "iscsi_write_latency",
                     "avg. Write latency",
-                    0.001,
+                    0.000001,
                     lambda x: "%.2f ms" % (x * 1000),
                 ),
                 ("read_data", "iscsi_read_data", "read data", 1, render.bytes),
@@ -209,11 +209,23 @@ def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
     now = time.time()
     value_store = get_value_store()
 
+    # The ONTAP counter manager reports latencies as cumulative averages: the final value
+    # is delta(latency) / delta(operations). check_netapp_vs_traffic computes that quotient
+    # by feeding the referenced operations counter to get_rate in place of the timestamp,
+    # so the keys here must match the protocol/counter names of protocol_map above.
+    # cfr: https://docs.netapp.com/us-en/ontap-restapi/cluster_counter_tables_endpoint_overview.html#counter-property
     latency_calc_ref = {
-        "iscsi": {
+        "iscsi_lif": {
             "average_read_latency": "iscsi_read_ops",
             "average_write_latency": "iscsi_write_ops",
         },
+        # these two entries have the same defect "iscsi_lif" had, but no
+        # verified sample data yet. "fcp" never matches the protocol name "fcp_lif", and
+        # "cifs" neither matches "svm_cifs" nor are its inner keys the counter names used
+        # by that protocol ("average_read_latency"/"average_write_latency"). Both are
+        # therefore rated against the timestamp instead of the operations counter, and
+        # both carry a scale in protocol_map that does not yield seconds.
+        # We defer the fix until we have verified sample data for these two protocols.
         "fcp": {
             "average_read_latency": "read_ops",
             "average_write_latency": "write_ops",

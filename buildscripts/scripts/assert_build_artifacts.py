@@ -39,6 +39,7 @@ HTTP_STATUS_OK = 200
 DOCKER_HUB_API = "https://hub.docker.com/v2"
 RELAY_IMAGE_NAME = "checkmk/check-mk-relay"
 EXIT_CODE_RELAY_MISSING = 2
+RELAY_PSEUDO_EDITION = "relay"
 
 UseCase = Literal["release", "daily", "weekly"]
 MetaFileExtension = Literal["json", "csv"]
@@ -121,6 +122,10 @@ def build_meta_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[
         yield csv_file_name, internal_only
         yield hash_file(csv_file_name), internal_only
 
+    relay_bom_file_name = meta_file_name(RELAY_PSEUDO_EDITION, version.version_without_rc, "json")
+    yield relay_bom_file_name, False
+    yield hash_file(relay_bom_file_name), False
+
 
 def latest_version_alias(args: Args) -> str:
     if args.version_agnostic:
@@ -137,6 +142,14 @@ def build_meta_file_latest_mapping(
         )
         for edition in loaded_yaml["editions"]
         if edition not in loaded_yaml.get("internal_editions", [])
+    }
+
+
+def build_relay_meta_file_latest_mapping(args: Args) -> dict[str, str]:
+    return {
+        meta_file_name(RELAY_PSEUDO_EDITION, latest_version_alias(args), "json"): meta_file_name(
+            RELAY_PSEUDO_EDITION, args.version, "json"
+        )
     }
 
 
@@ -330,6 +343,7 @@ def dump_meta_artifacts_mapping(args: Args, loaded_yaml: dict) -> None:
             {
                 **build_meta_file_latest_mapping(args, loaded_yaml, "json"),
                 **build_meta_file_latest_mapping(args, loaded_yaml, "csv"),
+                **build_relay_meta_file_latest_mapping(args),
             }
         )
     )

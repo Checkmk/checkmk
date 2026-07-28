@@ -241,7 +241,11 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     ])
   )
 
-  return h('table', { class: 'form-readonly__dictionary' }, rows)
+  return h(
+    'table',
+    { class: 'form-readonly__dictionary form-readonly__metric-backend-query' },
+    rows
+  )
 }
 
 function renderOptionalChoice(
@@ -959,6 +963,16 @@ table.form-readonly__table {
 
 .form-readonly__list > li > div {
   display: inline-block;
+}
+
+.form-readonly__metric-backend-query {
+  padding: var(--spacing);
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+}
+
+.form-readonly__list > li:not(:first-child) > .form-readonly__metric-backend-query {
+  margin-top: var(--spacing);
 }
 
 .form-readonly__labels {

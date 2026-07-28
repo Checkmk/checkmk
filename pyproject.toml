@@ -365,6 +365,10 @@ deprecated_calls_exclude = ["argparse.FileType", "os.popen", "os.system"]
 module = ["cmc_proto.*"]
 disallow_untyped_calls = false
 
+[[tool.mypy.overrides]]
+module = ["*.metric_backend.*"]
+disallow_any_explicit = true
+
 # meraki has no type annotations; with explicit_package_bases=true and mypy 1.19+, following it
 # silently triggers "Source file found twice under different module names". Skip it entirely —
 # all meraki types remain Any either way since the package ships no py.typed or stubs.

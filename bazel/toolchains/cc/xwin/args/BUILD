@@ -21,6 +21,7 @@ cc_args(
         # references that cannot be resolved against the static CRT libs.
         "/MT",
     ],
+    tags = ["manual"],
 )
 
 # -Xclang -internal-isystem is what clang-cl lowers /imsvc to. It is
@@ -58,6 +59,7 @@ cc_args(
         "sdk_include_ucrt": "@xwin_sysroot//:sdk_include_ucrt",
         "sdk_include_um": "@xwin_sysroot//:sdk_include_um",
     },
+    tags = ["manual"],
 )
 
 cc_args(
@@ -91,4 +93,5 @@ cc_args(
         "sdk_lib_ucrt": "@xwin_sysroot//:sdk_lib_ucrt",
         "sdk_lib_um": "@xwin_sysroot//:sdk_lib_um",
     },
+    tags = ["manual"],
 )

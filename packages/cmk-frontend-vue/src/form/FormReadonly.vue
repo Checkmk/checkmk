@@ -45,7 +45,7 @@ import type {
 import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import { formatTimeSpan } from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { type PropType, type VNode, defineComponent, h } from 'vue'
 
@@ -58,7 +58,9 @@ import {
   groupNestedValidations
 } from '@/form/private/validation'
 
-import { fromAttributeFilter, fromModel } from '@/metric-backend/attributeFilterAdapter'
+import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
+import { fromAttributeFilter } from '@/metric-backend/attributeFilterAdapter'
+import { lookbackLabel } from '@/metric-backend/consolidation/consolidation-label'
 
 import {
   type Operator,
@@ -203,43 +205,26 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     )
   }
 
-  const renderAttributes = (
-    title: string,
-    attributes: ReadonlyArray<{ key: string; value: string }>
-  ): VNode | null => {
-    if (attributes.length === 0) {
-      return null
-    }
-    const attributeText = attributes.map((attr) => `${attr.key}:${attr.value}`).join(', ')
-    return h('tr', [h('td', { class: 'dict_title' }, [`${title}:`]), h('td', [attributeText])])
+  // OR-of-AND sentence like the editable pills; the custom-query editor only builds one AND group.
+  const attributeGroups = value.attribute_filter
+    ? fromAttributeFilter(value.attribute_filter, randomId)
+    : []
+  const attributeSentence = attributeGroups
+    .map((group) =>
+      group.conditions.map((condition) => pillLabel(condition)).join(` ${untranslated('AND')} `)
+    )
+    .join(` ${untranslated('OR')} `)
+  if (attributeSentence) {
+    rows.push(
+      h('tr', [h('td', { class: 'dict_title' }, ['Attributes:']), h('td', [attributeSentence])])
+    )
   }
 
-  const attributeLists = value.attribute_filter
-    ? fromModel(fromAttributeFilter(value.attribute_filter, () => randomId()))
-    : { resource: [], scope: [], data_point: [] }
-
-  const resourceRow = renderAttributes('Resource Attributes', attributeLists.resource)
-  if (resourceRow) {
-    rows.push(resourceRow)
-  }
-
-  const scopeRow = renderAttributes('Scope Attributes', attributeLists.scope)
-  if (scopeRow) {
-    rows.push(scopeRow)
-  }
-
-  const dataPointRow = renderAttributes('Data Point Attributes', attributeLists.data_point)
-  if (dataPointRow) {
-    rows.push(dataPointRow)
-  }
-
-  const lookbackText = formatTimeSpan(value.aggregation_lookback, ['hour', 'minute', 'second'], {
-    hour: _t('Hours'),
-    minute: _t('Minutes'),
-    second: _t('Seconds')
-  })
   rows.push(
-    h('tr', [h('td', { class: 'dict_title' }, ['Aggregation lookback:']), h('td', lookbackText)])
+    h('tr', [
+      h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
+      h('td', [lookbackLabel(value.aggregation_lookback)])
+    ])
   )
 
   rows.push(

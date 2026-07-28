@@ -374,3 +374,62 @@ test('FormReadonly renders dual list choice', () => {
   screen.getByText('Choice 2')
   expect(screen.queryByText('Choice 3')).toBeNull()
 })
+
+const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
+  type: 'metric_backend_custom_query',
+  title: 'mbTitle',
+  help: 'mbHelp',
+  validators: [],
+  metric_name: null,
+  aggregation_lookback: 0,
+  aggregation_histogram_percentile: 0,
+  service_name_template: ''
+}
+
+function renderMetricBackendCustomQuery(attributeFilter?: unknown): void {
+  render(FormReadonly, {
+    props: {
+      spec: metricBackendCustomQuerySpec,
+      backendValidation: [],
+      data: {
+        metric_name: 'metric',
+        attribute_filter: attributeFilter,
+        aggregation_lookback: 222,
+        aggregation_histogram_percentile: 0.5,
+        service_name_template: 'svc'
+      }
+    }
+  })
+}
+
+test.each([
+  [
+    {
+      type: 'and',
+      conjuncts: [
+        { type: 'equals', key: { kind: 'resource', name: 'foo' }, value: 'bar' },
+        { type: 'equals', key: { kind: 'data_point', name: 'baz' }, value: 'tar' }
+      ]
+    },
+    '[Resource] foo is bar AND [Data point] baz is tar'
+  ],
+  [
+    {
+      type: 'or',
+      disjuncts: [
+        { type: 'equals', key: { kind: 'resource', name: 'foo' }, value: 'bar' },
+        { type: 'exists', key: { kind: 'scope', name: 'baz' } }
+      ]
+    },
+    '[Resource] foo is bar OR [Scope] baz exists'
+  ]
+])('FormReadonly renders the attribute filter as a sentence', (attributeFilter, sentence) => {
+  renderMetricBackendCustomQuery(attributeFilter)
+  screen.getByText(sentence)
+})
+
+test('FormReadonly omits the attribute row and renders a compact lookback without a filter', () => {
+  renderMetricBackendCustomQuery(undefined)
+  expect(screen.queryByText('Attributes:')).toBeNull()
+  screen.getByText(/3\s+m\s+42\s+s/)
+})

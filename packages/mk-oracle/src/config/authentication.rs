@@ -150,6 +150,8 @@ pub struct Authentication {
     asm_username: Option<String>,
     asm_password: Option<String>,
     asm_role: Option<Role>,
+    /// Explicit ASM auth type from the config; when set it overrides the derived one.
+    asm_type: Option<AuthType>,
 }
 
 impl std::fmt::Debug for Authentication {
@@ -173,6 +175,7 @@ impl Default for Authentication {
             asm_username: None,
             asm_password: None,
             asm_role: None,
+            asm_type: None,
         }
     }
 }
@@ -194,6 +197,10 @@ impl Authentication {
         let asm_role = auth
             .get_string(keys::ASM_ROLE)
             .and_then(|r| Role::new(r.as_str()));
+        let asm_type = auth
+            .get_string(keys::ASM_TYPE)
+            .map(|t| AuthType::try_from(t.as_str()))
+            .transpose()?;
 
         if auth_type == AuthType::Os {
             Ok(Some(Self {
@@ -204,6 +211,7 @@ impl Authentication {
                 asm_username,
                 asm_password,
                 asm_role,
+                asm_type,
             }))
         } else {
             Ok(Some(Self {
@@ -219,6 +227,7 @@ impl Authentication {
                 asm_username,
                 asm_password,
                 asm_role,
+                asm_type,
             }))
         }
     }
@@ -230,6 +239,26 @@ impl Authentication {
     }
     pub fn auth_type(&self) -> &AuthType {
         &self.auth_type
+    }
+    pub fn asm_auth_type(&self) -> AuthType {
+        // An explicit `asm_type` from the config wins; otherwise calc it from credentials.
+        if let Some(asm_type) = &self.asm_type {
+            return asm_type.clone();
+        }
+        match self.asm_username.as_deref() {
+            // `/` is external (OS/wallet) authentication.
+            Some("/") => AuthType::Wallet,
+            // A named ASM user with a password is standard auth, otherwise external.
+            Some(user) if !user.is_empty() => {
+                if self.asm_password.is_some() {
+                    AuthType::Standard
+                } else {
+                    AuthType::Wallet
+                }
+            }
+            // No (or empty) ASM user: reuse the regular auth type.
+            _ => self.auth_type.clone(),
+        }
     }
 
     pub fn role(&self) -> Option<&Role> {
@@ -338,6 +367,62 @@ mod tests {
                 sid: None,
             }
         )
+    }
+
+    #[test]
+    fn test_asm_auth_type() {
+        let mk = |user: Option<&str>, pw: Option<&str>| {
+            let a = Authentication {
+                asm_username: user.map(str::to_owned),
+                asm_password: pw.map(str::to_owned),
+                ..Default::default()
+            };
+            a.asm_auth_type()
+        };
+        assert_eq!(mk(Some("/"), None), AuthType::Wallet);
+        assert_eq!(mk(Some("asm_user"), Some("pw")), AuthType::Standard);
+        assert_eq!(mk(Some("asm_user"), None), AuthType::Wallet);
+        assert_eq!(mk(Some(""), None), AuthType::default()); // base auth_type
+        assert_eq!(mk(None, None), AuthType::default()); // base auth_type
+    }
+
+    #[test]
+    fn test_asm_auth_type_explicit_overrides_derived() {
+        // `asm_username: "/"` -> Wallet, but an explicit asm_type wins.
+        let a = Authentication {
+            asm_username: Some("/".to_owned()),
+            asm_type: Some(AuthType::Standard),
+            ..Default::default()
+        };
+        assert_eq!(a.asm_auth_type(), AuthType::Standard);
+    }
+
+    #[test]
+    fn test_asm_auth_type_legacy_typical() {
+        // `asm_username: "/"` -> Wallet, but an explicit asm_type wins.
+        let a = Authentication {
+            asm_username: Some("/".to_owned()),
+            ..Default::default()
+        };
+        assert_eq!(a.asm_auth_type(), AuthType::Wallet);
+    }
+
+    #[test]
+    fn test_asm_auth_type_read_from_yaml() {
+        let a = Authentication::from_yaml(&create_yaml(
+            r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "standard"
+  asm_username: "/"
+  asm_type: "standard"
+"#,
+        ))
+        .unwrap()
+        .unwrap();
+        // Read from the file: explicit `asm_type: standard` overrides the derived Wallet.
+        assert_eq!(a.asm_auth_type(), AuthType::Standard);
     }
     mod data {
         pub const AUTHENTICATION_NO_ASM: &str = r#"

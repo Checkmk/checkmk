@@ -9,7 +9,6 @@ from pathlib import Path
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName
-from cmk.livestatus_client import Query as OldQuery
 from cmk.livestatus_client import SingleSiteConnection
 from cmk.livestatus_client.expressions import And, LqSafe
 from cmk.livestatus_client.queries import Query
@@ -56,7 +55,7 @@ class PredictionQuerier:
         )
         yield from (
             Path(prediction_file)
-            for prediction_file in self.livestatus_connection.query_row(OldQuery(query))[0]
+            for prediction_file in self.livestatus_connection.query_row(query)[0]
         )
 
     def _query_prediction_file_content(self, relative_file_path: Path) -> bytes:

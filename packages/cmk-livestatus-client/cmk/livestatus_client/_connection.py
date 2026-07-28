@@ -525,7 +525,11 @@ class Query:
         return self._query.supports_json_format()
 
 
-QueryTypes = str | Query
+# `_SupportsJsonFormat` lets high-level query builders (e.g. the typed
+# `cmk.livestatus_client.queries.Query`) be passed directly to the connection
+# without this low-level module importing them (which would invert the layer
+# dependency). `query`/`query_row`/... normalize such objects into a `Query`.
+QueryTypes = str | Query | _SupportsJsonFormat
 OnlySites = list[SiteId] | None
 DeadSite = dict[str, str | int | Exception | SiteConfiguration]
 

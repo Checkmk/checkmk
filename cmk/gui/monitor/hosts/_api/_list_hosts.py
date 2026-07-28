@@ -93,7 +93,7 @@ class HostEntry:
             num_services_crit=host.service_counts.crit,
             num_services_unknown=host.service_counts.unknown,
             num_services_pending=host.service_counts.pending,
-            modes=build_host_modes(host),
+            modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )
 

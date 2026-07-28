@@ -20,7 +20,7 @@ use anyhow::Result;
 use regex::Regex;
 use std::collections::HashSet;
 use std::path::PathBuf;
-use sysinfo::System;
+use sysinfo::{System, IS_SUPPORTED_SYSTEM};
 
 /// Regex pattern to match Oracle PMON processes and capture the SID.
 ///
@@ -69,11 +69,20 @@ fn capture_sid(re: &Regex, param: &str) -> Option<String> {
 pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<String>> {
     let re = Regex::new(match_string.unwrap_or(SID_MASK))?;
 
+    if IS_SUPPORTED_SYSTEM {
+        Ok(sids_from_process_api(&re))
+    } else if cfg!(windows) {
+        Ok(HashSet::new())
+    } else {
+        sids_from_ps(&re)
+    }
+}
+
+fn sids_from_process_api(re: &Regex) -> HashSet<String> {
     let mut sys = System::new_all();
     sys.refresh_all();
 
-    let result: HashSet<String> = sys
-        .processes()
+    sys.processes()
         .values()
         .filter_map(|process| {
             process
@@ -81,11 +90,37 @@ pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<Stri
                 .last()
                 .map(|s| s.to_string_lossy())
                 .and_then(|s| s.split(' ').next_back().map(|s| s.to_string()))
-                .and_then(|last_param| capture_sid(&re, &last_param))
+                .and_then(|last_param| capture_sid(re, &last_param))
         })
-        .collect();
+        .collect()
+}
 
-    Ok(result)
+/// `sysinfo` has no process backend on AIX and Solaris, where it reports an
+/// empty process table instead of an error. POSIX `ps` covers those.
+fn sids_from_ps(re: &Regex) -> Result<HashSet<String>> {
+    let output = std::process::Command::new("ps")
+        .args(["-A", "-o", "args="])
+        .output()?;
+    anyhow::ensure!(
+        output.status.success(),
+        "ps failed with {}: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    Ok(sids_from_process_table(
+        &String::from_utf8_lossy(&output.stdout),
+        re,
+    ))
+}
+
+/// A PMON process renames argv[0] and takes no arguments, so only the first word
+/// of a command line can be a SID.
+fn sids_from_process_table(process_table: &str, re: &Regex) -> HashSet<String> {
+    process_table
+        .lines()
+        .filter_map(|line| line.split_whitespace().next())
+        .filter_map(|command| capture_sid(re, command))
+        .collect()
 }
 
 /// Finds ORACLE_HOME for a given SID using the platform's instance registry.
@@ -199,6 +234,21 @@ mod tests {
         assert_eq!(
             capture_sid(&re, "ora_pmon_Test23"),
             Some("TEST23".to_string())
+        );
+    }
+
+    #[test]
+    fn test_sids_from_process_table_matches_first_word_only() {
+        let re = Regex::new(SID_MASK).expect("Failed to compile regex");
+        let process_table = "\
+ora_pmon_TEST19
+asm_pmon_+ASM
+vi ora_pmon_TYPO
+/usr/sbin/cron
+";
+        assert_eq!(
+            sids_from_process_table(process_table, &re),
+            HashSet::from(["TEST19".to_string(), "+ASM".to_string()])
         );
     }
 

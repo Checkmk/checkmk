@@ -47,14 +47,10 @@ if [ "${line_count}" -lt 3 ]; then
 fi
 echo "OK: non-root can exec non-root code"
 
-# The runtime is owned by the calling user, so every root run below must be
-# refused: no section output, and the refusal reported on stderr.
-refusal="No Oracle client runtime found"
-
-# 4. Run mk-oracle as root — expect the refusal (no permissions to read the runtime)
+# 4. Run mk-oracle as root — expect empty output (no permissions to read config)
 sudo_output=$(sudo MK_LIBDIR=./runtimes "${binary}" -c tests/files/test-mini-one-section.yml 2>&1 || true)
-if echo "${sudo_output}" | grep -q '<<<' || ! echo "${sudo_output}" | grep -qF "${refusal}"; then
-    echo "FAIL: expected '${refusal}' and no section output from sudo run, got:" >&2
+if [ -n "${sudo_output}" ]; then
+    echo "FAIL: expected empty output from sudo run, got:" >&2
     echo "${sudo_output}" >&2
     exit 1
 fi
@@ -71,10 +67,10 @@ if ! echo "${sql_output}" | grep -q "details:hello"; then
 fi
 echo "OK: non-root reads and executes custom SQL file"
 
-# 6. Run the custom-metric config as root — expect the refusal (no permissions to read the runtime)
+# 6. Run the custom-metric config as root — expect empty output (no permissions to read the runtime)
 sudo_sql_output=$(sudo MK_LIBDIR=./runtimes "${binary}" -c tests/files/test-custom-metric.yml 2>&1 || true)
-if echo "${sudo_sql_output}" | grep -q '<<<' || ! echo "${sudo_sql_output}" | grep -qF "${refusal}"; then
-    echo "FAIL: expected '${refusal}' and no section output from sudo run with custom SQL file, got:" >&2
+if [ -n "${sudo_sql_output}" ]; then
+    echo "FAIL: expected empty output from sudo run with custom SQL file, got:" >&2
     echo "${sudo_sql_output}" >&2
     exit 1
 fi

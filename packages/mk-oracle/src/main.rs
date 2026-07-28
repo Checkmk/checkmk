@@ -66,7 +66,7 @@ async fn main() {
             log::info!("Spawn new process {args:?} with runtime path {old_path:?}");
             setup::spawn_new_process(args, old_path)
         } else {
-            setup::display_and_log("No Oracle client runtime found");
+            log::error!("No runtime");
             1
         }
     } else {

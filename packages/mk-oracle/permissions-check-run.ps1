@@ -138,23 +138,19 @@ if (`$LASTEXITCODE -ne 0) { exit 2 }
         }
     }
 
-    # Both runs must be refused by the runtime permission check: no section
-    # output, and the refusal reported on stderr (`*>` captures it here).
-    $refusal = "No Oracle client runtime found"
-
     $output_before = Get-Content $admin_out_before -Raw
     Remove-Item $admin_out_before -ErrorAction SilentlyContinue
-    if ($output_before -match '<<<' -or $output_before -notmatch $refusal) {
+    if ($output_before -and $output_before.Trim() -ne "") {
         Write-Host $output_before -ForegroundColor Red
-        Write-Error "FAIL: expected '$refusal' and no section output from admin run before restricting permissions"
+        Write-Error "FAIL: expected empty output from admin run before restricting permissions"
     }
     Write-Host "OK: root can't exec non-root code" -ForegroundColor Green
 
     $sql_output_before = Get-Content $admin_sql_out_before -Raw
     Remove-Item $admin_sql_out_before -ErrorAction SilentlyContinue
-    if ($sql_output_before -match '<<<' -or $sql_output_before -notmatch $refusal) {
+    if ($sql_output_before -and $sql_output_before.Trim() -ne "") {
         Write-Host $sql_output_before -ForegroundColor Red
-        Write-Error "FAIL: expected '$refusal' and no section output from admin run with custom SQL file"
+        Write-Error "FAIL: expected empty output from admin run with custom SQL file"
     }
     Write-Host "OK: root can't read non-root custom SQL file" -ForegroundColor Green
 

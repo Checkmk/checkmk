@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
-
 from cmk.ccc.user import UserId
 from cmk.gui.sidebar._snapin._helpers import make_main_menu, VisualItem, VisualMenuItem
 from cmk.gui.type_defs import Visual
@@ -14,7 +10,7 @@ from cmk.gui.utils.roles import UserPermissions
 
 
 def _visual_without_search_terms() -> Visual:
-    spec: dict[str, Any] = {
+    return {  # type: ignore[typeddict-item]
         "owner": UserId.builtin(),
         "name": "some_view",
         "context": {},
@@ -32,7 +28,6 @@ def _visual_without_search_terms() -> Visual:
         "packaged": False,
         "link_from": {},
     }
-    return spec  # type: ignore[return-value]
 
 
 def test_make_main_menu_visual_without_search_terms(request_context: None) -> None:

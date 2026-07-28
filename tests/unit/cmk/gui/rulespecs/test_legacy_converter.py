@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, Sequence
 from functools import partial
-from typing import Any
 
 import pytest
 
@@ -3223,7 +3221,7 @@ def test_dictionary_groups_migrate(
     ],
 )
 def test_dictionary_groups_legacy_validation(
-    form_spec: api_v1.form_specs.FormSpec, rule: Mapping[str, Any]
+    form_spec: api_v1.form_specs.FormSpec, rule: Mapping[str, object]
 ) -> None:
     converted = convert_to_legacy_valuespec(form_spec, lambda x: x)
     converted.validate_datatype(rule, "")

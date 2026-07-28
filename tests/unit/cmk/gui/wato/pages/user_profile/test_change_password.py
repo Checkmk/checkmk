@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Iterator
-from types import SimpleNamespace
-from typing import Any, cast
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -61,6 +57,6 @@ def test_change_password_action_blocked_on_remote_site(monkeypatch: pytest.Monke
     monkeypatch.setattr(
         change_password_mod, "is_distributed_setup_remote_site", lambda _sites: True
     )
-    page = UserChangePasswordPage(cast(Any, None))  # edition is irrelevant to the guard
+    page = UserChangePasswordPage(MagicMock())  # edition is irrelevant to the guard
     with pytest.raises(MKAuthException, match="remote sites"):
-        page._action(request=cast(Any, None), config=cast(Any, SimpleNamespace(sites={})))
+        page._action(request=MagicMock(), config=MagicMock())

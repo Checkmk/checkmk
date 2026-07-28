@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Callable
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -126,10 +124,10 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
 )
 @pytest.mark.usefixtures("request_context")
 @patch("cmk.gui.watolib.rulesets.update_merged_password_file")
-def test_all_rulesets_save(
+def test_all_rulesets_save(  # type: ignore[explicit-any]
     updated_password_file_automation: MagicMock,
     allrulesets_with_rules_in_multiple_files: AllRulesets,
-    callback: Callable[..., Any] | None,
+    callback: Callable[..., object] | None,
 ) -> None:
     updated_password_file_automation.side_effect = callback
 

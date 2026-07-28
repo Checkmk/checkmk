@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Tests for `Ruleset.format_raw_value`'s self-bootstrapping output.
 
 The emitted `rules.mk` source must load against an empty exec context
@@ -14,7 +12,6 @@ bundled rulespecs.
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -50,7 +47,7 @@ def test_standalone_emit_unchanged() -> None:
     assert "locals().setdefault" not in content
 
 
-def _exec_into_empty_default(content: str, tmp_path: Path) -> Mapping[str, Any]:
+def _exec_into_empty_default(content: str, tmp_path: Path) -> Mapping[str, object]:
     rules_mk = tmp_path / "rules.mk"
     rules_mk.write_text(content)
     return load_mk_file(rules_mk, default={}, lock=False)
@@ -88,12 +85,14 @@ def test_bundled_accumulates_across_files_in_shared_context(tmp_path: Path) -> N
         pprint_value=True,
     )
 
-    ctx: dict[str, Any] = {}
+    ctx: dict[str, object] = {}
     exec(compile(content_a, "<test_a>", "exec"), ctx, ctx)  # nosec B102
     exec(compile(content_b, "<test_b>", "exec"), ctx, ctx)  # nosec B102
 
     # rB prepended via `[<new>] + discovery_parameters['foo']`.
-    rules = ctx["discovery_parameters"]["inventory_df_rules"]
+    discovery_parameters = ctx["discovery_parameters"]
+    assert isinstance(discovery_parameters, dict)
+    rules = discovery_parameters["inventory_df_rules"]
     assert [r["id"] for r in rules] == ["rB", "rA"]
 
 
@@ -113,6 +112,7 @@ def test_bundled_emit_self_bootstraps_for_every_parent(ruleset_name: str, tmp_pa
         pprint_value=True,
     )
     environ = _exec_into_empty_default(content, tmp_path)
+    assert isinstance(environ, dict)
     parent, _, subkey = ruleset_name.partition(":")
     assert subkey in environ[parent]
 

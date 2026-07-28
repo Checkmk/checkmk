@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 import datetime
 from decimal import Decimal
-from typing import Any
 
 import pytest
 
@@ -70,7 +68,7 @@ def test_dict_to_document_empty_payload() -> None:
         pytest.param({"a": {"b": "c"}}, '<a type="dict"><b type="str">c</b></a>', id="dict"),
     ],
 )
-def test_dict_to_document_common_types(obj: dict[str, Any], content: str) -> None:
+def test_dict_to_document_common_types(obj: dict[str, object], content: str) -> None:
     value = _xml.dict_to_document(obj).toxml()
     expected = f'<?xml version="1.0" ?><root>{content}</root>'
     assert value == expected
@@ -85,7 +83,7 @@ def test_dict_to_document_common_types(obj: dict[str, Any], content: str) -> Non
         pytest.param({"a": {}}, '<a type="dict"/>', id="dict"),
     ],
 )
-def test_dict_to_document_empty_value(payload: dict[str, Any], content: str) -> None:
+def test_dict_to_document_empty_value(payload: dict[str, object], content: str) -> None:
     value = _xml.dict_to_document(payload).toxml()
     expected = f'<?xml version="1.0" ?><root>{content}</root>'
     assert value == expected
@@ -101,7 +99,7 @@ def test_dict_to_document_empty_value(payload: dict[str, Any], content: str) -> 
         # pytest.param({"a": '"'}, '<a type="str">"</a>', id="quote"),
     ],
 )
-def test_dict_to_document_escaped_value(payload: dict[str, Any], content: str) -> None:
+def test_dict_to_document_escaped_value(payload: dict[str, object], content: str) -> None:
     value = _xml.dict_to_document(payload).toxml()
     expected = f'<?xml version="1.0" ?><root>{content}</root>'
     assert value == expected
@@ -116,7 +114,7 @@ def test_dict_to_document_escaped_value(payload: dict[str, Any], content: str) -
         pytest.param({'"': "a"}, '<key name="&quot;" type="str">a</key>', id="greater-than"),
     ],
 )
-def test_dict_to_document_escaped_tag_name(payload: dict[str, Any], content: str) -> None:
+def test_dict_to_document_escaped_tag_name(payload: dict[str, object], content: str) -> None:
     value = _xml.dict_to_document(payload).toxml()
     expected = f'<?xml version="1.0" ?><root>{content}</root>'
     assert value == expected

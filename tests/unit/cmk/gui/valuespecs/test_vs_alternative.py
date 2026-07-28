@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any
+from collections.abc import Callable
 
 import pytest
 
@@ -19,7 +18,11 @@ from .utils import expect_validate_failure, expect_validate_success, raise_excep
 FAILURE_MATCH = "The data type of the value does not match any of the allowed alternatives."
 
 
-def get_alternative(**arguments: Any) -> vs.Alternative:
+def get_alternative(
+    match: Callable[[vs.AlternativeModel], int] | None = None,
+    show_alternative_title: bool = False,
+    default_value: vs.ValueSpecDefault[vs.AlternativeModel] = vs.DEF_VALUE,
+) -> vs.Alternative:
     return vs.Alternative(
         [
             vs.Integer(default_value=1),
@@ -27,27 +30,31 @@ def get_alternative(**arguments: Any) -> vs.Alternative:
             vs.Tuple(elements=[vs.Integer(), vs.Integer()]),
             vs.Tuple(elements=[vs.Integer(), vs.Integer(), vs.Integer()]),
         ],
-        **arguments,
+        show_alternative_title=show_alternative_title,
+        default_value=default_value,
     )
 
 
 class TestValuespecAlternative:
-    def _validate(self, arguments: dict[str, Any]) -> None:
-        expect_validate_success(get_alternative(**arguments), 1)
-        expect_validate_success(get_alternative(**arguments), "eins")
-        expect_validate_success(get_alternative(**arguments), (2, 3))
-        expect_validate_success(get_alternative(**arguments), (2, 3, 4))
-        expect_validate_failure(get_alternative(**arguments), ("eins", "zwei"), match=FAILURE_MATCH)
-        expect_validate_failure(get_alternative(**arguments), (), match=FAILURE_MATCH)
-        expect_validate_failure(get_alternative(**arguments), {}, match=FAILURE_MATCH)
+    def _validate(
+        self,
+        match: Callable[[vs.AlternativeModel], int] | None = None,
+    ) -> None:
+        expect_validate_success(get_alternative(match=match), 1)
+        expect_validate_success(get_alternative(match=match), "eins")
+        expect_validate_success(get_alternative(match=match), (2, 3))
+        expect_validate_success(get_alternative(match=match), (2, 3, 4))
+        expect_validate_failure(get_alternative(match=match), ("eins", "zwei"), match=FAILURE_MATCH)
+        expect_validate_failure(get_alternative(match=match), (), match=FAILURE_MATCH)
+        expect_validate_failure(get_alternative(match=match), {}, match=FAILURE_MATCH)
 
         with pytest.raises(MKUserError, match=FAILURE_MATCH):
             # expect_validate_failure executes validate_datatype first,
             # but we want to also cover this code path!
-            get_alternative(**arguments).validate_value(object, "")
+            get_alternative(match=match).validate_value(object, "")
 
     def test_validate(self) -> None:
-        self._validate({})
+        self._validate()
 
     def test_validate_match(self) -> None:
         def _match(value: int | str | tuple) -> int:
@@ -60,7 +67,7 @@ class TestValuespecAlternative:
                 return len(value)
             raise MKUserError("", message=FAILURE_MATCH)
 
-        self._validate({"match": _match})
+        self._validate(_match)
 
     def test_canonical_value(self) -> None:
         assert get_alternative().canonical_value() == 0

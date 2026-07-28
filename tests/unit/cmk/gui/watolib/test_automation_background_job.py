@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 
 import logging
@@ -13,7 +12,6 @@ from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -55,7 +53,7 @@ class ResultTest(ABCAutomationResult):
 
 class TestCheckmkAutomationBackgroundJob:
     @staticmethod
-    def _mock_save(_path: Any, data: object, **kwargs: Any) -> None:
+    def _mock_save(_path: object, data: object, **kwargs: object) -> None:
         global RESULT
         RESULT = data
 

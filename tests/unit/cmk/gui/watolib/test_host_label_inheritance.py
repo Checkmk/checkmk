@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="typeddict-unknown-key"
 
@@ -18,7 +17,6 @@ see the key as absent.
 import os
 import shutil
 from collections.abc import Iterator
-from typing import Any
 
 import pytest
 
@@ -28,7 +26,7 @@ from cmk.ccc.user import UserId
 from cmk.fields import String
 from cmk.gui.fields import Field
 from cmk.gui.logged_in import LoggedInSuperUser
-from cmk.gui.valuespec import TextInput, ValueSpec
+from cmk.gui.valuespec import TextInput
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
@@ -157,10 +155,10 @@ class _ClearingTestAttribute(ABCHostAttributeValueSpec):
     def openapi_field(self) -> Field:
         return String()
 
-    def valuespec(self) -> ValueSpec[Any]:
+    def valuespec(self) -> TextInput:
         return TextInput()
 
-    def labels(self, value: Any) -> Labels:
+    def labels(self, value: str) -> Labels:
         if value:
             return {"test/relay": value, "test/relay_monitored": "yes"}
         return {"test/relay": LABEL_CLEAR_VALUE, "test/relay_monitored": LABEL_CLEAR_VALUE}

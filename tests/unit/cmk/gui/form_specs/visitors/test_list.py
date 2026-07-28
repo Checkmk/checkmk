@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any
 
 import pytest
 
@@ -74,8 +72,8 @@ def list_spec() -> List:
 def test_list(
     spec: ListExtended,
     value: IncomingData,
-    expected_frontend_value: list[Any],
-    expected_disk_value: list[Any],
+    expected_frontend_value: list[object],
+    expected_disk_value: list[object],
 ) -> None:
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert visitor.validate(value) == []

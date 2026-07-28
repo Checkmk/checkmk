@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Callable, Iterable
-from typing import Any
+from collections.abc import Iterable
 
 import pytest
 
@@ -21,6 +19,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.form_specs.visitors import IncomingData
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -38,12 +37,9 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-def _generate_validation_func(comparator: Callable[[Any], bool]) -> Callable[[Any], None]:
-    def validation_func(value: Any) -> None:
-        if not comparator(value):
-            raise validators.ValidationError(Message("Validation failed"))
-
-    return validation_func
+def _validate_integer_larger_than_10(value: object) -> None:
+    if not isinstance(value, int) or value <= 10:
+        raise validators.ValidationError(Message("Value must be an integer larger than 10"))
 
 
 class _Unconvertible:
@@ -52,8 +48,8 @@ class _Unconvertible:
 
 
 def _build_value_validation_for_class_with_input_hint(
-    class_type: type, prefill_value: Any, good_values: list[Any], bad_values: list[Any]
-) -> Iterable[tuple[FormSpec, Any, bool]]:
+    class_type: type, prefill_value: object, good_values: list[object], bad_values: list[object]
+) -> Iterable[tuple[FormSpec, object, bool]]:
     for good_value in good_values:
         yield class_type(), good_value, True
         yield (
@@ -114,11 +110,7 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
         (
             DataSize(
                 displayed_magnitudes=[SIMagnitude.MEGA],
-                custom_validate=(
-                    _generate_validation_func(
-                        lambda x: x > 10,
-                    ),
-                ),
+                custom_validate=(_validate_integer_larger_than_10,),
             ),
             RawDiskData(5),
             False,
@@ -208,7 +200,7 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
 )
 def test_validation(
     form_spec: FormSpec,
-    value: Any,
+    value: IncomingData,
     valid: bool,
 ) -> None:
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))

@@ -2,10 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-
-from typing import Any
 
 from cmk.gui.form_specs.unstable import TimeSpecific
 from cmk.gui.form_specs.unstable.legacy_converter import (
@@ -37,7 +34,7 @@ def _get_first_actual_valuespec(vspec: ValueSpec) -> ValueSpec:
     return vspec
 
 
-def _get_first_actual_form_spec(form_spec: FormSpec[Any]) -> FormSpec[Any]:
+def _get_first_actual_form_spec(form_spec: FormSpec[object]) -> FormSpec[object]:
     if isinstance(form_spec, TransformDataForLegacyFormatOrRecomposeFunction):
         return _get_first_actual_form_spec(
             form_spec.wrapped_form_spec()

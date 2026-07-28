@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import Any
 
 import pytest
 
@@ -65,7 +63,7 @@ def test_builtin_icons_and_actions() -> None:
 
 
 def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
-    icon: dict[str, Any] = {
+    icon: dict[str, object] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],
@@ -84,6 +82,8 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
     assert registered_icon.columns == icon["columns"]
     assert registered_icon.host_columns == icon["host_columns"]
     assert registered_icon.service_columns == icon["service_columns"]
+    paint = icon["paint"]
+    assert callable(paint)
     assert registered_icon.render(
         "host",
         {},
@@ -97,7 +97,7 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
             staleness_threshold=1.5,
             debug=True,
         ),
-    ) == icon["paint"](
+    ) == paint(
         "host",
         {},
         [],

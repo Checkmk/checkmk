@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -16,7 +15,6 @@ import base64
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 from unittest import mock
 
 import pytest
@@ -92,9 +90,11 @@ def install_endpoint(fresh_app_instance):
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, Any]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
-        hooks.call("permission-checked", param["body"]["permission"])
+        body = param["body"]
+        assert isinstance(body, dict)
+        hooks.call("permission-checked", body["permission"])
         return Response(status=204)
 
     endpoint_registry.register(test)
@@ -118,7 +118,7 @@ def install_multi_accept_endpoint(fresh_app_instance):
         request_schema=SomeSchema,
         response_schema=SomeSchema,
     )
-    def multiaccept_test(param: Mapping[str, Any]) -> Response:
+    def multiaccept_test(param: Mapping[str, object]) -> Response:
         response = Response()
         response.set_content_type("application/json")
         response.set_data(json.dumps({"permission": param.get("content_type")}))
@@ -143,7 +143,7 @@ def install_reserved_endpoint(fresh_app_instance):
         output_empty=True,
         internal_user_only=True,
     )
-    def reserved_test(param: Mapping[str, Any]) -> Response:
+    def reserved_test(param: Mapping[str, object]) -> Response:
         return Response(status=204)
 
     endpoint_registry.register(reserved_test)
@@ -201,7 +201,7 @@ def install_endpoint_raise(fresh_app_instance):
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, Any]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         raise ProblemException(418, "short", "long")
 
@@ -223,7 +223,7 @@ def accept_parameter_endpoint(fresh_app_instance):
         update_config_generation=False,
         skip_locking=True,
     )
-    def test(param: Mapping[str, Any]) -> Response:
+    def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         return Response(status=204)
 
@@ -337,7 +337,7 @@ def test_non_supported_accept_header(base: str, aut_user_auth_wsgi_app: WebTestA
 
 # ========= WATO disabled Validation =========
 def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig) -> None:
-    test_data: dict[str, Any] = {
+    test_data: dict[str, object] = {
         "aux_tag_id": "aux_tag_id_1",
         "title": "aux_tag_1",
         "topic": "topic_1",
@@ -392,7 +392,7 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
         "cmk.gui.openapi.endpoints.aux_tags.load_tag_config",
         raise_an_exception,
     )
-    test_data: dict[str, Any] = {
+    test_data: dict[str, object] = {
         "aux_tag_id": "aux_tag_id_1",
         "title": "aux_tag_1",
         "topic": "topic_1",

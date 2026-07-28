@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Callable
-from typing import Any
 
 import pytest
 
@@ -99,7 +97,9 @@ def tuple_spec() -> Tuple:
         ],
     ],
 )
-def test_tuple_visitor_to_disk(spec: Tuple, value: IncomingData, expected_value: list[Any]) -> None:
+def test_tuple_visitor_to_disk(
+    spec: Tuple, value: IncomingData, expected_value: list[object]
+) -> None:
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     disk_value = visitor.to_disk(value)
     assert disk_value == expected_value
@@ -133,7 +133,9 @@ def test_tuple_visitor_to_disk(spec: Tuple, value: IncomingData, expected_value:
         ],
     ],
 )
-def test_tuple_visitor_to_vue(spec: Tuple, value: IncomingData, expected_value: list[Any]) -> None:
+def test_tuple_visitor_to_vue(
+    spec: Tuple, value: IncomingData, expected_value: list[object]
+) -> None:
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert visitor.to_vue(value)[1] == expected_value
     assert len(visitor.validate(value)) == 0

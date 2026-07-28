@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import Any
 
 import pytest
 
@@ -173,7 +171,7 @@ def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_registered_commands() -> None:
-    expected: dict[str, dict[str, Any]] = {
+    expected: dict[str, dict[str, object]] = {
         "acknowledge": {
             "group": "acknowledge",
             "permission": "action.acknowledge",

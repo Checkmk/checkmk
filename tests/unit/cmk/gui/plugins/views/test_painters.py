@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -12,7 +11,7 @@ import datetime
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -1330,17 +1329,17 @@ def _set_expected_queries(painter_ident, live):
         return
 
 
-def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) -> list[str]:
+def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]]) -> list[str]:
     expected_notes: list[str] = []
 
     for path in notes_dirs:
         path.mkdir(parents=True, exist_ok=True)
 
     for note in notes:
-        with open(note["file"], "w") as f:
-            f.write(note["content"])
+        with open(str(note["file"]), "w") as f:
+            f.write(str(note["content"]))
             if note["on_response"]:
-                expected_notes.append(note["content"])
+                expected_notes.append(str(note["content"]))
 
     return expected_notes
 
@@ -1637,7 +1636,7 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     host_name: str,
     service_name: str | None,
     notes_dirs: list[Path],
-    notes: list[dict[str, Any]],
+    notes: list[dict[str, object]],
     request_context: None,
 ) -> None:
     expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)

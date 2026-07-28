@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
@@ -15,12 +13,29 @@ from cmk.gui.exceptions import MKUserError
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def get_dropdown_choice(**kwargs: Any) -> vs.DropdownChoice[str]:
-    if "choices" not in kwargs:
-        kwargs["choices"] = [("a", "ant"), ("b", "bee")]
-
+def get_dropdown_choice(
+    choices: vs.DropdownChoices = (("a", "ant"), ("b", "bee")),
+    help_separator: str | None = None,
+    invalid_choice: vs.DropdownInvalidChoice = "complain",
+    invalid_choice_title: str | None = None,
+    invalid_choice_error: str | None = None,
+    no_preselect_title: str | None = None,
+    read_only: bool = False,
+    encode_value: bool = True,
+    deprecated_choices: Sequence[object] = (),
+    default_value: vs.ValueSpecDefault[str] = vs.DEF_VALUE,
+) -> vs.DropdownChoice[str]:
     return vs.DropdownChoice[str](
-        **kwargs,
+        choices,
+        help_separator=help_separator,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        read_only=read_only,
+        encode_value=encode_value,
+        deprecated_choices=deprecated_choices,
+        default_value=default_value,
     )
 
 

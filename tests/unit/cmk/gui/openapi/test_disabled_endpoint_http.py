@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Iterator, Mapping
-from typing import Any
 
 import pytest
 
@@ -41,7 +38,7 @@ def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEnd
         update_config_generation=False,
         skip_locking=True,
     )
-    def _real(param: Mapping[str, Any]) -> Response:
+    def _real(param: Mapping[str, object]) -> Response:
         return Response(status=204)
 
     stub = disabled_legacy(_real, _DETAIL)

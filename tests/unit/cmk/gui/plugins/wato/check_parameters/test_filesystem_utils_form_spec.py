@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
-from typing import Any
 
 import pytest
 
@@ -60,7 +58,7 @@ from cmk.gui.plugins.wato.check_parameters.filesystem_utils_form_spec import fs_
     ],
 )
 def test_filesystem_form_spec_vue_representation(
-    disk_data: dict[str, Any], frontend_data: dict[str, Any]
+    disk_data: dict[str, object], frontend_data: dict[str, object]
 ) -> None:
     form_spec = fs_filesystem()
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))

@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import urllib.parse
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 import cmk.ccc.store
 import cmk.utils.paths
@@ -44,7 +41,7 @@ class _InventoryClient:
         self,
         method: HTTPMethod,
         url: str,
-        query_params: Mapping[str, Any] | None = None,
+        query_params: Mapping[str, object] | None = None,
     ) -> Response:
         default_headers: Mapping[str, str] = JSON_HEADERS
         url = self._url_prefix + url

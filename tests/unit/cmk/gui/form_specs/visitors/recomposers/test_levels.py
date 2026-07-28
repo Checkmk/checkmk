@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import copy
-from typing import Any, Literal, TypeVar
+from typing import Literal, TypeVar
 
 import pytest
 
@@ -19,6 +18,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.form_specs.visitors import IncomingData
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -244,8 +244,8 @@ def levels_spec() -> Levels:
 )
 def test_levels_recompose(
     spec: Levels,
-    value: Any,
-    expected_frontend_data: tuple[str, Any],
+    value: IncomingData,
+    expected_frontend_data: tuple[str, object],
     expected_disk_data: _LevelsFormSpecModel,
 ) -> None:
     """Gets a spec and its value, serializes it for the frontend
@@ -305,7 +305,7 @@ def test_levels_recompose(
 )
 def test_levels_recompose_invalid_data(
     spec: Levels,
-    invalid_value: Any,
+    invalid_value: IncomingData,
     expected_validation_message: str,
 ) -> None:
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))

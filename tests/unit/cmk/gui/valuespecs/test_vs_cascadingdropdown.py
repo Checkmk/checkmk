@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
 
 import pytest
 
@@ -15,7 +12,10 @@ from cmk.gui.exceptions import MKUserError
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def get_cascading_dropdown(**arguments: Any) -> vs.CascadingDropdown:
+def get_cascading_dropdown(
+    no_preselect_title: str | None = None,
+    default_value: vs.ValueSpecDefault[vs.CascadingDropdownChoiceValue] = vs.DEF_VALUE,
+) -> vs.CascadingDropdown:
     return vs.CascadingDropdown(
         choices=[
             ("long", "long title", vs.TextInput()),
@@ -25,7 +25,8 @@ def get_cascading_dropdown(**arguments: Any) -> vs.CascadingDropdown:
             (None, "none ident title"),
             (False, "bool ident title"),
         ],
-        **arguments,
+        no_preselect_title=no_preselect_title,
+        default_value=default_value,
     )
 
 

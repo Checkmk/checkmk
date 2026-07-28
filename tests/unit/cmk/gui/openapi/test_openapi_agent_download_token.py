@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Endpoint tests for the agent download / registration token forwarder.
 
 Covers the local vs. remote-site forwarding code paths added so that hosts on
@@ -14,7 +12,6 @@ download and registration.
 
 import datetime as dt
 from collections.abc import Iterator
-from typing import Any
 
 import pytest
 
@@ -27,6 +24,7 @@ from cmk.gui.token_auth import (
     get_token_store,
 )
 from cmk.gui.token_auth._store import InvalidToken
+from cmk.utils.automation_config import RemoteAutomationConfig
 from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -133,14 +131,19 @@ class TestCreateAgentDownloadToken:
         distributed_sites: None,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        captured: dict[str, Any] = {}
+        captured: dict[str, object] = {}
+        captured_vars: list[tuple[str, str]] = []
 
         def fake_remote_automation(
-            *, automation_config: Any, command: str, vars_: list[tuple[str, str]], debug: bool
+            *,
+            automation_config: RemoteAutomationConfig,
+            command: str,
+            vars_: list[tuple[str, str]],
+            debug: bool,
         ) -> dict[str, str | None]:
             captured["site_id"] = automation_config.site_id
             captured["command"] = command
-            captured["vars"] = dict(vars_)
+            captured_vars[:] = vars_
             return {
                 "id": "forwarded-token-id",
                 "issued_at": "2026-04-27T10:00:00+00:00",
@@ -159,7 +162,7 @@ class TestCreateAgentDownloadToken:
         assert resp.json["extensions"]["expires_at"].startswith("2026-05-04")
         assert captured["site_id"] == REMOTE_SITE
         assert captured["command"] == "agent-download-token-create"
-        assert "request" in captured["vars"]
+        assert "request" in dict(captured_vars)
         # Local store must remain empty for the forwarded token.
         with pytest.raises(InvalidToken):
             get_token_store().verify(f"0:{resp.json['id']}", now=dt.datetime.now(dt.UTC))
@@ -210,10 +213,14 @@ class TestCreateAgentRegistrationToken:
         distributed_sites: None,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        captured: dict[str, Any] = {}
+        captured: dict[str, object] = {}
 
         def fake_remote_automation(
-            *, automation_config: Any, command: str, vars_: list[tuple[str, str]], debug: bool
+            *,
+            automation_config: RemoteAutomationConfig,
+            command: str,
+            vars_: list[tuple[str, str]],
+            debug: bool,
         ) -> dict[str, str | None]:
             captured["site_id"] = automation_config.site_id
             captured["command"] = command
@@ -240,8 +247,8 @@ class TestCreateAgentRegistrationToken:
         assert resp.json["extensions"]["expires_at"] is None
         assert captured["site_id"] == REMOTE_SITE
         assert captured["command"] == "agent-registration-token-create"
-        assert '"host_name":"heute"' in captured["request"]
-        assert '"connection_mode":"pull-agent"' in captured["request"]
+        assert '"host_name":"heute"' in str(captured["request"])
+        assert '"connection_mode":"pull-agent"' in str(captured["request"])
 
     @pytest.mark.usefixtures("with_host")
     def test_unknown_site_id_returns_400(

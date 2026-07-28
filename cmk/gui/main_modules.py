@@ -19,6 +19,7 @@ from cmk.gui.main_navigation import main_navigation_renderer_registry, MainNavig
 from cmk.gui.openapi import endpoint_family_registry, versioned_endpoint_registry
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
 from cmk.gui.sidebar import SidebarRenderer, snapin_registry
+from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
@@ -49,6 +50,7 @@ def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationCo
         config_variable_registry=config_variable_registry,
         dashlet_registry=dashlet_registry,
         endpoint_family_registry=endpoint_family_registry,
+        filter_registry=filter_registry,
         replication_path_registry=replication_path_registry,
         snapin_registry=snapin_registry,
         versioned_endpoint_registry=versioned_endpoint_registry,

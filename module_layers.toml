@@ -823,6 +823,7 @@ allows = [
   "cmk.gui.openapi",
   "cmk.gui.pagetypes",
   "cmk.gui.sidebar",
+  "cmk.gui.visuals.filter",
   "cmk.gui.watolib",
   "cmk.licensing.basics.options",
 ]

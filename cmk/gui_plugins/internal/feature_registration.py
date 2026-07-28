@@ -13,6 +13,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
 from cmk.gui.sidebar import SnapinRegistry
+from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
@@ -34,6 +35,7 @@ class RegistrationContext:
     config_variable_registry: ConfigVariableRegistry
     dashlet_registry: DashletRegistry
     endpoint_family_registry: EndpointFamilyRegistry
+    filter_registry: FilterRegistry
     replication_path_registry: ReplicationPathRegistry
     snapin_registry: SnapinRegistry
     versioned_endpoint_registry: VersionedEndpointRegistry

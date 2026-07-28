@@ -57,6 +57,7 @@ class FilterGroup(Enum):
     SERVICE_STATE = "service_state"
     AGENT = "agent"
     CLOUD = "cloud"
+    NETWORK_FLOW = "network_flow"
     NOTIFICATIONS = "notifications"
     OTHER = "other"
 

@@ -20,7 +20,6 @@ use anyhow::Result;
 use regex::Regex;
 use std::collections::HashSet;
 use std::path::PathBuf;
-use sysinfo::{System, IS_SUPPORTED_SYSTEM};
 
 /// Regex pattern to match Oracle PMON processes and capture the SID.
 ///
@@ -29,27 +28,22 @@ use sysinfo::{System, IS_SUPPORTED_SYSTEM};
 const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
 /// Retrieves local Oracle SIDs.
-/// On Windows: union of registry (SOFTWARE\Oracle) instances and detected processes.
+/// On Windows: the instance registry (SOFTWARE\Oracle).
 /// On Unix: only SIDs with a running PMON process; oratab is consulted later
 /// (`find_oracle_home`) solely to resolve ORACLE_HOME, not for discovery.
 pub fn get_local_sid_names() -> Vec<String> {
-    let process_sids = find_sids_by_processes(Some(SID_MASK))
-        .unwrap_or_default()
-        .into_iter()
-        .map(|i| i.to_uppercase())
-        .collect::<HashSet<String>>();
     if cfg!(windows) {
-        let mut sids = process_sids;
-        sids.extend(
-            get_instances(None)
-                .unwrap_or_default()
-                .into_iter()
-                .map(|i| i.name.to_string().to_uppercase()),
-        );
-        sids.into_iter().collect()
+        get_instances(None)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|i| i.name.to_string().to_uppercase())
+            .collect()
     } else {
-        // On Unix, monitor every running PMON SID (oratab only resolves ORACLE_HOME later).
-        process_sids.into_iter().collect()
+        find_sids_by_processes(Some(SID_MASK))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|i| i.to_uppercase())
+            .collect()
     }
 }
 
@@ -64,39 +58,16 @@ fn capture_sid(re: &Regex, param: &str) -> Option<String> {
         .map(|m| m.as_str().to_uppercase())
 }
 
-/// Method is similar to `ps -ef | grep <match_string>`
-/// May not work on Windows systems
+/// Method is similar to `ps -ef | grep <match_string>`.
+/// Empty on Windows, which has no per-SID processes.
 pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<String>> {
-    let re = Regex::new(match_string.unwrap_or(SID_MASK))?;
-
-    if IS_SUPPORTED_SYSTEM {
-        Ok(sids_from_process_api(&re))
-    } else if cfg!(windows) {
-        Ok(HashSet::new())
-    } else {
-        sids_from_ps(&re)
+    if cfg!(windows) {
+        return Ok(HashSet::new());
     }
+    let re = Regex::new(match_string.unwrap_or(SID_MASK))?;
+    sids_from_ps(&re)
 }
 
-fn sids_from_process_api(re: &Regex) -> HashSet<String> {
-    let mut sys = System::new_all();
-    sys.refresh_all();
-
-    sys.processes()
-        .values()
-        .filter_map(|process| {
-            process
-                .cmd()
-                .last()
-                .map(|s| s.to_string_lossy())
-                .and_then(|s| s.split(' ').next_back().map(|s| s.to_string()))
-                .and_then(|last_param| capture_sid(re, &last_param))
-        })
-        .collect()
-}
-
-/// `sysinfo` has no process backend on AIX and Solaris, where it reports an
-/// empty process table instead of an error. POSIX `ps` covers those.
 fn sids_from_ps(re: &Regex) -> Result<HashSet<String>> {
     let output = std::process::Command::new("ps")
         .args(["-A", "-o", "args="])

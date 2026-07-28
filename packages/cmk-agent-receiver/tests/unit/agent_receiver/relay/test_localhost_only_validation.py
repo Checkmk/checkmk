@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any
 from unittest.mock import Mock
 
 import fastapi
@@ -31,7 +30,7 @@ def test_localhost_only_validation() -> None:
     # since TestClient doesn't allow us to easily configure client addresses
 
     # Helper to create mock request with specific client address
-    def create_mock_request(client_host: str) -> Any:
+    def create_mock_request(client_host: str) -> Mock:
         mock_request = Mock()
         mock_request.client = Address(client_host, 12345)
         return mock_request

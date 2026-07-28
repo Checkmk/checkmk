@@ -350,6 +350,7 @@ module = [
   "*.metric_backend.*",
   "*.otel.*",
   "*.otel_collector.*",
+  "*.relay.*",
   "*.robotmk.*",
   "*.telemetry.*",
 ]

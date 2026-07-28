@@ -2,7 +2,7 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.livestatus_client.types import Column, Table
+from cmk.livestatus_client.types import Column, DynamicColumn, Table
 
 # fmt: off
 
@@ -947,3 +947,21 @@ class Hosts(Table):
         description='3D-Coordinates: Z',
     )
     """3D-Coordinates: Z"""
+
+    # Dynamic columns are registered in the core via addDynamicColumn and are
+    # not listed in livestatus' "columns" table. They are maintained manually
+    # in DYNAMIC_COLUMNS in _create_table.py.
+
+    mk_logwatch_file = DynamicColumn(
+        'mk_logwatch_file',
+        col_type='blob',
+        description='This contents of a logfile fetched via mk_logwatch',
+    )
+    """This contents of a logfile fetched via mk_logwatch"""
+
+    rrddata = DynamicColumn(
+        'rrddata',
+        col_type='list',
+        description='RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION',
+    )
+    """RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION"""

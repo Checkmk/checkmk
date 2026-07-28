@@ -60,6 +60,7 @@ class TestPredictionQuerier:
             f"Columns: prediction_file:file:{metric}/everyday-lower.info\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
+            "And: 2\n"
             "ColumnHeaders: off"
         )
         assert list(querier.query_available_predictions(metric)) == [expected_prediction_info]
@@ -104,6 +105,7 @@ class TestPredictionQuerier:
             f"Columns: prediction_file:file:{metric}/day-1234-lower\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
+            "And: 2\n"
             "ColumnHeaders: off"
         )
         assert querier.query_prediction_data(prediciton_info) == expected_prediction_data

@@ -59,12 +59,8 @@ class PredictionQuerier:
         )
 
     def _query_prediction_file_content(self, relative_file_path: Path) -> bytes:
-        # Dynamic column names are not supported by the query builder, so we use a string-based query here.
-        return b"\n".join(
-            self.livestatus_connection.query_row(
-                "GET services\n"
-                f"Columns: prediction_file:file:{relative_file_path}\n"
-                f"Filter: host_name = {LqSafe(self.host_name)}\n"
-                f"Filter: description = {LqSafe(self.service_name)}"
-            )
+        query = Query(
+            [Services.prediction_file.dynamic("file", str(relative_file_path))],
+            self._service_filter(),
         )
+        return b"\n".join(self.livestatus_connection.query_row(query))

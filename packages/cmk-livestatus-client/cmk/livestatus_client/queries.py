@@ -14,7 +14,6 @@ from typing import Any, NoReturn, override
 from cmk.ccc.site import SiteId
 from cmk.livestatus_client import tables
 from cmk.livestatus_client._connection import (
-    get_livestatus_blob_columns,
     LivestatusResponse,
     MultiSiteConnection,
     OnlySites,
@@ -243,7 +242,10 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         self.table: type[Table] = _tables.pop()
 
     def supports_json_format(self) -> bool:
-        return not {c.name for c in self.columns}.intersection(get_livestatus_blob_columns())
+        # Blob columns must not be transported as JSON. The declared column type covers both
+        # static and dynamic columns; the latter (e.g. "prediction_file:file:some/path") could
+        # never be recognised by name, as the runtime arguments are part of it.
+        return all(column.type != "blob" for column in self.columns)
 
     def filter(self, filter_expr: QueryExpression) -> "Query":
         """Apply additional filters to an existing query.

@@ -206,6 +206,132 @@ class Column:
         return self.expr.empty()
 
 
+class DynamicColumn:
+    """A representation of a livestatus dynamic column.
+
+    Dynamic columns are registered in the core via `addDynamicColumn` and take
+    runtime parameters which are appended to the column name, separated by
+    colons (e.g. ``prediction_file:file:some/path``). A `DynamicColumn` can
+    therefore not be used in a `Query` directly: calling `dynamic` with the
+    runtime parameters yields a regular `Column` which can.
+
+    Examples:
+
+        >>> class Services(Table):
+        ...     __tablename__ = 'services'
+        ...
+        ...     prediction_file = DynamicColumn(
+        ...         'prediction_file', 'blob', 'Fetch prediction data')
+
+        >>> Services.prediction_file
+        DynamicColumn(services.prediction_file: blob)
+
+        >>> Services.prediction_file.dynamic('file', 'metric/day-123-upper')
+        Column(services.prediction_file:file:metric/day-123-upper: blob)
+
+        The parameters are validated to prevent query injection:
+
+        >>> Services.prediction_file.dynamic('file', 'foo\\nbar')
+        Traceback (most recent call last):
+        ...
+        ValueError: Invalid Livestatus Query string: 'foo\\nbar'
+
+        >>> Services.prediction_file.dynamic('file', 'foo bar')
+        Traceback (most recent call last):
+        ...
+        ValueError: Invalid dynamic column parameter (contains whitespace): 'foo bar'
+    """
+
+    def __init__(
+        self,
+        name: str,
+        col_type: LivestatusType,
+        description: str | None = None,
+    ):
+        """A representation of a livestatus dynamic column.
+
+        Args:
+            name:
+                The name under which the dynamic column is registered in the
+                core, e.g. `prediction_file`.
+
+            col_type:
+                The livestatus column type of the columns created by the core
+                at runtime.
+
+            description:
+                The documentation for this column. The __doc__ attribute will
+                be populated with this text.
+        """
+        self.name = name
+        self.type: LivestatusType = col_type
+        self.table: type[Table] = NoTable
+        self.__doc__ = description
+
+    def __get__(self, obj: object, obj_type: type[Table]) -> DynamicColumn:
+        # Same descriptor logic as in `Column`: bind the table on attribute
+        # access.
+        if self.table is NoTable:
+            self.table = obj_type
+
+        return self
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.table.__tablename__}.{self.name}"
+
+    @override
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        return f"{class_name}({self.full_name}: {self.type})"
+
+    def dynamic(
+        self,
+        column_title: str | LqSafe,
+        *arguments: str | int | float | LqSafe,
+    ) -> Column:
+        """Parametrize this dynamic column for use in a `Query`.
+
+        Args:
+            column_title:
+                The name under which the core registers the created column,
+                e.g. `file`. Must not contain colons.
+
+            arguments:
+                The runtime parameters of the column, e.g. the file path for
+                `prediction_file`. Multiple arguments are joined with colons.
+
+        Returns:
+            A `Column` named `<name>:<column_title>:<argument>[:<argument>...]`.
+
+        Raises:
+            ValueError: If a parameter would break the query, i.e. it contains
+                whitespace (column names are whitespace-separated in the
+                `Columns:` header) or the title contains a colon.
+        """
+        if not arguments:
+            raise ValueError(f"Dynamic column {self.name!r} requires at least one argument")
+        title = _validate_lq_safe(column_title)
+        args = [_validate_lq_safe(argument) for argument in arguments]
+        if not title or ":" in title:
+            raise ValueError(f"Invalid dynamic column title: {title!r}")
+        for part in (title, *args):
+            if any(char.isspace() for char in part):
+                raise ValueError(
+                    f"Invalid dynamic column parameter (contains whitespace): {part!r}"
+                )
+        column = Column(":".join([self.name, title, *args]), self.type, self.__doc__)
+        column.table = self.table
+        # Use the (unique) column title as the response key, so consumers of
+        # `iterate`/`fetchone` get a sane key instead of the composed wire name.
+        column.label_name = title
+        return column
+
+
+def _validate_lq_safe(part: str | int | float | LqSafe) -> str:
+    return str(part if isinstance(part, LqSafe) else LqSafe(part))
+
+
 def expr_to_tree(
     table: type[Table],
     query_expr: QueryExpression,

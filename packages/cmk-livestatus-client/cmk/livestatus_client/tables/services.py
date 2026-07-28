@@ -2,7 +2,7 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.livestatus_client.types import Column, Table
+from cmk.livestatus_client.types import Column, DynamicColumn, Table
 
 # fmt: off
 
@@ -1717,3 +1717,21 @@ class Services(Table):
         description='A dictionary of the tags',
     )
     """A dictionary of the tags"""
+
+    # Dynamic columns are registered in the core via addDynamicColumn and are
+    # not listed in livestatus' "columns" table. They are maintained manually
+    # in DYNAMIC_COLUMNS in _create_table.py.
+
+    prediction_file = DynamicColumn(
+        'prediction_file',
+        col_type='blob',
+        description='Fetch prediction data',
+    )
+    """Fetch prediction data"""
+
+    rrddata = DynamicColumn(
+        'rrddata',
+        col_type='list',
+        description='RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION',
+    )
+    """RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION"""

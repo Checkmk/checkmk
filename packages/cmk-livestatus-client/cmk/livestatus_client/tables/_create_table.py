@@ -37,7 +37,7 @@ TABLE_FILE_TEMPLATE: Final = '''#!/usr/bin/env python3
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.livestatus_client.types import Column, Table
+from cmk.livestatus_client.types import Column, {% if dynamic_columns %}DynamicColumn, {% endif %}Table
 
 # fmt: off
 
@@ -52,8 +52,64 @@ class {{ table_name.title() }}(Table):
         description='{{ col.description | replace("'", "\\\\'") }}',
     )
     """{{ col.description }}"""{% endfor %}
+    {%- if dynamic_columns %}
+
+    # Dynamic columns are registered in the core via addDynamicColumn and are
+    # not listed in livestatus' "columns" table. They are maintained manually
+    # in DYNAMIC_COLUMNS in _create_table.py.
+    {%- for col in dynamic_columns %}
+
+    {{ col.name }} = DynamicColumn(
+        '{{ col.name }}',
+        col_type='{{ col.type }}',
+        description='{{ col.description | replace("'", "\\\\'") }}',
+    )
+    """{{ col.description }}"""{% endfor %}
+    {%- endif %}
 
 '''
+
+_RRDDATA_DESCRIPTION: Final = (
+    "RRD metrics data of this object. This is a column with parameters: "
+    "rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION"
+)
+
+# Dynamic columns (see addDynamicColumn in packages/livestatus) do not show up
+# in livestatus' "columns" table, so they cannot be generated from the CSV
+# input and are maintained here manually.
+DYNAMIC_COLUMNS: Final = {
+    "crashreports": [
+        {
+            "name": "file",
+            "type": "blob",
+            "description": "Files related to the crash report (crash.info, etc.)",
+        },
+    ],
+    "hosts": [
+        {
+            "name": "mk_logwatch_file",
+            "type": "blob",
+            "description": "This contents of a logfile fetched via mk_logwatch",
+        },
+        {
+            "name": "rrddata",
+            "type": "list",
+            "description": _RRDDATA_DESCRIPTION,
+        },
+    ],
+    "services": [
+        {
+            "name": "prediction_file",
+            "type": "blob",
+            "description": "Fetch prediction data",
+        },
+        {
+            "name": "rrddata",
+            "type": "list",
+            "description": _RRDDATA_DESCRIPTION,
+        },
+    ],
+}
 
 
 def transform_csv(table_name: str) -> None:
@@ -84,7 +140,15 @@ def transform_csv(table_name: str) -> None:
         for entry in column_entries:
             assert not any(entry[column] is None for column in columns)
 
-        sys.stdout.write(str(template.render(table_name=table_name, columns=column_entries)))
+        sys.stdout.write(
+            str(
+                template.render(
+                    table_name=table_name,
+                    columns=column_entries,
+                    dynamic_columns=DYNAMIC_COLUMNS.get(table_name, []),
+                )
+            )
+        )
         break
 
 

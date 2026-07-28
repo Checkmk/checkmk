@@ -35,6 +35,7 @@ pub mod keys {
     pub const ASM_USERNAME: &str = "asm_username";
     pub const ASM_PASSWORD: &str = "asm_password";
     pub const ASM_ROLE: &str = "asm_role";
+    pub const ASM_TYPE: &str = "asm_type";
 
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";

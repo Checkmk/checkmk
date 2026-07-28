@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-27 13:47+0000\n"
+"PO-Revision-Date: 2026-07-28 02:47+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
 "de/>\n"
 "Language: de\n"
@@ -12418,11 +12418,9 @@ msgstr "Übereinstimmende Check-Plugins"
 msgid "Check point firewall connections"
 msgstr "Check Point Firewall-Verbindungen"
 
-#, fuzzy
 msgid "Check point firewall packet rates"
 msgstr "Check Point Firewall-Paketraten"
 
-#, fuzzy
 msgid "Check point tunnel status"
 msgstr "Check Point Tunnelstatus"
 
@@ -12576,7 +12574,6 @@ msgstr ""
 "Zustand der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
-#, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Checkmk Appliance Information"
 
@@ -12625,10 +12622,9 @@ msgstr ""
 "Zustand der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
-#, fuzzy
 msgid "Checkmk agent: execute the Checkmk agent within running containers"
 msgstr ""
-"Checkmk-Agent: Führe den Checkmk-Agent innerhalb laufender Container aus"
+"Checkmk-Agent: führe den Checkmk-Agent innerhalb laufender Container aus"
 
 msgid "Checkmk automation"
 msgstr "Checkmk Automatisierung"
@@ -12657,13 +12653,11 @@ msgstr "Belegung Checkmk Checker"
 msgid "Checkmk config file name"
 msgstr "Dateiname der Checkmk-Konfiguration"
 
-#, fuzzy
 msgid "Checkmk configuration files"
 msgstr "Checkmk Konfigurationsdateien"
 
-#, fuzzy
 msgid "Checkmk core files"
-msgstr "Checkmk Core-Dateien"
+msgstr "Checkmk-Kern-Dateien"
 
 msgid "Checkmk dashboard"
 msgstr "Checkmk Dashboard"
@@ -12680,7 +12674,6 @@ msgstr "Checkmk-Fetcher-Latenz"
 msgid "Checkmk fetcher usage"
 msgstr "Checkmk-Fetcher Auslastung"
 
-#, fuzzy
 msgid ""
 "Checkmk has an efficient SNMP implementation called inline SNMP which "
 "reduces the load produced by SNMP monitoring on the monitoring host "
@@ -12723,23 +12716,18 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Auslastung Checkmk-Helper"
 
-#, fuzzy
 msgid "Checkmk licensing files"
-msgstr "Checkmk Lizenzdateien"
+msgstr "Checkmk-Lizenzdateien"
 
-#, fuzzy
 msgid "Checkmk log files"
-msgstr "Checkmk Log-Dateien"
+msgstr "Checkmk-Log-Dateien"
 
-#, fuzzy
 msgid "Checkmk mobile"
 msgstr "Checkmk Mobil"
 
-#, fuzzy
 msgid "Checkmk overview"
-msgstr "Checkmk Überblick"
+msgstr "Checkmk-Übersicht"
 
-#, fuzzy
 msgid "Checkmk overview of Checkmk server"
 msgstr "Checkmk-Übersicht des Checkmk-Servers"
 
@@ -12755,7 +12743,6 @@ msgstr "Checkmk Server"
 msgid "Checkmk service provider metadata"
 msgstr "Metadaten des Checkmk Serviceproviders"
 
-#, fuzzy
 msgid "Checkmk sidebar"
 msgstr "Checkmk-Seitenleiste"
 
@@ -12815,9 +12802,8 @@ msgstr ""
 "nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
 "<tt><b>Check_MK$</b></tt> in der Liste der Services an."
 
-#, fuzzy
 msgid "Checkmk version"
-msgstr "Checkmk-Versionen"
+msgstr "Checkmk-Version"
 
 msgid "Checkmk versions"
 msgstr "Checkmk-Versionen"
@@ -12859,42 +12845,33 @@ msgstr ""
 msgid "Checkmk with times metrics"
 msgstr "Checkmk mit Zeitmetriken"
 
-#, fuzzy
 msgid "Checkmk: API: bytes"
 msgstr "Checkmk: API: Bytes"
 
-#, fuzzy
 msgid "Checkmk: API: requests"
 msgstr "Checkmk: API: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: API: secs"
 msgstr "Checkmk: API: Sekunden"
 
 msgid "Checkmk: Agent Bakery signing keys expire soon"
 msgstr "Checkmk: Signaturschlüssel der Agentenbäckerei laufen bald ab"
 
-#, fuzzy
 msgid "Checkmk: Ajax: bytes"
 msgstr "Checkmk: Ajax: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Ajax: requests"
 msgstr "Checkmk: Ajax: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Ajax: secs"
 msgstr "Checkmk: Ajax: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: BI: bytes"
 msgstr "Checkmk: BI: Bytes"
 
-#, fuzzy
 msgid "Checkmk: BI: requests"
 msgstr "Checkmk: BI: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: BI: secs"
 msgstr "Checkmk: BI: Sekunden"
 
@@ -12902,123 +12879,93 @@ msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
 msgstr ""
 "Checkmk: Hinweis zu Servicerisiken – Signaturschlüssel des Agenten laufen ab"
 
-#, fuzzy
 msgid "Checkmk: Setup: bytes"
 msgstr "Checkmk: Setup: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Setup: requests"
 msgstr "Checkmk: Setup: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Setup: secs"
 msgstr "Checkmk: Setup: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: dashboards: bytes"
 msgstr "Checkmk: Dashboards: Bytes"
 
-#, fuzzy
 msgid "Checkmk: dashboards: requests"
 msgstr "Checkmk: Dashboards: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: dashboards: secs"
 msgstr "Checkmk: Dashboards: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: graphs: bytes"
 msgstr "Checkmk: Graphen: Bytes"
 
-#, fuzzy
 msgid "Checkmk: graphs: requests"
 msgstr "Checkmk: Graphen: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: graphs: secs"
 msgstr "Checkmk: Graphen: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: index: bytes"
 msgstr "Checkmk: Index: Bytes"
 
-#, fuzzy
 msgid "Checkmk: index: requests"
 msgstr "Checkmk: Index: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: index: secs"
 msgstr "Checkmk: Index: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: login: bytes"
 msgstr "Checkmk: Login: Bytes"
 
-#, fuzzy
 msgid "Checkmk: login: requests"
 msgstr "Checkmk: Login: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: login: secs"
 msgstr "Checkmk: Login: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: other: bytes"
 msgstr "Checkmk: Sonstige: Bytes"
 
-#, fuzzy
 msgid "Checkmk: other: requests"
 msgstr "Checkmk: Sonstige: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: other: secs"
 msgstr "Checkmk: Sonstige: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: search: bytes"
 msgstr "Checkmk: Suche: Bytes"
 
-#, fuzzy
 msgid "Checkmk: search: requests"
 msgstr "Checkmk: Suche: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: search: secs"
 msgstr "Checkmk: Suche: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: sidebar elements: bytes"
 msgstr "Checkmk: Seitenleistenelemente: Bytes"
 
-#, fuzzy
 msgid "Checkmk: sidebar elements: requests"
 msgstr "Checkmk: Seitenleistenelemente: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: sidebar elements: secs"
 msgstr "Checkmk: Seitenleistenelemente: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: sidebar: bytes"
 msgstr "Checkmk: Seitenleiste: Bytes"
 
-#, fuzzy
 msgid "Checkmk: sidebar: requests"
 msgstr "Checkmk: Seitenleiste: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: sidebar: secs"
 msgstr "Checkmk: Seitenleiste: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: views: bytes"
 msgstr "Checkmk: Ansichten: Bytes"
 
-#, fuzzy
 msgid "Checkmk: views: requests"
 msgstr "Checkmk: Ansichten: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: views: secs"
 msgstr "Checkmk: Ansichten: Sekunden"
 
@@ -13058,7 +13005,6 @@ msgstr "Child Hosts gehen auch in die Wartungszeit (rekursiv)."
 msgid "Child hosts also go in downtime."
 msgstr "Child Hosts gehen auch in die Wartungszeit."
 
-#, fuzzy
 msgid "Child node generation"
 msgstr "Child-Knoten generieren"
 

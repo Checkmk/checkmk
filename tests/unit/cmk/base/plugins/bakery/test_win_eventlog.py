@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
-
 from cmk.bakery.v1 import WindowsConfigEntry
 from cmk.base.plugins.bakery.win_eventlog import get_win_eventlog_windows_config
 
@@ -98,12 +94,15 @@ def test_win_eventlog_filter_sources() -> None:
 
 
 def test_win_eventlog_filter_users() -> None:
-    conf: dict[str, Any] = {
-        "filter_users": [
-            ("Security", ["admin"], []),
-        ],
-    }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(
+            {
+                "filter_users": [
+                    ("Security", ["admin"], []),
+                ],
+            }
+        )
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(

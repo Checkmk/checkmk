@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -16,7 +15,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, fields, replace
 from pathlib import Path
-from typing import Any, Literal, NoReturn
+from typing import Literal, NoReturn
 
 import pytest
 from pytest import MonkeyPatch
@@ -1659,7 +1658,7 @@ def test_config_cache_exit_code_spec_individual(
         },
     ],
 )
-def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: dict[str, Any]) -> None:
+def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: dict[str, object]) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
     ts.add_host(hostname)
@@ -2109,7 +2108,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
     ],
 )
 def test_config_cache_extra_attributes_of_service(
-    monkeypatch: MonkeyPatch, hostname: HostName, result: dict[str, Any]
+    monkeypatch: MonkeyPatch, hostname: HostName, result: dict[str, object]
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
@@ -2908,7 +2907,7 @@ cmc_host_rrd_config = [
 
 
 def _add_explicit_setting_in_folder(
-    folder_path: Path, setting_name: str, values: dict[HostName, Any]
+    folder_path: Path, setting_name: str, values: dict[HostName, str]
 ) -> None:
     folder_path.mkdir(parents=True, exist_ok=True)
     values_ = {str(k): v for k, v in values.items()}

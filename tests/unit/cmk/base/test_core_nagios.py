@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
@@ -17,7 +16,7 @@ import socket
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import pytest
 from pytest import MonkeyPatch
@@ -633,7 +632,7 @@ class FakeLabelConfig(ABCLabelConfig):
 def test_create_nagios_servicedefs_active_check(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
-    host_attrs: dict[str, Any],
+    host_attrs: dict[str, object],
     service_labels: Mapping[str, str],
     expected_result: str,
     monkeypatch: MonkeyPatch,
@@ -837,7 +836,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
 def test_create_nagios_servicedefs_with_warnings(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
-    host_attrs: dict[str, Any],
+    host_attrs: dict[str, object],
     expected_result: str,
     expected_warning: str,
     monkeypatch: MonkeyPatch,
@@ -929,7 +928,7 @@ def test_create_nagios_servicedefs_with_warnings(
 def test_create_nagios_servicedefs_omit_service(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
-    host_attrs: dict[str, Any],
+    host_attrs: dict[str, object],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -1014,7 +1013,7 @@ def test_create_nagios_servicedefs_omit_service(
 def test_create_nagios_servicedefs_invalid_args(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
-    host_attrs: dict[str, Any],
+    host_attrs: dict[str, object],
     error_message: str,
     monkeypatch: MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -1106,7 +1105,7 @@ def test_create_nagios_servicedefs_invalid_args(
 )
 def test_create_nagios_config_commands(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
-    host_attrs: dict[str, Any],
+    host_attrs: dict[str, object],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:

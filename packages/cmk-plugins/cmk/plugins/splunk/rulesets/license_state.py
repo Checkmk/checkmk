@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     LevelDirection,
+    migrate_to_integer_simple_levels,
     ServiceState,
     SimpleLevels,
 )
@@ -42,7 +43,8 @@ rule_spec_check_parameters = CheckParameters(
                             7 * 24 * 60 * 60,  # 7 days
                         )
                     ),
-                )
+                    migrate=migrate_to_integer_simple_levels,
+                ),
             ),
         },
     ),

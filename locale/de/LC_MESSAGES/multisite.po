@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-07-27 13:47+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -9657,6 +9657,10 @@ msgstr "Sicherungs-ID"
 msgid "Backups"
 msgstr "Sicherungen"
 
+#, fuzzy
+msgid "Backups CRITICAL"
+msgstr "Setze Check auf CRIT"
+
 msgid "Bad Requests Received"
 msgstr "Ungültige Anfragen empfangen"
 
@@ -18588,6 +18592,9 @@ msgstr ""
 msgid "Data"
 msgstr "Daten"
 
+msgid "Data Guard CRITICAL"
+msgstr ""
+
 msgid "Data block (DB)"
 msgstr "Datenblock (DB)"
 
@@ -18753,6 +18760,9 @@ msgstr "Datenbank für einzelnen PostgreSQL-Server"
 msgid "Database identifier"
 msgstr "Datenbank-Identifier"
 
+msgid "Database instances – state breakdown"
+msgstr ""
+
 msgid "Database is being recovered"
 msgstr "Datenbank wurde wiederhergestellt"
 
@@ -18806,6 +18816,9 @@ msgstr "Datenbank/Kollektions Name ('[DB_NAME] [COLLECTION_NAME]')"
 
 msgid "Databases"
 msgstr "Datenbanken"
+
+msgid "Databases needing attention (unhandled, non-OK)"
+msgstr ""
 
 msgid "Databases to monitor"
 msgstr "Zu überwachende Datenbanken"
@@ -19231,10 +19244,10 @@ msgid ""
 msgstr ""
 "Legen Sie die Distinguished Names oder Common Names der LDAP-Gruppen fest, "
 "zu denen Benutzer dieser Rolle hinzugefügt werden sollen. z. B. <tt>CN=cmk-"
-"benutzer,OU=groups,DC=example,DC=com</tt><br> oder <tt>cmk-benutzer</tt><br>"
-"Diese Gruppe muss im Rahmen der <a "
-"href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP-"
-"Gruppeneinstellungen</a> definiert sein."
+"benutzer,OU=groups,DC=example,DC=com</tt><br> oder <tt>cmk-benutzer</"
+"tt><br>Diese Gruppe muss im Rahmen der <a href=\"wato.py?"
+"mode=ldap_config&varname=ldap_groupspec\">LDAP-Gruppeneinstellungen</a> "
+"definiert sein."
 
 msgid "Define OAuth parameters"
 msgstr "OAuth-Parameter definieren"
@@ -29133,6 +29146,9 @@ msgstr "Status der Sondengesundheit"
 msgid "Health probe status lower levels"
 msgstr "Untergrenzen für Health probe Status"
 
+msgid "Health state of each database (ORA Instance)"
+msgstr ""
+
 msgid "Healthy"
 msgstr "Gesund"
 
@@ -30168,6 +30184,14 @@ msgstr "Hohe Wassermarke"
 msgid "High: Push notification alerts bypass quiet hours"
 msgstr ""
 "Hoch: Alerts von Push-Benachrichtigungen umgehen die definierten Ruhezeiten"
+
+#, fuzzy
+msgid "Highest Data Guard apply lag"
+msgstr "Datenbank-Applylag"
+
+#, fuzzy
+msgid "Highest process usage"
+msgstr "Auslastung der Apache-Prozesse"
 
 msgid "Historic Event Console event"
 msgstr "Historisches Ereignis der Event Console"
@@ -35921,6 +35945,10 @@ msgstr "Instanz, Tablespace und Typ der Sicherung"
 
 msgid "Instances"
 msgstr "Instanzen"
+
+#, fuzzy
+msgid "Instances CRITICAL"
+msgstr "Instanz-ID"
 
 msgid "Instances settings"
 msgstr "Einstellungen von Instanzen"
@@ -47689,6 +47717,10 @@ msgstr "Ältere Ereignisse"
 msgid "Oldest Message Age"
 msgstr "Alter der ältesten Meldung"
 
+#, fuzzy
+msgid "Oldest RMAN backups"
+msgstr "Oracle RMAN-Sicherungen"
+
 msgid "Oldest age"
 msgstr "Ältestes Alter"
 
@@ -48720,6 +48752,10 @@ msgstr "Oracle DB Zeit"
 msgid "Oracle DB time statistics"
 msgstr "Oracle DB Zeitstatistiken"
 
+#, fuzzy
+msgid "Oracle DB time – fleet total"
+msgstr "Oracle DB Zeitstatistiken"
+
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Statistiken"
 
@@ -49068,6 +49104,10 @@ msgstr "Oracle Pump Dump Datendatei Small Writes in Bytes"
 
 msgid "Oracle data pump dump file small writes"
 msgstr "Oracle Pump Dump Datendatei kleine Schreibzugriffe"
+
+#, fuzzy
+msgid "Oracle databases"
+msgstr "Azure-Datenbanken"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
@@ -49808,6 +49848,11 @@ msgstr "Überblick"
 
 msgid "Overview mode"
 msgstr "Überblick-Modus"
+
+msgid ""
+"Overview of all Oracle database instances monitored in this site: fleet "
+"health, unhandled problems, and the databases most in need of attention."
+msgstr ""
 
 msgid "Owned by other users"
 msgstr "Von anderen Benutzern"
@@ -54402,6 +54447,10 @@ msgid "Recovery Services Vault"
 msgstr "Recovery Services-Tresor"
 
 msgid "Recovery area"
+msgstr "Recovery-Bereich"
+
+#, fuzzy
+msgid "Recovery area CRITICAL"
 msgstr "Recovery-Bereich"
 
 msgid "Recovery status"
@@ -65514,11 +65563,23 @@ msgstr "Tablespacesgrößen"
 msgid "Tablespace used"
 msgstr "benutzte Tablespaces"
 
+#, fuzzy
+msgid "Tablespace used space"
+msgstr "benutzte Tablespaces"
+
 msgid "Tablespace wasted"
 msgstr "verschwendeter Tablespace"
 
 msgid "Tablespaces"
 msgstr "Tablespaces"
+
+#, fuzzy
+msgid "Tablespaces CRITICAL"
+msgstr "Tablespaces"
+
+#, fuzzy
+msgid "Tablespaces by state"
+msgstr "verschwendeter Tablespace"
 
 msgid "Tabloid"
 msgstr "Tabloid"
@@ -96109,11 +96170,6 @@ msgstr ""
 "Führen Sie auf dem Windows-Rechner, auf dem das Relay ausgeführt werden "
 "soll, den folgenden Befehl aus in einem "
 
-msgid "Note that the installation requires administrator privileges."
-msgstr ""
-"Bitte beachten Sie, dass für die Installation Administratorrechte "
-"erforderlich sind."
-
 msgid "Registration results"
 msgstr "Ergebnisse der Registrierung"
 
@@ -97439,6 +97495,11 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Note that the installation requires administrator privileges."
+#~ msgstr ""
+#~ "Bitte beachten Sie, dass für die Installation Administratorrechte "
+#~ "erforderlich sind."
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "Gruppen<nobr> </nobr>CN"

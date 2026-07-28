@@ -10084,6 +10084,10 @@ msgstr "Backup-ID"
 msgid "Backups"
 msgstr "Copii de rezervă"
 
+#, fuzzy
+msgid "Backups CRITICAL"
+msgstr "Asigurați-vă că verificarea este CRITICALĂ"
+
 msgid "Bad Requests Received"
 msgstr "Cereri primite în mod necorespunzător"
 
@@ -19335,6 +19339,9 @@ msgstr ""
 msgid "Data"
 msgstr "Date"
 
+msgid "Data Guard CRITICAL"
+msgstr ""
+
 msgid "Data block (DB)"
 msgstr ""
 
@@ -19517,6 +19524,9 @@ msgstr "Baza de date pentru MySQL"
 msgid "Database identifier"
 msgstr "Identificatorul bazei de date"
 
+msgid "Database instances – state breakdown"
+msgstr ""
+
 msgid "Database is being recovered"
 msgstr "Baza de date este în curs de recuperare"
 
@@ -19577,6 +19587,9 @@ msgstr "Numele bazei de date/colecției ('[DB_NAME] [COLLECTION_NAME]')"
 
 msgid "Databases"
 msgstr "Baze de date"
+
+msgid "Databases needing attention (unhandled, non-OK)"
+msgstr ""
 
 #, fuzzy
 msgid "Databases to monitor"
@@ -30423,6 +30436,9 @@ msgstr "Starea sondei de sănătate niveluri inferioare"
 msgid "Health probe status lower levels"
 msgstr "Starea sondei de sănătate niveluri inferioare"
 
+msgid "Health state of each database (ORA Instance)"
+msgstr ""
+
 #, fuzzy
 msgid "Healthy"
 msgstr "Sănătate"
@@ -31484,6 +31500,14 @@ msgstr "Filigran înalt"
 
 msgid "High: Push notification alerts bypass quiet hours"
 msgstr "Mare: Alertele de notificare push ocolesc orele de liniște"
+
+#, fuzzy
+msgid "Highest Data Guard apply lag"
+msgstr "Baza de date aplică decalajul"
+
+#, fuzzy
+msgid "Highest process usage"
+msgstr "Utilizarea procesului Apache"
 
 #, fuzzy
 msgid "Historic Event Console event"
@@ -37621,6 +37645,10 @@ msgstr "Instanță, tablespace și tip de backup"
 
 msgid "Instances"
 msgstr "Instanțe"
+
+#, fuzzy
+msgid "Instances CRITICAL"
+msgstr "ID-ul instanței"
 
 msgid "Instances settings"
 msgstr "Setări de instanțe"
@@ -50134,6 +50162,10 @@ msgstr "Evenimente mai vechi"
 msgid "Oldest Message Age"
 msgstr "Vârsta celui mai vechi mesaj"
 
+#, fuzzy
+msgid "Oldest RMAN backups"
+msgstr "Copii de rezervă Oracle RMAN"
+
 msgid "Oldest age"
 msgstr "Cea mai veche vârstă"
 
@@ -51154,6 +51186,10 @@ msgstr "Oracle DB"
 msgid "Oracle DB time statistics"
 msgstr "Statistici de timp ORACLE DB"
 
+#, fuzzy
+msgid "Oracle DB time – fleet total"
+msgstr "Statistici de timp ORACLE DB"
+
 msgid "Oracle Data-Guard Stats"
 msgstr "Statistici Oracle Data-Guard"
 
@@ -51606,6 +51642,10 @@ msgstr "ORACLE Total de octeți mici de scriere"
 #, fuzzy
 msgid "Oracle data pump dump file small writes"
 msgstr "ORACLE Total scrieri mici"
+
+#, fuzzy
+msgid "Oracle databases"
+msgstr "Baze de date Azure"
 
 #, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
@@ -52479,6 +52519,11 @@ msgstr "Prezentare generală"
 #, fuzzy
 msgid "Overview mode"
 msgstr "Prezentare generală"
+
+msgid ""
+"Overview of all Oracle database instances monitored in this site: fleet "
+"health, unhandled problems, and the databases most in need of attention."
+msgstr ""
 
 msgid "Owned by other users"
 msgstr "Deținută de alți utilizatori"
@@ -57360,6 +57405,10 @@ msgstr "Servicii de recuperare Vault"
 
 #, fuzzy
 msgid "Recovery area"
+msgstr "Zona de recuperare"
+
+#, fuzzy
+msgid "Recovery area CRITICAL"
 msgstr "Zona de recuperare"
 
 #, fuzzy
@@ -68999,11 +69048,23 @@ msgstr "Dimensiuni ale spațiului tabelar"
 msgid "Tablespace used"
 msgstr "Spațiul de mese utilizat"
 
+#, fuzzy
+msgid "Tablespace used space"
+msgstr "Spațiul de mese utilizat"
+
 msgid "Tablespace wasted"
 msgstr "Spațiul de mese irosit"
 
 msgid "Tablespaces"
 msgstr "Tablespaces"
+
+#, fuzzy
+msgid "Tablespaces CRITICAL"
+msgstr "Tablespaces"
+
+#, fuzzy
+msgid "Tablespaces by state"
+msgstr "Spațiul de mese irosit"
 
 msgid "Tabloid"
 msgstr "Tabloid"
@@ -100694,10 +100755,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Note that the installation requires administrator privileges."
-msgstr "Nu au fost procesate cereri de înregistrare a agenților"
-
-#, fuzzy
 msgid "Registration results"
 msgstr "Înregistrare reușită"
 
@@ -101991,6 +102048,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Note that the installation requires administrator privileges."
+#~ msgstr "Nu au fost procesate cereri de înregistrare a agenților"
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "Grup<nobr> </nobr>CN"

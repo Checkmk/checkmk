@@ -10155,6 +10155,10 @@ msgstr "ID de secours"
 msgid "Backups"
 msgstr "Sauvegardes"
 
+#, fuzzy
+msgid "Backups CRITICAL"
+msgstr "Rendez le contrôle CRITIQUE"
+
 msgid "Bad Requests Received"
 msgstr "Mauvaises requêtes reçues"
 
@@ -19448,6 +19452,9 @@ msgstr ""
 msgid "Data"
 msgstr "Données"
 
+msgid "Data Guard CRITICAL"
+msgstr ""
+
 msgid "Data block (DB)"
 msgstr ""
 
@@ -19631,6 +19638,9 @@ msgstr "Base de données pour MySQL"
 msgid "Database identifier"
 msgstr "Identifiant de la base de données"
 
+msgid "Database instances – state breakdown"
+msgstr ""
+
 msgid "Database is being recovered"
 msgstr "La base de données est en cours de récupération"
 
@@ -19692,6 +19702,9 @@ msgstr ""
 
 msgid "Databases"
 msgstr "Bases de données"
+
+msgid "Databases needing attention (unhandled, non-OK)"
+msgstr ""
 
 #, fuzzy
 msgid "Databases to monitor"
@@ -30596,6 +30609,9 @@ msgstr "État de la sonde de santé niveaux inférieurs"
 msgid "Health probe status lower levels"
 msgstr "État de la sonde de santé niveaux inférieurs"
 
+msgid "Health state of each database (ORA Instance)"
+msgstr ""
+
 #, fuzzy
 msgid "Healthy"
 msgstr "Santé"
@@ -31678,6 +31694,14 @@ msgstr "Filigrane élevé"
 msgid "High: Push notification alerts bypass quiet hours"
 msgstr ""
 "Haut : Les alertes par notification poussée contournent les heures creuses"
+
+#, fuzzy
+msgid "Highest Data Guard apply lag"
+msgstr "Retard dans l'application de la base de données"
+
+#, fuzzy
+msgid "Highest process usage"
+msgstr "Utilisation des processus Apache"
 
 #, fuzzy
 msgid "Historic Event Console event"
@@ -37812,6 +37836,10 @@ msgstr "Instance, tablespace et type de sauvegarde"
 
 msgid "Instances"
 msgstr "Instances"
+
+#, fuzzy
+msgid "Instances CRITICAL"
+msgstr "ID de l'instance"
 
 msgid "Instances settings"
 msgstr "Paramètres des instances"
@@ -50411,6 +50439,10 @@ msgstr "Événements plus anciens"
 msgid "Oldest Message Age"
 msgstr "Âge du message le plus ancien"
 
+#, fuzzy
+msgid "Oldest RMAN backups"
+msgstr "Sauvegardes Oracle RMAN"
+
 msgid "Oldest age"
 msgstr "Le plus vieil âge"
 
@@ -51431,6 +51463,10 @@ msgstr "Oracle DB"
 msgid "Oracle DB time statistics"
 msgstr "Statistiques de temps de la BD ORACLE"
 
+#, fuzzy
+msgid "Oracle DB time – fleet total"
+msgstr "Statistiques de temps de la BD ORACLE"
+
 msgid "Oracle Data-Guard Stats"
 msgstr "Statistiques d'Oracle Data-Guard"
 
@@ -51882,6 +51918,10 @@ msgstr "ORACLE Total des petits octets d'écriture"
 #, fuzzy
 msgid "Oracle data pump dump file small writes"
 msgstr "ORACLE Total des petites écritures"
+
+#, fuzzy
+msgid "Oracle databases"
+msgstr "Bases de données Azure"
 
 #, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
@@ -52763,6 +52803,11 @@ msgstr "Vue d'ensemble"
 #, fuzzy
 msgid "Overview mode"
 msgstr "Vue d'ensemble"
+
+msgid ""
+"Overview of all Oracle database instances monitored in this site: fleet "
+"health, unhandled problems, and the databases most in need of attention."
+msgstr ""
 
 msgid "Owned by other users"
 msgstr "Appartenant à d'autres utilisateurs"
@@ -57687,6 +57732,10 @@ msgstr "Chambre forte des services de recouvrement"
 
 #, fuzzy
 msgid "Recovery area"
+msgstr "Zone de récupération"
+
+#, fuzzy
+msgid "Recovery area CRITICAL"
 msgstr "Zone de récupération"
 
 #, fuzzy
@@ -69354,11 +69403,23 @@ msgstr "Taille des espaces de table"
 msgid "Tablespace used"
 msgstr "Espace de table utilisé"
 
+#, fuzzy
+msgid "Tablespace used space"
+msgstr "Espace de table utilisé"
+
 msgid "Tablespace wasted"
 msgstr "Espace de table gaspillé"
 
 msgid "Tablespaces"
 msgstr "Tablespaces"
+
+#, fuzzy
+msgid "Tablespaces CRITICAL"
+msgstr "Tablespaces"
+
+#, fuzzy
+msgid "Tablespaces by state"
+msgstr "Espace de table gaspillé"
 
 msgid "Tabloid"
 msgstr "Tabloïd"
@@ -101275,10 +101336,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Note that the installation requires administrator privileges."
-msgstr "Aucune demande d'enregistrement d'agent n'a été traitée"
-
-#, fuzzy
 msgid "Registration results"
 msgstr "Inscription réussie"
 
@@ -102557,6 +102614,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Note that the installation requires administrator privileges."
+#~ msgstr "Aucune demande d'enregistrement d'agent n'a été traitée"
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "Groupe<nobr> </nobr>CN"

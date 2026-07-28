@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-07-27 13:47+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
@@ -2028,15 +2028,15 @@ msgid ""
 "developer.cisco.com/meraki/api-v1/getting-started/#base-uri\">API "
 "Documentation</a>.</p>"
 msgstr ""
-"<p> Meraki APIは、世界の地域ごとに異なるURLで利用可能です。</p><ul><li> "
-"デフォルト（世界のほとんどの地域）：\"https://api.meraki.com/api/v1\" </li>"
-"<li> カナダ\n"
+"<p> Meraki APIは、世界の地域ごとに異なるURLで利用可能です。</p><ul><li> デ"
+"フォルト（世界のほとんどの地域）：\"https://api.meraki.com/api/v1\" </"
+"li><li> カナダ\n"
 "\"https://api.meraki.ca/api/v1\" </li><li> 中国\n"
 "\"https://api.meraki.cn/api/v1\"</li><li> インド\n"
 "\"https://api.meraki.in/api/v1\"</li><li> 米国 FedRAMP\n"
 "\"https://api.gov-meraki.com/api/v1\" </li></ul><p>詳細については、<a "
-"href=\"https://developer.cisco.com/meraki/api-v1/getting-started/#base-uri\">"
-"APIドキュメント</a>を参照してください。</p>"
+"href=\"https://developer.cisco.com/meraki/api-v1/getting-started/#base-"
+"uri\">APIドキュメント</a>を参照してください。</p>"
 
 #, fuzzy, python-format
 msgid ""
@@ -9562,6 +9562,10 @@ msgstr "バックアップID"
 msgid "Backups"
 msgstr "バックアップ"
 
+#, fuzzy
+msgid "Backups CRITICAL"
+msgstr "重要なチェックを行う"
+
 msgid "Bad Requests Received"
 msgstr "不正なリクエストを受信しました"
 
@@ -10638,13 +10642,13 @@ msgid ""
 "pattern which Checkmk searches for in the key of the AWS tag, or you can "
 "disable the import of AWS tags altogether."
 msgstr ""
-"デフォルトでは、CheckmkはEC2およびELBインスタンスのAWS タグをそれぞれの"
-"ピギーバックホストのホストラベルとしてインポートします。ラベルの構文は「cmk/"
-"aws/tag/{key}:{value}」です。<br>さらに、EC2インスタンスのピギーバックホスト"
-"には、このオプションとは独立して、ホストラベル「cmk/aws/ec2:instance」が割り"
-"当てられます。 <br>CheckmkがAWSタグのキー内で検索するパターンを指定することで"
-"、インポートされるタグをさらに制限したり、AWSタグのインポートを完全に無効にし"
-"たりすることができます。"
+"デフォルトでは、CheckmkはEC2およびELBインスタンスのAWS タグをそれぞれのピギー"
+"バックホストのホストラベルとしてインポートします。ラベルの構文は「cmk/aws/"
+"tag/{key}:{value}」です。<br>さらに、EC2インスタンスのピギーバックホストに"
+"は、このオプションとは独立して、ホストラベル「cmk/aws/ec2:instance」が割り当"
+"てられます。 <br>CheckmkがAWSタグのキー内で検索するパターンを指定することで、"
+"インポートされるタグをさらに制限したり、AWSタグのインポートを完全に無効にした"
+"りすることができます。"
 
 msgid ""
 "By default, Python agent plug-ins are written in Python 3. However, since "
@@ -18435,6 +18439,9 @@ msgstr ""
 msgid "Data"
 msgstr "データ"
 
+msgid "Data Guard CRITICAL"
+msgstr ""
+
 msgid "Data block (DB)"
 msgstr ""
 
@@ -18606,6 +18613,9 @@ msgstr "PostgreSQLシングルサーバー用データベース"
 msgid "Database identifier"
 msgstr "データベース識別子"
 
+msgid "Database instances – state breakdown"
+msgstr ""
+
 msgid "Database is being recovered"
 msgstr "データベースが復元されています"
 
@@ -18659,6 +18669,9 @@ msgstr "データベース/コレクション名('[DB_NAME] [COLLECTION_NAME]')"
 
 msgid "Databases"
 msgstr "データベース"
+
+msgid "Databases needing attention (unhandled, non-OK)"
+msgstr ""
 
 #, fuzzy
 msgid "Databases to monitor"
@@ -23702,12 +23715,11 @@ msgid ""
 "disable the import of AWS tags altogether."
 msgstr ""
 "このオプションを有効にすると、EC2およびELBインスタンスのAWS タグがそれぞれの"
-"ピギーバックホストのホストラベルとしてインポートされます。ラベルの構文は「"
-"cmk/aws/tag/{key}:{value}」です。<br>なお、EC2インスタンスの"
-"ピギーバックホストには、このオプションとは独立して、ホストラベル「cmk/aws/"
-"ec2:instance」が割り当てられます。 <br>CheckmkがAWSタグのキー内で検索する"
-"パターンを指定することで、インポートされるタグを完全に無効にしたりすることが"
-"できます。"
+"ピギーバックホストのホストラベルとしてインポートされます。ラベルの構文は"
+"「cmk/aws/tag/{key}:{value}」です。<br>なお、EC2インスタンスのピギーバックホ"
+"ストには、このオプションとは独立して、ホストラベル「cmk/aws/ec2:instance」が"
+"割り当てられます。 <br>CheckmkがAWSタグのキー内で検索するパターンを指定するこ"
+"とで、インポートされるタグを完全に無効にしたりすることができます。"
 
 msgid "Enable this package"
 msgstr "このパッケージを有効にする"
@@ -28973,6 +28985,9 @@ msgstr "ヘルスプローブステータス下位レベル"
 msgid "Health probe status lower levels"
 msgstr "ヘルスプローブステータス下位レベル"
 
+msgid "Health state of each database (ORA Instance)"
+msgstr ""
+
 #, fuzzy
 msgid "Healthy"
 msgstr "健康"
@@ -29966,6 +29981,14 @@ msgstr "ハイ ウォーターマーク"
 
 msgid "High: Push notification alerts bypass quiet hours"
 msgstr "高:プッシュ通知アラートは静かな時間をバイパスします"
+
+#, fuzzy
+msgid "Highest Data Guard apply lag"
+msgstr "データベース適用ラグ"
+
+#, fuzzy
+msgid "Highest process usage"
+msgstr "Apacheプロセスの使用量"
 
 #, fuzzy
 msgid "Historic Event Console event"
@@ -35599,6 +35622,10 @@ msgstr "インスタンス、テーブルスペース、バックアップタイ
 
 msgid "Instances"
 msgstr "インスタンス"
+
+#, fuzzy
+msgid "Instances CRITICAL"
+msgstr "インスタンスID"
 
 msgid "Instances settings"
 msgstr "インスタンス設定"
@@ -41589,8 +41616,8 @@ msgid ""
 msgstr ""
 "プロセスヒープが割り当てようとする総メモリの最大量。このオプションは、利用可"
 "能な総メモリからハードメモリ制限を計算するために使用されます。例えば、利用可"
-"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBの"
-"ハード制限が適用されます。"
+"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBのハー"
+"ド制限が適用されます。"
 
 msgid "Maximum bulk size"
 msgstr "最大バルクサイズ"
@@ -47525,6 +47552,10 @@ msgstr "古いイベント"
 msgid "Oldest Message Age"
 msgstr "最も古いメッセージ経過時間"
 
+#, fuzzy
+msgid "Oldest RMAN backups"
+msgstr "Oracle RMANバックアップ"
+
 msgid "Oldest age"
 msgstr "最古の経過時間"
 
@@ -48518,6 +48549,10 @@ msgstr "Oracle DB 時間"
 msgid "Oracle DB time statistics"
 msgstr "Oracle DBの時間統計"
 
+#, fuzzy
+msgid "Oracle DB time – fleet total"
+msgstr "Oracle DBの時間統計"
+
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
@@ -48873,6 +48908,10 @@ msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み
 
 msgid "Oracle data pump dump file small writes"
 msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み"
+
+#, fuzzy
+msgid "Oracle databases"
+msgstr "Azureデータベース"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
@@ -49608,6 +49647,11 @@ msgstr "概要"
 
 msgid "Overview mode"
 msgstr "概要モード"
+
+msgid ""
+"Overview of all Oracle database instances monitored in this site: fleet "
+"health, unhandled problems, and the databases most in need of attention."
+msgstr ""
 
 msgid "Owned by other users"
 msgstr "他のユーザーが所有"
@@ -53251,9 +53295,9 @@ msgid ""
 "the service \"LOG System\". You can use regular expressions which must match "
 "the beginning of the log file name."
 msgstr ""
-"ここにログファイルの項目名を入力してください。例えば、「System$」と入力すると"
-"、「LOG System」というサービスが選択されます。ログファイル名の先頭と一致する"
-"正規表現を使用できます。"
+"ここにログファイルの項目名を入力してください。例えば、「System$」と入力する"
+"と、「LOG System」というサービスが選択されます。ログファイル名の先頭と一致す"
+"る正規表現を使用できます。"
 
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "ここにデータベースの名前を入力します(例: SATURN\\ARCSERVE_DB)"
@@ -54213,6 +54257,10 @@ msgid "Recovery Services Vault"
 msgstr "Recovery Services Vault"
 
 msgid "Recovery area"
+msgstr "リカバリエリア"
+
+#, fuzzy
+msgid "Recovery area CRITICAL"
 msgstr "リカバリエリア"
 
 msgid "Recovery status"
@@ -56292,9 +56340,9 @@ msgid ""
 "Return to Checkmk, define a unique configuration name, and enter the tenant "
 "ID, client ID, client secret, and subscription ID(s) (if applicable) below."
 msgstr ""
-"Checkmkに戻り、一意の設定名を定義し、以下の欄にテナントID、クライアントID、"
-"クライアントシークレット、およびサブスクリプションID（該当する場合）を入力し"
-"てください。"
+"Checkmkに戻り、一意の設定名を定義し、以下の欄にテナントID、クライアントID、ク"
+"ライアントシークレット、およびサブスクリプションID（該当する場合）を入力して"
+"ください。"
 
 #, fuzzy
 msgid ""
@@ -62536,8 +62584,8 @@ msgid ""
 "central site in <i>Access to event status via TCP</i>."
 msgstr ""
 "レプリケーション元とする中央イベントコンソールのホスト名またはIPアドレスを指"
-"定します。ポート番号は、<i>TCPを介したイベントステータスへのアクセス</i>.で"
-"セントラルサイトに設定されているものと同じである必要があります。"
+"定します。ポート番号は、<i>TCPを介したイベントステータスへのアクセス</i>.でセ"
+"ントラルサイトに設定されているものと同じである必要があります。"
 
 #, fuzzy
 msgid ""
@@ -65243,11 +65291,23 @@ msgstr "表スペースのサイズ"
 msgid "Tablespace used"
 msgstr "使用されるテーブルスペース"
 
+#, fuzzy
+msgid "Tablespace used space"
+msgstr "使用されるテーブルスペース"
+
 msgid "Tablespace wasted"
 msgstr "表領域が無駄になります"
 
 msgid "Tablespaces"
 msgstr "テーブルスペース"
+
+#, fuzzy
+msgid "Tablespaces CRITICAL"
+msgstr "テーブルスペース"
+
+#, fuzzy
+msgid "Tablespaces by state"
+msgstr "表領域が無駄になります"
 
 msgid "Tabloid"
 msgstr "タブロイド"
@@ -65765,7 +65825,8 @@ msgstr "その多くの権限は、工場出荷時のデフォルトを使用し
 msgid ""
 "That many times the message must occur until an event moves out of the "
 "<i>counting</i> state"
-msgstr "イベントが<i>カウント中</i>状態から抜け出すまでに必要なメッセージの発生回数"
+msgstr ""
+"イベントが<i>カウント中</i>状態から抜け出すまでに必要なメッセージの発生回数"
 
 #, python-format
 msgid ""
@@ -66692,8 +66753,8 @@ msgid ""
 "The age, in seconds, when the last message was put to the queue. Calculated "
 "by subtracting LPUTDATE/LPUTTIME from current timestamp."
 msgstr ""
-"最後のメッセージがキューに入れられたときの時刻（秒単位）。現在の"
-"タイムスタンプから LPUTDATE/LPUTTIME を引くことによって計算されます。"
+"最後のメッセージがキューに入れられたときの時刻（秒単位）。現在のタイムスタン"
+"プから LPUTDATE/LPUTTIME を引くことによって計算されます。"
 
 msgid ""
 "The age, in seconds, when the last message was retrieved from the queue. "
@@ -67712,9 +67773,9 @@ msgid ""
 "updates have stopped, so setting this to a high value is acceptable in most "
 "cases."
 msgstr ""
-"ここで設定された間隔でキャッシュ全体が古い値を検索しディスクに書き込まれます"
-"。これは、更新が停止したRRDファイルにのみに関係するため、ほとんどの場合、これ"
-"を高い値に設定しても問題ありません。"
+"ここで設定された間隔でキャッシュ全体が古い値を検索しディスクに書き込まれま"
+"す。これは、更新が停止したRRDファイルにのみに関係するため、ほとんどの場合、こ"
+"れを高い値に設定しても問題ありません。"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -69440,12 +69501,12 @@ msgid ""
 "artificial ping-only gateway host will be created, if you have not disabled "
 "this feature."
 msgstr ""
-"親スキャンは、ホストの前にあるレイヤ3の最後のゲートウェイを検出しようとします"
-"。これは <tt>traceroute</tt> を呼び出すことで行われます。この方法で"
-"ゲートウェイが見つかり、その IP アドレスが監視しているホストの一つに属する場"
-"合、そのホストが当該ホストの親として使用されます。そのようなホストが存在しな"
-"い場合、この機能を無効にしていなければ、 ping専用ゲートウェイホストが作成され"
-"ます。"
+"親スキャンは、ホストの前にあるレイヤ3の最後のゲートウェイを検出しようとしま"
+"す。これは <tt>traceroute</tt> を呼び出すことで行われます。この方法でゲート"
+"ウェイが見つかり、その IP アドレスが監視しているホストの一つに属する場合、そ"
+"のホストが当該ホストの親として使用されます。そのようなホストが存在しない場"
+"合、この機能を無効にしていなければ、 ping専用ゲートウェイホストが作成されま"
+"す。"
 
 #, fuzzy, python-format
 msgid ""
@@ -84861,12 +84922,12 @@ msgid ""
 "rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "デフォルトでは、ソースホストがチェック間隔ごとにピギーバックデータを送信して"
-"いると想定しています。一部のソースホストに当てはまらない場合は、"
-"ピギーバックホストの<b> Check_MK </b>および<b> Check_MK Disovery </b>サービス"
-"が<b>ホストから情報を取得できません</b>と報告します。チェック間隔内に"
-"ピギーバックされたデータが欠落している場合、<b>消滅したサービス</b>と報告しま"
-"す。このルールは、ピギーバックされたホストデータの処理をより細かく制御するの"
-"に役立ちます。このルールの条件は<b>ソース</b>ホストに適用されます。"
+"いると想定しています。一部のソースホストに当てはまらない場合は、ピギーバック"
+"ホストの<b> Check_MK </b>および<b> Check_MK Disovery </b>サービスが<b>ホスト"
+"から情報を取得できません</b>と報告します。チェック間隔内にピギーバックされた"
+"データが欠落している場合、<b>消滅したサービス</b>と報告します。このルールは、"
+"ピギーバックされたホストデータの処理をより細かく制御するのに役立ちます。この"
+"ルールの条件は<b>ソース</b>ホストに適用されます。"
 
 msgid ""
 "We highly recommend solving this issue already in your installation by "
@@ -85106,8 +85167,8 @@ msgstr ""
 "るすべてのリーフノードはCRITと仮定、他のすべてはOKと仮定されます。その後、こ"
 "の仮定の下で状態がCRITである場合、各集計ノードはダウンタイム中であるとみなさ"
 "れます。これをWARNに変更することも可能です。この設定の影響は、 <i>count</i> "
-"タイプの集計関数を使用しており、そのようなノードがWARN状態になる場合も"
-"ダウンタイム情報がエスカレーションさせるようにしたい場合に特に重要です。"
+"タイプの集計関数を使用しており、そのようなノードがWARN状態になる場合もダウン"
+"タイム情報がエスカレーションさせるようにしたい場合に特に重要です。"
 
 msgid ""
 "When connecting to Checkmk versions older than 1.6 you can only use plain "
@@ -95170,10 +95231,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Note that the installation requires administrator privileges."
-msgstr "エージェント登録リクエストは処理なし"
-
-#, fuzzy
 msgid "Registration results"
 msgstr "登録完了"
 
@@ -95601,13 +95658,12 @@ msgid ""
 "            Do not enable product usage analytics if you do not wish to "
 "share this information."
 msgstr ""
-"社内で開発されたもの、またCheckmk ExchangeからMKPとしてインストールされた"
-"カスタムチェックプラグインの名称は、製品利用データの一部として収集されます"
-"。\n"
+"社内で開発されたもの、またCheckmk ExchangeからMKPとしてインストールされたカス"
+"タムチェックプラグインの名称は、製品利用データの一部として収集されます。\n"
 "MKPをご利用の場合は、オプトインする前にデータダウンロード機能を通じて内容を慎"
 "重に確認し、機密情報が含まれていないことを確認することをお勧めします。\n"
-"この情報の共有を希望されない場合は、製品利用分析機能を有効にしないでください"
-"。"
+"この情報の共有を希望されない場合は、製品利用分析機能を有効にしないでくださ"
+"い。"
 
 msgid "Product usage analytics is turned off by default. "
 msgstr "製品利用状況分析。 "
@@ -95621,8 +95677,8 @@ msgstr ""
 "当社は、お客様が明示的に共有を選択されたデータのみを受け取ることを原則として"
 "います。分析データの共有は、いつでもグローバル設定から有効にすることができま"
 "す。\n"
-"リマインダーを受け取りたくない場合は、グローバル設定で設定を変更してください"
-"。"
+"リマインダーを受け取りたくない場合は、グローバル設定で設定を変更してくださ"
+"い。"
 
 msgid "Remind me again in 30 days"
 msgstr "30日後にリマインドする"
@@ -96448,6 +96504,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Note that the installation requires administrator privileges."
+#~ msgstr "エージェント登録リクエストは処理なし"
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "グループ<nobr> </nobr> CN"

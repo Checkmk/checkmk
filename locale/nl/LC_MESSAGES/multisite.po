@@ -10087,6 +10087,10 @@ msgstr "Backup-ID"
 msgid "Backups"
 msgstr "Back-ups"
 
+#, fuzzy
+msgid "Backups CRITICAL"
+msgstr "Maak controle KRITISCH"
+
 msgid "Bad Requests Received"
 msgstr "Slechte verzoeken ontvangen"
 
@@ -19294,6 +19298,9 @@ msgstr ""
 msgid "Data"
 msgstr "Gegevens"
 
+msgid "Data Guard CRITICAL"
+msgstr ""
+
 msgid "Data block (DB)"
 msgstr ""
 
@@ -19476,6 +19483,9 @@ msgstr "Database voor MySQL"
 msgid "Database identifier"
 msgstr "Identificatiecode databank"
 
+msgid "Database instances – state breakdown"
+msgstr ""
+
 msgid "Database is being recovered"
 msgstr "Database wordt hersteld"
 
@@ -19536,6 +19546,9 @@ msgstr "Databank-/verzamelnaam ('[DB_NAME] [COLLECTION_NAME]')"
 
 msgid "Databases"
 msgstr "Databanken"
+
+msgid "Databases needing attention (unhandled, non-OK)"
+msgstr ""
 
 #, fuzzy
 msgid "Databases to monitor"
@@ -30346,6 +30359,9 @@ msgstr "Gezondheidssonde status lagere niveaus"
 msgid "Health probe status lower levels"
 msgstr "Gezondheidssonde status lagere niveaus"
 
+msgid "Health state of each database (ORA Instance)"
+msgstr ""
+
 #, fuzzy
 msgid "Healthy"
 msgstr "Gezondheid"
@@ -31395,6 +31411,14 @@ msgstr "Hoog watermerk"
 
 msgid "High: Push notification alerts bypass quiet hours"
 msgstr "Hoog: Push notificatie waarschuwingen omzeilen stille uren"
+
+#, fuzzy
+msgid "Highest Data Guard apply lag"
+msgstr "Databank pas vertraging toe"
+
+#, fuzzy
+msgid "Highest process usage"
+msgstr "Apache proces gebruik"
 
 #, fuzzy
 msgid "Historic Event Console event"
@@ -37486,6 +37510,10 @@ msgstr "Instance, tablespace & back-uptype"
 
 msgid "Instances"
 msgstr "Instanties"
+
+#, fuzzy
+msgid "Instances CRITICAL"
+msgstr "Instantie-ID"
 
 msgid "Instances settings"
 msgstr "Instanties instellingen"
@@ -50014,6 +50042,10 @@ msgstr "Oudere evenementen"
 msgid "Oldest Message Age"
 msgstr "Leeftijd oudste bericht"
 
+#, fuzzy
+msgid "Oldest RMAN backups"
+msgstr "Oracle RMAN back-ups"
+
 msgid "Oldest age"
 msgstr "Oudste leeftijd"
 
@@ -51023,6 +51055,10 @@ msgstr "Oracle DB"
 msgid "Oracle DB time statistics"
 msgstr "ORACLE DB-tijdstatistieken"
 
+#, fuzzy
+msgid "Oracle DB time – fleet total"
+msgstr "ORACLE DB-tijdstatistieken"
+
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
@@ -51475,6 +51511,10 @@ msgstr "ORACLE Totaal kleine schrijf bytes"
 #, fuzzy
 msgid "Oracle data pump dump file small writes"
 msgstr "ORACLE Totaal kleine schrijffouten"
+
+#, fuzzy
+msgid "Oracle databases"
+msgstr "Azure Databases"
 
 #, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
@@ -52349,6 +52389,11 @@ msgstr "Overzicht"
 #, fuzzy
 msgid "Overview mode"
 msgstr "Overzicht"
+
+msgid ""
+"Overview of all Oracle database instances monitored in this site: fleet "
+"health, unhandled problems, and the databases most in need of attention."
+msgstr ""
 
 msgid "Owned by other users"
 msgstr "Eigendom van andere gebruikers"
@@ -57226,6 +57271,10 @@ msgstr "Hersteldiensten Kluis"
 
 #, fuzzy
 msgid "Recovery area"
+msgstr "Herstelgebied"
+
+#, fuzzy
+msgid "Recovery area CRITICAL"
 msgstr "Herstelgebied"
 
 #, fuzzy
@@ -68770,11 +68819,23 @@ msgstr "Tablespace maten"
 msgid "Tablespace used"
 msgstr "Gebruikte tabelruimte"
 
+#, fuzzy
+msgid "Tablespace used space"
+msgstr "Gebruikte tabelruimte"
+
 msgid "Tablespace wasted"
 msgstr "Tablespace verspild"
 
 msgid "Tablespaces"
 msgstr "Tafelspaces"
+
+#, fuzzy
+msgid "Tablespaces CRITICAL"
+msgstr "Tafelspaces"
+
+#, fuzzy
+msgid "Tablespaces by state"
+msgstr "Tablespace verspild"
 
 msgid "Tabloid"
 msgstr "Tabloid"
@@ -100370,10 +100431,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Note that the installation requires administrator privileges."
-msgstr "Geen agent registratieverzoeken verwerkt"
-
-#, fuzzy
 msgid "Registration results"
 msgstr "Registratie succesvol"
 
@@ -101649,6 +101706,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Note that the installation requires administrator privileges."
+#~ msgstr "Geen agent registratieverzoeken verwerkt"
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "Groep<nobr> </nobr>CN"

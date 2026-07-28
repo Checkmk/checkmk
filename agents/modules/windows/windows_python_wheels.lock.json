@@ -1,5 +1,5 @@
 {
-  "python_version": "3.13.14",
+  "python_version": "3.13.13",
   "wheels": [
     {
       "name": "PySocks",
@@ -24,10 +24,10 @@
     },
     {
       "name": "cffi",
-      "version": "2.1.0",
-      "filename": "cffi-2.1.0-cp313-cp313-win_amd64.whl",
-      "url": "https://files.pythonhosted.org/packages/5a/47/59eb7975cb0e4ef0afa764ea945b29a5bb4537a9f771cb7d6c8a5dd74c95/cffi-2.1.0-cp313-cp313-win_amd64.whl",
-      "sha256": "8e74a6135550c4748af665b1b1118b6aab33b1fc6a16f9aff630af107c3b4512"
+      "version": "2.0.0",
+      "filename": "cffi-2.0.0-cp313-cp313-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/37/18/6519e1ee6f5a1e579e04b9ddb6f1676c17368a7aba48299c3759bbc3c8b3/cffi-2.0.0-cp313-cp313-win_amd64.whl",
+      "sha256": "19f705ada2530c1167abacb171925dd886168931e0a7b78f5bffcae5c6b5be75"
     },
     {
       "name": "chardet",
@@ -38,10 +38,10 @@
     },
     {
       "name": "charset-normalizer",
-      "version": "3.4.9",
-      "filename": "charset_normalizer-3.4.9-cp313-cp313-win_amd64.whl",
-      "url": "https://files.pythonhosted.org/packages/e8/ef/6953a77c7cf2c2ff9998e6f575ab3e380119f100223381565a4f94c1f836/charset_normalizer-3.4.9-cp313-cp313-win_amd64.whl",
-      "sha256": "fe2c7201c642b7c308f1675355ad7ff7b66acfe3541625efe5a3ad38f29d6115"
+      "version": "3.4.7",
+      "filename": "charset_normalizer-3.4.7-cp313-cp313-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/5d/78/1b74c5bbb3f99b77a1715c91b3e0b5bdb6fe302d95ace4f5b1bec37b0167/charset_normalizer-3.4.7-cp313-cp313-win_amd64.whl",
+      "sha256": "3946fa46a0cf3e4c8cb1cc52f56bb536310d34f25f01ca9b6c16afa767dab110"
     },
     {
       "name": "colorama",
@@ -52,10 +52,10 @@
     },
     {
       "name": "cryptography",
-      "version": "48.0.1",
-      "filename": "cryptography-48.0.1-cp311-abi3-win_amd64.whl",
-      "url": "https://files.pythonhosted.org/packages/c5/69/0572c77dbace6fef72f33755bd52ea399c71367250d366237f8691826b9e/cryptography-48.0.1-cp311-abi3-win_amd64.whl",
-      "sha256": "39489bfca54c7a1f6b297efcd8bc608ab92d16c4ca631b0cad4da46724588b24"
+      "version": "44.0.3",
+      "filename": "cryptography-44.0.3-cp39-abi3-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/c9/ad/51f212198681ea7b0deaaf8846ee10af99fba4e894f67b353524eab2bbe5/cryptography-44.0.3-cp39-abi3-win_amd64.whl",
+      "sha256": "5d186f32e52e66994dce4f766884bcb9c68b8da62d61d9d215bfe5fb56d21334"
     },
     {
       "name": "idna",
@@ -70,6 +70,13 @@
       "filename": "pip-26.1.1-py3-none-any.whl",
       "url": "https://files.pythonhosted.org/packages/3a/eb/fea4d1d51c49832120f7f285d07306db3960f423a2612c6057caf3e8196f/pip-26.1.1-py3-none-any.whl",
       "sha256": "99cb1c2899893b075ff56e4ed0af55669a955b49ad7fb8d8603ecdaf4ed653fb"
+    },
+    {
+      "name": "pyOpenSSL",
+      "version": "24.3.0",
+      "filename": "pyOpenSSL-24.3.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/42/22/40f9162e943f86f0fc927ebc648078be87def360d9d8db346619fb97df2b/pyOpenSSL-24.3.0-py3-none-any.whl",
+      "sha256": "e474f5a473cd7f92221cc04976e48f4d11502804657a08a989fb3be5514c904a"
     },
     {
       "name": "pycparser",

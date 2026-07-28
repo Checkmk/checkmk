@@ -193,6 +193,49 @@ def test_load_default_config_with_custom_snapin(monkeypatch: pytest.MonkeyPatch)
         ]
 
 
+@pytest.mark.parametrize(
+    "default_config",
+    [
+        pytest.param(
+            [{"snapin_type_id": "tactical_overview", "visibility": "open"}],
+            id="new_format_dict",
+        ),
+        pytest.param(
+            [["tactical_overview", "open"]],
+            id="list_instead_of_tuple",
+        ),
+        pytest.param(
+            [("tactical_overview", "open"), {"master_control", "closed"}],
+            id="set_instead_of_tuple",
+        ),
+        pytest.param(
+            [("tactical_overview", "open"), {"snapin_type_id": "master_control"}],
+            id="dict_without_visibility",
+        ),
+        pytest.param(
+            [("tactical_overview", "open"), ("master_control",)],
+            id="tuple_without_visibility",
+        ),
+    ],
+)
+def test_load_default_config_with_non_tuple_entry(
+    monkeypatch: pytest.MonkeyPatch, default_config: Sequence[tuple[str, str]]
+) -> None:
+    """A default config entry that is not a legacy (id, visibility) pair must not crash.
+
+    The included_in_default_sidebar() filter used to index every entry as a tuple, so a
+    new-format dictionary or a hand-written malformed entry took the whole sidebar down.
+    Interpretable entries are kept, the rest are dropped."""
+    with monkeypatch.context() as m:
+        m.setattr(user, "get_attribute", lambda key, default=None: default)
+
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(user, default_config, user_permissions)
+        assert user_config.snapins == [
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
+        ]
+
+
 def test_load_legacy_list_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,

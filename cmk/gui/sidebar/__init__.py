@@ -304,15 +304,13 @@ class UserSidebarConfig:
         # lazily via all_snapins()), so a direct lookup would raise a KeyError here. Keep
         # snap-ins that are not in the registry and let the all_snapins() filter in _load()
         # validate them, instead of crashing the whole sidebar.
-        default_config = [
-            snapin
-            for snapin in self._default_config
-            if snapin[0] not in snapin_registry
-            or snapin_registry[snapin[0]].included_in_default_sidebar()
-        ]
-
         return {
-            "snapins": self._transform_legacy_tuples(default_config),
+            "snapins": [
+                snapin
+                for snapin in self._transform_legacy_tuples(self._default_config)
+                if snapin["snapin_type_id"] not in snapin_registry
+                or snapin_registry[snapin["snapin_type_id"]].included_in_default_sidebar()
+            ],
             "fold": False,
         }
 
@@ -359,10 +357,22 @@ class UserSidebarConfig:
         return [e for e in snapins if e["visibility"] != "off"]
 
     def _transform_legacy_tuples(self, snapins: Any) -> list[dict[str, Any]]:
-        return [
-            {"snapin_type_id": e[0], "visibility": e[1]} if isinstance(e, tuple) else e
-            for e in snapins
-        ]
+        return [entry for entry in (self._snapin_entry(e) for e in snapins) if entry is not None]
+
+    def _snapin_entry(self, snapin: Any) -> dict[str, Any] | None:
+        """Normalize one persisted snap-in entry, dropping shapes we cannot interpret.
+
+        A hand-written or otherwise malformed ``sidebar`` entry must not take the whole
+        sidebar down, so anything that is neither a legacy ``(id, visibility)`` pair nor a
+        complete new-format dictionary is skipped.
+        """
+        if isinstance(snapin, tuple | list):
+            return (
+                {"snapin_type_id": snapin[0], "visibility": snapin[1]} if len(snapin) == 2 else None
+            )
+        if isinstance(snapin, dict) and {"snapin_type_id", "visibility"} <= snapin.keys():
+            return snapin
+        return None
 
     def save(self) -> None:
         if self._user.may("general.configure_sidebar"):

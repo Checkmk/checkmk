@@ -331,6 +331,18 @@ def _validate_lq_safe(part: str | int | float | LqSafe) -> str:
     return str(part if isinstance(part, LqSafe) else LqSafe(part))
 
 
+def escape_filename(file_name: str) -> str:
+    """Escape a file name for use as a dynamic file column argument.
+
+    This is the inverse of the core's ``mk::unescape_filename``, which decodes
+    ``\\s`` to a space and ``\\<char>`` to ``<char>``. The backslash must be
+    escaped before the space. Escaping is required because the ``Columns:``
+    header is whitespace-separated, so a raw space would end the column name
+    (`DynamicColumn.dynamic` rejects such arguments).
+    """
+    return file_name.replace("\\", "\\\\").replace(" ", "\\s")
+
+
 def expr_to_tree(
     table: type[Table],
     query_expr: QueryExpression,

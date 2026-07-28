@@ -122,11 +122,12 @@ def _run_new_plugin(oracle: OracleDatabase, config_path: Path | None = None) -> 
 
 
 def _run_new_plugin_as_root(oracle: OracleDatabase, config_path: Path | None = None) -> str:
-    """Run the mk-oracle binary inside the container as root and return its stdout.
+    """Run the mk-oracle binary inside the container as root and return its output.
 
     Unlike `_run_new_plugin`, success is not asserted: run as root against a
-    non-root-owned runtime the plugin refuses to load and exits with empty
-    output, so callers assert on the (empty) stdout instead of the exit code.
+    non-root-owned runtime the plugin refuses to load and exits non-zero, so
+    callers assert on the output instead of the exit code. `exec_run` merges
+    stderr into stdout, so the refusal message is part of the return value.
     """
     cfg = (config_path or oracle.new_plugin_cfg).as_posix()
     _, output = oracle.container.exec_run(
@@ -367,7 +368,10 @@ def test_mk_oracle_sid_only_connection(oracle: OracleDatabase) -> None:
 
 def test_mk_oracle_run_as_root_is_refused(oracle: OracleDatabase) -> None:
     output = _run_new_plugin_as_root(oracle)
-    assert output.strip() == "", f"Expected empty output when run as root, got:\n{output}"
+    assert "<<<" not in output, f"Expected no section output when run as root, got:\n{output}"
+    assert "No Oracle client runtime found" in output, (
+        f"Expected the runtime refusal when run as root, got:\n{output}"
+    )
 
 
 def test_mk_oracle_custom_instance_connection(oracle: OracleDatabase) -> None:

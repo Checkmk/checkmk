@@ -40,6 +40,7 @@ def test_basic_commands(site: Site) -> None:
         ["dig", "-v"],
         ["file", "--help"],
         ["host", "-V"],
+        ["journalctl", "--version"],
         ["nc", "-h"],
         # ["nmap", "--help"], # not present in build images
         ["nslookup", "help"],
@@ -47,6 +48,7 @@ def test_basic_commands(site: Site) -> None:
         ["php", "--help"],
         ["php-cgi", "--help"],
         ["resolvectl", "--help"],
+        ["rpm", "--version"],
         ["rpmbuild", "--help"],
         ["which", "scp"],
         ["ssh", "-V"],

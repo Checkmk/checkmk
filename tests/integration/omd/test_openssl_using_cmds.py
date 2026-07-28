@@ -18,6 +18,8 @@ from tests.testlib.site import Site
         "pdftoppm -v",
         "nslookup -version",
         "rpmbuild --version",
+        "rpm --version",
+        "journalctl --version",
         pytest.param(
             "zypper",
             marks=pytest.mark.skipif(

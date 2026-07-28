@@ -7,7 +7,11 @@ description:
  This check monitors the protocol traffic of SVMs.
  The monitored protocols depend on the activated protocols for the SVMs.
  Supported protocols are {ethernet}, {fibrechannel}, {cifs}, {iscsi}, {nfsv3},
- {nfsv4} and {nfsv4.1}. This check is always {OK}.
+ {nfsv4} and {nfsv4.1}.
+
+ Without configuration this check is always {OK}. Upper levels on the read and
+ the write latency can be configured, they apply to every protocol reported by
+ the service.
 
  SVM was reffered as vServer in the old NetApp API.
 item:

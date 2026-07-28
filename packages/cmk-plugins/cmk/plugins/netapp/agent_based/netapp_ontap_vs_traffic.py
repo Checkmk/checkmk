@@ -12,6 +12,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
+    LevelsT,
     render,
     Service,
     StringTable,
@@ -45,6 +46,17 @@ from cmk.plugins.netapp.agent_based.lib import check_netapp_vs_traffic
 
 Section = Mapping[str, models.SvmTrafficCountersModel]
 
+# The service reports the latency of several protocols, all of them in seconds. One pair
+# of levels per direction is applied to all of them.
+_LATENCY_LEVELS_PARAMS = {
+    "cifs_read_latency": "read_latency_levels",
+    "fcp_read_latency": "read_latency_levels",
+    "iscsi_read_latency": "read_latency_levels",
+    "cifs_write_latency": "write_latency_levels",
+    "fcp_write_latency": "write_latency_levels",
+    "iscsi_write_latency": "write_latency_levels",
+}
+
 
 def parse_netapp_ontap_vs_traffic(string_table: StringTable) -> Section:
     return {
@@ -65,7 +77,9 @@ def discovery_netapp_ontap_vs_traffic(section: Section) -> DiscoveryResult:
     yield from (Service(item=vserver) for vserver in vservers)
 
 
-def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
+def check_netapp_ontap_vs_traffic(
+    item: str, params: Mapping[str, LevelsT[float]], section: Section
+) -> CheckResult:
     protocol_map = {
         "lif": (
             "Ethernet",
@@ -236,6 +250,12 @@ def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
         },
     }
 
+    latency_levels = {
+        metric_name: levels
+        for metric_name, param_name in _LATENCY_LEVELS_PARAMS.items()
+        if (levels := params.get(param_name)) is not None
+    }
+
     for protocol in protocol_map:
         data = section.get(f"{protocol}.{item}")
         if not data or not data.counters:
@@ -244,7 +264,7 @@ def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
         counters = {el["name"]: el["value"] for el in data.counters}
 
         yield from check_netapp_vs_traffic(
-            counters, protocol, protocol_map, latency_calc_ref, now, value_store
+            counters, protocol, protocol_map, latency_calc_ref, now, value_store, latency_levels
         )
 
 
@@ -253,4 +273,6 @@ check_plugin_netapp_ontap_vs_traffic = CheckPlugin(
     service_name="Traffic SVM %s",
     discovery_function=discovery_netapp_ontap_vs_traffic,
     check_function=check_netapp_ontap_vs_traffic,
+    check_default_parameters={},
+    check_ruleset_name="netapp_ontap_vs_traffic",
 )

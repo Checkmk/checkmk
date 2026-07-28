@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -17,7 +16,6 @@ import textwrap
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 
-from cmk import trace
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import discover_plugins_from_modules
@@ -30,9 +28,6 @@ OptionFunction = Callable
 ModeFunction = Callable
 ConvertFunction = Callable
 Options = list[tuple[OptionSpec, Argument]]
-Arguments = list[str]
-
-tracer = trace.get_tracer()
 
 
 def print_(txt: str) -> None:
@@ -175,39 +170,6 @@ NOTES:
             if opt.lstrip("-") in [option.long_option, option.short_option]:
                 return option
         return None
-
-
-def call(
-    mode: Mode,
-    arg: Argument | None,
-    all_opts: Options,
-    all_args: Arguments,
-    trace_context: trace.Context,
-) -> int:
-    sub_options = mode.get_sub_options(all_opts)
-
-    handler_args: list = []
-    if mode.sub_options:
-        handler_args.append(sub_options)
-
-    if mode.argument and mode.argument_optional:
-        handler_args.append(all_args)
-    elif mode.argument:
-        handler_args.append(arg)
-
-    handler = mode.handler_function
-    if handler is None:
-        raise TypeError
-
-    with tracer.span(
-        f"mode[{mode.name}]",
-        attributes={
-            "cmk.base.mode.name": mode.name,
-            "cmk.base.mode.args": repr(handler_args),
-        },
-        context=trace_context,
-    ):
-        return handler(*handler_args)
 
 
 class Option:

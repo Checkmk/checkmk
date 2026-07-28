@@ -437,22 +437,36 @@ mod find_sids {
     use mk_oracle::platform::registry::find_oratab_file;
     use std::io::Write;
 
-    // Linux-only: sysinfo has no process backend on AIX/Solaris, and the mask
-    // matches a systemd process. CMK-35442 tracks proper coverage there.
-    #[cfg(target_os = "linux")]
+    /// Emulates a PMON process: `cat` renamed the way Oracle renames its
+    /// background processes and held alive by an open stdin pipe. A test-only
+    /// prefix keeps the production mask from discovering it as a real instance.
+    #[cfg(unix)]
     #[test]
     fn test_find_sids() {
         use mk_oracle::ora_sql::detect::find_sids_by_processes;
+        use std::collections::HashSet;
+        use std::os::unix::process::CommandExt;
 
-        if std::env::var("TEST_WORKSPACE").is_ok() {
-            eprintln!("Skipping test_find_sids if TEST_WORKSPACE is set(Bazel sandboxing)");
-            return;
+        const TEST_MASK: &str = r"^(mk_ora_test_pmon_)(.+)$";
+        let mut fake_pmon = std::process::Command::new("cat")
+            .arg0("mk_ora_test_pmon_MKORATEST")
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .expect("failed to spawn the fake PMON process");
+
+        // The scan can catch the child between fork and exec, still carrying the
+        // parent's argv, so poll rather than assert on the first attempt.
+        let mut sids = HashSet::new();
+        for _ in 0..50 {
+            sids = find_sids_by_processes(Some(TEST_MASK)).expect("process scan failed");
+            if sids.contains("MKORATEST") {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
         }
-        const TEST_MASK: &str = r"^(/usr/lib/systemd/systemd)(.*)$";
-        let sids = find_sids_by_processes(Some(TEST_MASK)).unwrap();
-        assert!(sids.len() > 2);
-        // Upper case: the scan upper-cases every captured SID.
-        assert!(sids.contains("-LOGIND"));
+        let _ = fake_pmon.kill();
+        let _ = fake_pmon.wait();
+        assert!(sids.contains("MKORATEST"));
     }
 
     #[test]

@@ -1667,6 +1667,34 @@ phpsessionclean.service loaded activating start Clean PHP session files
     assert not spurious, f"Spurious 'activating for' alert(s) emitted: {spurious}"
 
 
+def test_status_section_matched_for_unit_name_with_period() -> None:
+    """Regression: a unit whose name contains a period, e.g. ``hapee-3.2-lb.service``,
+    must still be matched between the ``[status]`` and ``[all]`` sections.
+
+    The ``[status]`` parser used to strip the unit type by splitting on the *first*
+    dot, mangling the name to ``hapee-3``. The status details were then keyed under
+    the wrong name and never matched the ``[all]`` entry, so status-derived fields
+    (active state, duration, tasks, ...) were dropped -- which could produce spurious
+    "activating for" alerts.
+    """
+    pre_pre_string_table = """[list-unit-files]
+hapee-3.2-lb.service enabled -
+[status]
+● hapee-3.2-lb.service - HAPEE Load Balancer
+Loaded: loaded (/usr/lib/systemd/system/hapee-3.2-lb.service; enabled; preset: enabled)
+Active: active (running) since Mon 2026-07-27 11:20:19 CEST; 30min ago
+Tasks: 3 (limit: 4579)
+[all]
+hapee-3.2-lb.service loaded active running HAPEE Load Balancer
+"""
+    string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
+    parsed = parse(string_table)
+    assert parsed is not None
+    unit = parsed.services["hapee-3.2-lb"]
+    assert unit.time_since_change == timedelta(minutes=30)
+    assert unit.number_of_tasks == 3
+
+
 def test_broken_parsing_without_unit_description() -> None:
     pre_pre_string_table = """
 <<<systemd_units>>>

@@ -10,8 +10,8 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._from_api import (
-    _SINGLE_QUANTITY_BUILDER,
     build_curve,
+    build_single_quantity,
     drawn_metric_names_of_graph,
     drawn_quantity,
     parse_graph_from_api,
@@ -144,7 +144,7 @@ def build_matched_graphs(
     kind: str,
     registered_graphs: Sequence[_GraphPlugin],
     registered_metrics: Mapping[str, metrics_v1.Metric],
-    quantity_builder: QuantityBuilder = _SINGLE_QUANTITY_BUILDER,
+    quantity_builder: QuantityBuilder = build_single_quantity,
     graph_name: str | None = None,
 ) -> Sequence[Graph]:
     names_by_service = fetch_metric_names()

@@ -53,13 +53,9 @@ class QuantityBuilder(Protocol):
     def __call__(self, metrics: Sequence[RRDMetric]) -> Quantity: ...
 
 
-class _SingleQuantityBuilder:
-    def __call__(self, metrics: Sequence[RRDMetric]) -> Quantity:
-        (metric,) = metrics
-        return metric
-
-
-_SINGLE_QUANTITY_BUILDER = _SingleQuantityBuilder()
+def build_single_quantity(metrics: Sequence[RRDMetric]) -> Quantity:
+    (metric,) = metrics
+    return metric
 
 
 def drawn_quantity(
@@ -388,7 +384,7 @@ def parse_graph_from_api(
     registered_metrics: Mapping[str, metrics_v1.Metric],
     *,
     kind: str,
-    quantity_builder: QuantityBuilder = _SINGLE_QUANTITY_BUILDER,
+    quantity_builder: QuantityBuilder = build_single_quantity,
 ) -> Graph:
     context = _ParseContext(
         services=services,

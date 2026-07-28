@@ -149,6 +149,47 @@ def test_generate_volume_metrics() -> None:
     ]
 
 
+def test_generate_volume_metrics_iscsi_latency_in_microseconds() -> None:
+    """
+    The ONTAP REST API reports latency counters as cumulative averages in microseconds.
+
+    They have to be divided by the corresponding operations counter. For the SAN
+    protocols the quotient is emitted in microseconds, netapp_ontap_volumes_metrics
+    scales it to seconds. The counter values are the ones observed on a customer system:
+    538268369638 / 789644282 == 681.65 us
+    29006195151  / 231886344 == 125.09 us
+    """
+    counter = VolumeCountersModelFactory.build(
+        id="volume_counter_iscsi",
+        iscsi_read_data=0,
+        iscsi_read_ops=789644282,
+        iscsi_read_latency=538268369638,
+        iscsi_write_data=0,
+        iscsi_write_ops=231886344,
+        iscsi_write_latency=29006195151,
+    )
+
+    value_store = {
+        #                       last time, last value
+        "iscsi_read_data": (LAST_EVALUATION_SECONDS, 0),
+        "iscsi_read_ops": (LAST_EVALUATION_SECONDS, 0),
+        "iscsi_read_latency": (LAST_EVALUATION_SECONDS, 0),
+        "iscsi_write_data": (LAST_EVALUATION_SECONDS, 0),
+        "iscsi_write_ops": (LAST_EVALUATION_SECONDS, 0),
+        "iscsi_write_latency": (LAST_EVALUATION_SECONDS, 0),
+    }
+
+    result = {
+        metric.name: metric.value
+        for metric in _generate_volume_metrics(
+            value_store, {"perfdata": ["iscsi"]}, counter, NOW_SIMULATED_SECONDS
+        )
+    }
+
+    assert result["iscsi_read_latency"] == pytest.approx(681.66, abs=1e-2)
+    assert result["iscsi_write_latency"] == pytest.approx(125.09, abs=1e-2)
+
+
 def test_serialize_volumes() -> None:
     volume_models = [
         VolumeModelFactory.build(

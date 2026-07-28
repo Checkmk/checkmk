@@ -1215,8 +1215,14 @@ translation_netapp_ontap_volumes = translations.Translation(
         "cifs_read_latency": translations.ScaleBy(0.001),
         "cifs_write_latency": translations.ScaleBy(0.001),
         "fcp_other_latency": translations.ScaleBy(0.001),
-        "fcp_read_latency": translations.ScaleBy(0.001),
-        "fcp_write_latency": translations.ScaleBy(0.001),
+        # single_volume_metrics() emits the latency of the SAN protocols unconverted: in
+        # milliseconds for the 7-Mode API, in microseconds for the ONTAP REST API. The
+        # difference is corrected here rather than in the check plugin on purpose. A
+        # translation is applied when the RRD is read, so it also corrects the values
+        # recorded before this fix and the graphs stay continuous instead of dropping by a
+        # factor of 1000. The same applies to the iSCSI latencies below.
+        "fcp_read_latency": translations.ScaleBy(1e-06),
+        "fcp_write_latency": translations.ScaleBy(1e-06),
         "fs_free": translations.ScaleBy(1048576),
         "fs_size": translations.ScaleBy(1048576),
         "fs_used": translations.ScaleBy(1048576),
@@ -1225,8 +1231,9 @@ translation_netapp_ontap_volumes = translations.Translation(
             1048576,
         ),
         "iscsi_other_latency": translations.ScaleBy(0.001),
-        "iscsi_read_latency": translations.ScaleBy(0.001),
-        "iscsi_write_latency": translations.ScaleBy(0.001),
+        # microseconds, see the fcp latencies above
+        "iscsi_read_latency": translations.ScaleBy(1e-06),
+        "iscsi_write_latency": translations.ScaleBy(1e-06),
         "nfs_other_latency": translations.ScaleBy(0.001),
         "nfs_read_latency": translations.ScaleBy(0.001),
         "nfs_write_latency": translations.ScaleBy(0.001),

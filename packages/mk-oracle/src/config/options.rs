@@ -76,6 +76,8 @@ pub struct Options {
     use_host_client: UseHostClient,
     params: Vec<SqlBindParam>,
     threads: usize,
+    permissions_check: bool,
+    permissions_safe_entries: Vec<String>,
 }
 
 impl Default for Options {
@@ -86,6 +88,8 @@ impl Default for Options {
             use_host_client: UseHostClient::default(),
             params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
             threads: 1,
+            permissions_check: true,
+            permissions_safe_entries: vec![],
         }
     }
 }
@@ -98,6 +102,8 @@ impl Options {
             use_host_client: UseHostClient::default(),
             params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
             threads: 1,
+            permissions_check: true,
+            permissions_safe_entries: vec![],
         }
     }
 
@@ -119,6 +125,14 @@ impl Options {
 
     pub fn threads(&self) -> usize {
         self.threads
+    }
+
+    pub fn permissions_check(&self) -> bool {
+        self.permissions_check
+    }
+
+    pub fn permissions_safe_entries(&self) -> &[String] {
+        &self.permissions_safe_entries
     }
 
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
@@ -152,6 +166,9 @@ impl Options {
             threads: options
                 .get_int::<usize>(keys::THREADS)
                 .unwrap_or(defaults::THREADS),
+            permissions_check: options.get_bool(keys::PERMISSIONS_CHECK, true),
+            permissions_safe_entries: options
+                .get_string_vector(keys::PERMISSIONS_SAFE_ENTRIES, &[]),
         }))
     }
 }
@@ -193,6 +210,35 @@ options:
             options.params(),
             &vec![(keys::IGNORE_DB_NAME.to_string(), 0)]
         );
+        assert!(options.permissions_check());
+        assert!(options.permissions_safe_entries().is_empty());
+    }
+
+    #[test]
+    fn test_options_permissions_from_yaml() {
+        const PERMISSION_YAML: &str = r#"
+options:
+    permissions_check: no
+    permissions_safe_entries: ["DOMAIN\\DbInstaller", "MYPC\\SpecialUser"]
+"#;
+        let options = Options::from_yaml(&create_yaml(PERMISSION_YAML))
+            .unwrap()
+            .unwrap();
+        assert!(!options.permissions_check());
+        assert_eq!(
+            options.permissions_safe_entries(),
+            [
+                "DOMAIN\\DbInstaller".to_string(),
+                "MYPC\\SpecialUser".to_string()
+            ]
+        );
+
+        // keys absent: check enabled, no safe entries
+        let options = Options::from_yaml(&create_yaml("options:\n    threads: 1"))
+            .unwrap()
+            .unwrap();
+        assert!(options.permissions_check());
+        assert!(options.permissions_safe_entries().is_empty());
     }
     #[test]
     fn test_default_use_host_client() {

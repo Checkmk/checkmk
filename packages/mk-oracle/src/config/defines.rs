@@ -23,6 +23,8 @@ pub mod keys {
     pub const USE_HOST_CLIENT: &str = "use_host_client";
     pub const IGNORE_DB_NAME: &str = "IGNORE_DB_NAME";
     pub const THREADS: &str = "threads";
+    pub const PERMISSIONS_CHECK: &str = "permissions_check";
+    pub const PERMISSIONS_SAFE_ENTRIES: &str = "permissions_safe_entries";
 
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";

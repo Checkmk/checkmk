@@ -34,6 +34,7 @@ from ._options import (
     TimeRange,
 )
 from ._perfdata import (
+    constant_time_series,
     FetchedData,
     HostName,
     MACRO_SERIES_ID,
@@ -134,6 +135,7 @@ __all__ = [
     "VerticalRangeKind",
     "build_matched_graphs",
     "build_curve",
+    "constant_time_series",
     "evaluate_graphs",
     "metric_display_attributes",
     "parse_graph_from_api",

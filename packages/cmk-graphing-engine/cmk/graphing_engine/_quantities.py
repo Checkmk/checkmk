@@ -16,6 +16,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from ._display import metric_display_attributes
 from ._options import ConsolidationFunction, TimeRange
 from ._perfdata import (
+    constant_time_series,
     FetchedData,
     HostName,
     MetricName,
@@ -128,16 +129,6 @@ def _apply(operator: _Operator, point: Sequence[float | None]) -> float | None:
     return operator(point)
 
 
-def _num_points(time_range: TimeRange) -> int:
-    if time_range.step <= 0:
-        return 0
-    return max(0, (time_range.end - time_range.start) // time_range.step)
-
-
-def _constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeries:
-    return TimeSeries(time_range=time_range, values=[value] * _num_points(time_range))
-
-
 def _apply_operator(
     operator: _Operator,
     operands: Sequence[EvaluatedQuantity],
@@ -200,7 +191,7 @@ class Constant:
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return [
             EvaluatedQuantity(
-                value=self.value, time_series=_constant_time_series(self.value, context.time_range)
+                value=self.value, time_series=constant_time_series(self.value, context.time_range)
             )
         ]
 
@@ -243,7 +234,7 @@ class RRDMetric:
                 time_series=(
                     existing
                     if existing is not None
-                    else _constant_time_series(None, context.time_range)
+                    else constant_time_series(None, context.time_range)
                 ),
             )
         ]
@@ -300,7 +291,7 @@ class ScalarOf:
                 assert_never(self.scalar_kind)
         return [
             EvaluatedQuantity(
-                value=value, time_series=_constant_time_series(value, context.time_range)
+                value=value, time_series=constant_time_series(value, context.time_range)
             )
         ]
 

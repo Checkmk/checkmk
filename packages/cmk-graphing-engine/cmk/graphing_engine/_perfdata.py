@@ -57,6 +57,18 @@ class TimeSeries:
     values: Sequence[float | None]
 
 
+def _num_points(time_range: TimeRange) -> int:
+    if time_range.step <= 0:
+        return 0
+    return max(0, (time_range.end - time_range.start) // time_range.step)
+
+
+def constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeries:
+    # The same value at every point of the range - the shape a quantity without a fetched series of
+    # its own draws on: a constant, a threshold, or a present-but-all-None curve.
+    return TimeSeries(time_range=time_range, values=[value] * _num_points(time_range))
+
+
 # The one macro spelling the engine itself knows: a macro-less title fanned into several series
 # falls back to appending this macro's value so the curves stay distinguishable.
 MACRO_SERIES_ID: Final = "$SERIES_ID$"

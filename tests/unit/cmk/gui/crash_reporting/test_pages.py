@@ -78,7 +78,6 @@ def test_build_crash_report_missing_request_vars(query_string: str) -> None:
         )
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 3887: KeyError 'page'")
 def test_report_renderer_gui_show_details_without_request_details(request_context: None) -> None:
     # A GUI crash raised outside of a request (e.g. in a background job) is stored
     # with an empty details dict, so none of the request fields are available.

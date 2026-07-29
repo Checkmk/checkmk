@@ -2461,6 +2461,15 @@ def _create_explicit_rule_conditions_dict(
         "explicit_hosts": DictElementAPI(
             parameter_form=DictionaryAPI(
                 title=Title("Explicit hosts"),
+                help_text=Help(
+                    "Here, you can enter a list of explicit host names that the rule should or should "
+                    "not apply to. Leave this option disabled if you want the rule to "
+                    "apply for all hosts specified by the given tags. The names that you "
+                    "enter here are compared with case sensitive exact matching. Alternatively "
+                    "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
+                    "character. That regular expression must match the <i>beginning</i> of "
+                    "the host names in question."
+                ),
                 elements={
                     "value": DictElementAPI(
                         parameter_form=ListOfStringsAPI(
@@ -2469,15 +2478,6 @@ def _create_explicit_rule_conditions_dict(
                                 not_empty(error_msg=Message("Please add at least one host.")),
                                 HostAddressList(),
                             ],
-                            help_text=Help(
-                                "Here, you can enter a list of explicit host names that the rule should or should "
-                                "not apply to. Leave this option disabled if you want the rule to "
-                                "apply for all hosts specified by the given tags. The names that you "
-                                "enter here are compared with case sensitive exact matching. Alternatively "
-                                "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
-                                "character. That regular expression must match the <i>beginning</i> of "
-                                "the host names in question."
-                            ),
                         ),
                         required=True,
                     ),

@@ -57,9 +57,8 @@ def parse_lnx_packages(string_table: StringTable) -> Section:
         else:
             continue
 
-        if pactype == "deb":
-            if "installed" not in inststate:
-                continue
+        if pactype == "deb" and "installed" not in inststate:
+            continue
 
         if arch == "amd64":
             arch = "x86_64"

@@ -146,11 +146,13 @@ def _render_agent_version_mismatch(
         return "" if literal == agent_version else f" (expected {literal})"
 
     # spec_type == "at_least"
-    if _is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
-        if int(agent_version.rsplit("-", maxsplit=1)[-1].replace(".", "")) < int(
-            at_least.replace(".", "")
-        ):
-            return f" (expected at least {at_least})"
+    if (
+        _is_daily_build_version(agent_version)
+        and (at_least := spec.get("daily_build")) is not None
+        and int(agent_version.rsplit("-", maxsplit=1)[-1].replace(".", ""))
+        < int(at_least.replace(".", ""))
+    ):
+        return f" (expected at least {at_least})"
 
     if (at_least := spec.get("release")) is None:
         return ""

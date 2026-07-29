@@ -169,12 +169,13 @@ def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section
             state=State.WARN, summary=f"Active: {active_if} (expected is {expected_active})"
         )
 
-    if (number_interfaces := params.get("expected_interfaces")) is not None:
-        if (actual_number := len(properties["interfaces"])) < number_interfaces["expected_number"]:
-            yield Result(
-                state=State(number_interfaces["state"]),
-                summary=f"Unexpected number of interfaces (expected: {number_interfaces['expected_number']}, got: {actual_number})",
-            )
+    if (number_interfaces := params.get("expected_interfaces")) is not None and (
+        actual_number := len(properties["interfaces"])
+    ) < number_interfaces["expected_number"]:
+        yield Result(
+            state=State(number_interfaces["state"]),
+            summary=f"Unexpected number of interfaces (expected: {number_interfaces['expected_number']}, got: {actual_number})",
+        )
 
 
 check_plugin_bonding = CheckPlugin(

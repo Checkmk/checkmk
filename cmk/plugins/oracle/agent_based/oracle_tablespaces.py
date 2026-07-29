@@ -283,9 +283,8 @@ def check_oracle_tablespaces(
             )
 
             # Check increment size, should not be set to default (1)
-            if params.get("defaultincrement"):
-                if uses_default_increment:
-                    yield Result(state=State.WARN, summary="DEFAULT INCREMENT")
+            if params.get("defaultincrement") and uses_default_increment:
+                yield Result(state=State.WARN, summary="DEFAULT INCREMENT")
 
         # Check autoextend status if parameter not set to None
         if autoext is not None and ts_status != "READONLY":

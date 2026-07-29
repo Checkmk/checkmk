@@ -184,24 +184,26 @@ class GraphApiClient:
             secret,
             f"{self._login_url}/{tenant}",
         )
-        if access_token_expiry := self._storage.read("access_token_expiry", None):
-            if int(access_token_expiry) > int(time.time()) + self.EXPIRY_OVERLAP:
-                self._headers.update(
-                    {
-                        "Authorization": "Bearer %s" % self.access_token,
-                        "Content-Type": "application/json",
-                        "ClientType": "monitoring-custom-client-type",
-                    }
-                )
+        if (access_token_expiry := self._storage.read("access_token_expiry", None)) and int(
+            access_token_expiry
+        ) > int(time.time()) + self.EXPIRY_OVERLAP:
+            self._headers.update(
+                {
+                    "Authorization": "Bearer %s" % self.access_token,
+                    "Content-Type": "application/json",
+                    "ClientType": "monitoring-custom-client-type",
+                }
+            )
+            return
+        if (refresh_token_expiry := self._storage.read("refresh_token_expiry", None)) and int(
+            refresh_token_expiry
+        ) > int(time.time()) + self.EXPIRY_OVERLAP:
+            if self._try_refresh_via_initial_token(client_app):
                 return
-        if refresh_token_expiry := self._storage.read("refresh_token_expiry", None):
-            if int(refresh_token_expiry) > int(time.time()) + self.EXPIRY_OVERLAP:
-                if self._try_refresh_via_initial_token(client_app):
-                    return
-                raise RuntimeError(
-                    "Refresh token has expired, re-login required. "
-                    "Please re-connect to your mailbox via the UI."
-                )
+            raise RuntimeError(
+                "Refresh token has expired, re-login required. "
+                "Please re-connect to your mailbox via the UI."
+            )
         self._refresh_token(client_app)
 
     def _try_refresh_via_initial_token(

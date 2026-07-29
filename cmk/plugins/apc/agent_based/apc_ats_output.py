@@ -104,17 +104,16 @@ def check_apc_ats_output(item: str, params: Mapping[str, Any], section: Section)
             render_func=lambda v: f"{v:.2f} A",
         )
 
-    if (perc_load := data.get("perc_load")) is not None:
-        # -1 means that the ATS doesn't support this value
-        if perc_load != -1:
-            yield from check_levels(
-                value=perc_load,
-                metric_name="load_perc",
-                levels_lower=params.get("load_perc_min", None),
-                levels_upper=params.get("load_perc_max", None),
-                label="Load",
-                render_func=percent,
-            )
+    # -1 means that the ATS doesn't support this value
+    if (perc_load := data.get("perc_load")) is not None and perc_load != -1:
+        yield from check_levels(
+            value=perc_load,
+            metric_name="load_perc",
+            levels_lower=params.get("load_perc_min", None),
+            levels_upper=params.get("load_perc_max", None),
+            label="Load",
+            render_func=percent,
+        )
 
 
 snmp_section_apc_ats_output = SimpleSNMPSection(

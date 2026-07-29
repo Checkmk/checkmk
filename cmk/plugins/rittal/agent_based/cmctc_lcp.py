@@ -182,10 +182,9 @@ def check_cmctc_lcp(item: str, params: Params, section: Section, sensortype: str
             extra_info += " (warn/crit at %d/%d%s)" % (warn, crit, unit)
     else:
         yield Metric(sensortype, sensor.reading)
-        if sensor.has_levels():
-            if sensor.reading >= sensor.high or sensor.reading <= sensor.low:
-                extra_state = 2
-                extra_info += f" (device lower/upper crit at {sensor.low}/{sensor.high}{unit})"
+        if sensor.has_levels() and (sensor.reading >= sensor.high or sensor.reading <= sensor.low):
+            extra_state = 2
+            extra_info += f" (device lower/upper crit at {sensor.low}/{sensor.high}{unit})"
 
     yield Result(state=State(extra_state), summary=extra_info)
 

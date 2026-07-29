@@ -110,12 +110,13 @@ class MerakiOrganisation:
         if not self.api_enabled:
             return
 
-        if self.config.required.licenses_overview:
-            if licenses_overview := self.client.get_licenses_overview(self.id, self.name):
-                yield Section(
-                    name="cisco_meraki_org_licenses_overview",
-                    data=licenses_overview,
-                )
+        if self.config.required.licenses_overview and (
+            licenses_overview := self.client.get_licenses_overview(self.id, self.name)
+        ):
+            yield Section(
+                name="cisco_meraki_org_licenses_overview",
+                data=licenses_overview,
+            )
 
         if networks := {net["id"]: net for net in self.client.get_networks(self.id, self.name)}:
             yield Section(name="cisco_meraki_org_networks", data=networks)
@@ -170,16 +171,15 @@ class MerakiOrganisation:
         for device in devices_by_serial.values():
             devices_by_type[device["productType"]].append(device)
 
-        if devices_by_type.get("sensor"):
-            if self.config.required.sensor_readings:
-                for sensor_reading in self.client.get_sensor_readings(self.id):
-                    serial = sensor_reading["serial"]
-                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
-                        yield Section(
-                            name="cisco_meraki_org_sensor_readings",
-                            data=sensor_reading,
-                            piggyback=piggyback,
-                        )
+        if devices_by_type.get("sensor") and self.config.required.sensor_readings:
+            for sensor_reading in self.client.get_sensor_readings(self.id):
+                serial = sensor_reading["serial"]
+                if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                    yield Section(
+                        name="cisco_meraki_org_sensor_readings",
+                        data=sensor_reading,
+                        piggyback=piggyback,
+                    )
 
         if devices_by_type.get("appliance"):
             if self.config.required.appliance_uplinks:
@@ -211,25 +211,27 @@ class MerakiOrganisation:
             if self.config.required.appliance_performance:
                 for device in devices_by_type["appliance"]:
                     serial = device["serial"]
-                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
-                        if appliance_performance := self.client.get_appliance_performance(serial):
-                            yield Section(
-                                name="cisco_meraki_org_appliance_performance",
-                                data=appliance_performance,
-                                piggyback=piggyback,
-                            )
+                    if (piggyback := self._get_device_piggyback(serial, devices_by_serial)) and (
+                        appliance_performance := self.client.get_appliance_performance(serial)
+                    ):
+                        yield Section(
+                            name="cisco_meraki_org_appliance_performance",
+                            data=appliance_performance,
+                            piggyback=piggyback,
+                        )
 
         if devices_by_type.get("wireless"):
             if self.config.required.wireless_device_statuses:
                 for device in devices_by_type["wireless"]:
                     serial = device["serial"]
-                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
-                        if wireless_device := self.client.get_wireless_device_statuses(serial):
-                            yield Section(
-                                name="cisco_meraki_org_wireless_device_statuses",
-                                data=wireless_device,
-                                piggyback=piggyback,
-                            )
+                    if (piggyback := self._get_device_piggyback(serial, devices_by_serial)) and (
+                        wireless_device := self.client.get_wireless_device_statuses(serial)
+                    ):
+                        yield Section(
+                            name="cisco_meraki_org_wireless_device_statuses",
+                            data=wireless_device,
+                            piggyback=piggyback,
+                        )
 
             if self.config.required.wireless_ethernet_statuses:
                 for wireless_ethernet_status in self.client.get_wireless_ethernet_statuses(self.id):
@@ -241,17 +243,16 @@ class MerakiOrganisation:
                             piggyback=piggyback,
                         )
 
-        if devices_by_type.get("switch"):
-            if self.config.required.switch_ports_statuses:
-                for switch in devices_by_type["switch"]:
-                    serial = switch["serial"]
-                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
-                        for switch_ports_status in self.client.get_switch_ports_statuses(serial):
-                            yield Section(
-                                name="cisco_meraki_org_switch_ports_statuses",
-                                data=switch_ports_status,
-                                piggyback=piggyback,
-                            )
+        if devices_by_type.get("switch") and self.config.required.switch_ports_statuses:
+            for switch in devices_by_type["switch"]:
+                serial = switch["serial"]
+                if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                    for switch_ports_status in self.client.get_switch_ports_statuses(serial):
+                        yield Section(
+                            name="cisco_meraki_org_switch_ports_statuses",
+                            data=switch_ports_status,
+                            piggyback=piggyback,
+                        )
 
     def _get_device_piggyback(
         self, serial: str, devices_by_serial: Mapping[str, Device]

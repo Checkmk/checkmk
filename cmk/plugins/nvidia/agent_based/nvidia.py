@@ -30,9 +30,8 @@ def _format_nvidia_name(identifier: str) -> str:
 def _discover_nvidia_temp(core: bool, section: StringTable) -> DiscoveryResult:
     for line in section:
         line_san = line[0].strip(":")
-        if line_san.lower().endswith("temp"):
-            if core == (line_san == "GPUCoreTemp"):
-                yield Service(item=_format_nvidia_name(line_san))
+        if line_san.lower().endswith("temp") and core == (line_san == "GPUCoreTemp"):
+            yield Service(item=_format_nvidia_name(line_san))
 
 
 def check_nvidia_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:

@@ -141,14 +141,17 @@ def parse_oracle_rman(
                 sid_level0_backupage = section[sid_level0]["backupage"]
                 section_backupage = section[elem]["backupage"]
 
-                if isinstance(sid_level0_backupage, int) and isinstance(section_backupage, int):
-                    if sid_level0_backupage < section_backupage:
-                        section[elem].update(
-                            {
-                                "backupage": sid_level0_backupage,
-                                "used_incr_0": True,
-                            }
-                        )
+                if (
+                    isinstance(sid_level0_backupage, int)
+                    and isinstance(section_backupage, int)
+                    and sid_level0_backupage < section_backupage
+                ):
+                    section[elem].update(
+                        {
+                            "backupage": sid_level0_backupage,
+                            "used_incr_0": True,
+                        }
+                    )
 
     return section
 

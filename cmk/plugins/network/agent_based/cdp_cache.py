@@ -238,13 +238,14 @@ def _get_device_id(raw_device_id: str) -> str | None:
             return device_id
         return None
 
-    if len(raw_device_id) in [12, 13, 14, 17]:
-        if (device_id := _sanitize_mac(raw_device_id)) is not None:
-            return device_id
+    if (
+        len(raw_device_id) in [12, 13, 14, 17]
+        and (device_id := _sanitize_mac(raw_device_id)) is not None
+    ):
+        return device_id
 
-    if len(raw_device_id) == 6:
-        if (device_id := _render_mac_address(raw_device_id)) is not None:
-            return device_id
+    if len(raw_device_id) == 6 and (device_id := _render_mac_address(raw_device_id)) is not None:
+        return device_id
     return raw_device_id
 
 

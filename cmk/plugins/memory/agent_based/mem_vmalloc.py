@@ -23,13 +23,14 @@ def discover_mem_vmalloc(section: Any) -> DiscoveryResult:
 
     # newer kernel version report wrong data,
     # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocTotal" in section and not (
-        section["VmallocUsed"] == 0 and section["VmallocChunk"] == 0
+    # Do not checks this on 64 Bit systems. They have almost
+    # infinitive vmalloc
+    if (
+        "VmallocTotal" in section
+        and not (section["VmallocUsed"] == 0 and section["VmallocChunk"] == 0)
+        and section["VmallocTotal"] < 4 * 1024**2
     ):
-        # Do not checks this on 64 Bit systems. They have almost
-        # infinitive vmalloc
-        if section["VmallocTotal"] < 4 * 1024**2:
-            yield Service()
+        yield Service()
 
 
 def check_mem_vmalloc(params: Mapping[str, Any], section: Any) -> CheckResult:

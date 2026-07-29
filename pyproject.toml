@@ -218,8 +218,6 @@ ignore = [
 
 # SIM102 incremental rollout: each labelled group is removed by its follow-up
 # change, which applies the fix and enforces the rule in that scope.
-# cmk/plugins
-"cmk/plugins/**" = ["SIM102"]
 # packages misc
 "packages/cmk-agent-receiver/**" = ["SIM102"]
 "packages/cmk-backup/**" = ["SIM102"]

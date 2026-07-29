@@ -56,14 +56,13 @@ def check_dmraid_pdisks(item: str, section: StringTable) -> CheckResult:
 def check_dmraid_ldisks(item: str, section: StringTable) -> CheckResult:
     LDISK_FOUND = False
     for line in section:
-        if LDISK_FOUND:
-            if line[0] == "status":
-                status = line[2]
-                if status == "ok":
-                    yield Result(state=State.OK, summary="state is %s" % status)
-                    return
-                yield Result(state=State.CRIT, summary="%s" % status)
+        if LDISK_FOUND and line[0] == "status":
+            status = line[2]
+            if status == "ok":
+                yield Result(state=State.OK, summary="state is %s" % status)
                 return
+            yield Result(state=State.CRIT, summary="%s" % status)
+            return
         if line[0] == "name" and line[2] == item:
             LDISK_FOUND = True
 

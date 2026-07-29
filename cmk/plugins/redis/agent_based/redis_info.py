@@ -91,10 +91,9 @@ def check_redis_info(item: str, params: Mapping[str, Any], section: Section) -> 
         mode_state = State.OK
         infotext = "Mode: %s" % server_mode.title()
         mode_params = params.get("expected_mode")
-        if mode_params is not None:
-            if mode_params != server_mode:
-                mode_state = State.WARN
-                infotext += " (expected: %s)" % mode_params.title()
+        if mode_params is not None and mode_params != server_mode:
+            mode_state = State.WARN
+            infotext += " (expected: %s)" % mode_params.title()
 
         yield Result(state=mode_state, summary=infotext)
 

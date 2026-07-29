@@ -95,14 +95,13 @@ def check_mysql_replica_slave(
     if data[f"{replica_or_slave}_IO_Running"]:
         yield Result(state=State.OK, summary=f"{replica_or_slave}-IO: running")
 
-        if rls := data["Relay_Log_Space"]:
-            if rls != "NULL":
-                yield from check_levels(
-                    value=rls,
-                    metric_name="relay_log_space",
-                    label="Relay log",
-                    render_func=render.bytes,
-                )
+        if (rls := data["Relay_Log_Space"]) and rls != "NULL":
+            yield from check_levels(
+                value=rls,
+                metric_name="relay_log_space",
+                label="Relay log",
+                render_func=render.bytes,
+            )
 
     else:
         yield Result(state=State.CRIT, summary=f"{replica_or_slave}-IO: not running")

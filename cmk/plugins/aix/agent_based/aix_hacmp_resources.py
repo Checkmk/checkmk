@@ -65,12 +65,11 @@ def check_aix_hacmp_resources(
         infotext.append(f"{resource_state} on node {node_name}")
 
     state = State.OK
-    if expected_behaviour == "first":
-        if resource_states[0] != "online":
-            state = State.CRIT
-    elif expected_behaviour == "any":
-        if not any(resource_state == "online" for resource_state in resource_states):
-            state = State.CRIT
+    if (expected_behaviour == "first" and resource_states[0] != "online") or (
+        expected_behaviour == "any"
+        and not any(resource_state == "online" for resource_state in resource_states)
+    ):
+        state = State.CRIT
 
     yield Result(state=state, summary=", ".join(infotext))
 

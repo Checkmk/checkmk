@@ -109,17 +109,15 @@ def check_aix_lvm(item: str, section: Section) -> CheckResult:
         # Test if the volume is mirrored.
         # Yes? Test for an even distribution of PP's over volumes.
         # This is cannot detect crossover misaligns and other bad practices.
-        if int(num_pp / num_lp) > 1:
-            if int(num_pp / num_pv) != num_lp:
-                msgtxt.append("LV Mirrors are misaligned between physical volumes(!)")
-                state = max(state, 1)
+        if int(num_pp / num_lp) > 1 and int(num_pp / num_pv) != num_lp:
+            msgtxt.append("LV Mirrors are misaligned between physical volumes(!)")
+            state = max(state, 1)
 
         # If it's not the boot volume I suspect it should be open.
         # This may need to be changed for some scenarios
-        if lvtype != "boot":
-            if activation != "open":  # and activation != target_activation:
-                msgtxt.append("LV is not opened(!)")
-                state = max(state, 1)
+        if lvtype != "boot" and activation != "open":  # and activation != target_activation:
+            msgtxt.append("LV is not opened(!)")
+            state = max(state, 1)
 
         # Detect any, not just mirrored, volumes, that have stale PPs.
         # This means either a disk write failure causing a mirror to go stale

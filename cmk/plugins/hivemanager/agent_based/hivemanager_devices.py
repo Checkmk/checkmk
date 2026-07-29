@@ -47,9 +47,8 @@ def check_hivemanager_devices(
         yield Result(state=State.CRIT, summary=alarmstate)
 
     # If activated, Check for lost connection of client
-    if params["alert_on_loss"]:
-        if infos["connection"] == "False":
-            yield Result(state=State.CRIT, summary="Connection lost")
+    if params["alert_on_loss"] and infos["connection"] == "False":
+        yield Result(state=State.CRIT, summary="Connection lost")
 
     # The number of clients
     number_of_clients = int(infos["clients"])

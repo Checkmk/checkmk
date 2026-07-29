@@ -218,9 +218,11 @@ def _mongodb_cluster_is_balanced(
     diff_chunks = number_of_chunks_in_shard - average_chunks_per_shard
 
     for threshold in BALANCE_THRESHOLDS:
-        if threshold[0][0] >= total_number_of_chunks > threshold[0][1]:
-            if diff_chunks > threshold[1]:
-                return False
+        if (
+            threshold[0][0] >= total_number_of_chunks > threshold[0][1]
+            and diff_chunks > threshold[1]
+        ):
+            return False
     return True
 
 

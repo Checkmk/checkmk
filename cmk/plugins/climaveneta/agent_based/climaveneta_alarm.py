@@ -83,10 +83,9 @@ def check_climaveneta_alarm(section: StringTable) -> CheckResult:
     hit = False
     for oid_id, status in section:
         alarm_id = int(oid_id.split(".")[0])
-        if alarm_id in climaveneta_alarms:
-            if status != "0":
-                hit = True
-                yield Result(state=State.CRIT, summary="Alarm: %s" % climaveneta_alarms[alarm_id])
+        if alarm_id in climaveneta_alarms and status != "0":
+            hit = True
+            yield Result(state=State.CRIT, summary="Alarm: %s" % climaveneta_alarms[alarm_id])
     if not hit:
         yield Result(state=State.OK, summary="No alarm state")
 

@@ -102,12 +102,13 @@ def parse(string_table: StringTable, *, strict: bool = True) -> DockerParseResul
     """
     version = ensure_valid_docker_header(string_table)
     string_table = cleanup_oci_error_message(string_table)
-    if strict:
-        if len(string_table) != 2 or len(string_table[0]) != 2 or len(string_table[1]) != 1:
-            raise ValueError(
-                "Expected list of length 2. "
-                "First element list of 2 strings, second element list of 1 string"
-            )
+    if strict and (
+        len(string_table) != 2 or len(string_table[0]) != 2 or len(string_table[1]) != 1
+    ):
+        raise ValueError(
+            "Expected list of length 2. "
+            "First element list of 2 strings, second element list of 1 string"
+        )
     return DockerParseResult(json.loads(string_table[1][0]), version)
 
 

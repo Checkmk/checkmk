@@ -264,9 +264,8 @@ def _get_cores(
     # Last resort if there's still no information about cores:
     # All "current" SPARC M, T, and S series processors have 8 threads per core,
     # so we do the math in that case
-    if processor_info.model in KNOWN_PROCESSORS:
-        if threads % 8 == 0:
-            return threads // 8
+    if processor_info.model in KNOWN_PROCESSORS and threads % 8 == 0:
+        return threads // 8
 
     return None
 

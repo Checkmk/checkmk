@@ -594,9 +594,8 @@ class PostgresWin(PostgresBase):
             cmd_line, PID = task.split("\r\r\n")
             cmd_line = cmd_line.split("CommandLine=")[1]
             PID = PID.split("ProcessId=")[1]
-            if self.is_postgres_process(cmd_line):
-                if task.find(self.name) != -1:
-                    out += "%s %s\n" % (PID, cmd_line)
+            if self.is_postgres_process(cmd_line) and task.find(self.name) != -1:
+                out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
 
     def get_stats(self, databases):

@@ -94,9 +94,8 @@ def get_affected_regions(all_regions: Iterable[str], entry: FeedParserDict) -> s
             affected_regions.add(region)
             summary = summary.replace(region, "")
 
-        if tags is not None:
-            if any(t for t in tags if t["term"] == region):
-                affected_regions.add(region)
+        if tags is not None and any(t for t in tags if t["term"] == region):
+            affected_regions.add(region)
 
     return affected_regions
 

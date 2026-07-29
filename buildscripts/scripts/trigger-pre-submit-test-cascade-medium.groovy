@@ -113,7 +113,8 @@ Boolean isBranchSubmitBlocked(String project, String branch) {
                 continue;
             }
             def submit_rules = entry.value.permissions?.submit?.rules ?: [:];
-            if (submit_rules.values().any { it.action == "BLOCK" }) {
+            def blocked_submit_rule_result = submit_rules.values().any { it.action == "BLOCK" };
+            if (blocked_submit_rule_result) {
                 is_blocked = true;
                 break;
             }

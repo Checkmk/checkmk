@@ -58,6 +58,8 @@ pub struct Args {
     #[arg(long)]
     pub detect_sids: bool,
 
+    /// Detect the Oracle client runtime and print the environment
+    /// (LD_LIBRARY_PATH/PATH, ORACLE_HOME) the monitoring process would use
     #[arg(long)]
     pub find_runtime: bool,
 

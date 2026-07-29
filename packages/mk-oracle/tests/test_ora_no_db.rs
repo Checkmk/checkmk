@@ -190,7 +190,7 @@ oracle:
 /// NOT ALL CONDITIONS TESTED
 #[test]
 fn test_add_runtime_to_path() {
-    use mk_oracle::setup::add_runtime_path_to_env;
+    use mk_oracle::setup::{apply_runtime_env, detect_runtime_dir, RuntimeEnv};
 
     fn exec_add_runtime_to_path(
         cfg: &OracleConfig,
@@ -200,12 +200,11 @@ fn test_add_runtime_to_path() {
         unsafe {
             std::env::set_var(mut_env_var.to_str(), "xxx");
         }
-        add_runtime_path_to_env(
-            cfg,
-            Some(mk_lib.to_owned()),
-            Some(mut_env_var.clone()),
-            false,
-        )
+        let runtime_env = RuntimeEnv {
+            runtime_dir: detect_runtime_dir(cfg, Some(mk_lib.to_owned()), false),
+            oracle_home: None,
+        };
+        apply_runtime_env(&runtime_env, Some(mut_env_var.clone()), None)
     }
     let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
     let mut_env_var = EnvVarName::from("SOME_PATH_TEST_VAR_XXX".to_string());
@@ -537,7 +536,7 @@ mod find_sids {
 #[cfg(unix)]
 #[test]
 fn test_add_oracle_home_to_env() {
-    use mk_oracle::setup::try_add_oracle_home_to_env;
+    use mk_oracle::setup::{apply_runtime_env, detect_oracle_home, OracleHome, RuntimeEnv};
     use mk_oracle::types::EnvVarName;
 
     let make_env_var = |name: &str| Some(EnvVarName::from(name.to_string()));
@@ -558,34 +557,59 @@ fn test_add_oracle_home_to_env() {
     let config_auto = OracleConfig::load_str(&make_config_with_use_host("auto")).unwrap();
     let config_never = OracleConfig::load_str(&make_config_with_use_host("never")).unwrap();
 
-    // use_host_client "never" -> gated out, variable stays unset
+    // use_host_client "never" -> gated out, no home detected
     let env_var = "_MK_TEST_ORACLE_HOME_GATED";
-    let result =
-        try_add_oracle_home_to_env(&config_never, Some(oratab.clone()), make_env_var(env_var));
+    let result = detect_oracle_home(&config_never, Some(oratab.clone()), make_env_var(env_var));
     assert!(result.is_none());
     assert!(std::env::var(env_var).is_err());
 
-    // variable already set -> untouched, fall back to runtime detection
+    // variable already set -> reported as inherited, apply leaves it untouched
     let env_var = "_MK_TEST_ORACLE_HOME_PRESET";
     unsafe {
         std::env::set_var(env_var, "/already/set");
     }
-    let result =
-        try_add_oracle_home_to_env(&config_auto, Some(oratab.clone()), make_env_var(env_var));
-    assert!(result.is_none());
+    let result = detect_oracle_home(&config_auto, Some(oratab.clone()), make_env_var(env_var));
+    assert_eq!(
+        result,
+        Some(OracleHome::Inherited(std::path::PathBuf::from(
+            "/already/set"
+        )))
+    );
+    let runtime_env = RuntimeEnv {
+        runtime_dir: Some(home.clone()),
+        oracle_home: result,
+    };
+    apply_runtime_env(
+        &runtime_env,
+        make_env_var("_MK_TEST_RUNTIME_PATH_PRESET"),
+        make_env_var(env_var),
+    )
+    .expect("apply with a runtime dir");
     assert_eq!(std::env::var(env_var).unwrap(), "/already/set");
 
-    // "auto" -> the first suitable home is set: BAD doesn't exist, XE wins
+    // "auto" -> the first suitable home is derived: BAD doesn't exist,
+    // XE wins; only apply exports it
     let env_var = "_MK_TEST_ORACLE_HOME_SET";
-    let result = try_add_oracle_home_to_env(&config_auto, Some(oratab), make_env_var(env_var));
-    assert!(result.is_some());
+    let result = detect_oracle_home(&config_auto, Some(oratab), make_env_var(env_var));
+    assert_eq!(result, Some(OracleHome::Derived(home.clone())));
+    assert!(std::env::var(env_var).is_err());
+    let runtime_env = RuntimeEnv {
+        runtime_dir: Some(home.clone()),
+        oracle_home: result,
+    };
+    apply_runtime_env(
+        &runtime_env,
+        make_env_var("_MK_TEST_RUNTIME_PATH_SET"),
+        make_env_var(env_var),
+    )
+    .expect("apply with a runtime dir");
     assert_eq!(std::env::var(env_var).unwrap(), home.to_str().unwrap());
 
-    // no suitable home at all -> nothing set
+    // no suitable home at all -> nothing detected
     let bad_oratab_path = tmp_dir.path().join("oratab_bad");
     std::fs::write(&bad_oratab_path, "BAD:/nonexistent/oracle/home:N\n").expect("write oratab");
     let env_var = "_MK_TEST_ORACLE_HOME_NO_HOME";
-    let result = try_add_oracle_home_to_env(
+    let result = detect_oracle_home(
         &config_auto,
         Some(bad_oratab_path.to_str().unwrap().to_string()),
         make_env_var(env_var),

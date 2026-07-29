@@ -34,6 +34,11 @@ def main() {
         "test-shell-unit",
         "test-typescript-types",
     ];
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn
+    /// like changing order or amount of stages, which will happen with stages started `via paral
+    def timeOffsetForOrder = 0;
 
     print(
         """
@@ -46,6 +51,8 @@ def main() {
 
     def stages = job_names.collectEntries { job_name ->
         [("${job_name}") : {
+            sleep(0.1 * timeOffsetForOrder++);
+
             smart_stage(
                 name: "Trigger ${job_name}",
             ) {

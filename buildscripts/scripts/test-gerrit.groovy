@@ -21,6 +21,11 @@ void main() {
     def stage_info = null;
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
 
     print(
         """
@@ -80,8 +85,10 @@ void main() {
         stage_info = load_json("${result_dir}/stages.json");
     }
 
-    def stepsForParallel = stage_info.STAGES.collectEntries { item -> [
-        ("Test ${item.NAME}") : {
+    def stepsForParallel = stage_info.STAGES.collectEntries { item ->
+        [("Test ${item.NAME}") : {
+            sleep(0.1 * timeOffsetForOrder++);
+
             def stepName = "Test ${item.NAME}";
             def run_condition = !item.SKIPPED;
             def build_instance = null;

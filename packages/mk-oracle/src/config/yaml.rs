@@ -104,7 +104,6 @@ impl Get for Yaml {
 
         let value = &self[key];
         if value.is_badvalue() {
-            log::debug!("{key} no vector, using default {default:?}");
             return default.iter().filter_map(map_str).collect();
         }
         if let Some(v) = value.as_vec() {

@@ -201,6 +201,85 @@ fn test_print_info() {
     }
 }
 
+#[test]
+fn test_find_runtime_reports_environment() {
+    let env = setup_test_env();
+    // factory runtime layout under MK_LIBDIR:
+    // plugins/packages/mk-oracle on Unix, + /runtime on Windows
+    let lib_dir = tempfile::tempdir().unwrap();
+    let package_dir = lib_dir.path().join("plugins/packages/mk-oracle");
+    fs::create_dir_all(package_dir.join("runtime")).unwrap();
+
+    let output = run_bin()
+        .env("MK_LIBDIR", lib_dir.path())
+        .env_remove("ORACLE_HOME")
+        .env_remove("LD_LIBRARY_PATH")
+        .args(["-c", env.config.to_str().unwrap(), "--find-runtime"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "--find-runtime must succeed");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let expected_dir = if cfg!(windows) {
+        package_dir.join("runtime")
+    } else {
+        package_dir
+    };
+    let path_var = if cfg!(windows) {
+        "PATH"
+    } else {
+        "LD_LIBRARY_PATH"
+    };
+    let first_line = stdout.lines().next().unwrap_or_default();
+    assert!(
+        first_line.starts_with(&format!("{path_var}={}", expected_dir.display())),
+        "first line must report the detected runtime, got: {stdout}"
+    );
+    assert!(
+        !stdout.contains('"'),
+        "output must not be Debug-quoted, got: {stdout}"
+    );
+    assert!(stdout.ends_with('\n'), "output must end with a newline");
+}
+
+#[test]
+fn test_find_runtime_without_runtime_fails() {
+    // use_host_client "never" + an empty MK_LIBDIR: nothing to detect
+    let tmp = tempfile::tempdir().unwrap();
+    let config = tmp.path().join("mk-oracle.yml");
+    fs::write(
+        &config,
+        r#"---
+oracle:
+  main:
+    options:
+      use_host_client: never
+    connection:
+      hostname: localhost
+    authentication:
+      username: dummy
+      password: dummy
+      type: standard
+"#,
+    )
+    .unwrap();
+
+    let output = run_bin()
+        .env("MK_LIBDIR", tmp.path())
+        .args(["-c", config.to_str().unwrap(), "--find-runtime"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1), "must fail without a runtime");
+    assert!(
+        output.stdout.is_empty(),
+        "nothing must be printed on stdout without a runtime"
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("Stop on error"),
+        "error must be reported on stderr, got: {stderr}"
+    );
+}
+
 #[cfg(not(windows))]
 #[test]
 fn test_user_config_overrides_bakery() {

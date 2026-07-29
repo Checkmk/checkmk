@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+use mk_oracle::ora_sql::detect::dump_detected_sids;
 use mk_oracle::{args::Args, config, setup};
 
 use clap::Parser;
@@ -55,19 +56,25 @@ async fn main() {
             ));
         };
 
-        if need_execution(args.as_slice()) {
+        if environment.detect_sids() || environment.find_runtime() {
+            run_utility_command(&config, &environment)
+        } else if environment.runtime_ready() {
+            // the parent process has already prepared the environment
             execute(config, environment).await
-        } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None, true) {
-            // On Unix before spawning a new process we try to set ORACLE_HOME
-            // from the local instances and only if no suitable home is found
-            // fall back to the runtime detection over LD_LIBRARY_PATH.
-            // On Windows ORACLE_HOME is never set.
-            setup::try_add_oracle_home_to_env(&config, None, None);
-            log::info!("Spawn new process {args:?} with runtime path {old_path:?}");
-            setup::spawn_new_process(args, old_path)
         } else {
-            setup::display_and_log("No Oracle client runtime found");
-            1
+            // Detect the Oracle client runtime and the ORACLE_HOME the
+            // monitoring process needs (on Unix derived from the local
+            // instances; on Windows ORACLE_HOME is never derived), export
+            // them and re-run ourselves: the child sees --runtime-ready and
+            // executes the actual monitoring.
+            let runtime_env = setup::detect_runtime_env(&config);
+            if let Some(old_path) = setup::apply_runtime_env(&runtime_env, None, None) {
+                log::info!("Spawn new process {args:?} with runtime path {old_path:?}");
+                setup::spawn_new_process(args, old_path)
+            } else {
+                setup::display_and_log("No Oracle client runtime found");
+                1
+            }
         }
     } else {
         setup::display_and_log(result.err().unwrap());
@@ -76,23 +83,37 @@ async fn main() {
     std::process::exit(code);
 }
 
-fn need_execution(args: &[String]) -> bool {
-    ["--detect-sids", "--find-runtime", "--runtime-ready"]
-        .into_iter()
-        .map(String::from)
-        .any(|c| args.contains(&c))
+/// Handles --detect-sids and --find-runtime: reports on stdout what the
+/// monitoring run would work with, without touching the environment.
+fn run_utility_command(config: &config::OracleConfig, environment: &setup::Env) -> i32 {
+    if config.ora_sql().is_none() {
+        setup::display_and_log("No Config");
+        return 1;
+    }
+    if environment.detect_sids() {
+        print!("{}", dump_detected_sids());
+        return 0;
+    }
+    let runtime_env = setup::detect_runtime_env(config);
+    if runtime_env.runtime_dir.is_none() {
+        setup::display_and_log("No Oracle client runtime found");
+        return 1;
+    }
+    let current = std::env::var(setup::RUNTIME_PATH_ENV_VAR).unwrap_or_default();
+    print!("{}", setup::format_runtime_env(&runtime_env, &current));
+    0
+}
+
+fn log_current_env_var(name: &str) {
+    let value = std::env::var(name).unwrap_or_default();
+    if !value.is_empty() {
+        log::info!("Current {name}={value}");
+    }
 }
 
 async fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
-    let env_var = if cfg!(windows) {
-        "PATH"
-    } else {
-        "LD_LIBRARY_PATH"
-    };
-    let env_var_value = std::env::var(env_var).unwrap_or_default();
-    log::info!("Current {env_var}={env_var_value}");
-    let oracle_home = std::env::var(setup::ORACLE_HOME_ENV_VAR).unwrap_or_default();
-    log::info!("Current {}={oracle_home}", setup::ORACLE_HOME_ENV_VAR);
+    log_current_env_var(setup::RUNTIME_PATH_ENV_VAR);
+    log_current_env_var(setup::ORACLE_HOME_ENV_VAR);
     match config.exec(&environment).await {
         Ok(output) => {
             print!("{output}");

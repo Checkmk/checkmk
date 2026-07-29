@@ -22,8 +22,8 @@ use crate::ora_sql::backend::{
 };
 use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::section::Section;
-use crate::setup::{detect_runtime, Env};
-use crate::types::{InstanceName, SectionFilter, SqlQuery, UseHostClient};
+use crate::setup::Env;
+use crate::types::{InstanceName, SectionFilter, SqlQuery};
 use std::collections::HashSet;
 
 use crate::config::authentication::AuthType;
@@ -31,7 +31,6 @@ use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use crate::config::section::names;
-use crate::ora_sql::detect::dump_detected_sids;
 use crate::ora_sql::spots::{
     make_spot_work_results, ClosedSpotWorks, OpenedSpotWorks, PostProcessing, QueryBlock,
 };
@@ -43,19 +42,6 @@ type ClosedSpotResults = (ClosedSpot, Vec<String>);
 impl OracleConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ora_sql) = self.ora_sql() {
-            if environment.detect_sids() {
-                return Ok(dump_detected_sids());
-            }
-            if environment.find_runtime() {
-                let use_host_client: UseHostClient = ora_sql.options().use_host_client().clone();
-
-                return Ok(detect_runtime(&use_host_client, None)
-                    .map(|t| format!("{:?}", t))
-                    .unwrap_or_else(|| {
-                        log::error!("Error detecting runtime");
-                        "Error detecting runtime".to_string()
-                    }));
-            }
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();
             output.extend(

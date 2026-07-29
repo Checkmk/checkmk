@@ -51,6 +51,9 @@ pub struct Env {
     /// detect runtime and stop
     find_runtime: bool,
 
+    /// the runtime environment is already prepared by the parent process
+    runtime_ready: bool,
+
     /// filtering sections for sync/async, possible values are "sync", "async", "all"
     filter: SectionFilter,
 
@@ -73,6 +76,7 @@ impl Env {
             disable_caching: args.no_spool,
             detect_sids: args.detect_sids,
             find_runtime: args.find_runtime,
+            runtime_ready: args.runtime_ready,
             filter: args.filter.unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
         }
@@ -100,6 +104,10 @@ impl Env {
 
     pub fn find_runtime(&self) -> bool {
         self.find_runtime
+    }
+
+    pub fn runtime_ready(&self) -> bool {
+        self.runtime_ready
     }
 
     pub fn generate_plugins(&self) -> Option<&Path> {
@@ -311,7 +319,8 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
                     local.home,
                     local.base
                 );
-                let candidate = local.home.join("bin");
+                // shared libraries live in lib on Unix, DLLs in bin on Windows
+                let candidate = local.home.join(if cfg!(windows) { "bin" } else { "lib" });
                 if candidate.is_dir() {
                     return Some(candidate);
                 } else {
@@ -424,12 +433,12 @@ pub fn detect_runtime(use_host_client: &UseHostClient, env_var: Option<String>) 
 }
 
 #[cfg(windows)]
-const _DEFAULT_ENV_VAR: &str = "PATH";
+pub const RUNTIME_PATH_ENV_VAR: &str = "PATH";
 #[cfg(unix)]
-const _DEFAULT_ENV_VAR: &str = "LD_LIBRARY_PATH";
+pub const RUNTIME_PATH_ENV_VAR: &str = "LD_LIBRARY_PATH";
 
 static DEFAULT_ENV_VAR: LazyLock<EnvVarName> =
-    LazyLock::new(|| EnvVarName::from(_DEFAULT_ENV_VAR.to_string()));
+    LazyLock::new(|| EnvVarName::from(RUNTIME_PATH_ENV_VAR.to_string()));
 
 #[cfg(windows)]
 const ENV_VAR_SEP: &str = ";";
@@ -438,17 +447,80 @@ const ENV_VAR_SEP: &str = ":";
 
 pub const ORACLE_HOME_ENV_VAR: &str = "ORACLE_HOME";
 
-/// On Unix tries to prepare the environment for the Oracle client using
-/// ORACLE_HOME: takes the home of the first local instance (as listed in
-/// oratab) which exists and whose lib dir passes the permission validation
-/// and sets it to the ORACLE_HOME environment variable. Applies only when
+/// The ORACLE_HOME the spawned monitoring process will see: either inherited
+/// from the current environment or derived from the local instances (oratab).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OracleHome {
+    Inherited(PathBuf),
+    Derived(PathBuf),
+}
+
+impl OracleHome {
+    pub fn path(&self) -> &Path {
+        match self {
+            OracleHome::Inherited(path) | OracleHome::Derived(path) => path,
+        }
+    }
+}
+
+/// The environment the monitoring process is spawned with: computed by
+/// detect_runtime_env, exported by apply_runtime_env and rendered for
+/// --find-runtime by format_runtime_env.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct RuntimeEnv {
+    /// directory to prepend to LD_LIBRARY_PATH (PATH on Windows)
+    pub runtime_dir: Option<PathBuf>,
+    /// effective ORACLE_HOME of the spawned process, if any
+    pub oracle_home: Option<OracleHome>,
+}
+
+/// Computes the runtime environment without touching the process environment.
+/// Must run before apply_runtime_env: runtime detection reads the current
+/// ORACLE_HOME/ORACLE_INSTANT_CLIENT values.
+pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
+    RuntimeEnv {
+        runtime_dir: detect_runtime_dir(config, None, true),
+        oracle_home: detect_oracle_home(config, None, None),
+    }
+}
+
+/// Detects the directory with the Oracle client runtime to be prepended to
+/// LD_LIBRARY_PATH (PATH on Windows) using config and, by default, MK_LIBDIR.
+/// May validate permissions of the detected path: returns None if they are
+/// not correct.
+pub fn detect_runtime_dir(
+    config: &OracleConfig,
+    mk_lib_dir: Option<String>,
+    check_permissions: bool,
+) -> Option<PathBuf> {
+    let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
+    log::info!("Use host client {:?}", use_host_client);
+    let runtime = detect_runtime(&use_host_client, mk_lib_dir)?;
+    if check_permissions && !validate_permissions(&runtime) {
+        log::error!("Runtime path {:?} has wrong permissions", runtime);
+        return None;
+    }
+    Some(runtime)
+}
+
+/// Determines the ORACLE_HOME the spawned monitoring process will see: the
+/// value already set in the environment, otherwise (on Unix) the home of the first
+/// local instance (as listed in oratab) which exists and whose lib dir passes
+/// the permission validation. The derivation applies only when
 /// use_host_client is auto or always: other values ask for a concrete client
-/// and are handled by add_runtime_path_to_env.
-pub fn try_add_oracle_home_to_env(
+/// and are covered by the runtime path alone.
+pub fn detect_oracle_home(
     config: &OracleConfig,
     custom_path: Option<String>,
-    mut_env: Option<EnvVarName>,
-) -> Option<PathBuf> {
+    home_var: Option<EnvVarName>,
+) -> Option<OracleHome> {
+    let env_var = home_var.unwrap_or_else(|| EnvVarName::from(ORACLE_HOME_ENV_VAR.to_string()));
+    let current = std::env::var(env_var.to_str()).unwrap_or_default();
+    if !current.is_empty() {
+        log::info!("{env_var} is already set to {current}, keeping it");
+        return Some(OracleHome::Inherited(PathBuf::from(current)));
+    }
+
     if cfg!(windows) {
         log::debug!("{ORACLE_HOME_ENV_VAR} based setup is not supported on Windows");
         return None;
@@ -459,13 +531,6 @@ pub fn try_add_oracle_home_to_env(
         log::info!(
             "Use host client is {use_host_client:?}: skipping {ORACLE_HOME_ENV_VAR} based setup"
         );
-        return None;
-    }
-
-    let env_var = mut_env.unwrap_or_else(|| EnvVarName::from(ORACLE_HOME_ENV_VAR.to_string()));
-    let current = std::env::var(env_var.to_str()).unwrap_or_default();
-    if !current.is_empty() {
-        log::info!("{env_var} is already set to {current}, falling back to runtime detection");
         return None;
     }
 
@@ -505,52 +570,63 @@ pub fn try_add_oracle_home_to_env(
         }
     });
 
-    if let Some(home) = &home {
-        log::info!("Setting {env_var} to {:?}", home);
-        unsafe {
-            std::env::set_var(env_var.to_str(), home);
-        }
-        // LD_LIBRARY_PATH is left untouched: return its current content so
-        // that resetting the environment after the spawn is a no-op
-        Some(PathBuf::from(
-            std::env::var(DEFAULT_ENV_VAR.to_str()).unwrap_or_default(),
-        ))
-    } else {
+    if home.is_none() {
         log::info!("No suitable Oracle home found to set {env_var}");
-        None
     }
+    home.map(OracleHome::Derived)
 }
 
-/// On Unix we modify LD_LIBRARY_PATH using config and, by default, MK_LIBDIR
-/// On Windows we modify PATH using config and, by default, MK_LIBDIR
-/// May validate permissions of the detected path: returns None if they are not correct
-pub fn add_runtime_path_to_env(
-    config: &OracleConfig,
-    mk_lib_dir: Option<String>,
-    mut_env: Option<EnvVarName>,
-    check_permissions: bool,
+/// Exports the runtime environment to the process environment: prepends the
+/// runtime directory to LD_LIBRARY_PATH (PATH on Windows) and sets a derived
+/// ORACLE_HOME (an inherited one is already in the environment and left untouched).
+/// Returns the old content of the modified path variable so that reset_env
+/// can restore it after the spawn; None if there is no runtime.
+pub fn apply_runtime_env(
+    runtime_env: &RuntimeEnv,
+    path_var: Option<EnvVarName>,
+    home_var: Option<EnvVarName>,
 ) -> Option<PathBuf> {
-    log::info!("Runtime to be added");
-    let mutable_var_name = mut_env.unwrap_or(DEFAULT_ENV_VAR.clone());
-    let mutable_var_content = std::env::var(mutable_var_name.to_str())
-        .ok()
-        .unwrap_or_default();
-    log::info!("Current {mutable_var_name}={mutable_var_content}");
-    let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
-    log::info!("Use host client {:?}", use_host_client);
-    let runtime = detect_runtime(&use_host_client, mk_lib_dir)?.into_os_string();
-    log::info!("Runtime found at {:?}", runtime);
-    let mut additional_path = runtime.clone();
-    if check_permissions && !validate_permissions(&PathBuf::from(&runtime)) {
-        log::error!("Runtime path {:?} has wrong permissions", runtime);
-        return None;
-    }
-    additional_path.push(ENV_VAR_SEP);
-    additional_path.push(&mutable_var_content);
+    let runtime_dir = runtime_env.runtime_dir.as_ref()?;
+    let path_var = path_var.unwrap_or(DEFAULT_ENV_VAR.clone());
+    let old_content = std::env::var(path_var.to_str()).ok().unwrap_or_default();
+    log::info!("Current {path_var}={old_content}");
+    let mut new_content = runtime_dir.clone().into_os_string();
+    new_content.push(ENV_VAR_SEP);
+    new_content.push(&old_content);
     unsafe {
-        std::env::set_var(mutable_var_name.to_str(), &additional_path);
+        std::env::set_var(path_var.to_str(), &new_content);
     }
-    Some(PathBuf::from(mutable_var_content))
+
+    if let Some(OracleHome::Derived(home)) = &runtime_env.oracle_home {
+        let home_var =
+            home_var.unwrap_or_else(|| EnvVarName::from(ORACLE_HOME_ENV_VAR.to_string()));
+        log::info!("Setting {home_var} to {:?}", home);
+        unsafe {
+            std::env::set_var(home_var.to_str(), home);
+        }
+    }
+    Some(PathBuf::from(old_content))
+}
+
+/// Renders the runtime environment for --find-runtime as shell-sourceable
+/// KEY=VALUE lines; current is the present content of LD_LIBRARY_PATH (PATH
+/// on Windows). Variables without a value are omitted.
+pub fn format_runtime_env(runtime_env: &RuntimeEnv, current: &str) -> String {
+    let mut output = String::new();
+    if let Some(runtime_dir) = &runtime_env.runtime_dir {
+        output.push_str(&format!("{RUNTIME_PATH_ENV_VAR}={}", runtime_dir.display()));
+        if !current.is_empty() {
+            output.push_str(&format!("{ENV_VAR_SEP}{current}"));
+        }
+        output.push('\n');
+    }
+    if let Some(home) = &runtime_env.oracle_home {
+        output.push_str(&format!(
+            "{ORACLE_HOME_ENV_VAR}={}\n",
+            home.path().display()
+        ));
+    }
+    output
 }
 
 pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
@@ -924,5 +1000,48 @@ mod tests {
         assert_eq!(plugins[0].0, "oracle_unified_sync");
         assert_eq!(plugins[1].0, "oracle_unified_async");
         assert_eq!(plugins[2].0, "oracle_unified_async_custom_metrics");
+    }
+
+    #[test]
+    fn test_format_runtime_env_full() {
+        let runtime_env = RuntimeEnv {
+            runtime_dir: Some(PathBuf::from("/runtime/lib")),
+            oracle_home: Some(OracleHome::Derived(PathBuf::from("/oracle/home"))),
+        };
+        assert_eq!(
+            format_runtime_env(&runtime_env, "/existing/path"),
+            format!(
+                "{RUNTIME_PATH_ENV_VAR}=/runtime/lib{ENV_VAR_SEP}/existing/path\nORACLE_HOME=/oracle/home\n"
+            )
+        );
+    }
+
+    #[test]
+    fn test_format_runtime_env_empty_current_has_no_separator() {
+        let runtime_env = RuntimeEnv {
+            runtime_dir: Some(PathBuf::from("/runtime/lib")),
+            oracle_home: None,
+        };
+        assert_eq!(
+            format_runtime_env(&runtime_env, ""),
+            format!("{RUNTIME_PATH_ENV_VAR}=/runtime/lib\n")
+        );
+    }
+
+    #[test]
+    fn test_format_runtime_env_inherited_home() {
+        let runtime_env = RuntimeEnv {
+            runtime_dir: Some(PathBuf::from("/runtime/lib")),
+            oracle_home: Some(OracleHome::Inherited(PathBuf::from("/inherited/home"))),
+        };
+        assert_eq!(
+            format_runtime_env(&runtime_env, ""),
+            format!("{RUNTIME_PATH_ENV_VAR}=/runtime/lib\nORACLE_HOME=/inherited/home\n")
+        );
+    }
+
+    #[test]
+    fn test_format_runtime_env_nothing_detected() {
+        assert_eq!(format_runtime_env(&RuntimeEnv::default(), "/some/path"), "");
     }
 }

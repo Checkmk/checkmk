@@ -15,9 +15,10 @@ from werkzeug.test import create_environ
 from livestatus import OnlySites
 
 from cmk.crash import AggregatedCrashInfo
-from cmk.gui.crash_reporting.pages import CrashReport, CrashReportRow
+from cmk.gui.crash_reporting.pages import CrashReport, CrashReportRow, ReportRendererGUI
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
+from cmk.gui.utils.output_funnel import output_funnel
 
 
 class CrashInfoFactory(TypedDictFactory[AggregatedCrashInfo]):
@@ -75,3 +76,16 @@ def test_build_crash_report_missing_request_vars(query_string: str) -> None:
             Request(create_environ(query_string=query_string)),
             FakeCrashReportsRowFetcher({"crash_info": json.dumps(CrashInfoFactory.build())}),
         )
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 3887: KeyError 'page'")
+def test_report_renderer_gui_show_details_without_request_details(request_context: None) -> None:
+    # A GUI crash raised outside of a request (e.g. in a background job) is stored
+    # with an empty details dict, so none of the request fields are available.
+    crash_info = CrashInfoFactory.build(crash_type="gui", details={})
+
+    with output_funnel.plugged():
+        ReportRendererGUI().show_details(crash_info, {"crash_id": "1", "site": "heute"})
+        rendered = "".join(output_funnel.drain())
+
+    assert rendered == ""

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -19,6 +19,20 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.humidity import check_humidity, CheckParams
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+
+
+def filter_broken_rows(
+    string_table: StringTable, required_columns: Sequence[int]
+) -> tuple[StringTable, set[str]]:
+    # SUP-29863: sensor readings can miss any number of entries, including the sensor description.
+    def intact(row: Sequence[str]) -> bool:
+        return all(row[i] for i in required_columns)
+
+    return (
+        [row for row in string_table if row[0] and intact(row)],
+        {row[0] for row in string_table if row[0] and not intact(row)},
+    )
+
 
 # .
 #   .--Humidity------------------------------------------------------------.
@@ -105,39 +119,52 @@ class HumiditySensor:
     online: bool
 
 
-HumiditySection = Mapping[str, ProbeHumiditySensor] | Mapping[str, HumiditySensor]
+HumiditySection = Mapping[str, ProbeHumiditySensor | None] | Mapping[str, HumiditySensor | None]
 
 
-def parse_akcp_sensor_humidity(string_table: StringTable) -> Mapping[str, ProbeHumiditySensor]:
+def parse_akcp_sensor_humidity(
+    string_table: StringTable,
+) -> Mapping[str, ProbeHumiditySensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 2, 3))
     return {
-        description: ProbeHumiditySensor(
-            status=SensorProbeHumidityStatus(status),
-            percent=int(percent) if percent else None,
-            online=online == "1",
-        )
-        for description, percent, status, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: ProbeHumiditySensor(
+                status=SensorProbeHumidityStatus(status),
+                percent=int(percent) if percent else None,
+                online=online == "1",
+            )
+            for description, percent, status, online in rows
+        },
     }
 
 
-def parse_akcp_humidity(string_table: StringTable) -> Mapping[str, HumiditySensor]:
+def parse_akcp_humidity(string_table: StringTable) -> Mapping[str, HumiditySensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 2, 3))
     return {
-        description: HumiditySensor(
-            status=SensorHumidityStatus(status),
-            percent=int(percent) if percent else None,
-            online=online == "1",
-        )
-        for description, percent, status, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: HumiditySensor(
+                status=SensorHumidityStatus(status),
+                percent=int(percent) if percent else None,
+                online=online == "1",
+            )
+            for description, percent, status, online in rows
+        },
     }
 
 
 def discover_akcp_humidity(section: HumiditySection) -> DiscoveryResult:
     for description, sensor in section.items():
-        if sensor.online:
+        if sensor is None or sensor.online:
             yield Service(item=description)
 
 
 def check_akcp_humidity(item: str, params: CheckParams, section: HumiditySection) -> CheckResult:
-    if (sensor := section.get(item)) is None:
+    if item not in section:
+        return
+    if (sensor := section[item]) is None:
+        yield IgnoreResults("Sensor reported corrupted values")
         return
     if sensor.status in (
         SensorProbeHumidityStatus.NO_VALUE,
@@ -173,7 +200,7 @@ def check_akcp_humidity(item: str, params: CheckParams, section: HumiditySection
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
-AKCP_TEMP_CHECK_DEFAULT_PARAMETERS = {
+AKCP_TEMP_CHECK_DEFAULT_PARAMETERS: TempParamDict = {
     "levels": (32.0, 35.0),
 }
 
@@ -254,7 +281,10 @@ class TemperatureSensor:
     online: bool
 
 
-TempSection = Mapping[str, ProbeTempSensor] | Mapping[str, TemperatureSensor]
+TempSection = Mapping[str, ProbeTempSensor | None] | Mapping[str, TemperatureSensor | None]
+
+# 1 (degree) and 8 (degreeraw) are omitted: werk 4352 makes a missing reading UNKNOWN, not stale.
+_TEMP_REQUIRED_COLUMNS = (0, 2, 3, 4, 5, 6, 7, 9)
 
 
 def _parse_temp_fields(
@@ -294,8 +324,9 @@ def _parse_temp_fields(
     return temperature, dev_unit, (high_w, high_c), (low_w, low_c)
 
 
-def parse_akcp_sensor_temp(string_table: StringTable) -> Mapping[str, ProbeTempSensor]:
-    result = {}
+def parse_akcp_sensor_temp(string_table: StringTable) -> Mapping[str, ProbeTempSensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=_TEMP_REQUIRED_COLUMNS)
+    result: dict[str, ProbeTempSensor | None] = dict.fromkeys(broken)
     for (
         description,
         degree,
@@ -307,7 +338,7 @@ def parse_akcp_sensor_temp(string_table: StringTable) -> Mapping[str, ProbeTempS
         high_crit,
         degreeraw,
         online,
-    ) in string_table:
+    ) in rows:
         temperature, dev_unit, dev_levels, dev_levels_lower = _parse_temp_fields(
             degree, unit, low_crit, low_warn, high_warn, high_crit, degreeraw
         )
@@ -322,8 +353,9 @@ def parse_akcp_sensor_temp(string_table: StringTable) -> Mapping[str, ProbeTempS
     return result
 
 
-def parse_akcp_temp(string_table: StringTable) -> Mapping[str, TemperatureSensor]:
-    result = {}
+def parse_akcp_temp(string_table: StringTable) -> Mapping[str, TemperatureSensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=_TEMP_REQUIRED_COLUMNS)
+    result: dict[str, TemperatureSensor | None] = dict.fromkeys(broken)
     for (
         description,
         degree,
@@ -335,7 +367,7 @@ def parse_akcp_temp(string_table: StringTable) -> Mapping[str, TemperatureSensor
         high_crit,
         degreeraw,
         online,
-    ) in string_table:
+    ) in rows:
         temperature, dev_unit, dev_levels, dev_levels_lower = _parse_temp_fields(
             degree, unit, low_crit, low_warn, high_warn, high_crit, degreeraw
         )
@@ -352,12 +384,15 @@ def parse_akcp_temp(string_table: StringTable) -> Mapping[str, TemperatureSensor
 
 def discover_akcp_sensor_temp(section: TempSection) -> DiscoveryResult:
     for description, sensor in section.items():
-        if sensor.online:
+        if sensor is None or sensor.online:
             yield Service(item=description)
 
 
 def check_akcp_sensor_temp(item: str, params: TempParamDict, section: TempSection) -> CheckResult:
-    if (sensor := section.get(item)) is None:
+    if item not in section:
+        return
+    if (sensor := section[item]) is None:
+        yield IgnoreResults("Sensor reported corrupted values")
         return
     if sensor.status in (
         SensorProbeTempStatus.NO_VALUE,
@@ -473,26 +508,34 @@ class SmokeSensor:
     online: bool
 
 
-RelaySection = Mapping[str, WaterSensor] | Mapping[str, SmokeSensor]
+RelaySection = Mapping[str, WaterSensor | None] | Mapping[str, SmokeSensor | None]
 
 
-def parse_akcp_water(string_table: StringTable) -> Mapping[str, WaterSensor]:
+def parse_akcp_water(string_table: StringTable) -> Mapping[str, WaterSensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
     return {
-        description: WaterSensor(status=SensorWaterStatus(status), online=online == "1")
-        for description, status, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: WaterSensor(status=SensorWaterStatus(status), online=online == "1")
+            for description, status, online in rows
+        },
     }
 
 
-def parse_akcp_smoke(string_table: StringTable) -> Mapping[str, SmokeSensor]:
+def parse_akcp_smoke(string_table: StringTable) -> Mapping[str, SmokeSensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
     return {
-        description: SmokeSensor(status=SensorSmokeStatus(status), online=online == "1")
-        for description, status, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: SmokeSensor(status=SensorSmokeStatus(status), online=online == "1")
+            for description, status, online in rows
+        },
     }
 
 
 def discover_akcp_sensor_relay(section: RelaySection) -> DiscoveryResult:
     for description, sensor in section.items():
-        if sensor.online:
+        if sensor is None or sensor.online:
             yield Service(item=description)
 
 
@@ -514,7 +557,10 @@ def check_akcp_sensor_relay(item: str, section: RelaySection) -> CheckResult:
         SensorSmokeStatus.RELAY_OFF: (State.OK, "relay off"),
     }
 
-    if (sensor := section.get(item)) is None:
+    if item not in section:
+        return
+    if (sensor := section[item]) is None:
+        yield IgnoreResults("Sensor reported corrupted values")
         return
     if sensor.status in (SensorWaterStatus.NO_VALUE, SensorSmokeStatus.NO_VALUE):
         yield IgnoreResults("Sensor did not report a status")

@@ -5,7 +5,9 @@ py_cmk_test(
     size = "small",
     srcs = glob(["backend/**/*.py"]),
     deps = [
+        "//packages/cmk-plugin-apis:diagnostics",
         "//packages/cmk-profiling:backend",
+        "//packages/cmk-profiling:plugins",
     ],
 )
 

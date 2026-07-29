@@ -158,7 +158,6 @@ allows = [
   "cmk.inventory",
   # decoding of the rot47-obfuscated licensing usage reports
   "cmk.licensing.usage",
-  "cmk.profiling.backend",
 ]
 
 # These plugins are tightly coupled to Checkmk.
@@ -197,6 +196,9 @@ allows = [
 
 [plugin_families.violations.dcd]
 allows = ["@ccc", "cmk.dcd", "cmk.gui.config"]
+
+[plugin_families.violations.profiling]
+allows = ["cmk.profiling.backend"]
 
 [plugin_families.violations.otel_collector]
 allows = [

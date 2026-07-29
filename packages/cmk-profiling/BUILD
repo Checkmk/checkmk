@@ -62,6 +62,21 @@ filegroup(
     srcs = ["cmk/profiling/gui/py.typed"],
 )
 
+py_library(
+    name = "plugins",
+    srcs = glob(["cmk/plugins/**/*.py"]),
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//packages/cmk-profiling:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":backend",
+        "//packages/cmk-plugin-apis:diagnostics",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-profiling",
@@ -74,6 +89,7 @@ py_wheel(
         ":backend_py_typed",
         ":gui",
         ":gui_py_typed",
+        ":plugins",
     ],
 )
 
@@ -93,6 +109,7 @@ py_requirements_test(
     libs = [
         ":backend",
         ":gui",
+        ":plugins",
     ],
     requirements_in = "requirements.in",
 )

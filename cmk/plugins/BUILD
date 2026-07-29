@@ -58,7 +58,6 @@ py_library(
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
         "//packages/cmk-plugins:lib",
-        "//packages/cmk-profiling:backend",
         requirement("boto3"),
         requirement("botocore"),
         requirement("cryptography"),

@@ -94,6 +94,7 @@ py_library(
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
         "//packages/cmk-plugins:all_families",
+        "//packages/cmk-profiling:plugins",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-trace",
         "//packages/cmk-werks:tool",

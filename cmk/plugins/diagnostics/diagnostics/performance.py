@@ -10,16 +10,13 @@ from pathlib import PurePosixPath
 import cmk.livestatus_client as livestatus
 from cmk.diagnostics.internal import (
     CollectContext,
-    CollectInfo,
     DiagnosticsPlugin,
     DumpItem,
     GeneratedContent,
     Help,
     Sensitivity,
-    VerbatimCopy,
 )
 from cmk.plugins.diagnostics.lib.topics import TOPIC_PERFORMANCE
-from cmk.profiling.backend import PROFILE_ID_RE, PROFILE_SUFFIXES
 
 _CMC_SETTING_KEYS = {
     "cmc_check_helpers",
@@ -51,29 +48,4 @@ diagnostics_plugin_core_performance_metrics = DiagnosticsPlugin(
     sensitivity=Sensitivity.LOW,
     topic=TOPIC_PERFORMANCE,
     handler=_collect_core_performance_metrics,
-)
-_PROFILES_REL_DIR = PurePosixPath("var/check_mk/profiles")
-
-
-def _collect_gui_profiles(context: CollectContext) -> Iterable[DumpItem]:
-    profiles_dir = context.omd_root / "var/check_mk/profiles"
-    packed = False
-    if profiles_dir.is_dir():
-        for source in sorted(profiles_dir.iterdir()):
-            if not source.is_file() or source.suffix not in PROFILE_SUFFIXES:
-                continue
-            if not PROFILE_ID_RE.match(source.name.split(".", 1)[0]):
-                continue
-            packed = True
-            yield DumpItem(_PROFILES_REL_DIR / source.name, VerbatimCopy(source))
-    if not packed:
-        raise CollectInfo("No profiles found")
-
-
-diagnostics_plugin_gui_profiles = DiagnosticsPlugin(
-    name="gui_profiles",
-    description=Help("Stored GUI performance profiles and flamegraphs"),
-    sensitivity=Sensitivity.MEDIUM,
-    topic=TOPIC_PERFORMANCE,
-    handler=_collect_gui_profiles,
 )

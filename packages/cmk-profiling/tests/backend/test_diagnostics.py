@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from cmk.diagnostics.internal import CollectContext, CollectInfo, VerbatimCopy
-from cmk.plugins.diagnostics.diagnostics.performance import (
+from cmk.plugins.profiling.diagnostics.gui_profiles import (
     diagnostics_plugin_gui_profiles,
 )
 

@@ -10,6 +10,7 @@ import type { RequestedLimit } from '@/monitoring/shared/services/MonitoringServ
 
 import type {
   FilterNode,
+  HostOptionalField,
   HostOverview,
   HostRef,
   HostsRequestBody,
@@ -22,6 +23,7 @@ export interface HostQueryParams {
   sort?: SortingState
   searchQuery?: string
   filter?: FilterNode | undefined
+  fields?: HostOptionalField[]
 }
 
 export class HostApi {
@@ -35,7 +37,8 @@ export class HostApi {
       limit: params.limit === undefined ? DEFAULT_BATCH_SIZE : params.limit,
       ...(sort.length > 0 && { sort }),
       ...(searchQuery && { q: searchQuery }),
-      ...(params.filter && { filter: params.filter })
+      ...(params.filter && { filter: params.filter }),
+      ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(
       await client.POST('/monitor/hosts', {

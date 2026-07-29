@@ -7,7 +7,11 @@ import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
-import { buildHostColumnPinning, buildHostColumns } from '@/monitoring/all-hosts/columns'
+import {
+  buildHostColumnPinning,
+  buildHostColumns,
+  visibleHostFields
+} from '@/monitoring/all-hosts/columns'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
@@ -95,6 +99,26 @@ test('the fixed columns keep their position around the optional ones', () => {
     'num_services_pending',
     'actions'
   ])
+})
+
+test('every hideable column asks for its field while nothing is hidden', () => {
+  expect(visibleHostFields({})).toEqual(makeService().toggleableColumns.map((column) => column.id))
+})
+
+test('a hidden column stops asking for its field', () => {
+  const fields = visibleHostFields({ address: false, num_services_pending: false })
+
+  expect(fields).not.toContain('address')
+  expect(fields).not.toContain('num_services_pending')
+  expect(fields).toContain('num_services')
+})
+
+test('the fields of the fixed columns are never asked for, the API always sending them', () => {
+  // Only what the API treats as optional can be requested; 'state', 'name' and
+  // the modes come with every host either way.
+  expect(visibleHostFields({})).not.toContain('state')
+  expect(visibleHostFields({})).not.toContain('name')
+  expect(visibleHostFields({})).not.toContain('modes')
 })
 
 test('the actions column is neither rendered nor pinned when no row action is permitted', () => {

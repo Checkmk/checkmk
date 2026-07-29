@@ -703,7 +703,7 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
-    it('updateColumnVisibility replaces the map without triggering a refetch', async () => {
+    it('refetches when a column is revealed, whose data may never have been fetched', async () => {
       const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
       const service = new TestService(fetchBatch, {
         columns: [{ accessorKey: 'alias', header: 'Alias', meta: { hidden: true } }]
@@ -716,7 +716,24 @@ describe('MonitoringService', () => {
       await vi.advanceTimersByTimeAsync(0)
 
       expect(service.columnVisibility.value).toEqual({ alias: true })
-      // Visibility is client-side, so it must not cause another server fetch.
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.stopPolling()
+    })
+
+    it('does not refetch when a column is hidden, its data being here already', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch, {
+        columns: [{ accessorKey: 'address', header: 'IP address' }]
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchBatch).toHaveBeenCalledTimes(1)
+
+      service.updateColumnVisibility({ address: false })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.columnVisibility.value).toEqual({ address: false })
       expect(fetchBatch).toHaveBeenCalledTimes(1)
 
       service.stopPolling()

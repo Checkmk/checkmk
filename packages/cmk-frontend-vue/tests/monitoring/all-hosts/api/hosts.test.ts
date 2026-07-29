@@ -93,6 +93,29 @@ describe('HostApi.fetchHosts', () => {
     })
   })
 
+  it('asks for the given optional fields only', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ fields: ['address', 'num_services'] })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE, fields: ['address', 'num_services'] }
+    })
+  })
+
+  it('asks for no optional field at all when the list is empty', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    // Distinct from omitting `fields`, which leaves the API to its default set.
+    await new HostApi().fetchHosts({ fields: [] })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE, fields: [] }
+    })
+  })
+
   it('serializes sort entries as column:direction strings', async () => {
     mockSuccess(makeHostsResponse([]))
 

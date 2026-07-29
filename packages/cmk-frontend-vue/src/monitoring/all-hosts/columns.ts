@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
+import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/shared/api/types'
@@ -35,6 +35,14 @@ const HIDEABLE_COLUMNS = [
 ] as const satisfies readonly HostOptionalField[]
 
 const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set(HIDEABLE_COLUMNS)
+
+/**
+ * The host optional fields (columns) the table currently shows,
+ * to ask the API for those alone.
+ */
+export function visibleHostFields(visibility: VisibilityState): HostOptionalField[] {
+  return HIDEABLE_COLUMNS.filter((field) => visibility[field] !== false)
+}
 
 function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
   const id = columnId(column)

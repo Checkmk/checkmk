@@ -5,6 +5,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { visibleHostFields } from '@/monitoring/all-hosts/columns'
 import { HostService } from '@/monitoring/all-hosts/services/HostService'
 import type { HostEntry, HostsResponse } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
@@ -73,7 +74,8 @@ describe('HostService', () => {
       {
         limit: DEFAULT_BATCH_SIZE,
         sort: [{ id: 'name', desc: false }],
-        searchQuery: ''
+        searchQuery: '',
+        fields: visibleHostFields({})
       },
       expect.any(AbortSignal)
     )
@@ -89,9 +91,50 @@ describe('HostService', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(fetchHosts).toHaveBeenLastCalledWith(
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01' },
+      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01', fields: visibleHostFields({}) },
       expect.any(AbortSignal)
     )
+  })
+
+  describe('requested fields', () => {
+    const COLUMNS = [{ accessorKey: 'address', header: 'IP address' }] as const
+
+    function makeService(fetchHosts: () => Promise<HostsResponse>): HostService {
+      return new HostService({ fetchHosts }, makeKeyShortcutService(), { columns: [...COLUMNS] })
+    }
+
+    it('leaves a hidden column out of the next request', async () => {
+      const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
+      service = makeService(fetchHosts)
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateColumnVisibility({ address: false })
+      service.updateSearch('web01')
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchHosts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ fields: visibleHostFields({ address: false }) }),
+        expect.any(AbortSignal)
+      )
+    })
+
+    it('fetches the field of a column that is shown again', async () => {
+      const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
+      service = makeService(fetchHosts)
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateColumnVisibility({ address: false })
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchHosts).toHaveBeenCalledTimes(1)
+
+      service.updateColumnVisibility({})
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchHosts).toHaveBeenCalledTimes(2)
+      expect(fetchHosts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ fields: visibleHostFields({}) }),
+        expect.any(AbortSignal)
+      )
+    })
   })
 
   it('offers the configured limits and starts at the smallest one', async () => {

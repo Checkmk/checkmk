@@ -250,11 +250,20 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   updateColumnVisibility(visibility: VisibilityState): void {
+    // A view may narrow its request to the columns on show, in which case a
+    // column that was hidden has no data behind it yet and revealing one has to
+    // fetch. Hiding needs nothing: that data is already here, merely unused.
+    const revealed = this.toggleableColumns.some(
+      ({ id }) => this.columnVisibility.value[id] === false && visibility[id] !== false
+    )
     this.columnVisibility.value = visibility
+    if (revealed) {
+      void this.fetch()
+    }
   }
 
   resetColumnVisibility(): void {
-    this.columnVisibility.value = { ...this.defaultColumnVisibility }
+    this.updateColumnVisibility({ ...this.defaultColumnVisibility })
   }
 
   updateFilters(node: FilterNode | undefined): void {

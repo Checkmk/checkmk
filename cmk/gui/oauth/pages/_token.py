@@ -191,6 +191,7 @@ class OAuthTokenPage(Page):
             UserId(record.user_id),
             expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
             resource=record.resource,
+            scope=record.scope,
         )
 
         response.set_content_type("application/json")

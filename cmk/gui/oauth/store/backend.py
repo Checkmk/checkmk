@@ -11,7 +11,7 @@ from pathlib import Path
 
 import cmk.utils.paths
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Changing a table that already exists needs SCHEMA_VERSION bumped: create_schema
 # replays these statements on existing databases, where the CREATE is a no-op.
@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS tokens (
     issued_at INTEGER NOT NULL,
     expires_at INTEGER NOT NULL,
     resource TEXT,
+    scope TEXT,
     CHECK (expires_at > issued_at)
 );
 

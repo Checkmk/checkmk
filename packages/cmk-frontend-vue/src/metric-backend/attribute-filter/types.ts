@@ -27,18 +27,7 @@ export type ExistenceOperator = (typeof EXISTENCE_OPERATORS)[number]
 
 export type Operator = StringOperator | ExistenceOperator
 
-export const SUPPORTED_OPERATORS: Operator[] = [
-  'eq',
-  'neq',
-  'contains',
-  'not_contains',
-  'starts_with',
-  'not_starts_with',
-  'ends_with',
-  'not_ends_with',
-  'exists',
-  'not_exists'
-]
+export const SUPPORTED_OPERATORS: Operator[] = [...STRING_OPERATORS, ...EXISTENCE_OPERATORS]
 
 export function operatorTakesValue(operator: Operator): operator is StringOperator {
   return STRING_OPERATORS.includes(operator as StringOperator)

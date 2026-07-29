@@ -212,6 +212,14 @@ describe('toAttributeFilter', () => {
         type: 'not',
         condition: { type: 'ends_with', key: { kind: 'scope', name: 'a' }, value: 'v' }
       }
+    ],
+    [
+      'not_regex',
+      'v.*',
+      {
+        type: 'not',
+        condition: { type: 'regex', key: { kind: 'scope', name: 'a' }, value: 'v.*' }
+      }
     ]
   ])('encodes the negated operator %s as a not(...) node', (operator, value, expected) => {
     expect(
@@ -234,18 +242,6 @@ describe('toAttributeFilter', () => {
 
   test('encodes an empty model as an empty AND (match everything)', () => {
     expect(toAttributeFilter([])).toEqual({ type: 'and', conjuncts: [] })
-  })
-
-  test('throws on an operator without a backend representation', () => {
-    const model = group({
-      id: 'a',
-      attributeKind: 'resource',
-      key: 'k',
-      operator: 'regex',
-      value: 'v'
-    })
-
-    expect(() => toAttributeFilter(model)).toThrow(/no backend representation/)
   })
 })
 
@@ -298,6 +294,10 @@ describe('fromAttributeFilter', () => {
     [
       { type: 'ends_with', key: { kind: 'resource', name: 'service.name' }, value: 'v' },
       ['resource', 'service.name', 'not_ends_with', 'v']
+    ],
+    [
+      { type: 'regex', key: { kind: 'resource', name: 'service.name' }, value: 'v.*' },
+      ['resource', 'service.name', 'not_regex', 'v.*']
     ]
   ])('decodes a not(...) node into the matching negated operator', (condition, expected) => {
     const filter: AttributeFilter = { type: 'not', condition }

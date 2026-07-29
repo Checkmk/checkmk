@@ -171,11 +171,11 @@ py_library(
     srcs = ["cmk-validate-config.py"],
     imports = ["."],
     deps = [
-        "//cmk:validate_config",
         "//cmk/base/config",
         "//cmk/gui:app",
         "//cmk/utils:paths",
         "//cmk/utils:redis",
+        "//cmk/validate_config",
         "//packages/cmk-ccc:version",
         "//packages/cmk-wsgi",
     ],

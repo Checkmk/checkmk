@@ -43,7 +43,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//cmk:message_broker_certs",
-        "//cmk:validate_config",
         "//cmk/base:app",
         "//cmk/base/config",
         "//cmk/checkengine",
@@ -77,6 +76,7 @@ py_library(
         "//cmk/plugins",
         "//cmk/utils",
         "//cmk/utils:redis",
+        "//cmk/validate_config",
         "//packages/cmk-backup:gui",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:debug",

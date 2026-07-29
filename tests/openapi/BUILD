@@ -68,7 +68,6 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
-        "//cmk:validate_config",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:general_pages",
@@ -88,6 +87,7 @@ py_cmk_test(
         "//cmk/gui/userdb",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
+        "//cmk/validate_config",
         requirement("marshmallow-oneofschema"),
         requirement("polyfactory"),
         requirement("pytest-mock"),

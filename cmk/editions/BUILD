@@ -14,7 +14,6 @@ py_library(
     deps = [
         "//cmk:cmkpasswd",
         "//cmk:message_broker_certs",
-        "//cmk:validate_config",
         "//cmk:validate_plugins",
         "//cmk/automations",
         "//cmk/base",
@@ -46,6 +45,7 @@ py_library(
         "//cmk/update_config",
         "//cmk/utils",
         "//cmk/utils:msi_patch",
+        "//cmk/validate_config",
         "//packages/cmk-agent-receiver",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",

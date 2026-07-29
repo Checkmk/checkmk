@@ -455,9 +455,10 @@ class Server:
                     # if a class_id exists for all model types (e.g. faultInst).
                     # Only xml_object of the correct Model type may be processed.
                     bios_unit_name = self._get_bios_unit_name_from_dn(xml_object)
-                    if (model_prefix := model_info.get(bios_unit_name)) is not None:
-                        if not model_pattern.match(model_prefix):
-                            continue
+                    if (
+                        model_prefix := model_info.get(bios_unit_name)
+                    ) is not None and not model_pattern.match(model_prefix):
+                        continue
 
                     xml_data = []
                     for attribute in attributes:

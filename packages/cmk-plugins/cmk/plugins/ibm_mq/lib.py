@@ -68,11 +68,10 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
             parsed[qmname] = {"STATUS": qmstatus, "NOW": now}
             continue
 
-        if RE_GROUP.match(line) or not has_more:
-            if attributes:
-                record_group(qmname, attributes, parsed)
-                attributes.clear()
-                # Remote group header can contain attribute(s)
+        if (RE_GROUP.match(line) or not has_more) and attributes:
+            record_group(qmname, attributes, parsed)
+            attributes.clear()
+            # Remote group header can contain attribute(s)
 
         if RE_KEY.match(line):
             if RE_SECOND_COLUMN.search(line[39:]):

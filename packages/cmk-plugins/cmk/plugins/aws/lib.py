@@ -270,10 +270,11 @@ def is_expected_metric(row_id: str, expected_metric_name: str) -> bool:
     expected_metric_name_lower = expected_metric_name.lower()
     row_id_lower = row_id.lower()
 
-    if row_id_lower.endswith(expected_metric_name_lower):
-        # Differentiate between e.g. 'CPUUtilization' and 'EngineCPUUtilization'
-        if row_id_lower.replace(expected_metric_name_lower, "").endswith("_"):
-            return True
+    # Differentiate between e.g. 'CPUUtilization' and 'EngineCPUUtilization'
+    if row_id_lower.endswith(expected_metric_name_lower) and row_id_lower.replace(
+        expected_metric_name_lower, ""
+    ).endswith("_"):
+        return True
 
     return row_id_lower.startswith(expected_metric_name_lower)
 

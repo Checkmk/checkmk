@@ -21,9 +21,8 @@ def discovery_redfish_arraycontrollers_generic(
     section: RedfishAPIData,
 ) -> DiscoveryResult:
     for key in section:
-        if section[key].get("Oem"):
-            if section[key]["Oem"].get("Dell"):
-                yield Service(item=section[key]["Id"])
+        if section[key].get("Oem") and section[key]["Oem"].get("Dell"):
+            yield Service(item=section[key]["Id"])
 
 
 def check_redfish_arraycontrollers_generic(item: str, section: RedfishAPIData) -> CheckResult:

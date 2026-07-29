@@ -126,9 +126,8 @@ def dropnonascii(input_str):
     output_str = ""
     for i in input_str:
         num = ord(i)
-        if num >= 0:
-            if num <= 127:
-                output_str = output_str + i
+        if num >= 0 and num <= 127:
+            output_str = output_str + i
 
     return output_str
 
@@ -229,9 +228,8 @@ class Vendor:
 def detect_vendor(root_data: Any) -> Vendor:
     """Extract Vendor information from base data"""
     vendor_string = ""
-    if root_data.get("Oem"):
-        if len(root_data.get("Oem")) > 0:
-            vendor_string = list(root_data.get("Oem"))[0]
+    if root_data.get("Oem") and len(root_data.get("Oem")) > 0:
+        vendor_string = list(root_data.get("Oem"))[0]
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 

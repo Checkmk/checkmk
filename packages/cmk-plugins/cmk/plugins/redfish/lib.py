@@ -85,9 +85,8 @@ class Vendor:
 def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
     """Extract Vendor information from base data"""
     vendor_string = ""
-    if root_data.get("Oem"):
-        if len(root_data["Oem"]) > 0:
-            vendor_string = list(root_data["Oem"])[0]
+    if root_data.get("Oem") and len(root_data["Oem"]) > 0:
+        vendor_string = list(root_data["Oem"])[0]
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data["Vendor"]
 

@@ -284,9 +284,8 @@ def check_esx_vsphere_counters_diskio(
         # summed up in key ""
         data = section.get("disk.%s" % op_type, {}).get("")
         multivalues, _unit = data[0] if data else (None, None)
-        if multivalues is not None:
-            if (avg := average_valid_samples(multivalues)) is not None:
-                summary["%s_throughput" % op_type] = avg * 1024
+        if multivalues is not None and (avg := average_valid_samples(multivalues)) is not None:
+            summary["%s_throughput" % op_type] = avg * 1024
 
         # sum up all instances
         op_counts_key = "disk.number%sAveraged" % op_type.title()

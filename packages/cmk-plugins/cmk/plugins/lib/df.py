@@ -362,11 +362,13 @@ def mountpoints_in_group(
             fnmatch.fnmatch(mountpoint, pattern_exclude) for pattern_exclude in patterns_exclude
         ):
             continue
-        if any(
-            fnmatch.fnmatch(mountpoint, pattern_include) for pattern_include in patterns_include
+        if (
+            any(
+                fnmatch.fnmatch(mountpoint, pattern_include) for pattern_include in patterns_include
+            )
+            and mountpoint not in matching_mountpoints
         ):
-            if mountpoint not in matching_mountpoints:
-                matching_mountpoints.append(mountpoint)
+            matching_mountpoints.append(mountpoint)
     return matching_mountpoints
 
 

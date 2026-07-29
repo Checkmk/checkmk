@@ -56,9 +56,12 @@ def _migrate_netapp_config(p: object) -> dict[str, object]:
 
         fetched_resources = default_fetched_resources.copy()
 
-        if isinstance(skip_elements, list) and "ctr_volumes" in skip_elements:
-            if "volumes_counters" in fetched_resources:
-                fetched_resources.remove("volumes_counters")
+        if (
+            isinstance(skip_elements, list)
+            and "ctr_volumes" in skip_elements
+            and "volumes_counters" in fetched_resources
+        ):
+            fetched_resources.remove("volumes_counters")
 
         if "fetched_resources" not in migrated:
             migrated["fetched_resources"] = fetched_resources

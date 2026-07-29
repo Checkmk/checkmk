@@ -313,23 +313,22 @@ def merge_if_sections(
         # differ, e.g. the speed of all interfaces might get accumulated..
         # Additionally, we check if not all interfaces of the virtual group share the same
         # connection speed
-        if not speed:
-            if "mac-address" in values:
-                mac_list = if_mac_list[values["mac-address"]]
-                if len(mac_list) > 1:  # check if this interface is grouped
-                    extra_info.setdefault(nic_name, {})
+        if not speed and "mac-address" in values:
+            mac_list = if_mac_list[values["mac-address"]]
+            if len(mac_list) > 1:  # check if this interface is grouped
+                extra_info.setdefault(nic_name, {})
 
-                    max_speed = 0
-                    min_speed = 1024**5
-                    for tmp_if, _ in mac_list:
-                        if tmp_if == nic_name or "speed" not in interfaces_section[tmp_if]:
-                            continue
-                        check_speed = int(interfaces_section[tmp_if]["speed"])
-                        max_speed = max(max_speed, check_speed)
-                        min_speed = min(min_speed, check_speed)
-                    if max_speed != min_speed:
-                        extra_info[nic_name]["speed_differs"] = (max_speed, min_speed)
-                    speed = max_speed
+                max_speed = 0
+                min_speed = 1024**5
+                for tmp_if, _ in mac_list:
+                    if tmp_if == nic_name or "speed" not in interfaces_section[tmp_if]:
+                        continue
+                    check_speed = int(interfaces_section[tmp_if]["speed"])
+                    max_speed = max(max_speed, check_speed)
+                    min_speed = min(min_speed, check_speed)
+                if max_speed != min_speed:
+                    extra_info[nic_name]["speed_differs"] = (max_speed, min_speed)
+                speed = max_speed
 
         # Virtual interfaces is "Up" if at least one physical interface is up
         if "state" in values:

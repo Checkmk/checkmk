@@ -220,8 +220,6 @@ ignore = [
 # change, which applies the fix and enforces the rule in that scope.
 # cmk/plugins
 "cmk/plugins/**" = ["SIM102"]
-# packages/cmk-plugins
-"packages/cmk-plugins/**" = ["SIM102"]
 # packages misc
 "packages/cmk-agent-receiver/**" = ["SIM102"]
 "packages/cmk-backup/**" = ["SIM102"]

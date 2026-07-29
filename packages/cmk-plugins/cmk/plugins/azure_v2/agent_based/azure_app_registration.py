@@ -138,13 +138,12 @@ def _check_credential_expiration(
     expiration_date = parse_azure_datetime_to_utc(credential.endDateTime)
     age = expiration_date.timestamp() - datetime.now(tz=UTC).timestamp()
     if age < 0:
-        if ignore_if_older_than is not None:
-            if abs(age) > ignore_if_older_than:
-                yield Result(
-                    state=State.OK,
-                    summary=f"{credential_type} ignored: expired more than {render.timespan(ignore_if_older_than)} ago",
-                )
-                return
+        if ignore_if_older_than is not None and abs(age) > ignore_if_older_than:
+            yield Result(
+                state=State.OK,
+                summary=f"{credential_type} ignored: expired more than {render.timespan(ignore_if_older_than)} ago",
+            )
+            return
 
         yield Result(
             state=State.CRIT,

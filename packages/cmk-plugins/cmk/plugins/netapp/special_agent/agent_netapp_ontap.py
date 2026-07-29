@@ -1090,9 +1090,8 @@ def write_sections(
     fetched_resources = {obj.value for obj in args.fetched_resources}
     nodes, min_node_version = get_nodes(connection, logger, fetched_resources)
 
-    if FetchedResource.node.value in fetched_resources:
-        if nodes is not None:
-            safe_write_section("node", nodes, logger)
+    if FetchedResource.node.value in fetched_resources and nodes is not None:
+        safe_write_section("node", nodes, logger)
 
     volumes: Sequence[models.VolumeModel] | None = None
     if (
@@ -1110,15 +1109,11 @@ def write_sections(
             logger.exception("Failed to fetch volumes")
             _write_error("volumes", str(exc))
 
-    if FetchedResource.volumes.value in fetched_resources:
-        if volumes is not None:
-            safe_write_section("volumes", volumes, logger)
+    if FetchedResource.volumes.value in fetched_resources and volumes is not None:
+        safe_write_section("volumes", volumes, logger)
 
-    if FetchedResource.volumes_counters.value in fetched_resources:
-        if volumes is not None:
-            safe_write_section(
-                "volumes_counters", fetch_volumes_counters(connection, volumes), logger
-            )
+    if FetchedResource.volumes_counters.value in fetched_resources and volumes is not None:
+        safe_write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
 
     if FetchedResource.disk.value in fetched_resources:
         safe_write_section("disk", fetch_disks(connection), logger)
@@ -1160,13 +1155,11 @@ def write_sections(
                 "if_counters", fetch_interfaces_counters(connection, interfaces), logger
             )
 
-    if FetchedResource.fan.value in fetched_resources:
-        if min_node_version is not None:
-            safe_write_section("fan", fetch_fans(connection, min_node_version), logger)
+    if FetchedResource.fan.value in fetched_resources and min_node_version is not None:
+        safe_write_section("fan", fetch_fans(connection, min_node_version), logger)
 
-    if FetchedResource.temp.value in fetched_resources:
-        if min_node_version is not None:
-            safe_write_section("temp", fetch_temperatures(connection, min_node_version), logger)
+    if FetchedResource.temp.value in fetched_resources and min_node_version is not None:
+        safe_write_section("temp", fetch_temperatures(connection, min_node_version), logger)
 
     if FetchedResource.alerts.value in fetched_resources:
         safe_write_section("alerts", fetch_alerts(connection, args), logger)

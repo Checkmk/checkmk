@@ -824,10 +824,11 @@ class PodCondition(BaseModel):
     @model_validator(mode="after")
     @staticmethod
     def verify_type(data: "PodCondition") -> "PodCondition":
-        if data.type or data.custom_type:
-            # Tests indicate implicit or
-            if not (data.type is not None or data.custom_type is not None):
-                raise ValueError("either type or custom_type is required")
+        # Tests indicate implicit or
+        if (data.type or data.custom_type) and not (
+            data.type is not None or data.custom_type is not None
+        ):
+            raise ValueError("either type or custom_type is required")
         return data
 
 

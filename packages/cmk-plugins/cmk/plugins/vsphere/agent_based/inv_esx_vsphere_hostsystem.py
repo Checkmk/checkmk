@@ -103,18 +103,14 @@ def inv_esx_vsphere_hostsystem(section: Section) -> InventoryResult:
                 data[inv_key] = transform(section[section_key])
 
         # Handle some corner cases for hw and sys
-        if name == "hw":
-            if all(k in data for k in ["cpus", "cores", "threads"]):
-                for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
-                    data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
-        if name == "sys":
-            # We only know for HP and DELL that ServiceTag is the serial...
-            if data["vendor"] in ["HP", "Dell Inc."]:
-                # ...but it is missing in some cases
-                with contextlib.suppress(KeyError):
-                    data["serial"] = section[
-                        "hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0"
-                    ][0]
+        if name == "hw" and all(k in data for k in ["cpus", "cores", "threads"]):
+            for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
+                data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
+        # We only know for HP and DELL that ServiceTag is the serial...
+        if name == "sys" and data["vendor"] in ["HP", "Dell Inc."]:
+            # ...but it is missing in some cases
+            with contextlib.suppress(KeyError):
+                data["serial"] = section["hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0"][0]
 
         yield Attributes(path=sub_section["path"], inventory_attributes=data)
 

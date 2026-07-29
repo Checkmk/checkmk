@@ -123,12 +123,15 @@ def _check_cron_job_status(
             value=current_time - latest_job.status.start_time,
         )
 
-    if job_status is JobStatusType.RUNNING and job_pod is not None:
-        if (pod_running_start_time := _pod_running_start_time(job_pod)) is not None:
-            yield Metric(
-                name="kube_cron_job_status_execution_duration",
-                value=current_time - pod_running_start_time,
-            )
+    if (
+        job_status is JobStatusType.RUNNING
+        and job_pod is not None
+        and (pod_running_start_time := _pod_running_start_time(job_pod)) is not None
+    ):
+        yield Metric(
+            name="kube_cron_job_status_execution_duration",
+            value=current_time - pod_running_start_time,
+        )
 
     if status.last_duration:
         yield Metric(name="kube_cron_job_status_last_duration", value=status.last_duration)

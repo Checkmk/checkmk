@@ -178,10 +178,9 @@ def check_jenkins_nodes(
         if mode == "EXCLUSIVE" and label_collection:
             mode_infotext.append(f"(Labels: {' '.join(label_collection)})")
 
-        if (mode_expected := params.get("jenkins_mode")) is not None:
-            if mode_expected != mode:
-                mode_state = State.CRIT
-                mode_infotext.append(f"(expected: {mode_expected.title()})")
+        if (mode_expected := params.get("jenkins_mode")) is not None and mode_expected != mode:
+            mode_state = State.CRIT
+            mode_infotext.append(f"(expected: {mode_expected.title()})")
 
         yield Result(state=mode_state, summary=" ".join(mode_infotext))
 

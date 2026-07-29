@@ -254,9 +254,8 @@ def dropnonascii(input_str: str) -> str:
     output_str = ""
     for i in input_str:
         num = ord(i)
-        if num >= 0:
-            if num <= 127:
-                output_str = output_str + i
+        if num >= 0 and num <= 127:
+            output_str = output_str + i
 
     return output_str
 

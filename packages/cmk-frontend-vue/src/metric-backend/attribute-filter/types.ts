@@ -34,6 +34,8 @@ export const SUPPORTED_OPERATORS: Operator[] = [
   'not_contains',
   'starts_with',
   'not_starts_with',
+  'ends_with',
+  'not_ends_with',
   'exists',
   'not_exists'
 ]

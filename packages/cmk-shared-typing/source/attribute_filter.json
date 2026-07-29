@@ -12,6 +12,9 @@
       "$ref": "#/$defs/attribute_filter_starts_with"
     },
     {
+      "$ref": "#/$defs/attribute_filter_ends_with"
+    },
+    {
       "$ref": "#/$defs/attribute_filter_exists"
     },
     {
@@ -83,6 +86,23 @@
         "type": {
           "type": "string",
           "enum": ["starts_with"]
+        },
+        "key": {
+          "$ref": "#/$defs/attribute_key"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "key", "value"]
+    },
+    "attribute_filter_ends_with": {
+      "type": "object",
+      "title": "attribute_filter_ends_with",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ends_with"]
         },
         "key": {
           "$ref": "#/$defs/attribute_key"

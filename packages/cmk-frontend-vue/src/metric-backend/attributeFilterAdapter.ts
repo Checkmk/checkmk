@@ -6,6 +6,7 @@
 import type {
   AttributeFilter,
   AttributeFilterContains as SharedAttributeFilterContains,
+  AttributeFilterEndsWith as SharedAttributeFilterEndsWith,
   AttributeFilterEquals as SharedAttributeFilterEquals,
   AttributeFilterExists as SharedAttributeFilterExists,
   AttributeFilterStartsWith as SharedAttributeFilterStartsWith
@@ -31,6 +32,7 @@ type PositiveLeaf =
   | SharedAttributeFilterEquals
   | SharedAttributeFilterContains
   | SharedAttributeFilterStartsWith
+  | SharedAttributeFilterEndsWith
   | SharedAttributeFilterExists
 type SharedLeaf = PositiveLeaf | { type: 'not'; condition: PositiveLeaf }
 type AttributeKey = SharedAttributeFilterEquals['key']
@@ -40,6 +42,7 @@ const WIRE_TYPE_TO_OPERATOR = {
   equals: 'eq',
   contains: 'contains',
   starts_with: 'starts_with',
+  ends_with: 'ends_with',
   exists: 'exists'
 } as const satisfies Record<PositiveLeaf['type'], Operator>
 
@@ -84,6 +87,8 @@ function positiveLeaf(operator: Operator, key: AttributeKey, value: string): Pos
       return { type: 'contains', key, value }
     case 'starts_with':
       return { type: 'starts_with', key, value }
+    case 'ends_with':
+      return { type: 'ends_with', key, value }
     case 'exists':
       return { type: 'exists', key }
     default:

@@ -6,17 +6,42 @@
 import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/shared/api/types'
 import type {
   BooleanGroupFilter,
   CheckboxListFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { columnId } from '@/monitoring/shared/services/MonitoringService'
 
 export interface HostColumnOptions {
   /** Whether to render the row-action column, which needs permitted actions. */
   includeActions: boolean
+}
+
+/**
+ * The columns a user may hide.
+ * These should satisfy the HostOptionalField type.
+ */
+const HIDEABLE_COLUMNS = [
+  'address',
+  'num_services',
+  'num_services_ok',
+  'num_services_warn',
+  'num_services_crit',
+  'num_services_unknown',
+  'num_services_pending'
+] as const satisfies readonly HostOptionalField[]
+
+const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set(HIDEABLE_COLUMNS)
+
+function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
+  const id = columnId(column)
+  if (id !== undefined && HIDEABLE_COLUMN_IDS.has(id)) {
+    return column
+  }
+  return { ...column, enableHiding: false }
 }
 
 /**
@@ -33,9 +58,9 @@ export function buildHostColumnPinning({ includeActions }: HostColumnOptions): C
 /**
  * The columns of the All Hosts table.
  *
- * `enableHiding: false` keeps them out of the column picker.
- * Columns carrying `hidden` are off until a user picks them, which defines the
- * set shown on first use.
+ * Which ones a user may hide follows from {@link HIDEABLE_COLUMNS}; no column
+ * states it itself. Columns carrying `hidden` are off until a user picks them,
+ * which defines the set shown on first use.
  */
 export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
@@ -98,7 +123,7 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
     ]
   }
 
-  return [
+  const columns: ColumnDef<HostEntry>[] = [
     {
       id: 'select',
       header: '',
@@ -111,7 +136,6 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       accessorKey: 'state',
       header: _t('State'),
       sortDescFirst: true,
-      enableHiding: false,
       minSize: 74,
       maxSize: 100,
       meta: { filter: stateFilter }
@@ -120,7 +144,6 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       accessorKey: 'modes',
       header: _t('Mode'),
       enableSorting: false,
-      enableHiding: false,
       minSize: 80,
       maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
@@ -129,7 +152,6 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       accessorKey: 'name',
       header: _t('Host'),
       sortDescFirst: false,
-      enableHiding: false,
       minSize: 150,
       meta: { filter: nameFilter }
     },
@@ -219,7 +241,6 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
             id: 'actions',
             header: _t('Actions'),
             enableSorting: false,
-            enableHiding: false,
             minSize: 75,
             maxSize: 75,
             meta: { justify: 'right' }
@@ -227,4 +248,6 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
         ]
       : [])
   ]
+
+  return columns.map(fixUnlessHideable)
 }

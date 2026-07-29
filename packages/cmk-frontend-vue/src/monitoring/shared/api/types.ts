@@ -11,6 +11,8 @@ export type HostsResponse = components['schemas']['HostsResponse']
 
 export type HostEntry = components['schemas']['HostEntry']
 
+export type HostOptionalField = components['schemas']['HostOptionalField']
+
 export type HostOverview = components['schemas']['HostOverviewResponse']
 
 export type HostMode = components['schemas']['ModeInfo']

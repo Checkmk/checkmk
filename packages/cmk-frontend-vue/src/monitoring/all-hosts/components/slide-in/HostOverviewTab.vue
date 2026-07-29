@@ -10,24 +10,21 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
+import type { HostOverview } from '@/monitoring/shared/api/types'
 
 import HostOverviewChips from './HostOverviewChips.vue'
 import HostOverviewLabels from './HostOverviewLabels.vue'
 
-// `host` carries the synchronously available list-row data (including the
-// service counts); `data` is the detailed overview fetched by the slide-in
-// framework and handed in via the `data` prop once its `load` promise settled.
-const props = defineProps<{ host: HostEntry; data: HostOverview }>()
+const props = defineProps<{ data: HostOverview }>()
 
 const { _t } = usei18n()
 
 const serviceSegments = computed<StateSegment[]>(() => [
-  { label: _t('OK'), count: props.host.num_services_ok, color: 'success' },
-  { label: _t('WARN'), count: props.host.num_services_warn, color: 'warning' },
-  { label: _t('CRIT'), count: props.host.num_services_crit, color: 'danger' },
-  { label: _t('UNKNOWN'), count: props.host.num_services_unknown, color: 'unknown' },
-  { label: _t('PENDING'), count: props.host.num_services_pending, color: 'default' }
+  { label: _t('OK'), count: props.data.service_counts.ok, color: 'success' },
+  { label: _t('WARN'), count: props.data.service_counts.warn, color: 'warning' },
+  { label: _t('CRIT'), count: props.data.service_counts.crit, color: 'danger' },
+  { label: _t('UNKNOWN'), count: props.data.service_counts.unknown, color: 'unknown' },
+  { label: _t('PENDING'), count: props.data.service_counts.pending, color: 'default' }
 ])
 
 const tagChips = computed(() =>

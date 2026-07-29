@@ -6,25 +6,7 @@
 import { render, screen, within } from '@testing-library/vue'
 
 import HostOverviewTab from '@/monitoring/all-hosts/components/slide-in/HostOverviewTab.vue'
-import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
-
-function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
-  return {
-    name: 'web-1',
-    state: 'UP',
-    address: '10.0.0.1',
-    alias: 'web server 1',
-    site_id: 'local',
-    num_services: 15,
-    num_services_ok: 9,
-    num_services_warn: 2,
-    num_services_crit: 3,
-    num_services_unknown: 1,
-    num_services_pending: 0,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
-    ...overrides
-  }
-}
+import type { HostOverview } from '@/monitoring/shared/api/types'
 
 function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
   return {
@@ -49,7 +31,7 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
 }
 
 test('renders the service summary state-count bar from the host service counts', async () => {
-  render(HostOverviewTab, { props: { host: makeHost(), data: makeData() } })
+  render(HostOverviewTab, { props: { data: makeData() } })
 
   const bar = await screen.findByRole('img')
   expect(bar).toHaveAttribute('aria-label', '9 OK, 2 WARN, 3 CRIT, 1 UNKNOWN')
@@ -60,7 +42,7 @@ test('renders the service summary state-count bar from the host service counts',
 })
 
 test('legend lists every state with its count, including the zero one', async () => {
-  const { container } = render(HostOverviewTab, { props: { host: makeHost(), data: makeData() } })
+  const { container } = render(HostOverviewTab, { props: { data: makeData() } })
 
   await screen.findByRole('img')
 

@@ -29,6 +29,12 @@ type PositiveLeaf = SharedAttributeFilterEquals | SharedAttributeFilterExists
 type SharedLeaf = PositiveLeaf | { type: 'not'; condition: PositiveLeaf }
 type AttributeKey = SharedAttributeFilterEquals['key']
 
+// `satisfies` forces an entry per PositiveLeaf type; a new leaf type breaks the build until mapped.
+const WIRE_TYPE_TO_OPERATOR = {
+  equals: 'eq',
+  exists: 'exists'
+} as const satisfies Record<PositiveLeaf['type'], Operator>
+
 // Every operator paired with its negation; the wire encodes a negation as not(<positive>).
 const NEGATION_PAIRS: readonly (readonly [Operator, Operator])[] = [
   ['eq', 'neq'],
@@ -48,7 +54,7 @@ function positiveOf(operator: Operator): Operator | undefined {
 }
 
 function isPositiveLeaf(filter: AttributeFilter): filter is PositiveLeaf {
-  return filter.type === 'equals' || filter.type === 'exists'
+  return filter.type in WIRE_TYPE_TO_OPERATOR
 }
 
 function assertLeaf(filter: AttributeFilter): SharedLeaf {
@@ -99,7 +105,7 @@ export function toAttributeFilter(model: AttributeFilterModel): AttributeFilter 
 
 function leafToCondition(leaf: SharedLeaf, newId: () => string): Condition {
   const positive = leaf.type === 'not' ? leaf.condition : leaf
-  const operator = positive.type === 'equals' ? 'eq' : 'exists'
+  const operator = WIRE_TYPE_TO_OPERATOR[positive.type]
   return {
     id: newId(),
     attributeKind: positive.key.kind,

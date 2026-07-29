@@ -61,7 +61,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="a.py\nb.py\n")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             result = _get_content_hash("HEAD", tmp_path)
 
@@ -78,7 +78,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="a.py\n")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             hash1 = _get_content_hash("HEAD", tmp_path)
             hash2 = _get_content_hash("HEAD", tmp_path)
@@ -100,7 +100,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="a.py\n")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             hash1 = _get_content_hash("HEAD", tmp_path)
 
@@ -118,7 +118,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="missing.py\n")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             result = _get_content_hash("HEAD", tmp_path)
 
@@ -134,7 +134,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="a.py\n")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             hash_with_file = _get_content_hash("HEAD", tmp_path)
 
@@ -154,8 +154,8 @@ class TestGetContentHash:
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
             patch(
-                "cmk.dev_deploy.watcher._get_untracked_files",
-                return_value="new_file.py\n",
+                "cmk.dev_deploy.watcher.query_untracked_files",
+                return_value=["new_file.py"],
             ),
         ):
             hash1 = _get_content_hash("HEAD", tmp_path)
@@ -172,7 +172,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="", staged="", untracked="")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             hash1 = _get_content_hash("HEAD", tmp_path)
             hash2 = _get_content_hash("HEAD", tmp_path)
@@ -214,7 +214,7 @@ class TestGetContentHash:
         mock_run = _make_subprocess_mock(unstaged="a.py\n", staged="a.py\n")
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
         ):
             hash1 = _get_content_hash("HEAD", tmp_path)
             hash2 = _get_content_hash("HEAD", tmp_path)
@@ -238,7 +238,7 @@ class TestGetContentHash:
 
         with (
             patch("cmk.dev_deploy.watcher.subprocess.run", side_effect=mock_run),
-            patch("cmk.dev_deploy.watcher._get_untracked_files", return_value=""),
+            patch("cmk.dev_deploy.watcher.query_untracked_files", return_value=[]),
             patch.object(Path, "read_bytes", _mock_read_bytes),
         ):
             result = _get_content_hash("HEAD", tmp_path)

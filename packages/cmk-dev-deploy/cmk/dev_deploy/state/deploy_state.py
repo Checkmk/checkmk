@@ -15,6 +15,7 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from cmk.dev_deploy.core.git import query_untracked_files
 from cmk.dev_deploy.core.timeouts import GIT_QUICK
 
 STATE_FILE_NAME = "deploy_state.json"
@@ -156,6 +157,7 @@ class _GitCache:
     branch: str | None = None
     head: str | None = None
     dirty_files: tuple[str, ...] | None = None
+    untracked: tuple[str, ...] | None = None
     file_hashes: dict[str, str] = field(default_factory=dict)
 
 
@@ -209,12 +211,31 @@ def get_head_commit(repo_root: Path) -> str:
     return cache.head
 
 
+def get_untracked_files(repo_root: Path) -> list[str]:
+    """Return untracked, non-ignored files; memoized for the deploy cycle.
+
+    The watch loop calls the unmemoized :func:`query_untracked_files`
+    instead: it polls between cycles, when the memo is stale by design.
+    """
+    cache = _cache_for(repo_root)
+    if cache.untracked is None:
+        cache.untracked = tuple(query_untracked_files(repo_root))
+    return list(cache.untracked)
+
+
 def get_dirty_files(repo_root: Path) -> list[str]:
-    """Return paths of files with unstaged or staged changes relative to HEAD."""
+    """Return paths of files differing from HEAD in the working tree.
+
+    Covers unstaged and staged modifications plus untracked files.  The
+    latter are invisible to ``git diff`` and would otherwise never be
+    recorded as deployed, so a deployer whose only changes are new files
+    would skip itself forever (and, once deployed, redeploy forever).
+    """
     cache = _cache_for(repo_root)
     if cache.dirty_files is None:
         out = _git_stdout(["diff", "--name-only", "HEAD"], repo_root)
-        cache.dirty_files = tuple(line for line in (out or "").splitlines() if line)
+        tracked = {line for line in (out or "").splitlines() if line}
+        cache.dirty_files = tuple(sorted(tracked | set(get_untracked_files(repo_root))))
     return list(cache.dirty_files)
 
 

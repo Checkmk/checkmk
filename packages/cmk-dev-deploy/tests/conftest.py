@@ -27,7 +27,8 @@ from __future__ import annotations
 import functools
 import sys
 import types
-from unittest.mock import MagicMock
+from collections.abc import Iterator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -146,3 +147,18 @@ _reader._load_raw = _seeded_load_raw  # noqa: SLF001
 @pytest.fixture(autouse=True)
 def _fresh_git_cache() -> None:
     _deploy_state.reset_git_cache()
+
+
+# ---------------------------------------------------------------------------
+# 4. No untracked-file query reaches the real git
+# ---------------------------------------------------------------------------
+# get_dirty_files() unions in `git ls-files --others`, which lives in another
+# module and so survives a test's patch of deploy_state.subprocess.run.  Left
+# alone it would shell out to the real git from a tmp_path that is not a
+# repository.  Tests that care about untracked files override this.
+
+
+@pytest.fixture(autouse=True)
+def _no_untracked_files() -> Iterator[None]:
+    with patch.object(_deploy_state, "query_untracked_files", return_value=[]):
+        yield

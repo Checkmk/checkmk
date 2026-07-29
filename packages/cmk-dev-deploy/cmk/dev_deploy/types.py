@@ -112,6 +112,11 @@ class ChangeSet:
     files: tuple[str, ...]
     categories: dict[ChangeCategory, tuple[str, ...]]
     deleted_files: tuple[str, ...] = ()
+    untracked: tuple[str, ...] = ()
+    """Subset of *files* that git does not track (never ``git add``-ed).
+
+    Unlike committed changes, these keep being detected on every run: the
+    diff base advancing past them does not hide them."""
 
     @property
     def is_empty(self) -> bool:

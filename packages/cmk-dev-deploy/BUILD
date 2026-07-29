@@ -18,6 +18,7 @@ py_library(
         "cmk/dev_deploy/cli.py",
         "cmk/dev_deploy/core/__init__.py",
         "cmk/dev_deploy/core/diagnostics.py",
+        "cmk/dev_deploy/core/git.py",
         "cmk/dev_deploy/core/output.py",
         "cmk/dev_deploy/core/subprocess_utils.py",
         "cmk/dev_deploy/core/timeouts.py",

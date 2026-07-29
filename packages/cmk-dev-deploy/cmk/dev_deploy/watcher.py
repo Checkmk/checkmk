@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.git import query_untracked_files
 from cmk.dev_deploy.state.deploy_state import load_state
 
 if TYPE_CHECKING:
@@ -53,27 +54,6 @@ _BACKOFF_INITIAL_S: float = 5.0
 
 _BACKOFF_MAX_S: float = 60.0
 """Maximum backoff delay between retries after consecutive failures."""
-
-
-def _get_untracked_files(repo_root: Path) -> str:
-    """Return stdout from ``git ls-files --others --exclude-standard``.
-
-    Captures untracked files (new files not yet ``git add``-ed) so they
-    are included in the content hash scope.  Returns an empty string on
-    subprocess error.
-    """
-    try:
-        result = subprocess.run(
-            ["git", "ls-files", "--others", "--exclude-standard"],
-            capture_output=True,
-            text=True,
-            check=False,
-            cwd=str(repo_root),
-            timeout=5,
-        )
-        return result.stdout
-    except (subprocess.TimeoutExpired, OSError):
-        return ""
 
 
 def _get_content_hash(build_commit: str | None, repo_root: Path) -> str:
@@ -122,16 +102,12 @@ def _get_content_hash(build_commit: str | None, repo_root: Path) -> str:
     except (subprocess.TimeoutExpired, OSError):
         return ""
 
-    # Untracked files (new files not yet git-added)
-    untracked_output = _get_untracked_files(repo_root)
-
-    # Deduplicate and sort for deterministic hashing (Pitfall 1)
+    # Deduplicate and sort for deterministic hashing (Pitfall 1).
+    # Untracked files (new files not yet git-added) are invisible to both
+    # diffs above and must be unioned in explicitly.
     all_files = sorted(
-        {
-            line
-            for line in (unstaged.stdout + staged.stdout + untracked_output).strip().splitlines()
-            if line
-        }
+        {line for line in (unstaged.stdout + staged.stdout).strip().splitlines() if line}
+        | set(query_untracked_files(repo_root))
     )
 
     # Build hash: filename list + per-file content hashes

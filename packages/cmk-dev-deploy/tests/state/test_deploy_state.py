@@ -566,35 +566,94 @@ class TestGetHeadCommit:
 # ---------------------------------------------------------------------------
 
 
+_UNTRACKED = "cmk.dev_deploy.state.deploy_state.query_untracked_files"
+
+
 class TestGetDirtyFiles:
     """Tests for the get_dirty_files function."""
 
     def test_get_dirty_files_normal(self, tmp_path: Path) -> None:
         """Returns list of dirty file paths."""
-        with patch(
-            "cmk.dev_deploy.state.deploy_state.subprocess.run",
-            _make_mock_run(returncode=0, stdout="cmk/a.py\ncmk/b.py\n"),
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=0, stdout="cmk/a.py\ncmk/b.py\n"),
+            ),
+            patch(_UNTRACKED, return_value=[]),
         ):
             result = get_dirty_files(tmp_path)
         assert result == ["cmk/a.py", "cmk/b.py"]
 
     def test_get_dirty_files_empty(self, tmp_path: Path) -> None:
         """Returns empty list when no dirty files."""
-        with patch(
-            "cmk.dev_deploy.state.deploy_state.subprocess.run",
-            _make_mock_run(returncode=0, stdout=""),
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=0, stdout=""),
+            ),
+            patch(_UNTRACKED, return_value=[]),
         ):
             result = get_dirty_files(tmp_path)
         assert result == []
 
     def test_get_dirty_files_error(self, tmp_path: Path) -> None:
         """Returns empty list on subprocess failure."""
-        with patch(
-            "cmk.dev_deploy.state.deploy_state.subprocess.run",
-            _make_mock_run(returncode=1, stderr="fatal"),
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=1, stderr="fatal"),
+            ),
+            patch(_UNTRACKED, return_value=[]),
         ):
             result = get_dirty_files(tmp_path)
         assert result == []
+
+    def test_get_dirty_files_includes_untracked(self, tmp_path: Path) -> None:
+        """New files that were never ``git add``-ed count as dirty.
+
+        Regression: they are invisible to ``git diff``, so a deployer whose
+        only change is a new file would never redeploy.
+        """
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=0, stdout="cmk/a.py\n"),
+            ),
+            patch(_UNTRACKED, return_value=["packages/cmk-frontend-vue/src/NewApp.vue"]),
+        ):
+            result = get_dirty_files(tmp_path)
+        assert result == ["cmk/a.py", "packages/cmk-frontend-vue/src/NewApp.vue"]
+
+    def test_get_dirty_files_deduplicates(self, tmp_path: Path) -> None:
+        """A path reported by both git commands appears once.
+
+        ``git rm --cached`` leaves a file listed as deleted by ``git diff
+        HEAD`` and as untracked by ``git ls-files --others``.
+        """
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=0, stdout="cmk/a.py\n"),
+            ),
+            patch(_UNTRACKED, return_value=["cmk/a.py"]),
+        ):
+            result = get_dirty_files(tmp_path)
+        assert result == ["cmk/a.py"]
+
+    def test_compute_dirty_hashes_covers_untracked(self, tmp_path: Path) -> None:
+        """Untracked files reach compute_dirty_hashes and its prefix filter."""
+        (tmp_path / "pkg").mkdir()
+        (tmp_path / "pkg" / "new.vue").write_text("content")
+        (tmp_path / "elsewhere.txt").write_text("content")
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=0, stdout=""),
+            ),
+            patch(_UNTRACKED, return_value=["pkg/new.vue", "elsewhere.txt"]),
+        ):
+            assert set(compute_dirty_hashes(tmp_path)) == {"pkg/new.vue", "elsewhere.txt"}
+            assert set(compute_dirty_hashes(tmp_path, path_prefixes=("pkg/",))) == {"pkg/new.vue"}
 
 
 # ---------------------------------------------------------------------------
@@ -623,6 +682,25 @@ class TestGitCache:
             assert get_dirty_files(tmp_path) == ["cmk/a.py"]
             assert get_dirty_files(tmp_path) == ["cmk/a.py"]
         assert len(calls) == 1
+
+    def test_untracked_query_runs_once_per_cycle(self, tmp_path: Path) -> None:
+        """The added `ls-files` costs one query per cycle, not one per caller."""
+        calls: list[Path] = []
+
+        def _query(repo_root: Path) -> list[str]:
+            calls.append(repo_root)
+            return ["new.vue"]
+
+        with (
+            patch(
+                "cmk.dev_deploy.state.deploy_state.subprocess.run",
+                _make_mock_run(returncode=0, stdout=""),
+            ),
+            patch(_UNTRACKED, _query),
+        ):
+            assert get_dirty_files(tmp_path) == ["new.vue"]
+            assert get_dirty_files(tmp_path) == ["new.vue"]
+        assert calls == [tmp_path]
 
     def test_reset_re_reads_the_working_tree(self, tmp_path: Path) -> None:
         run, calls = _counting_run("cmk/a.py\n")

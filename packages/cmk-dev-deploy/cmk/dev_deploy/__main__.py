@@ -164,7 +164,11 @@ def _warn_uncovered_files(
             + "".join(f"  {f}\n" for f in sorted(uncovered))
             + "These changes will NOT be deployed."
         )
-    return uncovered
+    # Untracked files are re-detected on every run, so recording them buys
+    # nothing -- and the record would outlive the file being committed or
+    # deleted, warning about a path that is no longer uncovered.
+    untracked = set(changes.untracked) if changes is not None else set()
+    return {path: file_hash for path, file_hash in uncovered.items() if path not in untracked}
 
 
 def _print_timing_display(

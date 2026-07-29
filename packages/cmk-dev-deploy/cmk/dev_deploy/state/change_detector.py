@@ -12,15 +12,12 @@ import logging
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core.timeouts import GIT_QUICK
 from cmk.dev_deploy.errors import ChangeDetectionError
 from cmk.dev_deploy.manifest.reader import get_categorization_rules
+from cmk.dev_deploy.state.deploy_state import DeployState, get_untracked_files
 from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, ChangeSet, DiffBaseSource
-
-if TYPE_CHECKING:
-    from cmk.dev_deploy.state.deploy_state import DeployState
 
 logger = logging.getLogger(__name__)
 
@@ -195,8 +192,14 @@ def detect_changes(
             f"--commit ref '{target_commit}' not found in this repository.",
             recovery="Check the ref name, or fetch it first: git fetch origin",
         )
-    changed_files = _git_diff_files(build_commit, repo_root, target_commit=target_commit)
+    tracked_changed = _git_diff_files(build_commit, repo_root, target_commit=target_commit)
     deleted_files = _git_diff_deleted(build_commit, repo_root, target_commit=target_commit)
+
+    # Untracked files are part of what a build picks up, but no form of
+    # ``git diff`` reports them.  A commit-to-commit diff (--commit <ref>)
+    # does not look at the working tree at all, so they stay out of it.
+    untracked = () if target_commit is not None else tuple(get_untracked_files(repo_root))
+    changed_files = sorted(set(tracked_changed) | set(untracked))
 
     if not changed_files and not deleted_files:
         return ChangeSet(
@@ -217,9 +220,10 @@ def detect_changes(
 
     return ChangeSet(
         build_commit=build_commit,
-        files=tuple(sorted(changed_files)),
+        files=tuple(changed_files),
         deleted_files=tuple(sorted(deleted_files)),
         categories=frozen_categories,
+        untracked=untracked,
     )
 
 
@@ -274,6 +278,8 @@ def _git_diff_files(
     Excludes deleted files (--diff-filter=d) since those are tracked separately
     by _git_diff_deleted().  Without this filter, deleted files appear in
     ChangeSet.files and the wheel deployer crashes trying to copy them.
+
+    Reports tracked files only; detect_changes() unions in untracked ones.
     """
     cmd = ["git", "diff", "--name-only", "--no-renames", "--diff-filter=d", build_commit]
     if target_commit is not None:
@@ -406,4 +412,6 @@ def filter_stale_dirty(
         build_commit=changes.build_commit,
         files=filtered_files,
         categories=filtered_categories,
+        deleted_files=changes.deleted_files,
+        untracked=tuple(f for f in changes.untracked if f not in stale),
     )

@@ -98,3 +98,40 @@ class TestWarnUncoveredFiles:
             categories={ChangeCategory.IGNORED: (path,)},
         )
         assert _warn_uncovered_files(None, changes, tmp_path) == {}
+
+    def test_untracked_file_warns_but_is_not_recorded(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Untracked files are re-detected every run, so recording them is wrong.
+
+        A record would outlive the file being committed or deleted and keep
+        warning about a path that is no longer uncovered.
+        """
+        _write(tmp_path, _PATH, "content")
+        changes = ChangeSet(
+            build_commit="a" * 40,
+            files=(_PATH,),
+            categories={ChangeCategory.OTHER: (_PATH,)},
+            untracked=(_PATH,),
+        )
+
+        result = _warn_uncovered_files(None, changes, tmp_path)
+
+        assert _PATH in capsys.readouterr().err
+        assert result == {}
+
+    def test_tracked_file_alongside_untracked_is_still_recorded(self, tmp_path: Path) -> None:
+        """Only the untracked entry is dropped from the persisted record."""
+        tracked = "zzz_uncovered/tracked.py"
+        abs_tracked = _write(tmp_path, tracked, "content")
+        _write(tmp_path, _PATH, "content")
+        changes = ChangeSet(
+            build_commit="a" * 40,
+            files=(_PATH, tracked),
+            categories={ChangeCategory.OTHER: (_PATH, tracked)},
+            untracked=(_PATH,),
+        )
+
+        result = _warn_uncovered_files(None, changes, tmp_path)
+
+        assert result == {tracked: compute_file_hash(abs_tracked)}

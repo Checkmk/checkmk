@@ -16,7 +16,9 @@ from cmk.dev_deploy.state.change_detector import (
     _STRUCTURAL_RULES,
     categorize_file,
     detect_changes,
+    filter_stale_dirty,
 )
+from cmk.dev_deploy.state.deploy_state import compute_file_hash, DeployerState, DeployState
 from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, ChangeSet, DiffBaseSource
 
 
@@ -597,3 +599,199 @@ class TestCategorizationRegression:
     def test_regression(self, path: str, expected: ChangeCategory) -> None:
         """Ensure categorize_file produces the same result as the old hardcoded rules."""
         assert categorize_file(path) == expected
+
+
+# ---------------------------------------------------------------------------
+# Untracked file handling
+# ---------------------------------------------------------------------------
+
+
+_UNTRACKED = "cmk.dev_deploy.state.change_detector.get_untracked_files"
+_NEW_FILE = "packages/cmk-frontend-vue/src/check-ai/CheckAiApp.vue"
+
+
+def _make_diff_mock(diff_stdout: str) -> object:
+    """Mock git: resolve any commit, return *diff_stdout* for the file diff."""
+
+    def _mock_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        if "cat-file" in cmd:
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="commit\n", stderr="")
+        stdout = "" if "--diff-filter=D" in cmd else diff_stdout
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+    return _mock_run
+
+
+class TestUntrackedChanges:
+    """detect_changes() must see files that were never ``git add``-ed.
+
+    Regression: untracked files are invisible to every form of ``git diff``,
+    so a new feature directory produced no changeset entry, no Bazel target,
+    and no deploy -- while Bazel itself globbed and built those same files
+    whenever an unrelated tracked file happened to change.
+    """
+
+    def test_untracked_file_enters_changeset(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A new file shows up in files and is recorded as untracked."""
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.change_detector.subprocess.run",
+            _make_diff_mock("cmk/gui/existing.py\n"),
+        )
+        monkeypatch.setattr(_UNTRACKED, lambda _repo: [_NEW_FILE])
+
+        result = detect_changes("a" * 40, tmp_path)
+
+        assert result is not None
+        assert result.files == ("cmk/gui/existing.py", _NEW_FILE)
+        assert result.untracked == (_NEW_FILE,)
+
+    def test_untracked_file_is_categorized(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """The new file lands in a category, so Bazel target resolution sees it."""
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.change_detector.subprocess.run", _make_diff_mock("")
+        )
+        monkeypatch.setattr(_UNTRACKED, lambda _repo: [_NEW_FILE])
+
+        result = detect_changes("a" * 40, tmp_path)
+
+        assert result is not None
+        assert any(_NEW_FILE in paths for paths in result.categories.values())
+
+    def test_untracked_only_still_yields_changes(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """New files alone are enough to make the changeset non-empty."""
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.change_detector.subprocess.run", _make_diff_mock("")
+        )
+        monkeypatch.setattr(_UNTRACKED, lambda _repo: [_NEW_FILE])
+
+        result = detect_changes("a" * 40, tmp_path)
+
+        assert result is not None
+        assert result.is_empty is False
+
+    def test_commit_to_commit_diff_excludes_untracked(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """--commit <ref> compares two commits; the working tree is not involved."""
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.change_detector.subprocess.run",
+            _make_diff_mock("cmk/gui/existing.py\n"),
+        )
+        monkeypatch.setattr(
+            _UNTRACKED,
+            lambda _repo: pytest.fail("untracked files must not leak into a commit-to-commit diff"),
+        )
+
+        result = detect_changes("a" * 40, tmp_path, target_commit="b" * 40)
+
+        assert result is not None
+        assert result.files == ("cmk/gui/existing.py",)
+        assert result.untracked == ()
+
+    def test_no_duplicate_when_git_reports_path_twice(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A path in both the diff and the untracked list appears once."""
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.change_detector.subprocess.run",
+            _make_diff_mock(f"{_NEW_FILE}\n"),
+        )
+        monkeypatch.setattr(_UNTRACKED, lambda _repo: [_NEW_FILE])
+
+        result = detect_changes("a" * 40, tmp_path)
+
+        assert result is not None
+        assert result.files == (_NEW_FILE,)
+
+
+class TestFilterStaleDirty:
+    """filter_stale_dirty() drops already-deployed dirty files."""
+
+    def _state(self, dirty: dict[str, str]) -> DeployState:
+        return DeployState(
+            deployers={
+                "install_spec": DeployerState(
+                    deployer="install_spec",
+                    git_commit="a" * 40,
+                    dirty_file_hashes=dirty,
+                    deployed_at=1.0,
+                )
+            }
+        )
+
+    def test_unchanged_untracked_file_is_filtered(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """An untracked file already deployed at this content is not new work.
+
+        Without this the file would stay in the changeset forever, forcing a
+        Bazel build on every single run.
+        """
+        (tmp_path / "new.vue").write_text("content")
+        known_hash = compute_file_hash(tmp_path / "new.vue")
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.deploy_state.get_dirty_files", lambda _repo: ["new.vue"]
+        )
+
+        changes = ChangeSet(
+            build_commit="a" * 40,
+            files=("new.vue",),
+            categories={ChangeCategory.VUE: ("new.vue",)},
+            untracked=("new.vue",),
+        )
+        result = filter_stale_dirty(changes, self._state({"new.vue": known_hash}), tmp_path)
+
+        assert result.files == ()
+        assert result.untracked == ()
+
+    def test_edited_untracked_file_is_kept(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Re-editing an already-deployed new file makes it work again."""
+        (tmp_path / "new.vue").write_text("edited")
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.deploy_state.get_dirty_files", lambda _repo: ["new.vue"]
+        )
+
+        changes = ChangeSet(
+            build_commit="a" * 40,
+            files=("new.vue",),
+            categories={ChangeCategory.VUE: ("new.vue",)},
+            untracked=("new.vue",),
+        )
+        result = filter_stale_dirty(changes, self._state({"new.vue": "stale" * 12}), tmp_path)
+
+        assert result.files == ("new.vue",)
+        assert result.untracked == ("new.vue",)
+
+    def test_deleted_files_survive_filtering(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Deletions are not dirty-file candidates and must be carried through.
+
+        Dropping them made the changeset look empty, so the caller reported
+        "nothing to deploy" and the files stayed on the site.
+        """
+        (tmp_path / "kept.py").write_text("content")
+        known_hash = compute_file_hash(tmp_path / "kept.py")
+        monkeypatch.setattr(
+            "cmk.dev_deploy.state.deploy_state.get_dirty_files", lambda _repo: ["kept.py"]
+        )
+
+        changes = ChangeSet(
+            build_commit="a" * 40,
+            files=("kept.py",),
+            categories={ChangeCategory.PYTHON: ("kept.py",)},
+            deleted_files=("cmk/gui/gone.py",),
+        )
+        result = filter_stale_dirty(changes, self._state({"kept.py": known_hash}), tmp_path)
+
+        assert result.files == ()
+        assert result.deleted_files == ("cmk/gui/gone.py",)
+        assert result.is_empty is False

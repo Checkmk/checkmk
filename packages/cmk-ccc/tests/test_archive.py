@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.archive import (
+    ArchiveSettings,
     CheckmkTarArchive,
     NotAValidArchive,
     SecurityViolation,
@@ -42,13 +43,28 @@ def make_tarfile_path(
     return tar_path
 
 
+def make_tarfile_bytes_from_members(*members: tarfile.TarInfo) -> bytes:
+    """Build an archive from members that carry no content, such as directories or device files."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        for member in members:
+            tar.addfile(member)
+    return buf.getvalue()
+
+
+def make_member(name: str, member_type: bytes) -> tarfile.TarInfo:
+    member = tarfile.TarInfo(name)
+    member.type = member_type
+    return member
+
+
 def test_safe_extractall_basic_bytes(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
     with CheckmkTarArchive.from_bytes(raw) as safe_tar:
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
@@ -60,7 +76,7 @@ def test_safe_extractall_basic_io(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
 
     with CheckmkTarArchive.from_buffer(buf) as safe_tar:
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
@@ -72,7 +88,7 @@ def test_safe_extractall_basic_path(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
 
     with CheckmkTarArchive.from_path(path) as safe_tar:
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
@@ -81,6 +97,47 @@ def test_safe_extractall_basic_path(tmp_path: Path) -> None:
 def test_invalid_archive() -> None:
     with pytest.raises(NotAValidArchive):
         CheckmkTarArchive.validate_bytes(b"not a tar")
+
+
+@pytest.mark.parametrize(
+    "files, settings",
+    [
+        pytest.param(
+            [("a.txt", b"x"), ("b.txt", b"x"), ("c.txt", b"x")],
+            ArchiveSettings(file_limit=2),
+            id="file count",
+        ),
+        pytest.param(
+            [("big.txt", b"xx")],
+            ArchiveSettings(per_file_limit=1),
+            id="per-file size",
+        ),
+        pytest.param(
+            [("a.txt", b"x"), ("b.txt", b"x")],
+            ArchiveSettings(size_limit_bytes=1),
+            id="total size",
+        ),
+    ],
+)
+def test_indexed_validates_eagerly_on_open(
+    files: Iterable[tuple[str, bytes]], settings: ArchiveSettings
+) -> None:
+    """In contrast to streaming mode, indexed mode validates before the caller iterates."""
+    raw = make_tarfile_bytes(files)
+
+    with (
+        pytest.raises(UnpackedArchiveTooLargeError),
+        CheckmkTarArchive.from_bytes(raw, streaming=False, **settings),
+    ):
+        pytest.fail("indexed mode must reject the archive before the context body runs")
+
+
+def test_validate_bytes_enforces_the_limits() -> None:
+    """Validation streams through every member, so the limits apply although nothing is written."""
+    raw = make_tarfile_bytes([("a.txt", b"x"), ("b.txt", b"x"), ("c.txt", b"x")])
+
+    with pytest.raises(UnpackedArchiveTooLargeError):
+        CheckmkTarArchive.validate_bytes(raw, file_limit=2)
 
 
 def test_per_file_size_limit_bytes(tmp_path: Path) -> None:
@@ -93,7 +150,7 @@ def test_per_file_size_limit_bytes(tmp_path: Path) -> None:
         pytest.raises(UnpackedArchiveTooLargeError),
         CheckmkTarArchive.from_bytes(raw, per_file_limit=max_size) as safe_tar,
     ):
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
 
 
 def test_total_file_limit_bytes(tmp_path: Path) -> None:
@@ -105,7 +162,28 @@ def test_total_file_limit_bytes(tmp_path: Path) -> None:
         pytest.raises(UnpackedArchiveTooLargeError),
         CheckmkTarArchive.from_bytes(raw, file_limit=2) as safe_tar,
     ):
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
+
+
+def test_compressed_size_limit_bytes() -> None:
+    """The compressed size is checked before the archive is opened, so nothing is read at all."""
+    raw = make_tarfile_bytes([("a.txt", b"hello")])
+
+    with (
+        pytest.raises(UnpackedArchiveTooLargeError),
+        CheckmkTarArchive.from_bytes(raw, raw_limit_bytes=len(raw) - 1),
+    ):
+        pytest.fail("an oversized archive must be rejected before the context body runs")
+
+
+def test_compressed_size_limit_path(tmp_path: Path) -> None:
+    path = make_tarfile_path([("a.txt", b"hello")], tmp_path)
+
+    with (
+        pytest.raises(UnpackedArchiveTooLargeError),
+        CheckmkTarArchive.from_path(path, raw_limit_bytes=path.stat().st_size - 1),
+    ):
+        pytest.fail("an oversized archive must be rejected before the context body runs")
 
 
 def test_path_traversal_bytes(tmp_path: Path) -> None:
@@ -114,7 +192,34 @@ def test_path_traversal_bytes(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
 
     with pytest.raises(SecurityViolation), CheckmkTarArchive.from_bytes(raw) as safe_tar:
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
+
+
+@pytest.mark.parametrize(
+    "member_type",
+    [tarfile.CHRTYPE, tarfile.BLKTYPE, tarfile.FIFOTYPE],
+    ids=["character device", "block device", "fifo"],
+)
+def test_special_file_blocked(member_type: bytes) -> None:
+    """Special files are refused whatever the limits permit."""
+    raw = make_tarfile_bytes_from_members(make_member("special", member_type))
+
+    with pytest.raises(SecurityViolation):
+        CheckmkTarArchive.validate_bytes(raw)
+
+
+def test_hardlink_blocked() -> None:
+    member = make_member("hard.txt", tarfile.LNKTYPE)
+    member.linkname = "a.txt"
+    raw = make_tarfile_bytes_from_members(member)
+
+    with pytest.raises(SecurityViolation):
+        CheckmkTarArchive.validate_bytes(raw, allow_symlinks=False)
+
+
+def test_empty_member_name_rejected() -> None:
+    with pytest.raises(NotAValidArchive):
+        CheckmkTarArchive.validate_bytes(make_tarfile_bytes_from_members(tarfile.TarInfo("")))
 
 
 def test_symlink_blocked(tmp_path: Path) -> None:
@@ -130,9 +235,7 @@ def test_symlink_blocked(tmp_path: Path) -> None:
         pytest.raises(SecurityViolation),
         CheckmkTarArchive.from_buffer(buf, allow_symlinks=False) as safe_tar,
     ):
-        safe_tar.extractall(
-            dest,
-        )  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
 
 
 def test_symlink_allowed(tmp_path: Path) -> None:
@@ -145,7 +248,7 @@ def test_symlink_allowed(tmp_path: Path) -> None:
 
     dest = tmp_path / "dest"
     with CheckmkTarArchive.from_buffer(buf, allow_symlinks=True) as safe_tar:
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+        safe_tar.extractall(dest)
 
 
 def test_iteration_bytes() -> None:
@@ -175,3 +278,44 @@ def test_extractfile_by_name() -> None:
 
         f2 = safe_tar.extractfile_by_name("notfound")
         assert f2 is None
+
+
+def test_streaming_extractall_skips_consumed_members(tmp_path: Path) -> None:
+    """The cursor cannot go back, so extractall only ever sees what iteration has not consumed."""
+    files = {"a.txt": b"hello", "b.txt": b"world"}
+    dest = tmp_path / "dest"
+
+    with CheckmkTarArchive.from_bytes(make_tarfile_bytes(files.items())) as safe_tar:
+        next(safe_tar)
+        safe_tar.extractall(dest)
+
+    assert not (dest / "a.txt").exists()
+    assert (dest / "b.txt").read_bytes() == files["b.txt"]
+
+
+def test_extractfile_by_name_without_a_name_keeps_the_cursor() -> None:
+    """The empty name is answered without searching, so the streamed members stay reachable."""
+    with CheckmkTarArchive.from_bytes(make_tarfile_bytes([("a.txt", b"hello")])) as safe_tar:
+        assert safe_tar.extractfile_by_name("") is None
+        assert [m.name for m in safe_tar] == ["a.txt"]
+
+
+def test_streaming_extractmember_returns_none_for_a_directory() -> None:
+    raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
+
+    with CheckmkTarArchive.from_bytes(raw) as safe_tar:
+        assert safe_tar.extractmember(next(safe_tar)) is None
+
+
+def test_indexed_extractmember_returns_none_for_a_directory() -> None:
+    raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
+
+    with CheckmkTarArchive.from_bytes(raw, streaming=False) as safe_tar:
+        assert safe_tar.extractmember(next(iter(safe_tar))) is None
+
+
+def test_indexed_extractfile_by_name_returns_none_for_a_directory() -> None:
+    raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
+
+    with CheckmkTarArchive.from_bytes(raw, streaming=False) as safe_tar:
+        assert safe_tar.extractfile_by_name("subdir") is None

@@ -40,6 +40,7 @@ py_library(
         "//packages/cmk-web/cmk/web/utils",
         requirement("python-dateutil"),
         requirement("tzlocal"),
+        requirement("matplotlib"),
     ],
 )
 

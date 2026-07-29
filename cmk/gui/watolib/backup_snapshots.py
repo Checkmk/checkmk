@@ -532,7 +532,7 @@ def snapshot_secret() -> bytes:
 
 
 def extract_snapshot(
-    tar: tar_archive.BaseSafeTarFile,
+    tar: tar_archive.SafeIndexedTarFile,
     domains: dict[str, DomainSpec],
 ) -> None:
     """Used to restore a configuration snapshot for "discard changes"""

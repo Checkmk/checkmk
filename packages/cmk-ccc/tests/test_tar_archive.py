@@ -226,6 +226,13 @@ def test_compressed_size_limit_path(tmp_path: Path) -> None:
         pytest.fail("an oversized archive must be rejected before the context body runs")
 
 
+def test_indexed_extract_rejects_path_traversal(tmp_path: Path) -> None:
+    raw = make_tarfile_bytes([("../evil.txt", b"malicious")])
+
+    with pytest.raises(SecurityViolation), open_bytes_indexed(raw) as safe_tar:
+        safe_tar.extract(safe_tar.getmembers()[0], tmp_path / "dest")
+
+
 def test_path_traversal_bytes(tmp_path: Path) -> None:
     files = [("../evil.txt", b"malicious")]
     raw = make_tarfile_bytes(files)
@@ -363,11 +370,35 @@ def test_streaming_extractmember_returns_none_for_a_directory() -> None:
         assert safe_tar.extractmember(next(safe_tar)) is None
 
 
+def test_indexed_extract_single_member(tmp_path: Path) -> None:
+    files = {"a.txt": b"hello", "b.txt": b"world"}
+    raw = make_tarfile_bytes(files.items())
+    dest = tmp_path / "dest"
+
+    with open_bytes_indexed(raw) as safe_tar:
+        safe_tar.extract(safe_tar.getmembers()[1], dest)
+
+    assert (dest / "b.txt").read_bytes() == files["b.txt"]
+    assert not (dest / "a.txt").exists()
+
+
+def test_indexed_extractmember() -> None:
+    files = {"a.txt": b"hello", "b.txt": b"world"}
+
+    with open_bytes_indexed(make_tarfile_bytes(files.items())) as safe_tar:
+        members = safe_tar.getmembers()
+        # random access, in an order the archive does not have
+        for member in reversed(members):
+            obj = safe_tar.extractmember(member)
+            assert obj is not None
+            assert obj.read() == files[member.name]
+
+
 def test_indexed_extractmember_returns_none_for_a_directory() -> None:
     raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
 
     with open_bytes_indexed(raw) as safe_tar:
-        assert safe_tar.extractmember(next(iter(safe_tar))) is None
+        assert safe_tar.extractmember(safe_tar.getmembers()[0]) is None
 
 
 def test_indexed_extractfile_by_name_returns_none_for_a_directory() -> None:

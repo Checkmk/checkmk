@@ -6,12 +6,12 @@
 import io
 import math
 import tarfile
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Final, IO, Literal
+from typing import Final, IO, Literal
 
 
 def fmt_bytes(bytes_val: int, unit: str | None = None) -> str:
@@ -108,17 +108,20 @@ class ArchiveLimits:
 DEFAULT_ARCHIVE_LIMITS: Final = ArchiveLimits()
 
 
-class BaseSafeTarFile:
-    """Base wrapper for TarFile with enforced security checks.
+class SafeStreamedTarFile:
+    """Safe wrapper around TarFile in streaming mode (r|gz).
 
-    Prevents path traversal, symlink attacks and oversized archives.
+    Validates incrementally during iteration. There is a cursor: seeking backwards is not possible
+    and once it reaches EOF the archive has to be reopened for a second pass.
     """
 
-    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None):
-        self._tar = tar
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None) -> None:
+        self._extractor = _SafeExtractor(tar)
         self._limits = limits
         self._name = name
-        self._member_iter = iter(self._tar)
+        self._member_iter = iter(tar)
+        self._total_size = 0
+        self._file_count = 0
 
     @property
     def name(self) -> str | None:
@@ -129,78 +132,6 @@ class BaseSafeTarFile:
         return self
 
     def __next__(self) -> tarfile.TarInfo:
-        return next(self._member_iter)
-
-    def extract(
-        self, member: tarfile.TarInfo | str, path: str | Path = ".", tar_filter: FilterType = "data"
-    ) -> None:
-        """
-        Safely extract an archive to the desired path.
-        """
-        path = Path(path).resolve()
-        member_name = member.name if isinstance(member, tarfile.TarInfo) else member
-        resolved = (path / member_name).resolve()
-        if not resolved.is_relative_to(path):
-            raise SecurityViolation(f"Path traversal attempt: {member_name}")
-        self._tar.extract(member, path=path, filter=tar_filter)
-
-    def extractmember(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
-        return self._tar.extractfile(member)
-
-    def extractall(self, dest: Path | str) -> None:
-        """
-        Safely extract a whole archive to the disk
-        """
-        if isinstance(dest, str):
-            dest = Path(dest)
-        dest = dest.resolve()
-        for member in self:
-            self.extract(member, path=dest)
-
-    def extractfile_by_name(
-        self,
-        target_file: str,
-    ) -> IO[bytes] | None:
-        """
-        Safely extract a single file from the archive in memory.
-        Raises FileNotFoundError if the file does not exist.
-        """
-        if not target_file:
-            return None
-        for member in self:
-            if member.name == target_file:
-                return self.extractmember(member)
-        return None
-
-    def __getattr__(self, name: str) -> Any:  # type: ignore[explicit-any]
-        return getattr(self._tar, name)
-
-    def __enter__(self) -> "BaseSafeTarFile":
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> None:
-        self._tar.close()
-
-
-class SafeStreamedTarFile(BaseSafeTarFile):
-    """Safe wrapper around TarFile in streaming mode (r|gz).
-
-    Validates incrementally during iteration. There is a cursor: seeking backwards is not possible
-    and once it reaches EOF the archive has to be reopened for a second pass.
-    """
-
-    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None):
-        super().__init__(tar, limits, name)
-        self._total_size = 0
-        self._file_count = 0
-
-    def __next__(self) -> tarfile.TarInfo:
-        # Get next member from underlying tar
         member = next(self._member_iter)
         self._file_count += 1
         self._total_size += member.size
@@ -209,26 +140,112 @@ class SafeStreamedTarFile(BaseSafeTarFile):
         self._limits.validate_member(member)
         return member
 
-    def getmembers(self) -> None:
-        raise TypeError("getmembers() not supported in streaming-safe mode; use iteration instead")
+    def extractall(self, dest: Path | str) -> None:
+        """
+        Safely extract the remaining members of the archive to the disk
+        """
+        self._extractor.extract_all(self, Path(dest))
+
+    def extractmember(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
+        """
+        Safely extract a single member in memory. Returns None if the member has no content,
+        e.g. because it is a directory.
+        """
+        return self._extractor.extract_in_memory(member)
+
+    def extractfile_by_name(self, target_file: str) -> IO[bytes] | None:
+        """
+        Safely extract a single file from the archive in memory. Returns None if the archive holds
+        no such file, or if the file has no content, e.g. because it is a directory.
+        """
+        return self._extractor.extract_in_memory_by_name(self, target_file) if target_file else None
+
+    def __enter__(self) -> "SafeStreamedTarFile":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self._extractor.close()
 
 
-class SafeIndexedTarFile(BaseSafeTarFile):
+class SafeIndexedTarFile:
     """Safe wrapper around TarFile in indexed mode (r:gz).
 
-    Validates all members eagerly on open, which requires reading the whole archive into memory.
-    Prefer streaming mode where possible.
+    Validates all members eagerly on open and keeps them, so they stay accessible in any order and
+    iteration can be repeated.
     """
 
     def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None) -> None:
-        super().__init__(tar, limits, name)
         members = tar.getmembers()
-
         limits.validate_file_count(len(members))
         limits.validate_unpacked_size(sum(m.size for m in members))
-        for m in members:
-            limits.validate_member(m)
-        self._member_iter = iter(members)
+        for member in members:
+            limits.validate_member(member)
+
+        self._extractor = _SafeExtractor(tar)
+        self._name = name
+        self._members: Final = members
+
+    @property
+    def name(self) -> str | None:
+        """The path the archive was read from, if it was read from disk."""
+        return self._name
+
+    def __iter__(self) -> Iterator[tarfile.TarInfo]:
+        return iter(self._members)
+
+    def getmembers(self) -> list[tarfile.TarInfo]:
+        return list(self._members)
+
+    def extract(
+        self,
+        member: tarfile.TarInfo | str,
+        path: str | Path = ".",
+        tar_filter: FilterType = "data",
+    ) -> None:
+        """
+        Safely extract a single member to the desired path
+        """
+        self._extractor.extract(member, Path(path), tar_filter)
+
+    def extractall(self, dest: Path | str) -> None:
+        """
+        Safely extract a whole archive to the disk
+        """
+        self._extractor.extract_all(self._members, Path(dest))
+
+    def extractmember(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
+        """
+        Safely extract a single member in memory. Returns None if the member has no content,
+        e.g. because it is a directory.
+        """
+        return self._extractor.extract_in_memory(member)
+
+    def extractfile_by_name(self, target_file: str) -> IO[bytes] | None:
+        """
+        Safely extract a single file from the archive in memory. Returns None if the archive holds
+        no such file, or if the file has no content, e.g. because it is a directory.
+        """
+        return (
+            self._extractor.extract_in_memory_by_name(self._members, target_file)
+            if target_file
+            else None
+        )
+
+    def __enter__(self) -> "SafeIndexedTarFile":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self._extractor.close()
 
 
 @contextmanager
@@ -310,6 +327,42 @@ def validate_bytes(
     with open_bytes_streaming(raw, compression=compression, limits=limits) as archive:
         for _ in archive:
             ...
+
+
+class _SafeExtractor:
+    """Owns a TarFile and enforces the security checks while extracting from it.
+
+    Knows nothing about tar modes: it only ever touches the members it is handed, which is what
+    makes it usable while streaming.
+    """
+
+    def __init__(self, tar: tarfile.TarFile) -> None:
+        self._tar = tar
+
+    def extract(self, member: tarfile.TarInfo | str, dest: Path, tar_filter: FilterType) -> None:
+        dest = dest.resolve()
+        member_name = member.name if isinstance(member, tarfile.TarInfo) else member
+        if not (dest / member_name).resolve().is_relative_to(dest):
+            raise SecurityViolation(f"Path traversal attempt: {member_name}")
+        self._tar.extract(member, path=dest, filter=tar_filter)
+
+    def extract_all(self, members: Iterable[tarfile.TarInfo], dest: Path) -> None:
+        for member in members:
+            self.extract(member, dest, "data")
+
+    def extract_in_memory(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
+        return self._tar.extractfile(member)
+
+    def extract_in_memory_by_name(
+        self, members: Iterable[tarfile.TarInfo], target_file: str
+    ) -> IO[bytes] | None:
+        for member in members:
+            if member.name == target_file:
+                return self.extract_in_memory(member)
+        return None
+
+    def close(self) -> None:
+        self._tar.close()
 
 
 @contextmanager

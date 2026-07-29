@@ -2,19 +2,7 @@
 
 /// file: winagt-build-linux.groovy
 ///
-/// Builds the Windows agent artifacts that can be produced on Linux --
-/// currently the Rust binaries (cmk-agent-ctl, mk-sql, mk-oracle,
-/// robotmk_ext), cross compiled via the xwin toolchain
-/// (//bazel/toolchains/cc/xwin, CMK-34215) -- and runs their unit tests
-/// under the pinned Wine and asserts that
-/// their PE import tables are free of dynamic-CRT references. Test
-/// results are published with one JUnit testcase per Rust test (via
-/// collect_rust_tests).
-///
-/// The job grows with each artifact the cross-compile work makes
-/// producible (unsigned MSI and service exe with CMK-34218/CMK-34220,
-/// signed artifacts with CMK-34221) until it reaches winagt-build parity
-/// and can replace the Windows-node job.
+/// Builds the Windows agent artifacts that can be produced on Linux.
 
 void main() {
     check_job_parameters([
@@ -46,6 +34,10 @@ void main() {
         "//packages/mk-sql:mk-sql-tests-wine",
         "//packages/mk-oracle:mk-oracle-tests-wine",
     ];
+    // The toolchain's own contract test.
+    def toolchain_test_targets = [
+        "//bazel/toolchains/cc/clang/xwin/tests:tests",
+    ];
     def target_args = targets.join(" ");
     def crt_test_args = targets.collect { it + "-static-crt" }.join(" ");
     // Fail the build but keep going, so the test results below still get
@@ -71,6 +63,17 @@ void main() {
                 // names (binary_name on the targets).
                 targets.each { target ->
                     sh("cp -f \$(bazel cquery --cmk_version=${cmk_version} --output=files ${target}) artefacts/");
+                }
+            }
+
+            stage("Check toolchain argument contract") {
+                catchError(fail_and_continue) {
+                    sh(
+                        """
+                        set -euo pipefail
+                        bazel test --cmk_version=${cmk_version} ${toolchain_test_targets.join(" ")}
+                        """
+                    );
                 }
             }
 

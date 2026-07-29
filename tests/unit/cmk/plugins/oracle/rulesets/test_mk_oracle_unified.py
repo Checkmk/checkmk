@@ -7,7 +7,20 @@ import re
 
 import pytest
 
-from cmk.plugins.oracle.rulesets.mk_oracle_unified import USE_HOST_CLIENT_PATH_RE
+from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
+    _agent_config_mk_oracle,
+    USE_HOST_CLIENT_PATH_RE,
+)
+from cmk.rulesets.v1.form_specs import Dictionary
+
+
+def test_options_is_top_level() -> None:
+    # `options` is a top-level GUI section; the bakery routes it into `oracle.main.options`
+    form = _agent_config_mk_oracle()
+    assert "options" in form.elements, "`options` must be a top-level element"
+    main_form = form.elements["main"].parameter_form
+    assert isinstance(main_form, Dictionary)
+    assert "options" not in main_form.elements, "`options` must not be nested under `main`"
 
 
 @pytest.mark.parametrize(

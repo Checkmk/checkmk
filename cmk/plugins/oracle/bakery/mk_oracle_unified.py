@@ -206,7 +206,6 @@ class GuiAdditionalOptionsConf(BaseModel):
 class GuiMainConf(BaseModel, Generic[SecretT]):
     auth: GuiAuthConf[SecretT]
     connection: GuiConnectionConf
-    options: GuiAdditionalOptionsConf | None = None
     cache_age: int | None = None
     custom_metrics_cache_age: int | None = None
     discovery: GuiDiscoveryConf | None = None
@@ -235,6 +234,8 @@ class GuiInstanceConf(BaseModel, Generic[SecretT]):
 
 class GuiConfig(BaseModel, Generic[SecretT]):
     deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
+    # `options` is a top-level GUI section; it is baked into `oracle.main.options`.
+    options: GuiAdditionalOptionsConf | None = None
     main: GuiMainConf[SecretT]
     instances: list[GuiInstanceConf[SecretT]] | None = None
 
@@ -360,7 +361,7 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
     return OracleMain(
         authentication=auth,
         connection=_get_oracle_connection(main_config.connection),
-        options=_get_oracle_additional_options(main_config.options),
+        options=_get_oracle_additional_options(config.options),
         discovery=_get_oracle_discovery(main_config.discovery),
         sections=_get_oracle_sections(main_config.sections),
         instances=_get_oracle_instances(instances_config),

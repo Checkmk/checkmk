@@ -5,6 +5,7 @@
  */
 import type {
   AttributeFilter,
+  AttributeFilterContains as SharedAttributeFilterContains,
   AttributeFilterEquals as SharedAttributeFilterEquals,
   AttributeFilterExists as SharedAttributeFilterExists
 } from 'cmk-shared-typing/typescript/attribute_filter'
@@ -25,13 +26,17 @@ export type AttributeKindKey = Exclude<AttributeKind, null>
 
 export const ATTRIBUTE_KIND_ORDER: AttributeKindKey[] = ['resource', 'scope', 'data_point']
 
-type PositiveLeaf = SharedAttributeFilterEquals | SharedAttributeFilterExists
+type PositiveLeaf =
+  | SharedAttributeFilterEquals
+  | SharedAttributeFilterContains
+  | SharedAttributeFilterExists
 type SharedLeaf = PositiveLeaf | { type: 'not'; condition: PositiveLeaf }
 type AttributeKey = SharedAttributeFilterEquals['key']
 
 // `satisfies` forces an entry per PositiveLeaf type; a new leaf type breaks the build until mapped.
 const WIRE_TYPE_TO_OPERATOR = {
   equals: 'eq',
+  contains: 'contains',
   exists: 'exists'
 } as const satisfies Record<PositiveLeaf['type'], Operator>
 
@@ -72,6 +77,8 @@ function positiveLeaf(operator: Operator, key: AttributeKey, value: string): Pos
   switch (operator) {
     case 'eq':
       return { type: 'equals', key, value }
+    case 'contains':
+      return { type: 'contains', key, value }
     case 'exists':
       return { type: 'exists', key }
     default:

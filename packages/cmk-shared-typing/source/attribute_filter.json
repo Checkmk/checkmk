@@ -6,6 +6,9 @@
       "$ref": "#/$defs/attribute_filter_equals"
     },
     {
+      "$ref": "#/$defs/attribute_filter_contains"
+    },
+    {
       "$ref": "#/$defs/attribute_filter_exists"
     },
     {
@@ -43,6 +46,23 @@
         "type": {
           "type": "string",
           "enum": ["equals"]
+        },
+        "key": {
+          "$ref": "#/$defs/attribute_key"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "key", "value"]
+    },
+    "attribute_filter_contains": {
+      "type": "object",
+      "title": "attribute_filter_contains",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["contains"]
         },
         "key": {
           "$ref": "#/$defs/attribute_key"

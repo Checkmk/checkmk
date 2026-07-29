@@ -188,6 +188,14 @@ describe('toAttributeFilter', () => {
       'neq',
       'v',
       { type: 'not', condition: { type: 'equals', key: { kind: 'scope', name: 'a' }, value: 'v' } }
+    ],
+    [
+      'not_contains',
+      'v',
+      {
+        type: 'not',
+        condition: { type: 'contains', key: { kind: 'scope', name: 'a' }, value: 'v' }
+      }
     ]
   ])('encodes the negated operator %s as a not(...) node', (operator, value, expected) => {
     expect(
@@ -262,6 +270,10 @@ describe('fromAttributeFilter', () => {
     [
       { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'v' },
       ['resource', 'service.name', 'neq', 'v']
+    ],
+    [
+      { type: 'contains', key: { kind: 'resource', name: 'service.name' }, value: 'v' },
+      ['resource', 'service.name', 'not_contains', 'v']
     ]
   ])('decodes a not(...) node into the matching negated operator', (condition, expected) => {
     const filter: AttributeFilter = { type: 'not', condition }

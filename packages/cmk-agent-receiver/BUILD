@@ -10,7 +10,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
     "skel.permissions",
 ])
@@ -171,7 +170,6 @@ py_wheel(
         "uvicorn-worker",
     ],
     strip_path_prefixes = ["packages/cmk-agent-receiver"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

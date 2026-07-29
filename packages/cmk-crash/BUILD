@@ -8,7 +8,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -89,7 +88,6 @@ py_wheel(
     distribution = "cmk-crash",
     entry_points = {"console_scripts": ["cmk-upload-crashes = cmk.crash_reporting.cli:main"]},
     strip_path_prefixes = ["packages/cmk-crash"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

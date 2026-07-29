@@ -4,7 +4,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 

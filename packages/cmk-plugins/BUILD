@@ -20,7 +20,6 @@ FAMILIES = [
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
 ] + [
     "requirements.in-%s" % family
     for family in FAMILIES

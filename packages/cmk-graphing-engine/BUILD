@@ -7,7 +7,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -58,7 +57,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-graphing-engine",
     strip_path_prefixes = ["packages/cmk-graphing-engine"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = _ALL + [

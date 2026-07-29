@@ -7,7 +7,6 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -79,7 +78,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-wsgi",
     strip_path_prefixes = ["packages/cmk-wsgi"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

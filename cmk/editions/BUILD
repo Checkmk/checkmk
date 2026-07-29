@@ -32,7 +32,6 @@ py_library(
         "//cmk/gui/plugins/wato/check_parameters",
         "//cmk/gui_plugins/internal",
         "//cmk/inventory",
-        "//cmk/inventory:cmk_inventory_main",
         "//cmk/legacy_checks",
         "//cmk/legacy_includes",
         "//cmk/piggyback:backend",

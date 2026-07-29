@@ -6,8 +6,6 @@ per-file cmk-monitor-mknotifyd=file:/component_owners/notifications/OWNERS_DEFIN
 per-file cmk-monitor-mknotifyd=set noparent
 per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_collector/OWNERS_DEFINITION
 per-file cmk-monitor-otel-collector=set noparent
-per-file cmk-transform-inventory-trees=file:/component_owners/hw_sw_inventory/OWNERS_DEFINITION
-per-file cmk-transform-inventory-trees=set noparent
 per-file mkp=file:/component_owners/mkp_tool/OWNERS_DEFINITION
 per-file mkp=set noparent
 

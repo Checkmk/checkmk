@@ -8,6 +8,7 @@ py_library(
         "paths.py",
         "structured_data.py",
         "transformation/__init__.py",
+        "transformation/__main__.py",
         "transformation/main.py",
     ],
     imports = ["../.."],
@@ -23,22 +24,5 @@ py_library(
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:store",
-    ],
-)
-
-# transformation/__main__.py imports from site-specific packages (cmk.utils.paths, etc.)
-# which are not declared as deps of the standalone cmk_inventory library.
-# Keep it in a separate target to avoid mypy errors on the library target.
-py_library(
-    name = "cmk_inventory_main",
-    srcs = ["transformation/__main__.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/editions:__pkg__",
-    ],
-    deps = [
-        ":inventory",
-        "//cmk/utils:paths",
     ],
 )

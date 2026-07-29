@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
 import subprocess
 import sys
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
+from pathlib import Path
 
-import cmk.utils.paths
 from cmk.inventory.transformation.main import (
     transform_inventory_trees,
 )
@@ -62,11 +63,12 @@ def _collect_hosts() -> Sequence[str]:
 
 
 def main() -> int:
+    omd_root = Path(os.environ.get("OMD_ROOT", ""))
     args = _parse_arguments(sys.argv)
     try:
         return transform_inventory_trees(
             logger=logger,
-            omd_root=cmk.utils.paths.omd_root,
+            omd_root=omd_root,
             show_results=args.show_results,
             bundle_length=args.bundle_length,
             filter_host_names=args.host_name,

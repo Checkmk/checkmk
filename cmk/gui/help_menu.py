@@ -57,7 +57,9 @@ def register(
                 trigger_button=NavItemHeaderTriggerButton(
                     mode=HeaderTriggerModeEnum.unack_incomp_werks,
                     color=ColorEnum.danger,
-                    target_url=makeuri_contextless(request, vars_=[], filename="change_log.py"),
+                    target_url=makeuri_contextless(
+                        request, vars_=[("show_unack", "1")], filename="change_log.py"
+                    ),
                 ),
             ),
             hint=_l("Docs, references and guides"),

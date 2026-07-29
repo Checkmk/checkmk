@@ -13,6 +13,7 @@ from tzlocal import get_localzone_name
 from cmk.graphing_engine import Graph
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphTimerange
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
@@ -24,7 +25,11 @@ from cmk.shared_typing.cmk_time_series_graph import (
     XAxis,
     YAxis,
 )
-from cmk.shared_typing.global_time_picker import CustomGraphTimeRange, GlobalTimePickerProps
+from cmk.shared_typing.global_time_picker import (
+    CustomGraphTimeRange,
+    FirstDayOfWeek,
+    GlobalTimePickerProps,
+)
 
 from ._engine_dispatch import serialize_graphs
 from ._graph_specification import GraphSpecification
@@ -39,15 +44,53 @@ def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:
     return any(ident in ENGINE_GRAPH_PAINTER_IDENTS for ident in painter_idents)
 
 
+def resolve_default_time_range_seconds(
+    graph_timeranges: Sequence[GraphTimerange], preferred_duration: int | None
+) -> int:
+    """The preferred duration wins as long as it references a configured graph time range;
+    otherwise (no or stale preference) the first graph time range definition applies."""
+    if preferred_duration is not None and any(
+        timerange["duration"] == preferred_duration for timerange in graph_timeranges
+    ):
+        return preferred_duration
+    return graph_timeranges[0]["duration"]
+
+
 def default_time_range_seconds() -> int:
-    """Graph time range shown by default: resolves to the first of the global settings' graph time
-    range definitions. With builtin time ranges this resolves to "Last 1 h".
+    """Graph time range shown by default: resolves to the user's preferred graph time range or the
+    first of the global settings' graph time range definitions. With builtin time ranges and no
+    user preference this resolves to "Last 1 h".
     Keeps graph rendering and global time picker in sync.
 
     Must be called per-request (not cached at import time) as active_config is only bound within a
     request context.
     """
-    return active_config.graph_timeranges[0]["duration"]
+    return resolve_default_time_range_seconds(
+        active_config.graph_timeranges, user.get_attribute("graph_default_time_range")
+    )
+
+
+def user_first_day_of_week() -> FirstDayOfWeek | None:
+    """The user's preferred start of week in the global time picker's calendar, None meaning the
+    browser locale decides."""
+    match user.get_attribute("start_of_week"):
+        case str() as value:
+            try:
+                return FirstDayOfWeek(value)
+            except ValueError:  # defensive: stale stored value
+                return None
+        case _:
+            return None
+
+
+def user_default_refresh_time() -> int | None:
+    """The user's preferred refresh interval preselected in the global time picker's refresh
+    control. None means no preference, in which case the frontend default applies."""
+    match user.get_attribute("graph_default_refresh_time"):
+        case int() as value:
+            return value
+        case _:
+            return None
 
 
 _DEFAULT_INTERACTION = Interaction(
@@ -98,8 +141,12 @@ def to_cmk_time_series_graph(
 def global_time_picker_props(
     graph_timeranges: Sequence[GraphTimerange],
     default_time_range_seconds: int,
+    *,
+    first_day_of_week: FirstDayOfWeek | None,
+    default_refresh_time: int | None,
 ) -> GlobalTimePickerProps:
-    """Assemble the global time picker props from the configured graph time ranges."""
+    """Assemble the global time picker props from the configured graph time ranges and the user's
+    time picker preferences."""
     return GlobalTimePickerProps(
         custom_time_ranges=[
             CustomGraphTimeRange(title=timerange["title"], total_seconds=timerange["duration"])
@@ -107,6 +154,8 @@ def global_time_picker_props(
         ],
         default_time_range=default_time_range_seconds,
         server_time_zone=get_localzone_name(),
+        first_day_of_week=first_day_of_week,
+        default_refresh_time=default_refresh_time,
     )
 
 
@@ -115,5 +164,10 @@ def render_global_time_picker(
     default_time_range_seconds: int,
 ) -> None:
     """Render the global time picker frontend component."""
-    props = global_time_picker_props(graph_timeranges, default_time_range_seconds)
+    props = global_time_picker_props(
+        graph_timeranges,
+        default_time_range_seconds,
+        first_day_of_week=user_first_day_of_week(),
+        default_refresh_time=user_default_refresh_time(),
+    )
     html.vue_component("cmk-global-time-picker", data=asdict(props))

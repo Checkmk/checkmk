@@ -23,6 +23,34 @@ function setRefreshPaused(paused: boolean): void {
   pausedState.value = paused
 }
 
+let seededFromPreference = false
+
+/** Seed the interval from the user's profile preference, once per page load (a one-shot so a
+ * late-mounting host cannot clobber choices the user made in the meantime). `null` = no
+ * preference, in which case the default stands. Only preselects: never unpauses.
+ */
+export function seedRefreshIntervalSeconds(defaultRefreshTime: number | null): void {
+  if (seededFromPreference || defaultRefreshTime === null) {
+    return
+  }
+  // Defensive: the profile setting only offers the intervals below, but the props are untrusted.
+  if (!Number.isFinite(defaultRefreshTime) || defaultRefreshTime <= 0) {
+    return
+  }
+  // Consumed only once a seed takes effect, so a bogus value cannot swallow a later one.
+  seededFromPreference = true
+  intervalSecondsState.value = defaultRefreshTime
+}
+
+/** Only tests need this: a page load starts from a fresh module, and the seeding one-shot is
+ * not reachable through the public setters.
+ */
+export function resetGlobalRefresh(): void {
+  seededFromPreference = false
+  pausedState.value = true
+  intervalSecondsState.value = DEFAULT_INTERVAL_SECONDS
+}
+
 function fireRefresh(): void {
   tickState.value += 1
 }

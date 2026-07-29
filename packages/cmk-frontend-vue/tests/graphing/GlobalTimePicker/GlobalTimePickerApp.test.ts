@@ -7,7 +7,10 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
-import { useGlobalRefresh } from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+import {
+  resetGlobalRefresh,
+  useGlobalRefresh
+} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
 import GlobalTimePickerApp from '@/graphing/GlobalTimePicker/GlobalTimePickerApp.vue'
 import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
@@ -20,19 +23,15 @@ const PROPS: GlobalTimePickerProps = {
     { title: 'Last 25 hours', total_seconds: 25 * HOUR }
   ],
   default_time_range: 4 * HOUR,
-  server_time_zone: 'America/Los_Angeles'
+  server_time_zone: 'America/Los_Angeles',
+  first_day_of_week: null,
+  default_refresh_time: null
 }
 
 const activeDurationSeconds = (): number => {
   const active = useGlobalTimeRange().activeTimeRange.value
   expect(active).not.toBeNull()
   return durationSeconds(active!)
-}
-
-function resetGlobalRefresh(): void {
-  const { setRefreshIntervalSeconds, setRefreshPaused } = useGlobalRefresh()
-  setRefreshPaused(true)
-  setRefreshIntervalSeconds(30)
 }
 
 describe('GlobalTimePickerApp', () => {
@@ -66,5 +65,23 @@ describe('GlobalTimePickerApp', () => {
   test('renders the refresh control', () => {
     render(GlobalTimePickerApp, { props: { ...PROPS } })
     expect(screen.getByText('Refresh off')).toBeInTheDocument()
+  })
+
+  test('a preferred refresh time preselects the interval but stays paused', () => {
+    render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
+    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(60)
+    expect(useGlobalRefresh().refreshPaused.value).toBe(true)
+  })
+
+  test('no refresh preference keeps the default interval', () => {
+    render(GlobalTimePickerApp, { props: { ...PROPS } })
+    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(30)
+  })
+
+  test('a second app does not clobber an interval the user chose in the meantime', () => {
+    render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
+    useGlobalRefresh().setRefreshIntervalSeconds(90)
+    render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
+    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
   })
 })

@@ -20,7 +20,9 @@ const props: GlobalTimePickerProps = {
     { title: 'Last 32 days', total_seconds: 32 * DAY }
   ],
   default_time_range: 4 * HOUR,
-  server_time_zone: 'America/Los_Angeles'
+  server_time_zone: 'America/Los_Angeles',
+  first_day_of_week: null,
+  default_refresh_time: null
 }
 </script>
 

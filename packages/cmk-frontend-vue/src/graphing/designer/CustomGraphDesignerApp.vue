@@ -14,7 +14,11 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
-import { GlobalRefreshControl, useGlobalRefresh } from '../GlobalRefreshControl'
+import {
+  GlobalRefreshControl,
+  seedRefreshIntervalSeconds,
+  useGlobalRefresh
+} from '../GlobalRefreshControl'
 import { rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
 import { type CustomGraphObject, getCustomGraph } from './api'
 import DesignerBody from './components/DesignerBody.vue'
@@ -29,6 +33,8 @@ const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
 if (activeTimeRange.value === null) {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range))
 }
+
+seedRefreshIntervalSeconds(props.time_picker.default_refresh_time)
 
 const current = ref<{ name: string; owner: string }>({
   name: props.graph_name,

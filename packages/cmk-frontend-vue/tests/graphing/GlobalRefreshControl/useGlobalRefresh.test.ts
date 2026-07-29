@@ -5,13 +5,11 @@
  */
 import { afterEach, beforeEach, vi } from 'vitest'
 
-import { useGlobalRefresh } from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
-
-function resetGlobalRefresh(): void {
-  const { setRefreshIntervalSeconds, setRefreshPaused } = useGlobalRefresh()
-  setRefreshPaused(true)
-  setRefreshIntervalSeconds(30)
-}
+import {
+  resetGlobalRefresh,
+  seedRefreshIntervalSeconds,
+  useGlobalRefresh
+} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -87,4 +85,34 @@ test('changing the interval while paused does not start the timer', () => {
   vi.advanceTimersByTime(120_000)
 
   expect(refreshTick.value).toBe(ticksBefore)
+})
+
+test('seeding a preferred interval preselects it without starting the timer', () => {
+  const { refreshIntervalSeconds, refreshPaused, refreshTick } = useGlobalRefresh()
+  const ticksBefore = refreshTick.value
+
+  seedRefreshIntervalSeconds(60)
+  vi.advanceTimersByTime(120_000)
+
+  expect(refreshIntervalSeconds.value).toBe(60)
+  expect(refreshPaused.value).toBe(true)
+  expect(refreshTick.value).toBe(ticksBefore)
+})
+
+test('seeding null keeps the default interval', () => {
+  seedRefreshIntervalSeconds(null)
+  expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(30)
+})
+
+test('only the first seed wins', () => {
+  seedRefreshIntervalSeconds(60)
+  seedRefreshIntervalSeconds(90)
+  expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(60)
+})
+
+test('a bogus value does not consume the one-shot', () => {
+  seedRefreshIntervalSeconds(Number.NaN)
+  seedRefreshIntervalSeconds(60)
+
+  expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(60)
 })

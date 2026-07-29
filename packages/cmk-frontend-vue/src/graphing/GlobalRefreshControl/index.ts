@@ -5,5 +5,5 @@
  */
 export { default as GlobalRefreshControl } from './GlobalRefreshControl.vue'
 
-export { useGlobalRefresh } from './useGlobalRefresh'
+export { seedRefreshIntervalSeconds, useGlobalRefresh } from './useGlobalRefresh'
 export type { GlobalRefresh } from './useGlobalRefresh'

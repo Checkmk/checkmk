@@ -31,6 +31,8 @@ watch(refreshTick, () => {
 
 const { _t } = usei18n()
 
+// Kept in sync by hand with GRAPH_REFRESH_INTERVALS_SECONDS, which backs the profile setting
+// preselecting one of these.
 const INTERVAL_CHOICES_SECONDS = [30, 60, 90]
 const TURN_OFF = 'turn-off'
 

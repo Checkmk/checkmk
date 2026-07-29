@@ -57,6 +57,7 @@ const range = computed<DateTimeRange>({
       class="graphing-designer-header__time-picker"
       :custom-time-ranges="timePicker.custom_time_ranges"
       :server-time-zone="timePicker.server_time_zone"
+      :first-day-of-week="timePicker.first_day_of_week"
     />
     <div class="graphing-designer-header__actions">
       <template v-if="mode === 'view'">

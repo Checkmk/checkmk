@@ -9,6 +9,7 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { computed } from 'vue'
 
 import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.vue'
+import { seedRefreshIntervalSeconds } from '../GlobalRefreshControl/useGlobalRefresh.ts'
 import GlobalTimePicker from './GlobalTimePicker.vue'
 import { rollingRange } from './private/timeRange.ts'
 import { useGlobalTimeRange } from './useGlobalTimeRange.ts'
@@ -23,6 +24,8 @@ if (activeTimeRange.value === null) {
   setActiveTimeRange(fallback)
 }
 
+seedRefreshIntervalSeconds(props.default_refresh_time)
+
 const range = computed<DateTimeRange>({
   get: () => activeTimeRange.value ?? fallback,
   set: setActiveTimeRange
@@ -34,6 +37,7 @@ const range = computed<DateTimeRange>({
     v-model="range"
     :custom-time-ranges="props.custom_time_ranges"
     :server-time-zone="props.server_time_zone"
+    :first-day-of-week="props.first_day_of_week"
   >
     <template #aside>
       <GlobalRefreshControl />

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { CustomGraphTimeRange } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { describe, expect, test } from 'vitest'
@@ -25,12 +25,16 @@ const CUSTOM_RANGES: CustomGraphTimeRange[] = [
   { title: 'Last 25 hours', total_seconds: 25 * 3600 }
 ]
 
-function renderPicker(modelValue: DateTimeRange) {
+function renderPicker(
+  modelValue: DateTimeRange,
+  firstDayOfWeek: 'saturday' | 'sunday' | 'monday' | null = null
+) {
   const updates: DateTimeRange[] = []
   const view = render(GlobalTimePicker, {
     props: {
       customTimeRanges: CUSTOM_RANGES,
       serverTimeZone: 'America/Los_Angeles',
+      firstDayOfWeek,
       modelValue,
       'onUpdate:modelValue': (value: DateTimeRange) => updates.push(value)
     }
@@ -70,8 +74,29 @@ describe('GlobalTimePicker', () => {
     await rerender({
       customTimeRanges: CUSTOM_RANGES,
       serverTimeZone: 'America/Los_Angeles',
+      firstDayOfWeek: null,
       modelValue: rangeOfSeconds(99)
     })
     expect(chip('Last 4 hours')).toHaveAttribute('aria-pressed', 'false')
   })
+
+  // jsdom's locale is en-US, so the browser-locale default is a Sunday week start.
+  test.each([
+    { firstDayOfWeek: 'monday' as const, expected: 'Monday' },
+    { firstDayOfWeek: 'saturday' as const, expected: 'Saturday' },
+    { firstDayOfWeek: null, expected: 'Sunday' }
+  ])(
+    'the calendar starts the week on $expected for preference $firstDayOfWeek',
+    async ({ firstDayOfWeek, expected }) => {
+      renderPicker(rangeOfSeconds(99), firstDayOfWeek)
+      const trigger = screen
+        .getAllByRole('button')
+        .find((button) => button.getAttribute('aria-haspopup') === 'dialog')!
+      await fireEvent.click(trigger)
+
+      const grid = (await screen.findAllByRole('grid'))[0]!
+      const firstColumnHeader = within(grid).getAllByRole('columnheader')[0]!
+      expect(firstColumnHeader).toHaveAccessibleName(expected)
+    }
+  )
 })

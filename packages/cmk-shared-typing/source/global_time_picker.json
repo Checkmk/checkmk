@@ -8,10 +8,25 @@
       "items": { "$ref": "#/$defs/custom_graph_time_range" }
     },
     "default_time_range": { "type": "number" },
-    "server_time_zone": { "type": "string" }
+    "server_time_zone": { "type": "string" },
+    "first_day_of_week": {
+      "anyOf": [{ "$ref": "#/$defs/first_day_of_week" }, { "type": "null" }]
+    },
+    "default_refresh_time": { "type": ["number", "null"] }
   },
-  "required": ["custom_time_ranges", "default_time_range", "server_time_zone"],
+  "required": [
+    "custom_time_ranges",
+    "default_time_range",
+    "server_time_zone",
+    "first_day_of_week",
+    "default_refresh_time"
+  ],
   "$defs": {
+    "first_day_of_week": {
+      "title": "FirstDayOfWeek",
+      "type": "string",
+      "enum": ["saturday", "sunday", "monday"]
+    },
     "custom_graph_time_range": {
       "title": "CustomGraphTimeRange",
       "type": "object",

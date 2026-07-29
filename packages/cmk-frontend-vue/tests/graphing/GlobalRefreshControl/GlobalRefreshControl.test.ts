@@ -9,13 +9,10 @@ import { afterEach, beforeEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import GlobalRefreshControl from '@/graphing/GlobalRefreshControl/GlobalRefreshControl.vue'
-import { useGlobalRefresh } from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
-
-function resetGlobalRefresh(): void {
-  const { setRefreshIntervalSeconds, setRefreshPaused } = useGlobalRefresh()
-  setRefreshPaused(true)
-  setRefreshIntervalSeconds(30)
-}
+import {
+  resetGlobalRefresh,
+  useGlobalRefresh
+} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
 
 beforeEach(() => {
   resetGlobalRefresh()

@@ -9,25 +9,34 @@ import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon
 import {
   CmkTimeRangeDisplay,
   CmkTimeRangePicker,
+  type DateTimePickerSettings,
   type DateTimeRange
 } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
 
 import DynamicPresets from './private/DynamicPresets.vue'
 import TimeRangeChip from './private/TimeRangeChip.vue'
+import { firstDayOfWeekAsWeekday } from './private/firstDayOfWeek.ts'
 import { useCustomPresets } from './private/useCustomPresets.ts'
 import { useStaticPresets } from './private/useStaticPresets.ts'
 
 const props = defineProps<{
   customTimeRanges: GlobalTimePickerProps['custom_time_ranges']
   serverTimeZone: GlobalTimePickerProps['server_time_zone']
+  firstDayOfWeek: GlobalTimePickerProps['first_day_of_week']
 }>()
 
 const range = defineModel<DateTimeRange>({ required: true })
 
 const { _t } = usei18n()
 
-const staticRangePresets = useStaticPresets()
+const firstDayOfWeek = computed(() => firstDayOfWeekAsWeekday(props.firstDayOfWeek))
+const pickerSettings = computed<DateTimePickerSettings | undefined>(() =>
+  firstDayOfWeek.value === undefined ? undefined : { firstDayOfWeek: firstDayOfWeek.value }
+)
+
+const staticRangePresets = useStaticPresets(() => firstDayOfWeek.value)
 
 const {
   presets: customPresets,
@@ -42,6 +51,7 @@ const {
       v-model="range"
       :presets="staticRangePresets"
       :server-time-zone="props.serverTimeZone"
+      :settings="pickerSettings"
     >
       <template #trigger="{ aria, triggerRef, fields, settings: triggerSettings }">
         <button

@@ -9,6 +9,10 @@ import type { CustomGraphDesigner } from 'cmk-shared-typing/typescript/custom_gr
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
+import {
+  resetGlobalRefresh,
+  useGlobalRefresh
+} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
 import CustomGraphDesignerApp from '@/graphing/designer/CustomGraphDesignerApp.vue'
 
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
@@ -131,7 +135,13 @@ const PROPS: CustomGraphDesigner = {
     { title: 'Customize', link: null },
     { title: 'Custom graphs', link: 'custom_graphs.py' }
   ],
-  time_picker: { custom_time_ranges: [], default_time_range: 14400, server_time_zone: 'UTC' }
+  time_picker: {
+    custom_time_ranges: [],
+    default_time_range: 14400,
+    server_time_zone: 'UTC',
+    first_day_of_week: null,
+    default_refresh_time: null
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -154,6 +164,8 @@ function mockGraphGet(graph: unknown = graphObject()): void {
 }
 
 beforeEach(() => {
+  // Module-level singleton: without this the designer's auto-unpause leaks into later tests.
+  resetGlobalRefresh()
   getSpy = vi.spyOn(client, 'GET')
   mockGraphGet()
   postSpy = vi.spyOn(client, 'POST')
@@ -167,6 +179,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  resetGlobalRefresh()
   vi.restoreAllMocks()
 })
 
@@ -360,4 +373,11 @@ test('an incomplete row blocks saving with an inline error', async () => {
   await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
   expect(await screen.findByText(/incomplete.*B/)).toBeInTheDocument()
   expect(putSpy).not.toHaveBeenCalled()
+})
+
+test('a preferred refresh time is preselected and used by the auto-started refresh', async () => {
+  await renderApp({ time_picker: { ...PROPS.time_picker, default_refresh_time: 90 } })
+
+  expect(useGlobalRefresh().refreshPaused.value).toBe(false)
+  expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
 })

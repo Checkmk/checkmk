@@ -13,9 +13,12 @@ import pytest
 from cmk.ccc.tar_archive import (
     ArchiveLimits,
     NotAValidArchive,
-    open_buffer,
-    open_bytes,
-    open_path,
+    open_buffer_indexed,
+    open_buffer_streaming,
+    open_bytes_indexed,
+    open_bytes_streaming,
+    open_path_indexed,
+    open_path_streaming,
     SecurityViolation,
     UnpackedArchiveTooLargeError,
     validate_bytes,
@@ -61,36 +64,73 @@ def make_member(name: str, member_type: bytes) -> tarfile.TarInfo:
     return member
 
 
-def test_safe_extractall_basic_bytes(tmp_path: Path) -> None:
+def test_safe_extractall_streaming_bytes(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
-    with open_bytes(raw) as safe_tar:
+    with open_bytes_streaming(raw) as safe_tar:
         safe_tar.extractall(dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
-def test_safe_extractall_basic_io(tmp_path: Path) -> None:
+def test_safe_extractall_streaming_buffer(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     buf = make_tarfile_io(files)
     dest = tmp_path / "dest"
 
-    with open_buffer(buf) as safe_tar:
+    with open_buffer_streaming(buf) as safe_tar:
         safe_tar.extractall(dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
-def test_safe_extractall_basic_path(tmp_path: Path) -> None:
+def test_safe_extractall_streaming_path(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     path = make_tarfile_path(files, tmp_path)
     dest = tmp_path / "dest"
 
-    with open_path(path) as safe_tar:
+    with open_path_streaming(path) as safe_tar:
+        safe_tar.extractall(dest)
+
+    for f, content in files:
+        assert (dest / f).read_bytes() == content
+
+
+def test_safe_extractall_indexed_bytes(tmp_path: Path) -> None:
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
+    raw = make_tarfile_bytes(files)
+    dest = tmp_path / "dest"
+
+    with open_bytes_indexed(raw) as safe_tar:
+        assert [m.name for m in safe_tar.getmembers()] == ["a.txt", "b.txt"]
+        safe_tar.extractall(dest)
+
+    for f, content in files:
+        assert (dest / f).read_bytes() == content
+
+
+def test_safe_extractall_indexed_buffer(tmp_path: Path) -> None:
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
+    buf = make_tarfile_io(files)
+    dest = tmp_path / "dest"
+
+    with open_buffer_indexed(buf) as safe_tar:
+        safe_tar.extractall(dest)
+
+    for f, content in files:
+        assert (dest / f).read_bytes() == content
+
+
+def test_safe_extractall_indexed_path(tmp_path: Path) -> None:
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
+    path = make_tarfile_path(files, tmp_path)
+    dest = tmp_path / "dest"
+
+    with open_path_indexed(path) as safe_tar:
         safe_tar.extractall(dest)
 
     for f, content in files:
@@ -128,10 +168,7 @@ def test_indexed_validates_eagerly_on_open(
     """In contrast to streaming mode, indexed mode validates before the caller iterates."""
     raw = make_tarfile_bytes(files)
 
-    with (
-        pytest.raises(UnpackedArchiveTooLargeError),
-        open_bytes(raw, streaming=False, limits=limits),
-    ):
+    with pytest.raises(UnpackedArchiveTooLargeError), open_bytes_indexed(raw, limits=limits):
         pytest.fail("indexed mode must reject the archive before the context body runs")
 
 
@@ -151,7 +188,7 @@ def test_per_file_size_limit_bytes(tmp_path: Path) -> None:
 
     with (
         pytest.raises(UnpackedArchiveTooLargeError),
-        open_bytes(raw, limits=ArchiveLimits(per_file_limit=max_size)) as safe_tar,
+        open_bytes_streaming(raw, limits=ArchiveLimits(per_file_limit=max_size)) as safe_tar,
     ):
         safe_tar.extractall(dest)
 
@@ -163,7 +200,7 @@ def test_total_file_limit_bytes(tmp_path: Path) -> None:
 
     with (
         pytest.raises(UnpackedArchiveTooLargeError),
-        open_bytes(raw, limits=ArchiveLimits(file_limit=2)) as safe_tar,
+        open_bytes_streaming(raw, limits=ArchiveLimits(file_limit=2)) as safe_tar,
     ):
         safe_tar.extractall(dest)
 
@@ -174,7 +211,7 @@ def test_compressed_size_limit_bytes() -> None:
 
     with (
         pytest.raises(UnpackedArchiveTooLargeError),
-        open_bytes(raw, limits=ArchiveLimits(raw_limit_bytes=len(raw) - 1)),
+        open_bytes_streaming(raw, limits=ArchiveLimits(raw_limit_bytes=len(raw) - 1)),
     ):
         pytest.fail("an oversized archive must be rejected before the context body runs")
 
@@ -184,7 +221,7 @@ def test_compressed_size_limit_path(tmp_path: Path) -> None:
 
     with (
         pytest.raises(UnpackedArchiveTooLargeError),
-        open_path(path, limits=ArchiveLimits(raw_limit_bytes=path.stat().st_size - 1)),
+        open_path_streaming(path, limits=ArchiveLimits(raw_limit_bytes=path.stat().st_size - 1)),
     ):
         pytest.fail("an oversized archive must be rejected before the context body runs")
 
@@ -194,7 +231,7 @@ def test_path_traversal_bytes(tmp_path: Path) -> None:
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
-    with pytest.raises(SecurityViolation), open_bytes(raw) as safe_tar:
+    with pytest.raises(SecurityViolation), open_bytes_streaming(raw) as safe_tar:
         safe_tar.extractall(dest)
 
 
@@ -236,7 +273,7 @@ def test_symlink_blocked(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
     with (
         pytest.raises(SecurityViolation),
-        open_buffer(buf, limits=ArchiveLimits(allow_symlinks=False)) as safe_tar,
+        open_buffer_streaming(buf, limits=ArchiveLimits(allow_symlinks=False)) as safe_tar,
     ):
         safe_tar.extractall(dest)
 
@@ -250,7 +287,7 @@ def test_symlink_allowed(tmp_path: Path) -> None:
     buf.seek(0)
 
     dest = tmp_path / "dest"
-    with open_buffer(buf, limits=ArchiveLimits(allow_symlinks=True)) as safe_tar:
+    with open_buffer_streaming(buf, limits=ArchiveLimits(allow_symlinks=True)) as safe_tar:
         safe_tar.extractall(dest)
 
 
@@ -258,7 +295,9 @@ def test_iteration_bytes() -> None:
     files = [(f"file{i}.txt", f"data{i}".encode()) for i in range(5)]
     raw = make_tarfile_bytes(files)
 
-    with open_bytes(raw, compression="*", limits=ArchiveLimits(allow_symlinks=False)) as safe_tar:
+    with open_bytes_streaming(
+        raw, compression="*", limits=ArchiveLimits(allow_symlinks=False)
+    ) as safe_tar:
         first = next(safe_tar)
         assert first.name.startswith("file")
 
@@ -274,7 +313,9 @@ def test_extractfile_by_name() -> None:
     files = {"file0.txt": b"hello", "file1.txt": b"world"}
     raw = make_tarfile_bytes(files.items())
 
-    with open_bytes(raw, compression="*", limits=ArchiveLimits(allow_symlinks=False)) as safe_tar:
+    with open_bytes_streaming(
+        raw, compression="*", limits=ArchiveLimits(allow_symlinks=False)
+    ) as safe_tar:
         f = safe_tar.extractfile_by_name("file1.txt")
         assert f is not None
         assert f.read() == files["file1.txt"]
@@ -288,7 +329,7 @@ def test_streaming_extractall_skips_consumed_members(tmp_path: Path) -> None:
     files = {"a.txt": b"hello", "b.txt": b"world"}
     dest = tmp_path / "dest"
 
-    with open_bytes(make_tarfile_bytes(files.items())) as safe_tar:
+    with open_bytes_streaming(make_tarfile_bytes(files.items())) as safe_tar:
         next(safe_tar)
         safe_tar.extractall(dest)
 
@@ -298,7 +339,7 @@ def test_streaming_extractall_skips_consumed_members(tmp_path: Path) -> None:
 
 def test_extractfile_by_name_without_a_name_keeps_the_cursor() -> None:
     """The empty name is answered without searching, so the streamed members stay reachable."""
-    with open_bytes(make_tarfile_bytes([("a.txt", b"hello")])) as safe_tar:
+    with open_bytes_streaming(make_tarfile_bytes([("a.txt", b"hello")])) as safe_tar:
         assert safe_tar.extractfile_by_name("") is None
         assert [m.name for m in safe_tar] == ["a.txt"]
 
@@ -306,19 +347,19 @@ def test_extractfile_by_name_without_a_name_keeps_the_cursor() -> None:
 def test_streaming_extractmember_returns_none_for_a_directory() -> None:
     raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
 
-    with open_bytes(raw) as safe_tar:
+    with open_bytes_streaming(raw) as safe_tar:
         assert safe_tar.extractmember(next(safe_tar)) is None
 
 
 def test_indexed_extractmember_returns_none_for_a_directory() -> None:
     raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
 
-    with open_bytes(raw, streaming=False) as safe_tar:
+    with open_bytes_indexed(raw) as safe_tar:
         assert safe_tar.extractmember(next(iter(safe_tar))) is None
 
 
 def test_indexed_extractfile_by_name_returns_none_for_a_directory() -> None:
     raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
 
-    with open_bytes(raw, streaming=False) as safe_tar:
+    with open_bytes_indexed(raw) as safe_tar:
         assert safe_tar.extractfile_by_name("subdir") is None

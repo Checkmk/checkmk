@@ -478,9 +478,9 @@ def _list_tar_content(the_tarfile: str | IO[bytes]) -> dict[str, FileInfo]:
     files: dict[str, FileInfo] = {}
     try:
         if isinstance(the_tarfile, str):
-            context = tar_archive.open_path(Path(the_tarfile), compression="*")
+            context = tar_archive.open_path_streaming(Path(the_tarfile), compression="*")
         else:
-            context = tar_archive.open_buffer(the_tarfile, compression="*")
+            context = tar_archive.open_buffer_streaming(the_tarfile, compression="*")
 
         with context as archive:
             for member in archive:
@@ -494,7 +494,7 @@ def _list_tar_content(the_tarfile: str | IO[bytes]) -> dict[str, FileInfo]:
 
 def _file_exists_in_tar(the_tarfile: bytes, filename: str) -> bool:
     try:
-        with tar_archive.open_bytes(the_tarfile, compression="*") as tar:
+        with tar_archive.open_bytes_streaming(the_tarfile, compression="*") as tar:
             return any(member.name == filename for member in tar)
     except (tarfile.TarError, OSError, EOFError):
         return False
@@ -502,9 +502,9 @@ def _file_exists_in_tar(the_tarfile: bytes, filename: str) -> bool:
 
 def _get_file_content(the_tarfile: str | IO[bytes], filename: str) -> bytes:
     if isinstance(the_tarfile, str):
-        context = tar_archive.open_path(Path(the_tarfile), compression="*")
+        context = tar_archive.open_path_streaming(Path(the_tarfile), compression="*")
     else:
-        context = tar_archive.open_buffer(the_tarfile, compression="*")
+        context = tar_archive.open_buffer_streaming(the_tarfile, compression="*")
 
     with context as archive:
         if obj := archive.extractfile_by_name(filename):

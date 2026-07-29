@@ -226,41 +226,69 @@ class SafeIndexedTarFile(BaseSafeTarFile):
 
 
 @contextmanager
-def open_bytes(
+def open_bytes_streaming(
     raw: bytes,
     *,
-    streaming: bool = True,
     compression: Compression = "gz",
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
-) -> Generator[SafeStreamedTarFile | SafeIndexedTarFile]:
-    with open_buffer(
-        io.BytesIO(raw), streaming=streaming, compression=compression, limits=limits
-    ) as tar:
+) -> Generator[SafeStreamedTarFile]:
+    with open_buffer_streaming(io.BytesIO(raw), compression=compression, limits=limits) as tar:
         yield tar
 
 
 @contextmanager
-def open_buffer(
-    buffer: IO[bytes],
+def open_bytes_indexed(
+    raw: bytes,
     *,
-    streaming: bool = True,
     compression: Compression = "gz",
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
-) -> Generator[SafeStreamedTarFile | SafeIndexedTarFile]:
-    with _open_buffer(buffer, _mode(compression, streaming=streaming), limits) as tar:
-        yield (SafeStreamedTarFile(tar, limits) if streaming else SafeIndexedTarFile(tar, limits))
+) -> Generator[SafeIndexedTarFile]:
+    with open_buffer_indexed(io.BytesIO(raw), compression=compression, limits=limits) as tar:
+        yield tar
 
 
 @contextmanager
-def open_path(
-    path: Path,
+def open_buffer_streaming(
+    buffer: IO[bytes],
     *,
-    streaming: bool = True,
     compression: Compression = "gz",
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
-) -> Generator[SafeStreamedTarFile | SafeIndexedTarFile]:
-    with _open_path(path, _mode(compression, streaming=streaming), limits) as tar:
-        yield (SafeStreamedTarFile(tar, limits) if streaming else SafeIndexedTarFile(tar, limits))
+) -> Generator[SafeStreamedTarFile]:
+    with _open_buffer(buffer, _streaming_mode(compression), limits) as tar:
+        yield SafeStreamedTarFile(tar, limits)
+
+
+@contextmanager
+def open_buffer_indexed(
+    buffer: IO[bytes],
+    *,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> Generator[SafeIndexedTarFile]:
+    with _open_buffer(buffer, _indexed_mode(compression), limits) as tar:
+        yield SafeIndexedTarFile(tar, limits)
+
+
+@contextmanager
+def open_path_streaming(
+    path: Path,
+    *,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> Generator[SafeStreamedTarFile]:
+    with _open_path(path, _streaming_mode(compression), limits) as tar:
+        yield SafeStreamedTarFile(tar, limits)
+
+
+@contextmanager
+def open_path_indexed(
+    path: Path,
+    *,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> Generator[SafeIndexedTarFile]:
+    with _open_path(path, _indexed_mode(compression), limits) as tar:
+        yield SafeIndexedTarFile(tar, limits)
 
 
 def validate_bytes(
@@ -273,7 +301,7 @@ def validate_bytes(
 
     Streams through all members and enforces the limits.
     """
-    with open_bytes(raw, compression=compression, limits=limits) as archive:
+    with open_bytes_streaming(raw, compression=compression, limits=limits) as archive:
         for _ in archive:
             ...
 
@@ -309,11 +337,9 @@ def _buffer_size(buffer: IO[bytes]) -> int:
     return size
 
 
-def _mode(compression: Compression, *, streaming: bool) -> _TarReadMode:
-    # NOTE: mypy currently doesn't narrow on tuples, so we have to use the
-    # slightly less readable if/else cascade below.
-    return (
-        ("r|gz" if compression == "gz" else "r|*")
-        if streaming
-        else ("r:gz" if compression == "gz" else "r:*")
-    )
+def _streaming_mode(compression: Compression) -> Literal["r|gz", "r|*"]:
+    return "r|gz" if compression == "gz" else "r|*"
+
+
+def _indexed_mode(compression: Compression) -> Literal["r:gz", "r:*"]:
+    return "r:gz" if compression == "gz" else "r:*"

@@ -511,7 +511,7 @@ def build_image(
     LOG.debug("pkg_file: %(pkg_file)s", {"pkg_file": pkg_file})
 
     LOG.info("Unpack source tar to %(tmp_path)s", {"tmp_path": tmp_path})
-    with tar_archive.open_path(
+    with tar_archive.open_path_streaming(
         Path(f"{args.source_path}/check-mk-{args.edition}-{args.version}.tar.gz")
     ) as archive:
         archive.extractall(tmp_path)

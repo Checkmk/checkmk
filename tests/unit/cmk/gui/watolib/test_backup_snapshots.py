@@ -64,9 +64,7 @@ def test_extract_snapshot() -> None:
         use_git=False,
         debug=False,
     )
-    with tar_archive.open_path(
-        next(_snapshot_files()), streaming=False, compression="*"
-    ) as snapshot_tar:
+    with tar_archive.open_path_indexed(next(_snapshot_files()), compression="*") as snapshot_tar:
         backup_snapshots.extract_snapshot(
             snapshot_tar,
             backup_snapshots.backup_domains,
@@ -111,7 +109,7 @@ def test_extract_snapshot_permission_check_uses_real_paths(
     # extract_snapshot runs "tar tzf" on the inner archive and gets back "./global.mk\n".
     # it checks the real path prefix/./global.mk → not writable → error.
     with (
-        tar_archive.open_bytes(outer_bytes, streaming=False, compression="*") as snapshot_tar,
+        tar_archive.open_bytes_indexed(outer_bytes, compression="*") as snapshot_tar,
         pytest.raises(MKGeneralException) as exc_info,
     ):
         backup_snapshots.extract_snapshot(snapshot_tar, {"check_mk": domain})

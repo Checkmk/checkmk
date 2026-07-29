@@ -3323,7 +3323,7 @@ def _has_local_file_changes(sync_archive: bytes, to_delete: list[str]) -> bool:
     if any(p.startswith(f"{paths.LOCAL_SEGMENT}/") for p in to_delete):
         return True  # no need to check the archive.
 
-    with tar_archive.open_bytes(sync_archive, compression="*") as safe_tar:
+    with tar_archive.open_bytes_streaming(sync_archive, compression="*") as safe_tar:
         return any(m.name.startswith(f"{paths.LOCAL_SEGMENT}/") for m in safe_tar)
 
 

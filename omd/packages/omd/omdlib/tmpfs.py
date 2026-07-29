@@ -288,7 +288,7 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     if not tmpfs_dump.exists():
         return
 
-    with tar_archive.open_path(tmpfs_dump, compression="*") as archive:
+    with tar_archive.open_path_streaming(tmpfs_dump, compression="*") as archive:
         archive.extractall(dest=site_tmp_dir)  # nosec B202 # BNS:481b41
     tmpfs_dump.unlink()
 

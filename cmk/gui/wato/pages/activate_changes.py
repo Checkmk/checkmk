@@ -136,7 +136,7 @@ def _extract_snapshot(snapshot_file: str) -> None:
     filepath = Path(backup_snapshots.snapshot_dir + snapshot_file)
     if not isinstance(backup_snapshots.backup_domains, dict):
         raise NotImplementedError
-    with tar_archive.open_path(filepath, streaming=False, compression="*") as opened_file:
+    with tar_archive.open_path_indexed(filepath, compression="*") as opened_file:
         backup_snapshots.extract_snapshot(opened_file, backup_snapshots.backup_domains)
 
 

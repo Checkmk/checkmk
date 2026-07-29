@@ -42,6 +42,52 @@ class ConcreteDisabledNotificationsModel:
 
 
 @api_model
+class GraphDefaultTimeRangeOutputModel:
+    option: Literal["default", "individual"] = api_field(
+        description="This field indicates if the default time range of the global time picker "
+        "uses the default (the first configured graph time range) or an individual time range",
+    )
+    duration: int | ApiOmitted = api_field(
+        description="The duration in seconds of the individual time range if individual is "
+        "selected as option.",
+        example=14400,
+        default_factory=ApiOmitted,
+    )
+
+
+@api_model
+class GraphDefaultRefreshTimeOutputModel:
+    option: Literal["default", "individual"] = api_field(
+        description="This field indicates if the refresh time preselected in the global time "
+        "picker uses the default or an individual interval",
+    )
+    interval: Literal[30, 60, 90] | ApiOmitted = api_field(
+        description="The refresh interval in seconds if individual is selected as option.",
+        example=60,
+        default_factory=ApiOmitted,
+    )
+
+
+@api_model
+class ConcreteTimePickerModel:
+    start_of_week: Literal["browser_locale", "saturday", "sunday", "monday"] | ApiOmitted = (
+        api_field(
+            description="The first day of the week in the calendar.",
+            example="monday",
+            default_factory=ApiOmitted,
+        )
+    )
+    default_time_range: GraphDefaultTimeRangeOutputModel | ApiOmitted = api_field(
+        description="The time range the picker preselects.",
+        default_factory=ApiOmitted,
+    )
+    default_refresh_time: GraphDefaultRefreshTimeOutputModel | ApiOmitted = api_field(
+        description="The refresh interval preselected in the picker's refresh control.",
+        default_factory=ApiOmitted,
+    )
+
+
+@api_model
 class ConcreteUserInterfaceAttributesModel:
     interface_theme: Literal["default", "dark", "light"] | ApiOmitted = api_field(
         description="The theme of the interface",
@@ -93,6 +139,10 @@ class ConcreteUserInterfaceAttributesModel:
             example="slideout",
             default_factory=ApiOmitted,
         )
+    )
+    time_picker: ConcreteTimePickerModel | ApiOmitted = api_field(
+        description="Settings of the global time picker on graph pages.",
+        default_factory=ApiOmitted,
     )
 
 

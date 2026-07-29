@@ -22,9 +22,12 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.user_config.models.response_models import (
     AuthOptionOutputModel,
     ConcreteDisabledNotificationsModel,
+    ConcreteTimePickerModel,
     ConcreteUserContactOptionModel,
     ConcreteUserInterfaceAttributesModel,
     DateTimeRangeModel,
+    GraphDefaultRefreshTimeOutputModel,
+    GraphDefaultTimeRangeOutputModel,
     UserAttributesModel,
     UserIdleOptionModel,
     UserObject,
@@ -33,7 +36,7 @@ from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer
 from cmk.gui.openapi.framework import ApiContext, ETag
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import StartOfWeek, UserSpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
     ConnectorType,
@@ -114,6 +117,23 @@ def make_pending_changes(api_context: ApiContext) -> PendingChanges:
 # ---------------------------------------------------------------------------------------------
 
 
+class TimeRangeDetails(TypedDict, total=False):
+    option: Literal["default", "individual"]
+    duration: int
+
+
+class RefreshTimeDetails(TypedDict, total=False):
+    option: Literal["default", "individual"]
+    # The API models narrow this to the intervals the profile setting offers.
+    interval: int
+
+
+class TimePickerDetails(TypedDict, total=False):
+    start_of_week: Literal["browser_locale", "saturday", "sunday", "monday"]
+    default_time_range: TimeRangeDetails
+    default_refresh_time: RefreshTimeDetails
+
+
 class ApiInterfaceAttributes(TypedDict, total=False):
     interface_theme: Literal["default", "dark", "light"]
     sidebar_position: Literal["left", "right"]
@@ -123,6 +143,7 @@ class ApiInterfaceAttributes(TypedDict, total=False):
     show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
     contextual_help_icon: Literal["show_icon", "hide_icon"]
     navbar_changes_action: Literal["full_page", "slideout", "slideout_ask"]
+    time_picker: TimePickerDetails
 
 
 class InternalInterfaceAttributes(TypedDict, total=False):
@@ -133,6 +154,9 @@ class InternalInterfaceAttributes(TypedDict, total=False):
     show_mode: Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
     contextual_help_icon: Literal["hide_icon"] | None
     navbar_changes_action: Literal["full_page", "slideout"] | None
+    start_of_week: StartOfWeek | None
+    graph_default_time_range: int | None
+    graph_default_refresh_time: int | None
 
 
 class APIAuthOption(TypedDict):
@@ -430,6 +454,20 @@ def _interface_options_to_internal_format(
         case _:
             ...
 
+    if (time_picker := api_interface_options.get("time_picker")) is not None:
+        if (start_of_week := time_picker.get("start_of_week")) is not None:
+            internal_interface_options["start_of_week"] = (
+                None if start_of_week == "browser_locale" else start_of_week
+            )
+        if (time_range := time_picker.get("default_time_range")) is not None:
+            internal_interface_options["graph_default_time_range"] = (
+                _time_picker_option_to_internal(time_range, "duration")
+            )
+        if (refresh_time := time_picker.get("default_refresh_time")) is not None:
+            internal_interface_options["graph_default_refresh_time"] = (
+                _time_picker_option_to_internal(refresh_time, "interval")
+            )
+
     return internal_interface_options
 
 
@@ -537,6 +575,12 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
         iia["show_mode"] = internal_attrs["show_mode"]
     if "navbar_changes_action" in internal_attrs:
         iia["navbar_changes_action"] = internal_attrs["navbar_changes_action"]
+    if "start_of_week" in internal_attrs:
+        iia["start_of_week"] = internal_attrs["start_of_week"]
+    if "graph_default_time_range" in internal_attrs:
+        iia["graph_default_time_range"] = internal_attrs["graph_default_time_range"]
+    if "graph_default_refresh_time" in internal_attrs:
+        iia["graph_default_refresh_time"] = internal_attrs["graph_default_refresh_time"]
     if interface_options := _interface_options_to_api_format(iia):
         api_attrs["interface_options"] = interface_options
 
@@ -704,6 +748,22 @@ def _interface_options_to_api_format(
         case _:
             attributes["navbar_changes_action"] = "slideout_ask"
 
+    time_picker: TimePickerDetails = {}
+    if "start_of_week" in internal_interface_options:
+        time_picker["start_of_week"] = _start_of_week_to_api_format(
+            internal_interface_options["start_of_week"]
+        )
+    if "graph_default_time_range" in internal_interface_options:
+        time_picker["default_time_range"] = _time_range_to_api_format(
+            internal_interface_options["graph_default_time_range"]
+        )
+    if "graph_default_refresh_time" in internal_interface_options:
+        time_picker["default_refresh_time"] = _refresh_time_to_api_format(
+            internal_interface_options["graph_default_refresh_time"]
+        )
+    if time_picker:
+        attributes["time_picker"] = time_picker
+
     return attributes
 
 
@@ -715,6 +775,51 @@ def _internal_temperature_format_to_api_format(internal_temperature: str | None)
     'default'
     """
     return internal_temperature if internal_temperature else "default"
+
+
+def _time_picker_option_to_internal(option: Mapping[str, Any], value_key: str) -> int | None:
+    """
+    >>> _time_picker_option_to_internal({"option": "default"}, "duration")
+    >>> _time_picker_option_to_internal({"option": "individual", "duration": 14400}, "duration")
+    14400
+    """
+    return None if option["option"] == "default" else option[value_key]
+
+
+def _start_of_week_to_api_format(
+    start_of_week: StartOfWeek | None,
+) -> Literal["browser_locale", "saturday", "sunday", "monday"]:
+    """
+    >>> _start_of_week_to_api_format(None)
+    'browser_locale'
+    >>> _start_of_week_to_api_format('monday')
+    'monday'
+    """
+    return "browser_locale" if start_of_week is None else start_of_week
+
+
+def _time_range_to_api_format(duration: int | None) -> TimeRangeDetails:
+    """
+    >>> _time_range_to_api_format(None)
+    {'option': 'default'}
+    >>> _time_range_to_api_format(14400)
+    {'option': 'individual', 'duration': 14400}
+    """
+    if duration is None:
+        return {"option": "default"}
+    return {"option": "individual", "duration": duration}
+
+
+def _refresh_time_to_api_format(interval: int | None) -> RefreshTimeDetails:
+    """
+    >>> _refresh_time_to_api_format(None)
+    {'option': 'default'}
+    >>> _refresh_time_to_api_format(60)
+    {'option': 'individual', 'interval': 60}
+    """
+    if interval is None:
+        return {"option": "default"}
+    return {"option": "individual", "interval": interval}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -766,6 +871,34 @@ def _build_idle_option(value: Mapping[str, Any] | None) -> UserIdleOptionModel |
     )
 
 
+def _build_time_picker(
+    value: Mapping[str, Any] | None,
+) -> ConcreteTimePickerModel | ApiOmitted:
+    if not value:
+        return ApiOmitted()
+    time_range = value.get("default_time_range")
+    refresh_time = value.get("default_refresh_time")
+    return ConcreteTimePickerModel(
+        start_of_week=value.get("start_of_week", ApiOmitted()),
+        default_time_range=(
+            ApiOmitted()
+            if time_range is None
+            else GraphDefaultTimeRangeOutputModel(
+                option=time_range["option"],
+                duration=time_range.get("duration", ApiOmitted()),
+            )
+        ),
+        default_refresh_time=(
+            ApiOmitted()
+            if refresh_time is None
+            else GraphDefaultRefreshTimeOutputModel(
+                option=refresh_time["option"],
+                interval=refresh_time.get("interval", ApiOmitted()),
+            )
+        ),
+    )
+
+
 def _build_disabled_notifications(
     value: Mapping[str, Any] | None,
 ) -> ConcreteDisabledNotificationsModel | ApiOmitted:
@@ -807,6 +940,7 @@ def _build_interface_options(
         show_mode=value.get("show_mode", ApiOmitted()),
         contextual_help_icon=value.get("contextual_help_icon", ApiOmitted()),
         navbar_changes_action=value.get("navbar_changes_action", ApiOmitted()),
+        time_picker=_build_time_picker(value.get("time_picker")),
     )
 
 

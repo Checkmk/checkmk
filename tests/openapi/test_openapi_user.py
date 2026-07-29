@@ -13,7 +13,7 @@ import random
 import string
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, cast
+from typing import Any, cast, get_args
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,9 +39,17 @@ from cmk.gui.openapi.api_endpoints.user_config._utils import (
 from cmk.gui.openapi.api_endpoints.user_config._utils import (
     load_user as _load_user,
 )
+from cmk.gui.openapi.api_endpoints.user_config.models.request_models import (
+    IndividualRefreshTimeModel,
+)
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import CustomUserAttrSpec, Users, UserSpec
-from cmk.gui.userdb import ConnectorType, get_user_attributes, UserRole
+from cmk.gui.userdb import (
+    ConnectorType,
+    get_user_attributes,
+    GRAPH_REFRESH_INTERVALS_SECONDS,
+    UserRole,
+)
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.userroles import clone_role, RoleID
@@ -1337,3 +1345,136 @@ def test_user_navbar_changes_action_param(
 
     if expected_status_code == 200:
         assert resp.json["extensions"]["interface_options"]["navbar_changes_action"] == field_value
+
+
+def test_openapi_time_picker_preferences(clients: ClientRegistry) -> None:
+    username = "time_picker_user"
+    interface_options = {
+        "time_picker": {
+            "start_of_week": "monday",
+            "default_time_range": {"option": "individual", "duration": 14400},
+            "default_refresh_time": {"option": "individual", "interval": 60},
+        }
+    }
+    resp = clients.User.create(
+        username=username,
+        fullname="Time Picker User",
+        interface_options=interface_options,
+    )
+    extensions = resp.json["extensions"]["interface_options"]["time_picker"]
+    assert extensions["start_of_week"] == "monday"
+    assert extensions["default_time_range"] == {"option": "individual", "duration": 14400}
+    assert extensions["default_refresh_time"] == {"option": "individual", "interval": 60}
+
+    internal_attributes = _load_internal_attributes(UserId(username))
+    assert internal_attributes["start_of_week"] == "monday"
+    assert internal_attributes["graph_default_time_range"] == 14400
+    assert internal_attributes["graph_default_refresh_time"] == 60
+
+    assert clients.User.get(username=username).json["extensions"] == resp.json["extensions"]
+
+
+def test_openapi_time_picker_preferences_use_default_round_trip(
+    clients: ClientRegistry,
+) -> None:
+    username = "time_picker_default_user"
+    clients.User.create(
+        username=username,
+        fullname="Time Picker User",
+        interface_options={
+            "time_picker": {
+                "start_of_week": "monday",
+                "default_time_range": {"option": "individual", "duration": 14400},
+                "default_refresh_time": {"option": "individual", "interval": 60},
+            }
+        },
+    )
+    extensions = clients.User.edit(
+        username=username,
+        interface_options={
+            "time_picker": {
+                "start_of_week": "browser_locale",
+                "default_time_range": {"option": "default"},
+                "default_refresh_time": {"option": "default"},
+            }
+        },
+    ).json["extensions"]["interface_options"]["time_picker"]
+    # Stored as an explicit None, and reported as the sentinel forms rather than omitted.
+    assert extensions["start_of_week"] == "browser_locale"
+    assert extensions["default_time_range"] == {"option": "default"}
+    assert extensions["default_refresh_time"] == {"option": "default"}
+
+    internal_attributes = _load_internal_attributes(UserId(username))
+    assert internal_attributes["start_of_week"] is None
+    assert internal_attributes["graph_default_time_range"] is None
+    assert internal_attributes["graph_default_refresh_time"] is None
+
+
+def test_openapi_time_picker_stale_time_range_does_not_block_edits(
+    clients: ClientRegistry,
+) -> None:
+    # Saving a user validates every registered attribute against the whole stored spec, so a time
+    # range an admin removed from the global setting would otherwise make that user uneditable.
+    username = "time_picker_stale_user"
+    stale_duration = 1234
+    assert all(
+        timerange["duration"] != stale_duration for timerange in active_config.graph_timeranges
+    )
+    clients.User.create(
+        username=username,
+        fullname="Time Picker User",
+        interface_options={
+            "time_picker": {
+                "default_time_range": {"option": "individual", "duration": stale_duration},
+            }
+        },
+    )
+
+    # An edit that does not touch the preference still goes through.
+    clients.User.edit(username=username, fullname="Time Picker User Updated")
+
+
+def test_openapi_edit_user_should_not_modify_time_picker_preferences(
+    clients: ClientRegistry,
+) -> None:
+    username = "time_picker_edit_user"
+    clients.User.create(
+        username=username,
+        fullname="Time Picker User",
+        interface_options={
+            "time_picker": {
+                "start_of_week": "saturday",
+                "default_time_range": {"option": "individual", "duration": 14400},
+                "default_refresh_time": {"option": "individual", "interval": 90},
+            }
+        },
+    )
+    extensions = clients.User.edit(
+        username=username,
+        fullname="Time Picker User Updated",
+    ).json["extensions"]["interface_options"]["time_picker"]
+    assert extensions["start_of_week"] == "saturday"
+    assert extensions["default_time_range"] == {"option": "individual", "duration": 14400}
+    assert extensions["default_refresh_time"] == {"option": "individual", "interval": 90}
+
+
+def test_openapi_time_picker_preferences_default_for_fresh_user(
+    clients: ClientRegistry,
+) -> None:
+    # User creation fills in every registered attribute (explicit None, like
+    # contextual_help_icon), so even a fresh user reports the "use default" sentinels.
+    extensions = clients.User.create(
+        username="time_picker_fresh_user",
+        fullname="Time Picker User",
+    ).json["extensions"]["interface_options"]["time_picker"]
+    assert extensions["start_of_week"] == "browser_locale"
+    assert extensions["default_time_range"] == {"option": "default"}
+    assert extensions["default_refresh_time"] == {"option": "default"}
+
+
+def test_openapi_time_picker_refresh_intervals_match_the_gui_choices() -> None:
+    # The REST Literal spells the intervals out for the API schema; this keeps it honest against
+    # the single source of truth the GUI valuespec uses.
+    assert set(get_args(IndividualRefreshTimeModel.__annotations__["interval"])) == set(
+        GRAPH_REFRESH_INTERVALS_SECONDS
+    )

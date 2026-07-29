@@ -31,6 +31,9 @@ from .._utils import (
     ContactOptions,
     IdleDetails,
     NotificationDetails,
+    RefreshTimeDetails,
+    TimePickerDetails,
+    TimeRangeDetails,
     username_should_not_exist,
 )
 
@@ -216,6 +219,69 @@ class IdleOptionModel:
 
 
 @api_model
+class DefaultTimeRangeModel:
+    option: Literal["default"] = api_field(
+        description="Use the default, which is the first configured graph time range.",
+    )
+
+    def to_internal_dict(self) -> TimeRangeDetails:
+        return {"option": self.option}
+
+
+@api_model
+class IndividualTimeRangeModel:
+    option: Literal["individual"] = api_field(
+        description="Use one of the configured graph time ranges.",
+    )
+    duration: int = api_field(
+        description="The duration in seconds of one of the configured graph time ranges ('Custom "
+        "graph time ranges' global setting). A duration that is no longer configured falls back "
+        "to the first configured time range when the picker is rendered.",
+        example=14400,
+    )
+
+    def to_internal_dict(self) -> TimeRangeDetails:
+        return {"option": self.option, "duration": self.duration}
+
+
+type _TimeRangeOption = Annotated[
+    DefaultTimeRangeModel | IndividualTimeRangeModel, Discriminator("option")
+]
+
+
+@api_model
+class DefaultRefreshTimeModel:
+    option: Literal["default"] = api_field(
+        description="Use the default refresh interval.",
+    )
+
+    def to_internal_dict(self) -> RefreshTimeDetails:
+        return {"option": self.option}
+
+
+@api_model
+class IndividualRefreshTimeModel:
+    option: Literal["individual"] = api_field(
+        description="Preselect a specific refresh interval. This only preselects it; refreshing "
+        "does not start automatically.",
+    )
+    # Kept in sync with GRAPH_REFRESH_INTERVALS_SECONDS by a test; a Literal spells the choices
+    # out in the API schema, which a validator against the constant would not.
+    interval: Literal[30, 60, 90] = api_field(
+        description="The refresh interval in seconds.",
+        example=60,
+    )
+
+    def to_internal_dict(self) -> RefreshTimeDetails:
+        return {"option": self.option, "interval": self.interval}
+
+
+type _RefreshTimeOption = Annotated[
+    DefaultRefreshTimeModel | IndividualRefreshTimeModel, Discriminator("option")
+]
+
+
+@api_model
 class NotificationTimeRangeModel:
     start_time: dt.datetime = api_field(
         description="The start datetime of the time period. The format has to conform to the ISO "
@@ -266,6 +332,7 @@ type _MenuIcons = Literal["topic", "entry"]
 type _ShowMode = Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
 type _ContextualHelpIcon = Literal["show_icon", "hide_icon"]
 type _NavbarChangesAction = Literal["slideout_ask", "slideout", "full_page"]
+type _StartOfWeek = Literal["browser_locale", "saturday", "sunday", "monday"]
 
 _INTERFACE_KEYS = (
     "interface_theme",
@@ -277,6 +344,63 @@ _INTERFACE_KEYS = (
     "contextual_help_icon",
     "navbar_changes_action",
 )
+
+
+@api_model
+class CreateTimePickerModel:
+    start_of_week: _StartOfWeek = api_field(
+        description="The first day of the week in the calendar. 'browser_locale' derives it from "
+        "the browser's language settings.",
+        example="monday",
+        default="browser_locale",
+    )
+    default_time_range: _TimeRangeOption = api_field(
+        description="The time range the picker preselects.",
+        example={"option": "individual", "duration": 14400},
+        default_factory=lambda: DefaultTimeRangeModel(option="default"),
+    )
+    default_refresh_time: _RefreshTimeOption = api_field(
+        description="The refresh interval preselected in the picker's refresh control.",
+        example={"option": "individual", "interval": 60},
+        default_factory=lambda: DefaultRefreshTimeModel(option="default"),
+    )
+
+    def to_internal_dict(self) -> TimePickerDetails:
+        return {
+            "start_of_week": self.start_of_week,
+            "default_time_range": self.default_time_range.to_internal_dict(),
+            "default_refresh_time": self.default_refresh_time.to_internal_dict(),
+        }
+
+
+@api_model
+class UpdateTimePickerModel:
+    start_of_week: _StartOfWeek | None = api_field(
+        description="The first day of the week in the calendar. 'browser_locale' derives it from "
+        "the browser's language settings.",
+        example="monday",
+        default=None,
+    )
+    default_time_range: _TimeRangeOption | None = api_field(
+        description="The time range the picker preselects.",
+        example={"option": "individual", "duration": 14400},
+        default=None,
+    )
+    default_refresh_time: _RefreshTimeOption | None = api_field(
+        description="The refresh interval preselected in the picker's refresh control.",
+        example={"option": "individual", "interval": 60},
+        default=None,
+    )
+
+    def to_internal_dict(self) -> TimePickerDetails:
+        details: TimePickerDetails = {}
+        if self.start_of_week is not None:
+            details["start_of_week"] = self.start_of_week
+        if self.default_time_range is not None:
+            details["default_time_range"] = self.default_time_range.to_internal_dict()
+        if self.default_refresh_time is not None:
+            details["default_refresh_time"] = self.default_refresh_time.to_internal_dict()
+        return details
 
 
 def _reconcile_menu_icons(data: Any) -> Any:
@@ -332,6 +456,10 @@ class CreateUserInterfaceModel:
         example="slideout",
         default="slideout_ask",
     )
+    time_picker: CreateTimePickerModel = api_field(
+        description="Settings of the global time picker on graph pages.",
+        default_factory=CreateTimePickerModel,
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -339,7 +467,10 @@ class CreateUserInterfaceModel:
         return _reconcile_menu_icons(data)
 
     def to_internal_dict(self) -> dict[str, Any]:
-        return {key: getattr(self, key) for key in _INTERFACE_KEYS}
+        return {
+            **{key: getattr(self, key) for key in _INTERFACE_KEYS},
+            "time_picker": self.time_picker.to_internal_dict(),
+        }
 
 
 @api_model
@@ -383,6 +514,10 @@ class UpdateUserInterfaceModel:
         example="slideout",
         default=None,
     )
+    time_picker: UpdateTimePickerModel | None = api_field(
+        description="Settings of the global time picker on graph pages.",
+        default=None,
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -395,6 +530,8 @@ class UpdateUserInterfaceModel:
             value = getattr(self, key)
             if value is not None:
                 details[key] = value
+        if self.time_picker is not None:
+            details["time_picker"] = self.time_picker.to_internal_dict()
         return details
 
 

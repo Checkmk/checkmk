@@ -68,7 +68,6 @@ def _raw_crash_row(crash_id: str, time: object) -> dict[str, str]:
     }
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4512: TypeError on unreadable crash time")
 def test_parse_rows_skips_crash_report_with_unreadable_time() -> None:
     # A crash report whose time field is not a number must not take the other
     # reports (and with them the whole crash report view) down with it.

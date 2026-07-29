@@ -118,11 +118,16 @@ class CrashReportsRowTable(RowTableLivestatus):
             except json.JSONDecodeError:
                 continue  # skip broken crash infos like b'' or b'\n'
 
+            try:
+                occurrences = read_occurrences(crash_info_raw)
+            except (TypeError, ValueError):
+                continue  # skip crash infos with an unreadable time
+
             row = {
                 "site": raw_row["site"],
                 "crash_id": raw_row["crash_id"],
                 "crash_type": raw_row["crash_type"],
-                "crash_time": read_occurrences(crash_info_raw)["last_seen"],
+                "crash_time": occurrences["last_seen"],
                 "crash_version": crash_info_raw["version"],
                 "crash_exc_type": crash_info_raw["exc_type"],
                 "crash_exc_value": crash_info_raw["exc_value"],

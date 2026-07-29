@@ -141,7 +141,7 @@ void main() {
 
     stages += selected_fips_distros.collectEntries { fips_distro ->
         [("${fips_edition} FIPS ${fips_distro}") : {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
 
             smart_stage(
                 name: "Trigger FIPS ${fips_edition} package build for ${fips_distro}",

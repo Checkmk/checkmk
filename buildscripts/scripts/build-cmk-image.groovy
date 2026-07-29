@@ -51,7 +51,7 @@ void main() {
     def package_dir = "${checkout_dir}/download";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
     /// In order to ensure a fixed order for stages executed in parallel,
-    /// we wait an increasing amount of time (N * 100ms).
+    /// we wait an increasing amount of time (N * 1s).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
     /// like changing order or amount of stages, which will happen with stages started `via parallel()`
     def timeOffsetForOrder = 0;
@@ -84,7 +84,7 @@ void main() {
 
     def stages = [
         "Build source package": {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
             def build_instance = null;
 
             smart_stage(
@@ -128,7 +128,7 @@ void main() {
             }
         },
         "Build Package": {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
             // groovylint-disable UnusedVariable
             def build_instance = null;
 

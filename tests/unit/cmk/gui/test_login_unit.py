@@ -188,8 +188,13 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
 
 def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     username, _ = with_user
+    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
     token = oauth.token_store().issue_token(
-        username, expires_at=datetime.now(UTC) + timedelta(minutes=5), resource=None, scope=None
+        username,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        resource=None,
+        scope=None,
+        client_id=client_id,
     )
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {token}"}
@@ -213,8 +218,13 @@ def test_login_with_expired_oauth_bearer_token(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
+    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
     token = oauth.token_store().issue_token(
-        username, expires_at=datetime.now(UTC) + timedelta(minutes=5), resource=None, scope=None
+        username,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        resource=None,
+        scope=None,
+        client_id=client_id,
     )
     with (
         time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),

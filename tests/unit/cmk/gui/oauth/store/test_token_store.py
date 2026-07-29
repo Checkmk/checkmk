@@ -10,16 +10,27 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.backend import create_schema
-from cmk.gui.oauth.store.token_store import TokenRecord, TokenStore
+from cmk.gui.oauth.store.token_store import TokenRecord, TokenStore, UnknownClientError
 
 _USER = UserId("cmkadmin")
+_CLIENT = "test-client"
 
 
 @pytest.fixture
 def store() -> TokenStore:
     connection = sqlite3.connect(":memory:")
     connection.row_factory = sqlite3.Row
+    # Production connections enforce foreign keys (see open_connection); the
+    # tokens.client_id constraint only exists with the pragma set.
+    connection.execute("PRAGMA foreign_keys=ON")
     create_schema(connection)
+    connection.execute(
+        """
+        INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
+        VALUES (?, '["https://client.example/callback"]', NULL, 0)
+        """,
+        (_CLIENT,),
+    )
     return TokenStore(connection)
 
 
@@ -36,7 +47,12 @@ def _past(minutes: int) -> datetime:
 
 def test_record_is_valid_before_it_expires() -> None:
     record = TokenRecord(
-        user_id=_USER, issued_at=_past(5), expires_at=_future(5), resource=None, scope=None
+        user_id=_USER,
+        issued_at=_past(5),
+        expires_at=_future(5),
+        resource=None,
+        scope=None,
+        client_id=_CLIENT,
     )
 
     assert record.is_valid(at=_future(1)) is True
@@ -44,7 +60,12 @@ def test_record_is_valid_before_it_expires() -> None:
 
 def test_record_is_not_valid_after_it_expires() -> None:
     record = TokenRecord(
-        user_id=_USER, issued_at=_past(10), expires_at=_past(5), resource=None, scope=None
+        user_id=_USER,
+        issued_at=_past(10),
+        expires_at=_past(5),
+        resource=None,
+        scope=None,
+        client_id=_CLIENT,
     )
 
     assert record.is_valid(at=datetime.now(UTC)) is False
@@ -52,7 +73,12 @@ def test_record_is_not_valid_after_it_expires() -> None:
 
 def test_record_is_valid_defaults_to_the_current_time() -> None:
     record = TokenRecord(
-        user_id=_USER, issued_at=_past(5), expires_at=_future(60), resource=None, scope=None
+        user_id=_USER,
+        issued_at=_past(5),
+        expires_at=_future(60),
+        resource=None,
+        scope=None,
+        client_id=_CLIENT,
     )
 
     assert record.is_valid() is True
@@ -60,7 +86,12 @@ def test_record_is_valid_defaults_to_the_current_time() -> None:
 
 def test_record_is_valid_rejects_naive_datetimes() -> None:
     record = TokenRecord(
-        user_id=_USER, issued_at=_past(5), expires_at=_future(5), resource=None, scope=None
+        user_id=_USER,
+        issued_at=_past(5),
+        expires_at=_future(5),
+        resource=None,
+        scope=None,
+        client_id=_CLIENT,
     )
 
     with pytest.raises(ValueError, match="timezone-aware"):
@@ -71,33 +102,57 @@ def test_record_is_valid_rejects_naive_datetimes() -> None:
 
 
 def test_issue_token_stores_only_a_hash_never_the_plaintext(store: TokenStore) -> None:
-    token = store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None)
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
 
     stored_hashes = [row[0] for row in store._connection.execute("SELECT token_hash FROM tokens")]
     assert token not in stored_hashes
 
 
 def test_issue_token_produces_unique_tokens(store: TokenStore) -> None:
-    first = store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None)
-    second = store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None)
+    first = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
+    second = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
 
     assert first != second
 
 
 def test_issue_token_rejects_an_empty_user_id(store: TokenStore) -> None:
     with pytest.raises(ValueError, match="user_id"):
-        store.issue_token(UserId(""), expires_at=_future(60), resource=None, scope=None)
+        store.issue_token(
+            UserId(""), expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+        )
 
 
 def test_issue_token_rejects_an_expiry_in_the_past(store: TokenStore) -> None:
     with pytest.raises(ValueError, match="expires_at"):
-        store.issue_token(_USER, expires_at=_past(5), resource=None, scope=None)
+        store.issue_token(_USER, expires_at=_past(5), resource=None, scope=None, client_id=_CLIENT)
 
 
 def test_issue_token_rejects_a_naive_expiry(store: TokenStore) -> None:
     with pytest.raises(ValueError, match="timezone-aware"):
         store.issue_token(
-            _USER, expires_at=datetime.now() + timedelta(minutes=5), resource=None, scope=None
+            _USER,
+            expires_at=datetime.now() + timedelta(minutes=5),
+            resource=None,
+            scope=None,
+            client_id=_CLIENT,
+        )
+
+
+def test_issue_token_rejects_an_empty_client_id(store: TokenStore) -> None:
+    with pytest.raises(ValueError, match="client_id"):
+        store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None, client_id="")
+
+
+def test_issue_token_rejects_an_unregistered_client(store: TokenStore) -> None:
+    with pytest.raises(UnknownClientError):
+        store.issue_token(
+            _USER, expires_at=_future(60), resource=None, scope=None, client_id="never-registered"
         )
 
 
@@ -107,7 +162,9 @@ def test_issue_token_rejects_a_naive_expiry(store: TokenStore) -> None:
 def test_get_by_token_returns_the_matching_record(store: TokenStore) -> None:
     expires_at = _future(60)
 
-    token = store.issue_token(_USER, expires_at=expires_at, resource=None, scope=None)
+    token = store.issue_token(
+        _USER, expires_at=expires_at, resource=None, scope=None, client_id=_CLIENT
+    )
 
     record = store.get_by_token(token)
     assert record is not None
@@ -121,7 +178,11 @@ def test_get_by_token_returns_none_for_an_unknown_token(store: TokenStore) -> No
 
 def test_get_by_token_returns_the_bound_resource(store: TokenStore) -> None:
     token = store.issue_token(
-        _USER, expires_at=_future(60), resource="https://host/mysite/check_mk/mcp", scope=None
+        _USER,
+        expires_at=_future(60),
+        resource="https://host/mysite/check_mk/mcp",
+        scope=None,
+        client_id=_CLIENT,
     )
 
     record = store.get_by_token(token)
@@ -130,7 +191,9 @@ def test_get_by_token_returns_the_bound_resource(store: TokenStore) -> None:
 
 
 def test_get_by_token_returns_none_for_an_unbound_resource(store: TokenStore) -> None:
-    token = store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None)
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
 
     record = store.get_by_token(token)
     assert record is not None
@@ -138,7 +201,9 @@ def test_get_by_token_returns_none_for_an_unbound_resource(store: TokenStore) ->
 
 
 def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
-    token = store.issue_token(_USER, expires_at=_future(60), resource=None, scope="mcp")
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope="mcp", client_id=_CLIENT
+    )
 
     record = store.get_by_token(token)
     assert record is not None
@@ -146,11 +211,23 @@ def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
 
 
 def test_get_by_token_returns_none_for_an_unbound_scope(store: TokenStore) -> None:
-    token = store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None)
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
 
     record = store.get_by_token(token)
     assert record is not None
     assert record.scope is None
+
+
+def test_get_by_token_returns_the_issuing_client(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
+
+    record = store.get_by_token(token)
+    assert record is not None
+    assert record.client_id == _CLIENT
 
 
 # TokenStore.list_by_user
@@ -162,8 +239,10 @@ def test_list_by_user_returns_empty_for_a_user_without_tokens(store: TokenStore)
 
 def test_list_by_user_only_returns_that_users_tokens(store: TokenStore) -> None:
     other_user = UserId("other")
-    store.issue_token(other_user, expires_at=_future(60), resource=None, scope=None)
-    store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None)
+    store.issue_token(
+        other_user, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT
+    )
+    store.issue_token(_USER, expires_at=_future(60), resource=None, scope=None, client_id=_CLIENT)
 
     records = store.list_by_user(_USER)
 

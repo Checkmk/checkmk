@@ -14,6 +14,15 @@ from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.backend import Backend
 
 
+class UnknownClientError(LookupError):
+    """The client_id does not (or no longer) reference a registered client.
+
+    Raised by issue_token when the foreign key on tokens.client_id rejects
+    the insert -- e.g. the client was deleted between the authorization
+    request and the code redemption.
+    """
+
+
 @dataclass(frozen=True, slots=True)
 class TokenRecord:
     user_id: UserId
@@ -21,6 +30,7 @@ class TokenRecord:
     expires_at: datetime
     resource: str | None
     scope: str | None
+    client_id: str
 
     def is_valid(self, *, at: datetime | None = None) -> bool:
         current_time = at or _utc_now()
@@ -56,9 +66,12 @@ class TokenStore(Backend):
         expires_at: datetime,
         resource: str | None,
         scope: str | None,
+        client_id: str,
     ) -> str:
         if not user_id:
             raise ValueError("user_id must not be empty")
+        if not client_id:
+            raise ValueError("client_id must not be empty")
 
         issued_at_timestamp = int(_utc_now().timestamp())
         expires_at_timestamp = _to_timestamp(expires_at)
@@ -67,20 +80,28 @@ class TokenStore(Backend):
             raise ValueError("expires_at must be later than the issue time")
 
         token = _mint_token()
-        self._connection.execute(
-            """
-            INSERT INTO tokens (user_id, token_hash, issued_at, expires_at, resource, scope)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                user_id,
-                _token_hash(token),
-                issued_at_timestamp,
-                expires_at_timestamp,
-                resource,
-                scope,
-            ),
-        )
+        try:
+            self._connection.execute(
+                """
+                INSERT INTO tokens
+                    (user_id, token_hash, issued_at, expires_at, resource, scope, client_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    user_id,
+                    _token_hash(token),
+                    issued_at_timestamp,
+                    expires_at_timestamp,
+                    resource,
+                    scope,
+                    client_id,
+                ),
+            )
+        except sqlite3.IntegrityError as e:
+            # The client_id foreign key is the only constraint left to trip:
+            # the ValueError guards above cover every other CHECK on the
+            # table, and token_hash is a fresh sha256 hexdigest.
+            raise UnknownClientError(client_id) from e
         return token
 
     def get_by_token(self, token: str) -> TokenRecord | None:
@@ -91,7 +112,7 @@ class TokenStore(Backend):
 
         row = self._connection.execute(
             """
-            SELECT user_id, issued_at, expires_at, resource, scope
+            SELECT user_id, issued_at, expires_at, resource, scope, client_id
             FROM tokens
             WHERE token_hash = ?
             """,
@@ -106,7 +127,7 @@ class TokenStore(Backend):
     def list_by_user(self, user_id: UserId) -> list[TokenRecord]:
         rows = self._connection.execute(
             """
-            SELECT user_id, issued_at, expires_at, resource, scope
+            SELECT user_id, issued_at, expires_at, resource, scope, client_id
             FROM tokens
             WHERE user_id = ?
             """,
@@ -122,6 +143,7 @@ def _row_to_record(row: sqlite3.Row) -> TokenRecord:
         expires_at=datetime.fromtimestamp(row["expires_at"], tz=UTC),
         resource=row["resource"],
         scope=row["scope"],
+        client_id=row["client_id"],
     )
 
 

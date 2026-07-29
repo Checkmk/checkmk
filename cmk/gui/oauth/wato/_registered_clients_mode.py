@@ -60,6 +60,10 @@ class ModeRegisteredOAuthClients(WatoMode):
                             form_name="bulk_delete_form",
                             button_name="_bulk_delete_clients",
                             title=_("Delete selected clients"),
+                            message=_(
+                                "All access tokens issued to the selected clients"
+                                " are revoked immediately."
+                            ),
                         ),
                         is_shortcut=True,
                         is_suggested=True,
@@ -128,6 +132,9 @@ class ModeRegisteredOAuthClients(WatoMode):
                         ),
                         title=_("Delete registered client"),
                         suffix=client.client_name or client.client_id,
+                        message=_(
+                            "All access tokens issued to this client are revoked immediately."
+                        ),
                     )
                     html.icon_button(
                         delete_url, _("Delete this client"), StaticIcon(IconNames.delete)

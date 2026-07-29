@@ -4,17 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sqlite3
+from datetime import datetime, timedelta, UTC
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.backend import create_schema
 from cmk.gui.oauth.store.client_store import ClientRegistrationLimitExceededError, ClientStore
+from cmk.gui.oauth.store.token_store import TokenStore
 
 
 @pytest.fixture
 def store() -> ClientStore:
     connection = sqlite3.connect(":memory:", isolation_level=None)
     connection.row_factory = sqlite3.Row
+    # Production connections enforce foreign keys (see open_connection); the
+    # tokens.client_id ON DELETE CASCADE only fires with the pragma set.
+    connection.execute("PRAGMA foreign_keys=ON")
     create_schema(connection)
     return ClientStore(connection)
 
@@ -133,3 +139,19 @@ def test_delete_dedupes_duplicate_ids_in_input(store: ClientStore) -> None:
 
 def test_delete_on_empty_store_returns_zero(store: ClientStore) -> None:
     assert store.delete(["does-not-exist"]) == 0
+
+
+def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
+    registered = store.register(["https://client.example/callback"], "Example")
+    token_store = TokenStore(store._connection)
+    token = token_store.issue_token(
+        UserId("cmkadmin"),
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        resource=None,
+        scope=None,
+        client_id=registered.client_id,
+    )
+
+    store.delete([registered.client_id])
+
+    assert token_store.get_by_token(token) is None

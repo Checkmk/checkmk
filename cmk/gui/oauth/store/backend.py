@@ -11,11 +11,19 @@ from pathlib import Path
 
 import cmk.utils.paths
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Changing a table that already exists needs SCHEMA_VERSION bumped: create_schema
 # replays these statements on existing databases, where the CREATE is a no-op.
+# clients comes first because tokens references it.
 SCHEMA_SQL = """
+CREATE TABLE IF NOT EXISTS clients (
+    client_id TEXT PRIMARY KEY NOT NULL CHECK (client_id <> ''),
+    redirect_uris TEXT NOT NULL,
+    client_name TEXT,
+    registered_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS tokens (
     token_hash TEXT PRIMARY KEY NOT NULL CHECK (length(token_hash) = 64),
     user_id TEXT NOT NULL CHECK (user_id <> ''),
@@ -23,6 +31,8 @@ CREATE TABLE IF NOT EXISTS tokens (
     expires_at INTEGER NOT NULL,
     resource TEXT,
     scope TEXT,
+    client_id TEXT NOT NULL CHECK (client_id <> '')
+        REFERENCES clients(client_id) ON DELETE CASCADE,
     CHECK (expires_at > issued_at)
 );
 
@@ -32,12 +42,10 @@ CREATE INDEX IF NOT EXISTS idx_tokens_user_id_issued_at
 CREATE INDEX IF NOT EXISTS idx_tokens_expires_at
     ON tokens (expires_at);
 
-CREATE TABLE IF NOT EXISTS clients (
-    client_id TEXT PRIMARY KEY NOT NULL CHECK (client_id <> ''),
-    redirect_uris TEXT NOT NULL,
-    client_name TEXT,
-    registered_at INTEGER NOT NULL
-);
+-- Deleting a client cascades into tokens. Without this index that is a
+-- full-table scan per deleted client.
+CREATE INDEX IF NOT EXISTS idx_tokens_client_id
+    ON tokens (client_id);
 """
 SCHEMA_STATEMENTS = [statement.strip() for statement in SCHEMA_SQL.split(";") if statement.strip()]
 

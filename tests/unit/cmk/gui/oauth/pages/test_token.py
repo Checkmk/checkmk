@@ -12,6 +12,7 @@ from flask import Flask
 from pytest_mock import MockerFixture
 
 from cmk.ccc.exceptions import MKTimeout
+from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._token import OAuthTokenPage
@@ -39,14 +40,29 @@ def _stored_record(
     # The RFC 7636 appendix B challenge, matching _VALID_FORM's code_verifier.
     code_challenge: str = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
     resource: str | None = "https://host/mysite/check_mk/mcp",
+    client_id: str = "test-client",
 ) -> AuthCodeRecord:
     return AuthCodeRecord(
         user_id="alice",
-        client_id="test-client",
+        client_id=client_id,
         redirect_uri="https://client.example/callback",
         scope="mcp",
         resource=resource,
         code_challenge=code_challenge,
+    )
+
+
+@pytest.fixture(autouse=True)
+def seeded_test_client(flask_app: Flask) -> None:
+    # Issued tokens reference their client (tokens.client_id), so _VALID_FORM's
+    # client has to exist in the registry for redemption to succeed. Idempotent
+    # because the store's connection is a process-wide singleton that outlives
+    # the test (see cleanup_registered_clients in conftest).
+    oauth.client_store()._connection.execute(
+        """
+        INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
+        VALUES ('test-client', '["https://client.example/callback"]', NULL, 0)
+        """
     )
 
 
@@ -65,6 +81,23 @@ class TestOAuthTokenPage:
             access_token = response.json["access_token"]
             assert isinstance(access_token, str)
             assert access_token
+
+    @pytest.mark.usefixtures("clean_redis")
+    def test_rejects_redemption_when_the_client_was_deleted(self, flask_app: Flask) -> None:
+        # The client can be deleted (Setup > Registered OAuth clients) between
+        # receiving the code and redeeming it; a code issued to a client that
+        # no longer exists must not become a token.
+        registered = oauth.client_store().register(["https://client.example/callback"], None)
+        AuthCodeStore().store(_VALID_FORM["code"], _stored_record(client_id=registered.client_id))
+        oauth.client_store().delete([registered.client_id])
+        with flask_app.test_request_context(
+            method="POST", data={**_VALID_FORM, "client_id": registered.client_id}
+        ):
+            flask_app.preprocess_request()
+            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+
+            assert response.status_code == 400
+            assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
     def test_returns_a_different_access_token_for_each_code(self, flask_app: Flask) -> None:

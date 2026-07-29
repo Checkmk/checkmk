@@ -18,6 +18,7 @@ from cmk.gui.log import logger
 from cmk.gui.oauth import token_store
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
+from cmk.gui.oauth.store.token_store import UnknownClientError
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
 from cmk.utils.security_event import log_security_event
@@ -76,7 +77,8 @@ class OAuthTokenPage(Page):
     parameters, code_verifier syntax), authorization codes are redeemed
     single-use against the store the authorize endpoint fills, and every
     binding of the redeemed record is enforced: the PKCE S256 challenge, the
-    client_id, and redirect_uri/resource if sent. A scope parameter is
+    client_id (which must still be registered), and redirect_uri/resource if
+    sent. A scope parameter is
     ignored; the eventual token's user and scope come only from the record.
     Rejections follow the RFC 6749 section 5.2 error format. The returned
     access token is a real, store-backed token issued for the record's user
@@ -187,12 +189,20 @@ class OAuthTokenPage(Page):
             _error("invalid_grant")
             return None
 
-        access_token = token_store().issue_token(
-            UserId(record.user_id),
-            expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
-            resource=record.resource,
-            scope=record.scope,
-        )
+        try:
+            access_token = token_store().issue_token(
+                UserId(record.user_id),
+                expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
+                resource=record.resource,
+                scope=record.scope,
+                client_id=record.client_id,
+            )
+        except UnknownClientError:
+            # The client was deleted after the code was issued. Its grants
+            # died with it (tokens.client_id is ON DELETE CASCADE), so the
+            # code must not become a token either.
+            _error("invalid_grant")
+            return None
 
         response.set_content_type("application/json")
         response.set_data(OAuthTokenResponse(access_token=access_token).model_dump_json())

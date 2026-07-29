@@ -34,8 +34,9 @@ function persistPin(newPinTime: number | null): void {
 }
 
 function setPin(time: number): void {
-  pinTimeState.value = time
-  persistPin(time)
+  const wholeSecond = Math.round(time)
+  pinTimeState.value = wholeSecond
+  persistPin(wholeSecond)
 }
 
 function clearPin(): void {

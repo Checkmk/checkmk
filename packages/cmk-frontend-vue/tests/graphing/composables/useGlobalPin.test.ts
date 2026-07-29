@@ -68,6 +68,15 @@ test('setting a pin updates the state and persists it', async () => {
   expect(saveGraphPin).toHaveBeenCalledWith(4242)
 })
 
+test('setting a pin snaps it to a whole second', async () => {
+  const { globalPin, saveGraphPin } = await freshGlobalPin()
+
+  globalPin.setPin(4242.56)
+
+  expect(globalPin.pinTime.value).toBe(4243)
+  expect(saveGraphPin).toHaveBeenCalledWith(4243)
+})
+
 test('clearing the pin removes it and persists the removal', async () => {
   const { globalPin, saveGraphPin } = await freshGlobalPin()
   globalPin.setPin(4242)

@@ -33,10 +33,12 @@ py_library(
     name = "cmk_inventory_main",
     srcs = ["transformation/__main__.py"],
     imports = ["../.."],
-    tags = ["no-mypy"],
     visibility = [
         "//cmk:__pkg__",
         "//cmk/editions:__pkg__",
     ],
-    deps = [":inventory"],
+    deps = [
+        ":inventory",
+        "//cmk/utils:paths",
+    ],
 )

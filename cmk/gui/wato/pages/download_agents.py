@@ -10,10 +10,11 @@
 import abc
 import fnmatch
 import os
-from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping, Sequence
-from functools import cached_property
+from collections.abc import Callable, Collection, Generator, Iterator, Mapping, Sequence
+from dataclasses import dataclass
+from functools import cached_property, lru_cache
 from pathlib import Path
-from typing import override
+from typing import Final, override
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -40,41 +41,77 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
-# Page name of the GUI handler that streams agent plugin files which live outside
+# Page names of the GUI handlers that stream agent plugin files which live outside
 # the statically served share/check_mk/agents tree (e.g. cmk/plugins/<family>/agents/).
+# Files shipped with the version are served without authentication, just like the files
+# below the statically served tree. Files of locally installed plugins are not.
 DOWNLOAD_AGENT_PLUGIN_PAGE = "download_agent_plugin"
+DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE = "download_local_agent_plugin"
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeDownloadAgentsOther)
     mode_registry.register(ModeDownloadAgentsWindows)
     mode_registry.register(ModeDownloadAgentsLinux)
-    page_registry.register(PageEndpoint(DOWNLOAD_AGENT_PLUGIN_PAGE, PageDownloadAgentPlugin()))
+
+    # The endpoints handing out the files need to filter for allowed ones themselves!
+    # Bonus: fills the cache of _plugin_family_agent_dirs at apache load.
+    available_dirs = [d.path for d in _plugin_family_agent_dirs()]
+    page_registry.register(
+        PageEndpoint(
+            f"noauth:{DOWNLOAD_AGENT_PLUGIN_PAGE}",
+            PageDownloadAgentPlugin(
+                [p for p in available_dirs if not p.is_relative_to(cmk.utils.paths.local_root)],
+                require_permission=False,
+            ),
+        )
+    )
+    page_registry.register(
+        PageEndpoint(
+            DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE,
+            PageDownloadAgentPlugin(
+                available_dirs,
+                require_permission=True,
+            ),
+        )
+    )
 
 
-def _plugin_family_agent_titles() -> Iterable[tuple[Path, str]]:
-    """Map each plugin family agents directory to a display title.
+@dataclass(frozen=True)
+class PluginFamilyAgentDir:
+    """An agent plugin directory of a single plugin family (cmk.bakery.v2).
+
+    These live under lib/python3/cmk/plugins/<family>/agents/ - i.e. outside the
+    statically served share/check_mk/agents tree - so files found here must be
+    downloaded through a GUI handler, not the Apache alias.
+    """
+
+    path: Path
+    title: str
+    is_local: bool
+
+
+@lru_cache  # This is based on python imports and thus never changes for a running process
+def _plugin_family_agent_dirs() -> Sequence[PluginFamilyAgentDir]:
+    """Discover the agent plugin directory of every plugin family.
 
     ``discover_families`` returns keys like ``cmk.plugins.oracle``; we use the
     last dotted component ("oracle") as a human readable section title ("Oracle")
     so that files of different families are not all lumped under one generic
     "Agents" header on the download page.
+
+    It also finds the families installed below ``local/`` (e.g. via MKP). Those are
+    not shipped with the version, so they are marked to be handled separately.
     """
-    return (
-        (Path(family_path, AGENT_PLUGINS_FOLDER), family.split(".")[-1].capitalize())
+    return [
+        PluginFamilyAgentDir(
+            path=Path(family_path, AGENT_PLUGINS_FOLDER),
+            title=family.split(".")[-1].capitalize(),
+            is_local=Path(family_path).is_relative_to(cmk.utils.paths.local_root),
+        )
         for family, family_paths in sorted(discover_families(raise_errors=False).items())
         for family_path in family_paths
-    )
-
-
-def _plugin_family_agent_dirs() -> Sequence[Path]:
-    """Agent plugin directories grouped by plugin family (cmk.bakery.v2).
-
-    These live under lib/python3/cmk/plugins/<family>/agents/ - i.e. outside the
-    statically served share/check_mk/agents tree - so files found here must be
-    downloaded through the GUI handler, not the Apache alias.
-    """
-    return [p for p, _t in _plugin_family_agent_titles()]
+    ]
 
 
 def download_href(path: str) -> str:
@@ -83,15 +120,22 @@ def download_href(path: str) -> str:
     Files below share/check_mk/agents are served statically by the Apache alias
     "check_mk/agents", so a relative URL resolves against the current page. Plugin
     family agent files live outside that tree (e.g. lib/python3/cmk/plugins/<family>/
-    agents/) and are streamed through the GUI handler instead.
+    agents/) and are streamed through a GUI handler instead - the one requiring
+    authentication if the file belongs to a locally installed plugin family.
     """
     agents_dir_prefix = str(cmk.utils.paths.agents_dir) + "/"
     if path.startswith(agents_dir_prefix):
         return "agents/%s" % path[len(agents_dir_prefix) :]
+
+    is_local = Path(path).is_relative_to(cmk.utils.paths.local_root)
     return makeuri_contextless(
         request,
         [("path", path)],
-        filename=f"{DOWNLOAD_AGENT_PLUGIN_PAGE}.py",
+        filename=(
+            f"{DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE}.py"
+            if is_local
+            else f"{DOWNLOAD_AGENT_PLUGIN_PAGE}.py"
+        ),
     )
 
 
@@ -276,7 +320,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             # * general information
             # * a (allow/deny) list of the files that should be exposed for download
             # * description / title for those.
-            *(str(p) for p in _plugin_family_agent_dirs()),
+            *(str(d.path) for d in _plugin_family_agent_dirs()),
         ]
 
     @override
@@ -292,7 +336,16 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
 
     @cached_property
     def _title_map(self) -> Mapping[str, str]:
-        return {str(p): t for p, t in _plugin_family_agent_titles()}
+        return {
+            str(d.path): (
+                # Downloading these requires a login, while all other offered files
+                # are served without authentication. Say so.
+                _("%(family)s (locally installed, download requires login)") % {"family": d.title}
+                if d.is_local
+                else d.title
+            )
+            for d in _plugin_family_agent_dirs()
+        }
 
     @override
     def _title_for_root(self, root: str, relpath: str) -> str:
@@ -394,23 +447,37 @@ class PageDownloadAgentPlugin(Page):
 
     Files grouped by plugin family (cmk/plugins/<family>/agents/) are not reachable
     through the "check_mk/agents" Apache alias, so ``ModeDownloadAgentsOther`` links
-    them here. The requested path is validated against the set of plugin family agent
-    directories before serving to prevent reading arbitrary files.
+    them here. The requested path is validated against the passed set of plugin family
+    agent directories before serving to prevent reading arbitrary files.
+
+    Authentication is decided before the page is called, so serving the files shipped
+    with the version without a login (as the Apache alias does) and the files of locally
+    installed plugin families with one requires two instances, registered under a
+    "noauth:" and a regular page name respectively.
     """
+
+    def __init__(
+        self,
+        allowed_dirs: Sequence[Path],
+        *,
+        require_permission: bool,
+    ) -> None:
+        self.allowed_dirs: Final = [p.resolve() for p in allowed_dirs]
+        self.require_permission: Final = require_permission
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user.need_permission("wato.download_agents")
+        if self.require_permission:
+            user.need_permission("wato.download_agents")
 
         try:
             requested = Path(ctx.request.get_str_input_mandatory("path")).resolve(strict=True)
         except (MKUserError, OSError):
             raise MKUserError("path", _("The requested file does not exist."))
 
-        allowed_dirs = [
-            family_agents_dir.resolve() for family_agents_dir in _plugin_family_agent_dirs()
-        ]
-        if not (requested.is_file() and any(requested.is_relative_to(d) for d in allowed_dirs)):
+        if not (
+            requested.is_file() and any(requested.is_relative_to(d) for d in self.allowed_dirs)
+        ):
             raise MKUserError("path", _("The requested file is not available for download."))
 
         filename = requested.name

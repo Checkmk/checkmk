@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-28 02:47+0000\n"
+"PO-Revision-Date: 2026-07-28 23:54+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
 "de/>\n"
 "Language: de\n"
@@ -13139,16 +13139,15 @@ msgstr ""
 "ist \"Check and WARN\". Diese Funktion wird derzeit nur von dem Check "
 "netapp_api_if unterstützt."
 
-#, fuzzy
 msgid ""
 "Choose the behavior when the current port is not the home port of the "
 "respective interface. The default is \"Check and display\". This feature is "
 "currently only supported by the check netapp_api_if."
 msgstr ""
-"Wählen Sie das Verhalten für unterschiedliche "
-"Schnittstellengeschwindigkeiten in Schnittstellengruppen. Die Voreinstellung "
-"ist \"Check and Display\". Diese Funktion wird derzeit nur von dem Check "
-"netapp_api_if unterstützt."
+"Wählen Sie das Verhalten aus, wenn der aktuelle Port nicht der Heimatport "
+"der jeweiligen Schnittstelle ist. Die Standardeinstellung lautet \"Prüfen "
+"und anzeigen\". Diese Funktion wird derzeit nur von der Check-Funktion "
+"\"netapp_api_if\" unterstützt."
 
 msgid "Choose the connector, the user(s) should be migrated to."
 msgstr ""
@@ -13234,7 +13233,6 @@ msgstr ""
 "Wählen Sie, welches Modem verwendet wird. Derzeit wird nur das Teltonika-"
 "TRB140 unterstützt."
 
-#, fuzzy
 msgid ""
 "Choose what to do with the files under %PROGRAMDATA%\\checkmk on Checkmk "
 "agent uninstallation. Note: Uninstallation also happens on every agent "
@@ -13243,7 +13241,7 @@ msgid ""
 "include the agent updater and Agent Controller registrations."
 msgstr ""
 "Legen Sie fest, wie bei der Deinstallation des Checkmk-Agenten mit den "
-"Dateien unter %PROGRAMDATA%\\checkmk verfahren werden soll. Hinweis: Die "
+"Dateien unter %PROGRAMDATA%\\checkmk verfahren werden soll. Hinweis: Eine "
 "Deinstallation erfolgt auch bei jedem Agenten-Update. Die Einstellung 'Alle "
 "Dateien und Unterverzeichnisse entfernen' führt dazu, dass automatische "
 "Agenten-Updates und die TLS-verschlüsselte Kommunikation des Agenten nicht "
@@ -13290,11 +13288,9 @@ msgstr "Chrony Zeitsynchronisation"
 msgid "Cipher suite ID"
 msgstr "Cipher Suite-ID"
 
-#, fuzzy
 msgid "Cisco ASA firewall connections"
 msgstr "Cisco ASA Firewall Verbindungen"
 
-#, fuzzy
 msgid "Cisco CPU memory"
 msgstr "Cisco CPU Speicher"
 
@@ -13343,23 +13339,18 @@ msgstr "Speicherauslastung von Cisco Nexus Supervisor"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
-#, fuzzy
 msgid "Cisco Prime WLAN controller access points"
 msgstr "Zugriffspunkte des Cisco Prime WLAN Controllers"
 
-#, fuzzy
 msgid "Cisco Prime WLAN controller clients"
 msgstr "Clients des Cisco Prime WLAN Controllers"
 
-#, fuzzy
 msgid "Cisco Prime WLAN controller last backup"
-msgstr "Letzte Cisco Prime WLAN Controller Sicherung"
+msgstr "Letzte Sicherung des Cisco Prime WLAN Controllers"
 
-#, fuzzy
 msgid "Cisco Prime WiFi access points"
 msgstr "Cisco Prime WiFi Zugriffspunkte"
 
-#, fuzzy
 msgid "Cisco Prime WiFi connections"
 msgstr "Cisco Prime WiFi Verbindungen"
 
@@ -13378,11 +13369,9 @@ msgstr "Cisco SMA Mail Transfer Threads"
 msgid "Cisco SMA queue"
 msgstr "Cisco SMA Warteschlange"
 
-#, fuzzy
 msgid "Cisco UCS C-Series rack server LED state"
-msgstr "Cisco UCS C-Series Rack Server LED Zustand"
+msgstr "LED-Zustand des Cisco UCS C-Series Rack Servers"
 
-#, fuzzy
 msgid "Cisco VPN sessions"
 msgstr "Cisco VPN-Sitzungen"
 
@@ -13402,28 +13391,23 @@ msgstr "Cisco Speicherauslastung (%(check)s)"
 msgid "Cisco quality of service"
 msgstr "Cisco Service Qualität (QoS)"
 
-#, fuzzy
 msgid "Cisco stack switch status"
 msgstr "Cisco Stack-Switch-Status"
 
 msgid "Citrix"
 msgstr "Citrix"
 
-#, fuzzy
 msgid "Citrix NetScaler SSL certificates"
-msgstr "Citrix Netscaler SSL Zertifikate"
+msgstr "Citrix NetScaler SSL Zertifikate"
 
-#, fuzzy
 msgid "Citrix NetScaler load balancer HA"
-msgstr "Citrix Netscaler Load Balancer HA"
+msgstr "Citrix NetScaler Load Balancer HA"
 
-#, fuzzy
 msgid "Citrix NetScaler load balancer TCP connections"
-msgstr "Citrix Netscaler Load Balancer TCP-Verbindungen"
+msgstr "Citrix NetScaler Load Balancer TCP-Verbindungen"
 
-#, fuzzy
 msgid "Citrix Netscaler DNS counter rates"
-msgstr "Citrix Netscaler DNS Zählerraten"
+msgstr "Citrix NetScaler DNS Zählerraten"
 
 msgid "Citrix VM state"
 msgstr "Citrix VM-Zustand"
@@ -13431,29 +13415,23 @@ msgstr "Citrix VM-Zustand"
 msgid "Citrix XenApp (Windows)"
 msgstr "Citrix XenApp (Windows)"
 
-#, fuzzy
 msgid "Citrix desktops registered"
 msgstr "Registrierte Citrix Desktops"
 
-#, fuzzy
 msgid "Citrix licenses (Windows)"
 msgstr "Citrix-Lizenzen (Windows)"
 
-#, fuzzy
 msgid "Citrix load"
 msgstr "Citrix-Last"
 
-#, fuzzy
 msgid "Citrix server load"
 msgstr "Citrix Serverlast"
 
-#, fuzzy
 msgid "Citrix serverload"
 msgstr "Citrix Serverlast"
 
-#, fuzzy
 msgid "Citrix terminal server sessions"
-msgstr "Citrix Terminal-Server Sessions"
+msgstr "Citrix Terminal Server-Sitzungen"
 
 msgid "City name"
 msgstr "Stadtname"
@@ -13473,9 +13451,8 @@ msgstr "Klassen"
 msgid "Classic"
 msgstr "Klassisch"
 
-#, fuzzy
 msgid "Classic load balancing (ELB)"
-msgstr "Classic Load Balancing (ELB)"
+msgstr "Klassischer Lastausgleich (ELB)"
 
 msgid "Classical"
 msgstr "Klassisch"
@@ -13583,11 +13560,9 @@ msgstr ""
 "Klicken Sie auf den Knopf \"Konfiguration hinzufügen\", um mit dem "
 "Einrichten Ihrer ersten Konfiguration zu beginnen."
 
-#, fuzzy
 msgid "Click the icon to see details."
 msgstr "Klicken Sie auf das Symbol, um Details angezeigt zu bekommen."
 
-#, fuzzy
 msgid "Click this icon to see the activation status per site."
 msgstr "Klicken Sie hier, um den Aktivierungsstatus pro Instanz zu sehen."
 
@@ -13608,7 +13583,6 @@ msgstr "Client"
 msgid "Client ID"
 msgstr "Client-ID"
 
-#, fuzzy
 msgid "Client ID / application ID"
 msgstr "Client-ID / Anwendungs-ID"
 
@@ -13814,9 +13788,8 @@ msgstr "Cloud-Region"
 msgid "Cloud services"
 msgstr "Cloud-Services"
 
-#, fuzzy
 msgid "Cloud-based environments"
-msgstr "Cloud-basierte Umgebungen"
+msgstr "Cloudbasierte Umgebungen"
 
 msgid "CloudFront"
 msgstr "CloudFront"
@@ -13896,7 +13869,6 @@ msgstr "Geclusterte Services für überlappende Cluster"
 msgid "Clusters"
 msgstr "Cluster"
 
-#, fuzzy
 msgid ""
 "Clusters can share nodes, meaning they \"overlap.\" In these scenarios, the "
 "standard rule set <i>Clustered services</i> is insufficient because it "
@@ -13919,9 +13891,8 @@ msgstr "Cluster: knotenspezifische CPU-Auslastung"
 msgid "Clusters: node-specific memory utilization"
 msgstr "Cluster: knotenspezifische Speicherauslastung"
 
-#, fuzzy
 msgid "Clusters: preferred check result of local checks"
-msgstr "Cluster: Bevorzugtes Check-Ergebnis der lokalen Checks"
+msgstr "Cluster: bevorzugtes Check-Ergebnis der lokalen Checks"
 
 msgid "Clusterwide"
 msgstr "Cluster-weit"
@@ -13968,12 +13939,11 @@ msgstr "Sammle Diagnosedaten"
 msgid "Collect information about OS and Checkmk version"
 msgstr "Sammle Informationen über die Betriebssystem- und Checkmk-Version"
 
-#, fuzzy
 msgid ""
 "Collect information about OS, Checkmk version and edition, time, core, "
 "Python version and paths, architecture"
 msgstr ""
-"Informationen über OS, Checkmk-Version und -Edition, Zeit, Core, Python-"
+"Informationen über OS, Checkmk-Version und -Edition, Zeit, Kern, Python-"
 "Version und -Pfade, Architektur sammeln"
 
 msgid "Collect information about..."
@@ -13990,9 +13960,8 @@ msgstr ""
 "Kollektion der Passwörter ist fehlgeschlagen\n"
 "%(output)s"
 
-#, fuzzy
 msgid "Collection size"
-msgstr "Größe der Collection"
+msgstr "Größe der Kollektion"
 
 msgid "Collections"
 msgstr "Collectionen"
@@ -14192,7 +14161,6 @@ msgstr "Kommentare von Host"
 msgid "Comments of service"
 msgstr "Kommentare von Service"
 
-#, fuzzy
 msgid "Commit latency"
 msgstr "Übertragungslatenz"
 
@@ -14217,7 +14185,6 @@ msgstr "Common Name (Subjekt)"
 msgid "Common password wordlist"
 msgstr "Liste der häufig verwendeten Passwörter"
 
-#, fuzzy
 msgid "Common provisioning groups: virtual pool configuration"
 msgstr "Gemeinsame Bereitstellungsgruppen: Konfiguration des virtuellen Pools"
 
@@ -14499,9 +14466,8 @@ msgstr "Konfiguration von individuellen Ereignisprotokollen"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Konfiguration von Monitoring-Agenten für Linux, Windows und Unix"
 
-#, fuzzy
 msgid "Configuration of the Business Intelligence component of Checkmk"
-msgstr "Konfiguration von Checkmk's Business Intelligence Modul"
+msgstr "Konfiguration der Business Intelligence Komponente von Checkmk"
 
 msgid "Configuration of the Checkmk hardware- and software inventory system"
 msgstr "Konfiguration des Checkmk Hardware- und Software-Inventursystems"
@@ -14533,9 +14499,9 @@ msgstr ""
 "Konfiguration, Status und Status-Historie des CMC (Checkmk Micro Core); "
 "cmcdump-Ausgabe des Status und der Konfiguration."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Configuration: %(bundle_id)s"
-msgstr "entferne Konfiguration %(bundle_id)s"
+msgstr "Konfiguration: %(bundle_id)s"
 
 msgid "Configurations"
 msgstr "Konfigurationen"
@@ -14789,7 +14755,6 @@ msgstr ""
 "Erwägen Sie die Verwendung von SNMPv3, um ein höheres Maß an Sicherheit zu "
 "erreichen."
 
-#, fuzzy
 msgid ""
 "Configure the discovery of services monitoring network interfaces and switch "
 "ports. Note that this rule is a somehow special case compared to most other "
@@ -15030,13 +14995,13 @@ msgstr ""
 "mode=edit_configvar&varname=default_user_profile&site=&folder=\">Standardrollen</"
 "a> hinzugefügt. Deaktivieren Sie diese, wenn sie ungewünscht sind."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Configuring more checkers than the number of available CPUs (%(num_cpu)d) "
 "has a detrimental effect, since they are not I/O bound."
 msgstr ""
-"Das Konfigurieren von mehr Checkern als die Anzahl der verfügbaren CPUs "
-"(%(num_cpu)d) wirkt sich nachteilig aus, da sie nicht E/A-gebunden sind."
+"Das Konfigurieren von mehr Checkern als die Anzahl der verfügbaren CPUs (%"
+"(num_cpu)d) wirkt sich nachteilig aus, da sie nicht E/A-gebunden sind."
 
 msgid "Confirm"
 msgstr "Bestätigen"
@@ -15419,7 +15384,6 @@ msgstr "Kontaktgruppen, die für diesen Ordner berechtigt sind"
 msgid "Contact information"
 msgstr "Kontaktinformation"
 
-#, fuzzy
 msgid "Contact name"
 msgstr "Kontaktname"
 
@@ -15505,9 +15469,8 @@ msgstr "Inhalt von Bericht %(report_title)s"
 msgid "Content of report %(title)s"
 msgstr "Inhalt von Bericht %(title)s"
 
-#, fuzzy
 msgid "Content type"
-msgstr "Kommentartyp"
+msgstr "Inhaltstyp"
 
 msgid "Content-based filtering"
 msgstr "Filterung nach Inhalt"
@@ -15518,11 +15481,9 @@ msgstr "Inhalte"
 msgid "Context"
 msgstr "Kontext"
 
-#, fuzzy
 msgid "Context / search filters"
 msgstr "Kontext / Suchfilter"
 
-#, fuzzy
 msgid "Context info"
 msgstr "Kontextinformationen"
 
@@ -15596,7 +15557,7 @@ msgstr "Controller-ID"
 msgid "Controller version"
 msgstr "Controller-Version"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Controls which Oracle Instant Client the plug-in uses to connect to "
 "databases. Two sources are available: the <b>agent-local client</b> — Oracle "
@@ -15619,9 +15580,9 @@ msgstr ""
 "wurden – und der <b>Host-Client</b> – eine bereits auf dem überwachten Host "
 "vorhandene Oracle-Installation. Hinweis: Checkmk <b>installiert</b> den "
 "Oracle Instant Client nicht automatisch; Sie müssen ihn manuell "
-"installieren, wenn Sie den agent-lokalen Client verwenden möchten. "
-"<b>Automatisch erkennen</b>: versucht zuerst den Host-Client, weicht dann "
-"auf den agent-lokalen Client aus. <b>Host-Client niemals verwenden</b>: "
+"installieren, wenn Sie den agent-lokalen Client verwenden möchten. <b>"
+"Automatisch erkennen</b>: versucht zuerst den Host-Client, weicht dann auf "
+"den agent-lokalen Client aus. <b>Host-Client niemals verwenden</b>: "
 "Verwendet nur den agent-lokalen Client, ignoriert jegliche Host-"
 "Installation. <b>Host-Client immer verwenden</b>: Verwendet nur den Host-"
 "Client, ignoriert den agent-lokalen Client. <b>Benutzerdefinierter Pfad</b>: "
@@ -15768,9 +15729,8 @@ msgstr "Korrigierte Schlüsselwörter"
 msgid "Corrupted"
 msgstr "Korrupt"
 
-#, fuzzy
 msgid "Corrupted files in spool"
-msgstr "Beschädigte Dateien im Spooler"
+msgstr "Beschädigte Dateien im Spool"
 
 msgid "Cosmic"
 msgstr "Kosmisch"
@@ -15784,61 +15744,48 @@ msgstr "Kosten"
 msgid "Costs and usage (CE)"
 msgstr "Kosten und Nutzung (CE)"
 
-#, fuzzy
 msgid "Couchbase cache"
 msgstr "Couchbase-Cache"
 
-#, fuzzy
 msgid "Couchbase fragmentation"
-msgstr "Couchbase Fragmentierung"
+msgstr "Couchbase-Fragmentierung"
 
-#, fuzzy
 msgid "Couchbase items"
 msgstr "Couchbase-Items"
 
-#, fuzzy
 msgid "Couchbase node: cluster status"
 msgstr "Couchbase-Knoten: Cluster-Status"
 
-#, fuzzy
 msgid "Couchbase node: size of couch views"
-msgstr "Couchbase-Knoten: Größe der Couch Ansichten"
+msgstr "Couchbase-Knoten: Größe der Couch-Ansichten"
 
-#, fuzzy
 msgid "Couchbase node: size of documents"
 msgstr "Couchbase-Knoten: Größe der Dokumente"
 
-#, fuzzy
 msgid "Couchbase node: size of spatial views"
 msgstr "Couchbase-Knoten: Größe der Spacial Views"
 
-#, fuzzy
 msgid "Couchbase nodes: items"
 msgstr "Couchbase-Knoten: Items"
 
-#, fuzzy
 msgid "Couchbase operations"
 msgstr "Couchbase-Vorgänge"
 
 msgid "Couchbase servers"
 msgstr "Couchbase Server"
 
-#, fuzzy
 msgid "Couchbase status"
 msgstr "Couchbase-Status"
 
-#, fuzzy
 msgid "Couchbase total bucket operations"
 msgstr "Couchbase Summe der Bucket-Vorgänge"
 
-#, fuzzy
 msgid "Couchbase total node operations"
 msgstr "Couchbase gesamte Knoten-Vorgänge"
 
 msgid "Couchbase vBuckets"
 msgstr "Couchbase-vBuckets"
 
-#, fuzzy
 msgid "Couchbase: cache"
 msgstr "Couchbase: Cache"
 
@@ -16015,7 +15962,6 @@ msgstr "Anzahl"
 msgid "Count (number of recent occurrences)"
 msgstr "Anzahl (Zahl von bisherigen Vorkommen)"
 
-#, fuzzy
 msgid "Count groups"
 msgstr "Gruppen zählen"
 
@@ -16052,7 +15998,6 @@ msgstr "Anzahl der Knoten im Zustand OK"
 msgid "Count until triggered"
 msgstr "Zähle bis ausgelöst wird"
 
-#, fuzzy
 msgid "Count users"
 msgstr "Benutzer zählen"
 
@@ -16074,11 +16019,10 @@ msgstr "Zähler-Level"
 msgid "Counter levels"
 msgstr "Zähler-Levels"
 
-#, fuzzy
 msgid ""
 "Counter rates of DNS parameters for Citrix NetScaler load balancer appliances"
 msgstr ""
-"Zählerraten der DNS-Parameter für Citrix Netscaler Load Balancer Appliances"
+"Zählerraten der DNS-Parameter für Citrix NetScaler Load Balancer Appliances"
 
 msgid "Counter-object name or number"
 msgstr "Zählerobjektname oder -nummer"
@@ -16086,7 +16030,6 @@ msgstr "Zählerobjektname oder -nummer"
 msgid "Counters"
 msgstr "Zähler"
 
-#, fuzzy
 msgid "Counting & timing"
 msgstr "Zählen & Timing"
 
@@ -16255,7 +16198,6 @@ msgstr ""
 "Erstellen Sie ein separates Diagramm, das die gemittelten Single-Core-CPU-"
 "Auslastungen zeigt."
 
-#, fuzzy
 msgid ""
 "Create a service account in \"IAM & Admin\" and assign the roles "
 "\"Monitoring Viewer\" and \"Cloud Asset Viewer\" to this account."
@@ -16285,7 +16227,6 @@ msgstr "Zusammenfassung für alle physischen Festplatten erstellen"
 msgid "Create a summary service for all alert rules"
 msgstr "Erstellen Sie einen zusammenfassenden Service für alle Alert-Regeln"
 
-#, fuzzy
 msgid ""
 "Create a user in the 'Proxmox VE authentication server' realm in Proxmox, "
 "which you use exclusively for monitoring with Checkmk."
@@ -16304,13 +16245,11 @@ msgstr ""
 "verwenden Sie die erstellte Webook-URL.<br><br>Diese URL kann auch aus dem "
 "Passwortspeicher von Checkmk bezogen werden."
 
-#, fuzzy
 msgid "Create additional service for I/O stats bytes"
-msgstr "Zusätzlichen Service für E/A-Stats Bytes erstellen"
+msgstr "Zusätzlichen Service für E/A-Statistik-Bytes erstellen"
 
-#, fuzzy
 msgid "Create additional service for I/O stats requests"
-msgstr "Zusätzlichen Service für E/A-Stats Anfragen erstellen"
+msgstr "Zusätzlichen Service für E/A-Statistikanfragen erstellen"
 
 msgid "Create additional service for system wait"
 msgstr "Zusätzlichen Service für System Wait erstellen"
@@ -16337,9 +16276,8 @@ msgstr "Erstelle Klon von %(host_name)s"
 msgid "Create cluster"
 msgstr "Cluster erstellen"
 
-#, fuzzy
 msgid "Create conference latency"
-msgstr "Latenz bei Erstellung von Konferenzen"
+msgstr "Latenz für Konferenzen erstellen"
 
 msgid "Create custom graph"
 msgstr "Benutzerdefinierten Graph erstellen"
@@ -16639,9 +16577,8 @@ msgstr "Erstellungszeit"
 msgid "Credentials"
 msgstr "Anmeldedaten"
 
-#, fuzzy
 msgid "Credentials expiration"
-msgstr "Zugangsdaten abgelaufen"
+msgstr "Zugangsdaten laufen ab"
 
 msgid "Credentials for HTTP basic authentication"
 msgstr "Anmeldedaten für HTTP Basis-Authentifizierung"
@@ -16660,9 +16597,8 @@ msgstr ""
 "Anmeldedaten für SNMPv3 ohne Authentifizierung und ohne Privacy "
 "(noAuthNoPriv)"
 
-#, fuzzy
 msgid "Credentials for connect (ODBC interface)"
-msgstr "Credentials für Connect (ODBC-Schnittstelle)"
+msgstr "Zugangsdaten für Verbindung (ODBC-Schnittstelle)"
 
 msgid "Credentials for processing SNMP traps"
 msgstr "Daten zur Verarbeitung von SNMP-Traps"
@@ -16787,11 +16723,9 @@ msgstr "Kritisch unter"
 msgid "Critical equal or after "
 msgstr "Kritisch gleich oder nach "
 
-#, fuzzy
 msgid "Critical event rate"
 msgstr "Rate kritischer Ereignisse"
 
-#, fuzzy
 msgid "Critical events"
 msgstr "Kritische Ereignisse"
 
@@ -16929,9 +16863,8 @@ msgstr "Aktuelle Anzahl von Prozessen"
 msgid "Current number of sessions"
 msgstr "Aktuelle Anzahl von Sitzungen"
 
-#, fuzzy
 msgid "Current on power channel"
-msgstr "Strom auf Power Channel"
+msgstr "Strom im Leistungskanal"
 
 msgid "Current password"
 msgstr "Aktuelles Passwort"
@@ -17083,9 +17016,8 @@ msgstr ""
 msgid "Custom event limit"
 msgstr "Benutzerdefiniertes Ereignislimit"
 
-#, fuzzy
 msgid "Custom file folders to deploy"
-msgstr "Alert Handlers, die verteilt werden sollen"
+msgstr "Benutzerdefinierte Dateiordner für die Verteilung"
 
 msgid "Custom footer links"
 msgstr "Benutzerdefinierte Fußzeilen-Links"
@@ -17156,7 +17088,6 @@ msgstr "Benutzerdefinierte Makros"
 msgid "Custom metrics"
 msgstr "Custom Metrics"
 
-#, fuzzy
 msgid "Custom metrics cache age"
 msgstr "Cache-Alter der Custom Metrics"
 
@@ -17370,7 +17301,6 @@ msgstr "DB-Cluster-Rollen"
 msgid "DB clusters"
 msgstr "DB-Cluster"
 
-#, fuzzy
 msgid "DB connections"
 msgstr "DB-Verbindungen"
 
@@ -17380,7 +17310,6 @@ msgstr "DB-Instanzen"
 msgid "DB non-idle wait"
 msgstr "DB Nicht-Leerlaufzeit"
 
-#, fuzzy
 msgid "DB number"
 msgstr "DB-Nummer"
 
@@ -17405,17 +17334,14 @@ msgstr "Datenbank-Benutzername"
 msgid "DB2"
 msgstr "DB2"
 
-#, fuzzy
 msgid "DB2 connections"
-msgstr "DB-Verbindungen"
+msgstr "DB2-Verbindungen"
 
-#, fuzzy
 msgid "DB2 counters"
 msgstr "DB2-Zähler"
 
-#, fuzzy
 msgid "DB2 databases (Linux, AIX)"
-msgstr "DB2 Datenbanken (Linux, AIX)"
+msgstr "DB2-Datenbanken (Linux, AIX)"
 
 msgid "DB2 instance followed by database name, e.g db2taddm:CMDBS1"
 msgstr "DB2-Instanz gefolgt vom Datenbanknamen, z.B. db2taddm:CMDBS1"
@@ -17426,11 +17352,9 @@ msgstr "Auslastung der DB2 Log-Datei"
 msgid "DB2 memory usage"
 msgstr "DB2-Speicherauslastung"
 
-#, fuzzy
 msgid "DB2 sort overflow"
-msgstr "DB2 Sortierüberlauf"
+msgstr "DB2-Sortierüberlauf"
 
-#, fuzzy
 msgid "DB2 tablespaces"
 msgstr "DB2-Tablespaces"
 
@@ -17473,16 +17397,14 @@ msgstr "Anfragen löschen"
 msgid "DHCP"
 msgstr "DHCP"
 
-#, fuzzy
 msgid "DHCP discovery messages"
-msgstr "Meldungen der DHCP Erkennung"
+msgstr "Meldungen der DHCP-Erkennung"
 
 msgid "DHCP pools (Windows)"
 msgstr "DHCP Pool (Windows)"
 
-#, fuzzy
 msgid "DHCP pools for Windows and Linux"
-msgstr "DHCP"
+msgstr "DHCP-Pools für Windows und Linux"
 
 msgid "DHCP received declines"
 msgstr "empfangene DHCP Ablehnungen"
@@ -17571,13 +17493,11 @@ msgstr "DNS-Anfragen via Rekursion"
 msgid "DNS referrals"
 msgstr "DNS Zuweisungen"
 
-#, fuzzy
 msgid "DNS resolution"
 msgstr "DNS-Auflösung"
 
-#, fuzzy
 msgid "DNS server"
-msgstr "DNS-Server 1"
+msgstr "DNS-Server"
 
 msgid "DNS server 1"
 msgstr "DNS-Server 1"
@@ -17594,9 +17514,8 @@ msgstr "Erfolgreiche DNS-Anworten"
 msgid "DOWN"
 msgstr "DOWN"
 
-#, fuzzy
 msgid "DOWN only"
-msgstr "Nur Status DOWN"
+msgstr "Nur DOWN"
 
 msgid "DPI"
 msgstr "DPI"
@@ -17644,7 +17563,6 @@ msgstr "Tagesversion"
 msgid "Daily paged display"
 msgstr "Tägliche Anzeige"
 
-#, fuzzy
 msgid "Daily report"
 msgstr "Täglicher Bericht"
 
@@ -17755,7 +17673,6 @@ msgstr "Datenquelle: %(title)s"
 msgid "Data store name"
 msgstr "Name des Datenspeichers"
 
-#, fuzzy
 msgid "Data stores"
 msgstr "Datenspeicher"
 
@@ -17815,8 +17732,8 @@ msgid ""
 "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
 "the Switchoverstate on Primary."
 msgstr ""
-"Data-Guards mit dg_broker_start=false benötigen den Zustand Broker-Zustand "
-"ignorieren, um den primären Switchoverstate zu überwachen."
+"Data Guards mit dg_broker_start=false benötigen den Zustand 'Broker-Zustand "
+"ignorieren', um den primären Switchoverstate zu überwachen."
 
 msgid "Database"
 msgstr "Datenbank"
@@ -17939,7 +17856,7 @@ msgid "Datafiles size"
 msgstr "Größe der Datendateien"
 
 msgid "Dataguard statistics"
-msgstr "Dataguard-Statistiken"
+msgstr "Data Guard-Statistiken"
 
 msgid "Date"
 msgstr "Datum"
@@ -18205,9 +18122,8 @@ msgstr ""
 "Standardzustand, wenn ein Tunnel, der nicht in dieser Regel gelistet wurden, "
 "nicht mehr gefunden wird."
 
-#, fuzzy
 msgid "Default state if stopped auto-start services are found"
-msgstr "Standardzustand, wenn gestoppte Autostart-Dienste gefunden werden"
+msgstr "Standardzustand, wenn gestoppte Autostart-Services gefunden werden"
 
 msgid "Default state to report when tunnel cannot be found anymore"
 msgstr ""
@@ -18252,9 +18168,8 @@ msgstr "Standardmäßig wird 'https' verwendet, wenn nicht angegeben."
 msgid "Deferred files age"
 msgstr "Alter der aufgeschobenen Dateien"
 
-#, fuzzy
 msgid "Deferred files in spool"
-msgstr "Verzögerte Dateien im Spooler"
+msgstr "Verzögerte Dateien im Spool"
 
 msgid "Define OAuth parameters"
 msgstr "OAuth-Parameter definieren"
@@ -18844,9 +18759,8 @@ msgstr "Lösche Eintrag"
 msgid "Delete this folder"
 msgstr "Lösche Ordner"
 
-#, fuzzy
 msgid "Delete this icon"
-msgstr "Dieses Icon löschen"
+msgstr "Dieses Symbol löschen"
 
 msgid "Delete this job"
 msgstr "Diesen Hintergrund-Prozess löschen"
@@ -19087,7 +19001,6 @@ msgstr ""
 msgid "Deploy AD-Replication plug-in"
 msgstr "Plugin für AD-Replikation verteilen"
 
-#, fuzzy
 msgid "Deploy Hyper-V VM guest information plug-in"
 msgstr "Plugin für Hyper-V VM Gastinformationen verteilen"
 
@@ -19121,7 +19034,6 @@ msgstr "Podman-Plugin verteilen"
 msgid "Deploy Windows Updates plug-in and run asynchronously"
 msgstr "Windows Updates Plugin verteilen und asynchron ausführen"
 
-#, fuzzy
 msgid "Deploy Windows updates plug-in"
 msgstr "Windows Updates Plugin verteilen"
 
@@ -19451,18 +19363,16 @@ msgstr "Erkennungsrate"
 msgid "Detector ID"
 msgstr "Sensor ID"
 
-#, fuzzy
 msgid "Determine the DC"
-msgstr "Unbestimmt"
+msgstr "Den Domänencontroller (DC) bestimmen"
 
-#, fuzzy
 msgid ""
 "Determine the DC for the node which is the DC during discovery. The check "
 "will report CRITICAL when another node becomes the DC during later checks."
 msgstr ""
-"Den DC festlegen für den Knoten, welcher während der Erkennung der DC ist. "
-"Der Check meldet CRITICAL, sobald ein anderen Knoten später die Rolle des DC "
-"übernimmt."
+"Den Domänencontroller (DC) festlegen für den Knoten, welcher während der "
+"Erkennung der DC ist. Der Check meldet CRITICAL, sobald ein anderen Knoten "
+"später die Rolle des DC übernimmt."
 
 msgid ""
 "Determine whether the group interface is created as an separate service or "
@@ -19487,7 +19397,6 @@ msgstr "Durch die Erkennung bestimmt"
 msgid "Determines how to treat invalid certificate"
 msgstr "Legt fest, wie ein ungültiges Zertifikat zu behandeln ist"
 
-#, fuzzy
 msgid ""
 "Determines the resources for the node which is holding them during "
 "discovery. The check will report CRITICAL when another holds the resource "
@@ -19500,7 +19409,6 @@ msgstr ""
 msgid "Developer resources"
 msgstr "Ressourcen für Entwickler"
 
-#, fuzzy
 msgid "Developer tools"
 msgstr "Werkzeuge für Entwickler"
 
@@ -19513,7 +19421,6 @@ msgstr "Gerät"
 msgid "Device available"
 msgstr "Gerät verfügbar"
 
-#, fuzzy
 msgid "Device component PCI I/O utilization"
 msgstr "PCI-E/A-Auslastung der Gerätekomponente"
 
@@ -19529,11 +19436,9 @@ msgstr "Stromverbrauch der Gerätekomponente"
 msgid "Device going online"
 msgstr "Gerät geht online"
 
-#, fuzzy
 msgid "Device name"
 msgstr "Gerätename"
 
-#, fuzzy
 msgid "Device name and value ident"
 msgstr "Gerätename und Wert-Identifikator"
 
@@ -20037,11 +19942,9 @@ msgstr ""
 "%(labels_changed)d geändert, %(labels_removed)d entfernt, %(labels_kept)d "
 "behalten)"
 
-#, fuzzy
 msgid "Discovery output"
 msgstr "Ausgabe der Erkennung"
 
-#, fuzzy
 msgid "Discovery outputs"
 msgstr "Ausgaben der Erkennung"
 
@@ -20066,15 +19969,12 @@ msgstr "Erkennungszustand"
 msgid "Disk"
 msgstr "Platte"
 
-#, fuzzy
 msgid "Disk I/O discovery"
 msgstr "Erkennung Festplatten-E/A"
 
-#, fuzzy
 msgid "Disk I/O levels"
 msgstr "Festplatten E/A-Levels"
 
-#, fuzzy
 msgid "Disk I/O levels (old style checks)"
 msgstr "Festplatten E/A-Levels (Checks nach altem Muster)"
 
@@ -20084,7 +19984,6 @@ msgstr "Festplatten-E/A-Vorgänge"
 msgid "Disk I/O statistics for AIX"
 msgstr "Festplatten E/A-Statistiken für AIX"
 
-#, fuzzy
 msgid "Disk I/O utilization"
 msgstr "E/A-Festplattenauslastung"
 
@@ -20094,19 +19993,15 @@ msgstr "Platten-ID"
 msgid "Disk IO"
 msgstr "Festplatten-E/A"
 
-#, fuzzy
 msgid "Disk backend bytes evicted (full cache)"
 msgstr "Festplatten-Backend-Bytes verdrängt (voller Cache)"
 
-#, fuzzy
 msgid "Disk backend bytes removed or overwritten"
 msgstr "Entfernte oder überschriebene Backend-Bytes auf der Festplatte"
 
-#, fuzzy
 msgid "Disk backend size"
 msgstr "Größe des Festplatten-Backends"
 
-#, fuzzy
 msgid "Disk backend uncompressed"
 msgstr "Festplatten-Backend unkomprimiert"
 
@@ -20481,9 +20376,8 @@ msgstr ""
 msgid "Displays entries from the log file of the monitoring core."
 msgstr "Zeigt Einträge aus der Log-Datei des Monitoring-Kerns."
 
-#, fuzzy
 msgid "Displays gauge"
-msgstr "Zeige Gauge"
+msgstr "Zeigt Tachometer"
 
 msgid "Displays hosts and services producing the most notifications"
 msgstr ""
@@ -20520,9 +20414,8 @@ msgstr "Zeigt den Zustand eines spezifischen Hosts an."
 msgid "Displays the state of a specific service."
 msgstr "Zeigt den Zustand eines spezifischen Services an."
 
-#, fuzzy
 msgid "Displays top talkers"
-msgstr "Zeige Top Talkers"
+msgstr "Zeigt Top Talkers"
 
 msgid "Distinguish times in and out of notification period"
 msgstr ""
@@ -20636,7 +20529,6 @@ msgstr "Hosts nicht erstellen"
 msgid "Do not deploy AD-Replication plug-in"
 msgstr "Plugin für AD-Replikation nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Hyper-V VM guest information plug-in"
 msgstr "Plugin für Hyper-V VM Gastinformationen nicht verteilen"
 
@@ -20743,9 +20635,8 @@ msgstr "Nicht erkennen"
 msgid "Do not discover single interfaces"
 msgstr "Einzelne Schnittstellen nicht erkennen"
 
-#, fuzzy
 msgid "Do not display 'reboot required' state"
-msgstr "Den Zustand \"Reboot erforderlich\" nicht anzeigen"
+msgstr "Den Zustand 'Reboot erforderlich' nicht anzeigen"
 
 msgid "Do not display a date"
 msgstr "Kein Datum anzeigen"
@@ -46646,7 +46537,7 @@ msgid "Oracle DB time statistics"
 msgstr "Oracle DB Zeitstatistiken"
 
 msgid "Oracle Data-Guard Stats"
-msgstr "Oracle Data-Guard Statistiken"
+msgstr "Oracle Data Guard-Statistiken"
 
 #, fuzzy
 msgid "Oracle IOSTAT I/O reads"
@@ -46994,7 +46885,7 @@ msgid "Oracle datafile small writes"
 msgstr "Oracle Datendatei Small Writes"
 
 msgid "Oracle dataguard statistics"
-msgstr "Oracle Dataguard-Statistiken"
+msgstr "Oracle Data Guard-Statistiken"
 
 msgid "Oracle external table large read bytes"
 msgstr "Oracle externe Tabelle Large Read in Bytes"
@@ -61148,7 +61039,7 @@ msgid "State if violated"
 msgstr "Zustand bei Verstößen"
 
 msgid "State in case of Active Data Guard option is active: "
-msgstr "Zustand, wenn Active Data Guard-Option aktiv ist: "
+msgstr "Zustand, wenn \"Active Data Guard\"-Option aktiv ist: "
 
 msgid "State in case of Job has no log information"
 msgstr "Zustand des Services, falls der Job keine Log-Informationen hat"
@@ -63367,7 +63258,7 @@ msgstr "Der ARN der zu übernehmenden IAM-Rolle"
 
 msgid "The Active Data Guard option needs an additional license from Oracle."
 msgstr ""
-"Die Option \"Active Data-Guard\" benötigt eine zusätzliche Oracle-Lizenz."
+"Die Option \"Active Data Guard\" benötigt eine zusätzliche Oracle-Lizenz."
 
 msgid ""
 "The Agent Controller provides a safe channel for the communication between "
@@ -63630,8 +63521,8 @@ msgid ""
 "must be <tt>TRUE</tt> for this check. The apply and transport lag can be "
 "configured with this rule."
 msgstr ""
-"Die Data-Guard Statistiken sind in der Oracle Enterprise Edition verfügbar, "
-"wenn Data-Guard aktiviert ist. Der Parameter <tt>dg_broker_start</tt> aus "
+"Die Data Guard Statistiken sind in der Oracle Enterprise Edition verfügbar, "
+"wenn Data Guard aktiviert ist. Der Parameter <tt>dg_broker_start</tt> aus "
 "der Datei <tt>init.ora</tt> muss auf <tt>TRUE</tt> gesetzt sein, damit "
 "dieser Check funktioniert. In dieser Regel können Sie Schwellen für das "
 "Apply- und Transportlag einstellen."
@@ -66405,7 +66296,7 @@ msgid "The maximum key length is 128 characters."
 msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
 
 msgid "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."
-msgstr "Die maximale Grenze für das Apply-Lag in <tt>v$dataguard_stats</tt>."
+msgstr "Die maximale Grenze für das Apply Lag in <tt>v$dataguard_stats</tt>."
 
 msgid ""
 "The maximum number of concurrent Livestatus connections is limited by this "

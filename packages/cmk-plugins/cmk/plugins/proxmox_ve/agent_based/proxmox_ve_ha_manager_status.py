@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 from collections import Counter
 from collections.abc import Sequence
 from typing import Literal, TypedDict
@@ -37,7 +36,7 @@ class Params(TypedDict):
 
 
 def parse_proxmox_ve_ha_manager_status(string_table: StringTable) -> SectionHaManagerCurrent:
-    return SectionHaManagerCurrent.from_json_list(json.loads(string_table[0][0]))
+    return SectionHaManagerCurrent.model_validate_json(string_table[0][0])
 
 
 agent_section_proxmox_ve_ha_manager_status = AgentSection(

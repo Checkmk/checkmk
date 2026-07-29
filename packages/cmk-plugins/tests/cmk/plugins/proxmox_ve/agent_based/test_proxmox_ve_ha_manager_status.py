@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
@@ -22,111 +20,31 @@ from cmk.plugins.proxmox_ve.lib.ha_manager_status import (
     ServiceItem,
 )
 
-# Raw shape of the Proxmox VE API's /cluster/ha/status/current: a flat list of
-# heterogeneous items (quorum, master, one lrm entry per node, one service entry per
-# HA-managed VM/container), tagged by "type". SectionHaManagerCurrent.from_json_list()
-# groups this into the nested structure used by the check function.
-_RAW_HA_STATUS = [
-    {"id": "quorum", "node": "pve-fra-002", "status": "OK", "type": "quorum"},
-    {
-        "node": "pve-fra-002",
-        "status": "pve-fra-002 (active, Mon Nov 24 11:34:39 2025)",
-        "timestamp": 1763980479,
-        "type": "master",
-    },
-    {
-        "node": "pve-fra-001",
-        "status": "pve-fra-001 (idle, Fri Oct 10 10:20:04 2025)",
-        "timestamp": 1760084404,
-        "type": "lrm",
-    },
-    {
-        "node": "pve-fra-001",
-        "comment": None,
-        "sid": "ct:137",
-        "state": "started",
-        "type": "service",
-    },
-    {
-        "node": "pve-fra-001",
-        "comment": None,
-        "sid": "vm:135",
-        "state": "started",
-        "type": "service",
-    },
-    {
-        "node": "pve-fra-001",
-        "comment": None,
-        "sid": "vm:162",
-        "state": "started",
-        "type": "service",
-    },
-    {
-        "node": "pve-fra-002",
-        "status": "pve-fra-002 (maintenance, Fri Oct 10 10:20:08 2025)",
-        "timestamp": 1760084408,
-        "type": "lrm",
-    },
-    {
-        "node": "pve-fra-002",
-        "comment": "internal DNS master - as important as fw.tribe29.com",
-        "sid": "ct:128",
-        "state": "started",
-        "request_state": "stopped",
-        "type": "service",
-    },
-    {
-        "node": "pve-fra-002",
-        "comment": None,
-        "sid": "vm:104",
-        "state": "started",
-        "type": "service",
-    },
-    {"node": "pve-fra-002", "comment": None, "sid": "vm:143", "state": "error", "type": "service"},
-    {
-        "node": "pve-fra-002",
-        "comment": None,
-        "sid": "vm:182",
-        "state": "started",
-        "type": "service",
-    },
-    {
-        "node": "pve-fra-003",
-        "status": "pve-fra-003 (active, Fri Oct 10 10:20:10 2025)",
-        "timestamp": 1760084410,
-        "type": "lrm",
-    },
-    {
-        "node": "pve-fra-003",
-        "comment": None,
-        "sid": "vm:118",
-        "state": "something_else",
-        "type": "service",
-    },
-    {
-        "node": "pve-fra-004",
-        "status": "pve-fra-004 (active, Fri Oct 10 10:20:04 2025)",
-        "timestamp": 1760084404,
-        "type": "lrm",
-    },
-    {
-        "node": "pve-fra-004",
-        "comment": None,
-        "sid": "vm:126",
-        "state": "stopped",
-        "type": "service",
-        "request_state": "started",
-    },
-    {
-        "node": "pve-fra-004",
-        "comment": None,
-        "sid": "vm:160",
-        "state": "ignored",
-        "type": "service",
-    },
+STRING_TABLE = [
+    [
+        '{"quorum": {"id": "quorum", "node": "pve-fra-002", "status": "OK", "type": "quorum"}, '
+        '"master": {"node":"pve-fra-002","status":"pve-fra-002 (active, Mon Nov 24 11:34:39 2025)","timestamp":1763980479,"type":"master"}, '
+        '"lrm_nodes": {"pve-fra-001": {"node": "pve-fra-001", "status": "pve-fra-001 (idle, Fri Oct 10 10:20:04 2025)", '
+        '"timestamp": 1760084404, "type": "lrm", "services": {"ct:137": {"node": "pve-fra-001", '
+        '"comment": null, "sid": "ct:137", "state": "started", "type": "service"}, '
+        '"vm:135": {"node": "pve-fra-001", "comment": null, "sid": "vm:135", '
+        '"state": "started", "type": "service"}, "vm:162": {"node": "pve-fra-001", '
+        '"comment": null, "sid": "vm:162", "state": "started", "type": "service"}}}, '
+        '"pve-fra-002": {"node": "pve-fra-002", "status": "pve-fra-002 (maintenance, Fri Oct 10 10:20:08 2025)", '
+        '"timestamp": 1760084408, "type": "lrm", "services": {"ct:128": {"node": "pve-fra-002", "comment": '
+        '"internal DNS master - as important as fw.tribe29.com", "sid": "ct:128", "state": "started", "request_state": "stopped", "type": "service"}, '
+        '"vm:104": {"node": "pve-fra-002", "comment": null, "sid": "vm:104", "state": "started", '
+        '"type": "service"}, "vm:143": {"node": "pve-fra-002", "comment": null, "sid": "vm:143", '
+        '"state": "error", "type": "service"}, "vm:182": {"node": "pve-fra-002", "comment": null, '
+        '"sid": "vm:182", "state": "started", "type": "service"}}}, "pve-fra-003": {"node": "pve-fra-003", "status": '
+        '"pve-fra-003 (active, Fri Oct 10 10:20:10 2025)", "timestamp": 1760084410, "type": "lrm", "services": '
+        '{"vm:118": {"node": "pve-fra-003", "comment": null, "sid": "vm:118", "state": "something_else", "type": '
+        '"service"}}}, "pve-fra-004": {"node": "pve-fra-004", "status": "pve-fra-004 (active, Fri Oct 10 10:20:04 2025)", '
+        '"timestamp": 1760084404, "type": "lrm", "services": {"vm:126": {"node": "pve-fra-004", "comment": null, "sid": '
+        '"vm:126", "state": "stopped", "type": "service", "request_state": "started"}, "vm:160": {"node": "pve-fra-004", "comment": null, '
+        '"sid": "vm:160", "state": "ignored", "type": "service"}}}}}'
+    ]
 ]
-
-STRING_TABLE = [[json.dumps(_RAW_HA_STATUS)]]
 
 SECTION = SectionHaManagerCurrent(
     quorum=QuorumItem(id="quorum", node="pve-fra-002", status="OK", type="quorum"),

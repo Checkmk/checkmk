@@ -378,7 +378,7 @@ def migrate_ruleset(
     results: list[MigrationResult] = []
     skipped = 0
     for folder, _index, rule in legacy_ruleset.get_rules():
-        new_id = str(uuid.uuid5(MIGRATION_NAMESPACE, rule.id))
+        new_id = _new_id(rule.id)
         if new_id in existing_ids:
             skipped += 1
             continue
@@ -410,3 +410,20 @@ def migrate_ruleset(
         )
 
     return results, skipped
+
+
+def disable_migrated_legacy_rules(legacy_ruleset: Ruleset, unified_ruleset: Ruleset) -> list[Rule]:
+    unified_ids = {rule.id for _, _, rule in unified_ruleset.get_rules() if not rule.is_disabled()}
+    results: list[Rule] = []
+    for _folder, _index, rule in legacy_ruleset.get_rules():
+        if rule.is_disabled():
+            continue
+        if _new_id(rule.id) not in unified_ids:
+            continue
+        rule.rule_options.disabled = True
+        results.append(rule)
+    return results
+
+
+def _new_id(old_rule_id: str) -> str:
+    return str(uuid.uuid5(MIGRATION_NAMESPACE, old_rule_id))

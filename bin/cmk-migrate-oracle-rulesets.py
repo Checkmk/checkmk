@@ -13,9 +13,13 @@ from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.rulesets import AllRulesets, Rule
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.plugins.lib.mk_oracle_migration import migrate_ruleset, MigrationResult
+from cmk.update_config.plugins.lib.mk_oracle_migration import (
+    disable_migrated_legacy_rules,
+    migrate_ruleset,
+    MigrationResult,
+)
 from cmk.utils import paths
 
 logger = logging.getLogger(__name__)
@@ -37,7 +41,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--enable-migrated-rules",
         action="store_true",
-        help="Create migrated rules as enabled. By default, migrated rules are created disabled.",
+        help="Create migrated rules as enabled, and disable legacy rules. By default, migrated rules are created disabled and legacy rules are left as is.",
     )
     args = parser.parse_args(argv)
 
@@ -55,13 +59,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         results, skipped = migrate_ruleset(
             legacy_ruleset, unified_ruleset, disabled=not args.enable_migrated_rules
         )
-        _print_report(results, skipped)
 
+        disabled_legacy_rules: list[Rule] = []
         if args.apply:
             for result in results:
                 unified_ruleset.append_rule(result.new_rule.folder, result.new_rule)
+
+            if args.enable_migrated_rules:
+                disabled_legacy_rules = disable_migrated_legacy_rules(
+                    legacy_ruleset, unified_ruleset
+                )
+
             all_rulesets.save(pprint_value=True, debug=False)
-        else:
+
+        _print_report(results, skipped, disabled_legacy_rules)
+
+        if not args.apply:
             logger.info(
                 "\nDry run only — no rules were written. Re-run with --apply to create them."
             )
@@ -69,7 +82,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-def _print_report(results: Sequence[MigrationResult], skipped: int) -> None:
+def _print_report(
+    results: Sequence[MigrationResult], skipped: int, disabled_legacy_rules: list[Rule]
+) -> None:
     for result in results:
         legacy_rule = result.legacy_rule
         name = legacy_rule.description() if legacy_rule.description() else legacy_rule.id
@@ -85,10 +100,21 @@ def _print_report(results: Sequence[MigrationResult], skipped: int) -> None:
 
     total = len(results)
     with_warnings = sum(len(result.warnings) for result in results if result.warnings)
-    logger.info(
-        "%(total)d rule(s) processed, %(with_warnings)d total warning(s).",
-        {"total": total, "with_warnings": with_warnings},
-    )
+
+    if disabled_legacy_rules:
+        logger.info(
+            "%(total)d rule(s) processed, %(with_warnings)d total warning(s), %(disabled_count)d legacy rule(s) disabled.",
+            {
+                "total": total,
+                "with_warnings": with_warnings,
+                "disabled_count": len(disabled_legacy_rules),
+            },
+        )
+    else:
+        logger.info(
+            "%(total)d rule(s) processed, %(with_warnings)d total warning(s).",
+            {"total": total, "with_warnings": with_warnings},
+        )
     if skipped:
         logger.info("%(skipped)d rule(s) already migrated — skipped.", {"skipped": skipped})
 

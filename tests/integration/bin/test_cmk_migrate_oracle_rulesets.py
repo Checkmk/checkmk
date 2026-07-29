@@ -47,3 +47,32 @@ def test_cmk_migrate_oracle_rulesets(site: Site) -> None:
             site.openapi.rules.delete(rule_id)
         site.openapi.rules.delete(legacy_rule_id)
         site.activate_changes_and_wait_for_core_reload()
+
+
+@pytest.mark.skip_if_edition("community", "cloud")
+def test_cmk_migrate_oracle_rulesets_disables_legacy_rule(site: Site) -> None:
+    legacy_rule_id = site.openapi.rules.create(
+        ruleset_name=LEGACY_RULESET,
+        value={"activated": True, "login": {"auth": "wallet"}, "sids": ("only", ["ORCL"])},
+        folder="/",
+    )
+    site.activate_changes_and_wait_for_core_reload()
+
+    try:
+        p = site.run(["cmk-migrate-oracle-rulesets", "--apply", "--enable-migrated-rules"])
+        LOGGER.info("STDOUT: %s", p.stdout)
+        LOGGER.info("STDERR: %s", p.stderr)
+        p.check_returncode()
+
+        # Both plug-ins cannot be deployed to the same host, so enabling the migrated rule must
+        # disable the legacy rule it replaces — and that has to survive the write to disk.
+        (migrated_rule,) = site.openapi.rules.get_all(UNIFIED_RULESET)
+        assert migrated_rule["extensions"]["properties"].get("disabled", False) is False
+
+        (legacy_rule,) = site.openapi.rules.get_all(LEGACY_RULESET)
+        assert legacy_rule["extensions"]["properties"]["disabled"] is True
+    finally:
+        for rule_id in site.openapi.rules.get_all_names(UNIFIED_RULESET):
+            site.openapi.rules.delete(rule_id)
+        site.openapi.rules.delete(legacy_rule_id)
+        site.activate_changes_and_wait_for_core_reload()

@@ -12,7 +12,11 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
-from cmk.update_config.plugins.lib.mk_oracle_migration import migrate_ruleset, MIGRATION_NAMESPACE
+from cmk.update_config.plugins.lib.mk_oracle_migration import (
+    disable_migrated_legacy_rules,
+    migrate_ruleset,
+    MIGRATION_NAMESPACE,
+)
 
 
 @pytest.fixture(name="rulespec")
@@ -38,13 +42,20 @@ def fixture_rulespec() -> Rulespec:
     )
 
 
-def _legacy_rule(folder: Folder, ruleset: Ruleset, *, rule_id: str, description: str = "") -> Rule:
+def _legacy_rule(
+    folder: Folder,
+    ruleset: Ruleset,
+    *,
+    rule_id: str,
+    description: str = "",
+    disabled: bool = False,
+) -> Rule:
     return Rule(
         id_=rule_id,
         folder=folder,
         ruleset=ruleset,
         conditions=RuleConditions(host_folder=folder.name()),
-        options=RuleOptions(disabled=False, description=description, comment="", docu_url=""),
+        options=RuleOptions(disabled=disabled, description=description, comment="", docu_url=""),
         value={},
     )
 
@@ -129,3 +140,76 @@ def test_new_rule_description_without_legacy_description(rulespec: Rulespec) -> 
     results, _ = migrate_ruleset(legacy_ruleset, unified_ruleset, disabled=True)
 
     assert results[0].new_rule.rule_options.description == "(Migrated)"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_disables_legacy_rule_with_enabled_replacement(rulespec: Rulespec) -> None:
+    folder = folder_tree().root_folder()
+    legacy_ruleset = Ruleset("agent_config:mk_oracle", rulespec=rulespec)
+    legacy_rule = _legacy_rule(folder, legacy_ruleset, rule_id="legacy-1")
+    legacy_ruleset.append_rule(folder, legacy_rule)
+
+    unified_ruleset = Ruleset("agent_config:mk_oracle_unified", rulespec=rulespec)
+    unified_ruleset.append_rule(
+        folder,
+        _legacy_rule(
+            folder, unified_ruleset, rule_id=str(uuid.uuid5(MIGRATION_NAMESPACE, "legacy-1"))
+        ),
+    )
+
+    assert disable_migrated_legacy_rules(legacy_ruleset, unified_ruleset) == [legacy_rule]
+    assert legacy_rule.is_disabled()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_keeps_legacy_rule_when_replacement_is_disabled(rulespec: Rulespec) -> None:
+    folder = folder_tree().root_folder()
+    legacy_ruleset = Ruleset("agent_config:mk_oracle", rulespec=rulespec)
+    legacy_rule = _legacy_rule(folder, legacy_ruleset, rule_id="legacy-1")
+    legacy_ruleset.append_rule(folder, legacy_rule)
+
+    unified_ruleset = Ruleset("agent_config:mk_oracle_unified", rulespec=rulespec)
+    unified_ruleset.append_rule(
+        folder,
+        _legacy_rule(
+            folder,
+            unified_ruleset,
+            rule_id=str(uuid.uuid5(MIGRATION_NAMESPACE, "legacy-1")),
+            disabled=True,
+        ),
+    )
+
+    assert disable_migrated_legacy_rules(legacy_ruleset, unified_ruleset) == []
+    assert not legacy_rule.is_disabled()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_keeps_legacy_rule_without_replacement(rulespec: Rulespec) -> None:
+    folder = folder_tree().root_folder()
+    legacy_ruleset = Ruleset("agent_config:mk_oracle", rulespec=rulespec)
+    legacy_rule = _legacy_rule(folder, legacy_ruleset, rule_id="legacy-1")
+    legacy_ruleset.append_rule(folder, legacy_rule)
+
+    unified_ruleset = Ruleset("agent_config:mk_oracle_unified", rulespec=rulespec)
+
+    assert disable_migrated_legacy_rules(legacy_ruleset, unified_ruleset) == []
+    assert not legacy_rule.is_disabled()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_ignores_already_disabled_legacy_rule(rulespec: Rulespec) -> None:
+    folder = folder_tree().root_folder()
+    legacy_ruleset = Ruleset("agent_config:mk_oracle", rulespec=rulespec)
+    legacy_ruleset.append_rule(
+        folder, _legacy_rule(folder, legacy_ruleset, rule_id="legacy-1", disabled=True)
+    )
+
+    unified_ruleset = Ruleset("agent_config:mk_oracle_unified", rulespec=rulespec)
+    unified_ruleset.append_rule(
+        folder,
+        _legacy_rule(
+            folder, unified_ruleset, rule_id=str(uuid.uuid5(MIGRATION_NAMESPACE, "legacy-1"))
+        ),
+    )
+
+    assert disable_migrated_legacy_rules(legacy_ruleset, unified_ruleset) == []

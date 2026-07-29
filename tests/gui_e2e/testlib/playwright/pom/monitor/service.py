@@ -52,20 +52,22 @@ class ServicePage(CmkPage):
             "td:nth-child(2)"
         )
 
-    def _graph_with_timeranges_container(self, graph_title: str) -> Locator:
-        return self.main_area.locator(
-            "div[class='graph_with_timeranges']:has(div[class='title'])",
-            has_text=graph_title,
-        )
-
     def graph(self, graph_title: str) -> Locator:
-        container = self._graph_with_timeranges_container(graph_title)
-        expect(container).to_be_attached()
-        return container.locator("div[class='graph with_margin'] >> canvas")
+        """The plot of the graph carrying this title.
+
+        Addressed by the plot's accessible name, which the graph engine sets to the graph
+        title.
+        """
+        return self.row_content("Service graphs").get_by_role("img", name=graph_title, exact=True)
 
     @property
     def broken_graph(self) -> Locator:
-        return self.main_area.locator("div[class*='brokengraph']")
+        """The message shown in place of the graphs when they could not be loaded.
+
+        The engine reports a failed load once for the whole graph group rather than per
+        graph, so this can only ever resolve to 0 or 1 elements.
+        """
+        return self.row_content("Service graphs").locator(".graphing-graph-group__error")
 
     def click_explain_with_ai(self) -> None:
         self.main_area.get_suggestion("Explain with AI").click()

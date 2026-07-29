@@ -3,15 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { SortingState } from '@tanstack/vue-table'
+import type { ColumnDef, SortingState } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
-  type PagedResponse
+  type PagedResponse,
+  buildColumnStorageKey
 } from '@/monitoring/shared/services/MonitoringService'
 
 import { makeKeyShortcutService, makeResponse } from './testHelpers'
@@ -737,6 +739,114 @@ describe('MonitoringService', () => {
       expect(fetchBatch).toHaveBeenCalledTimes(1)
 
       service.stopPolling()
+    })
+
+    describe('persistence', () => {
+      const STORAGE_KEY = 'test-service-columns'
+      const COLUMNS: ColumnDef<TestItem>[] = [
+        { id: 'select', header: '', meta: { selectColumn: true } },
+        { accessorKey: 'name', header: 'Host', enableHiding: false },
+        { accessorKey: 'address', header: 'IP address' },
+        { accessorKey: 'alias', header: 'Alias', meta: { hidden: true } }
+      ]
+
+      function makePersistingService(columnStorageKey: string = STORAGE_KEY): TestService {
+        const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+          columns: COLUMNS,
+          columnStorageKey
+        })
+        service.stopPolling()
+        return service
+      }
+
+      function stored(): unknown {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+      }
+
+      afterEach(() => {
+        localStorage.clear()
+      })
+
+      it('starts from the default set when storage is empty', () => {
+        expect(makePersistingService().columnVisibility.value).toEqual({ alias: false })
+      })
+
+      it('keys a selection by view, site, user and edition', () => {
+        expect(
+          buildColumnStorageKey({
+            view: 'all-hosts',
+            site: 'heute',
+            userId: 'harri',
+            edition: 'community'
+          })
+        ).toBe('monitoring-all-hosts-columns-heute-harri-community')
+      })
+
+      it('keeps the same user on another site out of the stored selection', () => {
+        // Browser storage is shared by every site served from one host, where a
+        // user id can mean two unrelated accounts.
+        const scope = { view: 'all-hosts', site: 'heute', userId: 'harri', edition: 'community' }
+        localStorage.setItem(buildColumnStorageKey(scope), JSON.stringify({ alias: true }))
+
+        const other = makePersistingService(buildColumnStorageKey({ ...scope, site: 'heute_2' }))
+          .columnVisibility.value
+
+        expect(other).toEqual({ alias: false })
+      })
+
+      it('restores a stored selection over the defaults', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ alias: true, address: false }))
+
+        expect(makePersistingService().columnVisibility.value).toEqual({
+          alias: true,
+          address: false
+        })
+      })
+
+      it('writes a changed selection to storage', async () => {
+        const service = makePersistingService()
+
+        service.updateColumnVisibility({ alias: true })
+        await nextTick()
+
+        expect(stored()).toEqual({ alias: true })
+      })
+
+      it('writes the default set back when the selection is reset', async () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ alias: true }))
+        const service = makePersistingService()
+
+        service.resetColumnVisibility()
+        await nextTick()
+
+        expect(stored()).toEqual({ alias: false })
+      })
+
+      it('ignores stored entries for columns that are no longer offered', () => {
+        // 'gone' was dropped from the table and 'name' has become fixed since
+        // this selection was stored; neither may still hide anything.
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ gone: false, name: false, alias: true }))
+
+        expect(makePersistingService().columnVisibility.value).toEqual({ alias: true })
+      })
+
+      it('falls back to the defaults when storage holds something unusable', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(['alias']))
+
+        expect(makePersistingService().columnVisibility.value).toEqual({ alias: false })
+      })
+
+      it('keeps the selection in memory when no storage key is given', async () => {
+        const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+          columns: COLUMNS
+        })
+        service.stopPolling()
+
+        service.updateColumnVisibility({ alias: true })
+        await nextTick()
+
+        expect(localStorage.length).toBe(0)
+      })
     })
 
     it('resetColumnVisibility restores the default column set', () => {

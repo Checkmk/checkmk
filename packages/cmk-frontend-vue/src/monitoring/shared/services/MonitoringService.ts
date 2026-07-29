@@ -13,6 +13,7 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
+import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import {
   type ComputedRef,
   type Ref,
@@ -61,6 +62,29 @@ export interface MonitoringServiceOptions<T> {
   quickFilters?: QuickFilterConfig[]
   limitTiers?: number[]
   mayRemoveLimit?: boolean
+  /**
+   * Browser-storage key the user's column selection is kept under, built with
+   * {@link buildColumnStorageKey}. Omit to keep the selection in memory only.
+   */
+  columnStorageKey?: string
+}
+
+export interface ColumnStorageScope {
+  /** The view the columns belong to, e.g. `'all-hosts'`. */
+  view: string
+  /** Site serving the view. */
+  site: string
+  /** Logged-in user. */
+  userId: string
+  /** Edition serving the view, e.g. `'community'`. */
+  edition: string
+}
+
+/**
+ * Key a view's column selection is stored under.
+ */
+export function buildColumnStorageKey({ view, site, userId, edition }: ColumnStorageScope): string {
+  return `monitoring-${view}-columns-${site}-${userId}-${edition}`
 }
 
 export type RequestedLimit = number | null
@@ -119,6 +143,32 @@ function computeDefaultVisibility<T>(columns: ColumnDef<T>[]): VisibilityState {
   return visibility
 }
 
+/**
+ * Rebuild a visibility state from what browser storage holds, keeping only
+ * decisions that still mean something: an id that is no longer offered has been
+ * renamed, removed or turned into a fixed column since it was stored, so its
+ * stale entry must not decide anything. Columns the stored state says nothing
+ * about fall back to their default.
+ */
+function sanitizeVisibility(
+  stored: unknown,
+  toggleable: ToggleableColumn[],
+  defaults: VisibilityState
+): VisibilityState {
+  const visibility: VisibilityState = { ...defaults }
+  if (stored === null || typeof stored !== 'object') {
+    return visibility
+  }
+  const entries = stored as Record<string, unknown>
+  for (const column of toggleable) {
+    const value = entries[column.id]
+    if (typeof value === 'boolean') {
+      visibility[column.id] = value
+    }
+  }
+  return visibility
+}
+
 export abstract class MonitoringService<T> extends ServiceBase {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly matched: Ref<number> = ref(0)
@@ -144,7 +194,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
 
   readonly toggleableColumns: ToggleableColumn[]
-  readonly columnVisibility: Ref<VisibilityState> = ref<VisibilityState>({})
+  readonly columnVisibility: Ref<VisibilityState>
   readonly defaultColumnVisibility: VisibilityState
 
   /** Owns all filter state: quick-filters and active conditions. */
@@ -204,12 +254,21 @@ export abstract class MonitoringService<T> extends ServiceBase {
       quickFilters = [],
       columns = [],
       limitTiers = [],
-      mayRemoveLimit = false
+      mayRemoveLimit = false,
+      columnStorageKey
     } = options
 
     this.toggleableColumns = buildToggleableColumns(columns)
     this.defaultColumnVisibility = computeDefaultVisibility(columns)
-    this.columnVisibility.value = { ...this.defaultColumnVisibility }
+    const defaultVisibility = { ...this.defaultColumnVisibility }
+    // usePersistentRef writes every later change back, so the selection outlives
+    // the tab it was made in.
+    this.columnVisibility =
+      columnStorageKey === undefined
+        ? ref(defaultVisibility)
+        : usePersistentRef(columnStorageKey, defaultVisibility, (stored) =>
+            sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
+          )
 
     const numericTiers: RequestedLimit[] = limitTiers.length
       ? [...limitTiers]

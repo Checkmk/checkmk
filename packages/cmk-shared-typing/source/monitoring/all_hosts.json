@@ -3,5 +3,21 @@
   "type": "object",
   "title": "Monitoring - All Hosts App",
   "$id": "../all_hosts.json",
-  "allOf": [{ "$ref": "monitoring/_base.json" }]
+  "allOf": [{ "$ref": "monitoring/_base.json" }],
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "site": {
+      "type": "string"
+    },
+    "edition": { "$ref": "#/$defs/edition" }
+  },
+  "required": ["user_id", "site", "edition"],
+  "$defs": {
+    "edition": {
+      "type": "string",
+      "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
+    }
+  }
 }

@@ -44,6 +44,7 @@ import {
 } from '../shared/components/action/actions/reschedule'
 import { useScheduleDowntimeAction } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
+import { buildColumnStorageKey } from '../shared/services/MonitoringService'
 import { useMonitoringActions } from '../shared/services/useMonitoringActions'
 import { HostActionMenuApi } from './api/actionMenu'
 import { HostApi } from './api/hosts'
@@ -123,6 +124,12 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms,
   limitTiers: HOST_LIMIT_TIERS,
   mayRemoveLimit: props.may_ignore_hard_limit ?? false,
+  columnStorageKey: buildColumnStorageKey({
+    view: 'all-hosts',
+    site: props.site,
+    userId: props.user_id,
+    edition: props.edition
+  }),
   columns,
   quickFilters: [
     {

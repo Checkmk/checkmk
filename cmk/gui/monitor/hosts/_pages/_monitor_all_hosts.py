@@ -5,7 +5,9 @@
 from dataclasses import asdict
 from typing import override
 
+from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.header import make_header
@@ -29,10 +31,12 @@ from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.all_hosts import (
+    Edition,
     MonitoringAllHostsApp,
     MonitoringPageLinkButton,
     RowAction,
 )
+from cmk.utils import paths
 
 from .._actions import PermittedHostActions
 
@@ -123,6 +127,9 @@ class MonitorAllHostsPage(Page):
             data=asdict(
                 MonitoringAllHostsApp(
                     poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
+                    user_id=str(user.id),
+                    site=str(omd_site()),
+                    edition=Edition(edition(paths.omd_root).short),
                     actions=PermittedHostActions(
                         self._commands, user, _SUPPORTED_ACTIONS
                     ).as_models(),

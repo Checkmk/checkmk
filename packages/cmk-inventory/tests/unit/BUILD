@@ -9,5 +9,7 @@ py_cmk_test(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:store",
         "//packages/cmk-inventory:inventory",
+        "//packages/cmk-inventory:plugins",
+        "//packages/cmk-plugin-apis:diagnostics",
     ],
 )

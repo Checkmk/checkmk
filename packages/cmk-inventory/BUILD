@@ -45,6 +45,22 @@ filegroup(
     srcs = ["cmk/inventory/py.typed"],
 )
 
+py_library(
+    name = "plugins",
+    srcs = ["cmk/plugins/inventory/diagnostics/checkmk_overview.py"],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//packages/cmk-inventory:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":inventory",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-plugin-apis:diagnostics",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-inventory",
@@ -58,6 +74,7 @@ py_wheel(
     deps = [
         ":inventory",
         ":inventory_py_typed",
+        ":plugins",
     ],
 )
 
@@ -83,6 +100,9 @@ sh_library(
 
 py_requirements_test(
     name = "requirements-test",
-    libs = [":inventory"],
+    libs = [
+        ":inventory",
+        ":plugins",
+    ],
     requirements_in = "requirements.in",
 )

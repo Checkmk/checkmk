@@ -155,7 +155,6 @@ allows = [
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version",
-  "cmk.inventory",
   # decoding of the rot47-obfuscated licensing usage reports
   "cmk.licensing.usage",
 ]
@@ -199,6 +198,9 @@ allows = ["@ccc", "cmk.dcd", "cmk.gui.config"]
 
 [plugin_families.violations.profiling]
 allows = ["cmk.profiling.backend"]
+
+[plugin_families.violations.inventory]
+allows = ["cmk.ccc.hostaddress", "cmk.inventory"]
 
 [plugin_families.violations.otel_collector]
 allows = [

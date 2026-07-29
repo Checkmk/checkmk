@@ -10,18 +10,14 @@ from datetime import datetime
 from pathlib import PurePosixPath
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.hostaddress import HostName
 from cmk.diagnostics.internal import (
     CollectContext,
-    CollectError,
-    CollectWarning,
     DiagnosticsPlugin,
     DumpItem,
     GeneratedContent,
     Help,
     Sensitivity,
 )
-from cmk.inventory.structured_data import InventoryStore, SDNodeName, serialize_tree
 from cmk.plugins.diagnostics.lib.files import walk_verbatim
 from cmk.plugins.diagnostics.lib.topics import TOPIC_GENERAL
 
@@ -94,39 +90,4 @@ diagnostics_plugin_omd_config = DiagnosticsPlugin(
     sensitivity=Sensitivity.LOW,
     topic=TOPIC_GENERAL,
     handler=_collect_omd_config,
-)
-
-
-def _collect_checkmk_overview(context: CollectContext) -> Iterable[DumpItem]:
-    checkmk_server_host = HostName(context.resolve_checkmk_server_host())
-    try:
-        tree = InventoryStore(context.omd_root).load_inventory_tree(host_name=checkmk_server_host)
-    except FileNotFoundError as e:
-        raise CollectError("No HW/SW Inventory tree of '%s' found" % checkmk_server_host) from e
-
-    if not (
-        node := tree.get_tree(
-            (
-                SDNodeName("software"),
-                SDNodeName("applications"),
-                SDNodeName("check_mk"),
-            )
-        )
-    ):
-        raise CollectWarning("No HW/SW Inventory node 'Software > Applications > Checkmk'")
-
-    yield DumpItem(
-        PurePosixPath("checkmk_overview"),
-        GeneratedContent(json.dumps(serialize_tree(node), sort_keys=True, indent=4).encode()),
-    )
-
-
-diagnostics_plugin_checkmk_overview = DiagnosticsPlugin(
-    name="checkmk_overview",
-    description=Help(
-        "HW/SW Inventory node 'Software > Applications > Checkmk' of the Checkmk server"
-    ),
-    sensitivity=Sensitivity.LOW,
-    topic=TOPIC_GENERAL,
-    handler=_collect_checkmk_overview,
 )

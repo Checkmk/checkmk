@@ -180,6 +180,41 @@ test('FormCascadingSingleChoice shows required tag of revealed element without l
   await waitFor(() => expect(screen.getAllByText('(required)')).toHaveLength(1))
 })
 
+test('FormCascadingSingleChoice shows required tag for revealed file upload', async () => {
+  const fileUploadFormSpec: FormSpec.FileUpload = {
+    type: 'file_upload',
+    title: 'nestedFileUploadTitle',
+    help: 'nestedFileUploadHelp',
+    validators: [],
+    i18n: { replace_file: 'Replace file' }
+  }
+  const emptyFileUploadData = {
+    input_uuid: 'some-uuid',
+    file_name: null,
+    file_type: null,
+    file_content_encrypted: null
+  }
+  const specWithFileUpload: FormSpec.CascadingSingleChoice = {
+    ...spec,
+    elements: [
+      {
+        name: 'fileChoice',
+        title: 'fileChoiceTitle',
+        default_value: emptyFileUploadData,
+        parameter_form: fileUploadFormSpec
+      }
+    ]
+  }
+
+  await renderForm({
+    spec: specWithFileUpload,
+    data: ['fileChoice', emptyFileUploadData],
+    backendValidation: []
+  })
+
+  await waitFor(() => expect(screen.getAllByText('(required)')).toHaveLength(1))
+})
+
 test('FormCascadingSingleChoice renders required tag only once for element with label', async () => {
   await renderForm({
     spec,

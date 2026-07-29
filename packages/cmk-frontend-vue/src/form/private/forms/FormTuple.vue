@@ -14,6 +14,8 @@ import { ref, watch } from 'vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
+import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, groupIndexedValidations } from '@/form/private/validation'
 
 const props = defineProps<{
@@ -61,6 +63,11 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
         <FormLabel v-if="element.title && spec.layout !== 'float'">{{
           capitalizeFirstLetter(element.title)
         }}</FormLabel>
+        <FormRequired
+          v-if="element.title && spec.layout !== 'float' && !rendersRequiredLabelItself(element)"
+          :spec="element"
+          :space="'before'"
+        />
         <CmkSpace size="small" />
         <CmkHelpText :help="untranslated(element.help)" />
         <CmkSpace

@@ -48,3 +48,7 @@ export function required(validator: FormSpec.Validator): boolean {
       validator.min_value > 0)
   )
 }
+
+export function isRequired(spec: FormSpec.FormSpec): boolean {
+  return (spec as Components).type === 'file_upload' || (spec.validators?.some(required) ?? false)
+}

@@ -74,6 +74,56 @@ test('FormTuple renders value', async () => {
   expect(screen.queryByText('Backend error message')).toBeNull()
 })
 
+test('FormTuple shows required tag only for elements that must not be empty', async () => {
+  const requiredStringSpec: FormSpec.String = {
+    ...stringSpec1,
+    validators: [
+      {
+        type: 'length_in_range',
+        min_value: 1,
+        max_value: null,
+        error_message: 'firstFooTitle must not be empty'
+      }
+    ]
+  }
+
+  const tupleSpec: FormSpec.Tuple = { ...spec, elements: [requiredStringSpec, stringSpec2] }
+  await renderForm({
+    spec: tupleSpec,
+    data: ['foo', 'bar'],
+    backendValidation: []
+  })
+
+  expect(screen.getAllByText('(required)')).toHaveLength(1)
+})
+
+test('FormTuple renders required tag only once for element with label', async () => {
+  const labeledRequiredStringSpec: FormSpec.String = {
+    ...stringSpec1,
+    label: 'firstFooLabel',
+    validators: [
+      {
+        type: 'length_in_range',
+        min_value: 1,
+        max_value: null,
+        error_message: 'firstFooTitle must not be empty'
+      }
+    ]
+  }
+
+  const tupleSpec: FormSpec.Tuple = {
+    ...spec,
+    elements: [labeledRequiredStringSpec, stringSpec2]
+  }
+  await renderForm({
+    spec: tupleSpec,
+    data: ['foo', 'bar'],
+    backendValidation: []
+  })
+
+  expect(screen.getAllByText('(required)')).toHaveLength(1)
+})
+
 test('FormTuple renders updated validation', async () => {
   const { rerender } = await renderForm({
     spec,

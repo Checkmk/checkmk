@@ -56,7 +56,7 @@ py_library(
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
         "//cmk/gui/views",
-        "//cmk/gui/views:icon",
+        "//cmk/gui/views:components",
         "//cmk/gui/visuals",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",

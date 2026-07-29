@@ -15,7 +15,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/utils:permission_verification",
-        "//cmk/gui/views:icon",
+        "//cmk/gui/views:components",
         "//packages/cmk-ruleset-matcher",
     ],
 )

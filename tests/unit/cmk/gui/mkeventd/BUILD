@@ -14,7 +14,7 @@ py_cmk_test(
         "//cmk/gui/mkeventd",
         "//cmk/gui/search:matchers",
         "//cmk/gui/utils:roles",
-        "//cmk/gui/views:icon",
+        "//cmk/gui/views:components",
         "//packages/cmk-ec",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",

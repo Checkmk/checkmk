@@ -1,37 +1,29 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
+# The view building blocks: commands, icons, layouts, sorters, graphs, perfometers and the view
+# store. Kept separate from ":views" because "//cmk/gui:view_toolkit" and "//cmk/gui/inventory" sit
+# between the two layers.
 py_library(
-    name = "store",
+    name = "components",
     srcs = [
         "builtin_views.py",
+        "graph.py",
+        "page_ajax_filters.py",
+        "sort_url.py",
         "store.py",
         "view_choices.py",
-    ],
+    ] + glob(include = [
+        "_openapi/**/*.py",
+        "command/**/*.py",
+        "icon/**/*.py",
+        "layout/**/*.py",
+        "perfometer/**/*.py",
+        "sorter/**/*.py",
+    ]),
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui/data_source",
-        "//cmk/gui/utils:labels",
-        "//cmk/gui/utils:roles",
-        "//cmk/gui/visuals",
-        "//cmk/utils:paths",
-        "//packages/cmk-ccc:plugin-registry",
-        "//packages/cmk-ccc:user",
-        "//packages/cmk-ccc:version",
-    ],
-)
-
-py_library(
-    name = "command",
-    srcs = glob(include = ["command/**/*.py"]),
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -41,246 +33,47 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
+        "//cmk/gui:painter_options",
+        "//cmk/gui:visual_link",
         "//cmk/gui/data_source",
+        "//cmk/gui/graphing",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:types",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter:v0_impl",
+        "//cmk/gui/painter:v1",
         "//cmk/gui/utils:confirm_with_preview",
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:html",
+        "//cmk/gui/utils:labels",
+        "//cmk/gui/utils:misc",
+        "//cmk/gui/utils:mobile",
+        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:popups",
+        "//cmk/gui/utils:roles",
         "//cmk/gui/utils:selection_id",
         "//cmk/gui/utils:speaklater",
+        "//cmk/gui/utils:temperate_unit",
         "//cmk/gui/utils:time",
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
+        "//cmk/gui/visuals",
         "//cmk/utils",
+        "//cmk/utils:paths",
+        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
     ],
 )
 
-py_library(
-    name = "icon",
-    srcs = glob(include = ["icon/**/*.py"]),
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//non-free/packages:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":graph",
-        "//cmk/gui:auth_core",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:html_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//cmk/gui:visual_link",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/painter:v1",
-        "//cmk/gui/utils:html",
-        "//cmk/gui/utils:mobile",
-        "//cmk/gui/utils:popups",
-        "//cmk/gui/utils:roles",
-        "//cmk/gui/utils:speaklater",
-        "//cmk/gui/utils:urls",
-        "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:plugin-registry",
-        "//packages/cmk-ccc:site",
-    ],
-)
-
-py_library(
-    name = "layout",
-    srcs = glob(include = ["layout/**/*.py"]),
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:auth_core",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:html_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//cmk/gui:visual_link",
-        "//cmk/gui/data_source",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/painter:v1",
-        "//cmk/gui/utils:html",
-        "//cmk/gui/utils:misc",
-        "//cmk/gui/utils:roles",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:plugin-registry",
-    ],
-)
-
-py_library(
-    name = "_openapi",
-    srcs = glob(include = ["_openapi/**/*.py"]),
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":store",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/framework:types",
-        "//cmk/gui/openapi/restful_objects",
-        "//cmk/gui/utils:permission_verification",
-    ],
-)
-
-py_library(
-    name = "sorter",
-    srcs = glob(include = ["sorter/**/*.py"]) + ["sort_url.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/painter:v0_impl",
-        "//cmk/gui/painter:v1",
-        "//cmk/gui/utils:misc",
-        "//cmk/gui/utils:roles",
-        "//cmk/gui/utils:speaklater",
-        "//cmk/gui/valuespec",
-        "//packages/cmk-ccc:plugin-registry",
-    ],
-)
-
-py_library(
-    name = "graph",
-    srcs = ["graph.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:auth_core",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//cmk/gui/graphing",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/utils:html",
-        "//cmk/gui/utils:mobile",
-        "//cmk/gui/utils:roles",
-        "//cmk/gui/utils:temperate_unit",
-        "//cmk/gui/utils:urls",
-        "//cmk/gui/valuespec",
-        "//packages/cmk-ccc:user",
-    ],
-)
-
-py_library(
-    name = "perfometer",
-    srcs = glob(include = ["perfometer/**/*.py"]),
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//non-free/packages:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":graph",
-        ":sorter",
-        "//cmk/gui:auth_core",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:html_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui/graphing",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/painter:v1",
-        "//cmk/gui/utils:escaping",
-        "//cmk/gui/utils:html",
-        "//packages/cmk-ccc:exceptions",
-    ],
-)
-
-py_library(
-    name = "page_ajax_filters",
-    srcs = ["page_ajax_filters.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":store",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui/data_source",
-        "//cmk/gui/utils:output_funnel",
-        "//cmk/gui/visuals",
-    ],
-)
-
-py_library(
-    name = "inventory",
-    srcs = glob(include = ["inventory/**/*.py"]),
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":row_post_processing",
-        ":sorter",
-        ":store",
-        "//cmk/gui:auth_core",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:html_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//cmk/gui:view_toolkit",
-        "//cmk/gui/data_source",
-        "//cmk/gui/graphing",
-        "//cmk/gui/inventory",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/utils:html",
-        "//cmk/gui/utils:output_funnel",
-        "//cmk/gui/utils:speaklater",
-        "//cmk/gui/utils:urls",
-        "//cmk/gui/utils:user_errors",
-        "//cmk/gui/valuespec",
-        "//cmk/gui/visuals",
-        "//packages/cmk-inventory:inventory",
-        "//packages/cmk-plugin-apis:inventory_ui",
-    ],
-)
-
-py_library(
-    name = "row_post_processing",
-    srcs = ["row_post_processing.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:view_toolkit",
-        "//cmk/gui/visuals",
-        "//packages/cmk-ccc:plugin-registry",
-    ],
-)
-
-# All remaining views files: page handlers, registration, __init__.
+# Page handlers, registration and row post processing on top of the
+# components.
 py_library(
     name = "views",
     srcs = [
@@ -296,25 +89,16 @@ py_library(
         "page_edit_views.py",
         "page_show_view.py",
         "registration.py",
+        "row_post_processing.py",
         "visual_type.py",
-    ],
+    ] + glob(include = ["inventory/**/*.py"]),
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":_openapi",
-        ":command",
-        ":graph",
-        ":icon",
-        ":inventory",
-        ":layout",
-        ":page_ajax_filters",
-        ":perfometer",
-        ":row_post_processing",
-        ":sorter",
-        ":store",
+        ":components",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -341,6 +125,7 @@ py_library(
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:roles",
         "//cmk/gui/utils:selection_id",
+        "//cmk/gui/utils:speaklater",
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
@@ -350,5 +135,7 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-inventory:inventory",
+        "//packages/cmk-plugin-apis:inventory_ui",
     ],
 )

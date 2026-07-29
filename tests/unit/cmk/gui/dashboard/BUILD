@@ -17,7 +17,7 @@ py_cmk_test(
         "//cmk/gui/openapi/framework",
         "//cmk/gui/token_auth",
         "//cmk/gui/utils:temperate_unit",
-        "//cmk/gui/views:icon",
+        "//cmk/gui/views:components",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("pytest-mock"),

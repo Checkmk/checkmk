@@ -2128,6 +2128,89 @@ class PasswordClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class MapsClient(RestApiClient):
+    domain: DomainType = "map"
+    default_version = APIVersion.UNSTABLE
+
+    def create(
+        self,
+        config: dict[str, Any],
+        visibility: dict[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"config": config}
+        if visibility is not None:
+            body["visibility"] = visibility
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get(self, name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{name}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        name: str,
+        config: dict[str, Any],
+        visibility: dict[str, Any] | None = None,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        body: dict[str, Any] = {"config": config}
+        if visibility is not None:
+            body["visibility"] = visibility
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{name}",
+            body=body,
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(name, etag),
+        )
+
+    def delete(
+        self,
+        name: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{name}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(name, etag),
+        )
+
+    def get_authoring_settings(self, expect_ok: bool = True) -> Response:
+        # Internal: the SPA's own editor defaults, not part of the public API.
+        return self.request(
+            "get",
+            url="/domain-types/maps_settings/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def _set_etag_header(
+        self, name: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(name).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 class CustomerClient(RestApiClient):
     domain: DomainType = "customer"
 
@@ -5248,6 +5331,7 @@ class ClientRegistry:
     HostTagGroup: HostTagGroupClient
     CustomHostAttr: CustomHostAttrClient
     Password: PasswordClient
+    Maps: MapsClient
     Customer: CustomerClient
     Agent: AgentClient
     Downtime: DowntimeClient
@@ -5319,6 +5403,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HostTagGroup=HostTagGroupClient(request_handler, url_prefix),
         CustomHostAttr=CustomHostAttrClient(request_handler, url_prefix),
         Password=PasswordClient(request_handler, url_prefix),
+        Maps=MapsClient(request_handler, url_prefix),
         Customer=CustomerClient(request_handler, url_prefix),
         Agent=AgentClient(request_handler, url_prefix),
         Downtime=DowntimeClient(request_handler, url_prefix),

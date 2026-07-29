@@ -794,10 +794,22 @@ allows = [
   "cmk.web.utils",
 ]
 
+# REST API endpoints for Maps. Import cmk.gui (openapi framework) plus the
+# feature's own gui/shared layers.
+[components."cmk.maps.rest_api"]
+allows = ["@ccc", "cmk.gui", "cmk.maps.shared", "cmk.maps.gui", "cmk.web.utils"]
+
 # The feature's composition root: the GuiFeaturePlugin cmk.gui.main_modules
-# discovers, so that cmk.gui does not have to import the feature.
+# discovers, so that cmk.gui does not have to import the feature. The only place
+# that sees both halves of Maps, so that neither the GUI integration nor the
+# REST endpoints have to import the other.
 [components."cmk.maps.registration"]
-allows = ["@ccc", "cmk.gui_plugins.internal", "cmk.maps.gui"]
+allows = [
+  "@ccc",
+  "cmk.gui_plugins.internal",
+  "cmk.maps.gui",
+  "cmk.maps.rest_api",
+]
 
 [components."cmk.mcp"]
 allows = ["@ccc", "@trace", "@crash"]
@@ -973,6 +985,8 @@ allows = [
   "cmk.gui.nonfree",
   "cmk.data_backend.gui",
   "cmk.data_backend.telemetry_metrics.gui",
+  "cmk.maps.gui",
+  "cmk.maps.rest_api",
   "cmk.network_flow.gui",
   "cmk.otel_collector",
   "cmk.telemetry.gui",

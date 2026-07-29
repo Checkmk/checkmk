@@ -9,12 +9,15 @@ called from each edition's ``registration.py``, so ``cmk.gui`` needs no import o
 this package. ``cmk.gui.main_modules`` discovers this module by name and hands it
 the registries it asks for.
 
-It sits beside the feature's parts rather than inside one of them, so no part
-has to import another.
+This is the only place that sees both halves of the feature — the GUI
+integration and the REST endpoints — which is why it lives next to them rather
+than inside either (neither may import the other).
 """
 
 from cmk.gui_plugins.internal.feature_registration import GuiFeaturePlugin, RegistrationContext
 from cmk.maps import gui as maps_gui
+from cmk.maps.rest_api import registration as maps_rest_api
+from cmk.maps.rest_api.internal import registration as maps_rest_api_internal
 
 
 def _register(ctx: RegistrationContext) -> None:
@@ -28,6 +31,14 @@ def _register(ctx: RegistrationContext) -> None:
         ctx.replication_path_registry,
         ctx.sample_config_generator_registry,
         ctx.mode_registry,
+    )
+    maps_rest_api.register(
+        versioned_endpoint_registry=ctx.versioned_endpoint_registry,
+        endpoint_family_registry=ctx.endpoint_family_registry,
+    )
+    maps_rest_api_internal.register(
+        versioned_endpoint_registry=ctx.versioned_endpoint_registry,
+        endpoint_family_registry=ctx.endpoint_family_registry,
     )
 
 

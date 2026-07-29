@@ -121,8 +121,34 @@ py_library(
     ],
 )
 
-# The GuiFeaturePlugin cmk.gui.main_modules discovers: the composition root that
-# plugs the feature into the GUI, so that cmk.gui never imports the package.
+# Versioned REST API endpoints for maps. Registered explicitly (not by
+# directory discovery), so living outside cmk/gui/openapi/api_endpoints is fine.
+py_library(
+    name = "rest_api",
+    srcs = glob(["cmk/maps/rest_api/**/*.py"]),
+    data = ["cmk/maps/py.typed"],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":gui",
+        ":shared",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
+        "//cmk/gui/openapi/restful_objects",
+        "//packages/cmk-web/cmk/web/utils",
+        requirement("pydantic"),
+    ],
+)
+
+# The GuiFeaturePlugin cmk.gui.main_modules discovers: the only target that
+# pulls in both halves of the feature, so neither half depends on the other.
 py_library(
     name = "registration",
     srcs = ["cmk/maps/registration.py"],
@@ -133,6 +159,7 @@ py_library(
     ],
     deps = [
         ":gui",
+        ":rest_api",
         "//cmk/gui_plugins/internal",
     ],
 )
@@ -177,6 +204,7 @@ py_wheel(
         ":gui",
         ":py_typed",
         ":registration",
+        ":rest_api",
         ":shared",
     ],
 )

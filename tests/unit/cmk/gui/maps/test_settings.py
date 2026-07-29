@@ -19,6 +19,7 @@ from cmk.maps.gui._config_domain import (
     CONFIG_VAR_OBJECT_DEFAULTS,
     ConfigDomainMaps,
 )
+from cmk.maps.rest_api.internal.models.response_models import MapsAuthoringSettings
 
 # Captured verbatim from a real WATO "Save": ``default_map_type`` and ``labels``
 # are stored as TUPLEs (CascadingSingleChoice), ``background`` too.
@@ -205,3 +206,15 @@ def test_monitoring_core_fails_safe_to_none(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setattr(_settings, "get_omd_config", _raise)
     assert _settings.monitoring_core() is None
+
+
+def test_rest_model_covers_every_authoring_default() -> None:
+    """The SPA reads these defaults over REST, so the endpoint must carry them all.
+
+    ``MapsAuthoringSettings`` is built by splatting ``AuthoringDefaults``, so a
+    field added on one side and not the other is either a TypeError at runtime or
+    a value the editor silently never sees. Pin the two shapes together instead.
+    """
+    assert set(MapsAuthoringSettings.__dataclass_fields__) == set(
+        _settings.AuthoringDefaults.__annotations__
+    )

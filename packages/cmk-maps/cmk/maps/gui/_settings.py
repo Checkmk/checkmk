@@ -21,7 +21,7 @@ round-trip (``/api/v1/settings``) is gone.
 
 import re
 from collections.abc import Mapping
-from typing import Literal, TypedDict
+from typing import get_args, Literal, TypedDict
 from urllib.parse import urlsplit
 
 from cmk.ccc.site import get_omd_config, omd_site
@@ -32,7 +32,14 @@ from cmk.maps.gui._config_domain import (
     CONFIG_VAR_OBJECT_DEFAULTS,
     ConfigDomainMaps,
 )
+from cmk.maps.shared.map_payload import LineStyle
 from cmk.utils import paths
+
+# Clamped by the flatten below (an unknown stored value falls back), so these
+# are real domains rather than documentation — the REST model and the SPA's
+# generated types narrow to them.
+RenderMode = Literal["default", "nagvis_classic"]
+MapListView = Literal["cards", "table"]
 
 
 class AuthoringDefaults(TypedDict):
@@ -47,7 +54,7 @@ class AuthoringDefaults(TypedDict):
     view_type: str
     url_target: str
     z: int
-    line_style: str
+    line_style: LineStyle
     label_show: bool
     label_size: int
     label_color: str
@@ -56,10 +63,10 @@ class AuthoringDefaults(TypedDict):
     context_template: str | None
     default_backend_id: str
     default_map_type: str
-    default_render_mode: str
+    default_render_mode: RenderMode
     default_tile_url: str | None
     # Per-operator localStorage overrides this client-side.
-    map_list_view: str
+    map_list_view: MapListView
 
 
 # Factory defaults for every flat field the SPA reads. A field missing from the
@@ -94,6 +101,17 @@ _FLAT_DEFAULTS: AuthoringDefaults = {
 def _optional_text(value: object) -> str | None:
     """A template/URL field: a non-empty string, else None."""
     return value if isinstance(value, str) and value else None
+
+
+def _line_style(value: object, fallback: LineStyle) -> LineStyle:
+    """The stored value comes from a fixed-choice FormSpec, but a hand-edited or
+    outdated global can still hold something else — fall back rather than let it
+    reach the SPA as a style nothing renders."""
+    styles: tuple[LineStyle, ...] = get_args(LineStyle)
+    for style in styles:
+        if value == style:
+            return style
+    return fallback
 
 
 def _int_or(value: object, fallback: int) -> int:
@@ -189,7 +207,7 @@ def _flatten(
     out["icon_size"] = _int_or(object_form.get("icon_size"), out["icon_size"])
     out["view_type"] = str(object_form.get("view_type", out["view_type"]))
     out["url_target"] = str(object_form.get("url_target", out["url_target"]))
-    out["line_style"] = str(object_form.get("line_style") or out["line_style"])
+    out["line_style"] = _line_style(object_form.get("line_style"), out["line_style"])
     out["hover_template"] = _optional_text(object_form.get("hover_template"))
     out["context_template"] = _optional_text(object_form.get("context_template"))
 

@@ -36,7 +36,7 @@ def main() {
 
     def test_stages = packages.collectEntries { p ->
         [("${p.name}"): {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
 
             def stepName = "${p.name}";
             def build_instance = null;

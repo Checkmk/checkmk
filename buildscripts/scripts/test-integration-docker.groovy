@@ -47,13 +47,13 @@ def main() {
     }
 
     /// In order to ensure a fixed order for stages executed in parallel,
-    /// we wait an increasing amount of time (N * 100ms).
+    /// we wait an increasing amount of time (N * 1s).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
     /// like changing order or amount of stages, which will happen with stages started `via parallel()`
     def timeOffsetForOrder = 0;
     def stages = [
         "Build source package": {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
             def build_instance = null;
             smart_stage(
                 name: "Build source package",
@@ -93,7 +93,7 @@ def main() {
             }
         },
         "Build Package": {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
             def build_instance = null;
             smart_stage(
                 name: "Build Package",

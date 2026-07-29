@@ -18,7 +18,6 @@ from ._engine_serialization import (
     consolidation_function_of,
     ensure_type,
     GraphCodec,
-    Json,
     time_range_of,
 )
 from ._graph_specification import GraphSpecification
@@ -87,7 +86,7 @@ class EngineGraphDispatcher:
     evaluate: DispatchedEvaluate
     reshape: DispatchedReshape | None = None
 
-    def serialize(self, graph: Graph) -> Json:
+    def serialize(self, graph: Graph) -> Mapping[str, object]:
         return self.codec.serialize_graph(graph)
 
     def deserialize(self, graph: Mapping[str, object], options: Mapping[str, object]) -> Graph:
@@ -108,7 +107,7 @@ class EngineGraphDispatcherRegistry(Registry[EngineGraphDispatcher]):
 engine_graph_dispatcher_registry = EngineGraphDispatcherRegistry()
 
 
-def serialize_graphs(graphs: Sequence[Graph]) -> Json:
+def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
     return {
         "graphs": [
             engine_graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs

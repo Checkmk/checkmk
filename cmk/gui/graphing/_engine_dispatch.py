@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -57,14 +57,25 @@ class EvaluatedGraphs:
     diagnostics: FetchDiagnostics
 
 
-class DispatchedEvaluate(Protocol):
-    # A graph type's evaluation. It receives the dispatcher's own codec to deserialize the graph, so
-    # the graph type names its codec once (on the dispatcher) instead of reconstructing it here.
+class DispatchedReshape(Protocol):
+    # How a graph type's request options reshape the graph that was serialized. The definition holds
+    # what a graph is made of, not everything about how it is drawn: a combined graph's mode is a
+    # request option, so the same definition folds its objects into one curve or draws them one by
+    # one. A type whose options do not reshape it names none and keeps what it serialized.
     def __call__(
         self,
         *,
-        codec: GraphCodec,
-        graph: Mapping[str, object],
+        graph: Graph,
+        options: Mapping[str, object],
+    ) -> Graph: ...
+
+
+class DispatchedEvaluate(Protocol):
+    # A graph type's evaluation, on the graph its deserialization produced.
+    def __call__(
+        self,
+        *,
+        graph: Graph,
         options: Mapping[str, object],
     ) -> EvaluatedGraphs: ...
 
@@ -74,9 +85,19 @@ class EngineGraphDispatcher:
     kind: str
     codec: GraphCodec
     evaluate: DispatchedEvaluate
+    reshape: DispatchedReshape | None = None
 
     def serialize(self, graph: Graph) -> Json:
         return self.codec.serialize_graph(graph)
+
+    def deserialize(self, graph: Mapping[str, object], options: Mapping[str, object]) -> Graph:
+        """The graph behind a serialized definition, as the request options make it.
+
+        Every caller - the evaluation as much as anything else reading a definition back - sees the
+        graph that is drawn.
+        """
+        decoded = self.codec.deserialize_graph(graph)
+        return decoded if self.reshape is None else self.reshape(graph=decoded, options=options)
 
 
 class EngineGraphDispatcherRegistry(Registry[EngineGraphDispatcher]):
@@ -95,17 +116,29 @@ def serialize_graphs(graphs: Sequence[Graph]) -> Json:
     }
 
 
+def _dispatched_graphs(
+    internal: Mapping[str, object],
+    options: Mapping[str, object],
+) -> Iterator[tuple[DispatchedEvaluate, Graph]]:
+    """The graphs behind a serialized definition, each paired with the evaluation of its graph type.
+
+    The definition may hold graphs of different kinds, but they share one common options object;
+    each dispatcher reads the common options plus whatever special options its graph type needs.
+    """
+    for serialized in ensure_type(internal["graphs"], list):
+        graph = ensure_type(serialized, dict)
+        dispatcher = engine_graph_dispatcher_registry[ensure_type(graph["kind"], str)]
+        yield dispatcher.evaluate, dispatcher.deserialize(graph, options)
+
+
 def evaluate_graphs(
-    graphs: Sequence[Mapping[str, object]],
+    internal: Mapping[str, object],
     options: Mapping[str, object],
 ) -> EvaluatedGraphs:
-    # The graphs may be of different kinds, but they share one common options object; each dispatcher
-    # reads the common options plus whatever special options its graph type needs.
     evaluated_graphs: list[EvaluatedGraph] = []
     diagnostics = FetchDiagnostics()
-    for graph in graphs:
-        dispatcher = engine_graph_dispatcher_registry[ensure_type(graph["kind"], str)]
-        evaluated = dispatcher.evaluate(codec=dispatcher.codec, graph=graph, options=options)
+    for evaluate, graph in _dispatched_graphs(internal, options):
+        evaluated = evaluate(graph=graph, options=options)
         evaluated_graphs.extend(evaluated.graphs)
         diagnostics.limits_reached.extend(evaluated.diagnostics.limits_reached)
         diagnostics.errors.extend(evaluated.diagnostics.errors)

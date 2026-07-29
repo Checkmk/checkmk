@@ -17,7 +17,6 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import MKLivestatusException
 
 from .._engine_dispatch import evaluate_graphs
-from .._engine_serialization import ensure_type
 from ._family import GRAPH_FAMILY
 from ._serialize import (
     api_consolidation_to_engine,
@@ -38,10 +37,7 @@ def fetch_graph_data_v1(body: GraphFetchRequest) -> GraphFetchResponse:
     if body.combination_mode is not None:
         options["combination_mode"] = body.combination_mode
     try:
-        evaluated = evaluate_graphs(
-            [ensure_type(graph, dict) for graph in ensure_type(body.internal["graphs"], list)],
-            options,
-        )
+        evaluated = evaluate_graphs(body.internal, options)
     except MKLivestatusException as exc:
         raise ProblemException(
             status=503,

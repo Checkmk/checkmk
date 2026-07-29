@@ -238,7 +238,7 @@ def _command_inspect(
     try:
         file_content = file_path.read_bytes()
     except OSError as exc:
-        raise PackageError from exc
+        raise PackageError(f"Cannot read file {file_path}: {exc}") from exc
 
     manifest = extract_manifest(file_content)
 
@@ -407,7 +407,7 @@ def _command_add(
     try:
         file_content = file_path.read_bytes()
     except OSError as exc:
-        raise PackageError from exc
+        raise PackageError(f"Cannot read file {file_path}: {exc}") from exc
 
     manifest = site_context.package_store.store(file_content, persisting_function)
 

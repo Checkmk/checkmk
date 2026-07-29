@@ -8,6 +8,8 @@ py_cmk_test(
     deps = [
         "//packages/cmk-crash:crash",
         "//packages/cmk-crash:crash_reporting",
+        "//packages/cmk-crash:plugins",
+        "//packages/cmk-plugin-apis:diagnostics",
         requirement("requests"),
         requirement("responses"),
     ],

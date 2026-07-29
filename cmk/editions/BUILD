@@ -72,6 +72,7 @@ py_library(
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-crash:crash",
+        "//packages/cmk-crash:plugins",
         "//packages/cmk-crypto",
         "//packages/cmk-ec",
         "//packages/cmk-ec:event",

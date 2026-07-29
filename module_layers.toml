@@ -145,6 +145,9 @@ allows = [
 ]
 
 
+[plugin_families.violations.crash]
+allows = ["cmk.crash"]
+
 [plugin_families.violations.diagnostics]
 allows = [
   "@livestatus_client",
@@ -152,7 +155,6 @@ allows = [
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version",
-  "cmk.crash",
   "cmk.inventory",
   # decoding of the rot47-obfuscated licensing usage reports
   "cmk.licensing.usage",

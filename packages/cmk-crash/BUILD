@@ -64,6 +64,21 @@ filegroup(
     srcs = ["cmk/crash_reporting/py.typed"],
 )
 
+py_library(
+    name = "plugins",
+    srcs = glob(["cmk/plugins/**/*.py"]),
+    imports = ["."],
+    visibility = [
+        "//cmk/editions:__subpackages__",
+        "//packages/cmk-crash:__subpackages__",
+        # "//tests:__subpackages__",
+    ],
+    deps = [
+        ":crash",
+        "//packages/cmk-plugin-apis:diagnostics",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-crash",
@@ -76,6 +91,7 @@ py_wheel(
         ":crash_py_typed",
         ":crash_reporting",
         ":crash_reporting_py_typed",
+        ":plugins",
     ],
 )
 
@@ -118,6 +134,7 @@ py_requirements_test(
     libs = [
         ":crash",
         ":crash_reporting",
+        ":plugins",
     ],
     requirements_in = "requirements.in",
 )

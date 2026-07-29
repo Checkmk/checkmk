@@ -16,8 +16,11 @@ from cmk.diagnostics.internal import (
     GeneratedContent,
     Help,
     Sensitivity,
+    Topic,
 )
-from cmk.plugins.diagnostics.lib.topics import TOPIC_CRASH_REPORTS
+
+# Shared with the diagnostics plugin family; topics compare by value.
+_TOPIC_CRASH_REPORTS = Topic("Crash reports")
 
 
 def _collect_latest_crash_reports(context: CollectContext) -> Iterable[DumpItem]:
@@ -49,6 +52,6 @@ diagnostics_plugin_latest_crash_reports = DiagnosticsPlugin(
     name="latest_crash_reports",
     description=Help("The latest crash dumps of each type as found in var/check_mk/crashes"),
     sensitivity=Sensitivity.MEDIUM,
-    topic=TOPIC_CRASH_REPORTS,
+    topic=_TOPIC_CRASH_REPORTS,
     handler=_collect_latest_crash_reports,
 )

@@ -11,7 +11,7 @@ from pathlib import Path, PurePosixPath
 
 from cmk.crash import make_crash_report_base_path
 from cmk.diagnostics.internal import CollectContext, GeneratedContent
-from cmk.plugins.diagnostics.diagnostics.crash_reports import (
+from cmk.plugins.crash.diagnostics.crash_reports import (
     diagnostics_plugin_latest_crash_reports,
 )
 

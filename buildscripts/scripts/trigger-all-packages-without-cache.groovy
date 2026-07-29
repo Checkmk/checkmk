@@ -14,6 +14,11 @@ void main() {
 
     def all_editions = [];
     def disable_cache = true;
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 1s).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         all_editions = versioning.get_editions();
@@ -52,7 +57,10 @@ void main() {
             /// this makes sure the whole parallel thread is marked as skipped
             if (! run_condition) {
                 Utils.markStageSkippedForConditional(stepName);
+                return true;
             }
+
+            sleep(1 * timeOffsetForOrder++);
 
             success &= smart_stage(
                 name: stepName,

@@ -223,6 +223,47 @@ def test_returning_to_live_switches_the_refresh_indicator(
     assert not javascript_errors, f"Uncaught JS errors returning to live: {javascript_errors}"
 
 
+def test_pin_marks_the_same_point_on_every_graph_and_outlives_a_reload(
+    service_graphs: ServiceGraphs, javascript_errors: list[str]
+) -> None:
+    """Pinning a point on one graph pins it on every graph and outlives a page load."""
+    panels = service_graphs.all_panels()
+
+    panels[0].graph.add_pin(0.4)
+
+    for panel in panels:
+        expect(
+            panel.graph.pin_handle,
+            "A graph shows no pin although a point was pinned on the page",
+        ).to_be_visible()
+    # The panels sit in one column at one width, so the handles' page x is comparable as it is.
+    pin_boxes = [panel.graph.pin_handle.bounding_box() for panel in panels]
+    assert all(box is not None for box in pin_boxes), "A pin handle has no layout box"
+    pin_centres = [box["x"] + box["width"] / 2 for box in pin_boxes if box is not None]
+    for centre in pin_centres[1:]:
+        assert centre == pytest.approx(pin_centres[0], abs=2), (
+            f"The graphs pin different points of their window: {pin_centres}"
+        )
+
+    service_graphs.reload()
+    panels = service_graphs.all_panels()
+
+    for panel in panels:
+        expect(
+            panel.graph.pin_handle,
+            "A graph came back from the reload without the pin the site had stored",
+        ).to_be_visible()
+
+    panels[0].graph.remove_pin()
+
+    for panel in panels:
+        expect(
+            panel.graph.pin_handle,
+            "A graph kept its pin although the pin was removed on the page",
+        ).to_have_count(0)
+    assert not javascript_errors, f"Uncaught JS errors while pinning: {javascript_errors}"
+
+
 def test_canvas_hover_shows_a_tooltip_for_the_resolved_point(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:

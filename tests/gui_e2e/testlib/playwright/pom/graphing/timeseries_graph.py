@@ -80,6 +80,16 @@ class TimeSeriesGraph:
         return self.root.get_by_role("button", name="Reset zoom")
 
     @property
+    def add_pin_handle(self) -> Locator:
+        """The handle the hover offers above the plot for pinning the hovered point."""
+        return self.root.get_by_role("button", name="Add pin")
+
+    @property
+    def pin_handle(self) -> Locator:
+        """The handle sitting on the pinned point; it is also the control that removes it."""
+        return self.root.get_by_role("button", name="Remove pin")
+
+    @property
     def tooltip(self) -> Locator:
         """The hover tooltip.
 
@@ -147,6 +157,23 @@ class TimeSeriesGraph:
     def hover_canvas(self, x_fraction: float = 0.5, y_fraction: float = 0.5) -> None:
         box = self._canvas_box()
         self.page.mouse.move(*_point_in(box, x_fraction, y_fraction))
+
+    def add_pin(self, x_fraction: float = 0.5) -> None:
+        """Hover the plot and pin the point the hover resolved."""
+        logger.info("Pinning the point at %s of the plot width", x_fraction)
+        self.hover_canvas(x_fraction)
+        self.add_pin_handle.click()
+
+    def remove_pin(self) -> None:
+        """Click the handle on the pinned point.
+
+        Pinning the hovered point leaves the hover's own handle stacked on the pin's, so the
+        pointer has to leave the plot and the hover lapse before the pin's handle is the one
+        a click reaches.
+        """
+        self.root.hover(position={"x": 0, "y": 0})
+        self.add_pin_handle.wait_for(state="detached")
+        self.pin_handle.click()
 
 
 class GraphPanel:
@@ -260,6 +287,12 @@ class ServiceGraphs:
     @property
     def resume_refresh_button(self) -> Locator:
         return self.refresh_indicator.get_by_role("button", name="Resume")
+
+    def reload(self) -> None:
+        """Reload the page and wait for the graphs to come back."""
+        logger.info("Reloading the page holding the graphs")
+        self.page.reload()
+        self.wait_until_rendered()
 
     def wait_until_rendered(self) -> None:
         """Wait for the graphs to be on screen.

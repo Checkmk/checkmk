@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::{self, section, section::names};
+use crate::config::{self, options::Options, section, section::names};
 use crate::emit::{header, signaling_header};
 use crate::ora_sql::custom;
 use crate::ora_sql::sqls;
@@ -47,15 +47,20 @@ pub struct Section {
     sql_params: Vec<(String, String)>,
     path: Option<PathBuf>,
     pdb_patterns: Vec<Regex>,
+    options: Options,
 }
 
 impl Section {
-    pub fn make_instance_section() -> Self {
+    pub fn make_instance_section(options: &Options) -> Self {
         let config_section = config::section::SectionBuilder::new(section::names::INSTANCE).build();
-        Self::new(&config_section, 0)
+        Self::new(&config_section, 0, options)
     }
 
-    pub fn new(section: &config::section::Section, global_cache_age: u32) -> Self {
+    pub fn new(
+        section: &config::section::Section,
+        global_cache_age: u32,
+        options: &Options,
+    ) -> Self {
         let cache_age = if section.kind() == config::section::SectionKind::Async {
             Some(global_cache_age)
         } else {
@@ -82,6 +87,7 @@ impl Section {
                     }
                 })
                 .collect(),
+            options: options.clone(),
         }
     }
 
@@ -341,7 +347,7 @@ impl Section {
             let stem = candidate.file_stem()?.to_str()?.to_owned();
             (parent, stem)
         };
-        read_versioned_query(&dir, &stem, instance_version)
+        read_versioned_query(&dir, &stem, instance_version, &self.options)
     }
 
     /// The name of this section's query: the custom-metric item name where
@@ -390,13 +396,18 @@ fn read_versioned_query(
     dir: &Path,
     stem: &str,
     instance_version: InstanceNumVersion,
+    options: &Options,
 ) -> Option<(PathBuf, String)> {
     let versioned_files = find_sql_files(dir, stem).ok()?;
     versioned_files
         .into_iter()
         .find(|(min_version, _)| instance_version >= InstanceNumVersion::from(*min_version))
         .and_then(|(_, sql_file)| {
-            if !validate_permissions(&sql_file) {
+            if !validate_permissions(
+                &sql_file,
+                options.permissions_check(),
+                options.permissions_safe_entries(),
+            ) {
                 log::warn!("SQL file {:?} rejected: wrong permissions", &sql_file);
                 return None;
             }
@@ -577,7 +588,8 @@ mod tests {
 
     #[test]
     fn test_section_header() {
-        let section = Section::make_instance_section();
+        let options = Options::default();
+        let section = Section::make_instance_section(&options);
         assert_eq!(
             section.to_signaling_header().unwrap(),
             "<<<oracle_instance>>>"
@@ -589,6 +601,7 @@ mod tests {
                 .set_async(true)
                 .build(),
             100,
+            &options,
         );
         assert_eq!(
             section.to_signaling_header().unwrap(),
@@ -599,7 +612,7 @@ mod tests {
             .starts_with("<<<oracle_backup:cached("));
         assert!(section.to_work_header().ends_with("100):sep(124)>>>"));
 
-        let section = Section::new(&section::SectionBuilder::new("jobs").build(), 100);
+        let section = Section::new(&section::SectionBuilder::new("jobs").build(), 100, &options);
         assert!(section
             .to_work_header()
             .starts_with("<<<oracle_jobs:cached("));
@@ -608,6 +621,7 @@ mod tests {
                 .set_async(false)
                 .build(),
             100,
+            &options,
         );
         assert_eq!(section.to_work_header(), "<<<oracle_jobs:sep(124)>>>");
     }
@@ -628,7 +642,7 @@ mod tests {
         if async_ {
             builder = builder.set_async(true);
         }
-        Section::new(&builder.build(), cache_age)
+        Section::new(&builder.build(), cache_age, &Options::default())
     }
 
     // TC-ORA-101 (Param: plain <<<oracle_sql:sep(58)>>> header, sync and async)
@@ -694,7 +708,7 @@ mod tests {
             .sql("select 'details:inline' from dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -726,7 +740,7 @@ oracle:
             .iter()
             .find(|s| s.name().as_str() == names::INSTANCE)
             .expect("instance section parsed from yaml");
-        let overridden = Section::new(section_config, 0);
+        let overridden = Section::new(section_config, 0, &Options::default());
         // Empty search dirs: nothing on disk may shadow the inline `sql:`.
         let queries = overridden
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
@@ -758,7 +772,7 @@ oracle:
             ])
             .set_item_value(ItemValue::from("test".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -774,7 +788,7 @@ oracle:
             .sql_params(vec![("parameter_1".to_string(), "value_1".to_string())])
             .set_item_value(ItemValue::from("test".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -791,7 +805,7 @@ oracle:
             .sql_params(vec![("p".to_string(), "42".to_string())])
             .set_item_value(ItemValue::from("test".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -823,7 +837,7 @@ oracle:
             .iter()
             .find(|s| s.is_custom_metric())
             .expect("custom metric parsed from yaml");
-        let runtime = Section::new(section_config, 0);
+        let runtime = Section::new(section_config, 0, &Options::default());
         let queries = runtime
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
             .expect("custom metric sql should yield queries");
@@ -838,7 +852,7 @@ oracle:
             .path("queries/product_price.sql")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         assert_eq!(runtime.path(), Some(Path::new("queries/product_price.sql")));
         assert!(runtime.path().is_some_and(|p| p.is_relative()));
         assert!(runtime.inline_sql().is_none());
@@ -849,7 +863,7 @@ oracle:
         let section_config = section::SectionBuilder::new("instance")
             .path("/opt/checkmk/sql/instance.sql")
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         assert_eq!(
             runtime.path(),
             Some(Path::new("/opt/checkmk/sql/instance.sql"))
@@ -863,7 +877,7 @@ oracle:
             .sql("select 'details:fallback' from dual")
             .set_item_value(ItemValue::from("mixed".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         assert_eq!(runtime.path(), Some(Path::new("queries/mixed.sql")));
         assert_eq!(
             runtime.inline_sql(),
@@ -875,12 +889,17 @@ oracle:
     fn test_configured_path_ignores_unset_and_empty_path() {
         // Only a non-empty `path:` counts as configured: the "missing SQL file"
         // report hangs off this, and builtin sections carry no `path:` at all.
-        let builtin = Section::new(&section::SectionBuilder::new("instance").build(), 0);
+        let builtin = Section::new(
+            &section::SectionBuilder::new("instance").build(),
+            0,
+            &Options::default(),
+        );
         assert!(builtin.configured_path().is_none());
 
         let empty = Section::new(
             &section::SectionBuilder::new("instance").path("").build(),
             0,
+            &Options::default(),
         );
         assert!(empty.configured_path().is_none());
 
@@ -889,6 +908,7 @@ oracle:
                 .path("queries/instance.sql")
                 .build(),
             0,
+            &Options::default(),
         );
         assert_eq!(
             configured.configured_path(),
@@ -909,7 +929,7 @@ oracle:
         if !sql.is_empty() {
             builder = builder.sql(sql);
         }
-        Section::new(&builder.build(), 0)
+        Section::new(&builder.build(), 0, &Options::default())
     }
 
     #[test]
@@ -960,7 +980,7 @@ oracle:
         let config = section::SectionBuilder::new("test")
             .set_pdb_patterns(patterns.iter().map(|s| s.to_string()).collect())
             .build();
-        Section::new(&config, 0)
+        Section::new(&config, 0, &Options::default())
     }
 
     #[test]
@@ -1107,7 +1127,7 @@ oracle:
             .sql("SELECT 'a;b' FROM dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
@@ -1121,7 +1141,7 @@ oracle:
             .sql("SELECT 1 FROM dual; SELECT 2 FROM dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&section_config, 0);
+        let runtime = Section::new(&section_config, 0, &Options::default());
         let queries = runtime
             .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");

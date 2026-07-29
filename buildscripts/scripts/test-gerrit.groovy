@@ -75,8 +75,6 @@ def main_parallel() {
 
     def stepsForParallel = stage_info.STAGES.collectEntries { item ->
         [("Test ${item.NAME}") : {
-            sleep(1 * timeOffsetForOrder++);
-
             def stepName = "Test ${item.NAME}";
             def run_condition = !item.SKIPPED;
             def build_instance = null;
@@ -86,6 +84,8 @@ def main_parallel() {
                 Utils.markStageSkippedForConditional(stepName);
                 return true;
             } else {
+                sleep(1 * timeOffsetForOrder++);
+
                 // can not use join(",") as "," are not supported by ci-artifacts
                 def env_var_list_str = "";
                 def sec_var_list_str = "";

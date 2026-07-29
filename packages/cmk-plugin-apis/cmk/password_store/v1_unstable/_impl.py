@@ -57,7 +57,10 @@ class Secret[T]:
 
 def _get_store_secret_path() -> Path:
     if not (raw_key_file := os.environ.get("PASSWORD_STORE_SECRET_FILE")):
-        raise PasswordStoreError("Environment variable PASSWORD_STORE_SECRET_FILE is not set")
+        raise PasswordStoreError(
+            "Environment variable PASSWORD_STORE_SECRET_FILE is not set. "
+            "If you encounter this exception on the CLI, try logging in in a new shell."
+        )
     return Path(raw_key_file)
 
 

@@ -24,6 +24,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
+import ColumnPicker from '../shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringLimitSelector from '../shared/components/MonitoringLimitSelector.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
@@ -401,6 +402,7 @@ function navigateToLegacy() {
             <div class="monitoring-all-hosts-app__table-toolbar-end">
               <MonitoringTotalCount />
               <MonitoringLimitSelector />
+              <ColumnPicker />
             </div>
           </div>
           <MonitoringTable

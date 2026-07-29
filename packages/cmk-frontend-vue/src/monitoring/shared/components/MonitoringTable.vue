@@ -78,6 +78,9 @@ const table = useVueTable({
     get columnPinning() {
       return props.columnPinning ?? {}
     },
+    get columnVisibility() {
+      return monitoringService?.columnVisibility.value ?? {}
+    },
     get rowSelection() {
       return rowSelection.value
     }
@@ -157,7 +160,7 @@ interface ColumnMetric {
 }
 
 const columnMetrics = computed<ColumnMetric[]>(() =>
-  table.getAllLeafColumns().map((column) => ({
+  table.getVisibleLeafColumns().map((column) => ({
     id: column.id,
     min: column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
     max: column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE,

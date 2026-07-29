@@ -15,9 +15,14 @@ import type {
 } from '@/monitoring/shared/components/filter/types'
 
 export interface HostColumnOptions {
+  /** Whether to render the row-action column, which needs permitted actions. */
   includeActions: boolean
 }
 
+/**
+ * The columns frozen to the edges of the table once it has to scroll
+ * horizontally.
+ */
 export function buildHostColumnPinning({ includeActions }: HostColumnOptions): ColumnPinningState {
   return {
     left: ['select', 'state', 'modes', 'name'],
@@ -25,6 +30,13 @@ export function buildHostColumnPinning({ includeActions }: HostColumnOptions): C
   }
 }
 
+/**
+ * The columns of the All Hosts table.
+ *
+ * `enableHiding: false` keeps them out of the column picker.
+ * Columns carrying `hidden` are off until a user picks them, which defines the
+ * set shown on first use.
+ */
 export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
@@ -99,6 +111,7 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       accessorKey: 'state',
       header: _t('State'),
       sortDescFirst: true,
+      enableHiding: false,
       minSize: 74,
       maxSize: 100,
       meta: { filter: stateFilter }
@@ -107,6 +120,7 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       accessorKey: 'modes',
       header: _t('Mode'),
       enableSorting: false,
+      enableHiding: false,
       minSize: 80,
       maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
@@ -115,6 +129,7 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       accessorKey: 'name',
       header: _t('Host'),
       sortDescFirst: false,
+      enableHiding: false,
       minSize: 150,
       meta: { filter: nameFilter }
     },
@@ -204,6 +219,7 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
             id: 'actions',
             header: _t('Actions'),
             enableSorting: false,
+            enableHiding: false,
             minSize: 75,
             maxSize: 75,
             meta: { justify: 'right' }

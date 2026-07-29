@@ -3,13 +3,21 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState
+} from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
-import { defineComponent, h, nextTick, provide, ref } from 'vue'
+import { type Ref, defineComponent, h, inject, nextTick, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
-import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import {
+  COLUMN_LAYOUT_KEY,
+  MONITORING_SERVICE
+} from '@/monitoring/shared/components/MonitoringTableContext'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
@@ -63,14 +71,28 @@ function makeRows(count: number): Row[] {
 
 function makeMockService(
   sortState: SortingState = [],
-  onSortUpdate: (value: SortingState) => void = () => {}
+  onSortUpdate: (value: SortingState) => void = () => {},
+  columnVisibility: Ref<VisibilityState> = ref({})
 ) {
   return {
     sortState: ref<SortingState>(sortState),
     updateSort: vi.fn((newSort: SortingState) => {
       onSortUpdate(newSort)
-    })
+    }),
+    columnVisibility
   }
+}
+
+const layoutProbe = defineComponent({
+  setup() {
+    const columns = inject(COLUMN_LAYOUT_KEY, null)
+    return () =>
+      h('td', { 'data-testid': 'layout-probe' }, [...(columns?.value.keys() ?? [])].join(','))
+  }
+})
+
+function probedLayout(): string {
+  return screen.getAllByTestId('layout-probe')[0]!.textContent ?? ''
 }
 
 function mountTable(overrides: {
@@ -79,6 +101,7 @@ function mountTable(overrides: {
   hasLoaded?: boolean
   sortState?: SortingState
   filterState?: ColumnFiltersState
+  columnVisibility?: Ref<VisibilityState>
   onSortUpdate?: (value: SortingState) => void
   onFilterUpdate?: (value: ColumnFiltersState) => void
   getRowKey?: (row: Row, index: number) => string | number
@@ -89,7 +112,11 @@ function mountTable(overrides: {
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
-  const mockService = makeMockService(overrides.sortState, overrides.onSortUpdate)
+  const mockService = makeMockService(
+    overrides.sortState,
+    overrides.onSortUpdate,
+    overrides.columnVisibility
+  )
 
   return render(
     defineComponent({
@@ -111,8 +138,10 @@ function mountTable(overrides: {
             'onUpdate:filterState': this.onFilterUpdate
           },
           {
-            row: ({ row, index }: { row: Row; index: number }) =>
+            row: ({ row, index }: { row: Row; index: number }) => [
               h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+              h(layoutProbe)
+            ],
             'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
           }
         )
@@ -284,6 +313,34 @@ test('keeps the filter buttons enabled when there are rows', () => {
   mountTable({ rows: makeRows(3) })
 
   expect(screen.getByRole('button', { name: 'Filter Name' })).toBeEnabled()
+})
+
+test('hides a column the service marks invisible', () => {
+  mountTable({ columnVisibility: ref({ state: false }) })
+
+  expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: 'State' })).not.toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument()
+})
+
+test('keeps a hidden column out of the provided column layout', async () => {
+  mountTable({ columnVisibility: ref({ state: false }) })
+  await flushVirtualizer()
+
+  expect(probedLayout()).toBe('name,actions')
+})
+
+test('picks up a visibility change without a remount', async () => {
+  const columnVisibility = ref<VisibilityState>({})
+  mountTable({ columnVisibility })
+  await flushVirtualizer()
+  expect(probedLayout()).toBe('name,state,actions')
+
+  columnVisibility.value = { name: false }
+  await flushVirtualizer()
+
+  expect(screen.queryByRole('columnheader', { name: 'Name' })).not.toBeInTheDocument()
+  expect(probedLayout()).toBe('state,actions')
 })
 
 test('clicking a disabled header in the empty state does not sort', async () => {

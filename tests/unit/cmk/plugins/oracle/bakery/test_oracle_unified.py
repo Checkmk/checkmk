@@ -22,6 +22,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiMainConf,
     GuiOracleClientLibOptions,
     GuiOracleIdentificationConf,
+    GuiOracleSafeEntries,
     OracleAuthType,
 )
 
@@ -895,3 +896,27 @@ def test_get_active_custom_metrics_cache_age(
         custom_metrics_cache_age=custom_metrics_cache_age,
     )
     assert conf.get_active_custom_metrics_cache_age() == expected
+
+
+def test_additional_options_parses_validate_permissions_enabled() -> None:
+    options = GuiAdditionalOptionsConf.model_validate(
+        {"validate_permissions": ("enabled", {"safe_entries": ["grp1", "user2"]})}
+    )
+    assert options.validate_permissions == (
+        "enabled",
+        GuiOracleSafeEntries(safe_entries=["grp1", "user2"]),
+    )
+
+
+def test_additional_options_parses_validate_permissions_disabled() -> None:
+    options = GuiAdditionalOptionsConf.model_validate({"validate_permissions": ("disabled", None)})
+    assert options.validate_permissions == ("disabled", None)
+
+
+def test_additional_options_ignores_legacy_permissions_check_key() -> None:
+    # Regression guard: the ruleset key is `validate_permissions`. A stray `permissions_check`
+    # key (the previous, wrong field name) must not bind and is ignored.
+    options = GuiAdditionalOptionsConf.model_validate(
+        {"permissions_check": ("enabled", {"safe_entries": ["x"]})}
+    )
+    assert options.validate_permissions is None

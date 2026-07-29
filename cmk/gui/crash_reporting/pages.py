@@ -673,7 +673,8 @@ class ReportRendererGUI(ABCReportRenderer):
         yield from ()
 
     def show_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
-        details = crash_info["details"]
+        if not (details := crash_info.get("details")):
+            return
 
         html.h3(_("Details"), class_="table")
         html.open_table(class_="data")

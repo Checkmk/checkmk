@@ -75,11 +75,12 @@ def _make_url_or_callback_from_registry(
 
 def _ajax_mark_step_as_complete(ctx: PageContext) -> None:
     # Handle step completion if completed-step parameter is provided
-    if completed_step_name := request.get_ascii_input("_completed_step"):
-        if completed_step_name in FinishedEnum:
-            completed_steps = user.welcome_completed_steps
-            completed_steps.add(completed_step_name)
-            user.welcome_completed_steps = completed_steps
+    if (
+        completed_step_name := request.get_ascii_input("_completed_step")
+    ) and completed_step_name in FinishedEnum:
+        completed_steps = user.welcome_completed_steps
+        completed_steps.add(completed_step_name)
+        user.welcome_completed_steps = completed_steps
 
 
 class PageWelcomePageStageInformation(AjaxPage):

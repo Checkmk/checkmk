@@ -193,14 +193,11 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
 
     def _validate_fields(name: str, dict_: Mapping[str, fields.Field]) -> None:
         for key, field in dict_.items():
-            if "description" not in field.metadata:
-                # FIXME: Add descriptions to all BI fields and schemas
-                if not name.startswith("BI"):
-                    raise ValueError(
-                        f"{name}: field {key} has no description."
-                        f"\n\n{field.metadata!r}"
-                        f"\n\n{dict_!r}"
-                    )
+            # FIXME: Add descriptions to all BI fields and schemas
+            if "description" not in field.metadata and not name.startswith("BI"):
+                raise ValueError(
+                    f"{name}: field {key} has no description.\n\n{field.metadata!r}\n\n{dict_!r}"
+                )
 
     def _from_dict(dict_: Mapping[str, fields.Field]) -> type[BaseSchema]:
         needs_validating = False

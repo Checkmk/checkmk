@@ -2840,11 +2840,8 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
         # Make sure that ID is unique
         for nr, other_rule_pack in enumerate(self._rule_packs):
-            if self._new or nr != self._edit_nr:
-                if other_rule_pack["id"] == new_id:
-                    raise MKUserError(
-                        "rule_pack_p_id", _("A rule pack with this ID already exists.")
-                    )
+            if (self._new or nr != self._edit_nr) and other_rule_pack["id"] == new_id:
+                raise MKUserError("rule_pack_p_id", _("A rule pack with this ID already exists."))
 
         if self._new:
             self._rule_packs.insert(0, self._rule_pack)
@@ -3033,16 +3030,15 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         while num_repl > num_groups:
             repl = "\\%d" % num_repl
             for name, value in rule.items():
-                if name.startswith("set_") and isinstance(value, str):
-                    if repl in value:
-                        raise MKUserError(
-                            "rule_p_" + name,
-                            _(
-                                "You are using the replacement reference <tt>\\%(num_repl)d</tt>, "
-                                "but your match text has only %(num_groups)d subgroups."
-                            )
-                            % {"num_repl": num_repl, "num_groups": num_groups},
+                if name.startswith("set_") and isinstance(value, str) and repl in value:
+                    raise MKUserError(
+                        "rule_p_" + name,
+                        _(
+                            "You are using the replacement reference <tt>\\%(num_repl)d</tt>, "
+                            "but your match text has only %(num_groups)d subgroups."
                         )
+                        % {"num_repl": num_repl, "num_groups": num_groups},
+                    )
             num_repl -= 1
 
         if (

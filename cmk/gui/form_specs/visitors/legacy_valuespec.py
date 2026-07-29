@@ -73,9 +73,11 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
         # Requires not empty validator
         # These fake validators are only used to display the "Required" message
         fake_validators: list[shared_type_defs.Validator] = []
-        if hasattr(self.form_spec.valuespec, "allow_empty"):
-            if not self.form_spec.valuespec.allow_empty():
-                fake_validators = build_vue_validators([not_empty()])
+        if (
+            hasattr(self.form_spec.valuespec, "allow_empty")
+            and not self.form_spec.valuespec.allow_empty()
+        ):
+            fake_validators = build_vue_validators([not_empty()])
 
         varprefix = None
         if isinstance(parsed_value, DefaultValue):

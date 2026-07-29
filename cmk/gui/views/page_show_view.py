@@ -196,10 +196,13 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
     # Another idea: We could change these views to non single context views, but then we would not
     # be able to show the buttons to other host related views, which is also bad. So better stick
     # with the current mode.
-    if _is_ec_unrelated_host_view(view_spec):
-        # Set the value for the event host filter
-        if not request.var("event_host") and request.has_var("host"):
-            request.set_var("event_host", request.get_str_input_mandatory("host"))
+    # Set the value for the event host filter
+    if (
+        _is_ec_unrelated_host_view(view_spec)
+        and not request.var("event_host")
+        and request.has_var("host")
+    ):
+        request.set_var("event_host", request.get_str_input_mandatory("host"))
 
 
 def process_view(

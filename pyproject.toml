@@ -214,26 +214,6 @@ ignore = [
 
 # SIM102 incremental rollout: each labelled group is removed by its follow-up
 # change, which applies the fix and enforces the rule in that scope.
-# gui part 2
-"cmk/gui/openapi/**" = ["SIM102"]
-"cmk/gui/nonfree/**" = ["SIM102"]
-"cmk/gui/ldap_integration/**" = ["SIM102"]
-"cmk/gui/views/**" = ["SIM102"]
-"cmk/gui/visuals/**" = ["SIM102"]
-"cmk/gui/graphing/**" = ["SIM102"]
-"cmk/gui/form_specs/**" = ["SIM102"]
-"cmk/gui/availability/**" = ["SIM102"]
-"cmk/gui/product_usage_analytics/**" = ["SIM102"]
-"cmk/gui/pagetypes/**" = ["SIM102"]
-"cmk/gui/mkeventd/**" = ["SIM102"]
-"cmk/gui/dashboard/**" = ["SIM102"]
-"cmk/gui/bi/**" = ["SIM102"]
-"cmk/gui/welcome/**" = ["SIM102"]
-"cmk/gui/rule_specs/**" = ["SIM102"]
-"cmk/gui/plugins/**" = ["SIM102"]
-"cmk/gui/parentscan/**" = ["SIM102"]
-"cmk/gui/view_renderer.py" = ["SIM102"]
-"cmk/gui/unit_formatter.py" = ["SIM102"]
 # cmk/plugins
 "cmk/plugins/**" = ["SIM102"]
 # cmk base & misc

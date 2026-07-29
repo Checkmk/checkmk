@@ -128,9 +128,10 @@ class NotationFormatter(abc.ABC):
         if value == value_floor:
             return value
         digits = self.precision.digits
-        if isinstance(self.precision, AutoPrecision):
-            if exponent := abs(math.ceil(math.log10(value - value_floor))):
-                digits = compute_auto_precision_digits(exponent, self.precision.digits)
+        if isinstance(self.precision, AutoPrecision) and (
+            exponent := abs(math.ceil(math.log10(value - value_floor)))
+        ):
+            digits = compute_auto_precision_digits(exponent, self.precision.digits)
         return (
             round(value, min(digits, _MAX_DIGITS))
             if use_max_digits_for_labels

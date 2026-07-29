@@ -318,9 +318,10 @@ def _compute_bi_aggregation_filter(
         elif active_filter.ident == "aggr_name":
             if aggr_name := conf.get("aggr_name"):
                 only_aggr_name = [aggr_name]
-        elif active_filter.ident == "aggr_group_tree":
-            if group_name := conf.get("aggr_group_tree"):
-                group_prefix = [group_name]
+        elif active_filter.ident == "aggr_group_tree" and (
+            group_name := conf.get("aggr_group_tree")
+        ):
+            group_prefix = [group_name]
 
     # BIAggregationFilter
     # ("hosts", List[HostName]),
@@ -1146,18 +1147,19 @@ def _handle_command_freeze_aggregation_action(
     if not request.has_var(_FREEZE_AGGREGATION_BUTTON_VARNAME):
         return None
 
-    if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
-        if frozen_info := compiled_aggregation.frozen_info:
-            frozen_path = storage.FrozenAggregationStore(
-                get_default_site_filesystem().var
-            ).get_branch_path(
-                aggregation_id=frozen_info.based_on_aggregation_id,
-                branch_title=compiled_aggregation.id,
-            )
-            return (
-                Dummy(str(frozen_path)),
-                command.confirm_dialog_options(cmdtag, row, action_rows),
-            )
+    if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None and (
+        frozen_info := compiled_aggregation.frozen_info
+    ):
+        frozen_path = storage.FrozenAggregationStore(
+            get_default_site_filesystem().var
+        ).get_branch_path(
+            aggregation_id=frozen_info.based_on_aggregation_id,
+            branch_title=compiled_aggregation.id,
+        )
+        return (
+            Dummy(str(frozen_path)),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
+        )
 
     return None
 

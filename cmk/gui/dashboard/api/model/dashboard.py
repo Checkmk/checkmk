@@ -219,14 +219,15 @@ class DashboardVisibility:
                         loc=share_location,
                         input="with_contact_groups",
                     )
-        elif isinstance(self.share, DashboardShareWithSites):
-            if not _may("general.publish_dashboards_to_sites"):
-                yield ErrorDetails(
-                    type="value_error",
-                    msg="You are not allowed to share dashboards with users of sites.",
-                    loc=share_location,
-                    input="with_sites",
-                )
+        elif isinstance(self.share, DashboardShareWithSites) and not _may(
+            "general.publish_dashboards_to_sites"
+        ):
+            yield ErrorDetails(
+                type="value_error",
+                msg="You are not allowed to share dashboards with users of sites.",
+                loc=share_location,
+                input="with_sites",
+            )
 
 
 @api_model

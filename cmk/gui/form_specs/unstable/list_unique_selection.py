@@ -77,15 +77,15 @@ class ListUniqueSelection(FormSpec[Sequence[ModelT]]):
     prefill: DefaultValue[Sequence[ModelT]] = DefaultValue([])
 
     def __post_init__(self) -> None:
-        if self.single_choice_type is SingleChoice:
-            if not all(isinstance(element, UniqueSingleChoiceElement) for element in self.elements):
-                raise ValueError(
-                    "All elements must be of type UniqueSingleChoiceElement when using SingleChoice."
-                )
-        if self.single_choice_type is CascadingSingleChoice:
-            if not all(
-                isinstance(element, UniqueCascadingSingleChoiceElement) for element in self.elements
-            ):
-                raise ValueError(
-                    "All elements must be of type UniqueCascadingSingleChoiceElement when using CascadingSingleChoice."
-                )
+        if self.single_choice_type is SingleChoice and not all(
+            isinstance(element, UniqueSingleChoiceElement) for element in self.elements
+        ):
+            raise ValueError(
+                "All elements must be of type UniqueSingleChoiceElement when using SingleChoice."
+            )
+        if self.single_choice_type is CascadingSingleChoice and not all(
+            isinstance(element, UniqueCascadingSingleChoiceElement) for element in self.elements
+        ):
+            raise ValueError(
+                "All elements must be of type UniqueCascadingSingleChoiceElement when using CascadingSingleChoice."
+            )

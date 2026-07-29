@@ -1024,12 +1024,14 @@ def _render_passive_checks_icon(
     | tuple[StaticIcon | DynamicIcon, str, str]
 ):
     # Passive checks disabled manually?
-    if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
-        if row[what + "_accept_passive_checks"] == 0:
-            return (
-                StaticIcon(IconNames.npassive),
-                _("Passive checks have been manually disabled for this %(what)s!") % {"what": what},
-            )
+    if (
+        "passive_checks_enabled" in row[what + "_modified_attributes_list"]
+        and row[what + "_accept_passive_checks"] == 0
+    ):
+        return (
+            StaticIcon(IconNames.npassive),
+            _("Passive checks have been manually disabled for this %(what)s!") % {"what": what},
+        )
     return None
 
 
@@ -1266,7 +1268,7 @@ def _render_check_period_icon(
     if what == "service":
         if row["%s_in_passive_check_period" % what] == 0 or row["%s_in_check_period" % what] == 0:
             return StaticIcon(IconNames.pause), _("This service is currently not being checked")
-    elif what == "host":
+    elif what == "host":  # noqa: SIM102  # mypy: "and" here is redundant-expr due to Literal narrowing
         if row["%s_in_check_period" % what] == 0:
             return StaticIcon(IconNames.pause), _("This host is currently not being checked")
     return None

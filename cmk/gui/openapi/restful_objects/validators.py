@@ -101,12 +101,11 @@ class ContentTypeValidator:
             and options["charset"].lower() != "utf-8"
         ):
             # but there are options.
-            if options["charset"].lower() != "utf-8":
-                raise RestAPIRequestContentTypeException(
-                    detail=f"Character set {options['charset']!r} not supported "
-                    f"for content-type {content_type_!r}.",
-                    title="Content type not valid for this endpoint.",
-                )
+            raise RestAPIRequestContentTypeException(
+                detail=f"Character set {options['charset']!r} not supported "
+                f"for content-type {content_type_!r}.",
+                title="Content type not valid for this endpoint.",
+            )
 
 
 class PathParamsValidator:

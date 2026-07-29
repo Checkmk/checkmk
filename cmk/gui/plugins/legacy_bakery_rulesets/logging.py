@@ -30,7 +30,7 @@ def _logging_level_to_dict(v: str | dict[str, _ValueType]) -> dict[str, _ValueTy
     if isinstance(v, dict):
         return v
 
-    if isinstance(v, str):
+    if isinstance(v, str):  # noqa: SIM102  # mypy: "and" here is redundant-expr, v is narrowed to str
         if v in {"yes", "no", "all"}:
             return {"logging_level": v}
 

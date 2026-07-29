@@ -56,22 +56,24 @@ def render_product_usage_analytics_popup(
     if not __popup_enabled:
         return
 
-    if "admin" in user.role_ids:
-        if is_not_distributed_setup or is_central_site_in_distributed_setup:
-            if load_product_usage_config(paths.default_config_dir, logger).enabled == "not_decided":
-                popup_timestamp_cookie = product_usage_analytics_popup_timestamp_cookie(request)
+    if (
+        "admin" in user.role_ids
+        and (is_not_distributed_setup or is_central_site_in_distributed_setup)
+        and load_product_usage_config(paths.default_config_dir, logger).enabled == "not_decided"
+    ):
+        popup_timestamp_cookie = product_usage_analytics_popup_timestamp_cookie(request)
 
-                if popup_timestamp_cookie is None:
-                    set_user_product_usage_analytics_popup_cookie(request, response)
-                else:
-                    # Check if 30 days (2592000 seconds) have passed since first login
-                    THIRTY_DAYS_IN_SECONDS = 2592000
-                    current_timestamp = datetime.datetime.now().timestamp()
-                    time_difference = current_timestamp - popup_timestamp_cookie
+        if popup_timestamp_cookie is None:
+            set_user_product_usage_analytics_popup_cookie(request, response)
+        else:
+            # Check if 30 days (2592000 seconds) have passed since first login
+            THIRTY_DAYS_IN_SECONDS = 2592000
+            current_timestamp = datetime.datetime.now().timestamp()
+            time_difference = current_timestamp - popup_timestamp_cookie
 
-                    if time_difference >= THIRTY_DAYS_IN_SECONDS:
-                        _show_popup(request)
-                        set_user_product_usage_analytics_popup_cookie(request, response)
+            if time_difference >= THIRTY_DAYS_IN_SECONDS:
+                _show_popup(request)
+                set_user_product_usage_analytics_popup_cookie(request, response)
 
 
 def _show_popup(request: Request) -> None:

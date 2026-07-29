@@ -198,10 +198,7 @@ class ModeParentScan(WatoMode):
     def _include_host(self, host: Host, select: SelectChoices) -> bool:
         if select == "noexplicit" and "parents" in host.attributes:
             return False
-        if select == "no":
-            if host.effective_attributes().get("parents"):
-                return False
-        return True
+        return not (select == "no" and host.effective_attributes().get("parents"))
 
     def _recurse_hosts(
         self, folder: Folder | SearchFolder, recurse: bool, select: SelectChoices

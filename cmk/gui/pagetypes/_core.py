@@ -586,9 +586,10 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         if self.config.public is True:
             return self.publish_is_allowed(user_permissions)
 
-        if isinstance(self.config.public, tuple):
-            if set(user.contact_groups).intersection(self.config.public[1]):
-                return self.publish_is_allowed(user_permissions)
+        if isinstance(self.config.public, tuple) and set(user.contact_groups).intersection(
+            self.config.public[1]
+        ):
+            return self.publish_is_allowed(user_permissions)
 
         return False
 
@@ -1845,9 +1846,8 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
-        if target_page:
-            if not isinstance(target_page, str):
-                target_page = target_page.page_url()
+        if target_page and not isinstance(target_page, str):
+            target_page = target_page.page_url()
 
         response.set_content_type("text/plain")
         response.set_data(f"{target_page or ''}\n{'true' if need_sidebar_reload else 'false'}")

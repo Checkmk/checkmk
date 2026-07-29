@@ -203,14 +203,14 @@ def _create_graph_recipe(
     units = {m.unit for m in graph_metrics}
 
     # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
-    if all(isinstance(m.unit, str) for m in graph_metrics) or all(
-        isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics
-    ):
-        if len(units) > 1:
-            raise MKGeneralException(
-                _("Cannot create graph with metrics of different units '%(units)s'")
-                % {"units": ", ".join(repr(unit) for unit in units)}
-            )
+    if (
+        all(isinstance(m.unit, str) for m in graph_metrics)
+        or all(isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics)
+    ) and len(units) > 1:
+        raise MKGeneralException(
+            _("Cannot create graph with metrics of different units '%(units)s'")
+            % {"units": ", ".join(repr(unit) for unit in units)}
+        )
 
     if not title:
         title = next((m.title for m in graph_metrics), "")

@@ -117,12 +117,14 @@ def get_relevant_annotations(
                     site_host_svc = site_host[0], site_host[1], service  # service can be None
 
                 for annotation in annotations.get(site_host_svc, []):
-                    if _annotation_affects_time_range(
-                        annotation["from"], annotation["until"], from_time, until_time
+                    if (
+                        _annotation_affects_time_range(
+                            annotation["from"], annotation["until"], from_time, until_time
+                        )
+                        and id(annotation) not in annos_rendered
                     ):
-                        if id(annotation) not in annos_rendered:
-                            annos_to_render.append((site_host_svc, annotation))
-                            annos_rendered.add(id(annotation))
+                        annos_to_render.append((site_host_svc, annotation))
+                        annos_rendered.add(id(annotation))
 
     return annos_to_render
 

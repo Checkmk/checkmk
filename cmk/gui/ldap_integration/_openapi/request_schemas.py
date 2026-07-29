@@ -710,9 +710,11 @@ class LDAPRoleElementRequest(BaseSchema):
 
     @post_load
     def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        if data["search_in"] != "this_connection":
-            if data["search_in"] not in get_ldap_connections():
-                raise ValidationError(f"The LDAP connection {data['search_in']} does not exist.")
+        if (
+            data["search_in"] != "this_connection"
+            and data["search_in"] not in get_ldap_connections()
+        ):
+            raise ValidationError(f"The LDAP connection {data['search_in']} does not exist.")
         return data
 
 

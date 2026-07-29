@@ -322,12 +322,13 @@ class HostAddressConverter:
             raise ValueError("Empty host address is not allowed.")
 
         address = HostAddress(value)  # this allows hostnames and ip addresses
-        if not self.allow_ipv4 or not self.allow_ipv6:
-            if ip := self._try_parse_ip_address(value):
-                if not self.allow_ipv4 and isinstance(ip, ipaddress.IPv4Address):
-                    raise ValueError(f"IPv4 address '{value}' is not allowed.")
-                if not self.allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
-                    raise ValueError(f"IPv6 address '{value}' is not allowed.")
+        if (not self.allow_ipv4 or not self.allow_ipv6) and (
+            ip := self._try_parse_ip_address(value)
+        ):
+            if not self.allow_ipv4 and isinstance(ip, ipaddress.IPv4Address):
+                raise ValueError(f"IPv4 address '{value}' is not allowed.")
+            if not self.allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
+                raise ValueError(f"IPv6 address '{value}' is not allowed.")
 
         return address
 
@@ -448,17 +449,17 @@ class RelativeUrlConverter:
         if self.allowed_to_be_empty and not value:
             return value
 
-        if self.must_endwith_one is not None:
-            if not any(value.endswith(postfix) for postfix in self.must_endwith_one):
-                raise ValueError(
-                    "The URL {value!r} does not end with one of {self.must_endwith_one!r}"
-                )
+        if self.must_endwith_one is not None and not any(
+            value.endswith(postfix) for postfix in self.must_endwith_one
+        ):
+            raise ValueError("The URL {value!r} does not end with one of {self.must_endwith_one!r}")
 
-        if self.must_startwith_one is not None:
-            if not any(value.startswith(prefix) for prefix in self.must_startwith_one):
-                raise ValueError(
-                    "The URL {value!r} does not start with one of {self.must_startwith_one!r}"
-                )
+        if self.must_startwith_one is not None and not any(
+            value.startswith(prefix) for prefix in self.must_startwith_one
+        ):
+            raise ValueError(
+                "The URL {value!r} does not start with one of {self.must_startwith_one!r}"
+            )
         return value
 
 

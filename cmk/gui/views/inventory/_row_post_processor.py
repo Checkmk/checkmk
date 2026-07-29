@@ -47,9 +47,8 @@ def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) 
     sorters: list[SorterEntry] = view.sorters
 
     for cell in cells:
-        if cell.has_tooltip():
-            if cell.tooltip_painter_name().startswith("inv_"):
-                return True
+        if cell.has_tooltip() and cell.tooltip_painter_name().startswith("inv_"):
+            return True
 
     for entry in sorters:
         if entry.sorter.load_inv:

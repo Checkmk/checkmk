@@ -204,9 +204,10 @@ def _compute_link_from_result(
     # We call it after the single_infos guard so a mismatch short-circuits before the base
     # class can raise NotImplementedError for unsupported single_infos combinations.
     _inventory_keys = {"has_inventory_tree", "has_inventory_tree_history", "single_infos"}
-    if link_from.keys() - _inventory_keys:
-        if not base_link_from(linking_view_single_infos, linking_view_rows, visual, context_vars):
-            return False
+    if (link_from.keys() - _inventory_keys) and not base_link_from(
+        linking_view_single_infos, linking_view_rows, visual, context_vars
+    ):
+        return False
 
     context = dict(context_vars)
     if (hostname := context.get("host")) is None:

@@ -599,27 +599,26 @@ class GUIViewRenderer(ABCViewRenderer):
         if (
             display_options.enabled(display_options.D)
             and painter_options.painter_option_graph_time_form_enabled()
-        ):
-            if not self.view.renders_engine_graphs:
-                display_dropdown.topics.insert(
-                    0,
-                    PageMenuTopic(
-                        title=_("Set graph time"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Set graph time"),
-                                icon_name=StaticIcon(IconNames.graph_time),
-                                item=PageMenuPopup(
-                                    self._render_painter_options_timerange_form(painter_options)
-                                ),
-                                name="display_painter_options_timerange",
-                                is_shortcut=True,
-                                is_suggested=True,
-                                is_list_entry=False,
-                            )
-                        ],
-                    ),
-                )
+        ) and not self.view.renders_engine_graphs:
+            display_dropdown.topics.insert(
+                0,
+                PageMenuTopic(
+                    title=_("Set graph time"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Set graph time"),
+                            icon_name=StaticIcon(IconNames.graph_time),
+                            item=PageMenuPopup(
+                                self._render_painter_options_timerange_form(painter_options)
+                            ),
+                            name="display_painter_options_timerange",
+                            is_shortcut=True,
+                            is_suggested=True,
+                            is_list_entry=False,
+                        )
+                    ],
+                ),
+            )
 
     def _page_menu_entries_filter(self, show_filters: list[Filter]) -> Iterator[PageMenuEntry]:
         is_filter_set = check_if_non_default_filter_in_request(

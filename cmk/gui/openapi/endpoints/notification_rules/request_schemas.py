@@ -127,11 +127,10 @@ class TagGroupBase(BaseSchema):
         if tg is not None:
             existing_tag_ids = tg.get_tag_ids()
 
-            if "tag_id" in data:
-                if data["tag_id"] not in existing_tag_ids:
-                    raise ValidationError(
-                        f"The tag id {data['tag_id']} does not belong to the tag group {data['tag_group_id']}"
-                    )
+            if "tag_id" in data and data["tag_id"] not in existing_tag_ids:
+                raise ValidationError(
+                    f"The tag id {data['tag_id']} does not belong to the tag group {data['tag_group_id']}"
+                )
             if "tag_ids" in data:
                 for tag_id in data["tag_ids"]:
                     if tag_id not in existing_tag_ids:
@@ -2800,10 +2799,12 @@ class ContactSelection(BaseSchema):
     def _require_explicit_email_addresses_when_allowed(
         self, data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
-        if version.edition(paths.omd_root) != version.Edition.CLOUD:
-            # manually load the default
-            if "explicit_email_addresses" not in data:
-                data["explicit_email_addresses"] = {"state": "disabled"}
+        # manually load the default
+        if (
+            version.edition(paths.omd_root) != version.Edition.CLOUD
+            and "explicit_email_addresses" not in data
+        ):
+            data["explicit_email_addresses"] = {"state": "disabled"}
         return data
 
     @post_load
@@ -2811,15 +2812,14 @@ class ContactSelection(BaseSchema):
         self, data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
         """Forbid explicit_email_addresses in CSE edition"""
-        if version.edition(paths.omd_root) == version.Edition.CLOUD:
-            if (
-                "explicit_email_addresses" in data
-                and data["explicit_email_addresses"].get("state") == "enabled"
-            ):
-                raise ValidationError(
-                    "The field 'explicit_email_addresses' is not allowed in CSE edition.",
-                    field_name="explicit_email_addresses",
-                )
+        if version.edition(paths.omd_root) == version.Edition.CLOUD and (
+            "explicit_email_addresses" in data
+            and data["explicit_email_addresses"].get("state") == "enabled"
+        ):
+            raise ValidationError(
+                "The field 'explicit_email_addresses' is not allowed in CSE edition.",
+                field_name="explicit_email_addresses",
+            )
         return data
 
 

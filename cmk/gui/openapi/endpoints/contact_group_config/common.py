@@ -55,9 +55,8 @@ class PathRestriction(OneOfSchema):
     }
 
     def get_obj_type(self, obj: object) -> str:
-        if isinstance(obj, dict):
-            if self.type_field in obj:
-                return obj[self.type_field]
+        if isinstance(obj, dict) and self.type_field in obj:
+            return obj[self.type_field]
 
         return super().get_obj_type(obj)
 
@@ -123,9 +122,8 @@ class InventoryPaths(OneOfSchema):
     }
 
     def get_obj_type(self, obj: object) -> str:
-        if isinstance(obj, dict):
-            if self.type_field in obj:
-                return obj[self.type_field]
+        if isinstance(obj, dict) and self.type_field in obj:
+            return obj[self.type_field]
 
         return super().get_obj_type(obj)
 

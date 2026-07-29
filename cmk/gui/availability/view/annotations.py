@@ -257,19 +257,17 @@ def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 def _validate_reclassify_of_states(value: dict[str, object], varprefix: str) -> None:
     host_state = value.get("host_state")
-    if host_state is not None:
-        if not value.get("host"):
-            raise MKUserError(
-                "_editanno_p_host", _("Please set a host name for host state reclassification")
-            )
+    if host_state is not None and not value.get("host"):
+        raise MKUserError(
+            "_editanno_p_host", _("Please set a host name for host state reclassification")
+        )
 
     service_state = value.get("service_state")
-    if service_state is not None:
-        if not value.get("service"):
-            raise MKUserError(
-                "_editanno_p_service_value",
-                _("Please set a service name for service state reclassification"),
-            )
+    if service_state is not None and not value.get("service"):
+        raise MKUserError(
+            "_editanno_p_service_value",
+            _("Please set a service name for service state reclassification"),
+        )
 
 
 def _vs_annotation() -> Dictionary:

@@ -115,12 +115,11 @@ def page_edit_visual(
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing built-ins requires copy
-            if owner_id != user.id:
-                if not user.may("general.edit_foreign_%s" % what):
-                    raise MKAuthException(
-                        _("You are not allowed to edit foreign %(plural_title)s.")
-                        % {"plural_title": visual_type.plural_title}
-                    )
+            if owner_id != user.id and not user.may("general.edit_foreign_%s" % what):
+                raise MKAuthException(
+                    _("You are not allowed to edit foreign %(plural_title)s.")
+                    % {"plural_title": visual_type.plural_title}
+                )
             owner_user_id = owner_id
             title = _("Edit %(title)s") % {"title": visual_type.title}
         elif mode == "export":

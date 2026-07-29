@@ -373,9 +373,12 @@ def _parse_perf_values(
 
 def _parse_check_command(check_command: str) -> str:
     parts = check_command.split("!", 1)
-    if parts[0] == "check-mk-custom" and len(parts) >= 2:
-        if parts[1].startswith("check_ping") or "/check_ping" in parts[1]:
-            return "check_ping"
+    if (
+        parts[0] == "check-mk-custom"
+        and len(parts) >= 2
+        and (parts[1].startswith("check_ping") or "/check_ping" in parts[1])
+    ):
+        return "check_ping"
     return parts[0]
 
 

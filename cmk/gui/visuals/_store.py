@@ -146,10 +146,9 @@ class _CombinedVisualsCache[TVisual: Visual]:
         self,
         internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],
     ) -> CustomUserVisuals:
-        if self._may_use_cache():
-            if (content := self._read_from_cache()) is not None:
-                self._set_permissions(content)
-                return content
+        if self._may_use_cache() and (content := self._read_from_cache()) is not None:
+            self._set_permissions(content)
+            return content
         return self._compute_and_write_cache(internal_to_runtime_transformer)
 
     def _set_permissions(self, content: CustomUserVisuals) -> None:
@@ -593,15 +592,15 @@ def get_permissioned_visual[TVisual: Visual](
         and user.may(  # user has top priority, thus only change if other user
             "general.edit_foreign_%ss" % what
         )
+        and (visual := all_visuals.get((owner, item)))
     ):
-        if visual := all_visuals.get((owner, item)):
-            return visual
-        # We don't raise on not found immediately and let it trickle down to default permitted
-        # as a failsafe for report inheritance. In general it is OK for other cases, because the
-        # priority should be inverse, first pick from permitted, then if edit_foreign permissions
-        # are available get from other user. In reports it still happens that the inheritance view
-        # is of the active user not of the "owner". Resolution of those piorities would need to be
-        # fixed in visuals.available to support foreign users.
+        return visual
+    # We don't raise on not found immediately and let it trickle down to default permitted
+    # as a failsafe for report inheritance. In general it is OK for other cases, because the
+    # priority should be inverse, first pick from permitted, then if edit_foreign permissions
+    # are available get from other user. In reports it still happens that the inheritance view
+    # is of the active user not of the "owner". Resolution of those piorities would need to be
+    # fixed in visuals.available to support foreign users.
 
     if visual := permitted_visuals.get(item):
         return visual

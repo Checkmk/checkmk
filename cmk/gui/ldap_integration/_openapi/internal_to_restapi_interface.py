@@ -1092,9 +1092,8 @@ class SyncPlugins:
     def api_response(self) -> APISyncPlugins:
         def checkbox_state(plugin_key: str) -> SYNC_ATTRIBUTE:
             value = cast(dict, self.active_plugins.get(plugin_key))
-            if value is not None:
-                if (attr := value.get("attr")) is not None:
-                    return {"state": "enabled", "attribute_to_sync": attr}
+            if value is not None and (attr := value.get("attr")) is not None:
+                return {"state": "enabled", "attribute_to_sync": attr}
             return {"state": "disabled"}
 
         r: APISyncPlugins = {

@@ -31,13 +31,17 @@ class LDAPConnectionSuffix(fields.String):
     def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        if self.presence == "should_exist":
-            if value not in LDAPUserConnector.get_connection_suffixes():
-                raise self.make_error("should_exist", path=value)
+        if (
+            self.presence == "should_exist"
+            and value not in LDAPUserConnector.get_connection_suffixes()
+        ):
+            raise self.make_error("should_exist", path=value)
 
-        if self.presence == "should_not_exist":
-            if value in LDAPUserConnector.get_connection_suffixes():
-                raise self.make_error("should_not_exist", path=value)
+        if (
+            self.presence == "should_not_exist"
+            and value in LDAPUserConnector.get_connection_suffixes()
+        ):
+            raise self.make_error("should_not_exist", path=value)
 
 
 class LDAPConnectionID(fields.String):
@@ -62,10 +66,8 @@ class LDAPConnectionID(fields.String):
 
         ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
 
-        if self.presence == "should_exist":
-            if value not in ldap_connection_ids:
-                raise self.make_error("should_exist", path=value)
+        if self.presence == "should_exist" and value not in ldap_connection_ids:
+            raise self.make_error("should_exist", path=value)
 
-        if self.presence == "should_not_exist":
-            if value in ldap_connection_ids:
-                raise self.make_error("should_not_exist", path=value)
+        if self.presence == "should_not_exist" and value in ldap_connection_ids:
+            raise self.make_error("should_not_exist", path=value)

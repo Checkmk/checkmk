@@ -242,15 +242,14 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
             for ldap_connection in [
                 cnx for ldapid, cnx in get_ldap_connections().items() if ldapid != ldap_id
             ]:
-                if (suffix := ldap_connection.get("suffix")) is not None:
-                    if suffix == ldap_data["ldap_connection"]["connection_suffix"]["suffix"]:
-                        raise MKUserError(
-                            None,
-                            _(
-                                "The suffix '%(suffix)s' is already in use by another LDAP connection."
-                            )
-                            % {"suffix": ldap_connection["suffix"]},
-                        )
+                if (suffix := ldap_connection.get("suffix")) is not None and suffix == ldap_data[
+                    "ldap_connection"
+                ]["connection_suffix"]["suffix"]:
+                    raise MKUserError(
+                        None,
+                        _("The suffix '%(suffix)s' is already in use by another LDAP connection.")
+                        % {"suffix": ldap_connection["suffix"]},
+                    )
 
         config_file = UserConnectionConfigFile()
         ldap_connection_from_request = LDAPConnectionInterface.from_api_request(ldap_data)

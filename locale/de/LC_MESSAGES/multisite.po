@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-27 13:47+0000\n"
+"PO-Revision-Date: 2026-07-28 20:54+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -9657,9 +9657,8 @@ msgstr "Sicherungs-ID"
 msgid "Backups"
 msgstr "Sicherungen"
 
-#, fuzzy
 msgid "Backups CRITICAL"
-msgstr "Setze Check auf CRIT"
+msgstr "Sicherungen CRITICAL"
 
 msgid "Bad Requests Received"
 msgstr "Ungültige Anfragen empfangen"
@@ -14122,7 +14121,7 @@ msgid "Citrix Load"
 msgstr "Citrix-Last"
 
 msgid "Citrix Netscaler DNS counter rates"
-msgstr "Citrix Netscaler DNS Zählerraten"
+msgstr "Citrix NetScaler DNS Zählerraten"
 
 msgid "Citrix Netscaler Load Balancer TCP Connections"
 msgstr "Citrix Netscaler Load Balancer TCP-Verbindungen"
@@ -16033,6 +16032,11 @@ msgstr "Verbindung zum Port %s abgelehnt: ungültiges Zertifikat"
 msgid "Connection to remote Agent Bakery"
 msgstr "Verbindung zur Remote-Agentenbäckerei"
 
+msgid ""
+"Connection to the license server timed out. Please try again or check your "
+"network settings."
+msgstr ""
+
 msgid "Connection type"
 msgstr "Verbindungstyp"
 
@@ -16746,18 +16750,14 @@ msgstr ""
 "wurde versucht, eine Verbindung über <tt>%s</tt> herzustellen. Gemeldeter "
 "Fehler war: %s."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Could not connect to the license server (%s). Please retry again later. If "
-"this error persists, please contact the Checkmk support. You also need to "
-"make sure that your Checkmk can reach the license server. Please check your "
-"firewall and proxy settings."
+"Could not connect to the license server (%(endpoint)s): %(detail)s If the "
+"error persists, please contact Checkmk support."
 msgstr ""
-"Verbindung zum Lizenzserver (%s) fehlgeschlagen. Bitte versuchen Sie es "
-"später erneut. Besteht dieser Fehler weiterhin kontaktieren Sie bitte den "
-"Checkmk Support. Sie müssen auch sicherstellen, dass Ihr Checkmk den "
-"Lizenzserver erreichen kann. Bitte prüfen Sie Ihre Firewall- und Proxy-"
-"Einstellungen."
+"Es wurde eine ungültige Antwort vom Lizenzserver (%s) empfangen. Bitte "
+"versuchen Sie es später erneut. Wenn dieser Fehler weiterhin besteht, wenden "
+"Sie sich bitte an den Checkmk-Support."
 
 #, python-format
 msgid "Could not connect to the remote site (%s)"
@@ -18593,7 +18593,7 @@ msgid "Data"
 msgstr "Daten"
 
 msgid "Data Guard CRITICAL"
-msgstr ""
+msgstr "Data Guard CRITICAL"
 
 msgid "Data block (DB)"
 msgstr "Datenblock (DB)"
@@ -18718,8 +18718,8 @@ msgid ""
 "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
 "the Switchoverstate on Primary."
 msgstr ""
-"Data-Guards mit dg_broker_start=false benötigen den Zustand Broker-Zustand "
-"ignorieren, um den primären Switchoverstate zu überwachen."
+"Data Guards mit dg_broker_start=false benötigen den Zustand 'Broker-Zustand "
+"ignorieren', um den primären Switchoverstate zu überwachen."
 
 msgid "Database"
 msgstr "Datenbank"
@@ -18818,7 +18818,7 @@ msgid "Databases"
 msgstr "Datenbanken"
 
 msgid "Databases needing attention (unhandled, non-OK)"
-msgstr ""
+msgstr "Datenbanken, die Aufmerksamkeit erfordern (unbearbeitet, nicht OK)"
 
 msgid "Databases to monitor"
 msgstr "Zu überwachende Datenbanken"
@@ -18845,7 +18845,7 @@ msgid "Datafiles"
 msgstr "Datendateien"
 
 msgid "Dataguard statistics"
-msgstr "Dataguard-Statistiken"
+msgstr "Data Guard-Statistiken"
 
 msgid "Datapath availability %"
 msgstr "Datenpfadverfügbarkeit %"
@@ -20300,7 +20300,7 @@ msgid "Deploy plug-in that updates agent automatically"
 msgstr "Plugin, das Agenten automatisch aktualisiert, verteilen"
 
 msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
-msgstr "Powershell-Plugin verteilen - empfohlen für Windows 2008 und aufwärts"
+msgstr "PowerShell-Plugin verteilen - empfohlen für Windows 2008 und aufwärts"
 
 msgid "Deploy remote desktop licenses plug-in"
 msgstr "Lizenzen-Plugin des Remote-Desktops verteilen"
@@ -28661,7 +28661,7 @@ msgid "Group patterns"
 msgstr "Gruppierungs-Patterns"
 
 msgid "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
-msgstr ""
+msgstr "Gruppe<nobr> </nobr>DN<nobr> </nobr>oder<nobr> </nobr>CN"
 
 msgid "Grouping"
 msgstr "Gruppierung"
@@ -29147,7 +29147,7 @@ msgid "Health probe status lower levels"
 msgstr "Untergrenzen für Health probe Status"
 
 msgid "Health state of each database (ORA Instance)"
-msgstr ""
+msgstr "Gesundheitszustand jeder Datenbank (ORA-Instanz)"
 
 msgid "Healthy"
 msgstr "Gesund"
@@ -30185,13 +30185,11 @@ msgid "High: Push notification alerts bypass quiet hours"
 msgstr ""
 "Hoch: Alerts von Push-Benachrichtigungen umgehen die definierten Ruhezeiten"
 
-#, fuzzy
 msgid "Highest Data Guard apply lag"
-msgstr "Datenbank-Applylag"
+msgstr "Höchste Anwendungsverzögerung bei Data Guard"
 
-#, fuzzy
 msgid "Highest process usage"
-msgstr "Auslastung der Apache-Prozesse"
+msgstr "Höchste Prozessauslastung"
 
 msgid "Historic Event Console event"
 msgstr "Historisches Ereignis der Event Console"
@@ -35946,9 +35944,8 @@ msgstr "Instanz, Tablespace und Typ der Sicherung"
 msgid "Instances"
 msgstr "Instanzen"
 
-#, fuzzy
 msgid "Instances CRITICAL"
-msgstr "Instanz-ID"
+msgstr "Instanzen CRITICAL"
 
 msgid "Instances settings"
 msgstr "Einstellungen von Instanzen"
@@ -47717,9 +47714,8 @@ msgstr "Ältere Ereignisse"
 msgid "Oldest Message Age"
 msgstr "Alter der ältesten Meldung"
 
-#, fuzzy
 msgid "Oldest RMAN backups"
-msgstr "Oracle RMAN-Sicherungen"
+msgstr "Älteste RMAN-Sicherungen"
 
 msgid "Oldest age"
 msgstr "Ältestes Alter"
@@ -48752,12 +48748,11 @@ msgstr "Oracle DB Zeit"
 msgid "Oracle DB time statistics"
 msgstr "Oracle DB Zeitstatistiken"
 
-#, fuzzy
 msgid "Oracle DB time – fleet total"
-msgstr "Oracle DB Zeitstatistiken"
+msgstr "Oracle-DB-Zeit – Gesamtwert der Flotte"
 
 msgid "Oracle Data-Guard Stats"
-msgstr "Oracle Data-Guard Statistiken"
+msgstr "Oracle Data Guard-Statistiken"
 
 msgid "Oracle Database Identification"
 msgstr "Identifikation der Oracle-Datenbank"
@@ -49105,15 +49100,14 @@ msgstr "Oracle Pump Dump Datendatei Small Writes in Bytes"
 msgid "Oracle data pump dump file small writes"
 msgstr "Oracle Pump Dump Datendatei kleine Schreibzugriffe"
 
-#, fuzzy
 msgid "Oracle databases"
-msgstr "Azure-Datenbanken"
+msgstr "Oracle-Datenbanken"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
 
 msgid "Oracle dataguard statistics"
-msgstr "Oracle Dataguard-Statistiken"
+msgstr "Oracle Data Guard-Statistiken"
 
 msgid "Oracle external table large read bytes"
 msgstr "Oracle externe Tabelle Large Read in Bytes"
@@ -49853,6 +49847,9 @@ msgid ""
 "Overview of all Oracle database instances monitored in this site: fleet "
 "health, unhandled problems, and the databases most in need of attention."
 msgstr ""
+"Übersicht über alle auf dieser Instanz überwachten Oracle-"
+"Datenbankinstanzen: Flottenzustand, unbehandelte Probleme und die "
+"Datenbanken, die am dringendsten Aufmerksamkeit erfordern."
 
 msgid "Owned by other users"
 msgstr "Von anderen Benutzern"
@@ -51928,6 +51925,12 @@ msgid ""
 msgstr ""
 "Bitte stellen Sie sicher, dass Sie es mit <tt>omd config set MKEVENTD on</"
 "tt> aktiviert haben, bevor Sie diese Instanz starten."
+
+msgid ""
+"Please make sure the host running Checkmk can resolve the server's hostname "
+"via DNS and that your firewall and proxy settings permit outbound HTTPS "
+"access."
+msgstr ""
 
 msgid "Please make sure, that the data is URL-encoded."
 msgstr "Bitte stellen Sie sicher, dass die Daten URL codiert sind."
@@ -54449,9 +54452,8 @@ msgstr "Recovery Services-Tresor"
 msgid "Recovery area"
 msgstr "Recovery-Bereich"
 
-#, fuzzy
 msgid "Recovery area CRITICAL"
-msgstr "Recovery-Bereich"
+msgstr "Recovery-Bereich CRITICAL"
 
 msgid "Recovery status"
 msgstr "Recovery-Status"
@@ -63824,7 +63826,7 @@ msgid "State if violated"
 msgstr "Zustand bei Verstößen"
 
 msgid "State in case of Active Data Guard option is active: "
-msgstr "Zustand, wenn Active Data Guard-Option aktiv ist: "
+msgstr "Zustand, wenn \"Active Data Guard\"-Option aktiv ist: "
 
 msgid "State in case of Job has no log information"
 msgstr "Zustand des Services, falls der Job keine Log-Informationen hat"
@@ -65563,9 +65565,8 @@ msgstr "Tablespacesgrößen"
 msgid "Tablespace used"
 msgstr "benutzte Tablespaces"
 
-#, fuzzy
 msgid "Tablespace used space"
-msgstr "benutzte Tablespaces"
+msgstr "Belegter Speicherplatz im Tablespace"
 
 msgid "Tablespace wasted"
 msgstr "verschwendeter Tablespace"
@@ -65573,13 +65574,11 @@ msgstr "verschwendeter Tablespace"
 msgid "Tablespaces"
 msgstr "Tablespaces"
 
-#, fuzzy
 msgid "Tablespaces CRITICAL"
-msgstr "Tablespaces"
+msgstr "Tablespaces CRITICAL"
 
-#, fuzzy
 msgid "Tablespaces by state"
-msgstr "verschwendeter Tablespace"
+msgstr "Tablespaces nach Zustand"
 
 msgid "Tabloid"
 msgstr "Tabloid"
@@ -66184,7 +66183,7 @@ msgstr "Der ARN der zu übernehmenden IAM-Rolle"
 
 msgid "The Active Data Guard option needs an additional license from Oracle."
 msgstr ""
-"Die Option \"Active Data-Guard\" benötigt eine zusätzliche Oracle-Lizenz."
+"Die Option \"Active Data Guard\" benötigt eine zusätzliche Oracle-Lizenz."
 
 msgid ""
 "The Agent Controller provides a safe channel for the communication between "
@@ -66449,8 +66448,8 @@ msgid ""
 "must be <tt>TRUE</tt> for this check. The apply and transport lag can be "
 "configured with this rule."
 msgstr ""
-"Die Data-Guard Statistiken sind in der Oracle Enterprise Edition verfügbar, "
-"wenn Data-Guard aktiviert ist. Der Parameter <tt>dg_broker_start</tt> aus "
+"Die Data Guard Statistiken sind in der Oracle Enterprise Edition verfügbar, "
+"wenn Data Guard aktiviert ist. Der Parameter <tt>dg_broker_start</tt> aus "
 "der Datei <tt>init.ora</tt> muss auf <tt>TRUE</tt> gesetzt sein, damit "
 "dieser Check funktioniert. In dieser Regel können Sie Schwellen für das "
 "Apply- und Transportlag einstellen."
@@ -67829,6 +67828,14 @@ msgstr ""
 msgid "The connection to this site has been disabled."
 msgstr "Die Verbindung zu dieser Instanz wurde deaktiviert."
 
+#, fuzzy
+msgid ""
+"The connection via the configured proxy failed. Please check your proxy "
+"settings."
+msgstr ""
+"Diese Verbindung ist derzeit deaktiviert. Bitte wenden Sie sich an Ihren "
+"Systemadministrator."
+
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
 "<tt>'</tt> <tt>|</tt> or <tt>$</tt>"
@@ -69080,6 +69087,17 @@ msgstr ""
 "gemeldeten Daten entspricht."
 
 msgid ""
+"The license server did not respond in time. Please try again or check your "
+"network settings."
+msgstr ""
+
+msgid ""
+"The license server's TLS certificate could not be verified. Please check "
+"your network settings, system wide CAs and trusted certificate authorities "
+"in Checkmk."
+msgstr ""
+
+msgid ""
 "The license usage history is older than five days. In order to have a "
 "reliable average of the number of services the license usage report must "
 "contain a significant number of license usage samples. Please execute the "
@@ -69288,7 +69306,7 @@ msgid "The maximum key length is 128 characters."
 msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
 
 msgid "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."
-msgstr "Die maximale Grenze für das Apply-Lag in <tt>v$dataguard_stats</tt>."
+msgstr "Die maximale Grenze für das Apply Lag in <tt>v$dataguard_stats</tt>."
 
 msgid ""
 "The maximum number of concurrent Livestatus connections is limited by this "
@@ -74462,7 +74480,7 @@ msgid ""
 msgstr ""
 "Dieses Plugin überprüft den Status und die Performance von "
 "Netzwerkschnittstellen unter Windows. Verwenden Sie das Legacy-Plugin für "
-"Windows-Versionen ohne Powershell"
+"Windows-Versionen ohne PowerShell"
 
 msgid ""
 "This plug-in collects information on the logical volumes and physical disks "
@@ -96123,6 +96141,8 @@ msgstr ""
 
 msgid "Run the command below in an elevated PowerShell to install it."
 msgstr ""
+"Führen Sie den folgenden Befehl in einer PowerShell mit erhöhten Rechten "
+"aus, um die Installation des Programms durchzuführen."
 
 msgid "For running WSL2 your system needs to have virtualization enabled. "
 msgstr ""
@@ -96133,6 +96153,8 @@ msgid ""
 "This command will prompt you to restart the computer to finish the "
 "installation."
 msgstr ""
+"Dieser Befehl fordert Sie auf, den Computer neu zu starten, um die "
+"Installation abzuschließen."
 
 msgid "A relay alias is required"
 msgstr "Ein Relay-Alias ist erforderlich"
@@ -97495,6 +97517,19 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#, python-format
+#~ msgid ""
+#~ "Could not connect to the license server (%s). Please retry again later. "
+#~ "If this error persists, please contact the Checkmk support. You also need "
+#~ "to make sure that your Checkmk can reach the license server. Please check "
+#~ "your firewall and proxy settings."
+#~ msgstr ""
+#~ "Verbindung zum Lizenzserver (%s) fehlgeschlagen. Bitte versuchen Sie es "
+#~ "später erneut. Besteht dieser Fehler weiterhin kontaktieren Sie bitte den "
+#~ "Checkmk Support. Sie müssen auch sicherstellen, dass Ihr Checkmk den "
+#~ "Lizenzserver erreichen kann. Bitte prüfen Sie Ihre Firewall- und Proxy-"
+#~ "Einstellungen."
 
 #~ msgid "Note that the installation requires administrator privileges."
 #~ msgstr ""

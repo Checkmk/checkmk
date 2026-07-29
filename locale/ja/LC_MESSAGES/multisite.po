@@ -15883,6 +15883,11 @@ msgstr "ポート%sへの接続が拒否されました：無効な証明書"
 msgid "Connection to remote Agent Bakery"
 msgstr "リモートエージェントベーカリーへの接続"
 
+msgid ""
+"Connection to the license server timed out. Please try again or check your "
+"network settings."
+msgstr ""
+
 msgid "Connection type"
 msgstr "接続タイプ"
 
@@ -16588,17 +16593,13 @@ msgstr ""
 "を確認してください。s<tt>%s</tt>経由で接続しようとしました。報告されたエ"
 "ラー： %s。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Could not connect to the license server (%s). Please retry again later. If "
-"this error persists, please contact the Checkmk support. You also need to "
-"make sure that your Checkmk can reach the license server. Please check your "
-"firewall and proxy settings."
+"Could not connect to the license server (%(endpoint)s): %(detail)s If the "
+"error persists, please contact Checkmk support."
 msgstr ""
-"ライセンスサーバー(%s)との接続に失敗しました。後で再試行してください。このエ"
-"ラーが続く場合は、Checkmk サポートにお問い合わせください。また、Checkmkがライ"
-"センスサーバーに到達できることを確認する必要があります。ファイアウォールとプ"
-"ロキシの設定を確認してください。"
+"ライセンス・サーバ (%s) から無効な応答を受け取りました。後で再試行してくださ"
+"い。このエラーが続く場合は、Checkmk サポートにお問い合わせください。"
 
 #, python-format
 msgid "Could not connect to the remote site (%s)"
@@ -51719,6 +51720,12 @@ msgstr ""
 "このサイトを開始する前に、<tt>omd config set MKEVENTD on</tt>を使用してアク"
 "ティブ化したことを確認してください。"
 
+msgid ""
+"Please make sure the host running Checkmk can resolve the server's hostname "
+"via DNS and that your firewall and proxy settings permit outbound HTTPS "
+"access."
+msgstr ""
+
 msgid "Please make sure, that the data is URL-encoded."
 msgstr "データがURLエンコードされていることを確認してください。"
 
@@ -67408,6 +67415,13 @@ msgstr ""
 msgid "The connection to this site has been disabled."
 msgstr "このサイトへの接続は無効になっています。"
 
+#, fuzzy
+msgid ""
+"The connection via the configured proxy failed. Please check your proxy "
+"settings."
+msgstr ""
+"この接続は現在無効になっています。システム管理者にお問い合わせください。"
+
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
 "<tt>'</tt> <tt>|</tt> or <tt>$</tt>"
@@ -68549,6 +68563,17 @@ msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
 msgstr "コストのレベルは、報告されたデータに対応する通貨であると見なされます。"
+
+msgid ""
+"The license server did not respond in time. Please try again or check your "
+"network settings."
+msgstr ""
+
+msgid ""
+"The license server's TLS certificate could not be verified. Please check "
+"your network settings, system wide CAs and trusted certificate authorities "
+"in Checkmk."
+msgstr ""
 
 msgid ""
 "The license usage history is older than five days. In order to have a "
@@ -96504,6 +96529,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid ""
+#~ "Could not connect to the license server (%s). Please retry again later. "
+#~ "If this error persists, please contact the Checkmk support. You also need "
+#~ "to make sure that your Checkmk can reach the license server. Please check "
+#~ "your firewall and proxy settings."
+#~ msgstr ""
+#~ "ライセンスサーバー(%s)との接続に失敗しました。後で再試行してください。この"
+#~ "エラーが続く場合は、Checkmk サポートにお問い合わせください。また、Checkmk"
+#~ "がライセンスサーバーに到達できることを確認する必要があります。ファイア"
+#~ "ウォールとプロキシの設定を確認してください。"
 
 #, fuzzy
 #~ msgid "Note that the installation requires administrator privileges."

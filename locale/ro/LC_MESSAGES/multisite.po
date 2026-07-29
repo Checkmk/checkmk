@@ -16699,6 +16699,11 @@ msgstr "Determină modul de tratare a certificatului invalid"
 msgid "Connection to remote Agent Bakery"
 msgstr "Conexiune la brutăria agentului de la distanță"
 
+msgid ""
+"Connection to the license server timed out. Please try again or check your "
+"network settings."
+msgstr ""
+
 msgid "Connection type"
 msgstr "Tipul de conexiune"
 
@@ -17422,18 +17427,14 @@ msgid ""
 "started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Could not connect to the license server (%s). Please retry again later. If "
-"this error persists, please contact the Checkmk support. You also need to "
-"make sure that your Checkmk can reach the license server. Please check your "
-"firewall and proxy settings."
+"Could not connect to the license server (%(endpoint)s): %(detail)s If the "
+"error persists, please contact Checkmk support."
 msgstr ""
-"Nu s-a putut conecta la serverul de licențe (%s). Vă rugăm să încercați din "
-"nou mai târziu. Dacă această eroare persistă, vă rugăm să contactați "
-"serviciul de asistență Checkmk. De asemenea, trebuie să vă asigurați că "
-"Checkmk-ul dvs. poate ajunge la serverul de licențe. Vă rugăm să verificați "
-"setările firewall și proxy."
+"A primit un răspuns invalid de la serverul de licențe (%s). Vă rugăm să "
+"încercați din nou mai târziu. Dacă această eroare persistă, vă rugăm să "
+"contactați serviciul de asistență Checkmk."
 
 #, fuzzy, python-format
 msgid "Could not connect to the remote site (%s)"
@@ -54701,6 +54702,12 @@ msgstr ""
 "Vă rugăm să vă asigurați că ați activat-o cu <tt>omd config set MKEVENTD on</"
 "tt> înainte de a porni acest site."
 
+msgid ""
+"Please make sure the host running Checkmk can resolve the server's hostname "
+"via DNS and that your firewall and proxy settings permit outbound HTTPS "
+"access."
+msgstr ""
+
 msgid "Please make sure, that the data is URL-encoded."
 msgstr "Vă rugăm să vă asigurați că datele sunt codificate URL."
 
@@ -71266,6 +71273,14 @@ msgstr ""
 msgid "The connection to this site has been disabled."
 msgstr "Conexiunea la acest site a fost dezactivată."
 
+#, fuzzy
+msgid ""
+"The connection via the configured proxy failed. Please check your proxy "
+"settings."
+msgstr ""
+"Această conexiune este în prezent dezactivată. Vă rugăm să contactați "
+"administratorul de sistem."
+
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
 "<tt>'</tt> <tt>|</tt> or <tt>$</tt>"
@@ -72463,6 +72478,17 @@ msgid ""
 msgstr ""
 "Nivelurile privind costurile vor fi considerate ca fiind în moneda "
 "corespunzătoare datelor raportate."
+
+msgid ""
+"The license server did not respond in time. Please try again or check your "
+"network settings."
+msgstr ""
+
+msgid ""
+"The license server's TLS certificate could not be verified. Please check "
+"your network settings, system wide CAs and trusted certificate authorities "
+"in Checkmk."
+msgstr ""
 
 msgid ""
 "The license usage history is older than five days. In order to have a "
@@ -102048,6 +102074,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid ""
+#~ "Could not connect to the license server (%s). Please retry again later. "
+#~ "If this error persists, please contact the Checkmk support. You also need "
+#~ "to make sure that your Checkmk can reach the license server. Please check "
+#~ "your firewall and proxy settings."
+#~ msgstr ""
+#~ "Nu s-a putut conecta la serverul de licențe (%s). Vă rugăm să încercați "
+#~ "din nou mai târziu. Dacă această eroare persistă, vă rugăm să contactați "
+#~ "serviciul de asistență Checkmk. De asemenea, trebuie să vă asigurați că "
+#~ "Checkmk-ul dvs. poate ajunge la serverul de licențe. Vă rugăm să "
+#~ "verificați setările firewall și proxy."
 
 #, fuzzy
 #~ msgid "Note that the installation requires administrator privileges."

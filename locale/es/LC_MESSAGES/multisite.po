@@ -16757,6 +16757,11 @@ msgstr ""
 msgid "Connection to remote Agent Bakery"
 msgstr "Conexión con el agente remoto bakery"
 
+msgid ""
+"Connection to the license server timed out. Please try again or check your "
+"network settings."
+msgstr ""
+
 msgid "Connection type"
 msgstr "Tipo de conexión"
 
@@ -17484,16 +17489,11 @@ msgid ""
 "started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
 msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
-"Could not connect to the license server (%s). Please retry again later. If "
-"this error persists, please contact the Checkmk support. You also need to "
-"make sure that your Checkmk can reach the license server. Please check your "
-"firewall and proxy settings."
+"Could not connect to the license server (%(endpoint)s): %(detail)s If the "
+"error persists, please contact Checkmk support."
 msgstr ""
-"Ha fallado la conexión con el servidor de licencias (%s). Debe asegurarse de "
-"que su Checkmk puede acceder al servidor de licencias. Por favor, compruebe "
-"la configuración de su firewall y proxy.<br><br>Detalles: %s"
 
 #, fuzzy, python-format
 msgid "Could not connect to the remote site (%s)"
@@ -54961,6 +54961,12 @@ msgstr ""
 "Por favor, asegúrese de haberlo activado con <tt>omd config set MKEVENTD on</"
 "tt> antes de iniciar este sitio."
 
+msgid ""
+"Please make sure the host running Checkmk can resolve the server's hostname "
+"via DNS and that your firewall and proxy settings permit outbound HTTPS "
+"access."
+msgstr ""
+
 #, fuzzy
 msgid "Please make sure, that the data is URL-encoded."
 msgstr ""
@@ -71594,6 +71600,14 @@ msgstr ""
 msgid "The connection to this site has been disabled."
 msgstr "La conexión a este sitio ha sido desactivada."
 
+#, fuzzy
+msgid ""
+"The connection via the configured proxy failed. Please check your proxy "
+"settings."
+msgstr ""
+"Esta conexión está actualmente desactivada. Póngase en contacto con el "
+"administrador del sistema."
+
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
 "<tt>'</tt> <tt>|</tt> or <tt>$</tt>"
@@ -72788,6 +72802,17 @@ msgid ""
 msgstr ""
 "Los niveles sobre los costes se considerarán en la moneda correspondiente a "
 "los datos comunicados."
+
+msgid ""
+"The license server did not respond in time. Please try again or check your "
+"network settings."
+msgstr ""
+
+msgid ""
+"The license server's TLS certificate could not be verified. Please check "
+"your network settings, system wide CAs and trusted certificate authorities "
+"in Checkmk."
+msgstr ""
 
 msgid ""
 "The license usage history is older than five days. In order to have a "
@@ -102425,6 +102450,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Could not connect to the license server (%s). Please retry again later. "
+#~ "If this error persists, please contact the Checkmk support. You also need "
+#~ "to make sure that your Checkmk can reach the license server. Please check "
+#~ "your firewall and proxy settings."
+#~ msgstr ""
+#~ "Ha fallado la conexión con el servidor de licencias (%s). Debe asegurarse "
+#~ "de que su Checkmk puede acceder al servidor de licencias. Por favor, "
+#~ "compruebe la configuración de su firewall y proxy.<br><br>Detalles: %s"
 
 #, fuzzy
 #~ msgid "Note that the installation requires administrator privileges."

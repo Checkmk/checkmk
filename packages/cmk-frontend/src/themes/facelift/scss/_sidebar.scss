@@ -68,7 +68,7 @@ body.side.main {
   display: flex;
   flex-direction: column;
   float: right;
-  width: 280px;
+  width: $sidebar-width;
   height: 100%;
   padding-top: $spacing;
 

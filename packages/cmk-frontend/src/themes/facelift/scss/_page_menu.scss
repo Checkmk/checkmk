@@ -997,10 +997,14 @@ div#page_menu_popups div.side_popup {
   top: 0;
   right: 0;
   z-index: 1000;
-  width: 375px;
+  width: $side-popup-width;
   height: 100vh;
   padding: 0;
   border-left: $popup-border;
+
+  body.side:has(#check_mk_sidebar:not(.folded, .left)) & {
+    right: $sidebar-width;
+  }
 
   form {
     width: inherit;
@@ -1147,7 +1151,7 @@ div#page_menu_popups div.side_popup {
   div.popup_filter_list {
     position: fixed;
     top: 0;
-    right: 375px;
+    right: $side-popup-width;
     display: none;
     width: 288px;
     height: 100vh;
@@ -1156,6 +1160,10 @@ div#page_menu_popups div.side_popup {
     background-color: $base-color;
     border-right: $popup-inner-border;
     border-left: $popup-border;
+
+    body.side:has(#check_mk_sidebar:not(.folded, .left)) & {
+      right: $sidebar-width + $side-popup-width;
+    }
 
     &.active {
       display: block;

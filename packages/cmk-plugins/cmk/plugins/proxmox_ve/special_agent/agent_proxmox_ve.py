@@ -34,6 +34,8 @@ from zoneinfo import ZoneInfo
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
+from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
+from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo, SubscriptionInfo
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
@@ -379,14 +381,16 @@ def _create_node_sections(
 ) -> Iterable[tuple[str, object]]:
     yield (
         "proxmox_ve_node_info",
-        {
-            "status": node["status"],
-            "version": node["version"],
-            "subscription": node["subscription"],
-            # Note: this is not filtered by node - it includes every VM in the cluster.
-            # Pre-existing behavior, kept as-is here; to be fixed in a follow-up.
-            "vms": list(all_vms.values()),
-        },
+        SectionNodeInfo(
+            status=node["status"],
+            lxc=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
+            qemu=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
+            version=node["version"].get("version", "n/a"),
+            subscription=SubscriptionInfo(
+                status=node["subscription"].get("status"),
+                next_due_date=node["subscription"].get("nextduedate"),
+            ),
+        ).model_dump(),
     )
 
     running_vms = [
@@ -441,10 +445,10 @@ def _create_node_sections(
 
     yield (
         "proxmox_ve_node_attributes",
-        {
-            "cluster": node_cluster_mapping.get(node["node"], ""),
-            "node_name": node["node"],
-        },
+        SectionNodeAttributes(
+            cluster=node_cluster_mapping.get(node["node"], ""),
+            node_name=node["node"],
+        ).model_dump_json(),
     )
 
     yield "proxmox_ve_ha_manager_status", ha_manager_status.model_dump()

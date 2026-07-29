@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Literal, NotRequired, TypedDict
-
-from pydantic import BaseModel
+from typing import Literal, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -22,7 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.proxmox_ve.lib.node_info import NodeStatus, SectionNodeInfo, SubscriptionInfo
+from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo, SubscriptionInfo
 
 
 class Params(TypedDict):
@@ -31,34 +29,8 @@ class Params(TypedDict):
     subscription_expiration_days_levels: NoLevelsT | FixedLevelsT[int]
 
 
-class _RawVM(BaseModel, frozen=True):
-    vmid: int
-    type: str
-
-
-class _RawNodeInfo(BaseModel, frozen=True):
-    status: NodeStatus
-    version: Mapping[str, Any]
-    subscription: Mapping[str, Any]
-    vms: Sequence[_RawVM]
-
-
-def _pre_parse_proxmox_ve_node_info(string_table: StringTable) -> _RawNodeInfo:
-    return _RawNodeInfo.model_validate_json(string_table[0][0])
-
-
 def parse_proxmox_ve_node_info(string_table: StringTable) -> SectionNodeInfo:
-    raw = _pre_parse_proxmox_ve_node_info(string_table)
-    return SectionNodeInfo(
-        status=raw.status,
-        lxc=[str(vm.vmid) for vm in raw.vms if vm.type == "lxc"],
-        qemu=[str(vm.vmid) for vm in raw.vms if vm.type == "qemu"],
-        version=raw.version.get("version", "n/a"),
-        subscription=SubscriptionInfo(
-            status=raw.subscription.get("status"),
-            next_due_date=raw.subscription.get("nextduedate"),
-        ),
-    )
+    return SectionNodeInfo.model_validate_json(string_table[0][0])
 
 
 def discover_single(section: SectionNodeInfo) -> DiscoveryResult:

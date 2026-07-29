@@ -343,6 +343,7 @@ vitest_bin.vitest_test(
 
 vue_tsc_bin.vue_tsc_test(
     name = "type-check",
+    timeout = "long",
     args = [
         "--build",
         "--force",

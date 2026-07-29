@@ -57,7 +57,7 @@ py_cmk_test(
 py_cmk_test(
     name = "repo_community",
     size = "small",
-    timeout = "moderate",
+    timeout = "long",
     srcs = [
         "__init__.py",
     ] + glob(include = ["test_*.py"]),

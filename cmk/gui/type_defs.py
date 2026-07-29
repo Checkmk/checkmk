@@ -268,12 +268,18 @@ class UserContactDetails(TypedDict):
     customer: NotRequired[str | None]
 
 
+StartOfWeek = Literal["saturday", "sunday", "monday"]
+
+
 class UserDetails(TypedDict):
     alias: str
     connector: NotRequired[str | None]
     locked: NotRequired[bool]
     roles: NotRequired[list[str]]
     temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
+    start_of_week: NotRequired[StartOfWeek | None]
+    graph_default_time_range: NotRequired[int | None]
+    graph_default_refresh_time: NotRequired[int | None]
     force_authuser: NotRequired[bool]
     nav_hide_icons_title: NotRequired[Literal["hide"] | None]
     icons_per_item: NotRequired[Literal["entry"] | None]
@@ -336,6 +342,9 @@ class UserSpec(TypedDict, total=False):
     nav_hide_icons_title: NotRequired[Literal["hide"] | None]
     icons_per_item: NotRequired[Literal["entry"] | None]
     temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
+    start_of_week: NotRequired[StartOfWeek | None]
+    graph_default_time_range: NotRequired[int | None]
+    graph_default_refresh_time: NotRequired[int | None]
     contextual_help_icon: NotRequired[Literal["hide_icon"] | None]
     ldap_pw_last_changed: NotRequired[str]  # On attribute sync, this is added, then removed.
     ldap_quarantine: NotRequired[QuarantineInfo | None]

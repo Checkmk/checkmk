@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -28,6 +29,10 @@ from cmk.ruleset_matcher.definition import RuleGroup
 
 from ._user_attribute import UserAttribute, UserAttributeRegistry
 
+# Mirrors INTERVAL_CHOICES_SECONDS of the frontend's GlobalRefreshControl. The REST API offers
+# the same intervals; tests/openapi keeps the two in sync.
+GRAPH_REFRESH_INTERVALS_SECONDS = (30, 60, 90)
+
 
 def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(TemperatureUnitUserAttribute)
@@ -41,6 +46,9 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIIconPlacement)
     user_attribute_registry.register(UIBasicAdvancedToggle)
     user_attribute_registry.register(ContextualHelpIcon)
+    user_attribute_registry.register(StartOfWeekUserAttribute)
+    user_attribute_registry.register(GraphDefaultTimeRangeUserAttribute)
+    user_attribute_registry.register(GraphDefaultRefreshTimeUserAttribute)
 
 
 class TemperatureUnitUserAttribute(UserAttribute):
@@ -423,6 +431,116 @@ class ChangesSlideoutDisabled(UserAttribute):
 
     def user_editable(self) -> bool:
         return user.may("wato.activate")
+
+
+class StartOfWeekUserAttribute(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "start_of_week"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Start of week in calendar"),
+            help=_(
+                "The first day of the week in the calendar of the global time picker on "
+                "graph pages. 'Browser locale' derives the start of the week from your "
+                "browser's language settings."
+            ),
+            choices=[
+                (None, _("Browser locale")),
+                ("saturday", _("Saturday")),
+                ("sunday", _("Sunday")),
+                ("monday", _("Monday")),
+            ],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class GraphDefaultTimeRangeUserAttribute(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "graph_default_time_range"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return Alternative(
+            title=_("Default time range of the global time picker"),
+            orientation="horizontal",
+            help=_(
+                "The time range preselected by the global time picker on graph pages. The "
+                "available time ranges can be configured <a href='%(configvar_url)s'>here</a>."
+            )
+            % {
+                "configvar_url": makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "graph_timeranges"),
+                    ],
+                    filename="wato.py",
+                ),
+            },
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("Use the default time range (first configured time range)"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom time range"),
+                    # Lazy: active_config is only bound within a request context.
+                    choices=lambda: [
+                        (timerange["duration"], timerange["title"])
+                        for timerange in active_config.graph_timeranges
+                    ],
+                    # Every user edit validates every attribute, so complaining about a time
+                    # range an admin has since removed would block unrelated edits of that user.
+                    # The picker falls back to the first configured range instead.
+                    invalid_choice="replace",
+                ),
+            ],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class GraphDefaultRefreshTimeUserAttribute(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "graph_default_refresh_time"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Default refresh time of the global time picker"),
+            help=_(
+                "The refresh interval preselected in the refresh control of the global time "
+                "picker on graph pages. This only preselects the interval; it does not start "
+                "refreshing automatically."
+            ),
+            choices=[
+                (None, _("Use the default refresh time")),
+                *(
+                    (seconds, _("%(seconds)d seconds") % {"seconds": seconds})
+                    for seconds in GRAPH_REFRESH_INTERVALS_SECONDS
+                ),
+            ],
+            # As above: a stored interval we no longer offer must not block unrelated edits.
+            invalid_choice="replace",
+        )
+
+    def domain(self) -> str:
+        return "multisite"
 
 
 def show_mode_choices() -> list[tuple[str | None, str]]:

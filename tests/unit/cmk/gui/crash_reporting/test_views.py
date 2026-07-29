@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
 
-from cmk.gui.crash_reporting.views import PainterCrashException
+from cmk.gui.crash_reporting.views import CrashReportsRowTable, PainterCrashException
 
 
 @pytest.mark.parametrize(
@@ -47,3 +49,36 @@ def test_painter_crash_exception_summarize(exc_type: str, exc_value: str, expect
     assert summary == expected
     assert "\n" not in summary
     assert "<" not in summary
+
+
+def _raw_crash_row(crash_id: str, time: object) -> dict[str, str]:
+    return {
+        "site": "heute",
+        "crash_id": crash_id,
+        "crash_type": "gui",
+        "crash_info": json.dumps(
+            {
+                "time": time,
+                "version": "2.4.0p9",
+                "exc_type": "ValueError",
+                "exc_value": "boom",
+                "exc_traceback": [],
+            }
+        ),
+    }
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 4512: TypeError on unreadable crash time")
+def test_parse_rows_skips_crash_report_with_unreadable_time() -> None:
+    # A crash report whose time field is not a number must not take the other
+    # reports (and with them the whole crash report view) down with it.
+    rows = list(
+        CrashReportsRowTable().parse_rows(
+            [
+                _raw_crash_row("readable", 1734000000.0),
+                _raw_crash_row("unreadable", "1734000000"),
+            ]
+        )
+    )
+
+    assert [row["crash_id"] for row in rows] == ["readable"]

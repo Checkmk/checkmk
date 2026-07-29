@@ -77,7 +77,6 @@ _INCLUDED_PATHS = (
     "cmk/bi",
     "cmk/config_anonymizer",
     "cmk/gui",
-    "cmk/inventory",
     "cmk/post_rename_site",
     "cmk/product_usage",
 )

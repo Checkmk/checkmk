@@ -180,6 +180,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-events:wheel",
     "//packages/cmk-flags:wheel",
     "//packages/cmk-graphing-engine:wheel",
+    "//packages/cmk-inventory:wheel",
     "//packages/cmk-licensing:wheel",
     "//packages/cmk-livestatus-client:cmk-livestatus-client_whl",
     "//packages/cmk-livestatus-client:livestatus_whl",

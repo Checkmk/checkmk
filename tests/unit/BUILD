@@ -68,7 +68,6 @@ py_cmk_test(
             "cmk/bi/**/*.py",
             "cmk/diskspace/**/*.py",
             "cmk/fields/**/*.py",
-            "cmk/inventory/**/*.py",
             "cmk/notifications/**/*.py",
             "cmk/piggyback_hub/**/*.py",
             "cmk/piggyback/**/*.py",
@@ -82,14 +81,6 @@ py_cmk_test(
     args = [
         "--random-order-bucket=global",
     ],
-    data = glob(
-        include = [
-            # canned data
-            "**/tree_test_data/**",
-            "**/*.json",
-        ],
-        exclude = ["**/*.py"],
-    ),
     use_project_pytest_config = True,
     visibility = ["//tests:__subpackages__"],
     deps = [

@@ -267,11 +267,11 @@ py_library(
         ":lib",
         ":section-parser",
         ":specs",
-        "//cmk/inventory",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-inventory:inventory",
         "//packages/cmk-plugin-apis:agent_based",
     ],
 )

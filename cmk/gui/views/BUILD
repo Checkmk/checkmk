@@ -259,7 +259,7 @@ py_library(
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/valuespec",
         "//cmk/gui/visuals",
-        "//cmk/inventory",
+        "//packages/cmk-inventory:inventory",
         "//packages/cmk-plugin-apis:inventory_ui",
     ],
 )

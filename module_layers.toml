@@ -1149,7 +1149,7 @@ allows = [
 ]
 
 [components."cmk.inventory"]
-allows = ["@ccc", "cmk.utils.paths"]
+allows = ["@ccc"]
 
 [components."cmk.dcd_connector_parameters"]
 allows = ["cmk.rulesets"]

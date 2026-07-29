@@ -24,8 +24,8 @@ from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils.paths
 from cmk import trace
+from cmk.ccc import tar_archive
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.tar_archive import BaseSafeTarFile, CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -478,9 +478,9 @@ def _list_tar_content(the_tarfile: str | IO[bytes]) -> dict[str, FileInfo]:
     files: dict[str, FileInfo] = {}
     try:
         if isinstance(the_tarfile, str):
-            context = CheckmkTarArchive.from_path(Path(the_tarfile), compression="*")
+            context = tar_archive.open_path(Path(the_tarfile), compression="*")
         else:
-            context = CheckmkTarArchive.from_buffer(the_tarfile, compression="*")
+            context = tar_archive.open_buffer(the_tarfile, compression="*")
 
         with context as archive:
             for member in archive:
@@ -494,7 +494,7 @@ def _list_tar_content(the_tarfile: str | IO[bytes]) -> dict[str, FileInfo]:
 
 def _file_exists_in_tar(the_tarfile: bytes, filename: str) -> bool:
     try:
-        with CheckmkTarArchive.from_bytes(the_tarfile, compression="*") as tar:
+        with tar_archive.open_bytes(the_tarfile, compression="*") as tar:
             return any(member.name == filename for member in tar)
     except (tarfile.TarError, OSError, EOFError):
         return False
@@ -502,9 +502,9 @@ def _file_exists_in_tar(the_tarfile: bytes, filename: str) -> bool:
 
 def _get_file_content(the_tarfile: str | IO[bytes], filename: str) -> bytes:
     if isinstance(the_tarfile, str):
-        context = CheckmkTarArchive.from_path(Path(the_tarfile), compression="*")
+        context = tar_archive.open_path(Path(the_tarfile), compression="*")
     else:
-        context = CheckmkTarArchive.from_buffer(the_tarfile, compression="*")
+        context = tar_archive.open_buffer(the_tarfile, compression="*")
 
     with context as archive:
         if obj := archive.extractfile_by_name(filename):
@@ -532,7 +532,7 @@ def snapshot_secret() -> bytes:
 
 
 def extract_snapshot(
-    tar: BaseSafeTarFile,
+    tar: tar_archive.BaseSafeTarFile,
     domains: dict[str, DomainSpec],
 ) -> None:
     """Used to restore a configuration snapshot for "discard changes"""

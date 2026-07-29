@@ -22,8 +22,7 @@ from omdlib.type_defs import Replacements
 from omdlib.users_and_groups import run_as_site_user
 from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
 
-from cmk.ccc import tty
-from cmk.ccc.tar_archive import CheckmkTarArchive
+from cmk.ccc import tar_archive, tty
 
 
 def tmpfs_mounted(sitename: str) -> bool:
@@ -289,7 +288,7 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     if not tmpfs_dump.exists():
         return
 
-    with CheckmkTarArchive.from_path(tmpfs_dump, compression="*") as archive:
+    with tar_archive.open_path(tmpfs_dump, compression="*") as archive:
         archive.extractall(dest=site_tmp_dir)  # nosec B202 # BNS:481b41
     tmpfs_dump.unlink()
 

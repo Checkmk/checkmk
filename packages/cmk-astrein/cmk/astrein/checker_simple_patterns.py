@@ -245,7 +245,7 @@ class TarfileOpenReadChecker(ASTVisitorChecker):
         if self._is_tarfile_open(node) and self._is_read_mode(node):
             self.add_error(
                 "tarfile.open() in read mode should not be used directly."
-                " Use CheckmkTarArchive.from_(bytes|buffer|path) method instead",
+                " Use cmk.ccc.tar_archive.open_(bytes|buffer|path) instead",
                 node,
             )
         self.generic_visit(node)

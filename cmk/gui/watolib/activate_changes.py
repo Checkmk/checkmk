@@ -56,12 +56,11 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
-from cmk.ccc import store, version
+from cmk.ccc import store, tar_archive, version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import get_omd_config, omd_site, SiteId
-from cmk.ccc.tar_archive import CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
@@ -3324,7 +3323,7 @@ def _has_local_file_changes(sync_archive: bytes, to_delete: list[str]) -> bool:
     if any(p.startswith(f"{paths.LOCAL_SEGMENT}/") for p in to_delete):
         return True  # no need to check the archive.
 
-    with CheckmkTarArchive.from_bytes(sync_archive, compression="*") as safe_tar:
+    with tar_archive.open_bytes(sync_archive, compression="*") as safe_tar:
         return any(m.name.startswith(f"{paths.LOCAL_SEGMENT}/") for m in safe_tar)
 
 

@@ -12,8 +12,8 @@ from collections.abc import Generator
 import pytest
 
 import cmk.utils.paths
+from cmk.ccc import tar_archive
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.tar_archive import CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.gui.watolib import backup_snapshots
 
@@ -64,7 +64,7 @@ def test_extract_snapshot() -> None:
         use_git=False,
         debug=False,
     )
-    with CheckmkTarArchive.from_path(
+    with tar_archive.open_path(
         next(_snapshot_files()), streaming=False, compression="*"
     ) as snapshot_tar:
         backup_snapshots.extract_snapshot(
@@ -111,7 +111,7 @@ def test_extract_snapshot_permission_check_uses_real_paths(
     # extract_snapshot runs "tar tzf" on the inner archive and gets back "./global.mk\n".
     # it checks the real path prefix/./global.mk → not writable → error.
     with (
-        CheckmkTarArchive.from_bytes(outer_bytes, streaming=False, compression="*") as snapshot_tar,
+        tar_archive.open_bytes(outer_bytes, streaming=False, compression="*") as snapshot_tar,
         pytest.raises(MKGeneralException) as exc_info,
     ):
         backup_snapshots.extract_snapshot(snapshot_tar, {"check_mk": domain})

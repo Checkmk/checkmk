@@ -11,11 +11,7 @@ from typing import Any
 
 from marshmallow import Schema
 
-from cmk.ccc.tar_archive import (
-    CheckmkTarArchive,
-    SecurityViolation,
-    UnpackedArchiveTooLargeError,
-)
+from cmk.ccc import tar_archive
 from cmk.gui.http import Request
 from cmk.gui.openapi.utils import (
     RestAPIRequestContentTypeException,
@@ -44,9 +40,9 @@ def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any:
     tgz = binary_decoder(request)
     try:
         assert isinstance(tgz, bytes)
-        CheckmkTarArchive.validate_bytes(tgz)
+        tar_archive.validate_bytes(tgz)
 
-    except (UnpackedArchiveTooLargeError, SecurityViolation) as err:
+    except (tar_archive.UnpackedArchiveTooLargeError, tar_archive.SecurityViolation) as err:
         raise RestAPIRequestDataValidationException(
             title=http.client.responses[400],
             detail=str(err),

@@ -2,14 +2,16 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import io
 import math
 import tarfile
-from collections.abc import Callable, Iterator
-from contextlib import _GeneratorContextManager, contextmanager
+from collections.abc import Callable, Generator, Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Final, IO, Literal, TypedDict, Unpack
+from typing import Any, Final, IO, Literal
 
 
 def fmt_bytes(bytes_val: int, unit: str | None = None) -> str:
@@ -54,14 +56,67 @@ class SecurityViolation(ValueError): ...
 
 TarFilterCallable = Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None]
 FilterType = Literal["fully_trusted", "tar", "data"] | TarFilterCallable
+Compression = Literal["gz", "*"]
+
+_TarReadMode = Literal["r|gz", "r|*", "r:gz", "r:*"]
+_GIB: Final = 1024**3
+
+
+@dataclass(frozen=True, kw_only=True)
+class ArchiveLimits:
+    """The limits enforced while reading an archive."""
+
+    size_limit_bytes: int = 10 * _GIB
+    file_limit: int = 100_000
+    per_file_limit: int = 2 * _GIB
+    raw_limit_bytes: int = 1 * _GIB
+    allow_symlinks: bool = True
+
+    def validate_member(self, member: tarfile.TarInfo) -> None:
+        if member.name == "":
+            # This should never happen
+            raise NotAValidArchive("Archive member name is cannot be empty")
+        if not self.allow_symlinks and (member.islnk() or member.issym()):
+            raise SecurityViolation(f"Symlink or hardlink not allowed: {member.name}")
+        if member.ischr() or member.isblk() or member.isfifo():
+            raise SecurityViolation(f"Special file not allowed: {member.name}")
+        if member.size > self.per_file_limit:
+            raise UnpackedArchiveTooLargeError(
+                f"File {member.name} exceeds per-file size limit: "
+                f"({fmt_bytes(member.size)} > {fmt_bytes(self.per_file_limit)})"
+            )
+
+    def validate_file_count(self, count: int) -> None:
+        if count > self.file_limit:
+            raise UnpackedArchiveTooLargeError(f"Archive contains too many files ({count})")
+
+    def validate_unpacked_size(self, size: int) -> None:
+        if size > self.size_limit_bytes:
+            raise UnpackedArchiveTooLargeError(
+                f"Archive exceeds total size limit: "
+                f"({fmt_bytes(size)} > {fmt_bytes(self.size_limit_bytes)})"
+            )
+
+    def validate_compressed_size(self, size: int) -> None:
+        if size > self.raw_limit_bytes:
+            raise UnpackedArchiveTooLargeError(
+                f"Compressed archive too large: "
+                f"({fmt_bytes(size)} > {fmt_bytes(self.raw_limit_bytes)})"
+            )
+
+
+DEFAULT_ARCHIVE_LIMITS: Final = ArchiveLimits()
 
 
 class BaseSafeTarFile:
-    """Base wrapper for TarFile with enforced security checks."""
+    """Base wrapper for TarFile with enforced security checks.
 
-    def __init__(self, tar: tarfile.TarFile, archive: "CheckmkTarArchive"):
+    Prevents path traversal, symlink attacks and oversized archives.
+    """
+
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits):
         self._tar = tar
-        self._archive = archive
+        self._limits = limits
         self._member_iter = iter(self._tar)
 
     def __iter__(self) -> Iterator[tarfile.TarInfo]:
@@ -128,10 +183,13 @@ class BaseSafeTarFile:
 
 class SafeStreamedTarFile(BaseSafeTarFile):
     """Safe wrapper around TarFile in streaming mode (r|gz).
-    Validates incrementally during iteration."""
 
-    def __init__(self, tar: tarfile.TarFile, archive: "CheckmkTarArchive"):
-        super().__init__(tar, archive)
+    Validates incrementally during iteration. There is a cursor: seeking backwards is not possible
+    and once it reaches EOF the archive has to be reopened for a second pass.
+    """
+
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits):
+        super().__init__(tar, limits)
         self._total_size = 0
         self._file_count = 0
 
@@ -140,9 +198,9 @@ class SafeStreamedTarFile(BaseSafeTarFile):
         member = next(self._member_iter)
         self._file_count += 1
         self._total_size += member.size
-        self._archive.validate_file_limit(self._file_count)
-        self._archive.validate_size_limit_bytes(self._total_size)
-        self._archive.validate_member(member)
+        self._limits.validate_file_count(self._file_count)
+        self._limits.validate_unpacked_size(self._total_size)
+        self._limits.validate_member(member)
         return member
 
     def getmembers(self) -> None:
@@ -151,183 +209,111 @@ class SafeStreamedTarFile(BaseSafeTarFile):
 
 class SafeIndexedTarFile(BaseSafeTarFile):
     """Safe wrapper around TarFile in indexed mode (r:gz).
-    Validates all members eagerly on open."""
 
-    def __init__(self, tar: tarfile.TarFile, archive: "CheckmkTarArchive") -> None:
-        super().__init__(tar, archive)
+    Validates all members eagerly on open, which requires reading the whole archive into memory.
+    Prefer streaming mode where possible.
+    """
+
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits) -> None:
+        super().__init__(tar, limits)
         members = tar.getmembers()
 
-        archive.validate_file_limit(len(members))
-        archive.validate_size_limit_bytes(sum(m.size for m in members))
+        limits.validate_file_count(len(members))
+        limits.validate_unpacked_size(sum(m.size for m in members))
         for m in members:
-            archive.validate_member(m)
+            limits.validate_member(m)
         self._member_iter = iter(members)
 
 
-class ArchiveSettings(TypedDict, total=False):
-    size_limit_bytes: int
-    file_limit: int
-    per_file_limit: int
-    raw_limit_bytes: int
-    compression: Literal["gz", "*"]
-    allow_symlinks: bool
+@contextmanager
+def open_bytes(
+    raw: bytes,
+    *,
+    streaming: bool = True,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> Generator[SafeStreamedTarFile | SafeIndexedTarFile]:
+    with open_buffer(
+        io.BytesIO(raw), streaming=streaming, compression=compression, limits=limits
+    ) as tar:
+        yield tar
 
 
-class CheckmkTarArchive:
-    """Safely read, validate, and extract tar.gz archives with strict security limits.
+@contextmanager
+def open_buffer(
+    buffer: IO[bytes],
+    *,
+    streaming: bool = True,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> Generator[SafeStreamedTarFile | SafeIndexedTarFile]:
+    with _open_buffer(buffer, _mode(compression, streaming=streaming), limits) as tar:
+        yield (SafeStreamedTarFile(tar, limits) if streaming else SafeIndexedTarFile(tar, limits))
 
-    Prevents path traversal, symlink attacks, and oversized archives.
-    Supports streaming (`r|gz`) and indexed (`r:gz`) modes for flexible performance.
-    Use context-managed helpers (`from_bytes`, `from_buffer`, `from_path`) for safe access.
-    Raises NotAValidArchive, UnpackedArchiveTooLargeError, or SecurityViolation on failure.
 
-    Prefer streaming mode over indexed mode.
-    Caution: in streaming mode there is a cursor. when cursor reaches EOF - archive must be reopened
-    ro reset cursor to the beginning of the archive.
-    Indexed mode - loads the archive fully into the RAM.
+@contextmanager
+def open_path(
+    path: Path,
+    *,
+    streaming: bool = True,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> Generator[SafeStreamedTarFile | SafeIndexedTarFile]:
+    with _open_path(path, _mode(compression, streaming=streaming), limits) as tar:
+        yield (SafeStreamedTarFile(tar, limits) if streaming else SafeIndexedTarFile(tar, limits))
+
+
+def validate_bytes(
+    raw: bytes,
+    *,
+    compression: Compression = "gz",
+    limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
+) -> None:
+    """Validate an archive without writing anything to disk.
+
+    Streams through all members and enforces the limits.
     """
+    with open_bytes(raw, compression=compression, limits=limits) as archive:
+        for _ in archive:
+            ...
 
-    RAW_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3 * 1  # 1 GB
-    ARCHIVE_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3 * 10  # 10 GB
-    ARCHIVE_MAX_SIZE_LIMIT_BYTES_PER_FILE: Final[int] = 1024**3 * 2  # 2 GB
-    ARCHIVE_MAX_TOTAL_FILES: Final[int] = 100_000
 
-    def __init__(
-        self,
-        size_limit_bytes: int = ARCHIVE_MAX_SIZE_LIMIT_BYTES,
-        file_limit: int = ARCHIVE_MAX_TOTAL_FILES,
-        per_file_limit: int = ARCHIVE_MAX_SIZE_LIMIT_BYTES_PER_FILE,
-        raw_limit_bytes: int = RAW_MAX_SIZE_LIMIT_BYTES,
-        compression: Literal["gz", "*"] = "gz",
-        allow_symlinks: bool = True,
-    ):
-        self.__size_limit_bytes = size_limit_bytes
-        self.__file_limit = file_limit
-        self.__per_file_limit = per_file_limit
-        self.__raw_limit_bytes = raw_limit_bytes
-        self.__compression = compression
-        self.allow_symlinks = allow_symlinks
+@contextmanager
+def _open_buffer(
+    buffer: IO[bytes], mode: _TarReadMode, limits: ArchiveLimits
+) -> Generator[tarfile.TarFile]:
+    try:
+        limits.validate_compressed_size(_buffer_size(buffer))
+        buffer.seek(0)
+        with tarfile.open(fileobj=buffer, mode=mode) as tar:
+            yield tar
+    except tarfile.ReadError as exc:
+        raise NotAValidArchive from exc
 
-    def _mode(self, *, streaming: bool) -> Literal["r|gz", "r|*", "r:gz", "r:*"]:
-        # NOTE: mypy currently doesn't narrow on tuples, so we have to use the
-        # slightly less readable if/else cascade below.
-        return (
-            ("r|gz" if self.__compression == "gz" else "r|*")
-            if streaming
-            else ("r:gz" if self.__compression == "gz" else "r:*")
-        )
 
-    def validate_member(self, member: tarfile.TarInfo) -> None:
-        """Validate a single tar member."""
-        if member.name == "":
-            # This should never happen
-            raise NotAValidArchive("Archive member name is cannot be empty")
-        if not self.allow_symlinks and (member.islnk() or member.issym()):
-            raise SecurityViolation(f"Symlink or hardlink not allowed: {member.name}")
-        if member.ischr() or member.isblk() or member.isfifo():
-            raise SecurityViolation(f"Special file not allowed: {member.name}")
-        self.validate_per_file_limit(member)
+@contextmanager
+def _open_path(path: Path, mode: _TarReadMode, limits: ArchiveLimits) -> Generator[tarfile.TarFile]:
+    try:
+        limits.validate_compressed_size(path.stat().st_size)
+        with tarfile.open(name=path, mode=mode) as tar:
+            yield tar
+    except tarfile.ReadError as exc:
+        raise NotAValidArchive from exc
 
-    @contextmanager
-    def open_buffer(
-        self,
-        buffer: IO[bytes],
-        streaming: bool = True,
-    ) -> Iterator[SafeStreamedTarFile | SafeIndexedTarFile]:
-        try:
-            self._check_compressed_size(buffer)
-            buffer.seek(0)
-            with tarfile.open(fileobj=buffer, mode=self._mode(streaming=streaming)) as tar:
-                if streaming:
-                    yield SafeStreamedTarFile(tar, self)
-                else:
-                    yield SafeIndexedTarFile(tar, self)
 
-        except tarfile.ReadError as exc:
-            raise NotAValidArchive from exc
+def _buffer_size(buffer: IO[bytes]) -> int:
+    current_pos = buffer.tell()
+    buffer.seek(0, 2)
+    size = buffer.tell()
+    buffer.seek(current_pos)
+    return size
 
-    @contextmanager
-    def open_path(
-        self,
-        path: Path,
-        streaming: bool = True,
-    ) -> Iterator[SafeIndexedTarFile | SafeStreamedTarFile]:
-        try:
-            self._check_compressed_size(path)
-            with tarfile.open(name=path, mode=self._mode(streaming=streaming)) as tar:
-                if streaming:
-                    yield SafeStreamedTarFile(tar, self)
-                else:
-                    yield SafeIndexedTarFile(tar, self)
-        except tarfile.ReadError as exc:
-            raise NotAValidArchive from exc
 
-    def _check_compressed_size(self, source: IO[bytes] | Path | str) -> None:
-        """
-        Check compressed archive size for a file-like object or a file path.
-        """
-        if isinstance(source, str | Path):
-            path = Path(source)
-            size = path.stat().st_size
-        else:
-            current_pos = source.tell()
-            source.seek(0, 2)
-            size = source.tell()
-            source.seek(current_pos)
-        self.validate_raw_limit_bytes(size)
-
-    @classmethod
-    def from_bytes(
-        cls, raw: bytes, streaming: bool = True, **kwargs: Unpack[ArchiveSettings]
-    ) -> _GeneratorContextManager[SafeIndexedTarFile | SafeStreamedTarFile]:
-        buffer = io.BytesIO(raw)
-        return cls(**kwargs).open_buffer(buffer, streaming=streaming)
-
-    @classmethod
-    def from_buffer(
-        cls, buffer: IO[bytes], streaming: bool = True, **kwargs: Unpack[ArchiveSettings]
-    ) -> _GeneratorContextManager[SafeIndexedTarFile | SafeStreamedTarFile]:
-        return cls(**kwargs).open_buffer(buffer, streaming=streaming)
-
-    @classmethod
-    def from_path(
-        cls, path: Path, streaming: bool = True, **kwargs: Unpack[ArchiveSettings]
-    ) -> _GeneratorContextManager[SafeIndexedTarFile | SafeStreamedTarFile]:
-        return cls(**kwargs).open_path(path, streaming=streaming)
-
-    @classmethod
-    def validate_bytes(cls, raw: bytes, **kwargs: Unpack[ArchiveSettings]) -> None:
-        """Validate archive without writing anything to disk.
-        It will stream through all members and enforce limits
-        """
-        with cls.from_bytes(raw, **kwargs) as archive:
-            for _ in archive:
-                ...
-
-    def validate_size_limit_bytes(self, value: int) -> bool:
-        if value > self.__size_limit_bytes:
-            raise UnpackedArchiveTooLargeError(
-                f"Archive exceeds total size limit: "
-                f"({fmt_bytes(value)} > {fmt_bytes(self.__size_limit_bytes)})"
-            )
-        return True
-
-    def validate_file_limit(self, value: int) -> bool:
-        if value > self.__file_limit:
-            raise UnpackedArchiveTooLargeError(f"Archive contains too many files ({value})")
-        return True
-
-    def validate_per_file_limit(self, member: tarfile.TarInfo) -> bool:
-        if member.size > self.__per_file_limit:
-            raise UnpackedArchiveTooLargeError(
-                f"File {member.name} exceeds per-file size limit: ({fmt_bytes(member.size)} > {fmt_bytes(self.__per_file_limit)})"
-            )
-        return True
-
-    def validate_raw_limit_bytes(self, value: int) -> bool:
-        if value > self.__raw_limit_bytes:
-            raise UnpackedArchiveTooLargeError(
-                f"Compressed archive too large: "
-                f"({fmt_bytes(value)} > {fmt_bytes(self.__raw_limit_bytes)})"
-            )
-        return True
+def _mode(compression: Compression, *, streaming: bool) -> _TarReadMode:
+    # NOTE: mypy currently doesn't narrow on tuples, so we have to use the
+    # slightly less readable if/else cascade below.
+    return (
+        ("r|gz" if compression == "gz" else "r|*")
+        if streaming
+        else ("r:gz" if compression == "gz" else "r:*")
+    )

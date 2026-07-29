@@ -55,7 +55,7 @@ from typing import NamedTuple
 
 import docker
 
-from cmk.ccc.tar_archive import CheckmkTarArchive
+from cmk.ccc import tar_archive
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from buildscripts.scripts.lib.common import cwd, strtobool
@@ -511,7 +511,7 @@ def build_image(
     LOG.debug("pkg_file: %(pkg_file)s", {"pkg_file": pkg_file})
 
     LOG.info("Unpack source tar to %(tmp_path)s", {"tmp_path": tmp_path})
-    with CheckmkTarArchive.from_path(
+    with tar_archive.open_path(
         Path(f"{args.source_path}/check-mk-{args.edition}-{args.version}.tar.gz")
     ) as archive:
         archive.extractall(tmp_path)

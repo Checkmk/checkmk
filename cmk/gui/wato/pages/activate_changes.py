@@ -15,9 +15,9 @@ from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 from typing import Literal, override
 
+from cmk.ccc import tar_archive
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.tar_archive import CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition_has_enforced_licensing
 from cmk.gui import forms
@@ -136,7 +136,7 @@ def _extract_snapshot(snapshot_file: str) -> None:
     filepath = Path(backup_snapshots.snapshot_dir + snapshot_file)
     if not isinstance(backup_snapshots.backup_domains, dict):
         raise NotImplementedError
-    with CheckmkTarArchive.from_path(filepath, streaming=False, compression="*") as opened_file:
+    with tar_archive.open_path(filepath, streaming=False, compression="*") as opened_file:
         backup_snapshots.extract_snapshot(opened_file, backup_snapshots.backup_domains)
 
 

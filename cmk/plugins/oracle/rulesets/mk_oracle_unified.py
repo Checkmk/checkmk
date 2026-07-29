@@ -615,7 +615,13 @@ def _oracle_client_library_options() -> Dictionary:
 
 
 def _options(is_default_options: bool = True) -> Dictionary:
-    elements: dict[str, DictElement[int] | DictElement[bool] | DictElement[_NamedOption]] = {
+    elements: dict[
+        str,
+        DictElement[int]
+        | DictElement[bool]
+        | DictElement[_NamedOption]
+        | DictElement[_AuthOptions],
+    ] = {
         "max_connections": DictElement(
             parameter_form=Integer(
                 title=Title("Maximum connections"),

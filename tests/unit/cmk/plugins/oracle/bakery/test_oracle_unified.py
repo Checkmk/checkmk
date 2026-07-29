@@ -170,7 +170,6 @@ oracle_config_min: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
         ),
-        options=None,
         cache_age=None,
         discovery=None,
         sections=None,
@@ -195,6 +194,12 @@ expected_yaml_lines_min = [
 # 2. Full config
 oracle_config_full: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
+    options=GuiAdditionalOptionsConf(
+        max_connections=10,
+        max_queries=100,
+        ignore_db_name=True,
+        oracle_client_library=None,
+    ),
     main=GuiMainConf(
         auth=GuiAuthConf(
             auth_type=(
@@ -211,12 +216,6 @@ oracle_config_full: GuiConfig = GuiConfig(
             port=1521,
             timeout=10,
             tns_admin="/etc/oracle/tns",
-        ),
-        options=GuiAdditionalOptionsConf(
-            max_connections=10,
-            max_queries=100,
-            ignore_db_name=True,
-            oracle_client_library=None,
         ),
         cache_age=600,
         discovery=GuiDiscoveryConf(
@@ -354,7 +353,6 @@ oracle_config_section: GuiConfig = GuiConfig(
             tns_admin="some_tns_admin",
             oracle_local_registry="some_registry",
         ),
-        options=None,
         cache_age=None,
         discovery=None,
         sections={
@@ -422,7 +420,6 @@ oracle_config_instance_sid: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
         ),
-        options=None,
         cache_age=None,
         discovery=None,
         sections=None,
@@ -475,7 +472,6 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
             timeout=5,
             tns_admin=None,
         ),
-        options=None,
         cache_age=None,
         discovery=GuiDiscoveryConf(
             enabled=True,
@@ -554,6 +550,11 @@ expected_yaml_lines_discovery_instances = [
 # 6. Main config with auth, connection and additional option use_host_client set to 'always'
 oracle_config_use_host_client_always: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
+    options=GuiAdditionalOptionsConf(
+        oracle_client_library=GuiOracleClientLibOptions(
+            use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
+        )
+    ),
     main=GuiMainConf(
         auth=GuiAuthConf(
             auth_type=(
@@ -571,11 +572,6 @@ oracle_config_use_host_client_always: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
             oracle_local_registry=None,
-        ),
-        options=GuiAdditionalOptionsConf(
-            oracle_client_library=GuiOracleClientLibOptions(
-                use_host_client=(ALWAYS_ORACLE_LIB_OPTION, None),
-            )
         ),
         cache_age=None,
         discovery=None,
@@ -604,6 +600,11 @@ expected_yaml_lines_use_host_client_always = [
 # 7. Main config with auth, connection and additional option use_host_client set to path
 oracle_config_use_host_client_path: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
+    options=GuiAdditionalOptionsConf(
+        oracle_client_library=GuiOracleClientLibOptions(
+            use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
+        )
+    ),
     main=GuiMainConf(
         auth=GuiAuthConf(
             auth_type=(
@@ -621,11 +622,6 @@ oracle_config_use_host_client_path: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
             oracle_local_registry=None,
-        ),
-        options=GuiAdditionalOptionsConf(
-            oracle_client_library=GuiOracleClientLibOptions(
-                use_host_client=(CUSTOM_ORACLE_LIB_OPTION, "/path/to/client"),
-            )
         ),
         cache_age=None,
         discovery=None,
@@ -655,6 +651,11 @@ expected_yaml_lines_use_host_client_path = [
 # set to True to deploy oracle binaries
 oracle_config_deploy_oracle_binaries: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
+    options=GuiAdditionalOptionsConf(
+        oracle_client_library=GuiOracleClientLibOptions(
+            deploy_lib=True,
+        )
+    ),
     main=GuiMainConf(
         auth=GuiAuthConf(
             auth_type=(
@@ -672,11 +673,6 @@ oracle_config_deploy_oracle_binaries: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
             oracle_local_registry=None,
-        ),
-        options=GuiAdditionalOptionsConf(
-            oracle_client_library=GuiOracleClientLibOptions(
-                deploy_lib=True,
-            )
         ),
         cache_age=None,
         discovery=None,
@@ -703,6 +699,11 @@ expected_yaml_lines_deploy_oracle_binaries = [
 # 9. Main config with wallet auth, connection
 oracle_config_wallet_auth: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
+    options=GuiAdditionalOptionsConf(
+        oracle_client_library=GuiOracleClientLibOptions(
+            deploy_lib=True,
+        )
+    ),
     main=GuiMainConf(
         auth=GuiAuthConf(
             auth_type=(
@@ -717,11 +718,6 @@ oracle_config_wallet_auth: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
             oracle_local_registry=None,
-        ),
-        options=GuiAdditionalOptionsConf(
-            oracle_client_library=GuiOracleClientLibOptions(
-                deploy_lib=True,
-            )
         ),
         cache_age=None,
         discovery=None,
@@ -794,7 +790,6 @@ oracle_config_custom_metrics_cache_age: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin=None,
         ),
-        options=None,
         cache_age=None,
         custom_metrics_cache_age=120,
         discovery=None,

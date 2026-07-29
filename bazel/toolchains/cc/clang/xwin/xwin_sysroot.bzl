@@ -155,7 +155,7 @@ xwin_sysroot = repository_rule(
             doc = "URL of the xwin tool release used by the fallback.",
         ),
         "_build_file": attr.label(
-            default = Label("//bazel/toolchains/cc/xwin:BUILD.xwin_sysroot.bazel"),
+            default = Label("//bazel/toolchains/cc/clang/xwin:BUILD.xwin_sysroot.bazel"),
             allow_single_file = True,
         ),
     },

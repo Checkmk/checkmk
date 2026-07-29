@@ -1,6 +1,6 @@
 load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
 
-package(default_visibility = ["//bazel/toolchains/cc/xwin:__subpackages__"])
+package(default_visibility = ["//bazel/toolchains/cc/clang:__subpackages__"])
 
 cc_args(
     name = "compile_defaults",

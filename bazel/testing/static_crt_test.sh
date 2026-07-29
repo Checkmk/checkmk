@@ -7,7 +7,7 @@
 # DLL, i.e. the CRT is fully statically linked. The Rust side gets
 # -Ctarget-feature=+crt-static from a platform flag on
 # //bazel/platforms:x86_64-windows-msvc and the C side relies on the
-# /MD -> /MT compile arg declared in //bazel/toolchains/cc/xwin/args, so a
+# /MD -> /MT compile arg declared in //bazel/toolchains/cc/clang/xwin/args, so a
 # regression in either shows up here as a
 # vcruntime*/msvcr*/ucrtbase/msvcp*/api-ms-win-crt-* import.
 

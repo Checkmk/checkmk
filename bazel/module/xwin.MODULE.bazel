@@ -1,6 +1,6 @@
 # @xwin_sysroot provides the MSVC CRT + Windows SDK for cross compiling the Rust
 # agent packages to x86_64-pc-windows-msvc from Linux. See
-# //bazel/toolchains/cc/xwin:xwin_sysroot.bzl for the fetch/splat logic; the
+# //bazel/toolchains/cc/clang/xwin:xwin_sysroot.bzl for the fetch/splat logic; the
 # pins below are the details that logic is parameterised over.
 
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
@@ -21,7 +21,7 @@ _SDK_VERSION = "10.0.26100"
 
 _PACKAGE_REVISION = "0"
 
-xwin_sysroot = use_repo_rule("//bazel/toolchains/cc/xwin:xwin_sysroot.bzl", "xwin_sysroot")
+xwin_sysroot = use_repo_rule("//bazel/toolchains/cc/clang/xwin:xwin_sysroot.bzl", "xwin_sysroot")
 
 xwin_sysroot(
     name = "xwin_sysroot",

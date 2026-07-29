@@ -43,7 +43,7 @@ platform(
     # invariant cannot be overridden by accident; static_crt_test() asserts
     # it on the shipped binaries. The matching CRT link libraries and the
     # /MD -> /MT rewrite for cc-built C sources live in
-    # //bazel/toolchains/cc/xwin/args.
+    # //bazel/toolchains/cc/clang/xwin/args.
     flags = [
         "--@rules_rust//rust/settings:extra_rustc_flags=-Ctarget-feature=+crt-static",
     ],

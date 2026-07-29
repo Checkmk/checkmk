@@ -51,6 +51,7 @@ select = [
   "RSE",    # flake8: raise
   "RUF100", # ruff: unused noqa
   "SIM101", # flake8-simplify: duplicate-isinstance-call
+  "SIM102", # flake8-simplify: collapsible-if
   "SIM103", # flake8-simplify: needless-bool
   "SIM105", # flake8-simplify: suppressible-exception
   "SIM108", # flake8-simplify: if-else-block-instead-of-if-exp
@@ -210,6 +211,62 @@ ignore = [
   "UP035",  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP045",  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 ]
+
+# SIM102 incremental rollout: each labelled group is removed by its follow-up
+# change, which applies the fix and enforces the rule in that scope.
+# gui part 1
+"cmk/gui/fields/**" = ["SIM102"]
+"cmk/gui/wato/**" = ["SIM102"]
+"cmk/gui/watolib/**" = ["SIM102"]
+# gui part 2
+"cmk/gui/openapi/**" = ["SIM102"]
+"cmk/gui/nonfree/**" = ["SIM102"]
+"cmk/gui/ldap_integration/**" = ["SIM102"]
+"cmk/gui/views/**" = ["SIM102"]
+"cmk/gui/visuals/**" = ["SIM102"]
+"cmk/gui/graphing/**" = ["SIM102"]
+"cmk/gui/form_specs/**" = ["SIM102"]
+"cmk/gui/availability/**" = ["SIM102"]
+"cmk/gui/product_usage_analytics/**" = ["SIM102"]
+"cmk/gui/pagetypes/**" = ["SIM102"]
+"cmk/gui/mkeventd/**" = ["SIM102"]
+"cmk/gui/dashboard/**" = ["SIM102"]
+"cmk/gui/bi/**" = ["SIM102"]
+"cmk/gui/welcome/**" = ["SIM102"]
+"cmk/gui/rule_specs/**" = ["SIM102"]
+"cmk/gui/plugins/**" = ["SIM102"]
+"cmk/gui/parentscan/**" = ["SIM102"]
+"cmk/gui/view_renderer.py" = ["SIM102"]
+"cmk/gui/unit_formatter.py" = ["SIM102"]
+# cmk/plugins
+"cmk/plugins/**" = ["SIM102"]
+# cmk base & misc
+"cmk/base/**" = ["SIM102"]
+"cmk/legacy_checks/**" = ["SIM102"]
+"cmk/config_anonymizer/**" = ["SIM102"]
+"cmk/fields/**" = ["SIM102"]
+"cmk/server_side_calls_backend/**" = ["SIM102"]
+"cmk/update_config/**" = ["SIM102"]
+# packages/cmk-plugins
+"packages/cmk-plugins/**" = ["SIM102"]
+# non-free
+"non-free/**" = ["SIM102"]
+# packages misc
+"packages/cmk-agent-receiver/**" = ["SIM102"]
+"packages/cmk-backup/**" = ["SIM102"]
+"packages/cmk-ccc/**" = ["SIM102"]
+"packages/cmk-check-engine/**" = ["SIM102"]
+"packages/cmk-dev-deploy/**" = ["SIM102"]
+"packages/cmk-ec/**" = ["SIM102"]
+"packages/cmk-livestatus-client/**" = ["SIM102"]
+"packages/cmk-mkp-tool/**" = ["SIM102"]
+"packages/cmk-ruleset-matcher/**" = ["SIM102"]
+"packages/cmk-werks/**" = ["SIM102"]
+"packages/cmk-wsgi/**" = ["SIM102"]
+# omd, tests, scripts
+"omd/packages/omd/**" = ["SIM102"]
+"tests/**" = ["SIM102"]
+"scripts/gerrit_api/**" = ["SIM102"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

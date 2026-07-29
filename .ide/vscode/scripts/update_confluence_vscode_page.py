@@ -29,8 +29,8 @@ import json
 import os
 import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -202,7 +202,9 @@ def _md_to_confluence(md: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _api_request(method: str, path: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
+def _api_request(
+    method: str, path: str, data: Mapping[str, object] | None = None
+) -> dict[str, object]:
     token = os.environ.get("CONFLUENCE_TOKEN", "")
     if not token:
         print("ERROR: CONFLUENCE_TOKEN env var is required.", file=sys.stderr)  # noqa: T201
@@ -225,7 +227,11 @@ def _api_request(method: str, path: str, data: dict[str, Any] | None = None) -> 
     try:
         with urlopen(req) as resp:  # nosec B310 # scheme validated above
             raw = resp.read()
-            return json.loads(raw) if raw else {}
+            if not raw:
+                return {}
+            parsed = json.loads(raw)
+            assert isinstance(parsed, dict)
+            return parsed
     except HTTPError as exc:
         error_body = exc.read().decode()
         print(f"ERROR: {exc.code} {exc.reason}\n{error_body}", file=sys.stderr)  # noqa: T201
@@ -242,7 +248,7 @@ def _get_page_version(page_id: str) -> int:
     return number
 
 
-def _update_page(page_id: str, title: str, body_xhtml: str, version: int) -> dict[str, Any]:
+def _update_page(page_id: str, title: str, body_xhtml: str, version: int) -> dict[str, object]:
     """Update an existing Confluence page."""
     payload = {
         "type": "page",

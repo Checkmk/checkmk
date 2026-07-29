@@ -8,11 +8,11 @@ load("@rules_cc//cc/toolchains:artifacts.bzl", "cc_artifact_name_pattern")
 load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
 
 cc_toolchain(
-    name = "windows_msvc_x64",
+    name = "x86_64_windows_msvc",
     args = [
-        "//bazel/toolchains/cc/xwin/args:compile_defaults",
-        "//bazel/toolchains/cc/xwin/args:sysroot_includes",
-        "//bazel/toolchains/cc/xwin/args:link_defaults",
+        "//bazel/toolchains/cc/clang/xwin/args:compile_defaults",
+        "//bazel/toolchains/cc/clang/xwin/args:sysroot_includes",
+        "//bazel/toolchains/cc/clang/xwin/args:link_defaults",
     ],
     artifact_name_patterns = [
         ":executable",
@@ -22,7 +22,7 @@ cc_toolchain(
     compiler = "clang-cl",
     tags = ["manual"],
     target_system_name = "x86_64-pc-windows-msvc",
-    tool_map = "//bazel/toolchains/cc/xwin/tools",
+    tool_map = "//bazel/toolchains/cc/clang/xwin/tools",
 )
 
 cc_artifact_name_pattern(
@@ -47,7 +47,7 @@ cc_artifact_name_pattern(
 )
 
 toolchain(
-    name = "windows_msvc_x64_toolchain",
+    name = "x86_64_windows_msvc_toolchain",
     exec_compatible_with = [
         "@platforms//os:linux",
         "@platforms//cpu:x86_64",
@@ -57,6 +57,7 @@ toolchain(
         "@platforms//os:windows",
         "@platforms//cpu:x86_64",
     ],
-    toolchain = ":windows_msvc_x64",
+    toolchain = ":x86_64_windows_msvc",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    visibility = ["//visibility:public"],
 )

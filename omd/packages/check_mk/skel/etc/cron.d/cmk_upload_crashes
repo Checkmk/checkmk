@@ -1,0 +1,3 @@
+# Run every 30 minutes
+# Note: claim_due_run() lets one tick a day through; the first point is random within 2h
+*/30 * * * * ###ROOT###/bin/cmk-upload-crashes --cron

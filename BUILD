@@ -325,6 +325,7 @@ create_venv(
         "//packages/cmk-shared-typing:wheel",
         "//packages/cmk-werks:wheel_entrypoint_only",
         "//packages/cmk-mkp-tool:wheel_entrypoint_only",
+        "//packages/cmk-crash:wheel_entrypoint_only",
     ] + select({
         "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmc-protocols:wheel",

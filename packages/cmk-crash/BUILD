@@ -34,6 +34,7 @@ py_library(
     srcs = [
         "cmk/crash_reporting/__init__.py",
         "cmk/crash_reporting/_packaging.py",
+        "cmk/crash_reporting/_schedule.py",
         "cmk/crash_reporting/cli.py",
         "cmk/crash_reporting/upload.py",
     ],
@@ -86,6 +87,7 @@ py_library(
 py_wheel(
     name = "wheel",
     distribution = "cmk-crash",
+    entry_points = {"console_scripts": ["cmk-upload-crashes = cmk.crash_reporting.cli:main"]},
     strip_path_prefixes = ["packages/cmk-crash"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",

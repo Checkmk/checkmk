@@ -59,7 +59,7 @@ ConfigVariableAutomaticCrashReportUpload = ConfigVariable(
         label=_("Upload crash reports automatically"),
         none_label=_("(disabled)"),
         help=_(
-            "When enabled, this site regularly uploads its crash reports to the configured "
+            "When enabled, this site uploads its crash reports once a day to the configured "
             "crash report URL. Crash reports can contain host names, IP addresses, "
             "configuration excerpts, agent output and Python tracebacks. The contact address "
             "is sent with every report so we can follow up."

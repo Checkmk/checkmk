@@ -104,6 +104,8 @@ from cmk.livestatus_client import (
     SiteConfigurations,
 )
 from cmk.rulesets.internal.form_specs import (
+    MultipleChoiceElementExtended,
+    MultipleChoiceExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -572,7 +574,7 @@ class SiteManagement:
             CascadingSingleChoiceElement(
                 name="list",
                 title=Title("Sync attributes only for the following LDAP connections"),
-                parameter_form=MultipleChoice(
+                parameter_form=MultipleChoiceExtended(
                     custom_validate=[
                         not_empty(
                             Message(
@@ -581,7 +583,7 @@ class SiteManagement:
                         )
                     ],
                     elements=[
-                        MultipleChoiceElement(  # astrein: disable=localization-checker
+                        MultipleChoiceElementExtended(  # astrein: disable=localization-checker
                             name=ident,
                             title=Title(label),  # astrein: disable=localization-checker
                         )

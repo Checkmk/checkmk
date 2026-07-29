@@ -56,19 +56,6 @@ class EvaluatedGraphs:
     diagnostics: FetchDiagnostics
 
 
-class DispatchedReshape(Protocol):
-    # How a graph type's request options reshape the graph that was serialized. The definition holds
-    # what a graph is made of, not everything about how it is drawn: a combined graph's mode is a
-    # request option, so the same definition folds its objects into one curve or draws them one by
-    # one. A type whose options do not reshape it names none and keeps what it serialized.
-    def __call__(
-        self,
-        *,
-        graph: Graph,
-        options: Mapping[str, object],
-    ) -> Graph: ...
-
-
 class DispatchedEvaluate(Protocol):
     # A graph type's evaluation, on the graph its deserialization produced.
     def __call__(
@@ -84,19 +71,12 @@ class EngineGraphDispatcher:
     kind: str
     codec: GraphCodec
     evaluate: DispatchedEvaluate
-    reshape: DispatchedReshape | None = None
 
     def serialize(self, graph: Graph) -> Mapping[str, object]:
         return self.codec.serialize_graph(graph)
 
-    def deserialize(self, graph: Mapping[str, object], options: Mapping[str, object]) -> Graph:
-        """The graph behind a serialized definition, as the request options make it.
-
-        Every caller - the evaluation as much as anything else reading a definition back - sees the
-        graph that is drawn.
-        """
-        decoded = self.codec.deserialize_graph(graph)
-        return decoded if self.reshape is None else self.reshape(graph=decoded, options=options)
+    def deserialize(self, graph: Mapping[str, object]) -> Graph:
+        return self.codec.deserialize_graph(graph)
 
 
 class EngineGraphDispatcherRegistry(Registry[EngineGraphDispatcher]):
@@ -127,7 +107,7 @@ def _dispatched_graphs(
     for serialized in ensure_type(internal["graphs"], list):
         graph = ensure_type(serialized, dict)
         dispatcher = engine_graph_dispatcher_registry[ensure_type(graph["kind"], str)]
-        yield dispatcher.evaluate, dispatcher.deserialize(graph, options)
+        yield dispatcher.evaluate, dispatcher.deserialize(graph)
 
 
 def evaluate_graphs(

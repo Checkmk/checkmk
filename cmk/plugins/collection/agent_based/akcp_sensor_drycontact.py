@@ -24,6 +24,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
+from cmk.plugins.lib.akcp_sensor import filter_broken_rows
 
 
 class SensorProbeSwitchStatus(enum.Enum):
@@ -127,20 +128,36 @@ class DrycontactSensor:
     online: bool
 
 
-DrycontactSection = Mapping[str, ProbeSwitchSensor] | Mapping[str, DrycontactSensor]
+DrycontactSection = Mapping[str, ProbeSwitchSensor | None] | Mapping[str, DrycontactSensor | None]
 
 
-def parse_akcp_sensor_drycontact(string_table: StringTable) -> Mapping[str, ProbeSwitchSensor]:
+def parse_akcp_sensor_drycontact(
+    string_table: StringTable,
+) -> Mapping[str, ProbeSwitchSensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
     return {
-        description: ProbeSwitchSensor(status=SensorProbeSwitchStatus(status), online=online == "1")
-        for description, status, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: ProbeSwitchSensor(
+                status=SensorProbeSwitchStatus(status), online=online == "1"
+            )
+            for description, status, online in rows
+        },
     }
 
 
-def parse_akcp_sensor2plus_drycontact(string_table: StringTable) -> Mapping[str, DrycontactSensor]:
+def parse_akcp_sensor2plus_drycontact(
+    string_table: StringTable,
+) -> Mapping[str, DrycontactSensor | None]:
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
     return {
-        description: DrycontactSensor(status=SensorDryContactStatus(status), online=online == "1")
-        for description, status, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: DrycontactSensor(
+                status=SensorDryContactStatus(status), online=online == "1"
+            )
+            for description, status, online in rows
+        },
     }
 
 
@@ -179,12 +196,15 @@ snmp_section_akcp_sensor2plus_drycontact = SimpleSNMPSection(
 
 def discover_akcp_sensor_drycontact(section: DrycontactSection) -> DiscoveryResult:
     for description, sensor in section.items():
-        if sensor.online:
+        if sensor is None or sensor.online:
             yield Service(item=description)
 
 
 def check_akcp_sensor_drycontact(item: str, section: DrycontactSection) -> CheckResult:
-    if (sensor := section.get(item)) is None:
+    if item not in section:
+        return
+    if (sensor := section[item]) is None:
+        yield IgnoreResults("Sensor reported corrupted values")
         return
     yield from _check_status(sensor.status, sensor.online, "Drycontact OK", "Drycontact on Error")
 
@@ -205,18 +225,23 @@ class ExpDrycontactSensor:
     critical_description: str
 
 
-ExpDrycontactSection = Mapping[str, ExpDrycontactSensor]
+ExpDrycontactSection = Mapping[str, ExpDrycontactSensor | None]
 
 
 def parse_akcp_exp_drycontact(string_table: StringTable) -> ExpDrycontactSection:
+    # Unlike the other drycontact tables, this one has the online field last.
+    rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 4))
     return {
-        description: ExpDrycontactSensor(
-            status=SensorDryContactStatus(status),
-            online=online == "1",
-            normal_description=normal_description,
-            critical_description=critical_description,
-        )
-        for description, status, critical_description, normal_description, online in string_table
+        **dict.fromkeys(broken),
+        **{
+            description: ExpDrycontactSensor(
+                status=SensorDryContactStatus(status),
+                online=online == "1",
+                normal_description=normal_description,
+                critical_description=critical_description,
+            )
+            for description, status, critical_description, normal_description, online in rows
+        },
     }
 
 
@@ -239,12 +264,15 @@ snmp_section_akcp_exp_drycontact = SimpleSNMPSection(
 
 def discover_akcp_exp_drycontact(section: ExpDrycontactSection) -> DiscoveryResult:
     for description, sensor in section.items():
-        if sensor.online:
+        if sensor is None or sensor.online:
             yield Service(item=description)
 
 
 def check_akcp_exp_drycontact(item: str, section: ExpDrycontactSection) -> CheckResult:
-    if (sensor := section.get(item)) is None:
+    if item not in section:
+        return
+    if (sensor := section[item]) is None:
+        yield IgnoreResults("Sensor reported corrupted values")
         return
     yield from _check_status(
         sensor.status,

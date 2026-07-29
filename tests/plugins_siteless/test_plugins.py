@@ -92,6 +92,16 @@ class _LogwatchConfigMocker:
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
 ) -> None:
+    _SKIP_LIST = [
+        "agent-2.2.0p14-proxmox",
+        "agent-2.4.0-proxmox",
+    ]
+    if any(dump in request.node.name for dump in _SKIP_LIST):
+        pytest.skip(
+            reason="CMK-36484; This is an expected issue with Proxmox for 3.0. Right now, "
+            "we are doing an agent rework which is affecting this."
+        )
+
     agent_based_plugins = config.load_all_plugins()
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections

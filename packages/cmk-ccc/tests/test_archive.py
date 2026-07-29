@@ -5,8 +5,8 @@
 
 import io
 import tarfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Literal
 
 import pytest
 
@@ -18,14 +18,10 @@ from cmk.ccc.archive import (
 )
 
 
-def make_tarfile_io(
-    files: dict[str, bytes],
-    compress: bool = True,
-) -> io.BytesIO:
-    mode: Literal["w:gz", "w"] = "w:gz" if compress else "w"
+def make_tarfile_io(files: Iterable[tuple[str, bytes]]) -> io.BytesIO:
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode=mode) as tar:
-        for name, content in files.items():
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        for name, content in files:
             tarinfo = tarfile.TarInfo(name)
             tarinfo.size = len(content)
             tar.addfile(tarinfo, io.BytesIO(content))
@@ -33,53 +29,52 @@ def make_tarfile_io(
     return buf
 
 
-def make_tarfile_bytes(files: dict[str, bytes], compress: bool = True) -> bytes:
-    return make_tarfile_io(files, compress).getvalue()
+def make_tarfile_bytes(files: Iterable[tuple[str, bytes]]) -> bytes:
+    return make_tarfile_io(files).getvalue()
 
 
 def make_tarfile_path(
-    files: dict[str, bytes],
+    files: Iterable[tuple[str, bytes]],
     tmp_path: Path,
-    compress: bool = True,
 ) -> Path:
     tar_path = tmp_path / "archive.tar.gz"
-    tar_path.write_bytes(make_tarfile_io(files, compress).getvalue())
+    tar_path.write_bytes(make_tarfile_io(files).getvalue())
     return tar_path
 
 
 def test_safe_extractall_basic_bytes(tmp_path: Path) -> None:
-    files = {"a.txt": b"hello", "b.txt": b"world"}
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
     with CheckmkTarArchive.from_bytes(raw) as safe_tar:
         safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
 
-    for f, content in files.items():
+    for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
 def test_safe_extractall_basic_io(tmp_path: Path) -> None:
-    files = {"a.txt": b"hello", "b.txt": b"world"}
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
     buf = make_tarfile_io(files)
     dest = tmp_path / "dest"
 
     with CheckmkTarArchive.from_buffer(buf) as safe_tar:
         safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
 
-    for f, content in files.items():
+    for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
 def test_safe_extractall_basic_path(tmp_path: Path) -> None:
-    files = {"a.txt": b"hello", "b.txt": b"world"}
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
     path = make_tarfile_path(files, tmp_path)
     dest = tmp_path / "dest"
 
     with CheckmkTarArchive.from_path(path) as safe_tar:
         safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
 
-    for f, content in files.items():
+    for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
@@ -90,7 +85,7 @@ def test_invalid_archive() -> None:
 
 def test_per_file_size_limit_bytes(tmp_path: Path) -> None:
     max_size = 100
-    files = {"big.txt": b"x" * (max_size + 1)}
+    files = [("big.txt", b"x" * (max_size + 1))]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
@@ -102,7 +97,7 @@ def test_per_file_size_limit_bytes(tmp_path: Path) -> None:
 
 
 def test_total_file_limit_bytes(tmp_path: Path) -> None:
-    files = {"a.txt": b"x", "b.txt": b"x", "c.txt": b"x"}
+    files = [("a.txt", b"x"), ("b.txt", b"x"), ("c.txt", b"x")]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
@@ -114,7 +109,7 @@ def test_total_file_limit_bytes(tmp_path: Path) -> None:
 
 
 def test_path_traversal_bytes(tmp_path: Path) -> None:
-    files = {"../evil.txt": b"malicious"}
+    files = [("../evil.txt", b"malicious")]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
@@ -154,7 +149,7 @@ def test_symlink_allowed(tmp_path: Path) -> None:
 
 
 def test_iteration_bytes() -> None:
-    files = {f"file{i}.txt": f"data{i}".encode() for i in range(5)}
+    files = [(f"file{i}.txt", f"data{i}".encode()) for i in range(5)]
     raw = make_tarfile_bytes(files)
 
     with CheckmkTarArchive.from_bytes(raw, compression="*", allow_symlinks=False) as safe_tar:
@@ -171,7 +166,7 @@ def test_iteration_bytes() -> None:
 
 def test_extractfile_by_name() -> None:
     files = {"file0.txt": b"hello", "file1.txt": b"world"}
-    raw = make_tarfile_bytes(files)
+    raw = make_tarfile_bytes(files.items())
 
     with CheckmkTarArchive.from_bytes(raw, compression="*", allow_symlinks=False) as safe_tar:
         f = safe_tar.extractfile_by_name("file1.txt")

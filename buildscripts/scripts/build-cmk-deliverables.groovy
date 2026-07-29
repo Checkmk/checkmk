@@ -59,7 +59,7 @@ void main() {
     def bazel_log_prefix = "bazel_log_";
 
     /// In order to ensure a fixed order for stages executed in parallel,
-    /// we wait an increasing amount of time (N * 100ms).
+    /// we wait an increasing amount of time (N * 1s).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
     /// like changing order or amount of stages, which will happen with stages started `via parallel()`
     def timeOffsetForOrder = 0;
@@ -102,7 +102,7 @@ void main() {
 
     def stages = [
         "Build source package": {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
             // groovylint-disable-next-line UnusedVariable
             def build_instance = null;
 
@@ -138,7 +138,7 @@ void main() {
 
     stages += all_distros.collectEntries { distro ->
         [("${distro}") : {
-            sleep(0.1 * timeOffsetForOrder++);
+            sleep(1 * timeOffsetForOrder++);
             def run_condition = distro in selected_distros;
             // groovylint-disable-next-line UnusedVariable
             def build_instance = null;

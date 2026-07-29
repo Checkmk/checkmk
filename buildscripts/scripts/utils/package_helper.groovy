@@ -168,7 +168,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             additional_build_params: [],
-            skip: ! test_binaries_only,
+            condition: test_binaries_only,
             retry: 1,
             install_cmd: """\
                 cp test_ora_no_db_test.aix test_ora_no_db_test.solaris ${checkout_dir}/packages/mk-oracle/

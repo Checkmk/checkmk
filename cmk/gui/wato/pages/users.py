@@ -150,9 +150,8 @@ def has_customer(
     if edition is not Edition.ULTIMATEMT:
         return None
 
-    if isinstance(user_cxn, LDAPUserConnector):
-        if user_cxn.customer_id is not None:
-            return cust_api.get_customer_name_by_id(user_cxn.customer_id)
+    if isinstance(user_cxn, LDAPUserConnector) and user_cxn.customer_id is not None:
+        return cust_api.get_customer_name_by_id(user_cxn.customer_id)
     return cust_api.get_customer_name(user_spec)
 
 
@@ -280,19 +279,18 @@ class ModeUsers(WatoMode):
     def _page_menu_entries_synchronized_users(
         self, user_connections: Sequence[UserConnectionConfig]
     ) -> Iterator[PageMenuEntry]:
-        if _sync_possible(user_connections):
-            if not self._job_snapshot.is_active:
-                yield PageMenuEntry(
-                    title=_("Synchronize users"),
-                    icon_name=StaticIcon(IconNames.replicate),
-                    item=make_simple_link(makeactionuri(request, transactions, [("_sync", 1)])),
-                )
+        if _sync_possible(user_connections) and not self._job_snapshot.is_active:
+            yield PageMenuEntry(
+                title=_("Synchronize users"),
+                icon_name=StaticIcon(IconNames.replicate),
+                item=make_simple_link(makeactionuri(request, transactions, [("_sync", 1)])),
+            )
 
-                yield PageMenuEntry(
-                    title=_("Last synchronization result"),
-                    icon_name=StaticIcon(IconNames.background_job_details),
-                    item=make_simple_link(self._job.detail_url()),
-                )
+            yield PageMenuEntry(
+                title=_("Last synchronization result"),
+                icon_name=StaticIcon(IconNames.background_job_details),
+                item=make_simple_link(self._job.detail_url()),
+            )
 
     def _page_menu_entries_user_messages(self) -> Iterator[PageMenuEntry]:
         if user.may("general.message"):

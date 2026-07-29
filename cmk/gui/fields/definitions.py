@@ -857,9 +857,8 @@ class HostnameOrIP(base.String):
         if len(value) < self.minlen:
             self.make_error("too_short", value=value, min=self.minlen)
 
-        if self.maxlen:
-            if len(value) > self.maxlen:
-                self.make_error("too_long", value=value, min=self.minlen)
+        if self.maxlen and len(value) > self.maxlen:
+            self.make_error("too_long", value=value, min=self.minlen)
 
     def _raise_an_error(
         self, validate_results: Mapping[str, ValidationError | Literal["pass"]]
@@ -942,13 +941,14 @@ class SiteField(base.String):
         ):
             return
 
-        if self.presence in ["should_exist", "might_not_exist_on_view"]:
-            if value not in active_config.sites:
-                raise self.make_error("should_exist", site=value)
+        if (
+            self.presence in ["should_exist", "might_not_exist_on_view"]
+            and value not in active_config.sites
+        ):
+            raise self.make_error("should_exist", site=value)
 
-        if self.presence == "should_not_exist":
-            if value in active_config.sites:
-                raise self.make_error("should_not_exist", site=value)
+        if self.presence == "should_not_exist" and value in active_config.sites:
+            raise self.make_error("should_not_exist", site=value)
 
     @override
     def _serialize(self, value: str, attr: str | None, obj: object, **kwargs: object) -> str | None:
@@ -1337,17 +1337,15 @@ class UserRoleID(base.String):
             if userroles.role_exists(userroles.RoleID(value)):
                 raise self.make_error("should_not_exist", role=value)
 
-        elif self.presence == "should_exist":
-            if not userroles.role_exists(userroles.RoleID(value)):
-                raise self.make_error("should_exist", role=value)
+        elif self.presence == "should_exist" and not userroles.role_exists(userroles.RoleID(value)):
+            raise self.make_error("should_exist", role=value)
 
         if self.userrole_type == "should_be_builtin":
             if value not in builtin_role_ids:
                 raise self.make_error("should_be_builtin", role=value)
 
-        elif self.userrole_type == "should_be_custom":
-            if value in builtin_role_ids:
-                raise self.make_error("should_be_custom", role=value)
+        elif self.userrole_type == "should_be_custom" and value in builtin_role_ids:
+            raise self.make_error("should_be_custom", role=value)
 
 
 class Username(base.String):

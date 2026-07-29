@@ -148,9 +148,10 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
         def _remove_method_key(value: object) -> object:
             if not isinstance(value, dict):
                 return value
-            if parameter_properties := value.get("parameter_properties"):
-                if "method_parameters" in parameter_properties:
-                    value["parameter_properties"] = parameter_properties["method_parameters"]
+            if (
+                parameter_properties := value.get("parameter_properties")
+            ) and "method_parameters" in parameter_properties:
+                value["parameter_properties"] = parameter_properties["method_parameters"]
             return value
 
         param_form_spec = self._parameter_form_spec(method)

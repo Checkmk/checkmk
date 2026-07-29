@@ -124,12 +124,14 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
             # Add special vars from table pagination
             # This modifies the data from the AbsoluteDate ValueSpec...
-            if req.has_var("audit_options_start_1_day"):
-                if req.var("audit_options_start_sel", "0") == "1":
-                    audit_log_options["start"] = (
-                        "time",
-                        AbsoluteDate().from_html_vars("audit_options_start_1"),
-                    )
+            if (
+                req.has_var("audit_options_start_1_day")
+                and req.var("audit_options_start_sel", "0") == "1"
+            ):
+                audit_log_options["start"] = (
+                    "time",
+                    AbsoluteDate().from_html_vars("audit_options_start_1"),
+                )
 
             if req.has_var("audit_options_start_sel"):
                 audit_log_options["sel"] = int(

@@ -582,15 +582,19 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.edit_url(backfolder=self._folder)),
             )
 
-        if not self._folder.locked_subfolders() and not self._folder.locked():
-            if self._folder.permissions.may("write", user) and user.may("wato.manage_folders"):
-                yield PageMenuEntry(
-                    title=_("Add folder"),
-                    icon_name=StaticIcon(IconNames.newfolder),
-                    item=make_simple_link(self._folder.url(request, [("mode", "newfolder")])),
-                    is_shortcut=True,
-                    is_suggested=True,
-                )
+        if (
+            not self._folder.locked_subfolders()
+            and not self._folder.locked()
+            and self._folder.permissions.may("write", user)
+            and user.may("wato.manage_folders")
+        ):
+            yield PageMenuEntry(
+                title=_("Add folder"),
+                icon_name=StaticIcon(IconNames.newfolder),
+                item=make_simple_link(self._folder.url(request, [("mode", "newfolder")])),
+                is_shortcut=True,
+                is_suggested=True,
+            )
 
         yield make_folder_status_link(self._folder, view_name="allhosts")
 
@@ -1007,10 +1011,14 @@ class ModeFolder(WatoMode):
     def _show_subfolder_buttons(self, subfolder: Folder, *, show_file_names: bool) -> None:
         self._show_subfolder_edit_button(subfolder)
 
-        if not subfolder.locked_subfolders() and not subfolder.locked():
-            if subfolder.permissions.may("write", user) and user.may("wato.manage_folders"):
-                self._show_move_to_folder_action(subfolder)
-                self._show_subfolder_delete_button(subfolder, show_file_names=show_file_names)
+        if (
+            not subfolder.locked_subfolders()
+            and not subfolder.locked()
+            and subfolder.permissions.may("write", user)
+            and user.may("wato.manage_folders")
+        ):
+            self._show_move_to_folder_action(subfolder)
+            self._show_subfolder_delete_button(subfolder, show_file_names=show_file_names)
 
     def _show_subfolder_edit_button(self, subfolder: Folder) -> None:
         html.icon_button(

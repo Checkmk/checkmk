@@ -297,10 +297,9 @@ def send_security_message(user_id: UserId | None, event: SecurityNotificationEve
     user_spec = users.get(user_id)
     event_time = datetime.now()
     try:
-        if user_spec := users.get(user_id):
-            if email_address := user_spec.get("email"):
-                _send_mail(email_address, event, event_time)
-                return
+        if (user_spec := users.get(user_id)) and (email_address := user_spec.get("email")):
+            _send_mail(email_address, event, event_time)
+            return
     except (FileExistsError, FileNotFoundError, RuntimeError):
         # Todo: log?
         pass

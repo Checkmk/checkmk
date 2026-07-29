@@ -330,9 +330,10 @@ def _rename_host_in_rulesets(
                 changed_rule = False
                 if rule.replace_explicit_host_condition(oldname, newname):
                     changed_rule = True
-                if rename_host_in_rule_value_hook:
-                    if rename_host_in_rule_value_hook.func(oldname, newname, rule):
-                        changed_rule = True
+                if rename_host_in_rule_value_hook and rename_host_in_rule_value_hook.func(
+                    oldname, newname, rule
+                ):
+                    changed_rule = True
 
                 if changed_rule:
                     changed_folder_rulesets.append(varname)
@@ -423,10 +424,11 @@ def _rename_host_in_event_rules(
     users = userdb.load_users(lock=True)
     some_user_changed = False
     for user_ in users.values():
-        if unrules := user_.get("notification_rules"):
-            if num_changed := rename_in_event_rules(unrules, oldname, newname):
-                actions += ["notify_user"] * num_changed
-                some_user_changed = True
+        if (unrules := user_.get("notification_rules")) and (
+            num_changed := rename_in_event_rules(unrules, oldname, newname)
+        ):
+            actions += ["notify_user"] * num_changed
+            some_user_changed = True
 
     nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
@@ -451,12 +453,12 @@ def rename_in_event_rules(
 ) -> int:
     num_changed = 0
     for rule in rules:
-        if rule.get("match_hosts"):
-            if rename_host_in_list(rule["match_hosts"], oldname, newname):
-                num_changed += 1
-        if rule.get("match_exclude_hosts"):
-            if rename_host_in_list(rule["match_exclude_hosts"], oldname, newname):
-                num_changed += 1
+        if rule.get("match_hosts") and rename_host_in_list(rule["match_hosts"], oldname, newname):
+            num_changed += 1
+        if rule.get("match_exclude_hosts") and rename_host_in_list(
+            rule["match_exclude_hosts"], oldname, newname
+        ):
+            num_changed += 1
     return num_changed
 
 
@@ -505,27 +507,25 @@ def _rename_host_as_parent(
 ) -> tuple[list[HostName | str], list[Folder]]:
     parents: list[HostName | str] = []
     for somehost in in_folder.hosts().values():
-        if "parents" in somehost.attributes:
-            if somehost.rename_parent(
-                oldname,
-                newname,
-                pprint_value=pprint_value,
-                pending_changes=pending_changes,
-                acting_user=user,
-            ):
-                parents.append(somehost.name())
-
-    if "parents" in in_folder.attributes:
-        if in_folder.rename_parent(
+        if "parents" in somehost.attributes and somehost.rename_parent(
             oldname,
             newname,
             pprint_value=pprint_value,
             pending_changes=pending_changes,
             acting_user=user,
         ):
-            if in_folder not in folder_parent_renamed:
-                folder_parent_renamed.append(in_folder)
-            parents.append(in_folder.name())
+            parents.append(somehost.name())
+
+    if "parents" in in_folder.attributes and in_folder.rename_parent(
+        oldname,
+        newname,
+        pprint_value=pprint_value,
+        pending_changes=pending_changes,
+        acting_user=user,
+    ):
+        if in_folder not in folder_parent_renamed:
+            folder_parent_renamed.append(in_folder)
+        parents.append(in_folder.name())
 
     for subfolder in in_folder.subfolders():
         subfolder_parents, folder_parent_renamed = _rename_host_as_parent(

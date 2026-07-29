@@ -214,10 +214,6 @@ ignore = [
 
 # SIM102 incremental rollout: each labelled group is removed by its follow-up
 # change, which applies the fix and enforces the rule in that scope.
-# gui part 1
-"cmk/gui/fields/**" = ["SIM102"]
-"cmk/gui/wato/**" = ["SIM102"]
-"cmk/gui/watolib/**" = ["SIM102"]
 # gui part 2
 "cmk/gui/openapi/**" = ["SIM102"]
 "cmk/gui/nonfree/**" = ["SIM102"]

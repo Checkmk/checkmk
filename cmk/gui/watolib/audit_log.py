@@ -139,7 +139,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             if entry.object_ref and entry.object_ref.ident != options["object_ident"]:
                 return False
 
-        if "user_id" in options and options["user_id"] is not None:
+        if "user_id" in options and options["user_id"] is not None:  # noqa: SIM102
             if entry.user_id != options["user_id"]:
                 return False
 

@@ -700,9 +700,8 @@ def _user_may_delete_passwords(
 ) -> None:
     # If the current user is different from the one who created the bundle, they need
     # permission to edit all passwords in order to (find and) delete the password.
-    if not acting_user.may("wato.edit_all_passwords"):
-        if owned_by and owned_by != acting_user.id:
-            raise MKAuthException(_("You are not permitted to perform this action."))
+    if not acting_user.may("wato.edit_all_passwords") and owned_by and owned_by != acting_user.id:
+        raise MKAuthException(_("You are not permitted to perform this action."))
 
 
 def _delete_passwords(

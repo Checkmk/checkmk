@@ -1774,22 +1774,19 @@ class ModeAnalyzeNotifications(ModeNotifications):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if request.has_var("_show_bulks"):
-            if transactions.check_transaction():
-                self._show_bulks = bool(request.var("_show_bulks"))
-                self._save_analyze_notification_display_options()
+        if request.has_var("_show_bulks") and transactions.check_transaction():
+            self._show_bulks = bool(request.var("_show_bulks"))
+            self._save_analyze_notification_display_options()
 
-        if request.has_var("_show_user"):
-            if transactions.check_transaction():
-                self._show_user_rules = bool(request.var("_show_user"))
-                self._save_analyze_notification_display_options()
+        if request.has_var("_show_user") and transactions.check_transaction():
+            self._show_user_rules = bool(request.var("_show_user"))
+            self._save_analyze_notification_display_options()
 
-        if request.has_var("_replay"):
-            if transactions.check_transaction():
-                replay_nr = request.get_integer_input_mandatory("_replay")
-                notification_replay(replay_nr, debug=config.debug)
-                flash(_("Replayed notification number %(nr)d") % {"nr": replay_nr + 1})
-                return None
+        if request.has_var("_replay") and transactions.check_transaction():
+            replay_nr = request.get_integer_input_mandatory("_replay")
+            notification_replay(replay_nr, debug=config.debug)
+            flash(_("Replayed notification number %(nr)d") % {"nr": replay_nr + 1})
+            return None
 
         return redirect(self.mode_url())
 
@@ -1973,27 +1970,25 @@ class ModeTestNotifications(ModeNotifications):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if request.has_var("_show_user"):
-            if transactions.check_transaction():
-                self._show_user_rules = bool(request.var("_show_user"))
-                self._save_test_notification_display_options()
+        if request.has_var("_show_user") and transactions.check_transaction():
+            self._show_user_rules = bool(request.var("_show_user"))
+            self._save_test_notification_display_options()
 
-        if self._test_notification_ongoing():
-            if transactions.check_transaction():
-                context, dispatch, test_type = self._infos_from_vars()
-                return redirect(
-                    makeuri(
-                        request,
-                        [
-                            ("mode", "test_notifications"),
-                            ("test_notification", "1"),
-                            ("test_context", json.dumps(context)),
-                            ("dispatch", dispatch or ""),
-                            ("test_type", test_type),
-                        ],
-                        filename="wato.py",
-                    )
+        if self._test_notification_ongoing() and transactions.check_transaction():
+            context, dispatch, test_type = self._infos_from_vars()
+            return redirect(
+                makeuri(
+                    request,
+                    [
+                        ("mode", "test_notifications"),
+                        ("test_notification", "1"),
+                        ("test_context", json.dumps(context)),
+                        ("dispatch", dispatch or ""),
+                        ("test_type", test_type),
+                    ],
+                    filename="wato.py",
                 )
+            )
 
         return redirect(self.mode_url())
 

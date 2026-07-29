@@ -78,15 +78,15 @@ class RelativeUrl(fields.String):
     def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        if self.must_endwith_one:
-            if not any(value.endswith(postfix) for postfix in self.must_endwith_one):
-                raise self.make_error("endswith_error", value=value, endswith=self.must_endwith_one)
+        if self.must_endwith_one and not any(
+            value.endswith(postfix) for postfix in self.must_endwith_one
+        ):
+            raise self.make_error("endswith_error", value=value, endswith=self.must_endwith_one)
 
-        if self.must_startwith_one:
-            if not any(value.startswith(prefix) for prefix in self.must_startwith_one):
-                raise self.make_error(
-                    "startwith_error", value=value, startwith=self.must_startwith_one
-                )
+        if self.must_startwith_one and not any(
+            value.startswith(prefix) for prefix in self.must_startwith_one
+        ):
+            raise self.make_error("startwith_error", value=value, startwith=self.must_startwith_one)
 
 
 class Timeout(fields.Float):
@@ -158,13 +158,17 @@ class AuxTagIDField(fields.String):
         super()._validate(value)
         tag_id = TagID(value)
 
-        if self.presence == "should_exist_and_should_be_builtin":
-            if not BuiltinTagConfig().aux_tag_list.exists(tag_id):
-                raise self.make_error("should_exist_and_should_be_builtin", aux_tag_id=tag_id)
+        if (
+            self.presence == "should_exist_and_should_be_builtin"
+            and not BuiltinTagConfig().aux_tag_list.exists(tag_id)
+        ):
+            raise self.make_error("should_exist_and_should_be_builtin", aux_tag_id=tag_id)
 
-        if self.presence == "should_exist_and_should_be_custom":
-            if not load_tag_config_read_only().aux_tag_list.exists(tag_id):
-                raise self.make_error("should_exist_and_should_be_custom", aux_tag_id=tag_id)
+        if (
+            self.presence == "should_exist_and_should_be_custom"
+            and not load_tag_config_read_only().aux_tag_list.exists(tag_id)
+        ):
+            raise self.make_error("should_exist_and_should_be_custom", aux_tag_id=tag_id)
 
         if self.presence == "should_not_exist":
             ro_config = load_tag_config_read_only()
@@ -177,9 +181,11 @@ class AuxTagIDField(fields.String):
             ):
                 raise self.make_error("should_not_exist_tag_group", aux_tag_id=tag_id)
 
-        if self.presence == "should_exist":
-            if not load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
-                raise self.make_error("should_exist", aux_tag_id=tag_id)
+        if (
+            self.presence == "should_exist"
+            and not load_all_tag_config_read_only().aux_tag_list.exists(tag_id)
+        ):
+            raise self.make_error("should_exist", aux_tag_id=tag_id)
 
 
 class ContactGroupField(fields.String):
@@ -210,13 +216,11 @@ class ContactGroupField(fields.String):
         super()._validate(value)
         cgs = list(load_contact_group_information())  # list of contact group ids
 
-        if self.presence == "should_exist":
-            if value not in cgs:
-                raise self.make_error("should_exist", contact_group=value)
+        if self.presence == "should_exist" and value not in cgs:
+            raise self.make_error("should_exist", contact_group=value)
 
-        if self.presence == "should_not_exist":
-            if value in cgs:
-                raise self.make_error("should_not_exist", contact_group=value)
+        if self.presence == "should_not_exist" and value in cgs:
+            raise self.make_error("should_not_exist", contact_group=value)
 
 
 class TimePeriodIDField(fields.String):
@@ -246,13 +250,11 @@ class TimePeriodIDField(fields.String):
     def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        if self.presence == "should_exist":
-            if not verify_timeperiod_name_exists(value):
-                raise self.make_error("should_exist", time_period=value)
+        if self.presence == "should_exist" and not verify_timeperiod_name_exists(value):
+            raise self.make_error("should_exist", time_period=value)
 
-        if self.presence == "should_not_exist":
-            if verify_timeperiod_name_exists(value):
-                raise self.make_error("should_not_exist", time_period=value)
+        if self.presence == "should_not_exist" and verify_timeperiod_name_exists(value):
+            raise self.make_error("should_not_exist", time_period=value)
 
 
 class SplunkURLField(fields.URL):
@@ -368,13 +370,11 @@ class PasswordStoreIDField(fields.String):
         super()._validate(value)
         pw_ids = load_passwords_for_validation()
 
-        if self.presence == "should_exist":
-            if value not in pw_ids:
-                raise self.make_error("should_exist", store_id=value)
+        if self.presence == "should_exist" and value not in pw_ids:
+            raise self.make_error("should_exist", store_id=value)
 
-        if self.presence == "should_not_exist":
-            if value in pw_ids:
-                raise self.make_error("should_not_exist", store_id=value)
+        if self.presence == "should_not_exist" and value in pw_ids:
+            raise self.make_error("should_not_exist", store_id=value)
 
 
 class ServiceLevelField(fields.Integer):
@@ -400,15 +400,13 @@ class ServiceLevelField(fields.Integer):
 
         choices = [int_val for int_val, _str_val in active_config.mkeventd_service_levels]
 
-        if self.presence == "should_exist":
-            if value not in choices:
-                raise self.make_error(
-                    "should_exist", value=value, choices=", ".join([str(c) for c in choices])
-                )
+        if self.presence == "should_exist" and value not in choices:
+            raise self.make_error(
+                "should_exist", value=value, choices=", ".join([str(c) for c in choices])
+            )
 
-        if self.presence == "should_not_exist":
-            if value in choices:
-                raise self.make_error("should_not_exist", value=value)
+        if self.presence == "should_not_exist" and value in choices:
+            raise self.make_error("should_not_exist", value=value)
 
 
 class TagGroupIDField(fields.String):
@@ -480,10 +478,8 @@ class GlobalHTTPProxyField(fields.String):
     def _validate(self, value: str) -> None:
         super()._validate(value)
 
-        if self.presence == "should_exist":
-            if value not in _global_proxy_choices():
-                raise self.make_error("should_exist", http_proxy=value)
+        if self.presence == "should_exist" and value not in _global_proxy_choices():
+            raise self.make_error("should_exist", http_proxy=value)
 
-        if self.presence == "should_not_exist":
-            if value in _global_proxy_choices():
-                raise self.make_error("should_not_exist", http_proxy=value)
+        if self.presence == "should_not_exist" and value in _global_proxy_choices():
+            raise self.make_error("should_not_exist", http_proxy=value)

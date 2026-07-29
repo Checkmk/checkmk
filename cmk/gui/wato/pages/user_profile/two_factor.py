@@ -327,9 +327,8 @@ class UserTwoFactorOverview(Page):
                 )
             else:
                 return
-            if not is_two_factor_login_enabled(user.id):
-                if credentials["backup_codes"]:
-                    _handle_revoke_all_backup_codes(request, user, credentials, config.sites)
+            if not is_two_factor_login_enabled(user.id) and credentials["backup_codes"]:
+                _handle_revoke_all_backup_codes(request, user, credentials, config.sites)
 
         if request.has_var("_delete_codes"):
             _handle_revoke_all_backup_codes(request, user, credentials, config.sites)
@@ -1379,55 +1378,57 @@ class UserLoginTwoFactor(Page):
         pprint_value: bool,
     ) -> None:
         assert user.id is not None
-        if "totp_credentials" in available_methods:
-            if totp_code := request.get_validated_type_input(Password, "_totp_code"):
-                totp_credential = credentials["totp_credentials"]
-                for credential in totp_credential:
-                    otp = TOTP(totp_credential[credential]["secret"])
-                    if otp.check_totp(
-                        totp_code.raw_bytes.decode(),
-                        otp.calculate_generation(datetime.datetime.now()),
-                    ):
-                        _handle_success_auth(user.id)
-                        raise redirect(request.get_url_input("_origtarget", "index.py"))
-                _log_event_auth(request.remote_ip, "Authenticator application (TOTP)")
-                _handle_failed_auth(
-                    user.id,
-                    user.attributes,
-                    user_attributes,
-                    lock_on_logon_failures,
-                    log_logon_failures,
-                    user_connections,
-                    pprint_value,
-                )
-                raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
-
-        if "backup_codes" in available_methods:
-            if backup_code := request.get_validated_type_input(Password, "_backup_code"):
-                if is_two_factor_backup_code_valid(user.id, backup_code):
-                    _log_event_usermanagement(TwoFactorEventType.backup_used)
-                    send_security_message(user.id, SecurityNotificationEvent.backup_used)
+        if "totp_credentials" in available_methods and (
+            totp_code := request.get_validated_type_input(Password, "_totp_code")
+        ):
+            totp_credential = credentials["totp_credentials"]
+            for credential in totp_credential:
+                otp = TOTP(totp_credential[credential]["secret"])
+                if otp.check_totp(
+                    totp_code.raw_bytes.decode(),
+                    otp.calculate_generation(datetime.datetime.now()),
+                ):
                     _handle_success_auth(user.id)
-                    if has_distributed_setup_remote_sites(site_configs):
-                        raise redirect(
-                            makeuri_contextless(
-                                request,
-                                [("back", "dashboard.py")],
-                                filename="user_profile_replicate.py",
-                            )
-                        )
                     raise redirect(request.get_url_input("_origtarget", "index.py"))
-                _log_event_auth(request.remote_ip, "Backup code")
-                _handle_failed_auth(
-                    user.id,
-                    user.attributes,
-                    user_attributes,
-                    lock_on_logon_failures,
-                    log_logon_failures,
-                    user_connections,
-                    pprint_value,
-                )
-                raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
+            _log_event_auth(request.remote_ip, "Authenticator application (TOTP)")
+            _handle_failed_auth(
+                user.id,
+                user.attributes,
+                user_attributes,
+                lock_on_logon_failures,
+                log_logon_failures,
+                user_connections,
+                pprint_value,
+            )
+            raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
+
+        if "backup_codes" in available_methods and (
+            backup_code := request.get_validated_type_input(Password, "_backup_code")
+        ):
+            if is_two_factor_backup_code_valid(user.id, backup_code):
+                _log_event_usermanagement(TwoFactorEventType.backup_used)
+                send_security_message(user.id, SecurityNotificationEvent.backup_used)
+                _handle_success_auth(user.id)
+                if has_distributed_setup_remote_sites(site_configs):
+                    raise redirect(
+                        makeuri_contextless(
+                            request,
+                            [("back", "dashboard.py")],
+                            filename="user_profile_replicate.py",
+                        )
+                    )
+                raise redirect(request.get_url_input("_origtarget", "index.py"))
+            _log_event_auth(request.remote_ip, "Backup code")
+            _handle_failed_auth(
+                user.id,
+                user.attributes,
+                user_attributes,
+                lock_on_logon_failures,
+                log_logon_failures,
+                user_connections,
+                pprint_value,
+            )
+            raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
     @override
     def page(self, ctx: PageContext) -> None:

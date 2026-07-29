@@ -328,13 +328,14 @@ class SiteField(base.String):
         ):
             return
 
-        if self.presence in ["should_exist", "might_not_exist_on_view"]:
-            if value not in active_config.sites:
-                raise self.make_error("should_exist", site=value)
+        if (
+            self.presence in ["should_exist", "might_not_exist_on_view"]
+            and value not in active_config.sites
+        ):
+            raise self.make_error("should_exist", site=value)
 
-        if self.presence == "should_not_exist":
-            if value in active_config.sites:
-                raise self.make_error("should_not_exist", site=value)
+        if self.presence == "should_not_exist" and value in active_config.sites:
+            raise self.make_error("should_not_exist", site=value)
 
     @override
     def _serialize(self, value: str, attr: str | None, obj: object, **kwargs: object) -> str | None:

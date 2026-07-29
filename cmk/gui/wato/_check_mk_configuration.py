@@ -4971,10 +4971,9 @@ def _rename_host_in_clustered_services_configuration(
 ) -> bool:
     assert isinstance(rule.value, tuple)
     settings_ref = rule.value[1]
-    if primary_node := settings_ref.get("primary_node"):
-        if primary_node == old_name:
-            settings_ref["primary_node"] = new_name
-            return True
+    if (primary_node := settings_ref.get("primary_node")) and primary_node == old_name:
+        settings_ref["primary_node"] = new_name
+        return True
     return False
 
 

@@ -323,9 +323,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
     def show(self, config: Config) -> None:
         user_permissions = UserPermissions.from_config(config, permission_registry)
-        if not site_config.is_distributed_setup_remote_site(config.sites):
-            if not config.wato_enabled:
-                html.write_text_permissive(_("Setup is disabled."))
+        if (
+            not site_config.is_distributed_setup_remote_site(config.sites)
+            and not config.wato_enabled
+        ):
+            html.write_text_permissive(_("Setup is disabled."))
 
         user_folders = compute_foldertree()
 

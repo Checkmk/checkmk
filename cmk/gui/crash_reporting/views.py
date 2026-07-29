@@ -110,11 +110,14 @@ class CrashReportsRowTable(RowTable):
             except json.JSONDecodeError:
                 continue  # skip broken crash infos like b'' or b'\n'
 
+            if not isinstance(crash_time := crash_info_raw.get("time"), int | float):
+                continue  # skip crash infos with an unreadable time
+
             row = {
                 "site": raw_row["site"],
                 "crash_id": raw_row["crash_id"],
                 "crash_type": raw_row["crash_type"],
-                "crash_time": crash_info_raw["time"],
+                "crash_time": crash_time,
                 "crash_version": crash_info_raw["version"],
                 "crash_exc_type": crash_info_raw["exc_type"],
                 "crash_exc_value": crash_info_raw["exc_value"],

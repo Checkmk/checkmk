@@ -25,25 +25,35 @@ from cmk.utils import paths
 logger = logging.getLogger(__name__)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    logger.setLevel(logging.INFO)
-    main_modules.register(edition(paths.omd_root))
+def main(argv: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(
         description="Migrate legacy agent_config:mk_oracle rules to agent_config:mk_oracle_unified."
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(
         "--apply",
         action="store_true",
-        help="Actually create the migrated rules. Without this flag, only a dry-run report is printed.",
+        help="Actually create the migrated rules.",
+    )
+    mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Only print the migration report, without writing any rules.",
     )
     parser.add_argument(
         "--enable-migrated-rules",
         action="store_true",
         help="Create migrated rules as enabled, and disable legacy rules. By default, migrated rules are created disabled and legacy rules are left as is.",
     )
+    if not argv:
+        parser.print_help()
+        return 0
     args = parser.parse_args(argv)
+
+    logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.setLevel(logging.INFO)
+    main_modules.register(edition(paths.omd_root))
 
     with gui_context():
         if is_distributed_setup_remote_site(active_config.sites):
@@ -120,4 +130,4 @@ def _print_report(
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

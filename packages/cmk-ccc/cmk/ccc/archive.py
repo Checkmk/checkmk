@@ -176,7 +176,6 @@ class ArchiveSettings(TypedDict, total=False):
     raw_limit_bytes: int
     compression: Literal["gz", "*"]
     allow_symlinks: bool
-    bypass_size_validation: bool
 
 
 class CheckmkTarArchive:
@@ -206,14 +205,12 @@ class CheckmkTarArchive:
         raw_limit_bytes: int = RAW_MAX_SIZE_LIMIT_BYTES,
         compression: Literal["gz", "*"] = "gz",
         allow_symlinks: bool = True,
-        bypass_size_validation: bool = False,
     ):
         self.__size_limit_bytes = size_limit_bytes
         self.__file_limit = file_limit
         self.__per_file_limit = per_file_limit
         self.__raw_limit_bytes = raw_limit_bytes
         self.__compression = compression
-        self.__bypass_size_validation = bypass_size_validation
         self.allow_symlinks = allow_symlinks
 
     def _mode(self, *, streaming: bool) -> Literal["r|gz", "r|*", "r:gz", "r:*"]:
@@ -313,7 +310,7 @@ class CheckmkTarArchive:
                 ...
 
     def validate_size_limit_bytes(self, value: int) -> bool:
-        if not self.__bypass_size_validation and value > self.__size_limit_bytes:
+        if value > self.__size_limit_bytes:
             raise UnpackedArchiveTooLargeError(
                 f"Archive exceeds total size limit: "
                 f"({fmt_bytes(value)} > {fmt_bytes(self.__size_limit_bytes)})"
@@ -321,19 +318,19 @@ class CheckmkTarArchive:
         return True
 
     def validate_file_limit(self, value: int) -> bool:
-        if not self.__bypass_size_validation and value > self.__file_limit:
+        if value > self.__file_limit:
             raise UnpackedArchiveTooLargeError(f"Archive contains too many files ({value})")
         return True
 
     def validate_per_file_limit(self, member: tarfile.TarInfo) -> bool:
-        if not self.__bypass_size_validation and member.size > self.__per_file_limit:
+        if member.size > self.__per_file_limit:
             raise UnpackedArchiveTooLargeError(
                 f"File {member.name} exceeds per-file size limit: ({fmt_bytes(member.size)} > {fmt_bytes(self.__per_file_limit)})"
             )
         return True
 
     def validate_raw_limit_bytes(self, value: int) -> bool:
-        if not self.__bypass_size_validation and value > self.__raw_limit_bytes:
+        if value > self.__raw_limit_bytes:
             raise UnpackedArchiveTooLargeError(
                 f"Compressed archive too large: "
                 f"({fmt_bytes(value)} > {fmt_bytes(self.__raw_limit_bytes)})"

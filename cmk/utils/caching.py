@@ -43,7 +43,7 @@ def _total_size(o: object) -> int:
     Automatically finds the contents of the following builtin containers and
     their subclasses:  tuple, list, dict, set and frozenset.
     """
-    all_handlers: dict[type[Any], Callable[[Any], Iterator[object]]] = {
+    all_handlers: dict[type[Any], Callable[[Any], Iterator[object]]] = {  # type: ignore[explicit-any]
         tuple: iter,
         list: iter,
         dict: lambda d: itertools.chain.from_iterable(d.items()),

@@ -18,7 +18,7 @@ code can uniformly rely on the new schema.
 """
 
 from logging import Logger
-from typing import Any, cast, override
+from typing import cast, override
 
 from cmk.ccc.site import SiteId
 from cmk.gui.watolib.paths import wato_var_dir
@@ -32,7 +32,7 @@ _SITE_CHANGES_PREFIX = "replication_changes_"
 _SITE_CHANGES_SUFFIX = ".mk"
 
 
-def _migrate_record(record: dict[str, Any]) -> bool:
+def _migrate_record(record: dict[str, object]) -> bool:
     changed = False
 
     if "need_sync" in record:
@@ -81,7 +81,7 @@ class MigrateSiteChangesSchema(UpdateAction):
 
             with store.mutable_view() as records:
                 migrated = sum(
-                    1 for record in records if _migrate_record(cast("dict[str, Any]", record))
+                    1 for record in records if _migrate_record(cast("dict[str, object]", record))
                 )
 
             if migrated:

@@ -26,8 +26,9 @@ PiggybackTimeSettings = Sequence[tuple[_HostCondition, _KeyName, _Value]]
 
 
 # 'parse_' is a bit much here. We don't parse everything (yet).
-def parse_flattened_piggyback_time_settings(
-    source_host_name: str, rule: Mapping[str, HopeForTheBest]
+def parse_flattened_piggyback_time_settings(  # type: ignore[explicit-any]
+    source_host_name: str,
+    rule: Mapping[str, HopeForTheBest],
 ) -> PiggybackTimeSettings:
     """This rule is a first match rule.
 

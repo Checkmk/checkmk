@@ -72,6 +72,7 @@ mypy_cli(
     name = "mypy_cli_original",
     mypy_requirement = requirement("mypy"),
     python_version = "3.13",
+    tags = ["no-mypy"],
     deps = [
         # for `plugins = ["pydantic.mypy"]`
         requirement("pydantic"),

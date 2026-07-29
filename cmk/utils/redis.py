@@ -10,7 +10,6 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
@@ -58,7 +57,7 @@ def query_redis[QueryData](
     client: Redis,
     data_key: str,
     integrity_callback: Callable[[], IntegrityCheckResponse],
-    update_callback: Callable[[Pipeline], Any],
+    update_callback: Callable[[Pipeline], object],
     query_callback: Callable[[], QueryData],
     timeout: int | None = None,
     ttl_query_lock: int = 5,

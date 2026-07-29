@@ -12,7 +12,7 @@ import sys
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import httpx
 
@@ -171,7 +171,7 @@ class ResultType(enum.StrEnum):
 
 class Metadata(NamedTuple):
     key: str
-    value: Any
+    value: object
 
 
 def print_metadata(title: str, infos: Iterable[Metadata]) -> None:

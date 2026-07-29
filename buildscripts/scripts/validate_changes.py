@@ -110,7 +110,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
+def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:  # type: ignore[explicit-any]
     """Return StageInfo created from validated @raw_stage"""
     return StageInfo(
         NAME=str(raw_stage["NAME"]),

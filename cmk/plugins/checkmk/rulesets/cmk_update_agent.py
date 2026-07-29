@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_from_mk_file
@@ -133,7 +132,7 @@ def _migrate_edition(value: object) -> str:
             raise ValueError(value)
 
 
-def _migrate_certificates(value: object) -> Sequence[Any]:
+def _migrate_certificates(value: object) -> Sequence[tuple[str, str, bytes]]:
     if isinstance(value, list):
         result: list[tuple[str, str, bytes]] = []
         for idx, cert in enumerate(value):

@@ -22,7 +22,7 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, assert_never, Final, Literal, Protocol
+from typing import assert_never, Final, Literal, Protocol
 
 import cmk.ccc.debug
 import cmk.utils.paths
@@ -429,7 +429,7 @@ class IPLookupCache:
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._cache!r})"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return other == self._cache
 
     def __getitem__(self, key: IPLookupCacheId) -> HostAddress:

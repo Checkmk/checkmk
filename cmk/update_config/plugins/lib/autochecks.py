@@ -33,7 +33,7 @@ _ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
     },
 }
 
-type ParameterTransformer = Callable[
+type ParameterTransformer = Callable[  # type: ignore[explicit-any]
     [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
     Mapping[str, object],
 ]

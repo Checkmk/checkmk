@@ -46,7 +46,7 @@ def _resolve_plugin_cleanup_paths(omd_root: Path, plugin: _PluginData) -> list[s
 def _load_plugin(plugin_base_dir: Path, plugin_file_name: str) -> _PluginData | None:
     plugin_file = plugin_base_dir / plugin_file_name
     verbose(f"Loading plugin: {plugin_file}")
-    plugin: dict[str, Any] = {}
+    plugin: dict[str, Any] = {}  # type: ignore[explicit-any]
     try:
         exec(  # nosec B102 # BNS:aee528
             plugin_file.read_text(),

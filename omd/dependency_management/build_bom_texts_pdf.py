@@ -7,6 +7,8 @@
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
 
+# mypy: disable-error-code="explicit-any"
+
 import argparse
 import csv
 import html

@@ -21,14 +21,14 @@ from pathlib import Path
 from shutil import which
 from typing import Callable, Literal, TypedDict, TypeVar, Union  # noqa: UP035
 
-_F = TypeVar("_F", bound=Callable[..., object])
+_F = TypeVar("_F", bound=Callable[..., object])  # type: ignore[explicit-any]
 
 # override decorator is only available in Python 3.12+
 try:
     from typing import override
 except ImportError:
 
-    def override(func: _F, /) -> _F:  # noqa: UP047
+    def override(func: _F, /) -> _F:  # type: ignore[explicit-any] # noqa: UP047
         return func
 
 

@@ -55,7 +55,7 @@ def test_migrate_record_adds_default_force_apache_reload() -> None:
 
 
 def test_migrate_record_idempotent_on_new_schema() -> None:
-    record = {
+    record: dict[str, object] = {
         "id": "abc",
         "action_name": "edit-host",
         "text": "x",

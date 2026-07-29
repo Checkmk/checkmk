@@ -50,7 +50,7 @@ def read_config_file(config_dir: Path) -> ProductUsageAnalyticsSettings:
 
     try:
         with filename.open("rb") as f:
-            settings: dict[str, Any] = {}
+            settings: dict[str, Any] = {}  # type: ignore[explicit-any]
             # We exec this file because this is also how the ABCConfigDomain loads the config for other .mk files.
             # gui.watolib.config_domain_name.ABCConfigDomain.load_full_config
             exec(f.read(), {}, settings)  # nosec B102 # BNS:aee528

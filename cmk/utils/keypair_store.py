@@ -91,7 +91,7 @@ class KeypairStore:
         if not self._path.exists():
             return {}
 
-        variables: dict[str, dict[str | int, dict[str, Any]]] = {self._attr: {}}
+        variables: dict[str, dict[str | int, dict[str, Any]]] = {self._attr: {}}  # type: ignore[explicit-any]
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)  # nosec B102 # BNS:aee528
         return self.parse(variables[self._attr])

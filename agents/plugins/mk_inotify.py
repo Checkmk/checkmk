@@ -23,7 +23,7 @@ except ImportError:  # Python 2
 try:
     from typing import Any
 
-    _ = Any  # make ruff happy
+    _ = Any  # type: ignore[explicit-any] # make ruff happy
 except ImportError:
     pass
 
@@ -154,7 +154,7 @@ if not opt_foreground:
 #   +----------------------------------------------------------------------+
 
 # Computed configuration
-folder_configs = {}  # type: dict[str, dict[str, Any]]
+folder_configs = {}  # type: dict[str, dict[str, Any]]  # type: ignore[explicit-any]
 # Data to be written to disk
 output = []  # type: list[str]
 

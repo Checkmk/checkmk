@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import typing
 from uuid import UUID
 
@@ -38,7 +37,7 @@ class SelfDescribingModel(pydantic.BaseModel):
     __namespace__: str
     __name__: str
 
-    def model_dump_with_metadata(self) -> dict[str, typing.Any]:
+    def model_dump_with_metadata(self) -> dict[str, object]:
         return {
             "metadata": self._metadata(),
             "data": self.model_dump(),

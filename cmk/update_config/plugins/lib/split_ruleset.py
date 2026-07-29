@@ -11,7 +11,6 @@ from collections.abc import Generator, Iterable
 from dataclasses import dataclass
 from itertools import groupby
 from logging import Logger
-from typing import Any
 
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 
@@ -21,7 +20,7 @@ class MigrationDetail:
     new_ruleset_name: str
     old_value_name: str
     new_value_name: str
-    default_value: Any = None
+    default_value: object = None
 
 
 @dataclass(frozen=True)

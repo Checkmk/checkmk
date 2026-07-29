@@ -12,7 +12,7 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Final, NamedTuple
+from typing import Final, NamedTuple
 
 import telnetlib3
 import yaml
@@ -42,7 +42,7 @@ import yaml
 # OnlyFrom:
 
 
-YamlDict = dict[str, dict[str, Any]]
+YamlDict = dict[str, dict[str, object]]
 INTEGRATION_PORT: Final = 25998
 AGENT_EXE_NAME: Final = "check_mk_agent.exe"
 _HOST: Final = "localhost"

@@ -12,5 +12,5 @@ class OneOfSchema(Schema):
     type_field: str
     type_field_remove: bool
     type_schemas: Mapping[str, type[Schema]]
-    def get_obj_type(self, obj: Any) -> str: ...
+    def get_obj_type(self, obj: Any) -> str: ...  # type: ignore[explicit-any]
     def get_data_type(self, data: dict[str, str]) -> str: ...

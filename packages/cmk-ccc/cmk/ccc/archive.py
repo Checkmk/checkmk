@@ -116,7 +116,7 @@ class BaseSafeTarFile:
                 return self.extractmember(member)
         return None
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> Any:  # type: ignore[explicit-any]
         return getattr(self._tar, name)
 
     def __enter__(self) -> "BaseSafeTarFile":

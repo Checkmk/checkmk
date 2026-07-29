@@ -31,7 +31,7 @@ class TChangeStatus(StrEnum):
         return {TChangeStatus.ALL, TChangeStatus.NEW, TChangeStatus.MERGED}
 
 
-class ChangeDetails(BaseModel):
+class ChangeDetails(BaseModel):  # type: ignore[explicit-any]
     id: str
     subject: str
     change_id: str
@@ -40,7 +40,7 @@ class ChangeDetails(BaseModel):
     work_in_progress: bool = False
     revert_of: int = 0
     owner: dict[str, int | str]
-    submit_records: list[dict[str, Any]]
+    submit_records: list[dict[str, Any]]  # type: ignore[explicit-any]
     cherry_pick_of_change: int | None = None
 
     @property

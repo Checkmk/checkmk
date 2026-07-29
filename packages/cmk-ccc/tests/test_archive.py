@@ -83,13 +83,9 @@ def test_safe_extractall_basic_path(tmp_path: Path) -> None:
         assert (dest / f).read_bytes() == content
 
 
-def test_path_traversal_bytes(tmp_path: Path) -> None:
-    files = {"../evil.txt": b"malicious"}
-    raw = make_tarfile_bytes(files)
-    dest = tmp_path / "dest"
-
-    with pytest.raises(SecurityViolation), CheckmkTarArchive.from_bytes(raw) as safe_tar:
-        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+def test_invalid_archive() -> None:
+    with pytest.raises(NotAValidArchive):
+        CheckmkTarArchive.validate_bytes(b"not a tar")
 
 
 def test_per_file_size_limit_bytes(tmp_path: Path) -> None:
@@ -117,38 +113,13 @@ def test_total_file_limit_bytes(tmp_path: Path) -> None:
         safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
 
 
-def test_iteration_bytes() -> None:
-    files = {f"file{i}.txt": f"data{i}".encode() for i in range(5)}
+def test_path_traversal_bytes(tmp_path: Path) -> None:
+    files = {"../evil.txt": b"malicious"}
     raw = make_tarfile_bytes(files)
+    dest = tmp_path / "dest"
 
-    with CheckmkTarArchive.from_bytes(raw, compression="*", allow_symlinks=False) as safe_tar:
-        first = next(safe_tar)
-        assert first.name.startswith("file")
-
-        remaining_names = [m.name for m in safe_tar]
-        expected = [f"file{i}.txt" for i in range(1, 5)]
-        assert remaining_names == expected
-
-        with pytest.raises(StopIteration):
-            next(safe_tar)
-
-
-def test_safe_extractfile_bytes() -> None:
-    files = {"file0.txt": b"hello", "file1.txt": b"world"}
-    raw = make_tarfile_bytes(files)
-
-    with CheckmkTarArchive.from_bytes(raw, compression="*", allow_symlinks=False) as safe_tar:
-        f = safe_tar.extractfile_by_name("file1.txt")
-        assert f is not None
-        assert f.read() == files["file1.txt"]
-
-        f2 = safe_tar.extractfile_by_name("notfound")
-        assert f2 is None
-
-
-def test_invalid_archive() -> None:
-    with pytest.raises(NotAValidArchive):
-        CheckmkTarArchive.validate_bytes(b"not a tar")
+    with pytest.raises(SecurityViolation), CheckmkTarArchive.from_bytes(raw) as safe_tar:
+        safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
 
 
 def test_symlink_blocked(tmp_path: Path) -> None:
@@ -180,3 +151,32 @@ def test_symlink_allowed(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
     with CheckmkTarArchive.from_buffer(buf, allow_symlinks=True) as safe_tar:
         safe_tar.extractall(dest)  # nosec B202 # BNS:481b41
+
+
+def test_iteration_bytes() -> None:
+    files = {f"file{i}.txt": f"data{i}".encode() for i in range(5)}
+    raw = make_tarfile_bytes(files)
+
+    with CheckmkTarArchive.from_bytes(raw, compression="*", allow_symlinks=False) as safe_tar:
+        first = next(safe_tar)
+        assert first.name.startswith("file")
+
+        remaining_names = [m.name for m in safe_tar]
+        expected = [f"file{i}.txt" for i in range(1, 5)]
+        assert remaining_names == expected
+
+        with pytest.raises(StopIteration):
+            next(safe_tar)
+
+
+def test_extractfile_by_name() -> None:
+    files = {"file0.txt": b"hello", "file1.txt": b"world"}
+    raw = make_tarfile_bytes(files)
+
+    with CheckmkTarArchive.from_bytes(raw, compression="*", allow_symlinks=False) as safe_tar:
+        f = safe_tar.extractfile_by_name("file1.txt")
+        assert f is not None
+        assert f.read() == files["file1.txt"]
+
+        f2 = safe_tar.extractfile_by_name("notfound")
+        assert f2 is None

@@ -14,12 +14,12 @@ import shlex
 import socket
 import subprocess
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from shutil import which
-from typing import Any, Callable, Literal, TypedDict, TypeVar, Union  # noqa: UP035
+from typing import Callable, Literal, TypedDict, TypeVar, Union  # noqa: UP035
 
 _F = TypeVar("_F", bound=Callable[..., object])
 
@@ -434,9 +434,9 @@ def _strip_login_banner(output: str) -> str:
 def _run_cli_json_query(
     args: Sequence[str],
     section_name: str,
-    default: Any = None,
+    default: object = None,
     run_as_user: Union[str, None] = None,
-    transform: Union[Callable[[Any], Any], None] = None,
+    transform: Union[Callable[[object], object], None] = None,
 ) -> Union[JSONSection, Error]:
     result = run_podman_command(args, run_as_user)
     if isinstance(result, Error):
@@ -454,12 +454,16 @@ def _run_cli_json_query(
 def query_containers_cli(
     run_as_user: Union[str, None] = None,
 ) -> Union[JSONSection, Error]:
+    def transform(cs: object) -> object:
+        assert isinstance(cs, Iterable)
+        return [c for c in cs if not c.get("IsInfra", False)]
+
     return _run_cli_json_query(
         ["ps", "--all", "--format", "json"],
         "containers",
         default=[],
         run_as_user=run_as_user,
-        transform=lambda cs: [c for c in cs if not c.get("IsInfra", False)],
+        transform=transform,
     )
 
 
@@ -500,7 +504,7 @@ def query_container_inspect_cli(
         except KeyError:
             socket_owner = "root"
 
-    def _transform(d: Any) -> Any:
+    def _transform(d: object) -> object:
         result = d[0] if isinstance(d, list) and d else d
         if isinstance(result, dict):
             result["SocketUser"] = socket_owner

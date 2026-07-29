@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, ServiceLabel, State
 from cmk.plugins.lib import interfaces
 from cmk.plugins.prism.agent_based.prism_host_networks import (
     _check_prism_host_network,
@@ -79,6 +79,11 @@ def fixture_section() -> interfaces.Section[interfaces.InterfaceWithRates]:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 10000000000.0,
                     },
+                    labels=[
+                        ServiceLabel("cmk/network_interface/index", "1"),
+                        ServiceLabel("cmk/network_interface/description", "eth2"),
+                        ServiceLabel("cmk/network_interface/alias", "eth2"),
+                    ],
                 ),
             ],
             id="For every network interface, a Service is discovered.",

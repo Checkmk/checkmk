@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
+    ServiceLabel,
     State,
     StringTable,
     TableRow,
@@ -32,6 +33,18 @@ from cmk.plugins.lib.interfaces import (
 )
 from cmk.plugins.network import lib_bonding as bonding
 from cmk.plugins.network.agent_based import lnx_if
+
+
+def _network_interface_labels(index: str, name: str) -> list[ServiceLabel]:
+    """Automatic ``cmk/network_interface/*`` labels emitted by discovery.
+
+    For lnx_if the description and alias both equal the interface name.
+    """
+    return [
+        ServiceLabel("cmk/network_interface/index", index),
+        ServiceLabel("cmk/network_interface/description", name),
+        ServiceLabel("cmk/network_interface/alias", name),
+    ]
 
 
 @pytest.fixture
@@ -643,6 +656,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("1", "docker0"),
                 ),
                 Service(
                     item="4",
@@ -651,6 +665,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("4", "wlp3s0"),
                 ),
             ],
             [
@@ -806,6 +821,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("2", "docker0"),
                 ),
                 Service(
                     item="4",
@@ -814,6 +830,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("4", "wlp3s0"),
                 ),
             ],
             [
@@ -969,6 +986,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("2", "docker0"),
                 ),
                 Service(
                     item="4",
@@ -977,6 +995,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("4", "wlp3s0"),
                 ),
             ],
             [
@@ -1038,6 +1057,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
+                    labels=_network_interface_labels("1", "em0"),
                 ),
                 Service(
                     item="2",
@@ -1046,6 +1066,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("2", "tun0"),
                 ),
                 Service(
                     item="3",
@@ -1054,6 +1075,7 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
+                    labels=_network_interface_labels("3", "tun1"),
                 ),
             ],
             [

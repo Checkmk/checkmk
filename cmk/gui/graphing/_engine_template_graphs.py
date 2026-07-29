@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Self
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
@@ -119,25 +121,31 @@ def evaluate_template_graphs(
     )
 
 
-def _dispatched_evaluate_template_graphs(
-    *, graph: Graph, options: Mapping[str, object]
-) -> EvaluatedGraphs:
-    fetch_data = EngineRRDFetchData(
-        debug=active_config.debug,
-        registered_translations=registered_translations(),
-    )
-    return EvaluatedGraphs(
-        graphs=evaluate_template_graphs(
-            graphs=[graph],
-            options=CommonGraphOptions.from_request_options(options),
-            fetch_data=fetch_data,
-        ),
-        diagnostics=fetch_data.diagnostics,
-    )
+@dataclass(frozen=True)
+class _EvaluateTemplateGraphs:
+    options: CommonGraphOptions
+
+    @classmethod
+    def make(cls, options: Mapping[str, object]) -> Self:
+        return cls(CommonGraphOptions.from_request_options(options))
+
+    def __call__(self, graph: Graph) -> EvaluatedGraphs:
+        fetch_data = EngineRRDFetchData(
+            debug=active_config.debug,
+            registered_translations=registered_translations(),
+        )
+        return EvaluatedGraphs(
+            graphs=evaluate_template_graphs(
+                graphs=[graph],
+                options=self.options,
+                fetch_data=fetch_data,
+            ),
+            diagnostics=fetch_data.diagnostics,
+        )
 
 
 TEMPLATE_GRAPH_DISPATCHER = EngineGraphDispatcher(
     kind="template",
     codec=graph_codec(),
-    evaluate=_dispatched_evaluate_template_graphs,
+    make_evaluate=_EvaluateTemplateGraphs.make,
 )

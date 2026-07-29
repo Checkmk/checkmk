@@ -93,11 +93,9 @@ def run_batch(
                 mail=mail,
                 crash_dir=crash_dir,
             )
-        except requests.exceptions.ConnectionError as exc:
-            # The server is down; further attempts this run would just fail the
-            # same way. Remaining crash dirs stay unmarked and get picked up on
-            # the next tick.
-            logger.warning("Server unreachable, stopping batch early: %(error)s", {"error": exc})
+        except requests.exceptions.RequestException as exc:
+            # Remaining crash dirs stay unmarked and get picked up on the next tick.
+            logger.warning("Upload failed, stopping batch early: %(error)s", {"error": exc})
             break
         outcome_counts[outcome] += 1
         if outcome is not _UploadOutcome.TRANSIENT:
@@ -128,8 +126,8 @@ def _serialize_crash_dir(crash_dir: Path) -> Mapping[str, bytes]:
 
 
 def _upload_one(*, crash_report_url: str, name: str, mail: str, crash_dir: Path) -> _UploadOutcome:
-    """Raises requests.exceptions.ConnectionError if the server is unreachable;
-    the caller treats that as batch-fatal."""
+    """Raises requests.exceptions.RequestException if the POST does not complete or the
+    server asks us to retry later; the caller treats that as batch-fatal."""
     logger.info("uploading crash_id=%(crash_id)s", {"crash_id": crash_dir.name})
     try:
         serialized_crash_report = _serialize_crash_dir(crash_dir)
@@ -145,6 +143,8 @@ def _upload_one(*, crash_report_url: str, name: str, mail: str, crash_dir: Path)
     resp = requests.post(
         crash_report_url, data=payload, timeout=_POST_TIMEOUT, allow_redirects=False
     )
+    if resp.status_code == 429:  # "come back later" - must not be marked like the other 4xx
+        resp.raise_for_status()
     if resp.status_code == 200:
         return _UploadOutcome.SUCCESS if resp.content.startswith(b"OK") else _UploadOutcome.REJECTED
     if 400 <= resp.status_code < 500:  # includes 413 (payload too large)

@@ -193,22 +193,41 @@ def test_response_classification_marks_only_terminal_outcomes(
 
 
 @responses.activate
-def test_connection_error_stops_batch_early(tmp_path: Path) -> None:
+def test_rate_limited_stops_batch_and_keeps_crashes_unmarked(tmp_path: Path) -> None:
+    """429 means come back later: marking would drop the crash permanently, and sending
+    the rest of the batch would walk into the same limit."""
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
     _make_crash_dir(tmp_path, "check", _FAKE_UUID_2)
-    responses.add(
-        responses.POST,
-        _CRASH_URL,
-        body=requests.exceptions.ConnectionError("connection refused"),
-    )
+    responses.add(responses.POST, _CRASH_URL, body=b"slow down", status=429)
     run_batch(
         crash_report_url=_CRASH_URL,
         base_path=tmp_path,
         name="pro mysite",
         mail="test@example.com",
     )
-    # Only the first crash dir was attempted; the batch stopped instead of trying
-    # the second and hitting the same connection failure again.
+    assert len(responses.calls) == 1
+    assert not (tmp_path / "check" / _FAKE_UUID_1 / ".uploaded").exists()
+    assert not (tmp_path / "check" / _FAKE_UUID_2 / ".uploaded").exists()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(requests.exceptions.ConnectionError("connection refused"), id="refused"),
+        pytest.param(requests.exceptions.ReadTimeout("read timed out"), id="stalled"),
+    ],
+)
+@responses.activate
+def test_post_failure_stops_batch_early(tmp_path: Path, error: Exception) -> None:
+    _make_crash_dir(tmp_path, "check", _FAKE_UUID_1)
+    _make_crash_dir(tmp_path, "check", _FAKE_UUID_2)
+    responses.add(responses.POST, _CRASH_URL, body=error)
+    run_batch(
+        crash_report_url=_CRASH_URL,
+        base_path=tmp_path,
+        name="pro mysite",
+        mail="test@example.com",
+    )
     assert len(responses.calls) == 1
     assert not (tmp_path / "check" / _FAKE_UUID_1 / ".uploaded").exists()
     assert not (tmp_path / "check" / _FAKE_UUID_2 / ".uploaded").exists()

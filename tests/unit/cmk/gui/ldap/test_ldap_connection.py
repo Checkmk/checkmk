@@ -454,6 +454,93 @@ def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
     ).assert_status_code(400)
 
 
+def test_cant_edit_to_use_the_same_suffix(clients: ClientRegistry) -> None:
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        }
+    )
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_2"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.33",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_2"},
+            },
+        }
+    )
+    # Editing LDAP_2 to claim the suffix already owned by LDAP_1 must be rejected.
+    clients.LdapConnection.edit(
+        ldap_connection_id="LDAP_2",
+        ldap_data={
+            "general_properties": {"id": "LDAP_2"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.33",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_ldap_write_endpoints_reject_under_privileged_user(
+    clients: ClientRegistry,
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    """LDAP write endpoints (create/edit/delete) require the RW permissions (wato.edit +
+    wato.users, plus the RO wato.seeall). A normal monitoring user (role "user") lacks
+    those, so every write is rejected at the permission gate before any body processing
+    happens. The user is authenticated and only lacks the permission, so the gate answers
+    403 -- not the 401 that an unauthenticated request would get."""
+
+    def _body(connection_id: str, suffix: str) -> dict:
+        return {
+            "general_properties": {"id": connection_id},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": suffix},
+            },
+        }
+
+    # Reset the class-level suffix registry so a suffix leaked by a prior test cannot make
+    # a request fail body validation before it reaches the permission gate.
+    LDAPUserConnector.connection_suffixes = {}
+    # Seed an existing connection as the admin so the edit/delete permission gate is reached
+    # rather than a 404 from path validation (which runs before the permission check).
+    clients.LdapConnection.create(ldap_data=_body("LDAP_EXISTING", "suffix_existing"))
+
+    clients.LdapConnection.set_credentials(*with_automation_user_not_admin)
+    # create: a fresh id avoids the duplicate-id body validation that runs ahead of the gate.
+    clients.LdapConnection.create(
+        ldap_data=_body("LDAP_NEW", "suffix_new"), expect_ok=False
+    ).assert_status_code(403)
+    # edit/delete: target the seeded connection so path validation passes and the gate is hit.
+    clients.LdapConnection.edit(
+        ldap_connection_id="LDAP_EXISTING",
+        ldap_data=_body("LDAP_EXISTING", "suffix_existing"),
+        expect_ok=False,
+    ).assert_status_code(403)
+    clients.LdapConnection.delete(
+        ldap_connection_id="LDAP_EXISTING", expect_ok=False
+    ).assert_status_code(403)
+
+
 def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
     LDAPUserConnector.connection_suffixes = {}
     clients.LdapConnection.create(

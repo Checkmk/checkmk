@@ -5,10 +5,49 @@ load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 def get_pip_options(module_name):
     return {
+        # matplotlib's meson build defaults to downloading and building its own vendored
+        # freetype as a subproject, which requires network access at build time.
+        # Use the system library instead, which is already provided by the build image.
+        # qhull and libraqm are left vendored (system-qhull/system-libraqm are NOT
+        # set): our build images don't provide a usable libqhull_r, and ship
+        # libraqm 0.10.1, older than the >=0.10.4 matplotlib requires. Their sources
+        # (and harfbuzz/sheenbidi) are instead seeded offline, see get_extra_setup().
+        "matplotlib": '--config-settings=setup-args="-Dsystem-freetype=true"',
+
         # * avoid compiling with BLAS support - we don't need super fast numpy (yet)
         "numpy": '--config-settings=setup-args="-Dallow-noblas=true"',
         # pillow in version 11.2 and above would require libavif>=1.0.0 which is per default not available on debian-12, see https://github.com/radarhere/Pillow/commit/7d50816f0a6e607b04f9bdc8af7482a29ba578e3 and as we don't need avif support, we simply disable it
         "pillow": "--config-settings=avif=disable",
+    }.get(module_name, "")
+
+def get_extra_setup(module_name):
+    """Shell snippet executed right before `pip install`.
+
+    Used to seed a local meson subproject package cache (MESON_PACKAGE_CACHE_DIR)
+    so meson resolves vendored C deps from disk instead of downloading them at
+    build time. The Bazel-fetched srcs referenced here must be added to that
+    module's `srcs` in the calling BUILD file.
+    """
+    return {
+        "matplotlib": """
+	    # meson runs harfbuzz's gen-hb-version.py through its
+            # "#!/usr/bin/env python3" shebang. LD_LIBRARY_PATH (see build_cmd) puts
+            # our bundled Python's lib dir first, so a system python3 that links
+            # libpython dynamically -- sles-16.0 does, with a colliding 3.13 soname --
+            # loads the wrong libpython and aborts before running the script. Resolve
+            # python3 to the interpreter LD_LIBRARY_PATH already matches.
+            export PATH="$$(dirname "$$PYTHON_EXECUTABLE"):$$PATH"
+            # Build in a private, guaranteed-writable/empty TMPDIR instead of the shared
+            # host /tmp: pip/meson-python stage the harfbuzz/libraqm/etc.
+            export TMPDIR="$$HOME/tmp_matplotlib"
+            mkdir -p "$$TMPDIR"
+            export MESON_PACKAGE_CACHE_DIR="$$HOME/mpl_packagecache"
+            mkdir -p "$$MESON_PACKAGE_CACHE_DIR"
+            cp "$(execpath @matplotlib_harfbuzz_src//file)" "$$MESON_PACKAGE_CACHE_DIR/harfbuzz-14.1.0.tar.xz"
+            cp "$(execpath @matplotlib_sheenbidi_src//file)" "$$MESON_PACKAGE_CACHE_DIR/sheenbidi-3.0.0.tar.gz"
+            cp "$(execpath @matplotlib_libraqm_src//file)" "$$MESON_PACKAGE_CACHE_DIR/libraqm-0.10.5.tar.gz"
+            cp "$(execpath @matplotlib_qhull_src//file)" "$$MESON_PACKAGE_CACHE_DIR/qhull-8.0.2.tgz"
+        """,
     }.get(module_name, "")
 
 def create_requirements_file(name, outs):
@@ -31,6 +70,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     openssl_dir = Label("@openssl").repo_name
     freetds_dir = Label("@freetds").repo_name
     python_dir = Label("@python").repo_name
+    extra_setup = get_extra_setup(name)
     native.genrule(
         name = name + "_compile",
         srcs = srcs,
@@ -45,6 +85,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 constraints = constraints,
+                extra_setup = extra_setup,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -54,6 +95,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 constraints = constraints,
+                extra_setup = extra_setup,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -148,6 +190,7 @@ build_cmd = """
     export CFLAGS="-Wno-error=incompatible-pointer-types -ffile-prefix-map=$$HOME=."
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/lib -Wl,--strip-debug"
+    {extra_setup}
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
@@ -163,7 +206,20 @@ build_cmd = """
       --use-feature=build-constraint \\
       --build-constraint="{constraints}" \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
+      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout" || true
+    # The `|| true` above keeps `set -e` from aborting on pip's exit code before
+    # we get a chance to inspect PIPESTATUS and dump diagnostics below.
+    PIP_INSTALL_STATUS=$${{PIPESTATUS[0]}}
+    if [ "$$PIP_INSTALL_STATUS" -ne 0 ]; then
+        # pip/meson swallow the actual subprocess output on failure and only point
+        # to a meson-log.txt buried in the (ephemeral) sandbox tmpdir -- e.g. the
+        # harfbuzz subproject build inside matplotlib's meson-python backend just
+        # reports "failed with status 1" with no further detail in the CI console.
+        # Dump any such log here so the real traceback survives into the CI log.
+        echo "pip install for $$MODULE_NAME failed (exit $$PIP_INSTALL_STATUS); dumping any meson-log.txt found under TMPDIR:"
+        find "$$TMPDIR" -name meson-log.txt -print -exec cat {{}} \\; 2>/dev/null
+        exit "$$PIP_INSTALL_STATUS"
+    fi
 
     tar cf $@ -C $$MODULE_NAME .
 """

@@ -236,6 +236,45 @@ local_path_override(
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
+# matplotlib's meson build vendors harfbuzz/sheenbidi/libraqm as subprojects
+# (system-libraqm can't be used: it needs libraqm>=0.10.4, newer than what our
+# build images provide). Fetch the exact pinned wrap sources here so meson can
+# pick them up from a local MESON_PACKAGE_CACHE_DIR instead of downloading them
+# itself at build time -- see omd/packages/python3-modules/build-python3-modules.bzl.
+http_file(
+    name = "matplotlib_harfbuzz_src",
+    downloaded_file_path = "harfbuzz-14.1.0.tar.xz",
+    sha256 = "ee0eb3a1da2c5a28147f12dff55f6c7d60aeeeb29ac7ef334eabe84c8476c105",
+    urls = [
+        "https://github.com/harfbuzz/harfbuzz/releases/download/14.1.0/harfbuzz-14.1.0.tar.xz",
+        "https://github.com/mesonbuild/wrapdb/releases/download/harfbuzz_14.1.0-1/harfbuzz-14.1.0.tar.xz",
+    ],
+)
+
+http_file(
+    name = "matplotlib_sheenbidi_src",
+    downloaded_file_path = "sheenbidi-3.0.0.tar.gz",
+    sha256 = "86c56014034739ba39a24c23eb00323b0bf6f737354f665786015fca842af786",
+    url = "https://github.com/Tehreer/SheenBidi/archive/refs/tags/v3.0.0/sheenbidi-3.0.0.tar.gz",
+)
+
+http_file(
+    name = "matplotlib_libraqm_src",
+    downloaded_file_path = "libraqm-0.10.5.tar.gz",
+    sha256 = "7f3dd21b4b3bd28a36f2c911d31d91a9d69341697713923ef1aac65d56ebcafd",
+    url = "https://github.com/HOST-Oman/libraqm/archive/v0.10.5/libraqm-0.10.5.tar.gz",
+)
+
+# qhull is also vendored (system-qhull is NOT set): our build images don't
+# provide a usable libqhull_r (pkg-config/cmake can't find it), so meson would
+# otherwise fall back to downloading this subproject itself at build time.
+http_file(
+    name = "matplotlib_qhull_src",
+    downloaded_file_path = "qhull-8.0.2.tgz",
+    sha256 = "8774e9a12c70b0180b95d6b0b563c5aa4bea8d5960c15e18ae3b6d2521d64f8b",
+    url = "https://github.com/qhull/qhull/archive/v8.0.2/qhull-8.0.2.tar.gz",
+)
+
 # Artifacts built and published by our own CI jobs, laid out like so:
 # <publisher>/<name>/<version>/<platform>/<arch>/<variant>/<file>
 CI_ARTIFACTS_URL = "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/"

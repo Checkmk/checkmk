@@ -39,6 +39,7 @@ py_library(
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         requirement("python-dateutil"),
         requirement("tzlocal"),
+        requirement("matplotlib"),
     ],
 )
 

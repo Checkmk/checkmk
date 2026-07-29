@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
@@ -48,6 +49,7 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-graphing-engine",
+        requirement("matplotlib"),
     ],
 )
 

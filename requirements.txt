@@ -4284,6 +4284,7 @@ pytest==9.1.1 \
     #   -r packages/cmk-events/dev-requirements.in
     #   -r packages/cmk-flags/dev-requirements.in
     #   -r packages/cmk-graphing-engine/dev-requirements.in
+    #   -r packages/cmk-inventory/dev-requirements.in
     #   -r packages/cmk-licensing/dev-requirements.in
     #   -r packages/cmk-livestatus-client/dev-requirements.in
     #   -r packages/cmk-logwatch/dev-requirements.in

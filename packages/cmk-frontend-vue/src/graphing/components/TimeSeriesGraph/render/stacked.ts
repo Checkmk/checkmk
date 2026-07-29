@@ -8,7 +8,7 @@ import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import type { ConsolidationFn } from '../../consolidation'
 import type { M4Bucket } from '../decimation/types'
 import type { Metric } from '../types'
-import { selectConsolidatedValue } from './bucket'
+import { bucketAnchorTime, selectConsolidatedValue } from './bucket'
 
 export interface StackedBand {
   lower: number
@@ -16,8 +16,6 @@ export interface StackedBand {
   gap: boolean
   startTime: number
   endTime: number
-  // Midpoint of the samples in the bucket, not the column centre: keeps a wide
-  // sample as one point so areas connect sample-to-sample instead of stepping.
   anchorTime: number
 }
 
@@ -26,10 +24,6 @@ export type StackedSeriesKind = 'line' | 'area-stacked'
 export interface StackedSeries {
   kind: StackedSeriesKind
   bands: StackedBand[]
-}
-
-function bucketAnchorTime(bucket: M4Bucket): number {
-  return bucket.gap ? NaN : (bucket.firstValueTime + bucket.lastValueTime) / 2
 }
 
 export function computeStackedSeries(

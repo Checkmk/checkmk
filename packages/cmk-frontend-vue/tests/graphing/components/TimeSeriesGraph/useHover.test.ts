@@ -36,6 +36,12 @@ function constantPoints(value: number | null): (number | null)[] {
   return Array.from({ length: 11 }, () => value)
 }
 
+// One point per 10s step, valued so that a sample at time t is drawn at pixel (t, 100 - t).
+// Ten 1px columns cover each sample, so a cursor rarely lands on a drawn point.
+function slopedPoints(): (number | null)[] {
+  return Array.from({ length: 11 }, (_, index) => index * 10)
+}
+
 const PLOT_CLIENT_LEFT = 200
 const PLOT_CLIENT_TOP = 300
 
@@ -157,6 +163,43 @@ describe('useHover — hit-test', () => {
     const state = hover.hoverState.value!
     expect(state.samples[0]).toMatchObject({ formattedValue: 'n/a', isClosest: false })
     expect(Math.abs(state.snapX - 50)).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('useHover — snapping to drawn points', () => {
+  test('a cursor between two samples snaps back to the nearer one', () => {
+    const hover = mountHover([makeLineMetric('sloped', slopedPoints())])
+
+    hover.moveHoverTo(pointAt(53, 50))
+
+    const state = hover.hoverState.value!
+    expect(state.snapTime).toBe(50)
+    expect(state.snapX).toBe(50)
+    expect(state.samples[0]).toMatchObject({ formattedValue: '50', pixelY: 50 })
+  })
+
+  test('a cursor past the midpoint between two samples snaps forward to the next one', () => {
+    const hover = mountHover([makeLineMetric('sloped', slopedPoints())])
+
+    hover.moveHoverTo(pointAt(57, 50))
+
+    const state = hover.hoverState.value!
+    expect(state.snapTime).toBe(60)
+    expect(state.snapX).toBe(60)
+    expect(state.samples[0]).toMatchObject({ formattedValue: '60', pixelY: 40 })
+  })
+
+  test('a cursor over a gap stays n/a instead of snapping to a neighbouring sample', () => {
+    const gappedPoints = slopedPoints()
+    gappedPoints[5] = null
+    const hover = mountHover([makeLineMetric('gapped', gappedPoints)])
+
+    hover.moveHoverTo(pointAt(53, 50))
+
+    expect(hover.hoverState.value!.samples[0]).toMatchObject({
+      formattedValue: 'n/a',
+      pixelY: null
+    })
   })
 })
 

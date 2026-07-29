@@ -11,16 +11,27 @@ import { type Ref, onBeforeUnmount, ref } from 'vue'
 import type { ConsolidationFn } from '../consolidation'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
-import { selectConsolidatedValue } from './render/bucket'
+import { bucketAnchorTime, selectConsolidatedValue } from './render/bucket'
 import type { StackedSeries } from './render/stacked'
 import type { Metric } from './types'
 
 const HOVER_CLEAR_DELAY_MS = 150
 
 const bucketCentre = (bucket: M4Bucket): number => (bucket.startTime + bucket.endTime) / 2
-const bisectBucket = bisector<M4Bucket, number>(bucketCentre).center
-const bucketContains = (bucket: M4Bucket, time: number): boolean =>
-  time >= bucket.startTime && time <= bucket.endTime
+
+// Hovering resolves to the point the renderer actually drew, so the focus dots sit on the curve
+// instead of floating between two of its vertices: whenever a sample is wider than a column, the
+// columns it covers all carry that sample's value but only its anchor is a point on the curve.
+// Gaps hold no drawn point; their column centre keeps the sequence ordered for the bisector and
+// makes a cursor over a gap resolve to that gap rather than to a sample beyond it.
+const drawnTime = (bucket: M4Bucket): number =>
+  bucket.gap ? bucketCentre(bucket) : bucketAnchorTime(bucket)
+const bisectDrawnPoint = bisector<M4Bucket, number>(drawnTime).center
+
+const coversTime = (buckets: M4Cache, time: number): boolean =>
+  buckets.length > 0 &&
+  time >= buckets[0]!.startTime &&
+  time <= buckets[buckets.length - 1]!.endTime
 
 export interface HoverOptions {
   metrics: () => Metric[]
@@ -78,16 +89,12 @@ export function useHover(options: HoverOptions) {
         pixelY: null,
         snapTime: null
       }
-      if (buckets.length === 0) {
+      if (!coversTime(buckets, cursorTime)) {
         hitDistances.push(null)
         return sampleWithoutValue
       }
-      const bucketIdx = Math.min(bisectBucket(buckets, cursorTime), buckets.length - 1)
+      const bucketIdx = Math.min(bisectDrawnPoint(buckets, cursorTime), buckets.length - 1)
       const bucket = buckets[bucketIdx]!
-      if (!bucketContains(bucket, cursorTime)) {
-        hitDistances.push(null)
-        return sampleWithoutValue
-      }
       const value = selectConsolidatedValue(bucket, options.consolidation())
       const band = bands[bucketIdx]
       if (!Number.isFinite(value) || !band) {
@@ -102,7 +109,7 @@ export function useHover(options: HoverOptions) {
         ...sampleBase,
         formattedValue: formatter.render(value),
         pixelY: drawnTopPixel,
-        snapTime: bucketCentre(bucket)
+        snapTime: bucketAnchorTime(bucket)
       }
     })
 

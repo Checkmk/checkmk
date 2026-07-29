@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest'
 
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 import {
+  bucketAnchorTime,
   invertBucket,
   selectConsolidatedValue
 } from '@/graphing/components/TimeSeriesGraph/render/bucket'
@@ -65,6 +66,20 @@ describe('selectConsolidatedValue', () => {
     const emptyBucket = makeBucket({ sampleCount: 0, valueSum: 0 })
 
     expect(Number.isNaN(selectConsolidatedValue(emptyBucket, 'avg'))).toBe(true)
+  })
+})
+
+describe('bucketAnchorTime', () => {
+  test('is the midpoint of the samples, not of the column', () => {
+    const bucket = makeBucket({ startTime: 0, endTime: 100, firstValueTime: 10, lastValueTime: 30 })
+
+    expect(bucketAnchorTime(bucket)).toBe(20)
+  })
+
+  test('is NaN for a gap bucket, which has no drawn point', () => {
+    const gapBucket = makeBucket({ gap: true })
+
+    expect(Number.isNaN(bucketAnchorTime(gapBucket))).toBe(true)
   })
 })
 

@@ -6,6 +6,13 @@
 import type { ConsolidationFn } from '../../consolidation'
 import type { M4Bucket } from '../decimation/types'
 
+// The time a bucket is drawn at: the midpoint of the samples it holds, not the centre of the
+// column it occupies. A sample wider than one column stays a single point that way, so the
+// curve connects sample-to-sample instead of stepping across the columns the sample covers.
+export function bucketAnchorTime(bucket: M4Bucket): number {
+  return bucket.gap ? NaN : (bucket.firstValueTime + bucket.lastValueTime) / 2
+}
+
 export function selectConsolidatedValue(bucket: M4Bucket, consolidation: ConsolidationFn): number {
   if (bucket.gap || bucket.sampleCount === 0) {
     return NaN

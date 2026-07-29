@@ -114,10 +114,16 @@ class BaseSafeTarFile:
     Prevents path traversal, symlink attacks and oversized archives.
     """
 
-    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits):
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None):
         self._tar = tar
         self._limits = limits
+        self._name = name
         self._member_iter = iter(self._tar)
+
+    @property
+    def name(self) -> str | None:
+        """The path the archive was read from, if it was read from disk."""
+        return self._name
 
     def __iter__(self) -> Iterator[tarfile.TarInfo]:
         return self
@@ -188,8 +194,8 @@ class SafeStreamedTarFile(BaseSafeTarFile):
     and once it reaches EOF the archive has to be reopened for a second pass.
     """
 
-    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits):
-        super().__init__(tar, limits)
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None):
+        super().__init__(tar, limits, name)
         self._total_size = 0
         self._file_count = 0
 
@@ -214,8 +220,8 @@ class SafeIndexedTarFile(BaseSafeTarFile):
     Prefer streaming mode where possible.
     """
 
-    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits) -> None:
-        super().__init__(tar, limits)
+    def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None) -> None:
+        super().__init__(tar, limits, name)
         members = tar.getmembers()
 
         limits.validate_file_count(len(members))
@@ -255,7 +261,7 @@ def open_buffer_streaming(
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
 ) -> Generator[SafeStreamedTarFile]:
     with _open_buffer(buffer, _streaming_mode(compression), limits) as tar:
-        yield SafeStreamedTarFile(tar, limits)
+        yield SafeStreamedTarFile(tar, limits, None)
 
 
 @contextmanager
@@ -266,7 +272,7 @@ def open_buffer_indexed(
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
 ) -> Generator[SafeIndexedTarFile]:
     with _open_buffer(buffer, _indexed_mode(compression), limits) as tar:
-        yield SafeIndexedTarFile(tar, limits)
+        yield SafeIndexedTarFile(tar, limits, None)
 
 
 @contextmanager
@@ -277,7 +283,7 @@ def open_path_streaming(
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
 ) -> Generator[SafeStreamedTarFile]:
     with _open_path(path, _streaming_mode(compression), limits) as tar:
-        yield SafeStreamedTarFile(tar, limits)
+        yield SafeStreamedTarFile(tar, limits, str(path))
 
 
 @contextmanager
@@ -288,7 +294,7 @@ def open_path_indexed(
     limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS,
 ) -> Generator[SafeIndexedTarFile]:
     with _open_path(path, _indexed_mode(compression), limits) as tar:
-        yield SafeIndexedTarFile(tar, limits)
+        yield SafeIndexedTarFile(tar, limits, str(path))
 
 
 def validate_bytes(

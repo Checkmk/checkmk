@@ -291,6 +291,18 @@ def test_symlink_allowed(tmp_path: Path) -> None:
         safe_tar.extractall(dest)
 
 
+def test_name_is_the_source_path(tmp_path: Path) -> None:
+    path = make_tarfile_path([("a.txt", b"hello")], tmp_path)
+
+    with open_path_streaming(path) as safe_tar:
+        assert safe_tar.name == str(path)
+
+
+def test_name_is_none_without_source_path() -> None:
+    with open_bytes_streaming(make_tarfile_bytes([("a.txt", b"hello")])) as safe_tar:
+        assert safe_tar.name is None
+
+
 def test_iteration_bytes() -> None:
     files = [(f"file{i}.txt", f"data{i}".encode()) for i in range(5)]
     raw = make_tarfile_bytes(files)

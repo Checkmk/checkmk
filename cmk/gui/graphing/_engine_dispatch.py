@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -95,29 +95,17 @@ def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
     }
 
 
-def _dispatched_graphs(
-    internal: Mapping[str, object],
-    options: Mapping[str, object],
-) -> Iterator[tuple[DispatchedEvaluate, Graph]]:
-    """The graphs behind a serialized definition, each paired with the evaluation of its graph type.
-
-    The definition may hold graphs of different kinds, but they share one common options object;
-    each dispatcher reads the common options plus whatever special options its graph type needs.
-    """
-    for serialized in ensure_type(internal["graphs"], list):
-        graph = ensure_type(serialized, dict)
-        dispatcher = engine_graph_dispatcher_registry[ensure_type(graph["kind"], str)]
-        yield dispatcher.evaluate, dispatcher.deserialize(graph)
-
-
 def evaluate_graphs(
     internal: Mapping[str, object],
     options: Mapping[str, object],
 ) -> EvaluatedGraphs:
     evaluated_graphs: list[EvaluatedGraph] = []
     diagnostics = FetchDiagnostics()
-    for evaluate, graph in _dispatched_graphs(internal, options):
-        evaluated = evaluate(graph=graph, options=options)
+    # The definition may hold graphs of different kinds, but they share the options of one request.
+    for serialized in ensure_type(internal["graphs"], list):
+        graph = ensure_type(serialized, dict)
+        dispatcher = engine_graph_dispatcher_registry[ensure_type(graph["kind"], str)]
+        evaluated = dispatcher.evaluate(graph=dispatcher.deserialize(graph), options=options)
         evaluated_graphs.extend(evaluated.graphs)
         diagnostics.limits_reached.extend(evaluated.diagnostics.limits_reached)
         diagnostics.errors.extend(evaluated.diagnostics.errors)

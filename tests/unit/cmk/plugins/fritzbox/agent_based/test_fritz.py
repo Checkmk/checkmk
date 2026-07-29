@@ -17,7 +17,6 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
-    ServiceLabel,
     State,
 )
 from cmk.plugins.fritzbox.agent_based.fritz import (
@@ -121,11 +120,6 @@ def test_parse_fritz() -> None:
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 25088000,
                     },
-                    labels=[
-                        ServiceLabel("cmk/network_interface/index", "0"),
-                        ServiceLabel("cmk/network_interface/description", "WAN"),
-                        ServiceLabel("cmk/network_interface/alias", "WAN"),
-                    ],
                 ),
             ],
             id="standard case",

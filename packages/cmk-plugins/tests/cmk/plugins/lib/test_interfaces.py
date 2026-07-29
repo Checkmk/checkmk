@@ -207,21 +207,6 @@ def _add_group_info_to_results(
 
 DEFAULT_DISCOVERY_PARAMS = interfaces.DISCOVERY_DEFAULT_PARAMETERS
 
-
-def _network_interface_labels(index: str, descr: str, alias: str) -> list[ServiceLabel]:
-    """Build the automatic ``cmk/network_interface/*`` labels emitted by discovery.
-
-    Mirrors ``discover_interfaces``: the index label is always present, the description and
-    alias labels are only emitted for non-empty values.
-    """
-    labels = [ServiceLabel("cmk/network_interface/index", index)]
-    if descr:
-        labels.append(ServiceLabel("cmk/network_interface/description", descr))
-    if alias:
-        labels.append(ServiceLabel("cmk/network_interface/alias", alias))
-    return labels
-
-
 SINGLE_SERVICES = [
     Service(
         item="5",
@@ -230,7 +215,6 @@ SINGLE_SERVICES = [
             "discovered_oper_status": ["1"],
             "discovered_speed": 10000000,
         },
-        labels=_network_interface_labels("5", "vboxnet0", "vboxnet0"),
     ),
     Service(
         item="6",
@@ -239,7 +223,6 @@ SINGLE_SERVICES = [
             "discovered_oper_status": ["1"],
             "discovered_speed": 0,
         },
-        labels=_network_interface_labels("6", "wlp2s0", "wlp2s0"),
     ),
 ]
 
@@ -306,7 +289,7 @@ def test_discovery_ungrouped_admin_status() -> None:
                 "discovered_speed": 10000000,
                 "discovered_admin_status": ["1"],
             },
-            labels=_network_interface_labels("5", "vboxnet0", "vboxnet0"),
+            labels=[],
         ),
     ]
 
@@ -363,7 +346,7 @@ def test_discovery_duplicate_index() -> None:
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
-            labels=_network_interface_labels("1", "vboxnet0", "vboxnet0"),
+            labels=[],
         ),
     ]
 
@@ -393,7 +376,7 @@ def test_discovery_duplicate_descr() -> None:
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
-            labels=_network_interface_labels("5", "description", "vboxnet0"),
+            labels=[],
         ),
         Service(
             item="description 6",
@@ -402,7 +385,7 @@ def test_discovery_duplicate_descr() -> None:
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 0,
             },
-            labels=_network_interface_labels("6", "description", "wlp2s0"),
+            labels=[],
         ),
     ]
 
@@ -437,7 +420,7 @@ def test_discovery_duplicate_alias() -> None:
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
-            labels=_network_interface_labels("5", "vboxnet0", "alias"),
+            labels=[],
         ),
     ]
 
@@ -477,7 +460,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
                 "discovered_oper_status": ["2"],
                 "discovered_speed": 10000000,
             },
-            labels=_network_interface_labels("4", "duplicate_descr", "alias"),
+            labels=[],
         ),
         Service(
             item="duplicate_descr 5",
@@ -486,7 +469,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
-            labels=_network_interface_labels("5", "duplicate_descr", "alias"),
+            labels=[],
         ),
         Service(
             item="wlp2s0",
@@ -495,7 +478,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 0,
             },
-            labels=_network_interface_labels("6", "wlp2s0", "alias"),
+            labels=[],
         ),
     ]
 
@@ -813,7 +796,7 @@ def test_discovery_labels() -> None:
                 "discovered_speed": 0,
                 "item_appearance": "alias",
             },
-            labels=[ServiceLabel("single", "default"), *_network_interface_labels("1", "lo", "lo")],
+            labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="docker0",
@@ -822,10 +805,7 @@ def test_discovery_labels() -> None:
                 "discovered_speed": 0,
                 "item_appearance": "alias",
             },
-            labels=[
-                ServiceLabel("single", "default"),
-                *_network_interface_labels("2", "docker0", "docker0"),
-            ],
+            labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="enp0s31f6",
@@ -834,10 +814,7 @@ def test_discovery_labels() -> None:
                 "discovered_speed": 0,
                 "item_appearance": "alias",
             },
-            labels=[
-                ServiceLabel("single", "default"),
-                *_network_interface_labels("3", "enp0s31f6", "enp0s31f6"),
-            ],
+            labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="enxe4b97ab99f99",
@@ -846,10 +823,7 @@ def test_discovery_labels() -> None:
                 "discovered_speed": 10000000,
                 "item_appearance": "alias",
             },
-            labels=[
-                ServiceLabel("single", "default"),
-                *_network_interface_labels("4", "enxe4b97ab99f99", "enxe4b97ab99f99"),
-            ],
+            labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="vboxnet0",
@@ -858,10 +832,7 @@ def test_discovery_labels() -> None:
                 "discovered_speed": 10000000,
                 "item_appearance": "alias",
             },
-            labels=[
-                ServiceLabel("single", "default"),
-                *_network_interface_labels("5", "vboxnet0", "vboxnet0"),
-            ],
+            labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="wlp2s0",
@@ -870,10 +841,7 @@ def test_discovery_labels() -> None:
                 "discovered_speed": 0,
                 "item_appearance": "alias",
             },
-            labels=[
-                ServiceLabel("single", "wlp"),
-                *_network_interface_labels("6", "wlp2s0", "wlp2s0"),
-            ],
+            labels=[ServiceLabel("single", "wlp")],
         ),
         Service(
             item="default_group",

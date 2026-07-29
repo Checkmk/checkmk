@@ -1388,16 +1388,6 @@ def discover_interfaces[TInterfaceType: (InterfaceWithCounters, InterfaceWithRat
             for k, v in single_interface_settings.get("labels", {}).items():
                 labels[k] = v
 
-            # Automatic labels in the reserved cmk/ namespace.
-            # Added last so they always reflect the true attributes and cannot be shadowed by user labels.
-            for label_key, attr_value in (
-                ("cmk/network_interface/index", interface.attributes.index),
-                ("cmk/network_interface/description", interface.attributes.descr),
-                ("cmk/network_interface/alias", interface.attributes.alias),
-            ):
-                if attr_value:
-                    labels[label_key] = attr_value
-
             pre_inventory.append(
                 (
                     item,

@@ -137,6 +137,7 @@ def expected_items() -> dict[str, list[str]]:
     }
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+        expected_items_dict["general"].append("oauth_registered_clients")
         expected_items_dict.update(
             {
                 "exporter": [

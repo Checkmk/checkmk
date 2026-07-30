@@ -242,6 +242,10 @@ def test_registered_pages() -> None:
             "download_robotmk_suite_report",
             "ajax_fetch_metric_color",
             "ajax_fetch_ajax_graph",
+            "noauth:oauth_authorization_server",
+            "oauth_authorize",
+            "noauth:oauth_client_registration",
+            "noauth:oauth_token",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:

@@ -326,7 +326,11 @@ py_library(
     deps = [
         "//agents/plugins:mk_jolokia",
     ] + select({
-        "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
+        "@//:gpl+nonfree_repo": CMC_PROTO_DEPS + [
+            # cmk.gui.mcp is imported by the nonfree edition registration
+            # modules; the package ships it as a separate wheel.
+            "//non-free/packages/cmk-mcp:cmk-gui-mcp",
+        ],
         "@//:gpl_repo": [],
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )

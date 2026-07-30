@@ -309,6 +309,8 @@ def test_registered_configvars() -> None:
             "reporting_use",
             "reporting_view_limit",
             "site_liveproxyd",
+            "site_mcp_server",
+            "site_mcp_trace_forward",
             "ntop_connection",
         ]
 

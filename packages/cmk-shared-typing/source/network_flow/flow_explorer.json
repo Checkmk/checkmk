@@ -22,12 +22,22 @@
       "description": "Longest range the flow database can answer, from the retention setting.",
       "type": "number",
       "default": 5184000
+    },
+    "filter_context": {
+      "description": "Filters parsed out of the page URL, as filter id -> (variable -> value).",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "string" }
+      },
+      "default": {}
     }
   },
   "required": [
     "poll_interval_ms",
     "limit_tiers",
     "default_time_range_seconds",
-    "max_time_range_seconds"
+    "max_time_range_seconds",
+    "filter_context"
   ]
 }

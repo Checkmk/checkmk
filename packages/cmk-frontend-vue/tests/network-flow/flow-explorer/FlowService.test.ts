@@ -47,7 +47,10 @@ test('requests the smallest offered page size first', async () => {
 
   await vi.advanceTimersByTimeAsync(0)
 
-  expect(listFlows).toHaveBeenCalledWith({ limit: 100, offset: 0 }, expect.anything())
+  expect(listFlows).toHaveBeenCalledWith(
+    { limit: 100, offset: 0, sort: undefined, context: {} },
+    expect.anything()
+  )
 
   service.stopPolling()
 })
@@ -59,7 +62,10 @@ test('sends the offset when paging', async () => {
   service.nextPage()
   await vi.advanceTimersByTimeAsync(0)
 
-  expect(listFlows).toHaveBeenLastCalledWith({ limit: 100, offset: 100 }, expect.anything())
+  expect(listFlows).toHaveBeenLastCalledWith(
+    { limit: 100, offset: 100, sort: undefined, context: {} },
+    expect.anything()
+  )
 
   service.stopPolling()
 })
@@ -82,7 +88,7 @@ test('sends no sort token for the endpoint default order', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenCalledWith(
-    { limit: 100, offset: 0, sort: undefined },
+    { limit: 100, offset: 0, sort: undefined, context: {} },
     expect.anything()
   )
 
@@ -97,7 +103,7 @@ test('translates the table sort state into the endpoint token', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenLastCalledWith(
-    { limit: 100, offset: 0, sort: 'bytes:desc' },
+    { limit: 100, offset: 0, sort: 'bytes:desc', context: {} },
     expect.anything()
   )
 
@@ -112,7 +118,30 @@ test('ignores a sort on a column the endpoint cannot order by', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenLastCalledWith(
-    { limit: 100, offset: 0, sort: undefined },
+    { limit: 100, offset: 0, sort: undefined, context: {} },
+    expect.anything()
+  )
+
+  service.stopPolling()
+})
+
+test('sends the visual filter context and restarts at page one', async () => {
+  const { listFlows, service } = makeService()
+  await vi.advanceTimersByTimeAsync(0)
+  service.nextPage()
+  await vi.advanceTimersByTimeAsync(0)
+
+  service.setContext({ network_flow_source: { network_flow_source_value: '10.0.0.5' } })
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(listFlows).toHaveBeenLastCalledWith(
+    {
+      limit: 100,
+      // Narrowing invalidates the page that was open.
+      offset: 0,
+      sort: undefined,
+      context: { network_flow_source: { network_flow_source_value: '10.0.0.5' } }
+    },
     expect.anything()
   )
 

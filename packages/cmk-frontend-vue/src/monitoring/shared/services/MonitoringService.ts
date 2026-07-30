@@ -477,7 +477,12 @@ export abstract class MonitoringService<T> extends ServiceBase {
     this.removeCallbacks()
   }
 
-  private async fetch(kind: FetchKind = 'foreground'): Promise<void> {
+  /**
+   * Protected rather than private: a subclass with query dimensions of its own
+   * (the flow explorer's visual-filter context, for one) needs to trigger the
+   * same foreground refetch that a search or sort change does.
+   */
+  protected async fetch(kind: FetchKind = 'foreground'): Promise<void> {
     if (kind === 'background' && this.fetchState.value !== 'idle') {
       return
     }

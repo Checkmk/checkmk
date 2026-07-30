@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { NetworkFlowFlowExplorerApp } from 'cmk-shared-typing/typescript/network_flow/flow_explorer'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { computed, onBeforeUnmount, provide } from 'vue'
@@ -33,10 +34,19 @@ const props = defineProps<NetworkFlowFlowExplorerApp>()
 const columns = buildFlowColumns()
 const columnPinning = buildFlowColumnPinning()
 
+// Python parses the "Network flow" filters out of the query string and hands
+// them over as the page's context, so a filtered URL is all it takes to open a
+// filtered listing - the controls for editing them come later.
+const initialFilters = (props.filter_context ?? {}) as ConfiguredFilters
+
 const flowService = new FlowService(new FlowApi(), getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms ?? undefined,
   limitTiers: props.limit_tiers ?? undefined,
-  columns
+  columns,
+  // Handed over at construction rather than on mount: the service fetches once
+  // by itself, and setting the context afterwards would abort that request only
+  // to repeat it - and aborting the request does not stop the query behind it.
+  context: initialFilters
 })
 
 provide(MONITORING_SERVICE, flowService)
@@ -125,8 +135,9 @@ function exportCsv(): void {
 .network-flow-flow-explorer-app__header {
   display: flex;
   flex: 0 0 auto;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: var(--spacing);
   margin-bottom: var(--spacing);
 }
 

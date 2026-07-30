@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
+import { type Ref, ref } from 'vue'
 
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
 import {
@@ -12,20 +13,46 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import type { FlowApi, FlowEntry, FlowSortToken } from '../api/flows'
+import type { FlowApi, FlowContext, FlowEntry, FlowSortToken } from '../api/flows'
 import { SORT_COLUMNS } from '../columns'
 
 function isNumber(value: number | null): value is number {
   return value !== null
 }
 
+export interface FlowServiceOptions extends MonitoringServiceOptions<FlowEntry> {
+  /** The filters the listing opens with, applied before the first fetch. */
+  context?: FlowContext
+}
+
 export class FlowService extends MonitoringService<FlowEntry> {
+  /**
+   * The Network flow filters, as the visual context the endpoint takes. Held here
+   * rather than in the shared filter store, because it is a different filter
+   * mechanism: these come from the URL and are named by filter ident, while the
+   * store's conditions are per column and live only in the page.
+   */
+  readonly context: Ref<FlowContext> = ref({})
+
   constructor(
     private readonly api: Pick<FlowApi, 'listFlows'>,
     shortCutService: KeyShortcutService,
-    options: MonitoringServiceOptions<FlowEntry> = {}
+    options: FlowServiceOptions = {}
   ) {
     super('flow-service', shortCutService, options)
+    // Set before the base class's scheduled first fetch runs, so the listing is
+    // filtered by its opening context on the first request rather than being
+    // fetched unfiltered and then again once the page hands the context over.
+    if (options.context !== undefined) {
+      this.context.value = options.context
+    }
+  }
+
+  /** Narrows the listing to `context`, from page one. */
+  setContext(context: FlowContext): void {
+    this.context.value = context
+    this.offset.value = 0
+    void this.fetch()
   }
 
   /**
@@ -59,7 +86,12 @@ export class FlowService extends MonitoringService<FlowEntry> {
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<FlowEntry>> {
     const response = await this.api.listFlows(
-      { limit: this.pageLimit, offset: this.offset.value, sort: this.sortToken },
+      {
+        limit: this.pageLimit,
+        offset: this.offset.value,
+        sort: this.sortToken,
+        context: this.context.value
+      },
       signal
     )
     return {

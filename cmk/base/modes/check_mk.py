@@ -42,6 +42,7 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache, handle_ip_lookup_failure
+from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
@@ -2838,6 +2839,7 @@ def run_checking(
     )
     service_level_config = make_service_level_config(loaded_config, ruleset_matcher, label_manager)
     exit_code_spec = make_exit_code_spec(loaded_config, ruleset_matcher, label_manager)
+    only_from = make_only_from_config(loaded_config, ruleset_matcher, label_manager)
     inventory_config = make_inventory_config(
         loaded_config, ruleset_matcher, label_manager, hosts_config
     )
@@ -2912,7 +2914,7 @@ def run_checking(
         keep_outdated=file_cache_options.keep_outdated,
     )
     checker_config = CheckerConfig(
-        only_from=config_cache.only_from,
+        only_from=only_from,
         effective_service_level=service_level_config.effective,
         get_clustered_service_configuration=clustering.get_clustered_service_configuration,
         nodes=lambda hn: hosts_config.clusters.get(hn, ()),

@@ -45,6 +45,7 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
 from cmk.base import default_config
+from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
@@ -1352,6 +1353,9 @@ class ConfigCache:
             self._loaded_config, self.ruleset_matcher, self.label_manager
         )
         self.exit_code_spec = make_exit_code_spec(
+            self._loaded_config, self.ruleset_matcher, self.label_manager
+        )
+        self.only_from = make_only_from_config(
             self._loaded_config, self.ruleset_matcher, self.label_manager
         )
         return self
@@ -2886,17 +2890,6 @@ class ConfigCache:
             host_name, self._loaded_config.agent_exclude_sections, self.label_manager.labels_of_host
         )
         return settings[0] if settings else {}
-
-    def only_from(self, host_name: HostName) -> None | list[str] | str:
-        """The agent of a host may be configured to be accessible only from specific IPs"""
-        ruleset = self._loaded_config.agent_config.get("only_from", [])
-        if not ruleset:
-            return None
-
-        entries = self.ruleset_matcher.get_host_values_all(
-            host_name, ruleset, self.label_manager.labels_of_host
-        )
-        return entries[0] if entries else None
 
     def ping_levels(self, host_name: HostName) -> PingLevels:
         levels: PingLevels = {}

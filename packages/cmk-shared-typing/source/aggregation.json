@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "aggregator",
+  "type": "object",
+  "properties": {
+    "stages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/aggregation_stage"
+      }
+    }
+  },
+  "required": ["stages"],
+  "$defs": {
+    "attribute_kind": {
+      "type": "string",
+      "enum": ["scope", "resource", "data_point"]
+    },
+    "attribute_key": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/attribute_kind"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "name"]
+    },
+    "scalar_aggregation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["scalar"]
+        },
+        "name": {
+          "type": "string",
+          "enum": ["avg", "count", "max", "min", "sum"]
+        }
+      },
+      "required": ["type", "name"]
+    },
+    "percentile_aggregation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["percentile"]
+        },
+        "quantile": {
+          "type": "number"
+        }
+      },
+      "required": ["type", "quantile"]
+    },
+    "fraction_below_aggregation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["fraction_below"]
+        },
+        "threshold": {
+          "type": "number"
+        }
+      },
+      "required": ["type", "threshold"]
+    },
+    "fraction_between_aggregation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["fraction_between"]
+        },
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        }
+      },
+      "required": ["type", "lower", "upper"]
+    },
+    "aggregation_fn": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/scalar_aggregation"
+        },
+        {
+          "$ref": "#/$defs/percentile_aggregation"
+        },
+        {
+          "$ref": "#/$defs/fraction_below_aggregation"
+        },
+        {
+          "$ref": "#/$defs/fraction_between_aggregation"
+        }
+      ]
+    },
+    "aggregation_stage": {
+      "type": "object",
+      "properties": {
+        "aggregate_by": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute_key"
+          }
+        },
+        "aggregation_fn": {
+          "$ref": "#/$defs/aggregation_fn"
+        }
+      },
+      "required": ["aggregate_by", "aggregation_fn"]
+    }
+  }
+}

@@ -54,6 +54,7 @@ SOURCES_COMMON = [
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [
+    "aggregation.json",
     "attribute_filter.json",
     "cmk_time_series_graph.json",
     "graph_designer.json",

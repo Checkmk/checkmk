@@ -237,7 +237,7 @@ section-order = [
 [tool.ruff.lint.isort.sections]
 first-party-not-cmk = ["cmc_proto", "omdlib", "livestatus"]
 
-# NOTE: Keep this is sync with mypy-raw.ini!
+# NOTE: Keep this is sync with mypy-gpl.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...

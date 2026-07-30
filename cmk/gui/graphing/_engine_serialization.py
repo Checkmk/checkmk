@@ -84,7 +84,13 @@ class QuantitySpec:
 
 class QuantityCodec:
     def __init__(self, specs: Sequence[QuantitySpec]) -> None:
-        self._by_kind = {spec.kind: spec for spec in specs}
+        # Two quantities claiming one kind would make the later spec silently decide how the earlier
+        # one is read back, so refuse the codec instead of mis-deserializing at request time.
+        self._by_kind: dict[str, QuantitySpec] = {}
+        for spec in specs:
+            if spec.kind in self._by_kind:
+                raise ValueError(f"duplicate quantity kind: {spec.kind}")
+            self._by_kind[spec.kind] = spec
 
     def kinds(self) -> Sequence[str]:
         return tuple(self._by_kind)

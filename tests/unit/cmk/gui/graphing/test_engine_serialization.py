@@ -42,7 +42,7 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.gui.graphing._engine_serialization import graph_codec
+from cmk.gui.graphing._engine_serialization import graph_codec, QuantitySpec
 
 _METRIC = RRDMetric(
     host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
@@ -252,3 +252,13 @@ def test_every_engine_quantity_kind_is_covered() -> None:
     # The engine stays de/serialization-free, so a quantity's fields are mirrored by hand in the
     # codec. A new quantity kind must arrive with a round-trip sample above, or this fails.
     assert set(_ENGINE_QUANTITY_SAMPLES) == set(graph_codec().quantity_kinds())
+
+
+def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
+    duplicate = QuantitySpec(
+        "constant",
+        lambda quantity, codec: {},
+        lambda data, codec: Constant(0.0),
+    )
+    with pytest.raises(ValueError, match="duplicate quantity kind: constant"):
+        graph_codec((duplicate,))

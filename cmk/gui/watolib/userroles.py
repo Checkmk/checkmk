@@ -174,10 +174,12 @@ def logout_users_with_role(
     *,
     pprint_value: bool,
 ) -> None:
+    changed_users = []
     users = load_users(lock=True)
     for user_id, user in users.items():
         if role_id in user["roles"] and not is_two_factor_login_enabled(user_id):
             user["serial"] = user.get("serial", 0) + 1
+            changed_users.append(user_id)
     save_users(
         users,
         user_attributes,
@@ -185,4 +187,5 @@ def logout_users_with_role(
         now=datetime.now(),
         pprint_value=pprint_value,
         call_users_saved_hook=True,
+        changed_users=changed_users,
     )

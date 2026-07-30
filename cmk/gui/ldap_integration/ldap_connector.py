@@ -1854,6 +1854,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         )
         self._complete_sync(
             sync_users_result=sync_user_result,
+            only_username=userid,
             users=users,
             user_connections=user_connections,
             save_users_func=save_users,
@@ -2019,6 +2020,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         self._complete_sync(
             sync_users_result=sync_users_result,
+            only_username=only_username,
             users=users,
             user_connections=active_config.user_connections,  # TODO user connections should be independent of active config
             save_users_func=save_users_func,
@@ -2030,6 +2032,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _complete_sync(
         self,
         sync_users_result: SyncUsersResult,
+        only_username: UserId | None,
         users: Users,
         user_connections: Sequence[UserConnectionConfig],
         save_users_func: SaveUsersFunction,
@@ -2068,6 +2071,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 datetime.now(),
                 active_config.wato_pprint_config,
                 True,
+                changed_users=[only_username] if only_username else "all",
             )
         else:
             release_users_lock()

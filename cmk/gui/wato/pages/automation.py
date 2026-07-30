@@ -325,6 +325,7 @@ class PageAutomation(AjaxPage):
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=[user_id],
         )
 
         return True

@@ -389,8 +389,12 @@ def _update_users(
     all_users_with_custom_macros = _add_custom_macro_attributes(user_attributes, all_users)
 
     _save_auth_serials(all_users_with_custom_macros)
+    # Deleted users may be passed as changed; their profile directories are
+    # removed by _cleanup_old_user_profiles below.
     changed_users_with_custom_macros = {
-        changed_user: all_users_with_custom_macros[changed_user] for changed_user in changed_users
+        changed_user: all_users_with_custom_macros[changed_user]
+        for changed_user in changed_users
+        if changed_user in all_users_with_custom_macros
     }
     # profiles are saved per user, so we need to save the changed users only
     _save_user_profiles(changed_users_with_custom_macros, user_attributes, now)
@@ -751,7 +755,8 @@ def create_cmk_automation_user(
 ) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
-    users[UserId(name)] = {
+    user_id = UserId(name)
+    users[user_id] = {
         "alias": alias,
         "contactgroups": [],
         "automation_secret": secret.raw,
@@ -774,6 +779,7 @@ def create_cmk_automation_user(
         now=now,
         pprint_value=pprint_value,
         call_users_saved_hook=True,
+        changed_users=[user_id],
     )
 
 

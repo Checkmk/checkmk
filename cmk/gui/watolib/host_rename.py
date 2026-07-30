@@ -426,20 +426,20 @@ def _rename_host_in_event_rules(
     actions = []
 
     users = userdb.load_users(lock=True)
-    some_user_changed = False
+    changed_users = []
     for user_ in users.values():
         if (unrules := user_.get("notification_rules")) and (
             num_changed := rename_in_event_rules(unrules, oldname, newname)
         ):
             actions += ["notify_user"] * num_changed
-            some_user_changed = True
+            changed_users.append(user_["user_id"])
 
     nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
         NotificationRuleConfigFile().save(nrules, pprint_value)
 
-    if some_user_changed:
+    if changed_users:
         userdb.save_users(
             users,
             get_user_attributes(custom_user_attributes),
@@ -447,6 +447,7 @@ def _rename_host_in_event_rules(
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=changed_users,
         )
 
     return actions

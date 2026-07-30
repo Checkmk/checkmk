@@ -14,7 +14,7 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils import roles
 
 from ._user_attribute import UserAttribute
-from .store import load_users, update_user
+from .store import load_users, save_users
 
 auth_logger = gui_logger.getChild("auth")
 
@@ -33,13 +33,14 @@ def on_failed_login(
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
         _increment_failed_logins_and_lock(user, lock_on_logon_failures)
-        update_user(
-            username,
+        save_users(
             all_users,
             user_attributes,
             user_connections,
             now,
             pprint_value=pprint_value,
+            call_users_saved_hook=True,
+            changed_users=[username],
         )
 
     if log_logon_failures:

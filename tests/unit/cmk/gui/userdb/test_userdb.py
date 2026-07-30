@@ -740,6 +740,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
         now=now,
         pprint_value=True,
         call_users_saved_hook=False,
+        changed_users=[user_id],
     )
 
     with pytest.raises(MKUserError, match="User is locked"):

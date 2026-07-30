@@ -394,6 +394,7 @@ class ConfigGeneratorInitialAdminUser(SampleConfigGenerator):
             now=datetime.now(),
             pprint_value=True,
             call_users_saved_hook=False,
+            changed_users=[UserId("cmkadmin")],
         )
 
 

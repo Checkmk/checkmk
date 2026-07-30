@@ -302,6 +302,7 @@ def _add_custom_attr_to_user(user_id: UserId, attr_name: str, value: str) -> Non
         now=datetime.now(),
         pprint_value=False,
         call_users_saved_hook=False,
+        changed_users=[user_id],
     )
 
 

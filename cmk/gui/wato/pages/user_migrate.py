@@ -270,7 +270,8 @@ class ModeUserMigrate(WatoMode):
         users_with_warning: list[str] = []
         users_migrated: list[str] = []
         all_users = userdb.load_users()
-        for username in _get_selected_users():
+        selected_users = _get_selected_users()
+        for username in selected_users:
             user_id = UserId(username)
             if username not in all_users:
                 users_with_warning.append(username)
@@ -300,6 +301,7 @@ class ModeUserMigrate(WatoMode):
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=[UserId(name) for name in selected_users],
         )
 
         return users_with_warning, users_migrated

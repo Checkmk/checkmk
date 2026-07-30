@@ -157,6 +157,7 @@ def _create_non_existing_user(
         now=now,
         pprint_value=pprint_value,
         call_users_saved_hook=True,
+        changed_users=[username],
     )
 
     # Call the sync function for this new user

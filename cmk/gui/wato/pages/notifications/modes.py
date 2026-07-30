@@ -2857,6 +2857,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 now=now,
                 pprint_value=config.wato_pprint_config,
                 call_users_saved_hook=True,
+                changed_users=[self._user_id()],
             )
             self._add_change(
                 action_name="notification-delete-user-rule",
@@ -2879,6 +2880,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 now=now,
                 pprint_value=config.wato_pprint_config,
                 call_users_saved_hook=True,
+                changed_users=[self._user_id()],
             )
 
             self._add_change(
@@ -3852,6 +3854,7 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
             now=datetime.now(),
             pprint_value=active_config.wato_pprint_config,
             call_users_saved_hook=True,
+            changed_users=[self._user_id()],
         )
 
     @override
@@ -3956,6 +3959,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             now=datetime.now(),
             pprint_value=active_config.wato_pprint_config,
             call_users_saved_hook=True,
+            changed_users=[self._user_id()],
         )
 
     @override

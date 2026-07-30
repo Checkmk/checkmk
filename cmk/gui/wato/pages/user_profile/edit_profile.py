@@ -98,9 +98,10 @@ class UserProfile(Page):
             users,
             user_attributes,
             config.user_connections,
-            now=datetime.now(),
+            datetime.now(),
             pprint_value=config.wato_pprint_config,
             call_users_saved_hook=True,
+            changed_users=[user.id],
         )
 
         flash(_("Successfully updated user profile."))

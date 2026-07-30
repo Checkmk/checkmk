@@ -538,9 +538,11 @@ pub struct RuntimeEnv {
 /// Must run before apply_runtime_env: runtime detection reads the current
 /// ORACLE_HOME/ORACLE_INSTANT_CLIENT values.
 pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
+    let runtime_dir = detect_runtime_dir(config, None, true);
+    let oracle_home = detect_oracle_home(config, None, None, runtime_dir.as_deref());
     RuntimeEnv {
-        runtime_dir: detect_runtime_dir(config, None, true),
-        oracle_home: detect_oracle_home(config, None, None),
+        runtime_dir,
+        oracle_home,
     }
 }
 
@@ -579,16 +581,46 @@ pub fn detect_runtime_dir(
     Some(runtime)
 }
 
+/// A full Oracle home (server or full client) ships the client library in
+/// <home>/lib and its message/timezone data in <home>/oracore; OCI resolves
+/// the latter only via ORACLE_HOME (else ORA-01804). Instant Client bundles
+/// that data, needs no ORACLE_HOME and has no oracore sibling of its lib dir.
+fn derive_home_from_runtime_dir(runtime_dir: &Path) -> Option<PathBuf> {
+    if runtime_dir.file_name() != Some(std::ffi::OsStr::new("lib")) {
+        log::info!(
+            "Runtime dir {:?} is not a lib dir of an Oracle home: treating as Instant Client, {ORACLE_HOME_ENV_VAR} stays unset",
+            runtime_dir
+        );
+        return None;
+    }
+    let home = runtime_dir.parent()?;
+    if !home.join("oracore").is_dir() {
+        log::info!(
+            "Runtime dir {:?} has no oracore next to it: treating as Instant Client, {ORACLE_HOME_ENV_VAR} stays unset",
+            runtime_dir
+        );
+        return None;
+    }
+    log::info!(
+        "Deriving {ORACLE_HOME_ENV_VAR} {:?} from configured client runtime dir {:?}",
+        home,
+        runtime_dir
+    );
+    Some(home.to_path_buf())
+}
+
 /// Determines the ORACLE_HOME the spawned monitoring process will see: the
-/// value already set in the environment, otherwise (on Unix) the home of the first
-/// local instance (as listed in oratab) which exists and whose lib dir passes
-/// the permission validation. The derivation applies only when
-/// use_host_client is auto or always: other values ask for a concrete client
-/// and are covered by the runtime path alone.
+/// value already set in the environment wins; otherwise (on Unix) it is
+/// derived - for an explicit use_host_client path from the parent of the
+/// runtime dir when that is the lib dir of a full Oracle home, for auto or
+/// always from the home of the first local instance (as listed in oratab)
+/// which exists and has a lib dir. Windows never derives: OCI is served by
+/// the registry there.
 pub fn detect_oracle_home(
     config: &OracleConfig,
     custom_path: Option<String>,
     home_var: Option<EnvVarName>,
+    runtime_dir: Option<&Path>,
 ) -> Option<OracleHome> {
     let env_var = home_var.unwrap_or_else(|| EnvVarName::from(ORACLE_HOME_ENV_VAR.to_string()));
     let current = std::env::var(env_var.to_str()).unwrap_or_default();
@@ -603,11 +635,15 @@ pub fn detect_oracle_home(
     }
 
     let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
-    if !matches!(use_host_client, UseHostClient::Always | UseHostClient::Auto) {
-        log::info!(
-            "Use host client is {use_host_client:?}: skipping {ORACLE_HOME_ENV_VAR} based setup"
-        );
-        return None;
+    match use_host_client {
+        UseHostClient::Always | UseHostClient::Auto => {}
+        UseHostClient::Path(_) => {
+            return derive_home_from_runtime_dir(runtime_dir?).map(OracleHome::Derived);
+        }
+        UseHostClient::Never => {
+            log::info!("Use host client is Never: skipping {ORACLE_HOME_ENV_VAR} based setup");
+            return None;
+        }
     }
 
     let locals = match registry::get_instances(custom_path) {

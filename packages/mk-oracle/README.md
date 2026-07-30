@@ -408,7 +408,7 @@ options:
   threads: 1 # optional, default: 1, parallel worker threads (range 1–8)
 ```
 
-- `use_host_client` controls whether the plugin uses the OCI library installed on the host or the one bundled with the plugin. Values: `auto`, `never`, `always`, or a path to a specific OCI library.
+- `use_host_client` controls whether the plugin uses the OCI library installed on the host or the one bundled with the plugin. Values: `auto`, `never`, `always`, or a path to the directory containing the OCI library. When that path is the `lib` directory of a full Oracle installation (an `oracore` directory exists next to it), the plugin also derives `ORACLE_HOME` from its parent and exports it, so that OCI finds its message and timezone files (prevents `ORA-01804`). An Oracle Instant Client directory is used as is; it needs no `ORACLE_HOME`.
 - `IGNORE_DB_NAME`: when set to `1`, the plugin will not verify that the database name matches the instance name.
 - `threads`: number of worker threads used to process instances in parallel. Default is `1`, meaning sequential execution. The supported range is `1` to `8`. Higher values are clamped down to `8`.
 

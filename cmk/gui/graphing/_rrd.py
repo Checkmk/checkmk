@@ -25,6 +25,11 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client import livestatus_lql
+from cmk.livestatus_client.expressions import And
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.tables.services import Services
+from cmk.livestatus_client.types import Column, DynamicColumn
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
@@ -182,17 +187,22 @@ def _metric_props_by_service(
 
 
 def _rrd_columns(
-    metric_props: Iterable[MetricProperties], *, start_time: float, end_time: float, step: int | str
-) -> Iterator[ColumnName]:
+    rrddata: DynamicColumn,
+    metric_props: Iterable[MetricProperties],
+    *,
+    start_time: float,
+    end_time: float,
+    step: int | str,
+) -> Iterator[Column]:
     """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
-    data_range = f"{start_time}:{end_time}:{step}"
     for metric_prop in metric_props:
         rpn = f"{metric_prop.metric_name}.{metric_prop.consolidation_function}"
         if metric_prop.scale != 1.0:
             rpn += ",%f,*" % metric_prop.scale
-        yield f"rrddata:{metric_prop.metric_name}:{rpn}:{data_range}"
+        # `step` may be a preformatted, colon separated step length & point count
+        yield rrddata.dynamic(metric_prop.metric_name, rpn, start_time, end_time, step)
 
 
 def _fetch_time_series_of_service(
@@ -210,16 +220,38 @@ def _fetch_time_series_of_service(
     if not isinstance(step, str):
         step = max(1, step)
 
-    with sites.only_sites(site_id):
-        data = sites.live().query_row(
-            livestatus_lql(
-                [host_name],
-                list(
-                    _rrd_columns(metric_props, start_time=start_time, end_time=end_time, step=step)
-                ),
-                service_description,
-            )
+    if service_description == "_HOST_":
+        query = Query(
+            list(
+                _rrd_columns(
+                    Hosts.rrddata,
+                    metric_props,
+                    start_time=start_time,
+                    end_time=end_time,
+                    step=step,
+                )
+            ),
+            Hosts.name == host_name,
         )
+    else:
+        query = Query(
+            list(
+                _rrd_columns(
+                    Services.rrddata,
+                    metric_props,
+                    start_time=start_time,
+                    end_time=end_time,
+                    step=step,
+                )
+            ),
+            And(
+                Services.host_name == host_name,
+                Services.description == service_description,
+            ),
+        )
+
+    with sites.only_sites(site_id):
+        data = sites.live().query_row(query)
 
     return list(
         zip(
@@ -403,22 +435,28 @@ def all_rrd_columns_potentially_relevant_for_metric(
     start_time: int,
     end_time: int,
 ) -> Iterator[ColumnName]:
-    yield from _rrd_columns(
-        (
-            MetricProperties(
-                metric_name=metric_name,
-                consolidation_function=consolidation_function or "max",  # type: ignore[unreachable]
-                # at this point, we do not yet know if there any potential scalings due to metric
-                # translations
-                scale=1,
-            )
-            for metric_name in _reverse_translate_into_all_potentially_relevant_metrics_cached(
-                metric_name
-            )
-        ),
-        start_time=start_time,
-        end_time=end_time,
-        step=60,
+    # The consumers of these columns (painters, dashlets) use the column *names* both in their
+    # queries and as keys to look up the values in the resulting rows, so yield the names here.
+    yield from (
+        ColumnName(column.name)
+        for column in _rrd_columns(
+            Services.rrddata,
+            (
+                MetricProperties(
+                    metric_name=metric_name,
+                    consolidation_function=consolidation_function or "max",  # type: ignore[unreachable]
+                    # at this point, we do not yet know if there any potential scalings due to
+                    # metric translations
+                    scale=1,
+                )
+                for metric_name in _reverse_translate_into_all_potentially_relevant_metrics_cached(
+                    metric_name
+                )
+            ),
+            start_time=start_time,
+            end_time=end_time,
+            step=60,
+        )
     )
 
 

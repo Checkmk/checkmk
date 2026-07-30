@@ -28,6 +28,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._rrd import (
+    _fetch_time_series_of_service,
     _metric_props_by_service,
     _reverse_translate_into_all_potentially_relevant_metrics,
     _rrd_columns,
@@ -41,6 +42,7 @@ from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.livestatus_client.tables.services import Services
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
@@ -54,7 +56,8 @@ def _setup_livestatus(mock_livestatus: MockLiveStatusConnection) -> Iterator[Non
             [
                 {
                     "host_name": "my-host",
-                    "service_description": "Temperature Zone 6",
+                    # The core resolves the `service_` prefix, the mock matches literally.
+                    "description": "Temperature Zone 6",
                     "rrddata:temp:temp.max:1681985455:1681999855:20": [1, 2, 3, 4, 5, None],
                 }
             ],
@@ -63,7 +66,8 @@ def _setup_livestatus(mock_livestatus: MockLiveStatusConnection) -> Iterator[Non
             """GET services
 Columns: rrddata:temp:temp.max:1681985455:1681999855:20
 Filter: host_name = my-host
-Filter: service_description = Temperature Zone 6
+Filter: description = Temperature Zone 6
+And: 2
 ColumnHeaders: off
 
             """,
@@ -403,11 +407,11 @@ def test_rrd_columns_uses_effective_consolidation_function_in_rpn() -> None:
         key_consolidation_function="min",
         scale=1.0,
     )
-    columns = list(_rrd_columns([prop], start_time=0, end_time=3600, step=60))
+    columns = list(_rrd_columns(Services.rrddata, [prop], start_time=0, end_time=3600, step=60))
     assert len(columns) == 1
     # The RPN part must reference the effective CF ("average"), not the key CF ("min")
-    assert "my_metric.average" in columns[0]
-    assert "my_metric.min" not in columns[0]
+    assert "my_metric.average" in columns[0].name
+    assert "my_metric.min" not in columns[0].name
 
 
 @pytest.mark.parametrize(
@@ -563,3 +567,42 @@ def test_make_graph_row_applies_pnp_suffix_check_command_to_translation(
     assert rta.value == pytest.approx(0.0068)
     assert rta.scalar.warn == pytest.approx(0.3)
     assert rta.scalar.crit == pytest.approx(0.5)
+
+
+def test_fetch_time_series_of_host(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    """The _HOST_ service is queried via the hosts table with an unprefixed name filter."""
+    prop = MetricProperties(metric_name="temp", consolidation_function="max", scale=1.0)
+    with mock_livestatus(expect_status_query=True) as live:
+        live.add_table(
+            "hosts",
+            [
+                {
+                    "name": "my-host",
+                    "rrddata:temp:temp.max:1681985455:1681999855:20": [1, 2, 3, 4, 5, None],
+                }
+            ],
+        )
+        live.expect_query(
+            """GET hosts
+Columns: rrddata:temp:temp.max:1681985455:1681999855:20
+Filter: name = my-host
+ColumnHeaders: off
+
+            """,
+            sites=["NO_SITE"],
+        )
+        result = _fetch_time_series_of_service(
+            SiteId("NO_SITE"),
+            HostName("my-host"),
+            ServiceName("_HOST_"),
+            {prop},
+            lambda v: v,
+            start_time=1681985455,
+            end_time=1681999855,
+            step=20,
+        )
+    assert result == [
+        (prop, TimeSeries(start=1, end=2, step=3, values=[4, 5, None])),
+    ]

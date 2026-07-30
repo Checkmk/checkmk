@@ -30,6 +30,9 @@ export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_sp
 // range the graph currently shows.
 export interface BurgerMenuGraph {
   specification: Record<string, unknown>
+  // The built graph, for the targets that store what a graph is made of instead of replaying how it
+  // was requested.
+  internal: string
   timeStart: number
   timeEnd: number
   consolidationFunction: ConsolidationFn

@@ -3,6 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+from cmk.graphing_engine import (
+    AutoPrecision,
+    Curve,
+    CurveAttributes,
+    DecimalNotation,
+    Graph,
+    HostName,
+    Line,
+    MetricName,
+    RRDMetric,
+    ServiceName,
+    Unit,
+)
+from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -13,6 +29,39 @@ _TEMPLATE_SPEC = {
     "service_description": "CPU load",
     "graph_id": "cpu_load",
 }
+
+
+# A container is handed the built graph as well; only a custom graph reads it. Built per call: the
+# graph kinds register with the dispatcher when the GUI registration runs, not at import time.
+def _serialized_graph() -> Mapping[str, object]:
+    return serialize_graphs(
+        [
+            Graph(
+                name="cpu_load",
+                title="CPU load",
+                kind="template",
+                lines=[
+                    Line(
+                        curve=Curve(
+                            quantity=RRDMetric(
+                                host_name=HostName("my-host"),
+                                service_name=ServiceName("CPU load"),
+                                metric_name=MetricName("load1"),
+                            ),
+                            attributes=CurveAttributes(
+                                title="Load 1",
+                                unit=Unit(
+                                    notation=DecimalNotation("X"), precision=AutoPrecision(2)
+                                ),
+                                color="#123456",
+                            ),
+                        ),
+                        inverse=False,
+                    )
+                ],
+            )
+        ]
+    )
 
 
 _EMPTY_DASHBOARD = {
@@ -90,6 +139,7 @@ def test_add_to_visual_rejects_an_unknown_visual_type(clients: ClientRegistry) -
 def test_add_to_container_rejects_an_unknown_container_type(clients: ClientRegistry) -> None:
     resp = clients.Graph.add_to_container(
         specification=_TEMPLATE_SPEC,
+        internal=_serialized_graph(),
         family="does_not_exist",
         target_id="my_graph_collection",
         expect_ok=False,

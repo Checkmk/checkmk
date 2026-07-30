@@ -98,9 +98,10 @@
       "type": "object",
       "properties": {
         "type": { "type": "string" },
-        "specification": { "type": "object", "additionalProperties": true }
+        "specification": { "type": "object", "additionalProperties": true },
+        "internal": { "type": "string" }
       },
-      "required": ["type", "specification"]
+      "required": ["type", "specification", "internal"]
     }
   }
 }

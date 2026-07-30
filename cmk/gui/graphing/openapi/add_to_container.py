@@ -9,7 +9,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.graphing.openapi._add_to import AddableGraph
 from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
-from cmk.gui.graphing.openapi.models import AddToContainerResponse, AddToRequest
+from cmk.gui.graphing.openapi.models import AddToContainerRequest, AddToContainerResponse
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -35,9 +35,11 @@ def _container_names() -> str:
     )
 
 
-def add_to_container_v1(api_context: ApiContext, body: AddToRequest) -> AddToContainerResponse:
+def add_to_container_v1(
+    api_context: ApiContext, body: AddToContainerRequest
+) -> AddToContainerResponse:
     """Add a graph to a container"""
-    addable = AddableGraph.parse(body.specification)
+    addable = AddableGraph.parse(body.specification, body.internal)
     page_type = all_page_types().get(body.family)
     if page_type is None or not issubclass(page_type, OverridableContainer):
         raise ProblemException(

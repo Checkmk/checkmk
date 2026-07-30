@@ -1375,6 +1375,7 @@ class GraphClient(RestApiClient):
     def add_to_container(
         self,
         specification: Mapping[str, Any],
+        internal: Mapping[str, object],
         family: str,
         target_id: str,
         expect_ok: bool = True,
@@ -1382,7 +1383,13 @@ class GraphClient(RestApiClient):
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/add_to_container/invoke",
-            body={"specification": specification, "family": family, "id": target_id},
+            body={
+                "specification": specification,
+                # an Annotated[..., Json] field, i.e. a JSON-encoded string on the wire
+                "internal": json.dumps(internal),
+                "family": family,
+                "id": target_id,
+            },
             expect_ok=expect_ok,
         )
 

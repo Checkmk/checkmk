@@ -16,10 +16,13 @@ const _EXPORT_URL = '/domain-types/graph/actions/export/invoke'
 type ExportType = 'graph_export' | 'graph_image'
 type ActionType = 'add_to_container' | 'add_to_visual' | 'export'
 
+// A container is handed both what the graph is made of and how it was requested: a graph
+// collection replays the specification, a custom graph stores the built graph.
 export const addToContainer = async (
   pageType: string,
   pageName: string,
-  specification: Record<string, unknown>
+  specification: Record<string, unknown>,
+  internal: string
 ) => {
   unwrap(
     await client.POST(_ADD_TO_CONTAINER_URL, {
@@ -31,7 +34,8 @@ export const addToContainer = async (
       body: {
         family: pageType,
         id: pageName,
-        specification: specification
+        specification: specification,
+        internal: internal
       }
     })
   )
@@ -105,7 +109,12 @@ const buildCallback = (action: ApiBurgerMenuAction): BurgerMenuCallable => {
   switch (action.id) {
     case 'add_to_container':
       return async (graph: BurgerMenuGraph) =>
-        await addToContainer(action.parameters[0]!, action.parameters[1]!, graph.specification)
+        await addToContainer(
+          action.parameters[0]!,
+          action.parameters[1]!,
+          graph.specification,
+          graph.internal
+        )
 
     case 'add_to_visual':
       return async (graph: BurgerMenuGraph) =>

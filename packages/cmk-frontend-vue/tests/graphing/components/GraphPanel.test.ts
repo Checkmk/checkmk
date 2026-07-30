@@ -199,7 +199,7 @@ test('does not render GraphBurgerMenu when the burger interaction is disabled', 
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification: {} },
+      addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
       interaction: INTERACTION_NONE
     }
   })
@@ -212,7 +212,7 @@ test('renders GraphBurgerMenu when the burger interaction is enabled', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification: {} },
+      addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
       interaction: { ...INTERACTION_NONE, burger: 'enabled' }
     }
   })
@@ -228,13 +228,14 @@ test('a do-action from the header runs the callback with the graph the backends 
     }
   ])
   const specification = { graph_type: 'template', graph_id: 'cpu_load' }
+  const internal = '{"graphs":[{"kind":"template"}]}'
 
   render(GraphPanel, {
     props: {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      addTo: { type: 'test', specification },
+      addTo: { type: 'test', specification, internal },
       interaction: { ...INTERACTION_NONE, burger: 'enabled' }
     }
   })
@@ -242,9 +243,11 @@ test('a do-action from the header runs the callback with the graph the backends 
   await fireEvent.click(screen.getByRole('button'))
   await fireEvent.click(await screen.findByRole('button', { name: 'Export as JSON' }))
 
-  // The add-to actions replay the specification; the export additionally needs the shown range.
+  // Most add-to actions replay the specification, a custom graph takes the built graph itself, and
+  // the export additionally needs the shown range.
   expect(onClick).toHaveBeenCalledWith({
     specification,
+    internal,
     timeStart: REQUESTED.start,
     timeEnd: REQUESTED.end,
     consolidationFunction: 'max'

@@ -98,24 +98,36 @@ const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !met
 
 const yAxis = computed(() => deriveYAxis(props.metrics))
 
-const showBurgerMenu = computed(() => !!props.addTo && props.interaction.burger === 'enabled')
+// The add-to target is what the burger menu exists for, so it carries everything the actions
+// need: the type the menu is assembled for, the specification most of them replay and the built
+// graph a custom graph stores.
+const addTo = computed(() => props.addTo ?? null)
+const showBurgerMenu = computed(
+  () => addTo.value !== null && props.interaction.burger === 'enabled'
+)
 const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
 
-if (showBurgerMenu.value) {
-  loadMenu(props.addTo!.type)
+const initialAddTo = addTo.value
+if (showBurgerMenu.value && initialAddTo !== null) {
+  loadMenu(initialAddTo.type)
     .then((groups) => {
       burgerMenuGroups.value = groups
     })
     .catch((err) => {
-      throw new Error(`Failed to load menu for add type "${props.addTo!.type}": ${err.message}`)
+      throw new Error(`Failed to load menu for add type "${initialAddTo.type}": ${err.message}`)
     })
 }
 
 const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
-  // The add-to actions replay the specification, the export builds its request around it and the
-  // displayed range, so every action is handed the graph as the backends address it.
+  const target = addTo.value
+  if (target === null) {
+    throw new Error('A burger menu action needs the add-to target the menu was assembled for')
+  }
+  // The export builds its request around the displayed range, so every action is handed the graph
+  // as the backends address it.
   await onClick({
-    specification: props.addTo!.specification,
+    specification: target.specification,
+    internal: target.internal,
     timeStart: props.requestedTimeRange.start,
     timeEnd: props.requestedTimeRange.end,
     consolidationFunction: activeConsolidationFunction.value

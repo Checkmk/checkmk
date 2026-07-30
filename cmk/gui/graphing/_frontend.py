@@ -102,12 +102,13 @@ _DEFAULT_INTERACTION = Interaction(
 )
 
 
-def _add_to(specification: GraphSpecification | None) -> AddTo | None:
+def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | None:
     # A graph offers an add-to action exactly if its specification declares an add-to type: the type
-    # is what the context menu is assembled for, the specification is what the actions replay.
+    # is what the context menu is assembled for, the specification is what most actions replay, and
+    # the built graph is what a custom graph stores instead of replaying anything.
     if specification is None or (add_type := specification.add_visual_type()) is None:
         return None
-    return AddTo(type=add_type, specification=specification.model_dump())
+    return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
 
 
 def to_cmk_time_series_graph(
@@ -123,6 +124,7 @@ def to_cmk_time_series_graph(
     add_to_specification: GraphSpecification | None = None,
 ) -> CmkTimeSeriesGraph:
     """Translate an engine graph definition into the shared ``CmkTimeSeriesGraph``."""
+    internal = json.dumps(serialize_graphs([graph]))
     return CmkTimeSeriesGraph(
         size=size,
         options=GraphOptions(
@@ -134,8 +136,8 @@ def to_cmk_time_series_graph(
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,
-        internal=json.dumps(serialize_graphs([graph])),
-        add_to=_add_to(add_to_specification),
+        internal=internal,
+        add_to=_add_to(add_to_specification, internal),
     )
 
 

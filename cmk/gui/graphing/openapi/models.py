@@ -289,6 +289,16 @@ class AddToRequest:
 
 
 @api_model
+class AddToContainerRequest(AddToRequest):
+    # A container may store what a graph is made of rather than how it was requested, so the built
+    # graph travels along and the target takes whichever of the two it holds.
+    internal: Annotated[Mapping[str, object], Json] = api_field(
+        description="The built graph, as returned by the discover actions.",
+        example="<implementation detail>",
+    )
+
+
+@api_model
 class AddToContainerResponse:
     sidebar_reload_required: bool = api_field(
         description=(

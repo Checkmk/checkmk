@@ -18,6 +18,7 @@ import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import hooks, permissions
+from cmk.gui.authorization import Authorization
 from cmk.gui.config import (
     active_config,
     builtin_role_ids,
@@ -29,7 +30,8 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperU
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import CustomUserRole
-from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.scopes import ScopeId
+from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.utils.rulesets.definition import RuleGroup
@@ -307,6 +309,41 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
 
     with create_and_destroy_user(username="test", config=active_config) as user:
         yield LoggedInUser(user[0], UserPermissions.from_config(active_config, permission_registry))
+
+
+def test_may_is_narrowed_by_the_request_authorization(
+    request_context: None, monitoring_user: LoggedInUser
+) -> None:
+    # Assuming "user" role
+    assert monitoring_user.may("general.use")
+    assert monitoring_user.may("general.act")
+
+    session.authorization = Authorization.from_scopes({ScopeId.READ})
+
+    assert monitoring_user.may("general.use")
+    assert not monitoring_user.may("general.act")
+
+
+def test_scope_never_grants_what_roles_deny(
+    request_context: None, monitoring_user: LoggedInUser
+) -> None:
+    """The scope's allow-list is not a grant -- roles still decide."""
+    session.authorization = Authorization.from_scopes({ScopeId.READ})
+
+    # wato.see_all_folders is on the read scope's allow-list, but the "user" role doesn't have it.
+    assert not monitoring_user.may("wato.see_all_folders")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_super_user_is_narrowed_by_the_request_authorization() -> None:
+    """Ensures that even after SuperUserContext swaps out the user object the scope is still
+    enforced.
+    """
+    session.authorization = Authorization.from_scopes({ScopeId.READ})
+
+    with SuperUserContext():
+        assert global_user.may("general.use")
+        assert not global_user.may("wato.activate")
 
 
 def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:

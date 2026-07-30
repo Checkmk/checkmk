@@ -8,12 +8,15 @@
 
 from __future__ import annotations
 
+from ast import literal_eval
 from base64 import b64encode
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
+from datetime import datetime, timedelta, UTC
 from http.cookies import SimpleCookie
 
 import flask
 import pytest
+import time_machine
 from werkzeug.test import create_environ
 
 from cmk.ccc.user import UserId
@@ -21,9 +24,18 @@ from cmk.gui import auth, http, login
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
+from cmk.gui.oauth.store.client_store import get_client_store
+from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
-from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
+from cmk.gui.userdb.session import (
+    auth_cookie_name,
+    auth_cookie_value,
+    generate_auth_hash,
+    load_session_infos,
+)
+from cmk.gui.userdb.store import load_custom_attr
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -137,6 +149,162 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
     ):
         assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
+
+
+def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
+    username, _ = with_user
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+    ):
+        assert type(session.user) is LoggedInUser
+        assert session.user.id == username
+        # Confirms the request authenticated as *this* token's user, not just "some" user.
+        last_login = load_custom_attr(user_id=username, key="last_login", parser=literal_eval)
+        assert last_login is not None
+        assert last_login["auth_type"] == "oauth"
+
+
+def test_read_scoped_oauth_token_narrows_what_the_user_may_do(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    """The whole point of the scope: the user's roles are the ceiling, not the floor.
+
+    with_user has the "user" role, which grants general.act -- but the token
+    was only granted read, so the intersection denies it.
+    """
+    username, _ = with_user
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+    ):
+        assert session.user.may("general.use")
+        assert not session.user.may("general.act")
+
+
+def test_write_scoped_oauth_token_leaves_the_users_permissions_alone(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    username, _ = with_user
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=frozenset({ScopeId.WRITE}),
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+    ):
+        assert session.user.may("general.act")
+
+
+def _legacy_bearer_header(username: UserId, password: str) -> str:
+    return f"Bearer {username} {password}"
+
+
+def _oauth_bearer_header(username: UserId, password: str) -> str:
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+    return "Bearer " + token.ok
+
+
+@pytest.mark.parametrize("make_header", [_legacy_bearer_header, _oauth_bearer_header])
+def test_token_auth_is_not_exchangeable_for_a_session_cookie(
+    make_header: Callable[[UserId, str], str],
+    with_user: tuple[UserId, str],
+    flask_app: flask.Flask,
+) -> None:
+    """A token this site authenticates must not mint a session cookie: otherwise a
+    scoped token could be exchanged for an unrestricted one.
+
+    2.5.0 backport note: master enforces this path-independently (71b364c301b, not
+    backported). On 2.5.0 the guarantee holds for REST-API requests, which set
+    is_gui_session=False (see cmk.gui.wsgi.applications.rest_api) -- and that is the
+    path the MCP server presents OAuth tokens on. We reproduce that condition here."""
+    username, password = with_user
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": make_header(username, password)}
+    ):
+        flask_app.preprocess_request()
+        session.is_gui_session = False
+        response = flask_app.process_response(http.Response())
+
+    assert not [
+        cookie
+        for cookie in response.headers.getlist("Set-Cookie")
+        if cookie.startswith(auth_cookie_name())
+    ]
+    assert not load_session_infos(username)
+
+
+def test_login_with_invalid_oauth_bearer_token(flask_app: flask.Flask) -> None:
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": "Bearer not-a-real-token"}
+    ):
+        assert isinstance(session.user, LoggedInNobody)
+
+
+def test_login_with_expired_oauth_bearer_token(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    username, _ = with_user
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+    with (
+        time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),
+        flask_app.test_request_context(
+            "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+        ),
+    ):
+        assert isinstance(session.user, LoggedInNobody)
 
 
 def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:

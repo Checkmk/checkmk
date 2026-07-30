@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import sqlite3
+from datetime import datetime, timedelta, UTC
+
+import pytest
+
+from cmk.ccc.resulttype import Error
+from cmk.ccc.user import UserId
+from cmk.gui.oauth.store.backend import create_schema
+from cmk.gui.oauth.store.token_store import _token_hash, TokenRecord, TokenStore, UnknownClient
+from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
+
+_USER = UserId("cmkadmin")
+_CLIENT = "test-client"
+
+
+@pytest.fixture
+def store() -> TokenStore:
+    connection = sqlite3.connect(":memory:")
+    connection.row_factory = sqlite3.Row
+    # Production connections enforce foreign keys (see open_connection); the
+    # tokens.client_id constraint only exists with the pragma set.
+    connection.execute("PRAGMA foreign_keys=ON")
+    create_schema(connection)
+    connection.execute(
+        """
+        INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
+        VALUES (?, '["https://client.example/callback"]', NULL, 0)
+        """,
+        (_CLIENT,),
+    )
+    return TokenStore(connection)
+
+
+def _future(minutes: int) -> datetime:
+    return (datetime.now(UTC) + timedelta(minutes=minutes)).replace(microsecond=0)
+
+
+def _past(minutes: int) -> datetime:
+    return (datetime.now(UTC) - timedelta(minutes=minutes)).replace(microsecond=0)
+
+
+def _overwrite_stored_scope(store: TokenStore, token: str, raw_scope: str | None) -> None:
+    """Put a value in the scope column that this version would never write there."""
+    store._connection.execute(
+        "UPDATE tokens SET scope = ? WHERE token_hash = ?",
+        (raw_scope, _token_hash(token)),
+    )
+
+
+# TokenRecord.is_valid
+
+
+def test_record_is_valid_before_it_expires() -> None:
+    record = TokenRecord(
+        user_id=_USER,
+        issued_at=_past(5),
+        expires_at=_future(5),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=_CLIENT,
+    )
+
+    assert record.is_valid(at=_future(1)) is True
+
+
+def test_record_is_not_valid_after_it_expires() -> None:
+    record = TokenRecord(
+        user_id=_USER,
+        issued_at=_past(10),
+        expires_at=_past(5),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=_CLIENT,
+    )
+
+    assert record.is_valid(at=datetime.now(UTC)) is False
+
+
+def test_record_is_valid_defaults_to_the_current_time() -> None:
+    record = TokenRecord(
+        user_id=_USER,
+        issued_at=_past(5),
+        expires_at=_future(60),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=_CLIENT,
+    )
+
+    assert record.is_valid() is True
+
+
+def test_record_is_valid_rejects_naive_datetimes() -> None:
+    record = TokenRecord(
+        user_id=_USER,
+        issued_at=_past(5),
+        expires_at=_future(5),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=_CLIENT,
+    )
+
+    with pytest.raises(ValueError, match="timezone-aware"):
+        record.is_valid(at=datetime.now())
+
+
+# TokenStore.issue_token
+
+
+def test_issue_token_stores_only_a_hash_never_the_plaintext(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+
+    stored_hashes = [row[0] for row in store._connection.execute("SELECT token_hash FROM tokens")]
+    assert token.ok not in stored_hashes
+
+
+def test_issue_token_produces_unique_tokens(store: TokenStore) -> None:
+    first = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    second = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert first.is_ok()
+    assert second.is_ok()
+
+    assert first != second
+
+
+def test_issue_token_rejects_an_empty_user_id(store: TokenStore) -> None:
+    with pytest.raises(ValueError, match="user_id"):
+        store.issue_token(
+            UserId(""),
+            expires_at=_future(60),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=_CLIENT,
+        )
+
+
+def test_issue_token_rejects_an_expiry_in_the_past(store: TokenStore) -> None:
+    with pytest.raises(ValueError, match="expires_at"):
+        store.issue_token(
+            _USER, expires_at=_past(5), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+        )
+
+
+def test_issue_token_rejects_a_naive_expiry(store: TokenStore) -> None:
+    with pytest.raises(ValueError, match="timezone-aware"):
+        store.issue_token(
+            _USER,
+            expires_at=datetime.now() + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=_CLIENT,
+        )
+
+
+def test_issue_token_rejects_an_empty_client_id(store: TokenStore) -> None:
+    with pytest.raises(ValueError, match="client_id"):
+        store.issue_token(
+            _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=""
+        )
+
+
+def test_issue_token_rejects_an_empty_scope(store: TokenStore) -> None:
+    with pytest.raises(ValueError, match="scope"):
+        store.issue_token(
+            _USER, expires_at=_future(60), resource=None, scope=frozenset(), client_id=_CLIENT
+        )
+
+
+def test_issue_token_rejects_an_unregistered_client(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER,
+        expires_at=_future(60),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id="never-registered",
+    )
+
+    assert token == Error(UnknownClient())
+
+
+# TokenStore.get_by_token
+
+
+def test_get_by_token_returns_the_matching_record(store: TokenStore) -> None:
+    expires_at = _future(60)
+
+    token = store.issue_token(
+        _USER, expires_at=expires_at, resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+
+    record = store.get_by_token(token.ok)
+    assert record is not None
+    assert record.user_id == _USER
+    assert record.expires_at == expires_at
+
+
+def test_get_by_token_returns_none_for_an_unknown_token(store: TokenStore) -> None:
+    assert store.get_by_token("never-issued") is None
+
+
+def test_get_by_token_returns_the_bound_resource(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER,
+        expires_at=_future(60),
+        resource="https://host/mysite/check_mk/mcp",
+        scope=DEFAULT_SCOPE,
+        client_id=_CLIENT,
+    )
+    assert token.is_ok()
+
+    record = store.get_by_token(token.ok)
+    assert record is not None
+    assert record.resource == "https://host/mysite/check_mk/mcp"
+
+
+def test_get_by_token_returns_none_for_an_unbound_resource(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+
+    record = store.get_by_token(token.ok)
+    assert record is not None
+    assert record.resource is None
+
+
+def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER,
+        expires_at=_future(60),
+        resource=None,
+        scope=frozenset({ScopeId.WRITE}),
+        client_id=_CLIENT,
+    )
+    assert token.is_ok()
+
+    record = store.get_by_token(token.ok)
+    assert record is not None
+    assert record.scope == {ScopeId.READ, ScopeId.WRITE}
+    assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read write"
+
+
+@pytest.mark.parametrize("stored_scope", ["mcp", None])
+def test_get_by_token_refuses_a_token_whose_stored_scope_does_not_parse(
+    store: TokenStore, stored_scope: str | None
+) -> None:
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+    _overwrite_stored_scope(store, token.ok, stored_scope)
+
+    assert store.get_by_token(token.ok) is None
+
+
+def test_get_by_token_returns_the_issuing_client(store: TokenStore) -> None:
+    token = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert token.is_ok()
+
+    record = store.get_by_token(token.ok)
+    assert record is not None
+    assert record.client_id == _CLIENT
+
+
+# TokenStore.list_by_user
+
+
+def test_list_by_user_returns_empty_for_a_user_without_tokens(store: TokenStore) -> None:
+    assert store.list_by_user(_USER) == []
+
+
+def test_list_by_user_only_returns_that_users_tokens(store: TokenStore) -> None:
+    other_user = UserId("other")
+    store.issue_token(
+        other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+
+    records = store.list_by_user(_USER)
+
+    assert len(records) == 1
+    assert records[0].user_id == _USER
+
+
+def test_list_by_user_skips_tokens_whose_stored_scope_does_not_parse(store: TokenStore) -> None:
+    # One unusable row must not take the whole listing down with it.
+    store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    unusable = store.issue_token(
+        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+    )
+    assert unusable.is_ok()
+    _overwrite_stored_scope(store, unusable.ok, "mcp")
+
+    assert len(store.list_by_user(_USER)) == 1

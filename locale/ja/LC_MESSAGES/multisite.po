@@ -4001,6 +4001,10 @@ msgstr "アクティブスポットフリートリクエスト"
 msgid "Active time range"
 msgstr "アクティブな時間範囲"
 
+#, fuzzy
+msgid "Active undo blocks"
+msgstr "アクティブなジョブ"
+
 msgid "Active unit"
 msgstr "アクティブユニット"
 
@@ -10073,6 +10077,14 @@ msgstr "バケットのみ:ディスクからフェッチされたアイテム�
 
 msgid "Buffer cache size"
 msgstr "バッファキャッシュサイズ"
+
+#, fuzzy
+msgid "Buffer hit ratio"
+msgstr "ルールヒット率"
+
+#, fuzzy
+msgid "Buffer pool statistics"
+msgstr "Oracleバッファプールの統計"
 
 msgid "Buffered I/O"
 msgstr "バッファI/O"
@@ -28972,6 +28984,11 @@ msgstr "見出し"
 msgid "Health"
 msgstr "健康"
 
+msgid ""
+"Health and key metrics of one Oracle database instance: hit ratios, "
+"sessions, tablespaces, and recent problems."
+msgstr ""
+
 #, fuzzy
 msgid "Health check healthy count"
 msgstr "ヘルスチェックの正常カウント"
@@ -38612,6 +38629,10 @@ msgstr "リベルビジネスシャドウ"
 msgid "Libraries"
 msgstr "ライブラリ"
 
+#, fuzzy
+msgid "Library cache hit ratio"
+msgstr "Oracleライブラリキャッシュヒット率"
+
 msgid "Licence state"
 msgstr "ライセンスの状態"
 
@@ -39651,6 +39672,10 @@ msgstr "ログルールのヒット"
 
 msgid "Log search query"
 msgstr "ログ検索クエリ"
+
+#, fuzzy
+msgid "Log switches (last hour)"
+msgstr "ログスイッチ/時間"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "過去60分間のログスイッチ"
@@ -48729,6 +48754,10 @@ msgstr "racle バッファキャッシュのサイズ"
 msgid "Oracle buffer hit ratio"
 msgstr "Oracle バッファヒット率"
 
+#, fuzzy
+msgid "Oracle buffer hit ratio (gauge)"
+msgstr "Oracle バッファヒット率"
+
 msgid "Oracle buffer pool statistics"
 msgstr "Oracleバッファプールの統計"
 
@@ -48983,6 +49012,9 @@ msgstr "Oracle アイドル 待機クラス(FG)"
 msgid "Oracle instance"
 msgstr "Oracleインスタンス"
 
+msgid "Oracle instance (single-database dashboard link)"
+msgstr ""
+
 msgid "Oracle instances"
 msgstr "Oracleインスタンス"
 
@@ -48990,6 +49022,10 @@ msgid "Oracle large pool size"
 msgstr "Oracle 大規模プールサイズ"
 
 msgid "Oracle library cache hit ratio"
+msgstr "Oracleライブラリキャッシュヒット率"
+
+#, fuzzy
+msgid "Oracle library cache hit ratio (gauge)"
 msgstr "Oracleライブラリキャッシュヒット率"
 
 msgid "Oracle library cache statistics"
@@ -49126,6 +49162,10 @@ msgstr "Oracle 共有IOプールサイズ"
 
 msgid "Oracle shared pool size"
 msgstr "Oracle 共有プールサイズ"
+
+#, fuzzy
+msgid "Oracle single database"
+msgstr "Azureデータベース"
 
 msgid "Oracle streams pool size"
 msgstr "Oracle ストリームプールサイズ"
@@ -51236,6 +51276,10 @@ msgstr "物理CPU消費"
 
 msgid "Physical Disks"
 msgstr "物理ディスク"
+
+#, fuzzy
+msgid "Physical IO"
+msgstr "物理的"
 
 msgid "Physical address (MAC)"
 msgstr "物理アドレス(MAC)"
@@ -57156,6 +57200,10 @@ msgstr "SELECT リクエスト"
 
 msgid "SELinux information"
 msgstr "SELinux情報"
+
+#, fuzzy
+msgid "SGA memory"
+msgstr "記憶"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1(SHA-96)"
@@ -84548,6 +84596,18 @@ msgstr "警告/クリティカル"
 
 msgid "WARNING"
 msgstr "警告"
+
+#, fuzzy
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to activate "
+"'Create additional service for I/O stats bytes' or 'Create additional "
+"service for I/O stats requests' in 'Oracle performance discovery'."
+msgstr ""
+"警告：このセクションでは、Checkmkサーバーの負荷が増加し、データベースの負荷も"
+"増加する可能性があります。結果を表示するには、「Oracle performance "
+"discovery」の「Create additional service for IO stats bytes」または「Create "
+"additional service for IO stats requests」をアクティブにする必要があります。"
 
 msgid "WEB - Failed get locations requests"
 msgstr "WEB - ロケーション取得リクエストの失敗"

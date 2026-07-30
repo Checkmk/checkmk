@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-28 20:54+0000\n"
+"PO-Revision-Date: 2026-07-30 16:04+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -4135,6 +4135,10 @@ msgstr "Pedidos de Frota Ativa Spot"
 
 msgid "Active time range"
 msgstr "Faixa de tempo ativa"
+
+#, fuzzy
+msgid "Active undo blocks"
+msgstr "Empregos activos"
 
 msgid "Active unit"
 msgstr "Unidade activa"
@@ -10637,6 +10641,14 @@ msgstr "Só baldes: Níveis para o número de itens buscados no disco"
 
 msgid "Buffer cache size"
 msgstr "Tamanho do cache buffer"
+
+#, fuzzy
+msgid "Buffer hit ratio"
+msgstr "Taxa de acerto de regras"
+
+#, fuzzy
+msgid "Buffer pool statistics"
+msgstr "Estatísticas do pool de reserva ORACLE"
 
 msgid "Buffered I/O"
 msgstr "E/S tamponadas"
@@ -30350,6 +30362,11 @@ msgstr "Rubricas"
 msgid "Health"
 msgstr "Saúde"
 
+msgid ""
+"Health and key metrics of one Oracle database instance: hit ratios, "
+"sessions, tablespaces, and recent problems."
+msgstr ""
+
 #, fuzzy
 msgid "Health check healthy count"
 msgstr "Controlo de saúde contagem de saúde"
@@ -40654,6 +40671,10 @@ msgstr "Sombra Empresarial Libelle"
 msgid "Libraries"
 msgstr "Bibliotecas"
 
+#, fuzzy
+msgid "Library cache hit ratio"
+msgstr "Estatísticas de cache da biblioteca ORACLE"
+
 msgid "Licence state"
 msgstr "Estado da licença"
 
@@ -41735,6 +41756,10 @@ msgstr "Regra de registo de acessos"
 
 msgid "Log search query"
 msgstr "Consulta de pesquisa de registo"
+
+#, fuzzy
+msgid "Log switches (last hour)"
+msgstr "interruptores de registo / hora"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "Interruptores de registo nos últimos 60 minutos"
@@ -51256,6 +51281,10 @@ msgid "Oracle buffer hit ratio"
 msgstr "Taxa de acerto da cache"
 
 #, fuzzy
+msgid "Oracle buffer hit ratio (gauge)"
+msgstr "Taxa de acerto da cache"
+
+#, fuzzy
 msgid "Oracle buffer pool statistics"
 msgstr "Estatísticas do pool de reserva ORACLE"
 
@@ -51584,6 +51613,9 @@ msgstr "ORACLE %s classe de espera (FG)"
 msgid "Oracle instance"
 msgstr "instâncias Oracle"
 
+msgid "Oracle instance (single-database dashboard link)"
+msgstr ""
+
 msgid "Oracle instances"
 msgstr "instâncias Oracle"
 
@@ -51593,6 +51625,10 @@ msgstr "Tamanho da piscina grande"
 
 #, fuzzy
 msgid "Oracle library cache hit ratio"
+msgstr "Estatísticas de cache da biblioteca ORACLE"
+
+#, fuzzy
+msgid "Oracle library cache hit ratio (gauge)"
 msgstr "Estatísticas de cache da biblioteca ORACLE"
 
 #, fuzzy
@@ -51772,6 +51808,10 @@ msgstr "Tamanho da piscina compartilhada"
 #, fuzzy
 msgid "Oracle shared pool size"
 msgstr "Tamanho da piscina compartilhada"
+
+#, fuzzy
+msgid "Oracle single database"
+msgstr "Bases de dados Azure"
 
 #, fuzzy
 msgid "Oracle streams pool size"
@@ -54019,6 +54059,10 @@ msgstr "Consumo físico da CPU"
 
 msgid "Physical Disks"
 msgstr "Discos Físicos"
+
+#, fuzzy
+msgid "Physical IO"
+msgstr "Físico"
 
 #, fuzzy
 msgid "Physical address (MAC)"
@@ -60299,6 +60343,10 @@ msgstr "solicitações"
 
 msgid "SELinux information"
 msgstr "Informações sobre o SELinux"
+
+#, fuzzy
+msgid "SGA memory"
+msgstr "memória"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1 (SHA-96)"
@@ -89340,6 +89388,13 @@ msgstr "ADVERTÊNCIA/CRIT"
 msgid "WARNING"
 msgstr "ADVERTÊNCIA"
 
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to activate "
+"'Create additional service for I/O stats bytes' or 'Create additional "
+"service for I/O stats requests' in 'Oracle performance discovery'."
+msgstr ""
+
 #, fuzzy
 msgid "WEB - Failed get locations requests"
 msgstr "WEB - Pedidos de localização falhados"
@@ -94598,6 +94653,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95122,6 +95178,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

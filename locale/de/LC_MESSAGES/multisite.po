@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-28 20:54+0000\n"
+"PO-Revision-Date: 2026-07-29 18:04+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -4109,6 +4109,10 @@ msgstr "Aktive Spot-Fleet-Anfragen"
 
 msgid "Active time range"
 msgstr "Aktiver Zeitraum"
+
+#, fuzzy
+msgid "Active undo blocks"
+msgstr "Aktive Jobs"
 
 msgid "Active unit"
 msgstr "Aktive Einheit"
@@ -10157,6 +10161,14 @@ msgstr ""
 msgid "Buffer cache size"
 msgstr "Größe des Puffer-Cache"
 
+#, fuzzy
+msgid "Buffer hit ratio"
+msgstr "Regelzugriffe (Verhältnis)"
+
+#, fuzzy
+msgid "Buffer pool statistics"
+msgstr "Oracle Bufferpool-Statistiken"
+
 msgid "Buffered I/O"
 msgstr "Gepufferter I/O"
 
@@ -16036,6 +16048,8 @@ msgid ""
 "Connection to the license server timed out. Please try again or check your "
 "network settings."
 msgstr ""
+"Die Verbindung zum Lizenzserver ist abgelaufen. Bitte versuchen Sie es "
+"erneut oder überprüfen Sie Ihre Netzwerkeinstellungen."
 
 msgid "Connection type"
 msgstr "Verbindungstyp"
@@ -16750,14 +16764,14 @@ msgstr ""
 "wurde versucht, eine Verbindung über <tt>%s</tt> herzustellen. Gemeldeter "
 "Fehler war: %s."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not connect to the license server (%(endpoint)s): %(detail)s If the "
 "error persists, please contact Checkmk support."
 msgstr ""
-"Es wurde eine ungültige Antwort vom Lizenzserver (%s) empfangen. Bitte "
-"versuchen Sie es später erneut. Wenn dieser Fehler weiterhin besteht, wenden "
-"Sie sich bitte an den Checkmk-Support."
+"Es konnte keine Verbindung zum Lizenzserver (%(endpoint)s) hergestellt "
+"werden: %(detail)s Sollte der Fehler weiterhin bestehen, wenden Sie sich "
+"bitte an den Checkmk-Support."
 
 #, python-format
 msgid "Could not connect to the remote site (%s)"
@@ -24470,10 +24484,10 @@ msgid "Entersekt Certificate Expiration"
 msgstr "Ablauf des Entersekt-Zertifikats"
 
 msgid "Entersekt HTTP EMR Errors"
-msgstr "Entersect HTTP EMR Fehler"
+msgstr "Entersect HTTP EMR-Fehler"
 
 msgid "Entersekt HTTP Ecert Errors"
-msgstr "Entersekt HTTP Ecert Fehler"
+msgstr "Entersekt HTTP Ecert-Fehler"
 
 msgid "Entersekt Soap Service Errors"
 msgstr "Entersect Soap Service Fehler"
@@ -29134,6 +29148,11 @@ msgstr "Überschriften"
 msgid "Health"
 msgstr "Integrität"
 
+msgid ""
+"Health and key metrics of one Oracle database instance: hit ratios, "
+"sessions, tablespaces, and recent problems."
+msgstr ""
+
 msgid "Health check healthy count"
 msgstr "Health Check Anzahl Gesunde"
 
@@ -29345,7 +29364,7 @@ msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
 "Hier können Sie die Levels für die 3.3 V und 12 V Versorgungsspannung für "
-"jede Gehäuse definieren."
+"jedes Gehäuse definieren."
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each power supply."
@@ -29368,7 +29387,7 @@ msgid "Here you can configure timeout settings in seconds."
 msgstr "Hier können Sie den Verbindungstimeout in Sekunden konfigurieren."
 
 msgid "Here you can configure timeout settings."
-msgstr "Hier können Sie Timeout Einstellungen konfigurieren."
+msgstr "Hier können Sie Timeout-Einstellungen konfigurieren."
 
 msgid ""
 "Here you can configure whether and how the creation of RRD files is being "
@@ -29785,15 +29804,15 @@ msgid ""
 "Here you can set explicit tablespaces by defining them via SID and the "
 "tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"
 msgstr ""
-"Hier können Sie explizite Tablespaces festlegen, indem Sie sie über die SID "
-"und den Tablespace-Namen, getrennt durch einen Punkt, definieren, zum "
+"Hier können Sie explizite Tablespaces festlegen, indem Sie diese über die "
+"SID und den Tablespace-Namen, getrennt durch einen Punkt, definieren, zum "
 "Beispiel <b>pengt.TEMP</b>"
 
 msgid ""
 "Here you can set host labels that automatically get created when discovering "
 "the services."
 msgstr ""
-"Hier können Sie Host-Labels festlegen, die beim Erkennen der Dienste "
+"Hier können Sie Host-Labels festlegen, die beim Erkennen der Services "
 "automatisch erstellt werden."
 
 msgid "Here you can set levels for the Oracle performance metrics."
@@ -29802,21 +29821,21 @@ msgstr ""
 
 msgid "Here you can set levels on the CPU utilization on single cores"
 msgstr ""
-"Hier können Sie Levels für CPU-Auslastung für die einzelnen Kerne festlegen"
+"Hier können Sie Levels für die CPU-Auslastung der einzelnen Kerne festlegen"
 
 msgid "Here you can set levels on the steal CPU utilization."
-msgstr "Hier können Sie die Levels der Steal-CPU-Auslastung einstellen."
+msgstr "Hier können Sie Levels der Steal-CPU-Auslastung festlegen."
 
 msgid "Here you can set the failover state for BIG-IP system of version 11.2.0"
 msgstr ""
 "Hier können Sie den Failover-Zustand für BIP-IP Systeme ab Version 11.2.0 "
-"einstellen"
+"festlegen"
 
 msgid "Here you can set the number of remaining open slots"
-msgstr "Hier können Sie die Anzahl der übrigen freien Slots einstellen"
+msgstr "Hier können Sie die Anzahl der verbleibenden freien Slots festlegen"
 
 msgid "Here you can set upper levels of busy workers"
-msgstr "Hier können Sie Obergrenzen für Busy-Workers setzen"
+msgstr "Hier können Sie Obergrenzen für Busy-Workers festlegen"
 
 msgid ""
 "Here you can set which alert type is set when the given access point is "
@@ -29838,7 +29857,7 @@ msgstr ""
 "Schlüssel-Wert-Paare, z. B. %s."
 
 msgid "Here you can specifiy the measurement unit of the network interface"
-msgstr "Hier legen Sie die Masseinheit der Netzwerkschnittstelle fest"
+msgstr "Hier können Sie die Masseinheit der Netzwerkschnittstelle festlegen"
 
 msgid ""
 "Here you can specify a service name. If this parameter is not set, the "
@@ -29923,7 +29942,7 @@ msgstr ""
 msgid "Here you can specify the total memory usage levels for clustered hosts."
 msgstr ""
 "Hier können Sie die Levels für die gesamte Speicherauslastung von "
-"geclusterten Hosts angeben."
+"geclusterten Hosts festlegen."
 
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
@@ -29976,7 +29995,7 @@ msgstr ""
 "verschiedenen Inventartabellen basiert auf diesen Makros."
 
 msgid "Here you need to insert the original file or pathname"
-msgstr "Hier muss die ursprüngliche Datei oder der Pfadnamen eingefügt werden"
+msgstr "Hier müssen Sie die ursprüngliche Datei oder den Pfadnamen einfügen"
 
 msgid ""
 "Here you see hosts that have registered for updates but have no available "
@@ -38895,6 +38914,10 @@ msgstr "Libelle Business Shadow"
 msgid "Libraries"
 msgstr "Bibliotheken"
 
+#, fuzzy
+msgid "Library cache hit ratio"
+msgstr "Oracle Bibliotheks-Cache Hit Ratio"
+
 msgid "Licence state"
 msgstr "Lizenzzustand"
 
@@ -39937,6 +39960,10 @@ msgstr "Zugriff auf Regeln loggen"
 
 msgid "Log search query"
 msgstr "Log-Suchanfrage"
+
+#, fuzzy
+msgid "Log switches (last hour)"
+msgstr "Logswitches / Stunde"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "Logswitches in den letzten 60 Sekunden"
@@ -48920,6 +48947,10 @@ msgstr "Oracle Puffer-Cache-Größe"
 msgid "Oracle buffer hit ratio"
 msgstr "Oracle Puffer Trefferquote"
 
+#, fuzzy
+msgid "Oracle buffer hit ratio (gauge)"
+msgstr "Oracle Puffer Trefferquote"
+
 msgid "Oracle buffer pool statistics"
 msgstr "Oracle Bufferpool-Statistiken"
 
@@ -49172,6 +49203,9 @@ msgstr "Oracle Leerlauf-Warteklasse (FG)"
 msgid "Oracle instance"
 msgstr "Oracle-Instanz"
 
+msgid "Oracle instance (single-database dashboard link)"
+msgstr ""
+
 msgid "Oracle instances"
 msgstr "Oracle-Instanzen"
 
@@ -49179,6 +49213,10 @@ msgid "Oracle large pool size"
 msgstr "Oracle große Poolgröße"
 
 msgid "Oracle library cache hit ratio"
+msgstr "Oracle Bibliotheks-Cache Hit Ratio"
+
+#, fuzzy
+msgid "Oracle library cache hit ratio (gauge)"
 msgstr "Oracle Bibliotheks-Cache Hit Ratio"
 
 msgid "Oracle library cache statistics"
@@ -49315,6 +49353,10 @@ msgstr "Oracle gemeinsame E/A-Poolgröße"
 
 msgid "Oracle shared pool size"
 msgstr "Oracle gemeinsame Poolgröße"
+
+#, fuzzy
+msgid "Oracle single database"
+msgstr "Oracle-Datenbanken"
 
 msgid "Oracle streams pool size"
 msgstr "Oracle Poolgröße von Strömen"
@@ -51444,6 +51486,10 @@ msgstr "Physikalische CPU Nutzung"
 msgid "Physical Disks"
 msgstr "Physikalische Platten"
 
+#, fuzzy
+msgid "Physical IO"
+msgstr "Physikalisch"
+
 msgid "Physical address (MAC)"
 msgstr "Physikalische Adresse (MAC)"
 
@@ -51931,6 +51977,9 @@ msgid ""
 "via DNS and that your firewall and proxy settings permit outbound HTTPS "
 "access."
 msgstr ""
+"Bitte stellen Sie sicher, dass der Host, auf dem Checkmk läuft, den Host-"
+"Namen des Servers über DNS auflösen kann und dass Ihre Firewall- und Proxy-"
+"Einstellungen den ausgehenden HTTPS-Zugriff zulassen."
 
 msgid "Please make sure, that the data is URL-encoded."
 msgstr "Bitte stellen Sie sicher, dass die Daten URL codiert sind."
@@ -57313,6 +57362,10 @@ msgstr "SELECT Anfragen"
 
 msgid "SELinux information"
 msgstr "SELinux-Information"
+
+#, fuzzy
+msgid "SGA memory"
+msgstr "Speicher"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1 (SHA-96)"
@@ -67828,13 +67881,12 @@ msgstr ""
 msgid "The connection to this site has been disabled."
 msgstr "Die Verbindung zu dieser Instanz wurde deaktiviert."
 
-#, fuzzy
 msgid ""
 "The connection via the configured proxy failed. Please check your proxy "
 "settings."
 msgstr ""
-"Diese Verbindung ist derzeit deaktiviert. Bitte wenden Sie sich an Ihren "
-"Systemadministrator."
+"Die Verbindung über den konfigurierten Proxy ist fehlgeschlagen. Bitte "
+"überprüfen Sie Ihre Proxy-Einstellungen."
 
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
@@ -69090,6 +69142,8 @@ msgid ""
 "The license server did not respond in time. Please try again or check your "
 "network settings."
 msgstr ""
+"Der Lizenzserver hat nicht rechtzeitig geantwortet. Bitte versuchen Sie es "
+"erneut oder überprüfen Sie Ihre Netzwerkeinstellungen."
 
 msgid ""
 "The license server's TLS certificate could not be verified. Please check "
@@ -85481,6 +85535,19 @@ msgstr "WARN/CRIT"
 
 msgid "WARNING"
 msgstr "WARNUNG"
+
+#, fuzzy
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to activate "
+"'Create additional service for I/O stats bytes' or 'Create additional "
+"service for I/O stats requests' in 'Oracle performance discovery'."
+msgstr ""
+"WARNUNG: Diese Sektion erhöht die Belastung Ihres Checkmk-Servers und kann "
+"die Belastung Ihrer Datenbank erhöhen. Um Ergebnisse zu sehen, müssen Sie "
+"auch 'Zusätzlichen Service für E/A-Stats Bytes erstellen' oder 'Zusätzlichen "
+"Service für E/A-Stats-Anfragen erstellen' in 'Oracle Performance-Erkennung' "
+"aktivieren."
 
 msgid "WEB - Failed get locations requests"
 msgstr "WEB - Fehlgeschlagene Standortanfragen"

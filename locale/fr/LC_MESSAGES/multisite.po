@@ -4180,6 +4180,10 @@ msgstr "Demandes actives de la flotte Spot"
 msgid "Active time range"
 msgstr "Plage de temps actif"
 
+#, fuzzy
+msgid "Active undo blocks"
+msgstr "Emplois actifs"
+
 msgid "Active unit"
 msgstr "Unité active"
 
@@ -10702,6 +10706,14 @@ msgstr ""
 
 msgid "Buffer cache size"
 msgstr "Taille du cache de la mémoire tampon"
+
+#, fuzzy
+msgid "Buffer hit ratio"
+msgstr "Taux de réussite de la règle"
+
+#, fuzzy
+msgid "Buffer pool statistics"
+msgstr "Statistiques du pool de mémoire tampon ORACLE"
 
 msgid "Buffered I/O"
 msgstr "E/S tamponnées"
@@ -30593,6 +30605,11 @@ msgstr "Rubriques"
 msgid "Health"
 msgstr "Santé"
 
+msgid ""
+"Health and key metrics of one Oracle database instance: hit ratios, "
+"sessions, tablespaces, and recent problems."
+msgstr ""
+
 #, fuzzy
 msgid "Health check healthy count"
 msgstr "Contrôle de la santé Compte de la santé"
@@ -41000,6 +41017,10 @@ msgstr "Libelle Business Shadow"
 msgid "Libraries"
 msgstr "Bibliothèques"
 
+#, fuzzy
+msgid "Library cache hit ratio"
+msgstr "Statistiques du cache de la bibliothèque ORACLE"
+
 msgid "Licence state"
 msgstr "État du permis"
 
@@ -42083,6 +42104,10 @@ msgstr "Enregistrer les occurrences des règles"
 
 msgid "Log search query"
 msgstr "Recherche dans le journal"
+
+#, fuzzy
+msgid "Log switches (last hour)"
+msgstr "commutations de journaux / heure"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "Commutation des journaux au cours des 60 dernières minutes"
@@ -51684,6 +51709,10 @@ msgid "Oracle buffer hit ratio"
 msgstr "Taux de réussite de l'antémémoire"
 
 #, fuzzy
+msgid "Oracle buffer hit ratio (gauge)"
+msgstr "Taux de réussite de l'antémémoire"
+
+#, fuzzy
 msgid "Oracle buffer pool statistics"
 msgstr "Statistiques du pool de mémoire tampon ORACLE"
 
@@ -52012,6 +52041,9 @@ msgstr "ORACLE %s classe d'attente (FG)"
 msgid "Oracle instance"
 msgstr "Instances Oracle"
 
+msgid "Oracle instance (single-database dashboard link)"
+msgstr ""
+
 msgid "Oracle instances"
 msgstr "Instances Oracle"
 
@@ -52021,6 +52053,10 @@ msgstr "Grande taille de la piscine"
 
 #, fuzzy
 msgid "Oracle library cache hit ratio"
+msgstr "Statistiques du cache de la bibliothèque ORACLE"
+
+#, fuzzy
+msgid "Oracle library cache hit ratio (gauge)"
 msgstr "Statistiques du cache de la bibliothèque ORACLE"
 
 #, fuzzy
@@ -52200,6 +52236,10 @@ msgstr "Taille de la piscine partagée"
 #, fuzzy
 msgid "Oracle shared pool size"
 msgstr "Taille de la piscine partagée"
+
+#, fuzzy
+msgid "Oracle single database"
+msgstr "Bases de données Azure"
 
 #, fuzzy
 msgid "Oracle streams pool size"
@@ -54476,6 +54516,10 @@ msgstr "Consommation physique du CPU"
 
 msgid "Physical Disks"
 msgstr "Disques physiques"
+
+#, fuzzy
+msgid "Physical IO"
+msgstr "Physique"
 
 #, fuzzy
 msgid "Physical address (MAC)"
@@ -60808,6 +60852,10 @@ msgstr "demande"
 #, fuzzy
 msgid "SELinux information"
 msgstr "Informations sur le contexte"
+
+#, fuzzy
+msgid "SGA memory"
+msgstr "mémoire"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1 (SHA-96)"
@@ -90212,6 +90260,13 @@ msgstr "WARN/CRIT"
 
 msgid "WARNING"
 msgstr "AVERTISSEMENT"
+
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to activate "
+"'Create additional service for I/O stats bytes' or 'Create additional "
+"service for I/O stats requests' in 'Oracle performance discovery'."
+msgstr ""
 
 #, fuzzy
 msgid "WEB - Failed get locations requests"

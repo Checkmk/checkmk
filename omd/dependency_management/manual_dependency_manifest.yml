@@ -70,3 +70,16 @@ dependencies:
 
   - purl: pkg:pypi/charset_normalizer@3.3.2
     path: non-free/packages/cmk-update-agent/src/pip/charset_normalizer-3.3.2-py3-none-any.whl
+
+  - purl: pkg:generic/rrdtool@1.7.2
+    license: GPL-2.0-only
+    path: third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz
+    cpe: cpe:2.3:a:rrdtool_project:rrdtool:1.7.2:*:*:*:*:*:*:*
+
+  - purl: pkg:generic/re2@2022-12-01
+    license: BSD-3-Clause
+    path: third_party/re2/re2-2022-12-01.tar.gz
+
+  - purl: pkg:generic/googletest@1.17.0
+    license: BSD-3-Clause
+    path: third_party/googletest/googletest-e90fe24856-patched.tar.gz

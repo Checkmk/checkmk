@@ -122,7 +122,7 @@ const getSearchInputPlaceholder = computed(() => {
     <div class="unified-search-header__input-panel">
       <div class="unified-search-header__input-wrapper" @click="searchUtils.input.setFocus">
         <div class="unified-search-header__input-tag-root">
-          <form class="unified-search-header__form">
+          <form class="unified-search-header__form" @submit.prevent>
             <input
               id="search-username"
               type="text"

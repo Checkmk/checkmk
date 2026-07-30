@@ -1566,7 +1566,7 @@ ConfigVariableCustomServiceAttributes = ConfigVariable(
             # custom error message.
             validate=_validate_unique_entries,
         ),
-        to_valuespec=lambda v: v.values(),
+        to_valuespec=lambda v: list(v.values()),
         from_valuespec=lambda v: {p["ident"]: p for p in v},
     ),
 )
@@ -3338,7 +3338,7 @@ ConfigVariableHTTPProxies = ConfigVariable(
             ),
             validate=_validate_proxies,
         ),
-        to_valuespec=lambda v: v.values(),
+        to_valuespec=lambda v: list(v.values()),
         from_valuespec=lambda v: {p["ident"]: p for p in v},
     ),
 )

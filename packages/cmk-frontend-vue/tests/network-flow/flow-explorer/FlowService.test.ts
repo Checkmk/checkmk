@@ -48,7 +48,7 @@ test('requests the smallest offered page size first', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenCalledWith(
-    { limit: 100, offset: 0, sort: undefined, context: {} },
+    { limit: 100, offset: 0, sort: undefined, context: {}, q: undefined },
     expect.anything()
   )
 
@@ -63,7 +63,7 @@ test('sends the offset when paging', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenLastCalledWith(
-    { limit: 100, offset: 100, sort: undefined, context: {} },
+    { limit: 100, offset: 100, sort: undefined, context: {}, q: undefined },
     expect.anything()
   )
 
@@ -88,7 +88,7 @@ test('sends no sort token for the endpoint default order', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenCalledWith(
-    { limit: 100, offset: 0, sort: undefined, context: {} },
+    { limit: 100, offset: 0, sort: undefined, context: {}, q: undefined },
     expect.anything()
   )
 
@@ -103,7 +103,7 @@ test('translates the table sort state into the endpoint token', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenLastCalledWith(
-    { limit: 100, offset: 0, sort: 'bytes:desc', context: {} },
+    { limit: 100, offset: 0, sort: 'bytes:desc', context: {}, q: undefined },
     expect.anything()
   )
 
@@ -118,7 +118,7 @@ test('ignores a sort on a column the endpoint cannot order by', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(listFlows).toHaveBeenLastCalledWith(
-    { limit: 100, offset: 0, sort: undefined, context: {} },
+    { limit: 100, offset: 0, sort: undefined, context: {}, q: undefined },
     expect.anything()
   )
 
@@ -140,8 +140,42 @@ test('sends the visual filter context and restarts at page one', async () => {
       // Narrowing invalidates the page that was open.
       offset: 0,
       sort: undefined,
-      context: { network_flow_source: { network_flow_source_value: '10.0.0.5' } }
+      context: { network_flow_source: { network_flow_source_value: '10.0.0.5' } },
+      q: undefined
     },
+    expect.anything()
+  )
+
+  service.stopPolling()
+})
+
+test('sends the committed search term and restarts at page one', async () => {
+  const { listFlows, service } = makeService()
+  await vi.advanceTimersByTimeAsync(0)
+  service.nextPage()
+  await vi.advanceTimersByTimeAsync(0)
+
+  service.updateSearch('  TLS  ')
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(listFlows).toHaveBeenLastCalledWith(
+    // Trimmed, and back on page one: narrowing invalidates the page that was open.
+    { limit: 100, offset: 0, sort: undefined, context: {}, q: 'TLS' },
+    expect.anything()
+  )
+
+  service.stopPolling()
+})
+
+test('sends no search term for a blank query', async () => {
+  const { listFlows, service } = makeService()
+  await vi.advanceTimersByTimeAsync(0)
+
+  service.updateSearch('   ')
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(listFlows).toHaveBeenLastCalledWith(
+    { limit: 100, offset: 0, sort: undefined, context: {}, q: undefined },
     expect.anything()
   )
 

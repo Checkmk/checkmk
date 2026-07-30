@@ -90,7 +90,8 @@ export class FlowService extends MonitoringService<FlowEntry> {
         limit: this.pageLimit,
         offset: this.offset.value,
         sort: this.sortToken,
-        context: this.context.value
+        context: this.context.value,
+        q: this.searchQuery.value.trim() || undefined
       },
       signal
     )

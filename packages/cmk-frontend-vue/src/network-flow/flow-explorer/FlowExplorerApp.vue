@@ -7,10 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { NetworkFlowFlowExplorerApp } from 'cmk-shared-typing/typescript/network_flow/flow_explorer'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, onBeforeUnmount, provide } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
@@ -56,6 +57,12 @@ provide(MONITORING_SERVICE, flowService)
 // Clicking an address or an autonomous system in a row opens its detail panel.
 const slideIns = useNetworkFlowSlideIns()
 
+const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+
+onMounted(() => {
+  flowService.onFocusSearch(() => searchInput.value?.focus())
+})
+
 onBeforeUnmount(() => {
   flowService.destruct()
 })
@@ -76,6 +83,17 @@ function exportCsv(): void {
 <template>
   <div class="network-flow-flow-explorer-app">
     <div class="network-flow-flow-explorer-app__header">
+      <div class="network-flow-flow-explorer-app__toolbar">
+        <CmkSearchInput
+          ref="searchInput"
+          v-model="flowService.searchQuery.value"
+          class="network-flow-flow-explorer-app__search"
+          :placeholder="_t('Search addresses, applications, protocols…')"
+          @search="flowService.updateSearch($event)"
+          @focusin="flowService.beginAutoPause()"
+          @focusout="flowService.endAutoPause()"
+        />
+      </div>
       <div class="network-flow-flow-explorer-app__header-end">
         <RefreshCountdown
           :remaining="flowService.secondsRemaining.value"
@@ -120,7 +138,9 @@ function exportCsv(): void {
         <FlowRow :row="row" />
       </template>
       <template #empty-state>
-        <MonitoringEmptyState />
+        <!-- The committed term rather than the live one: an empty listing was
+             produced by the search that was sent, not by what is being typed. -->
+        <MonitoringEmptyState :has-search-query="flowService.committedSearchQuery.value !== ''" />
       </template>
     </MonitoringTable>
     <NetworkFlowSlideIns :slide-ins="slideIns" />
@@ -145,6 +165,18 @@ function exportCsv(): void {
   justify-content: space-between;
   gap: var(--spacing);
   margin-bottom: var(--spacing);
+}
+
+.network-flow-flow-explorer-app__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing);
+}
+
+.network-flow-flow-explorer-app__search {
+  flex: 0 1 auto;
+  max-width: 360px;
 }
 
 .network-flow-flow-explorer-app__header-end {

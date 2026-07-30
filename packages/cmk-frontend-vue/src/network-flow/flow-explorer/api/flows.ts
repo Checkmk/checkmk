@@ -32,6 +32,8 @@ export interface FlowQueryParams {
   context?: FlowContext
   /** A single 'column:direction' token; omit for the endpoint's default order. */
   sort?: FlowSortToken | undefined
+  /** Free-text search over the addresses and the application and protocol names. */
+  q?: string | undefined
 }
 
 export class FlowApi {
@@ -43,7 +45,8 @@ export class FlowApi {
           context: params.context ?? {},
           limit: params.limit,
           offset: params.offset ?? 0,
-          ...(params.sort && { sort: params.sort })
+          ...(params.sort && { sort: params.sort }),
+          ...(params.q && { q: params.q })
         },
         ...(signal && { signal })
       })

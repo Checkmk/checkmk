@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import logging
 from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 
@@ -15,6 +16,7 @@ from cmk.plugins.netapp import models
 from cmk.plugins.netapp.special_agent.agent_netapp_ontap import (
     agent_netapp_main,
     fetch_aggr,
+    fetch_interfaces,
     get_nodes,
     parse_arguments,
 )
@@ -259,3 +261,111 @@ def test_fetch_aggr_continues_when_cli_passthrough_fails() -> None:
         discovered = list(fetch_aggr(connection, args))
 
     assert {aggregate.name for aggregate in discovered} == {"dataFA-1"}
+
+
+def _ip_interface_element(name: str, failover: str, home_node: str) -> MagicMock:
+    """Fake netapp_ontap IpInterface resource; only ``to_dict`` is consumed by the agent."""
+    element = MagicMock()
+    element.to_dict.return_value = {
+        "uuid": f"uuid-{name}",
+        "name": name,
+        "enabled": True,
+        "state": "up",
+        "location": {
+            "node": {"name": home_node},
+            "port": {"name": "e0a"},
+            "failover": failover,
+            "home_node": {"name": home_node},
+            "home_port": {"name": "e0a"},
+            "is_home": True,
+        },
+    }
+    return element
+
+
+def _node_element(name: str, partner_names: tuple[str, ...]) -> MagicMock:
+    """Fake netapp_ontap Node resource carrying the HA partner names."""
+    element = MagicMock()
+    element.to_dict.return_value = {
+        "name": name,
+        "ha": {"partners": [{"name": partner} for partner in partner_names]},
+    }
+    return element
+
+
+def test_fetch_interfaces_enriches_sfo_partners_only_with_ha_partner_names() -> None:
+    """
+    An sfo_partners_only interface is enriched with the HA partners of its home node,
+    which requires the extra node query.
+    Interfaces on other policies stay untouched.
+    """
+    with (
+        patch.object(
+            NetAppResource.IpInterface,
+            "get_collection",
+            return_value=iter(
+                [
+                    _ip_interface_element("lif_sfo", "sfo_partners_only", "node1"),
+                    _ip_interface_element("lif_default", "default", "node1"),
+                ]
+            ),
+        ),
+        patch.object(
+            NetAppResource.Node,
+            "get_collection",
+            return_value=iter([_node_element("node1", ("node2",))]),
+        ),
+    ):
+        interfaces = {
+            interface.name: interface
+            for interface in fetch_interfaces(connection=MagicMock(), logger=MagicMock())
+        }
+
+    assert interfaces["lif_sfo"].ha_partner_names == ("node2",)
+    assert interfaces["lif_default"].ha_partner_names is None
+
+
+def test_fetch_interfaces_skips_ha_partner_query_without_sfo_partners_only() -> None:
+    """Without a single sfo_partners_only interface the extra node query is not issued."""
+    with (
+        patch.object(
+            NetAppResource.IpInterface,
+            "get_collection",
+            return_value=iter([_ip_interface_element("lif_default", "default", "node1")]),
+        ),
+        patch.object(NetAppResource.Node, "get_collection") as mock_node_collection,
+    ):
+        interfaces = list(fetch_interfaces(connection=MagicMock(), logger=MagicMock()))
+
+    assert [interface.name for interface in interfaces] == ["lif_default"]
+    mock_node_collection.assert_not_called()
+
+
+def test_fetch_interfaces_continues_when_ha_partner_query_fails(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """
+    The HA partner names are enrichment only.
+    If that extra node query fails, the
+    interfaces collected so far are still reported instead of the whole section failing.
+    """
+    with (
+        patch.object(
+            NetAppResource.IpInterface,
+            "get_collection",
+            return_value=iter([_ip_interface_element("lif_sfo", "sfo_partners_only", "node1")]),
+        ),
+        patch.object(NetAppResource.Node, "get_collection", side_effect=_ServerError()),
+        caplog.at_level(logging.ERROR),
+    ):
+        interfaces = list(
+            fetch_interfaces(connection=MagicMock(), logger=logging.getLogger("test_netapp"))
+        )
+
+    assert [interface.name for interface in interfaces] == ["lif_sfo"]
+    assert interfaces[0].ha_partner_names is None
+
+    # The failure has to stay diagnosable: an error with the original traceback.
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelno == logging.ERROR
+    assert caplog.records[0].exc_info is not None

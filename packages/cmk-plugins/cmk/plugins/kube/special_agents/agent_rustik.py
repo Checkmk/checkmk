@@ -93,7 +93,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "url",
         metavar="URL",
-        help="The rustik endpoint to fetch the sections from.",
+        help="The base URL of the rustik agent. /pull/sections is appended automatically.",
     )
     return parser.parse_args(argv)
 
@@ -124,11 +124,12 @@ def main() -> int:
         # Bearer token, as accepted by rustik's pull endpoint (and matching agent_kube).
         headers["Authorization"] = f"Bearer {resolve_secret_option(args, SECRET_OPTION).reveal()}"
 
-    LOGGER.info("Fetching sections from rustik at %(url)s", {"url": args.url})
+    url = f"{args.url.rstrip('/')}/pull/sections"
+    LOGGER.info("Fetching sections from rustik at %(url)s", {"url": url})
 
     try:
         response = requests.get(
-            args.url,
+            url,
             headers=headers,
             proxies=proxies,
             timeout=(args.connect_timeout, args.read_timeout),

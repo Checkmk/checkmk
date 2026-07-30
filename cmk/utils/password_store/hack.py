@@ -72,6 +72,7 @@ HACK_AGENTS = {
     "redfish": False,
     "redfish_power": False,
     "ruckus_spot": False,
+    "rustik": False,
     "salesforce": False,  # needs no secret
     "siemens_plc": False,  # needs no secret
     "smb_share": False,

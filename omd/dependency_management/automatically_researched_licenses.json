@@ -2243,6 +2243,7 @@
   "pkg:pypi/pika@1.3.2": "BSD-3-Clause",
   "pkg:pypi/pillow@12.1.1": "MIT-CMU",
   "pkg:pypi/pillow@12.2.0": "MIT-CMU",
+  "pkg:pypi/pillow@12.3.0": "MIT-CMU",
   "pkg:pypi/pip@26.1.1": "MIT",
   "pkg:pypi/platformdirs@4.9.2": "MIT",
   "pkg:pypi/pluggy@1.5.0": "MIT",

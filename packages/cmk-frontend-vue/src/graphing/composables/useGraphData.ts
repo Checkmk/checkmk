@@ -79,8 +79,15 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
   }
 }
 
+// The renderer decimates to one M4 bucket per plotted column (TimeSeriesGraph.vue) and draws into a
+// DPR-scaled bitmap, so a single sample per column collapses each bucket's min/max and loses the
+// detail between samples. Requesting several samples per column keeps that detail. RRD serves this
+// for free — RRDConsolidate never returns finer than the RRA step — while query backends honour the
+// step literally, bounding a request at ~4x the plotted width in points.
+const SAMPLES_PER_PLOTTED_COLUMN = 4
+
 function computeStep(start: number, end: number, canvasWidth: number): number {
-  return Math.max(60, Math.ceil((end - start) / canvasWidth))
+  return Math.max(60, Math.ceil((end - start) / (canvasWidth * SAMPLES_PER_PLOTTED_COLUMN)))
 }
 
 // Graph discovery (matching templates to a service) happens backend-only: the caller already

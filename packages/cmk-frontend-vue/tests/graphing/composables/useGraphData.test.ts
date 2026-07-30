@@ -115,4 +115,15 @@ describe('useGraphData — requested resolution', () => {
 
     expect((await requestedTimeRange()).step).toBe(60)
   })
+
+  test('asks for several samples per plotted column on a wide window', async () => {
+    const eightDays = { start: 0, end: 8 * 86_400 }
+    const columns = 750
+
+    fetchFor(eightDays, columns)
+
+    const { step } = await requestedTimeRange()
+    const samplesPerColumn = (eightDays.end - eightDays.start) / step / columns
+    expect(samplesPerColumn).toBeCloseTo(4, 1)
+  })
 })

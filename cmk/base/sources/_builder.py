@@ -7,6 +7,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
+from collections import Counter
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import assert_never, Final, Literal
@@ -91,7 +92,7 @@ class _Builder:
         self.tag_list: Final = tag_list
         self.management_protocol: Final = management_protocol
         self.management_ip: Final = management_ip
-        self.special_agent_command_lines: Final = special_agent_command_lines
+        self.special_agent_command_lines: Final = tuple(special_agent_command_lines)
         self.datasource_programs: Final = datasource_programs
         self.agent_connection_mode: Final = agent_connection_mode
         self.check_mk_check_interval: Final = check_mk_check_interval
@@ -126,7 +127,10 @@ class _Builder:
 
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
+            totals = Counter(agentname for agentname, _ in self.special_agent_command_lines)
+            per_agent_idx: dict[str, int] = {}
             for agentname, agent_data in self.special_agent_command_lines:
+                idx = per_agent_idx[agentname] = per_agent_idx.get(agentname, -1) + 1
                 yield SpecialAgentSource(
                     self.fetcher_factory,
                     self.host_name,
@@ -136,6 +140,7 @@ class _Builder:
                     cmdline=agent_data.cmdline,
                     stdin=agent_data.stdin,
                     file_cache_path=self._file_cache_path,
+                    source_idx=None if totals[agentname] == 1 else idx,
                 )
 
         special_agents = tuple(make_special_agents())

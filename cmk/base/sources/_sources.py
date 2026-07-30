@@ -459,6 +459,7 @@ class SpecialAgentSource(Source[AgentRawData]):
         cmdline: str,
         file_cache_path_base: Path,
         file_cache_path_relative: Path,
+        source_idx: int | None = None,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
@@ -470,12 +471,16 @@ class SpecialAgentSource(Source[AgentRawData]):
         self._cmdline: Final = cmdline
         self._file_cache_path_base: Final = file_cache_path_base
         self._file_cache_path_relative: Final = file_cache_path_relative
+        self._source_idx: Final = source_idx
 
     def source_info(self) -> SourceInfo:
+        ident = f"special_{self._agent_name}"
+        if self._source_idx is not None:
+            ident = f"{ident}_{self._source_idx}"
         return SourceInfo(
             self.host_name,
             self.ipaddress,
-            f"special_{self._agent_name}",
+            ident,
             self.fetcher_type,
             self.source_type,
         )

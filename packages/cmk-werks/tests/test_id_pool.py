@@ -5,7 +5,7 @@
 
 import errno
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -515,3 +515,104 @@ def test_server_error_message_json_without_error_key() -> None:
 def test_server_error_message_non_json_body() -> None:
     response = _make_response(502, b"  Bad Gateway  ")
     assert _server_error_message(response) == "Bad Gateway"
+
+
+# ---------------------------------------------------------------------------
+# Injected server
+# ---------------------------------------------------------------------------
+
+
+# Deliberately not a requests.Session subclass: a method that is not implemented here has
+# to fail loudly rather than fall through to the real one and reach the network.
+class _FakeHttpSession:
+    def __init__(
+        self, status_code: int = 200, *, unreachable: bool = False, body: bytes = b"{}"
+    ) -> None:
+        self.status_code = status_code
+        self.unreachable = unreachable
+        self.body = body
+        self.calls: list[tuple[str, Mapping[str, object]]] = []
+
+    def _respond(self, url: str, recorded: Mapping[str, object]) -> requests.Response:
+        self.calls.append((url, recorded))
+        if self.unreachable:
+            raise requests.exceptions.ConnectionError("no route to host")
+        return _make_response(self.status_code, self.body)
+
+    def get(
+        self, url: str, *, headers: Mapping[str, str] | None = None, timeout: float
+    ) -> requests.Response:
+        return self._respond(url, {"headers": headers, "timeout": timeout})
+
+    def post(
+        self,
+        url: str,
+        *,
+        headers: Mapping[str, str] | None = None,
+        json: Mapping[str, object] | None = None,
+        timeout: float,
+    ) -> requests.Response:
+        return self._respond(url, {"headers": headers, "json": json, "timeout": timeout})
+
+
+def _secret_file(tmp_path: Path) -> Path:
+    paths = make_paths_object(tmp_path)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("s3cret\n", encoding="utf-8")
+    return paths.secret_file
+
+
+def test_ensure_connection_against_a_healthy_server() -> None:
+    server = _FakeHttpSession(200)
+
+    assert WerkIDsClient("http://werk-ids.test", session=server).ensure_connection() is True
+    assert server.calls[0][0] == "http://werk-ids.test"
+
+
+def test_ensure_connection_against_a_failing_server(capsys: pytest.CaptureFixture[str]) -> None:
+    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(500))
+
+    assert client.ensure_connection() is False
+    assert "could not connect" in capsys.readouterr().err
+
+
+def test_ensure_connection_against_an_unreachable_server() -> None:
+    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(unreachable=True))
+
+    assert client.ensure_connection() is False
+
+
+def test_test_connection_sends_the_secret_as_a_bearer_token(tmp_path: Path) -> None:
+    server = _FakeHttpSession(200)
+
+    result = WerkIDsClient("http://werk-ids.test", session=server).test_connection(
+        _secret_file(tmp_path)
+    )
+
+    assert result is True
+    url, kwargs = server.calls[0]
+    assert url == "http://werk-ids.test/v1/connect"
+    assert kwargs["headers"] == {"Authorization": "Bearer s3cret"}
+
+
+def test_test_connection_with_a_rejected_secret(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(401))
+
+    assert client.test_connection(_secret_file(tmp_path)) is False
+    assert "Connection test failed" in capsys.readouterr().err
+
+
+def test_reserve_werk_ids_against_an_injected_server(tmp_path: Path) -> None:
+    # the POST goes through the same session, so the whole client is injectable
+    server = _FakeHttpSession(200, body=b'{"reserved_werk_ids": [30, 31]}')
+
+    reserved = WerkIDsClient("http://werk-ids.test", session=server).reserve_werk_ids(
+        _secret_file(tmp_path), 8
+    )
+
+    assert list(reserved) == [30, 31]
+    url, kwargs = server.calls[0]
+    assert url == "http://werk-ids.test/v1/reserve"
+    assert kwargs["json"] == {"local_werk_ids_count": 8}

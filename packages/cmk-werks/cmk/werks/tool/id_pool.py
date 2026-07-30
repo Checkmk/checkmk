@@ -8,10 +8,10 @@ import json
 import os
 import sys
 import traceback
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 
 import requests
 
@@ -160,13 +160,29 @@ def _server_error_message(response: requests.Response) -> str:
     return response.text.strip()
 
 
+class HttpSession(Protocol):
+    def get(
+        self, url: str, *, headers: Mapping[str, str] | None = None, timeout: float
+    ) -> requests.Response: ...
+
+    def post(
+        self,
+        url: str,
+        *,
+        headers: Mapping[str, str] | None = None,
+        json: Mapping[str, object] | None = None,
+        timeout: float,
+    ) -> requests.Response: ...
+
+
 @dataclass(frozen=True)
 class WerkIDsClient:
     url: str
+    session: HttpSession = field(default_factory=requests.Session)
 
     def ensure_connection(self) -> bool:
         try:
-            response = requests.get(self.url, timeout=_TIMEOUT)
+            response = self.session.get(self.url, timeout=_TIMEOUT)
             response.raise_for_status()
             return True
         except requests.exceptions.RequestException:
@@ -177,9 +193,8 @@ class WerkIDsClient:
     def test_connection(self, secret_file_path: Path) -> bool:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.url}/v1/connect",
-                verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 timeout=_TIMEOUT,
             )
@@ -200,9 +215,8 @@ class WerkIDsClient:
     def reserve_werk_ids(self, secret_file_path: Path, local_werk_ids_count: int) -> Sequence[int]:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
-            response = requests.post(
+            response = self.session.post(
                 f"{self.url}/v1/reserve",
-                verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 json={"local_werk_ids_count": local_werk_ids_count},
                 timeout=_TIMEOUT,

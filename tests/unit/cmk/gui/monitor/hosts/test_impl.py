@@ -13,9 +13,9 @@ from cmk.gui.monitor.hosts._impl import _wato_folder_from_filename
         ("/wato/hosts.mk", "/"),
         ("/wato/network/switches/hosts.mk", "/network/switches"),
         ("/wato/network/hosts.mk", "/network"),
-        ("/omd/sites/heute/etc/nagios/conf.d/hosts.mk", None),
-        ("/wato/network/switches/other.mk", None),
+        ("/omd/sites/heute/etc/nagios/conf.d/hosts.mk", ""),
+        ("/wato/network/switches/other.mk", ""),
     ],
 )
-def test_wato_folder_from_filename(filename: str, expected: str | None) -> None:
+def test_wato_folder_from_filename(filename: str, expected: str) -> None:
     assert _wato_folder_from_filename(filename) == expected

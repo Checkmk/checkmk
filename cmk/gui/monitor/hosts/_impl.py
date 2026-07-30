@@ -200,11 +200,11 @@ class LiveStatusHostActions:
             )
 
 
-def _wato_folder_from_filename(filename: str) -> str | None:
+def _wato_folder_from_filename(filename: str) -> str:
     path = PurePosixPath(filename)
     if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
         # Not managed via Setup, e.g. added directly to the monitoring core.
-        return None
+        return ""
     folder = path.relative_to("/wato").parent
     return "/" if folder == PurePosixPath(".") else f"/{folder}"
 

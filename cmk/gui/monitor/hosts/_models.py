@@ -72,7 +72,7 @@ class HostOverview(Host):
     last_check: dt.datetime
     last_state_change: dt.datetime
     customer: str | None
-    folder: str | None
+    folder: str
     contact_groups: list[str] = dataclasses.field(default_factory=list)
     tags: dict[str, str] = dataclasses.field(default_factory=dict)
     labels: dict[str, HostLabelValue] = dataclasses.field(default_factory=dict)

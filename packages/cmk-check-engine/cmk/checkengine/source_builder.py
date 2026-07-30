@@ -10,6 +10,7 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import socket
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence, Sized
 from pathlib import Path
 from typing import assert_never, Final, Literal
@@ -95,7 +96,7 @@ class SourceBuilder:
         self.tag_list: Final = tag_list
         self.management_protocol: Final = management_protocol
         self.management_ip: Final = management_ip
-        self.special_agent_command_lines: Final = special_agent_command_lines
+        self.special_agent_command_lines: Final = tuple(special_agent_command_lines)
         self.datasource_programs: Final = datasource_programs
         self.is_pull_host: Final = is_pull_host
         self.check_mk_check_interval: Final = check_mk_check_interval
@@ -169,7 +170,10 @@ class SourceBuilder:
 
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
+            totals = Counter(agentname for agentname, _ in self.special_agent_command_lines)
+            per_agent_idx: dict[str, int] = {}
             for agentname, agent_data in self.special_agent_command_lines:
+                idx = per_agent_idx[agentname] = per_agent_idx.get(agentname, -1) + 1
                 yield SpecialAgentSource(
                     self._source_config,
                     self.host_name,
@@ -180,6 +184,7 @@ class SourceBuilder:
                     stdin=agent_data.stdin,
                     file_cache_path_base=self._file_cache_path_base,
                     file_cache_path_relative=self._file_cache_path_relative,
+                    source_idx=None if totals[agentname] == 1 else idx,
                 )
 
         special_agents = tuple(make_special_agents())

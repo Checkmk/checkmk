@@ -26,8 +26,10 @@ from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.source_abc import Source
 from cmk.checkengine.source_builder import SourceBuilder
+from cmk.checkengine.sources._sources import SpecialAgentSource
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.utils.ip_lookup import IPStackConfig
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
@@ -53,6 +55,7 @@ def _make_sources(
     loading_result: LoadingResult,
     *,
     tmp_path: Path,
+    special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None = None,
 ) -> Sequence[Source]:
     # Too many arguments to this function.  Let's wrap it to make it easier
     # to test.
@@ -99,14 +102,18 @@ def _make_sources(
         tag_list=loading_result.host_tags.tag_list(hostname),
         management_ip=ipaddress,
         management_protocol=config_cache.management_protocol(hostname),
-        special_agent_command_lines=config_cache.special_agent_command_lines(
-            hostname,
-            ip_family,
-            ipaddress,
-            secrets_config=_SecretsConfig(path=Path("/pw/store"), secrets={}),
-            ip_address_of=lambda *a: ipaddress,
-            executable_finder=lambda name, module: "/yolo/bin/hurra",
-            for_relay=False,
+        special_agent_command_lines=(
+            config_cache.special_agent_command_lines(
+                hostname,
+                ip_family,
+                ipaddress,
+                secrets_config=_SecretsConfig(path=Path("/pw/store"), secrets={}),
+                ip_address_of=lambda *a: ipaddress,
+                executable_finder=lambda name, module: "/yolo/bin/hurra",
+                for_relay=False,
+            )
+            if special_agent_command_lines is None
+            else special_agent_command_lines
         ),
         is_pull_host=config_cache.is_pull_host(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
@@ -222,3 +229,98 @@ def test_special_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
         type(source.fetcher())
         for source in _make_sources(hostname, loading_result, tmp_path=tmp_path)
     ] == [ProgramFetcher, PiggybackFetcher]
+
+
+def test_special_agent_multiple_command_lines_same_agent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("all-special-host")
+    tags = {TagGroupID("agent"): TagID("special-agents")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+
+    sources = _make_sources(
+        hostname,
+        loading_result,
+        tmp_path=tmp_path,
+        special_agent_command_lines=[
+            ("my_agent", SpecialAgentCommandLine("--instance one")),
+            ("my_agent", SpecialAgentCommandLine("--instance two")),
+        ],
+    )
+
+    special_agents = [source for source in sources if isinstance(source, SpecialAgentSource)]
+    assert len(special_agents) == 2
+
+    # Every command line is executed ...
+    assert sorted(source.fetcher().cmdline for source in special_agents) == [
+        "--instance one",
+        "--instance two",
+    ]
+
+    # ... with a unique ident that carries the index ...
+    idents = [source.source_info().ident for source in special_agents]
+    assert sorted(idents) == ["special_my_agent_0", "special_my_agent_1"]
+
+    # ... and therefore with independent file caches.
+    cache_paths = {
+        source.file_cache(
+            simulation=True, file_cache_options=FileCacheOptions()
+        ).relative_path_template
+        for source in special_agents
+    }
+    assert len(cache_paths) == 2
+
+
+def test_special_agent_single_command_line_has_no_index(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A single command line keeps the plain, index-less ident for backwards
+    # compatibility (cache paths must not change for the common case).
+    hostname = HostName("all-special-host")
+    tags = {TagGroupID("agent"): TagID("special-agents")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+
+    sources = _make_sources(
+        hostname,
+        loading_result,
+        tmp_path=tmp_path,
+        special_agent_command_lines=[
+            ("my_agent", SpecialAgentCommandLine("--instance one")),
+        ],
+    )
+
+    special_agents = [source for source in sources if isinstance(source, SpecialAgentSource)]
+    assert [source.source_info().ident for source in special_agents] == ["special_my_agent"]
+
+
+def test_special_agent_multiple_agents_keep_distinct_idents(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("all-special-host")
+    tags = {TagGroupID("agent"): TagID("special-agents")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+
+    sources = _make_sources(
+        hostname,
+        loading_result,
+        tmp_path=tmp_path,
+        special_agent_command_lines=[
+            ("agent_a", SpecialAgentCommandLine("--a1")),
+            ("agent_a", SpecialAgentCommandLine("--a2")),
+            ("agent_b", SpecialAgentCommandLine("--b1")),
+        ],
+    )
+
+    idents = sorted(
+        source.source_info().ident for source in sources if isinstance(source, SpecialAgentSource)
+    )
+    assert idents == ["special_agent_a_0", "special_agent_a_1", "special_agent_b"]

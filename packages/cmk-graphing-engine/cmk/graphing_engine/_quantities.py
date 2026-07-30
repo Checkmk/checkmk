@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import enum
+import itertools
 import math
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -152,7 +153,12 @@ def _apply_operator(
             time_range=context.time_range,
             values=[
                 _apply(operator, point)
-                for point in zip(*(operand.time_series.values for operand in operands))
+                # Operands are normally on one grid, but a fetch that snapped a series differently
+                # can make them differ in length. Pad the short ones rather than truncate the whole
+                # curve to the shortest: a missing point is a gap, which _apply already handles.
+                for point in itertools.zip_longest(
+                    *(operand.time_series.values for operand in operands), fillvalue=None
+                )
             ],
         ),
         label_macros=_operand_label_macros(operands),

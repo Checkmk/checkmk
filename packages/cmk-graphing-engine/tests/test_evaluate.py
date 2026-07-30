@@ -687,3 +687,25 @@ def test_evaluate_graph_carries_the_macros_of_an_operation_over_one_series() -> 
     result = _evaluate_graph(graph, _context({}, {}))
 
     assert [line.curve.attributes.title for line in result.lines] == ["h0/svc"]
+
+
+def test_evaluate_graph_pads_an_operation_over_operands_of_different_lengths() -> None:
+    # A fetch that snapped one series differently leaves the operands on grids of different lengths.
+    # The short one's missing points are gaps, not a reason to cut the whole curve short.
+    long_metric, short_metric = _metric("long"), _metric("short")
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[Line(curve=_curve(Sum([long_metric, short_metric]), "sum"), inverse=False)],
+    )
+
+    result = _evaluate_graph(
+        graph,
+        _context(
+            {long_metric: _data(value=1.0), short_metric: _data(value=2.0)},
+            {long_metric: _time_series(1.0, 1.0, 1.0), short_metric: _time_series(2.0)},
+        ),
+    )
+
+    assert [list(line.curve.time_series.values) for line in result.lines] == [[3.0, 1.0, 1.0]]

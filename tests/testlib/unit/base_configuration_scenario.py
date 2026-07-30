@@ -232,9 +232,8 @@ class Scenario:
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
-                "_autochecks_memoizer",
+                "autochecks_memoizer",
                 self._autochecks_mocker,
-                raising=False,
             )
 
         return loading_result

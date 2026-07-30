@@ -1285,9 +1285,6 @@ class ConfigCache:
         super().__init__()
         self._loaded_config: Final = loaded_config
         self.edition: Final = edition
-        self._autochecks_dir = autochecks_dir
-        self._discovered_host_labels_dir = discovered_host_labels_dir
-        self._builtin_host_labels_file = builtin_host_labels_file
         self._hosts_config = hosts_config
         self._host_tags = host_tags
         self.__enforced_services_table: dict[
@@ -1308,15 +1305,11 @@ class ConfigCache:
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
-        self._initialize()
-
-    def _initialize(self) -> ConfigCache:
-        self.invalidate_host_config()
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
         self._cache_section_name_of: dict[str, str] = {}
 
-        self._autochecks_memoizer = AutochecksMemoizer(self._autochecks_dir)
+        self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=self._host_tags.host_tags_maps,
@@ -1333,8 +1326,8 @@ class ConfigCache:
             ),
             self._hosts_config.clusters,
             self._loaded_config.host_labels,
-            builtin_host_labels_file=self._builtin_host_labels_file,
-            discovered_host_labels_dir=self._discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+            discovered_host_labels_dir=discovered_host_labels_dir,
         )
         self.clustering = make_clustering_config(
             self._loaded_config,
@@ -1375,12 +1368,6 @@ class ConfigCache:
         self.only_from = make_only_from_config(
             self._loaded_config, self.ruleset_matcher, self.label_manager
         )
-        return self
-
-    @property
-    def autochecks_memoizer(self) -> AutochecksMemoizer:
-        # can't be Final because it is set in self._initialize() :-(
-        return self._autochecks_memoizer
 
     def make_passive_service_name_config(
         self,
@@ -1671,10 +1658,7 @@ class ConfigCache:
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
         self.__snmp_backend.clear()
-        # `inventory_config` is (re)built at the end of `initialize`, which calls
-        # this first; guard for that initial call where it does not exist yet.
-        if (inventory_config := getattr(self, "inventory_config", None)) is not None:
-            inventory_config.invalidate()
+        self.inventory_config.invalidate()
 
     def check_table(
         self,

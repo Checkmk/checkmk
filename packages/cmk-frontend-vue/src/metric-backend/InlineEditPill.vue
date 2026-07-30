@@ -158,8 +158,12 @@ defineExpose({
   align-items: stretch;
   background: var(--default-form-element-bg-color);
   border: 1px solid var(--ux-theme-4);
-  padding-right: var(--dimension-3);
   white-space: nowrap;
+}
+
+/* Pad the right so the remove button clears the border; absent otherwise. */
+.metric-backend-inline-edit-pill:has(.metric-backend-inline-edit-pill__remove) {
+  padding-right: var(--dimension-3);
 }
 
 .metric-backend-inline-edit-pill:not(.metric-backend-inline-edit-pill--editing):hover {

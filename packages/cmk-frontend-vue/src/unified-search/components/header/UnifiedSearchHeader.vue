@@ -17,10 +17,6 @@ import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 import UnifiedSearchProviderSelect from './filter/SearchProvider.vue'
 
-interface CmkWindow extends Window {
-  main: Window
-}
-
 const { _t } = usei18n()
 
 const searchUtils = getSearchUtils()
@@ -92,7 +88,7 @@ function onInputEnter() {
           icon: { type: 'default_icon', id: 'main-search' }
         })
       )
-      ;(top!.frames as CmkWindow).main.location.href = url
+      window.location.href = url
 
       searchUtils.closeSearch()
       searchUtils.resetSearch()

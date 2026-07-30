@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::defines::values;
 use anyhow::{bail, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -51,6 +52,8 @@ struct LegacyDbUser {
     port: Option<String>,
     tns_alias: Option<String>,
     piggyback_host: Option<String>,
+    /// True when the legacy username was "/", i.e. external/wallet authentication.
+    wallet: bool,
 }
 
 /// Custom SQL section from legacy config: a function name listed in
@@ -114,9 +117,13 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         .strip_prefix("DBUSER_")
         .map(|suffix| suffix.to_string());
     let raw_username = field(0);
-    // Legacy "/" means Wallet authentication; replace with empty for YAML output
-    let username = if raw_username == "/" {
-        log::info!("{name}: replacing '/' username with empty string (Wallet)");
+    // Legacy "/" means external authentication: emit an empty username and flag
+    // the entry so the migrated config declares `type: wallet`. We always map to
+    // wallet and never to AuthType::Os: OS authentication is not a supported
+    // migration target.
+    let wallet = raw_username == "/";
+    let username = if wallet {
+        log::info!("{name}: replacing '/' username with empty string (wallet authentication)");
         String::new()
     } else {
         raw_username.to_string()
@@ -130,6 +137,7 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         port: optional_value(field(4)),
         tns_alias: optional_value(field(5)),
         piggyback_host: None,
+        wallet,
     })
 }
 
@@ -168,6 +176,8 @@ fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
         port: optional_value(field(4)),
         tns_alias: optional_value(field(8)),
         piggyback_host: optional_value(field(5)),
+        // REMOTE_INSTANCE rejects "/" usernames above, so it is never wallet auth.
+        wallet: false,
     })
 }
 
@@ -417,8 +427,13 @@ pub fn convert(
     }
 
     // authentication
+    let auth_type = if dbuser.wallet {
+        values::WALLET
+    } else {
+        values::STANDARD
+    };
     out.push_str(&format!(
-        "    authentication:\n      username: \"{}\"\n      password: \"{}\"\n      type: standard\n",
+        "    authentication:\n      username: \"{}\"\n      password: \"{}\"\n      type: {auth_type}\n",
         dbuser.username, dbuser.password
     ));
     if let Some(role) = &dbuser.role {
@@ -431,6 +446,13 @@ pub fn convert(
             }
             if !asm.password.is_empty() {
                 out.push_str(&format!("      asm_password: \"{}\"\n", asm.password));
+            }
+            // Like DBUSER, a "/" ASMUSER is external auth. The username is erased
+            // to empty, so declare `asm_type: wallet` explicitly; without it the
+            // parser would fall back to the main auth type. OS auth is not a
+            // supported migration target.
+            if asm.wallet {
+                out.push_str(&format!("      asm_type: {}\n", values::WALLET));
             }
             if let Some(role) = &asm.role {
                 out.push_str(&format!("      asm_role: {}\n", role.to_lowercase()));
@@ -553,11 +575,19 @@ fn format_instances(
         if let Some(piggyback) = &entry.piggyback_host {
             lines.push(format!("        piggyback_host: {piggyback}\n"));
         }
-        let has_auth =
-            entry.sid.is_some() && (!entry.username.is_empty() || !entry.password.is_empty());
+        // Only SID-bearing entries emit their own auth block; the main entry
+        // (sid == None) inherits it from `main:`. Wallet entries emit despite
+        // empty username/password, but stay behind the same SID guard.
+        let has_auth = entry.sid.is_some()
+            && (!entry.username.is_empty() || !entry.password.is_empty() || entry.wallet);
         if has_auth {
+            let auth_type = if entry.wallet {
+                values::WALLET
+            } else {
+                values::STANDARD
+            };
             lines.push(format!(
-                    "        authentication:\n          username: \"{}\"\n          password: \"{}\"\n          type: standard\n",
+                    "        authentication:\n          username: \"{}\"\n          password: \"{}\"\n          type: {auth_type}\n",
                     entry.username, entry.password
                 ));
             if let Some(role) = &entry.role {
@@ -1617,6 +1647,92 @@ sec3 () {
     }
 
     #[test]
+    fn test_convert_dbuser_slash_username_is_wallet() {
+        // A "/" username in DBUSER / DBUSER_ means external authentication: the
+        // migrated config gets an empty username and `type: wallet`. A regular
+        // instance user stays `type: standard`.
+        let vars = HashMap::from([
+            ("DBUSER".into(), "/:::::".into()),
+            ("DBUSER_XE1".into(), "/:::::".into()),
+            ("DBUSER_XE2".into(), "xe2user:xe2pwd:::1521:".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+
+        // main authentication: empty username, wallet type
+        assert!(
+            result.contains(
+                "    authentication:\n      username: \"\"\n      password: \"\"\n      type: wallet\n"
+            ),
+            "main auth not wallet: {result}"
+        );
+        // DBUSER_XE1 instance: wallet block emitted despite empty user and password
+        assert!(
+            result.contains(
+                "        authentication:\n          username: \"\"\n          password: \"\"\n          type: wallet\n"
+            ),
+            "XE1 instance auth not wallet: {result}"
+        );
+        // DBUSER_XE2 instance: ordinary user keeps standard type
+        assert!(
+            result.contains(
+                "        authentication:\n          username: \"xe2user\"\n          password: \"xe2pwd\"\n          type: standard\n"
+            ),
+            "XE2 instance auth not standard: {result}"
+        );
+    }
+
+    #[test]
+    fn test_convert_asmuser_slash_is_wallet() {
+        // Like DBUSER, a "/" ASMUSER is external auth: the migrated config declares
+        // `asm_type: wallet` (username erased) so ASM auth parses back as wallet
+        // instead of inheriting the main auth type.
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("ASMUSER".into(), "/:::::".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("      asm_type: wallet\n"),
+            "ASM '/' must map to wallet: {result}"
+        );
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        assert_eq!(
+            config
+                .ora_sql()
+                .expect("ora_sql")
+                .auth()
+                .asm_auth_type()
+                .to_string(),
+            "wallet",
+            "ASM auth type must parse back as wallet"
+        );
+    }
+
+    #[test]
+    fn test_convert_wallet_main_with_alias_has_no_instance_auth() {
+        // A wallet main DBUSER with a TNS alias yields an alias instance, but its
+        // auth stays under `main:`; the instance must not re-emit an auth block
+        // (an 8-space `authentication:`), even though `wallet` is set.
+        let vars = HashMap::from([("DBUSER".into(), "/:::::MYALIAS".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("      - alias: MYALIAS\n"),
+            "alias instance expected: {result}"
+        );
+        assert!(
+            result.contains(
+                "    authentication:\n      username: \"\"\n      password: \"\"\n      type: wallet\n"
+            ),
+            "main must carry the wallet auth: {result}"
+        );
+        assert!(
+            !result.contains("        authentication:"),
+            "alias instance must inherit main auth, not emit its own: {result}"
+        );
+    }
+
+    #[test]
     fn test_parse_sections() {
         let vars = HashMap::from([("SYNC_SECTIONS".into(), "instance performance locks".into())]);
         let result = parse_sections(&vars, "SYNC_SECTIONS");
@@ -1734,7 +1850,7 @@ sec3 () {
     }
 
     #[test]
-    fn test_convert_slash_username_no_auth_block() {
+    fn test_convert_slash_username_emits_wallet_auth() {
         let vars = HashMap::from([
             ("DBUSER".into(), "user:pass::::".into()),
             ("DBUSER_XE3".into(), "/::SYSASM:::".into()),
@@ -1744,9 +1860,12 @@ sec3 () {
             !result.contains("      - sid: XE3\n        connection:"),
             "XE3 must have no connection (empty hostname)"
         );
+        // "/" username → wallet auth: empty username/password, type wallet, role kept.
         assert!(
-            !result.contains("      - sid: XE3\n        authentication:"),
-            "XE3 must have no authentication ('/' → empty username)"
+            result.contains(
+                "      - sid: XE3\n        authentication:\n          username: \"\"\n          password: \"\"\n          type: wallet\n          role: sysasm\n"
+            ),
+            "XE3 must have wallet authentication: {result}"
         );
     }
 
@@ -1754,6 +1873,7 @@ sec3 () {
     fn test_parse_dbuser_slash_username_replaced() {
         let db = parse_dbuser("DBUSER", "/::SYSASM:::").unwrap();
         assert!(db.username.is_empty(), "'/' must be replaced with empty");
+        assert!(db.wallet, "'/' username must flag wallet authentication");
         assert_eq!(db.role.as_deref(), Some("SYSASM"));
     }
 
@@ -1962,6 +2082,7 @@ sec3 () {
             role: role.map(String::from),
             tns_alias: tns_alias.map(|s| s.to_string()),
             piggyback_host: None,
+            wallet: username == "/",
         }
     }
 

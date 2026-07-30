@@ -609,7 +609,8 @@ fn test_migrate_reference_config_connection_and_auth() {
         "must have at least 2 instances from DBUSER_XE1 + DBUSER_XE2"
     );
 
-    // DBUSER_XE1: sid=XE1, alias=oooo, inherits main connection and auth
+    // DBUSER_XE1: sid=XE1, alias=oooo, inherits main connection; its "/" username
+    // migrates to external/wallet auth (empty username), not the main credentials.
     #[cfg(not(windows))]
     let xe1_inst = instances
         .iter()
@@ -628,10 +629,16 @@ fn test_migrate_reference_config_connection_and_auth() {
         conn.hostname().to_string(),
         "XE1 connection must inherit main hostname"
     );
+    // "/" username → wallet auth: empty username, not the inherited main user.
     assert_eq!(
         xe1_inst.auth().username(),
-        auth.username(),
-        "XE1 auth must inherit main username"
+        "",
+        "XE1 '/' username must migrate to empty"
+    );
+    assert_eq!(
+        xe1_inst.auth().auth_type().to_string(),
+        "wallet",
+        "XE1 '/' username must migrate to wallet auth"
     );
 
     // No MAX_TASKS in output-multiple.cfg → threads defaults to 1

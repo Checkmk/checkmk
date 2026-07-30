@@ -72,6 +72,9 @@ class LiveStatusHostRepository:
                 Hosts.num_services_pending,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
+                Hosts.last_check,
+                Hosts.last_state_change,
+                Hosts.filename,
             ],
             _build_query_filter(query_),
             extra_headers=extra_headers,
@@ -96,6 +99,11 @@ class LiveStatusHostRepository:
                         ),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
+                        last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
+                        last_state_change=dt.datetime.fromtimestamp(
+                            row["last_state_change"], tz=dt.UTC
+                        ),
+                        folder=_wato_folder_from_filename(row["filename"]),
                     )
                     for row in q.iterate(conn)
                 ],

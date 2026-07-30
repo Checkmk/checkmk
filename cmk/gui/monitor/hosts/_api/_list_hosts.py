@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime as dt
 from collections.abc import Sequence, Set
 from typing import Annotated, Self
 
@@ -105,6 +106,24 @@ class HostEntry:
         example=2,
         default_factory=ApiOmitted,
     )
+    folder: str | ApiOmitted = api_field(
+        description=(
+            "The Setup folder path the host is configured in. Null when the host isn't managed "
+            "via Setup, e.g. it was added directly to the monitoring core."
+        ),
+        example="/network/switches",
+        default_factory=ApiOmitted,
+    )
+    last_check: dt.datetime | ApiOmitted = api_field(
+        description="Timestamp of the host's last check",
+        example="2026-07-13T11:38:30Z",
+        default_factory=ApiOmitted,
+    )
+    last_state_change: dt.datetime | ApiOmitted = api_field(
+        description="Timestamp of the host's last state change",
+        example="2026-07-13T11:39:00Z",
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -143,6 +162,11 @@ class HostEntry:
             else ApiOmitted(),
             num_services_pending=host.service_counts.pending
             if HostOptionalField.NUM_SERVICES_PENDING in fields
+            else ApiOmitted(),
+            folder=host.folder if HostOptionalField.FOLDER in fields else ApiOmitted(),
+            last_check=host.last_check if HostOptionalField.LAST_CHECK in fields else ApiOmitted(),
+            last_state_change=host.last_state_change
+            if HostOptionalField.LAST_STATE_CHANGE in fields
             else ApiOmitted(),
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),

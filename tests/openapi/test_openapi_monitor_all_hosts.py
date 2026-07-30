@@ -370,7 +370,7 @@ class TestMonitorHostsFields:
         assert _NON_DEFAULT_FIELD not in host
         assert _NON_DEFAULT_FIELD not in resp.json["meta"]["fields"]
 
-    def test_non_default_fields_specified(
+    def test_non_default_field_specified(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
@@ -393,6 +393,36 @@ class TestMonitorHostsFields:
 
         assert _NON_DEFAULT_FIELD in host
         assert _NON_DEFAULT_FIELD in resp.json["meta"]["fields"]
+
+    def test_all_optional_fields_specified(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+
+        optional_fields = [
+            "alias",
+            "folder",
+            "last_check",
+            "last_state_change",
+        ]
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=optional_fields)
+
+        host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
+
+        assert all(field in host for field in optional_fields)
 
 
 class TestMonitorHostOverviewAuth:
@@ -704,6 +734,9 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "last_check": 1700000000,
+        "last_state_change": 1700000060,
+        "filename": "/wato/hosts.mk",
     },
     {
         "name": "gestern",
@@ -718,6 +751,9 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "last_check": 1700000100,
+        "last_state_change": 1700000160,
+        "filename": "/wato/network/hosts.mk",
     },
     {
         "name": "morgen",
@@ -732,7 +768,11 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "last_check": 1700000200,
+        "last_state_change": 1700000260,
+        # Not managed via Setup, e.g. added directly to the monitoring core.
+        "filename": "/omd/sites/heute/etc/nagios/conf.d/hosts.mk",
     },
 ]
-_HOST_TABLE_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth"
+_HOST_TABLE_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change filename"
 _HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change contact_groups tags labels label_sources custom_variables filename"

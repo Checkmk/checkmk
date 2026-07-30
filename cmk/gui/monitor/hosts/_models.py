@@ -47,6 +47,9 @@ class Host:
     service_counts: ServiceCounts
     acknowledged: bool
     in_downtime: bool
+    folder: str
+    last_check: dt.datetime
+    last_state_change: dt.datetime
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -69,10 +72,7 @@ class HostLabelValue:
 
 @dataclasses.dataclass(frozen=True)
 class HostOverview(Host):
-    last_check: dt.datetime
-    last_state_change: dt.datetime
     customer: str | None
-    folder: str
     contact_groups: list[str] = dataclasses.field(default_factory=list)
     tags: dict[str, str] = dataclasses.field(default_factory=dict)
     labels: dict[str, HostLabelValue] = dataclasses.field(default_factory=dict)
@@ -87,6 +87,9 @@ class HostOptionalField(enum.StrEnum):
     NUM_SERVICES_CRIT = "num_services_crit"
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
+    FOLDER = "folder"
+    LAST_CHECK = "last_check"
+    LAST_STATE_CHANGE = "last_state_change"
 
     @classmethod
     def options(cls) -> str:

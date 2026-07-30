@@ -1,0 +1,25 @@
+# Build dependencies of the C++ Windows agent (agents/wnx).
+
+# Vendored dependencies of the C++ Windows agent; the same
+# tarballs the vcxproj build unpacks into agents/wnx/extlibs.
+vendored_archive = use_repo_rule("//bazel/rules:vendored_archive.bzl", "vendored_archive")
+
+vendored_archive(
+    name = "wnx_simpleini",
+    src = "//third_party:simpleini/simpleini-2af65fc.tar.gz",
+    build_file = "//third_party:simpleini/BUILD.simpleini.bazel",
+)
+
+vendored_archive(
+    name = "wnx_fmt",
+    src = "//third_party:fmt/fmt-11.1.4.tar.gz",
+    build_file = "//third_party:fmt/BUILD.fmt.bazel",
+    strip_prefix = "fmt-11.1.4",
+)
+
+vendored_archive(
+    name = "wnx_yaml_cpp",
+    src = "//third_party:yaml-cpp/yaml-cpp-0.8.0.tar.gz",
+    build_file = "//third_party:yaml-cpp/BUILD.yaml-cpp.bazel",
+    strip_prefix = "yaml-cpp-0.8.0",
+)

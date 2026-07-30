@@ -106,8 +106,7 @@ pub fn is_tree_only_root_modifiable(path: &Path) -> bool {
 /// running as root, the path itself and, if it is a directory, its whole
 /// subtree must be only-root-modifiable so that no unprivileged user could
 /// have tampered with the client library we are about to load.
-///  Linux doesn't support the concept of "safe entries" like Windows does and check cant be ignored
-pub fn validate(path: &Path, _check: bool, _safe_entries: &[String]) -> bool {
+pub fn validate(path: &Path) -> bool {
     if !is_running_as_root() {
         log::info!(
             "Not running as root; skipping permission validation for {:?}",

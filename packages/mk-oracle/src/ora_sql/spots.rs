@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::options::Options;
 use crate::config::ora_sql::CustomInstance;
 use crate::ora_sql::backend::{ClosedSpot, OpenedSpot};
 use crate::ora_sql::pdbs::{resolve_pdb_patterns, Pdbs};
@@ -57,7 +56,6 @@ pub fn make_spot_work_results(
     custom_instances: &[CustomInstance],
     global_cache_age: u32,
     params: &[SqlBindParam],
-    options: &Options,
 ) -> (Vec<OpenedSpotWorks>, Vec<SpotErrors>) {
     let work_results = spots
         .into_iter()
@@ -75,7 +73,6 @@ pub fn make_spot_work_results(
                         &opened,
                         custom_instances,
                         global_cache_age,
-                        options,
                     );
                     _make_work_result_ok(opened, instances, &merged_sections, params, &pdbs)
                 }
@@ -105,7 +102,6 @@ fn merge_per_instance_sections(
     spot: &OpenedSpot,
     custom_instances: &[CustomInstance],
     global_cache_age: u32,
-    options: &Options,
 ) -> Vec<Section> {
     let spot_target_id = spot.target().target_id();
     let per_instance_runtime: Vec<Section> = custom_instances
@@ -115,7 +111,7 @@ fn merge_per_instance_sections(
             custom_instance
                 .custom_metrics()
                 .iter()
-                .map(|cs| Section::new(cs, global_cache_age, options))
+                .map(|cs| Section::new(cs, global_cache_age))
                 .collect()
         })
         .unwrap_or_default();
@@ -260,7 +256,7 @@ oracle:
             .sections()
             .iter()
             .filter(|s| s.is_custom_metric())
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, 0))
             .collect()
     }
 
@@ -283,7 +279,7 @@ oracle:
         // A spot whose target_id mirrors the configured ORCL2 instance.
         let spot = open_spot(MiniOra::single("ORCL2"), Some(&instances[0]));
 
-        let merged = merge_per_instance_sections(&global, &spot, &instances, 0, config.options());
+        let merged = merge_per_instance_sections(&global, &spot, &instances, 0);
 
         // global_only (kept) + shared (folded, not duplicated) + instance_only (added)
         assert_eq!(
@@ -309,7 +305,7 @@ oracle:
         // No custom instance is passed, so nothing matches the spot's target.
         let spot = open_spot(MiniOra::single("ORCLX"), None);
 
-        let merged = merge_per_instance_sections(&global, &spot, &[], 0, config.options());
+        let merged = merge_per_instance_sections(&global, &spot, &[], 0);
 
         assert_eq!(item_names(&merged), item_names(&global));
     }

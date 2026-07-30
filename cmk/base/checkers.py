@@ -424,7 +424,7 @@ class CMKFetcher(FetcherFunction):
                 (
                     host_name,
                     self.default_address_family(host_name),
-                    (ip_stack_config := self.config_cache.ip_stack_config(host_name)),
+                    (ip_stack_config := self.get_ip_stack_config(host_name)),
                     ip_address
                     or (
                         None

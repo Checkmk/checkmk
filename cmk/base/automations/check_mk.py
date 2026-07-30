@@ -112,6 +112,7 @@ from cmk.base.checkers import (
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
     PassiveServiceNameConfig,
@@ -334,6 +335,14 @@ def _automation_service_discovery(
     hosts_config = env.hosts_config
     label_manager = env.label_manager
     ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.HANDLE)
+    set_global_logwatch_config(
+        env.loaded_config,
+        env.ruleset_matcher,
+        label_manager,
+        omd_root=cmk.utils.paths.omd_root,
+        var_dir=cmk.utils.paths.var_dir,
+        debug=cmk.ccc.debug.enabled(),
+    )
 
     results: dict[HostName, DiscoveryReport] = {}
     parser = CMKParser(
@@ -842,6 +851,14 @@ def _execute_discovery(
     secrets_config: SecretsConfig,
     for_relay: bool,
 ) -> CheckPreview:
+    set_global_logwatch_config(
+        loaded_config,
+        ruleset_matcher,
+        label_manager,
+        omd_root=cmk.utils.paths.omd_root,
+        var_dir=cmk.utils.paths.var_dir,
+        debug=cmk.ccc.debug.enabled(),
+    )
     hosts_config = config.make_hosts_config(loaded_config)
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
@@ -1063,6 +1080,14 @@ def _execute_autodiscovery(
         return {}, False
 
     env = AutomationEnvironment.create(app, ab_plugins, loading_result)
+    set_global_logwatch_config(
+        env.loaded_config,
+        env.ruleset_matcher,
+        env.label_manager,
+        omd_root=cmk.utils.paths.omd_root,
+        var_dir=cmk.utils.paths.var_dir,
+        debug=cmk.ccc.debug.enabled(),
+    )
 
     # error handling: we're redirecting stdout to /dev/null anyway,
     # and not using the collected errors. However, the config creation

@@ -52,7 +52,6 @@ from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
 from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicelevel import make_service_level_config
@@ -642,15 +641,6 @@ def perform_post_config_loading_actions(
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
-    )
-
-    set_global_logwatch_config(
-        loaded_config,
-        config_cache.ruleset_matcher,
-        config_cache.label_manager,
-        omd_root=cmk.utils.paths.omd_root,
-        var_dir=cmk.utils.paths.var_dir,
-        debug=cmk.ccc.debug.enabled(),
     )
 
     return LoadingResult(

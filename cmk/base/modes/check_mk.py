@@ -48,6 +48,7 @@ from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.servicelevel import make_service_level_config
 from cmk.base.configlib.servicename import (
     make_final_service_name_config,
@@ -2148,6 +2149,14 @@ def _mode_check_discovery(
     label_manager = config_cache.label_manager
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
+    set_global_logwatch_config(
+        loaded_config,
+        ruleset_matcher,
+        label_manager,
+        omd_root=cmk.utils.paths.omd_root,
+        var_dir=cmk.utils.paths.var_dir,
+        debug=cmk.ccc.debug.enabled(),
+    )
 
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     service_name_config = config_cache.make_passive_service_name_config(
@@ -2505,6 +2514,14 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
+    set_global_logwatch_config(
+        loaded_config,
+        ruleset_matcher,
+        label_manager,
+        omd_root=cmk.utils.paths.omd_root,
+        var_dir=cmk.utils.paths.var_dir,
+        debug=cmk.ccc.debug.enabled(),
+    )
 
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
@@ -2807,6 +2824,15 @@ def run_checking(
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
+
+    set_global_logwatch_config(
+        loaded_config,
+        ruleset_matcher,
+        label_manager,
+        omd_root=cmk.utils.paths.omd_root,
+        var_dir=cmk.utils.paths.var_dir,
+        debug=cmk.ccc.debug.enabled(),
+    )
 
     # handle adhoc-check
     hostname = HostName(args[0])

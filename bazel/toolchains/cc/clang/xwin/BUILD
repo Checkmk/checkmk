@@ -36,12 +36,14 @@ cc_toolchain(
     enabled_features = [
         ":replace_legacy_action_configs",
         ":parse_showincludes",
+        ":default_cpp_std",
         "//bazel/toolchains/cc/clang/args/msvc:features",
     ],
     known_features = [
         ":replace_legacy_action_configs",
         ":parse_showincludes",
         ":strip_all_symbols",
+        ":default_cpp_std",
         "//bazel/toolchains/cc/clang/args/msvc:features",
         "//bazel/toolchains/cc/clang/xwin/args/mode:features",
     ],
@@ -72,6 +74,19 @@ cc_args(
     name = "showincludes_args",
     actions = ["@rules_cc//cc/toolchains/actions:source_compile_actions"],
     args = ["/showIncludes"],
+    requires_not_none = "@rules_cc//cc/toolchains/variables:source_file",
+)
+
+cc_feature(
+    name = "default_cpp_std",
+    args = [":default_cpp_std_args"],
+    feature_name = "default_cpp_std",
+)
+
+cc_args(
+    name = "default_cpp_std_args",
+    actions = ["@rules_cc//cc/toolchains/actions:cpp_compile_actions"],
+    args = ["/std:c++latest"],
     requires_not_none = "@rules_cc//cc/toolchains/variables:source_file",
 )
 

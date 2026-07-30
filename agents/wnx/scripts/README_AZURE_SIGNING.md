@@ -28,9 +28,24 @@ AZURE_ARTIFACT_SIGNING_PROFILE        Certificate profile name created in the si
 AZURE_ARTIFACT_SIGNING_TENANT_ID      Azure AD tenant ID
 AZURE_ARTIFACT_SIGNING_CLIENT_ID      client ID of the registered app
 AZURE_ARTIFACT_SIGNING_CLIENT_SECRET  Service principal client secret (sensitive, the one above created)
+AZURE_ARTIFACT_SIGNING_CORRELATION_ID An opaque tracking string, reported back in the signing diagnostics
 ```
 
 See `sign_code_azure.ps1` regarding the script to perform the signing.
+
+## CorrelationId
+
+Every signing request must carry a `CorrelationId` which Azure reports back in the signing
+diagnostics (see below). The suffix is a
+shared secret stored in Jenkins' credential store as `azure_artifact_signing_correlation_suffix`.
+
+The credential has to stay bound (`withCredentials`) for the whole signing step, not just while
+the ID is assembled: the Azure client prints its metadata - `CorrelationId` included - to the
+build log, and Jenkins only masks a secret while its binding block is open. Assembling the ID in
+a short-lived binding leaks the suffix into the console in plaintext.
+
+Rotating the suffix is a two-step change: update the credential, then update the expected
+suffix in the monitoring rule (see below).
 
 ## View certs
 
@@ -45,6 +60,15 @@ This can be done in azure under "Microsoft Entra ID->Manage->App Registration->c
 
 When the new secret is created, test it first in the CI by using an intermediate new entry in the credential store and triggering an altered job (see e.g. this [change](https://review.lan.tribe29.com/c/check_mk/+/145660)).
 When the new secret works, change the actual secret in Jenkin's credential store and delete the previous token in azure.
+
+## Log and monitor signing transactions
+
+We are streaming the signing transaction to an `Event Hub`.
+(forwarding to `Log Analytics Workspace` is not yet fully implemented, see [link](http://github.com/Azure/artifact-signing-action/issues/57)
+
+1. Setup an event hub / namespace, [follow](https://dev.to/ikabbash/configuring-fluentd-to-collect-data-from-azure-event-hub-41g7#creating-event-hub)
+2. Goto "Artifact Signing Account -> checkmk -> Monitoring -> Diagnostic Setting" and add diagnostic setting
+3. Choose all logs and metrics and stream them to the above created event hub
 
 ## Resources
 

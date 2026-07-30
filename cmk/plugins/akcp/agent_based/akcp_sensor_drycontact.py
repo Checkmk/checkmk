@@ -135,14 +135,9 @@ def parse_akcp_sensor_drycontact(
     string_table: StringTable,
 ) -> Mapping[str, ProbeSwitchSensor | None]:
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: ProbeSwitchSensor(
-                status=SensorProbeSwitchStatus(status), online=online == "1"
-            )
-            for description, status, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: ProbeSwitchSensor(status=SensorProbeSwitchStatus(status), online=online == "1")
+        for description, status, online in rows
     }
 
 
@@ -150,14 +145,9 @@ def parse_akcp_sensor2plus_drycontact(
     string_table: StringTable,
 ) -> Mapping[str, DrycontactSensor | None]:
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: DrycontactSensor(
-                status=SensorDryContactStatus(status), online=online == "1"
-            )
-            for description, status, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: DrycontactSensor(status=SensorDryContactStatus(status), online=online == "1")
+        for description, status, online in rows
     }
 
 
@@ -231,17 +221,14 @@ ExpDrycontactSection = Mapping[str, ExpDrycontactSensor | None]
 def parse_akcp_exp_drycontact(string_table: StringTable) -> ExpDrycontactSection:
     # Unlike the other drycontact tables, this one has the online field last.
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 4))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: ExpDrycontactSensor(
-                status=SensorDryContactStatus(status),
-                online=online == "1",
-                normal_description=normal_description,
-                critical_description=critical_description,
-            )
-            for description, status, critical_description, normal_description, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: ExpDrycontactSensor(
+            status=SensorDryContactStatus(status),
+            online=online == "1",
+            normal_description=normal_description,
+            critical_description=critical_description,
+        )
+        for description, status, critical_description, normal_description, online in rows
     }
 
 

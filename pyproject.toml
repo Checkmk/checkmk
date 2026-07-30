@@ -222,8 +222,6 @@ ignore = [
 "cmk/plugins/**" = ["SIM102"]
 # packages/cmk-plugins
 "packages/cmk-plugins/**" = ["SIM102"]
-# non-free
-"non-free/**" = ["SIM102"]
 # packages misc
 "packages/cmk-agent-receiver/**" = ["SIM102"]
 "packages/cmk-backup/**" = ["SIM102"]

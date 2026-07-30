@@ -56,6 +56,8 @@ edition_deps = {
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
             "//non-free/packages/cmk-metric-backend:cmk-metric-backend-schema-manager_pkg_tar",
             "//non-free/packages/cmk-metric-backend:pkg_tar",
+            "//non-free/packages/cmk-mcp:omd_skel_tar",
+            "//non-free/packages/cmk-mcp:pkg_tar",
             "//non-free/packages/cmk-mknotifyd:pkg_tar",
             "//non-free/packages/cmk-otel-collector:pkg_tar",
             "//non-free/packages/cmk-update-agent:pkg_tar",
@@ -86,6 +88,8 @@ edition_deps = {
             "//cmk:cmk_tar_community",
             "//non-free/packages/cmc-protocols:pkg_tar",
             "//non-free/packages/cmk-core-helpers:pkg_tar",
+            "//non-free/packages/cmk-mcp:omd_skel_tar",
+            "//non-free/packages/cmk-mcp:pkg_tar",
             "//non-free/packages/cmk-mknotifyd:pkg_tar",
             "//non-free/packages/cmk-update-agent:pkg_tar",
             "//omd/non-free/packages/alert-handling:pkg_tar",
@@ -113,6 +117,8 @@ edition_deps = {
             "//non-free/packages/cmk-metric-backend:cmk-metric-backend-schema-manager_pkg_tar",
             "//non-free/packages/cmk-metric-backend:cmk-monitor-metric-backend_pkg_tar",
             "//non-free/packages/cmk-metric-backend:pkg_tar",
+            "//non-free/packages/cmk-mcp:omd_skel_tar",
+            "//non-free/packages/cmk-mcp:pkg_tar",
             "//non-free/packages/cmk-mknotifyd:pkg_tar",
             "//non-free/packages/cmk-otel-collector:pkg_tar",
             "//non-free/packages/cmk-update-agent:pkg_tar",
@@ -145,6 +151,8 @@ edition_deps = {
             "//non-free/packages/cmk-metric-backend:cmk-metric-backend-schema-manager_pkg_tar",
             "//non-free/packages/cmk-metric-backend:cmk-monitor-metric-backend_pkg_tar",
             "//non-free/packages/cmk-metric-backend:pkg_tar",
+            "//non-free/packages/cmk-mcp:omd_skel_tar",
+            "//non-free/packages/cmk-mcp:pkg_tar",
             "//non-free/packages/cmk-mknotifyd:pkg_tar",
             "//non-free/packages/cmk-otel-collector:pkg_tar",
             "//non-free/packages/cmk-relay-engine:pkg_tar",
@@ -171,6 +179,7 @@ edition_deps = {
 edition_skel_permissions = {
     "cloud": select({
         "@//:gpl+nonfree_repo": [
+            "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//omd/non-free/packages/cmc:skel.permissions",
             "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -213,6 +222,7 @@ edition_skel_permissions = {
     "pro": select({
         "@//:gpl+nonfree_repo": [
             "//omd/packages/apache-omd:skel.permissions",
+            "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//omd/non-free/packages/cmc:skel.permissions",
             "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -237,6 +247,7 @@ edition_skel_permissions = {
     "ultimate": select({
         "@//:gpl+nonfree_repo": [
             "//omd/packages/apache-omd:skel.permissions",
+            "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//non-free/packages/otel-collector:skel.permissions",
             "//omd/non-free/packages/cmc:skel.permissions",
@@ -265,6 +276,7 @@ edition_skel_permissions = {
     "ultimatemt": select({
         "@//:gpl+nonfree_repo": [
             "//omd/packages/apache-omd:skel.permissions",
+            "//non-free/packages/cmk-mcp:skel.permissions",
             "//non-free/packages/cmk-mknotifyd:skel.permissions",
             "//non-free/packages/otel-collector:skel.permissions",
             "//omd/non-free/packages/cmc:skel.permissions",

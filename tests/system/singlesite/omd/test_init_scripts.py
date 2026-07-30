@@ -31,6 +31,7 @@ def test_init_scripts(site: Site) -> None:
             "cmc",
             "dcd",
             "liveproxyd",
+            "mcp-server",
             "mknotifyd",
         }
     if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():

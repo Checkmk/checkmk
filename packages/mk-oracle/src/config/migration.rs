@@ -141,7 +141,7 @@ fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
         log::warn!("{name}: expected REMOTE_INSTANCE_* prefix");
         return None;
     }
-    let fields: Vec<&str> = value.splitn(8, ':').collect();
+    let fields: Vec<&str> = value.splitn(9, ':').collect();
     if fields.len() < 5 {
         log::warn!("{name}: need at least user:pass:role:host:port, got: {value}");
         return None;
@@ -160,13 +160,13 @@ fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
         }
     };
     Some(LegacyDbUser {
-        sid: Some(sid.clone()),
+        sid: Some(sid.to_uppercase()),
         username: username.to_string(),
         password: field(1).to_string(),
         role: optional_value(field(2)),
         hostname: field(3).to_string(),
         port: optional_value(field(4)),
-        tns_alias: Some(sid),
+        tns_alias: optional_value(field(8)),
         piggyback_host: optional_value(field(5)),
     })
 }
@@ -1052,6 +1052,36 @@ mod tests {
         }
     }
 
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_remote_instance_emits_field9_tnsalias() {
+        // A 9-field REMOTE_INSTANCE must emit the explicit TNS alias (field 9),
+        // kept distinct from the SID (field 7) rather than defaulted to it.
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            (
+                "REMOTE_INSTANCE_1".into(),
+                "user:pass::remotehost:1521:piggyhost:PRODSID:11.2:prod_alias".into(),
+            ),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("- sid: PRODSID\n"),
+            "SID from field 7 must be emitted, got: {result}"
+        );
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let inst = &config
+            .ora_sql()
+            .expect("ora_sql must be present")
+            .instances()[0];
+        assert_eq!(
+            inst.alias().as_ref().map(|a| a.to_string()),
+            Some("prod_alias".to_string()),
+            "explicit field-9 TNS alias must reach the instance, distinct from the SID"
+        );
+    }
+
     #[test]
     fn test_parse_custom_sqls_per_section_vars() {
         let vars = HashMap::from([
@@ -1799,7 +1829,25 @@ sec3 () {
         assert_eq!(ri.hostname, "myRemoteHost");
         assert_eq!(ri.port.as_deref(), Some("1521"));
         assert_eq!(ri.piggyback_host.as_deref(), Some("myOracleHost"));
-        assert_eq!(ri.tns_alias, Some("MYINST3".to_string()));
+        // 8-field value has no TNS alias (field 9); it is not defaulted to the SID
+        assert_eq!(ri.tns_alias, None);
+    }
+
+    #[test]
+    fn test_parse_remote_instance_full_2() {
+        let ri = parse_remote_instance(
+            "REMOTE_INSTANCE_piggy-hostname",
+            "u:p::hostname:1521:piggy-hostname:OACL-hostname:9.2:tns-hostname",
+        )
+        .expect("valid remote instance must return Some");
+        assert_eq!(ri.sid.as_deref(), Some("OACL-HOSTNAME"));
+        assert_eq!(ri.username, "u");
+        assert_eq!(ri.password, "p");
+        assert!(ri.role.is_none());
+        assert_eq!(ri.hostname, "hostname");
+        assert_eq!(ri.port.as_deref(), Some("1521"));
+        assert_eq!(ri.piggyback_host.as_deref(), Some("piggy-hostname"));
+        assert_eq!(ri.tns_alias, Some("tns-hostname".to_string()));
     }
 
     #[test]

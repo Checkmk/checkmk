@@ -38,8 +38,8 @@ class WarnAboutLegacyOracleRules(UpdateAction):
                 f"Found {len(rules)} rule(s) in the legacy Oracle agent configuration "
                 f"({_AGENT_CONFIG_LEGACY_ORACLE}). This plug-in has been superseded by the unified "
                 f"Oracle plug-in. Migrating them would produce {total_warnings} warning(s) to "
-                "review. Run 'cmk-migrate-oracle-rulesets' to migrate them (no flags for a "
-                "dry-run preview, --apply to actually create the migrated rules)."
+                "review. Run 'cmk-migrate-oracle-rulesets' to migrate them (--dry-run for a "
+                "preview, --apply to actually create the migrated rules)."
             )
         )
 

@@ -240,22 +240,27 @@ def test_login_without_tnsalias_has_no_instance() -> None:
     assert dumped["instances"] == []
 
 
-def test_login_with_tnsalias_adds_an_instance() -> None:
+def test_login_with_tnsalias_creates_no_instance() -> None:
     new_rule = convert({"login": {"auth": "wallet", "tnsalias": "myalias"}})
     dumped = dump(new_rule.rule)
 
     assert dumped["main"] == {"auth": {"auth_type": ("wallet", None)}, "connection": {}}
 
-    assert dumped["instances"] == [
-        {
-            "auth": {"auth_type": ("wallet", None)},
-            "connection": {},
-            "oracle_id": ("alias", {"alias": "myalias"}),
-        }
+    assert dumped["instances"] == []
+
+
+def test_login_with_tnsalias_warns_that_it_could_not_be_migrated() -> None:
+    new_rule = convert({"login": {"auth": "wallet", "tnsalias": "myalias"}})
+
+    assert new_rule.warnings == [
+        "The TNS alias 'myalias' of the default login could not be migrated, because the "
+        "unified plugin accepts a TNS alias for a single database only, not as a default for "
+        "all of them. Monitored instances are now reached via the configured host and port. "
+        "If the alias points somewhere else, add it as an entry under 'Databases to monitor'."
     ]
 
 
-def test_login_tnsalias_extra_instance_has_correct_connection() -> None:
+def test_login_tnsalias_does_not_affect_main_auth_and_connection() -> None:
     new_rule = convert(
         {"login": {"auth": "wallet", "host": "mydata.db", "port": 3635, "tnsalias": "myalias"}}
     )
@@ -266,13 +271,7 @@ def test_login_tnsalias_extra_instance_has_correct_connection() -> None:
         "connection": {"host": "mydata.db", "port": 3635},
     }
 
-    assert dumped["instances"] == [
-        {
-            "auth": {"auth_type": ("wallet", None)},
-            "connection": {"host": "mydata.db", "port": 3635},
-            "oracle_id": ("alias", {"alias": "myalias"}),
-        }
-    ]
+    assert dumped["instances"] == []
 
 
 def test_no_instance_created_when_no_login_exceptions() -> None:

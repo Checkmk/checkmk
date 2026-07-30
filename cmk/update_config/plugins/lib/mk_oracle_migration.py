@@ -92,8 +92,7 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     discovery = _convert_discovery(legacy.get("sids"))
 
-    auth, connection, login_instances = _convert_login(legacy, warnings)
-    instances.extend(login_instances)
+    auth, connection = _convert_login(legacy, warnings)
 
     login_exceptions = dict(legacy.get("login_exceptions", []))
     instances.extend(
@@ -183,14 +182,11 @@ def _convert_discovery(sids: tuple[str, Sequence[str]] | None) -> GuiDiscoveryCo
 
 def _convert_login(
     legacy: Mapping[str, Any], warnings: list[str]
-) -> tuple[
-    GuiAuthConf[RawSecret] | None, GuiConnectionConf | None, list[GuiInstanceConf[RawSecret]]
-]:
-    """Convert the legacy 'login' block into the unified main auth/connection,
-    plus an extra instance if a tnsalias is configured."""
+) -> tuple[GuiAuthConf[RawSecret] | None, GuiConnectionConf | None]:
+    """Convert the legacy 'login' block into the unified main auth/connection."""
     login = legacy.get("login")
     if not isinstance(login, Mapping):
-        return None, None, []
+        return None, None
 
     auth = _convert_auth(login, auth_required=True, warnings=warnings)
     assert auth is not None  # auth_required=True always yields a real GuiAuthConf
@@ -198,17 +194,16 @@ def _convert_login(
     if admin := legacy.get("tns_admin"):
         connection.tns_admin = admin
 
-    instances = []
     if tns_alias := login.get("tnsalias"):
-        instances.append(
-            GuiInstanceConf[RawSecret](
-                auth=auth.model_copy(),
-                connection=connection.model_copy(),
-                oracle_id=("alias", GuiOracleIdentificationConf(alias=tns_alias)),
-            )
+        warnings.append(
+            f"The TNS alias '{tns_alias}' of the default login could not be migrated, because "
+            "the unified plugin accepts a TNS alias for a single database only, not as a "
+            "default for all of them. Monitored instances are now reached via the configured "
+            "host and port. If the alias points somewhere else, add it as an entry under "
+            "'Databases to monitor'."
         )
 
-    return auth, connection, instances
+    return auth, connection
 
 
 def _convert_remote_instances(

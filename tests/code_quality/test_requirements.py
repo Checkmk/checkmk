@@ -475,11 +475,6 @@ def test_dependencies_are_used() -> None:
 
     if not is_pro_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))
-    else:
-        # mcp and httpx2 land ahead of the cmk-mcp package that imports them;
-        # both drop off this list when that package (and its scanned imports)
-        # arrive in the next change.
-        known_unused_packages.update(("mcp", "httpx2"))
 
     unused_dependencies = set(get_unused_dependencies())
 

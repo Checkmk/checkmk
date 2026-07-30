@@ -6,7 +6,7 @@
 import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { FlowEntry } from './api/flows'
+import type { FlowEntry, FlowSortColumn } from './api/flows'
 
 /**
  * The columns frozen to the left edge of the table once it has to scroll
@@ -20,9 +20,12 @@ export function buildFlowColumnPinning(): ColumnPinningState {
 /**
  * The columns of the flow listing.
  *
- * `enableSorting: false` throughout for now - the endpoint serves one fixed
- * order, and sorting arrives with the request field for it. Columns carrying
- * `hidden` are off until a user picks them in the column picker.
+ * The sortable ones are exactly the endpoint's sort columns. Protocol,
+ * application, direction and the last-seen/out-interface columns are not
+ * sortable: their values are either resolved to names in Python - so the
+ * database could only order them by numeric id, which reads as an arbitrary
+ * order - or not a stored sort key at all. Columns carrying `hidden` are off
+ * until a user picks them in the column picker.
  */
 export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
   const { _t } = usei18n()
@@ -31,7 +34,9 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
     {
       accessorKey: 'first_seen',
       header: _t('First seen'),
-      enableSorting: false,
+      // Newest first is both the useful default and the order the table is
+      // stored in, so it is also the cheapest.
+      sortDescFirst: true,
       enableHiding: false,
       minSize: 95,
       maxSize: 120
@@ -39,7 +44,6 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
     {
       accessorKey: 'source_ip',
       header: _t('Source'),
-      enableSorting: false,
       enableHiding: false,
       minSize: 180,
       meta: { headerTitle: _t('Source address, port and autonomous system') }
@@ -47,7 +51,6 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
     {
       accessorKey: 'destination_ip',
       header: _t('Destination'),
-      enableSorting: false,
       enableHiding: false,
       minSize: 180,
       meta: { headerTitle: _t('Destination address, port and autonomous system') }
@@ -69,7 +72,7 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
     {
       accessorKey: 'total_bytes',
       header: _t('Bytes'),
-      enableSorting: false,
+      sortDescFirst: true,
       minSize: 80,
       maxSize: 110,
       meta: { justify: 'right' }
@@ -77,7 +80,7 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
     {
       accessorKey: 'packets',
       header: _t('Packets'),
-      enableSorting: false,
+      sortDescFirst: true,
       minSize: 80,
       maxSize: 110,
       meta: { justify: 'right' }
@@ -98,7 +101,6 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
     {
       accessorKey: 'input_interface',
       header: _t('Interface'),
-      enableSorting: false,
       minSize: 90,
       maxSize: 130,
       meta: {
@@ -128,4 +130,18 @@ export function buildFlowColumns(): ColumnDef<FlowEntry>[] {
       meta: { hidden: true }
     }
   ]
+}
+
+/**
+ * Column id -> the endpoint's sort column. Only the sortable columns appear; the
+ * table's own ids differ from the API's where the column renders more than the
+ * one field it is keyed by.
+ */
+export const SORT_COLUMNS: Readonly<Record<string, FlowSortColumn>> = {
+  first_seen: 'time',
+  source_ip: 'source_ip',
+  destination_ip: 'destination_ip',
+  total_bytes: 'bytes',
+  packets: 'packets',
+  input_interface: 'input_interface'
 }

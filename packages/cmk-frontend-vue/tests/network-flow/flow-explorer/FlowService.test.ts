@@ -75,3 +75,46 @@ test('maps the response meta onto the shared paging state', async () => {
 
   service.stopPolling()
 })
+
+test('sends no sort token for the endpoint default order', async () => {
+  const { listFlows, service } = makeService()
+
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(listFlows).toHaveBeenCalledWith(
+    { limit: 100, offset: 0, sort: undefined },
+    expect.anything()
+  )
+
+  service.stopPolling()
+})
+
+test('translates the table sort state into the endpoint token', async () => {
+  const { listFlows, service } = makeService()
+  await vi.advanceTimersByTimeAsync(0)
+
+  service.updateSort([{ id: 'total_bytes', desc: true }])
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(listFlows).toHaveBeenLastCalledWith(
+    { limit: 100, offset: 0, sort: 'bytes:desc' },
+    expect.anything()
+  )
+
+  service.stopPolling()
+})
+
+test('ignores a sort on a column the endpoint cannot order by', async () => {
+  const { listFlows, service } = makeService()
+  await vi.advanceTimersByTimeAsync(0)
+
+  service.updateSort([{ id: 'application', desc: false }])
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(listFlows).toHaveBeenLastCalledWith(
+    { limit: 100, offset: 0, sort: undefined },
+    expect.anything()
+  )
+
+  service.stopPolling()
+})

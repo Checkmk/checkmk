@@ -12,7 +12,8 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import type { FlowApi, FlowEntry } from '../api/flows'
+import type { FlowApi, FlowEntry, FlowSortToken } from '../api/flows'
+import { SORT_COLUMNS } from '../columns'
 
 function isNumber(value: number | null): value is number {
   return value !== null
@@ -42,9 +43,23 @@ export class FlowService extends MonitoringService<FlowEntry> {
     return tiers.length > 0 ? Math.min(...tiers) : DEFAULT_BATCH_SIZE
   }
 
+  /**
+   * The requested sort as the endpoint's 'column:direction' token, or undefined
+   * for its default order. Only the first sort entry is sent: ORDER BY cannot be
+   * parameterized, so the query layer serves one column at a time.
+   */
+  private get sortToken(): FlowSortToken | undefined {
+    const [first] = this.sortState.value
+    if (first === undefined) {
+      return undefined
+    }
+    const column = SORT_COLUMNS[first.id]
+    return column === undefined ? undefined : `${column}:${first.desc ? 'desc' : 'asc'}`
+  }
+
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<FlowEntry>> {
     const response = await this.api.listFlows(
-      { limit: this.pageLimit, offset: this.offset.value },
+      { limit: this.pageLimit, offset: this.offset.value, sort: this.sortToken },
       signal
     )
     return {

@@ -14,10 +14,24 @@ export type FlowsResponse = components['schemas']['FlowsResponse']
 /** Visual context: filter id -> (variable -> value), the shape the endpoint takes. */
 export type FlowContext = FlowsRequest['context']
 
+/** A sort as the endpoint spells it, e.g. 'time:desc'. */
+export type FlowSortToken = NonNullable<FlowsRequest['sort']>
+
+/**
+ * The column half of a sort token.
+ *
+ * Derived from the endpoint's own closed set rather than restated here, so
+ * renaming a sortable column on the Python side fails this build instead of
+ * silently degrading to "no sort".
+ */
+export type FlowSortColumn = FlowSortToken extends `${infer Column}:${string}` ? Column : never
+
 export interface FlowQueryParams {
   limit: number
   offset?: number
   context?: FlowContext
+  /** A single 'column:direction' token; omit for the endpoint's default order. */
+  sort?: FlowSortToken | undefined
 }
 
 export class FlowApi {
@@ -28,7 +42,8 @@ export class FlowApi {
         body: {
           context: params.context ?? {},
           limit: params.limit,
-          offset: params.offset ?? 0
+          offset: params.offset ?? 0,
+          ...(params.sort && { sort: params.sort })
         },
         ...(signal && { signal })
       })

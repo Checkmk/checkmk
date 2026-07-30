@@ -172,7 +172,7 @@ snmp_section_akcp_sensor_drycontact = SimpleSNMPSection(
         oids=[
             "1",  # hhmsSensorArraySwitchDescription
             "3",  # hhmsSensorArraySwitchStatus
-            "5",  # hhmsSensorArraySwitchGoOnline (1: online, 2: offline)
+            "4",  # hhmsSensorArraySwitchOnline (1: online, 2: offline)
         ],
     ),
 )

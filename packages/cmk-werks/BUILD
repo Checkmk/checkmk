@@ -36,6 +36,7 @@ py_library(
         "cmk/werks/tool/cli/id_pool.py",
         "cmk/werks/tool/cli/in_out_elements.py",
         "cmk/werks/tool/cli/stash.py",
+        "cmk/werks/tool/cli/status.py",
         "cmk/werks/tool/cli/werk.py",
         "cmk/werks/tool/collect.py",
         "cmk/werks/tool/config.py",
@@ -66,6 +67,7 @@ py_library(
         requirement("markdown"),
         requirement("pydantic"),
         requirement("requests"),
+        requirement("rich"),
     ],
 )
 
@@ -85,6 +87,7 @@ py_cmk_test(
         requirement("flask"),
         requirement("gitpython"),
         requirement("requests"),
+        requirement("rich"),
         requirement("vcrpy"),
         requirement("pytest-recording"),
     ],

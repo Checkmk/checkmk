@@ -26,14 +26,18 @@ def initialize_werks_project(
     commit: bool = True,
     repo_url: str = "some-url/check_mk",
     branch_name: str = "testmain",
+    werk_ids_server_url: str | None = None,
 ) -> Repo:
     path.mkdir()
     werks = path / ".werks"
     werks.mkdir()
     (werks / "first_free").write_text(f"{first_free}\n")
-    commit_option = ""
+    extra_options = []
     if commit is False:
-        commit_option = "create_commit = False"
+        extra_options.append("create_commit = False")
+    if werk_ids_server_url is not None:
+        extra_options.append(f'werk_ids_server_url = "{werk_ids_server_url}"')
+    extra_config = "\n".join(extra_options)
     (werks / "config").write_text(f"""
 editions = [("community", "COMMUNITY")]
 components = [("ccc", "CCC")]
@@ -57,7 +61,7 @@ project = "{project}"
 current_version = "0.1.0"
 branch = "{branch_name}"
 repo = "{repo_url}"
-{commit_option}
+{extra_config}
     """)
     Repo.init(path)
     repo = Repo(path)
@@ -137,6 +141,28 @@ def call(*args: str) -> None:
     # we can not call main directly, because the script was not created with that in mind
     # for example we have very sticky caches
     subprocess.check_call(["python", "-m", "cmk.werks.tool", *args])
+
+
+def call_output(*args: str, home: Path, cwd: Path) -> tuple[int, str]:
+    # HOME and the working directory are handed to the subprocess, so the test process
+    # neither has to be patched nor left in a different directory
+    completed = subprocess.run(
+        ["python", "-m", "cmk.werks.tool", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=cwd,
+        env=os.environ | {"HOME": str(home)},
+    )
+    return completed.returncode, completed.stdout
+
+
+def write_secret(home: Path, mode: int = 0o600) -> Path:
+    secret = home / ".config/cmk-werks/secret"
+    secret.parent.mkdir(parents=True, exist_ok=True)
+    secret.write_text("s3cret")
+    secret.chmod(mode)
+    return secret
 
 
 def create_werk(*, title: str, vcr_cassette_dir: str, vcr_config: dict[str, Any]) -> None:
@@ -230,3 +256,133 @@ def test_commit_config(tmp_path: Path, vcr_cassette_dir: str, vcr_config: dict[s
         assert latest_commit_subject(cmk_repo_path) == "initial commit"
         # just lets make sure that the werk was actually created:
         assert "some_cloud_title" in (cmk_repo_path / ".werks/11111.md").read_text()
+
+
+def test_status_reports_a_missing_secret(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(repo_path, project="cmk", first_free=11_111)
+
+    returncode, output = call_output("status", home=home, cwd=repo_path)
+
+    assert returncode == 1
+    assert "WERK IDS" in output
+    # without a secret there is nothing to authenticate with, so no request is made
+    assert "not checked, no secret" in output
+    assert "werk init" in output
+
+
+def test_status_reports_an_unreachable_server(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    # port 1 refuses immediately, so the probe neither hangs nor depends on the VPN
+    initialize_werks_project(
+        repo_path,
+        project="cmk",
+        first_free=11_111,
+        werk_ids_server_url="http://127.0.0.1:1",
+    )
+    write_secret(home)
+
+    returncode, output = call_output("status", home=home, cwd=repo_path)
+
+    assert returncode == 1
+    assert "unreachable" in output
+    assert "none reserved and the server is unavailable" in output
+
+
+def test_status_reports_both_stash_files_instead_of_bailing_out(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(
+        repo_path,
+        project="cmk",
+        first_free=11_111,
+        werk_ids_server_url="http://127.0.0.1:1",
+    )
+    write_secret(home)
+    (home / ".cmk-werk-ids").write_text(json.dumps({"ids_by_project": {"cmk": [11_111]}}))
+    stash_file = home / ".local/state/cmk-werks/reserved-ids"
+    stash_file.parent.mkdir(parents=True, exist_ok=True)
+    stash_file.write_text(json.dumps({"__version__": "3", "ids": [11_112]}))
+
+    # every other command bails out in this state; status still prints the whole picture
+    returncode, output = call_output("status", home=home, cwd=repo_path)
+
+    assert returncode == 1
+    assert "exists next to the current werk ID files" in output
+
+
+def test_status_exits_zero_when_there_is_nothing_to_report(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(
+        repo_path,
+        project="cmk",
+        first_free=11_111,
+        werk_ids_server_url="http://127.0.0.1:1",
+    )
+    write_secret(home)
+    stash_file = home / ".local/state/cmk-werks/reserved-ids"
+    stash_file.parent.mkdir(parents=True, exist_ok=True)
+    stash_file.write_text(json.dumps({"__version__": "3", "ids": [11_111]}))
+
+    # an unreachable server is no problem as long as there are reserved IDs left
+    returncode, output = call_output("status", home=home, cwd=repo_path)
+
+    assert returncode == 0
+    assert "✓ none found" in output
+
+
+def test_status_json_is_machine_readable(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(
+        repo_path,
+        project="cmk",
+        first_free=11_111,
+        werk_ids_server_url="http://127.0.0.1:1",
+    )
+    write_secret(home)
+    stash_file = home / ".local/state/cmk-werks/reserved-ids"
+    stash_file.parent.mkdir(parents=True, exist_ok=True)
+    stash_file.write_text(json.dumps({"__version__": "3", "ids": [11_111]}))
+
+    returncode, output = call_output("status", "--json", home=home, cwd=repo_path)
+
+    # stdout must be nothing but the document, so `werk status --json | jq` works
+    document = json.loads(output)
+    assert returncode == 0
+    assert document["schema_version"] == 1
+    assert document["server"]["status"] == "unreachable"
+    assert document["reserved_ids"]["count"] == 1
+    assert document["reserved_ids"]["next_id"] == 11_111
+    assert document["problems"] == []
+
+
+def test_status_json_reports_problems_and_exits_non_zero(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(
+        repo_path,
+        project="cmk",
+        first_free=11_111,
+        werk_ids_server_url="http://127.0.0.1:1",
+    )
+    write_secret(home, mode=0o644)
+
+    returncode, output = call_output("status", "--json", home=home, cwd=repo_path)
+
+    document = json.loads(output)
+    assert returncode == 1
+    items = [problem["item"] for problem in document["problems"]]
+    assert "secret" in items
+    # every problem points at a key of the document itself
+    for item in items:
+        assert item in document

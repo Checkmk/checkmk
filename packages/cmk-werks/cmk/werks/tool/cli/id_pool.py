@@ -10,6 +10,7 @@ import sys
 import traceback
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Final, Protocol
 
@@ -23,6 +24,11 @@ from .werk import WerkId
 # server is unreachable (e.g. outside the VPN, where DNS/connect behaviour differs)
 # instead of blocking.
 _TIMEOUT: Final = 5
+
+# `werk status` is run interactively to answer "can I create a werk right now?".
+# Being outside the VPN is a common answer, so it waits noticeably less than the
+# commands that actually need the server.
+_STATUS_TIMEOUT: Final = 2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -161,6 +167,13 @@ def _server_error_message(response: requests.Response) -> str:
     return response.text.strip()
 
 
+class ServerStatus(Enum):
+    OK = "ok"
+    UNAUTHORIZED = "unauthorized"
+    UNREACHABLE = "unreachable"
+    ERROR = "error"
+
+
 class HttpSession(Protocol):
     def get(
         self, url: str, *, headers: Mapping[str, str] | None = None, timeout: float
@@ -181,6 +194,25 @@ class WerkIDsClient:
     url: str
     session: HttpSession = field(default_factory=requests.Session)
 
+    def check(self, secret_file_path: Path, *, timeout: float = _STATUS_TIMEOUT) -> ServerStatus:
+        secret = secret_file_path.read_text(encoding="utf-8").strip()
+        try:
+            response = self.session.get(
+                f"{self.url}/v1/connect",
+                headers={"Authorization": f"Bearer {secret}"},
+                timeout=timeout,
+            )
+        except requests.exceptions.RequestException:
+            return ServerStatus.UNREACHABLE
+
+        match response.status_code:
+            case 200:
+                return ServerStatus.OK
+            case 401 | 403:
+                return ServerStatus.UNAUTHORIZED
+            case _:
+                return ServerStatus.ERROR
+
     def ensure_connection(self) -> bool:
         try:
             response = self.session.get(self.url, timeout=_TIMEOUT)
@@ -192,25 +224,15 @@ class WerkIDsClient:
             return False
 
     def test_connection(self, secret_file_path: Path) -> bool:
-        secret = secret_file_path.read_text(encoding="utf-8").strip()
-        try:
-            response = self.session.get(
-                f"{self.url}/v1/connect",
-                headers={"Authorization": f"Bearer {secret}"},
-                timeout=_TIMEOUT,
-            )
-        except requests.exceptions.RequestException:
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.write("Failed: could not connect\n")
-            return False
-
-        if response.status_code == 200:
-            return True
-
-        sys.stderr.write(
-            f"{TTY_RED}Connection test failed "
-            f"(status {response.status_code}): {_server_error_message(response)}{TTY_NORMAL}\n"
-        )
+        match self.check(secret_file_path, timeout=_TIMEOUT):
+            case ServerStatus.OK:
+                return True
+            case ServerStatus.UNREACHABLE:
+                sys.stderr.write("Failed: could not connect\n")
+            case ServerStatus.UNAUTHORIZED:
+                sys.stderr.write(f"{TTY_RED}The server rejected the secret{TTY_NORMAL}\n")
+            case ServerStatus.ERROR:
+                sys.stderr.write(f"{TTY_RED}The server answered with an error{TTY_NORMAL}\n")
         return False
 
     def reserve_werk_ids(self, secret_file_path: Path, local_werk_ids_count: int) -> Sequence[int]:

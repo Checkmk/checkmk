@@ -7,6 +7,16 @@ Contains the `cmk.werks` namespace and the `cmk.werk_ids_server` HTTP service th
 
 `cmk.werks.tool` provides the `werk` CLI plus werk parsing, validation, formatting, and ID management.
 
+Run `werk status` to check your werk ID setup: which reservation workflow is active, whether the werk ID server is reachable and your secret still accepted, how many IDs you have reserved, and anything that would make `werk new` fail. It is read-only, exits non-zero when it found problems, and still prints the full picture in states where other commands refuse to run.
+
+`werk status --json` prints the same information as a single JSON document on stdout — typed values and stable keys, with every section always present:
+
+```sh
+werk status --json | jq -r '.problems[] | "\(.item): \(.fix)"'
+```
+
+`schema_version` is bumped whenever the document changes shape.
+
 ## cmk.werks.site — site runtime helpers
 
 `cmk.werks.site` contains the werk handling used inside a Checkmk site (e.g. werk acknowledgement storage).

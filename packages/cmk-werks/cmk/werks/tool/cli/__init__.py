@@ -21,6 +21,8 @@ from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple
 
+from rich.console import Console
+
 from .. import load_werk as cmk_werks_load_werk
 from .. import parse_werk
 from ..config import (
@@ -60,9 +62,12 @@ from .in_out_elements import (
     TTY_RED,
 )
 from .stash import LegacyStash, Stash
+from .status import collect_status, render_json, render_status
 from .werk import Werk, WerkId
 
 WerkVersion = Literal["v1", "markdown"]
+
+_REDIRECTED_WIDTH = 200
 
 WERK_ID_RANGES = {
     # start is inclusive, end is exclusive, as it is in range()
@@ -280,6 +285,17 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Show these Werks, or 'all' for all, of leave out for last",
     )
     parser_show.set_defaults(func=main_show)
+
+    # STATUS
+    parser_status = subparsers.add_parser(
+        "status", help="Show the state of your werk ID setup and any problems with it"
+    )
+    parser_status.add_argument(
+        "--json",
+        action="store_true",
+        help="print a machine readable JSON document instead of the tables",
+    )
+    parser_status.set_defaults(func=main_status)
 
     # PREVIEW
     parser_preview = subparsers.add_parser("preview", help="Preview html rendering of a Werk")
@@ -846,6 +862,28 @@ def main_init() -> None:
         "Successfully migrated werk IDs. From now on the manual reservation of werk IDs is not "
         "needed anymore, using 'werk new' is enough.\n"
     )
+
+
+def main_status(args: argparse.Namespace) -> None:
+    config = get_config()
+    paths = make_paths_object(Path.home())
+    status = collect_status(
+        paths=paths,
+        server_url=config.werk_ids_server_url,
+        server_status=(
+            WerkIDsClient(config.werk_ids_server_url).check(paths.secret_file)
+            if paths.secret_file.exists()
+            else None
+        ),
+        werk_exists=werk_exists,
+    )
+    if args.json:
+        sys.stdout.write(render_json(status) + "\n")
+    else:
+        # Redirected output falls back to 80 columns in rich, which folds the paths.
+        render_status(status, Console(width=None if sys.stdout.isatty() else _REDIRECTED_WIDTH))
+    if status.problems:
+        sys.exit(1)
 
 
 def main_blame(args: argparse.Namespace) -> None:

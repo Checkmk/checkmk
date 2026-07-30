@@ -3448,6 +3448,7 @@ rich==15.0.0 \
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r packages/cmk-werks/requirements.in
 robotframework==7.4.2 \
     --hash=sha256:1c934e7f43600de407860cd2bd2fdc41adad4a4a785d8b46b1ed485fdc0f6c9f \
     --hash=sha256:6e80f84cdc997bdde2abb6b729ac3531457ecf6d2e41abfb87a541877ab367bf

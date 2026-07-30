@@ -25,6 +25,7 @@ from cmk.werks.tool.cli.id_pool import (
     migrate_werk_ids_file,
     Paths,
     pick_id_from_stash,
+    ServerStatus,
     WerkIDsClient,
     write_secret,
 )
@@ -663,7 +664,7 @@ def test_test_connection_with_a_rejected_secret(
     client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(401))
 
     assert client.test_connection(_secret_file(tmp_path)) is False
-    assert "Connection test failed" in capsys.readouterr().err
+    assert "rejected the secret" in capsys.readouterr().err
 
 
 def test_reserve_werk_ids_against_an_injected_server(tmp_path: Path) -> None:
@@ -678,3 +679,45 @@ def test_reserve_werk_ids_against_an_injected_server(tmp_path: Path) -> None:
     url, kwargs = server.calls[0]
     assert url == "http://werk-ids.test/v1/reserve"
     assert kwargs["json"] == {"local_werk_ids_count": 8}
+
+
+@pytest.mark.parametrize(
+    ("status_code", "expected"),
+    [
+        pytest.param(200, ServerStatus.OK, id="200 -> ok"),
+        pytest.param(401, ServerStatus.UNAUTHORIZED, id="401 -> unauthorized"),
+        pytest.param(403, ServerStatus.UNAUTHORIZED, id="403 -> unauthorized"),
+        pytest.param(500, ServerStatus.ERROR, id="500 -> error"),
+        pytest.param(502, ServerStatus.ERROR, id="502 -> error"),
+    ],
+)
+def test_check_maps_status_code(tmp_path: Path, status_code: int, expected: ServerStatus) -> None:
+    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(status_code))
+
+    assert client.check(_secret_file(tmp_path)) == expected
+
+
+def test_check_unreachable(tmp_path: Path) -> None:
+    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(unreachable=True))
+
+    assert client.check(_secret_file(tmp_path)) == ServerStatus.UNREACHABLE
+
+
+def test_check_sends_stripped_secret_as_bearer_token(tmp_path: Path) -> None:
+    server = _FakeHttpSession(200)
+
+    WerkIDsClient("http://werk-ids.test", session=server).check(_secret_file(tmp_path))
+
+    url, kwargs = server.calls[0]
+    assert url == "http://werk-ids.test/v1/connect"
+    assert kwargs["headers"] == {"Authorization": "Bearer s3cret"}
+
+
+def test_check_is_quiet(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(unreachable=True)).check(
+        _secret_file(tmp_path)
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""

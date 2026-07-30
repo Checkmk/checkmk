@@ -435,35 +435,6 @@ const virtualHotspots = computed(() =>
   min-height: 0;
   max-height: 100%;
   overflow: auto;
-
-  /* Keep the scrollbar gutter reserved so the first hover doesn't reflow
-     rows, but only reveal the thumb / track while the pointer is inside the
-     table. The base Vue-app styles in assets/variables.css give every scroll
-     container a visible track+thumb by default; we override that here. */
-  scrollbar-gutter: stable;
-  scrollbar-color: transparent transparent;
-}
-
-.profiling-hotspots-table:hover {
-  scrollbar-color: var(--scrollbar-color) transparent;
-}
-
-.profiling-hotspots-table::-webkit-scrollbar-track {
-  background: transparent;
-  border: none;
-}
-
-.profiling-hotspots-table::-webkit-scrollbar-thumb {
-  background-color: transparent;
-  border-color: transparent;
-  transition:
-    background-color 0.2s,
-    border-color 0.2s;
-}
-
-.profiling-hotspots-table:hover::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-color);
-  border-color: var(--ux-theme-6);
 }
 
 .profiling-hotspots-table__table {

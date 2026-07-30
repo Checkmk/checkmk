@@ -616,31 +616,50 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     builtin_host_labels_file: Path,
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
-    # First cleanup things (needed for e.g. reloading the config)
-    cache_manager.clear_all()
-
-    loaded_config = BaseConfig(
-        **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
-    )
-
-    hosts_config = make_hosts_config(loaded_config)
-    host_tags = make_host_tags(loaded_config, hosts_config)
-
-    config_cache = ConfigCache(
-        loaded_config,
-        edition,
-        hosts_config,
-        host_tags,
+    return make_loading_result(
+        BaseConfig(
+            **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
+        ),
+        edition=edition,
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
     )
 
+
+def make_loading_result(
+    loaded_config: BaseConfig,
+    *,
+    edition: cmk_version.Edition,
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
+    builtin_host_labels_file: Path,
+) -> LoadingResult:
+    """Derive everything below the BaseConfig.
+
+    Callers whose BaseConfig is still valid but whose derived state went stale
+    (autodiscovery rewrites autochecks and discovered host labels) use this to get
+    a coherent new object graph, rather than resetting one in place.
+    """
+    # First cleanup things (needed for e.g. reloading the config)
+    cache_manager.clear_all()
+
+    hosts_config = make_hosts_config(loaded_config)
+    host_tags = make_host_tags(loaded_config, hosts_config)
+
     return LoadingResult(
         loaded_config=loaded_config,
         hosts_config=hosts_config,
         host_tags=host_tags,
-        config_cache=config_cache,
+        config_cache=ConfigCache(
+            loaded_config,
+            edition,
+            hosts_config,
+            host_tags,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+        ),
     )
 
 
@@ -1289,12 +1308,9 @@ class ConfigCache:
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
-        self.initialize()
+        self._initialize()
 
-    def initialize(self) -> ConfigCache:
-        # other than directly above, this is only called between the autodiscovery and the
-        # subsequent activation. When moving things out of here, carefully consider if
-        # they care about changes that could result from that (like the check table)
+    def _initialize(self) -> ConfigCache:
         self.invalidate_host_config()
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
@@ -1363,7 +1379,7 @@ class ConfigCache:
 
     @property
     def autochecks_memoizer(self) -> AutochecksMemoizer:
-        # can't be Final because it is set in self.initialize() :-(
+        # can't be Final because it is set in self._initialize() :-(
         return self._autochecks_memoizer
 
     def make_passive_service_name_config(
@@ -3095,7 +3111,7 @@ class CoreObjectsConfig:
         self.ruleset_matcher = matcher
         self.label_manager = label_manager
         # extra_attributes_of_service needs the check interval; build it here from
-        # the same inputs ConfigCache.initialize() uses (no extra dependency).
+        # the same inputs ConfigCache uses (no extra dependency).
         self.check_interval = make_check_interval_config(loaded_config, matcher, label_manager)
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}

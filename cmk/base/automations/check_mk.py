@@ -224,7 +224,6 @@ from cmk.server_side_calls_backend import (
 )
 from cmk.utils import config_warnings, ip_lookup, man_pages
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.caching import cache_manager
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.macros import replace_macros_in_str
@@ -233,6 +232,7 @@ from cmk.utils.paths import (
     autochecks_dir,
     autodiscovery_dir,
     base_discovered_host_labels_dir,
+    builtin_host_labels_file,
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
@@ -1312,6 +1312,23 @@ def _execute_autodiscovery(
     if not activation_required:
         return discovery_results, False
 
+    # Discovery rewrote autochecks and discovered host labels. Re-derive everything
+    # below the BaseConfig (which discovery does not touch), so that the core config
+    # is built from the new data.
+    env = AutomationEnvironment(
+        app=app,
+        plugins=env.plugins,
+        loading_result=config.make_loading_result(
+            env.loaded_config,
+            edition=app.edition,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+        ),
+    )
+    ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT)
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config)
+
     core = app.create_core(
         app.edition,
         env.ruleset_matcher,
@@ -1322,84 +1339,78 @@ def _execute_autodiscovery(
         env.plugins,
     )
 
-    try:
-        cache_manager.clear_all()
-        env.config_cache.initialize()
-        hosts_config = config.make_hosts_config(env.loaded_config)
-        bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
-        notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
-        core_objects_config = config.CoreObjectsConfig(
-            env.loaded_config, env.ruleset_matcher, env.label_manager
-        )
-        checker_config_writer = make_packed_config_writer(
-            {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
-            hosts_config,
-            is_online=env.config_cache.is_online,
-            is_active=env.config_cache.is_active,
-        )
+    hosts_config = env.hosts_config
+    bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
+    notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
+    core_objects_config = config.CoreObjectsConfig(
+        env.loaded_config, env.ruleset_matcher, env.label_manager
+    )
+    checker_config_writer = make_packed_config_writer(
+        {f.name: getattr(env.loaded_config, f.name) for f in fields(env.loaded_config)},
+        hosts_config,
+        is_online=env.config_cache.is_online,
+        is_active=env.config_cache.is_active,
+    )
 
-        if env.loaded_config.monitoring_core == "cmc":
-            do_reload(
-                env.config_cache,
-                core_objects_config,
-                hosts_config,
-                env.host_tags,
-                env.final_service_name_config,
-                env.passive_service_name_config,
-                env.enforced_services_table,
-                env.ip_lookup_config.ip_stack_config,
-                env.ip_lookup_config.default_address_family,
-                ip_address_of,
-                ip_address_of_mgmt,
-                core,
-                env.plugins,
-                locking_mode=env.loaded_config.restart_locking,
-                hosts_to_update=None,
-                service_depends_on=config.ServiceDependsOn(
-                    tag_list=env.host_tags.tag_list,
-                    service_dependencies=env.loaded_config.service_dependencies,
+    if env.loaded_config.monitoring_core == "cmc":
+        do_reload(
+            env.config_cache,
+            core_objects_config,
+            hosts_config,
+            env.host_tags,
+            env.final_service_name_config,
+            env.passive_service_name_config,
+            env.enforced_services_table,
+            env.ip_lookup_config.ip_stack_config,
+            env.ip_lookup_config.default_address_family,
+            ip_address_of,
+            ip_address_of_mgmt,
+            core,
+            env.plugins,
+            locking_mode=env.loaded_config.restart_locking,
+            hosts_to_update=None,
+            service_depends_on=config.ServiceDependsOn(
+                tag_list=env.host_tags.tag_list,
+                service_dependencies=env.loaded_config.service_dependencies,
+            ),
+            duplicates=sorted(
+                hosts_config.duplicates(
+                    lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                 ),
-                duplicates=sorted(
-                    hosts_config.duplicates(
-                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                    ),
+            ),
+            bake_on_restart=bake_on_restart,
+            notify_relay=notify_relay,
+            checker_config_writer=checker_config_writer,
+        )
+    else:
+        do_restart(
+            env.config_cache,
+            core_objects_config,
+            hosts_config,
+            env.host_tags,
+            env.final_service_name_config,
+            env.passive_service_name_config,
+            env.enforced_services_table,
+            env.ip_lookup_config.ip_stack_config,
+            env.ip_lookup_config.default_address_family,
+            ip_address_of,
+            ip_address_of_mgmt,
+            core,
+            env.plugins,
+            service_depends_on=config.ServiceDependsOn(
+                tag_list=env.host_tags.tag_list,
+                service_dependencies=env.loaded_config.service_dependencies,
+            ),
+            locking_mode=env.loaded_config.restart_locking,
+            duplicates=sorted(
+                hosts_config.duplicates(
+                    lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                 ),
-                bake_on_restart=bake_on_restart,
-                notify_relay=notify_relay,
-                checker_config_writer=checker_config_writer,
-            )
-        else:
-            do_restart(
-                env.config_cache,
-                core_objects_config,
-                hosts_config,
-                env.host_tags,
-                env.final_service_name_config,
-                env.passive_service_name_config,
-                env.enforced_services_table,
-                env.ip_lookup_config.ip_stack_config,
-                env.ip_lookup_config.default_address_family,
-                ip_address_of,
-                ip_address_of_mgmt,
-                core,
-                env.plugins,
-                service_depends_on=config.ServiceDependsOn(
-                    tag_list=env.host_tags.tag_list,
-                    service_dependencies=env.loaded_config.service_dependencies,
-                ),
-                locking_mode=env.loaded_config.restart_locking,
-                duplicates=sorted(
-                    hosts_config.duplicates(
-                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                    ),
-                ),
-                bake_on_restart=bake_on_restart,
-                notify_relay=notify_relay,
-                checker_config_writer=checker_config_writer,
-            )
-    finally:
-        cache_manager.clear_all()
-        env.config_cache.initialize()
+            ),
+            bake_on_restart=bake_on_restart,
+            notify_relay=notify_relay,
+            checker_config_writer=checker_config_writer,
+        )
 
     return discovery_results, True
 

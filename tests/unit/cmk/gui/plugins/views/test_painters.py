@@ -1308,7 +1308,7 @@ def _set_expected_queries(painter_ident, live):
             "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return
-    if painter_ident == "svc_pnpgraph":
+    if painter_ident in ("service_graphs", "svc_pnpgraph"):
         # The engine resolves the metric names during the render; the legacy renderer
         # deferred its fetch to a follow-up AJAX call and so issued no query here.
         live.expect_query(

@@ -464,6 +464,7 @@ class PainterServiceGraphs(Painter):
                 METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
             show_time_range_previews=True,
+            render_with_engine=True,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

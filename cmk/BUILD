@@ -222,100 +222,36 @@ sh_library(
     ],
 )
 
-_KNOWN_UNDECLARED = [
-    "tinkerforge",  # cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py
-    "ibm-db",  # cmk/plugins/sql/active_check/check_sql.py
-    "ibm-db-dbi",  # cmk/plugins/sql/active_check/check_sql.py
-    "sqlanydb",  # cmk/plugins/sql/active_check/check_sql.py
-    "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
-    "mysqldb",  # cmk/plugins/plesk/agents/plesk_backups.py
-    "pymongo",  # cmk/plugins/mongodb/agents/mk_mongodb.py
-    "bson",  # cmk/plugins/mongodb/agents/mk_mongodb.py
-    "pyrfc",  # cmk/plugins/sap/agents/mk_sap.py
-    "rrdtool",  # is built as part of the project
-]
-
-_KNOWN_UNUSED = [
-    "setuptools",  # pinned transitive dependency
-    "setuptools-scm",
-    "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
-    "apispec-oneofschema",  # only imported by build-time spec generator
-    "openapi-spec-validator",  # only imported by tests
-]
-
 py_requirements_test(
-    name = "requirements-test-community",
-    known_undeclared = _KNOWN_UNDECLARED,
-    known_unused = _KNOWN_UNUSED + [
-        # only imported in non-free editions
-        "numpy",
-        "protobuf",
-        "pyjwt",
-        "pypdf",
-        "pysaml2",
-        "roman",
+    name = "requirements-test",
+    known_undeclared = [
+        "tinkerforge",  # cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py
+        "ibm-db",  # cmk/plugins/sql/active_check/check_sql.py
+        "ibm-db-dbi",  # cmk/plugins/sql/active_check/check_sql.py
+        "sqlanydb",  # cmk/plugins/sql/active_check/check_sql.py
+        "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
+        "mysqldb",  # cmk/plugins/plesk/agents/plesk_backups.py
+        "pymongo",  # cmk/plugins/mongodb/agents/mk_mongodb.py
+        "bson",  # cmk/plugins/mongodb/agents/mk_mongodb.py
+        "pyrfc",  # cmk/plugins/sap/agents/mk_sap.py
+        "rrdtool",  # is built as part of the project
     ],
-    libs = ["//cmk/editions:community"],
-    requirements_in = "requirements.in",
-    target_compatible_with = select({
-        "@cmk//edition:community": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
-)
-
-py_requirements_test(
-    name = "requirements-test-pro",
-    known_undeclared = _KNOWN_UNDECLARED,
-    known_unused = _KNOWN_UNUSED + [
-        # only imported in cloud edition
-        "pyjwt",
+    known_unused = [
+        "setuptools",  # pinned transitive dependency
+        "setuptools-scm",
+        "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
+        "apispec-oneofschema",  # only imported by build-time spec generator
+        "openapi-spec-validator",  # only imported by tests
     ],
-    libs = ["//cmk/editions/nonfree:pro"],
-    requirements_in = "requirements.in",
-    target_compatible_with = select({
-        "@cmk//edition:pro": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
-)
-
-py_requirements_test(
-    name = "requirements-test-ultimate",
-    known_undeclared = _KNOWN_UNDECLARED,
-    known_unused = _KNOWN_UNUSED + [
-        # only imported in cloud edition
-        "pyjwt",
+    libs = [
+        # cloud and ultimatemt each transitively pull in ultimate -> pro -> community,
+        # so together they cover every edition's library code.
+        "//cmk/editions/nonfree:cloud",
+        "//cmk/editions/nonfree:ultimatemt",
     ],
-    libs = ["//cmk/editions/nonfree:ultimate"],
     requirements_in = "requirements.in",
     target_compatible_with = select({
-        "@cmk//edition:ultimate": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
-)
-
-py_requirements_test(
-    name = "requirements-test-cloud",
-    known_undeclared = _KNOWN_UNDECLARED,
-    known_unused = _KNOWN_UNUSED,
-    libs = ["//cmk/editions/nonfree:cloud"],
-    requirements_in = "requirements.in",
-    target_compatible_with = select({
-        "@cmk//edition:cloud": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
-)
-
-py_requirements_test(
-    name = "requirements-test-ultimatemt",
-    known_undeclared = _KNOWN_UNDECLARED,
-    known_unused = _KNOWN_UNUSED + [
-        # only imported in cloud edition
-        "pyjwt",
-    ],
-    libs = ["//cmk/editions/nonfree:ultimatemt"],
-    requirements_in = "requirements.in",
-    target_compatible_with = select({
-        "@cmk//edition:ultimatemt": [],
-        "//conditions:default": ["@platforms//:incompatible"],
+        "@cmk//edition:community": ["@platforms//:incompatible"],
+        "//conditions:default": [],
     }),
 )

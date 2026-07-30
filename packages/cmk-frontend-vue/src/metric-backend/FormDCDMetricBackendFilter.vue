@@ -47,6 +47,7 @@ onBeforeUnmount(() => {
       v-model:attribute-filter="data.attribute_filter"
       v-model:backend-validation="validation"
       :static-resource-attribute-keys="['service.name']"
+      :operators="['eq']"
       :indent="true"
     />
   </table>

@@ -240,8 +240,21 @@ class AggregationRawdataGenerator:
                 "filter_groups": filter_query.groups,
             },
         )
+
+        # Parse useful message when error code is known.
+        if response.status_code in {504}:
+            raise RawdataException(self._get_error_detail(response))
+
         response.raise_for_status()
         return response.text
+
+    @staticmethod
+    def _get_error_detail(response: requests.Response) -> str:
+        try:
+            detail = response.json().get("detail")
+        except ValueError:
+            detail = None
+        return detail or f"{response.status_code} Server Error: {response.reason}"
 
     def _parse_response_text(self, response_text: str) -> dict[str, Any]:
         try:

@@ -16,7 +16,7 @@ from redis import Redis
 from livestatus import Query, QuerySpecification
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.i18n import _
 
 from cmk.utils.log import logger
@@ -89,8 +89,16 @@ class BICompiler:
     def load_compiled_aggregations(self) -> None:
         try:
             self._check_compilation_status()
-        finally:
+        except MKTimeout:
+            # We are out of time. Skip the load below: the alarm that interrupted us
+            # fires only once, so it would run without any timeout left to bound it,
+            # occupying the worker for a result the aborting caller discards anyway.
+            raise
+        except Exception:
+            # Best effort: let the caller work with the aggregations the store holds.
             self._load_compiled_aggregations()
+            raise
+        self._load_compiled_aggregations()
 
     def get_frozen_aggr_id(self, frozen_info: FrozenBIInfo) -> str:
         return f"frozen_{frozen_info.based_on_aggregation_id}_{frozen_info.based_on_branch_title}"

@@ -129,6 +129,15 @@ def _apply(operator: _Operator, point: Sequence[float | None]) -> float | None:
     return operator(point)
 
 
+def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str, str]:
+    # An operand may be a fan-out leaf that matched a single series, and then it carries that series'
+    # title macros: the operation is the curve that gets drawn, so it has to carry them on.
+    macros: dict[str, str] = {}
+    for operand in operands:
+        macros.update(operand.label_macros)
+    return macros
+
+
 def _apply_operator(
     operator: _Operator,
     operands: Sequence[EvaluatedQuantity],
@@ -146,6 +155,7 @@ def _apply_operator(
                 for point in zip(*(operand.time_series.values for operand in operands))
             ],
         ),
+        label_macros=_operand_label_macros(operands),
     )
 
 

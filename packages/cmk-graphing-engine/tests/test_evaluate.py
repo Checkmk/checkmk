@@ -671,3 +671,19 @@ def test_resolve_series_title_keeps_a_macro_less_title_when_not_fanned() -> None
 
 def test_resolve_series_title_skips_the_append_for_an_empty_series_id() -> None:
     assert _resolve_series_title("cpu", {"$SERIES_ID$": ""}, fanned=True) == "cpu"
+
+
+def test_evaluate_graph_carries_the_macros_of_an_operation_over_one_series() -> None:
+    # A fan-out leaf that matched a single series carries that series' macros, and the operation over
+    # it is what gets drawn - so the macros still have to reach the curve's title.
+    fan = _FannedQuantity(series=[("h0/svc", 4.0)])
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[Line(curve=_curve(Sum([fan]), "$SERIES_ID$"), inverse=False)],
+    )
+
+    result = _evaluate_graph(graph, _context({}, {}))
+
+    assert [line.curve.attributes.title for line in result.lines] == ["h0/svc"]

@@ -21,15 +21,18 @@ from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple
 
-from . import load_werk as cmk_werks_load_werk
-from . import parse_werk
-from .config import (
+from .. import load_werk as cmk_werks_load_werk
+from .. import parse_werk
+from ..config import (
     Config,
     load_config,
     RuntimeConfiguration,
     try_load_current_version_from_defines_make,
 )
-from .format import format_as_markdown_werk
+from ..format import format_as_markdown_werk
+from ..models import EditionV2, EditionV3
+from ..parse import WerkMetadata, WerkV3ParseResult
+from ..utils import resolve_version
 from .id_pool import (
     add_id_to_stash,
     dump_stash_to_file,
@@ -56,10 +59,7 @@ from .in_out_elements import (
     TTY_NORMAL,
     TTY_RED,
 )
-from .models import EditionV2, EditionV3
-from .parse import WerkMetadata, WerkV3ParseResult
 from .schemas.werk import LegacyStash, Stash, Werk, WerkId
-from .utils import resolve_version
 
 WerkVersion = Literal["v1", "markdown"]
 

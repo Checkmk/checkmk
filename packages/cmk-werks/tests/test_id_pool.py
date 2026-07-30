@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 import requests
 
-from cmk.werks.tool.id_pool import (
+from cmk.werks.tool.cli.id_pool import (
     _ensure_stash_file_writable,
     _server_error_message,
     add_id_to_stash,
@@ -28,7 +28,7 @@ from cmk.werks.tool.id_pool import (
     WerkIDsClient,
     write_secret,
 )
-from cmk.werks.tool.schemas.werk import LegacyStash, Stash, WerkId
+from cmk.werks.tool.cli.schemas.werk import LegacyStash, Stash, WerkId
 
 
 def _write_secret(paths: Paths) -> None:

@@ -11,8 +11,8 @@ from typing import Literal, NamedTuple, override, TypeVar
 
 from pydantic import BaseModel, Field
 
+from ...parse import WerkV2ParseResult, WerkV3ParseResult
 from ..in_out_elements import TTY_NORMAL, TTY_RED
-from ..parse import WerkV2ParseResult, WerkV3ParseResult
 
 T = TypeVar("T", bound="Stash")
 

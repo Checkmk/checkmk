@@ -732,7 +732,11 @@ allows = [
 ]
 
 [components."cmk.metric_backend.adapters"]
-allows = ["@metric_backend", "cmk.shared_typing.attribute_filter"]
+allows = [
+  "@metric_backend",
+  "cmk.shared_typing.aggregation",
+  "cmk.shared_typing.attribute_filter",
+]
 
 [components."cmk.network_flow"]
 allows = ["@ccc"]

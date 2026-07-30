@@ -14,7 +14,7 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from time import time
-from typing import override
+from typing import Literal, override
 from unittest import mock
 from unittest.mock import ANY, MagicMock
 
@@ -253,6 +253,7 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         _now: datetime.datetime,
         _pprint_value: bool,
         _call_users_saved_hook: bool,
+        changed_users: list[UserId] | Literal["all"] = "all",
     ) -> None:
         assert UserId("alice") in users_to_save
         assert users_to_save[UserId("alice")]["connector"] == "htpasswd"

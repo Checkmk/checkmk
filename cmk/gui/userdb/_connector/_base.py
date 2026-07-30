@@ -32,6 +32,7 @@ class SaveUsersFunction(Protocol):
         pprint_value: bool,
         call_users_saved_hook: bool,
         /,
+        changed_users: list[UserId] | Literal["all"] = "all",
     ) -> None: ...
 
 

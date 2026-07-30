@@ -416,9 +416,10 @@ def save_users(
     now: datetime,
     pprint_value: bool,
     call_users_saved_hook: bool,
+    changed_users: list[UserId] | Literal["all"] = "all",
 ) -> None:
     _update_users(
-        list(profiles.keys()),
+        changed_users if changed_users != "all" else list(profiles.keys()),
         profiles,
         user_attributes,
         user_connections,

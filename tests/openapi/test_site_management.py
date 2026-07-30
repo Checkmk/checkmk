@@ -657,6 +657,43 @@ def test_update_site_connection_user_sync_with_ldap_connections_200(
     assert extensions == config
 
 
+def test_update_site_connection_user_sync_no_permission_does_not_leak_ldap_existence(
+    clients: ClientRegistry,
+) -> None:
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+            },
+        }
+    )
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    clients.User.create(
+        username="unprivileged",
+        fullname="unprivileged",
+        roles=["user"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.SiteManagement.set_credentials("unprivileged", "supersecretish")
+
+    details = []
+    for ldap_id in ("LDAP_1", "LDAP_unknown"):
+        config["configuration_connection"]["user_sync"] = {
+            "sync_with_ldap_connections": "ldap",
+            "ldap_connections": [ldap_id],
+        }
+        resp = clients.SiteManagement.update(site_id=site_id, site_config=config, expect_ok=False)
+        resp.assert_status_code(403)
+        details.append(resp.json["detail"])
+    assert details[0] == details[1]
+
+
 def test_update_site_connection_user_sync_with_ldap_connections_400(
     clients: ClientRegistry,
 ) -> None:

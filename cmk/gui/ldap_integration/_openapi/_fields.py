@@ -9,7 +9,14 @@ from typing import Any, Literal, override
 
 from cmk import fields
 from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
+from cmk.gui.logged_in import user
 from cmk.gui.userdb import connection_choices
+
+
+def _need_read_permissions() -> None:
+    """Deny existence probing to users without read access to the LDAP configuration."""
+    user.need_permission("wato.seeall")
+    user.need_permission("wato.users")
 
 
 class LDAPConnectionSuffix(fields.String):
@@ -32,6 +39,11 @@ class LDAPConnectionSuffix(fields.String):
     @override
     def _validate(self, value: str) -> None:
         super()._validate(value)
+
+        if self.presence == "ignore":
+            return
+
+        _need_read_permissions()
 
         if (
             self.presence == "should_exist"
@@ -65,6 +77,11 @@ class LDAPConnectionID(fields.String):
     @override
     def _validate(self, value: str) -> None:
         super()._validate(value)
+
+        if self.presence == "ignore":
+            return
+
+        _need_read_permissions()
 
         ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
 

@@ -703,3 +703,48 @@ def test_create_with_temperature_unit_from_group(
         ]
         == temperature_unit_groups
     )
+
+
+def _create_user_without_ldap_read_permissions(clients: ClientRegistry) -> None:
+    clients.User.create(
+        username="unprivileged",
+        fullname="unprivileged",
+        roles=["user"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.LdapConnection.set_credentials("unprivileged", "supersecretish")
+
+
+def test_create_ldap_connection_no_read_permission_does_not_leak_existence(
+    clients: ClientRegistry,
+) -> None:
+    create_ldap_connections(clients)
+    _create_user_without_ldap_read_permissions(clients)
+
+    resp_existing = clients.LdapConnection.create(
+        ldap_data=ldap_api_schema(ldap_id="LDAP_1"), expect_ok=False
+    )
+    resp_existing.assert_status_code(403)
+    resp_missing = clients.LdapConnection.create(
+        ldap_data=ldap_api_schema(ldap_id="LDAP_new"), expect_ok=False
+    )
+    resp_missing.assert_status_code(403)
+    assert resp_existing.json["detail"] == resp_missing.json["detail"]
+
+
+@pytest.mark.parametrize("ldap_id", ["LDAP_1", "LDAP_unknown"], ids=["existing", "missing"])
+def test_object_endpoints_no_read_permission_do_not_leak_existence(
+    clients: ClientRegistry, ldap_id: str
+) -> None:
+    create_ldap_connections(clients)
+    _create_user_without_ldap_read_permissions(clients)
+
+    clients.LdapConnection.get(ldap_connection_id=ldap_id, expect_ok=False).assert_status_code(403)
+    clients.LdapConnection.edit(
+        ldap_connection_id=ldap_id,
+        ldap_data=ldap_api_schema(ldap_id=ldap_id),
+        expect_ok=False,
+    ).assert_status_code(403)
+    clients.LdapConnection.delete(ldap_connection_id=ldap_id, expect_ok=False).assert_status_code(
+        403
+    )

@@ -463,31 +463,47 @@ class RelativeUrlConverter:
         return value
 
 
+@dataclass(slots=True)
 class LDAPConnectionIDConverter:
-    @staticmethod
-    def should_exist(value: str) -> str:
+    read_permissions: tuple[str, ...]
+    """Permissions that gate knowledge of the configured LDAP connections in the
+    consuming endpoint's context. They must be declared by that endpoint."""
+
+    def _need_read_permissions(self) -> None:
+        # Request model validation runs before the endpoint handlers check any
+        # permissions, so the existence check below must verify read access
+        # itself. Otherwise unauthorized users could learn whether a connection
+        # exists from the validation error.
+        for permission in self.read_permissions:
+            user.need_permission(permission)
+
+    def should_exist(self, value: str) -> str:
+        self._need_read_permissions()
         ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
         if value not in ldap_connection_ids:
             raise ValueError(f"The LDAP connection {value!r} should exist but it doesn't.")
         return value
 
-    @staticmethod
-    def should_not_exist(value: str) -> str:
-        ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
-        if value in ldap_connection_ids:
-            raise ValueError(f"The LDAP connection {value!r} should not exist but it does.")
-        return value
-
 
 class SAMLConnectionIDConverter:
     @staticmethod
+    def _need_read_permission() -> None:
+        # Request model validation runs before the endpoint handlers check any
+        # permissions, so the existence checks below must verify read access
+        # themselves. Otherwise unauthorized users could learn whether a
+        # connection exists from the validation error.
+        user.need_permission("wato.global")
+
+    @staticmethod
     def should_exist(value: str) -> str:
+        SAMLConnectionIDConverter._need_read_permission()
         if value not in get_saml_connections():
             raise ValueError(f"The SAML connection {value!r} should exist but it doesn't.")
         return value
 
     @staticmethod
     def should_not_exist(value: str) -> str:
+        SAMLConnectionIDConverter._need_read_permission()
         if value in get_saml_connections():
             raise ValueError(f"The SAML connection {value!r} should not exist but it does.")
         return value

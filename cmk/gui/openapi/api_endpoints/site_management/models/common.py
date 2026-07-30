@@ -495,7 +495,9 @@ class UserSyncWithLdapModel:
     ldap_connections: list[
         Annotated[
             str,
-            TypedPlainValidator(str, LDAPConnectionIDConverter.should_exist),
+            TypedPlainValidator(
+                str, LDAPConnectionIDConverter(read_permissions=("wato.sites",)).should_exist
+            ),
         ]
     ] = api_field(
         description="A list of existing ldap connections.",

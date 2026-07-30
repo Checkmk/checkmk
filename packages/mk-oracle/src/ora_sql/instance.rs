@@ -109,11 +109,7 @@ pub async fn generate_data(
             .iter()
             .filter_map(|s| {
                 if s.is_allowed(filter) {
-                    Some(Section::new(
-                        s,
-                        ora_sql.product().cache_age(),
-                        ora_sql.options(),
-                    ))
+                    Some(Section::new(s, ora_sql.product().cache_age()))
                 } else {
                     log::info!("Skip section: {:?} not allowed in {:?}", s, filter);
                     None
@@ -132,7 +128,6 @@ pub async fn generate_data(
             ora_sql.instances(),
             ora_sql.product().cache_age(),
             ora_sql.params(),
-            ora_sql.options(),
         );
         let results = if ora_sql.options().threads() > 1 {
             process_spot_works_para(
@@ -800,7 +795,6 @@ mod yaml_to_output_tests {
     //! Config YAML -> emitted agent lines, DB faked via `MiniOra`.
     //! Single-threaded path only, so output order is deterministic.
     use super::*;
-    use crate::config::options::Options;
     use crate::config::ora_sql::Config;
     use crate::ora_sql::backend::test_support::{instance_row, open_spot, MiniOra};
 
@@ -815,7 +809,7 @@ mod yaml_to_output_tests {
             .sections()
             .iter()
             .filter(|s| s.is_custom_metric())
-            .map(|s| Section::new(s, cache_age, config.options()))
+            .map(|s| Section::new(s, cache_age))
             .collect()
     }
 
@@ -826,14 +820,7 @@ mod yaml_to_output_tests {
         instances: &[CustomInstance],
         cache_age: u32,
     ) -> String {
-        let (works, errors) = make_spot_work_results(
-            spots,
-            sections,
-            instances,
-            cache_age,
-            &[],
-            &Options::default(),
-        );
+        let (works, errors) = make_spot_work_results(spots, sections, instances, cache_age, &[]);
         let error_msgs: Vec<String> = errors.iter().map(|(_, e)| e.to_string()).collect();
         assert!(
             error_msgs.is_empty(),

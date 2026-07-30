@@ -430,15 +430,7 @@ fn only_admins_can_modify_tree(path: &Path, depth: usize, local_admins: &HashSet
 /// Entry point for `setup::validate_permissions` on Windows. Non-admin
 /// callers always pass; admins require the path (and subtree for directories)
 /// to be only modifiable by privileged principals.
-pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
-    if !check {
-        log::info!(
-            "Permission check disabled; skipping validation for {:?}",
-            path
-        );
-        return true;
-    }
-
+pub fn validate(path: &Path) -> bool {
     if !is_running_as_admin() {
         log::info!(
             "Not running as admin; skipping permission validation for {:?}",
@@ -455,9 +447,8 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
     };
     // Resolved once per validation run instead of per-ACL-walk: the tree walk
     // below can call only_admins_can_modify for every file under `path`.
-    let mut safe_users = local_administrators();
-    safe_users.extend(safe_entries.iter().cloned());
-    if !check_reparse_point(path, &md, &safe_users) {
+    let local_admins = local_administrators();
+    if !check_reparse_point(path, &md, &local_admins) {
         return false;
     }
     let follow_md = match std::fs::metadata(path) {
@@ -468,9 +459,9 @@ pub fn validate(path: &Path, check: bool, safe_entries: &[String]) -> bool {
         }
     };
     if follow_md.is_dir() {
-        only_admins_can_modify_tree(path, MAX_DEPTH, &safe_users)
+        only_admins_can_modify_tree(path, MAX_DEPTH, &local_admins)
     } else {
-        only_admins_can_modify(path, &safe_users)
+        only_admins_can_modify(path, &local_admins)
     }
 }
 

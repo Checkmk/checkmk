@@ -430,10 +430,10 @@ fn test_migrate_config_yaml_structure() {
     // assert!(stdout.contains("      port: 1521\n"));
     // assert!(stdout.contains("      username: c##checkmk\n"));
     // From DBUSER_XE1='/:::::oooo'
-    // assert!(stdout.contains("      - sid: $ORACLE_SID\n"));
+    // assert!(stdout.contains("      - sid: XE1\n"));
     // assert!(stdout.contains("        alias: oooo\n"));
     // From DBUSER_XE2='xe2user:xe2pwd:SYSDBA:localhost1:1521:'
-    // assert!(stdout.contains("      - sid: $ORACLE_SID\n"));
+    // assert!(stdout.contains("      - sid: XE2\n"));
 
     // Output must be loadable as valid Oracle config
     // let config = mk_oracle::config::OracleConfig::load_str(&stdout);
@@ -596,7 +596,6 @@ fn test_migrate_reference_config_connection_and_auth() {
 
     // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2, REMOTE_INSTANCE_1,
     // MYINST2 from static SQLS_SIDS and TNS from SQLS_TNSALIAS (Linux only)
-    // DBUSER with $ORACLE_SID is skipped: env var absent at load time
     let instances = ora.instances();
     #[cfg(not(windows))]
     assert_eq!(
@@ -958,18 +957,38 @@ fn legacy_cfg_no_tnsalias_path() -> String {
 
 #[cfg(not(windows))]
 #[test]
-fn test_migrate_no_tnsalias_falls_back_to_oracle_sid() {
+fn test_migrate_no_tnsalias_omits_instances_and_uses_discovery() {
     let cfg = legacy_cfg_no_tnsalias_path();
     let output = run_bin().args(["-M", &cfg]).ok().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
+    // A bare DBUSER without SID or TNS alias must not synthesize an instance
+    // (it previously emitted a bogus literal `$ORACLE_SID`); the SID from
+    // ONLY_SIDS drives discovery instead. Assert on structural YAML keys, not
+    // the bare word "alias", which also appears in the echoed source filename.
     assert!(
-        stdout.contains("      - sid: $ORACLE_SID"),
-        "sid must fall back to $ORACLE_SID"
+        !stdout.contains("instances:"),
+        "no instance block expected, got: {stdout}"
     );
     assert!(
-        stdout.contains("        alias: $ORACLE_SID"),
-        "alias must fall back to $ORACLE_SID"
+        !stdout.contains("alias:"),
+        "no alias field expected, got: {stdout}"
+    );
+    assert!(
+        !stdout.contains("- sid"),
+        "no SID instance expected, got: {stdout}"
+    );
+    assert!(
+        stdout.contains("include: [XE]"),
+        "ONLY_SIDS must drive discovery, got: {stdout}"
+    );
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    assert!(
+        ora.instances().is_empty(),
+        "bare DBUSER must not produce an explicit instance"
     );
 }
 

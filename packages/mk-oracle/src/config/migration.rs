@@ -49,7 +49,7 @@ struct LegacyDbUser {
     role: Option<String>,
     hostname: String,
     port: Option<String>,
-    alias_or_sid: String,
+    tns_alias: Option<String>,
     piggyback_host: Option<String>,
 }
 
@@ -114,9 +114,9 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         .strip_prefix("DBUSER_")
         .map(|suffix| suffix.to_string());
     let raw_username = field(0);
-    // Legacy "/" means OS authentication; replace with empty for YAML output
+    // Legacy "/" means Wallet authentication; replace with empty for YAML output
     let username = if raw_username == "/" {
-        log::info!("{name}: replacing '/' username with empty string (OS authentication)");
+        log::info!("{name}: replacing '/' username with empty string (Wallet)");
         String::new()
     } else {
         raw_username.to_string()
@@ -128,7 +128,7 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         role: optional_value(field(2)),
         hostname: field(3).to_string(),
         port: optional_value(field(4)),
-        alias_or_sid: optional_value(field(5)).unwrap_or_else(|| "$ORACLE_SID".to_string()),
+        tns_alias: optional_value(field(5)),
         piggyback_host: None,
     })
 }
@@ -166,7 +166,7 @@ fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
         role: optional_value(field(2)),
         hostname: field(3).to_string(),
         port: optional_value(field(4)),
-        alias_or_sid: sid,
+        tns_alias: Some(sid),
         piggyback_host: optional_value(field(5)),
     })
 }
@@ -502,33 +502,50 @@ fn format_instances(
     dbuser_extras: &[LegacyDbUser],
     custom_sqls: &[LegacyCustomSql],
 ) -> Vec<String> {
-    let mut lines = vec!["    instances:\n".to_string()];
-    let mut known_sids: Vec<&str> = Vec::new();
-    let mut known_aliases: Vec<&str> = Vec::new();
+    // Accumulate instance entries first; the `instances:` header is prepended
+    // only when at least one entry exists, so a bare DBUSER yields no block.
+    let mut lines: Vec<String> = Vec::new();
+    let mut known_sids: Vec<String> = Vec::new();
+    let mut known_aliases: Vec<String> = Vec::new();
     let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
-        let sid = entry.sid.as_deref().unwrap_or(&entry.alias_or_sid);
-        known_sids.push(sid);
-        lines.push(format!("      - sid: {sid}\n"));
-        let alias = if entry.sid.is_some() && entry.alias_or_sid == "$ORACLE_SID" {
-            // sid known from variable name suffix, no explicit alias needed
-            None
-        } else {
-            lines.push(format!("        alias: {}\n", entry.alias_or_sid));
-            known_aliases.push(&entry.alias_or_sid);
-            Some(entry.alias_or_sid.as_str())
-        };
-        if entry.sid.is_none() {
-            lines.extend(instance_custom_metrics(custom_sqls, Some(sid), alias));
+        let sid = &entry.sid;
+        let tns_alias = &entry.tns_alias;
+        if sid.is_none() && tns_alias.is_none() {
+            log::info!("DBUSER has neither SID nor TNS alias, skipping instance entry");
             continue;
         }
 
-        let has_connection = !entry.hostname.is_empty() || entry.port.is_some();
+        let sid_written = if let Some(sid) = &sid {
+            known_sids.push(sid.clone());
+            lines.push(format!("      - sid: {sid}\n"));
+            true
+        } else {
+            false
+        };
+        if let Some(alias) = tns_alias {
+            lines.push(format!(
+                "      {} alias: {}\n",
+                if sid_written { ' ' } else { '-' },
+                &alias
+            ));
+            known_aliases.push(alias.clone());
+        };
+
+        // The main DBUSER (sid == None) inherits connection and authentication
+        // from `main:`; emitting them again here would duplicate the credentials
+        // and pair a self-resolving TNS alias with an explicit host/port. Only
+        // SID-bearing entries (DBUSER_*, REMOTE_INSTANCE_*) may override them.
+        let has_connection =
+            entry.sid.is_some() && (!entry.hostname.is_empty() || entry.port.is_some());
         if has_connection {
             lines.push("        connection:\n".to_string());
-            if !entry.hostname.is_empty() {
-                lines.push(format!("          hostname: {}\n", entry.hostname));
-            }
+            let hostname = if entry.hostname.is_empty() {
+                "localhost"
+            } else {
+                &entry.hostname
+            };
+            lines.push(format!("          hostname: {hostname}\n"));
             if let Some(port) = &entry.port {
                 lines.push(format!("          port: {port}\n"));
             }
@@ -536,7 +553,8 @@ fn format_instances(
         if let Some(piggyback) = &entry.piggyback_host {
             lines.push(format!("        piggyback_host: {piggyback}\n"));
         }
-        let has_auth = !entry.username.is_empty() || !entry.password.is_empty();
+        let has_auth =
+            entry.sid.is_some() && (!entry.username.is_empty() || !entry.password.is_empty());
         if has_auth {
             lines.push(format!(
                     "        authentication:\n          username: \"{}\"\n          password: \"{}\"\n          type: standard\n",
@@ -546,7 +564,11 @@ fn format_instances(
                 lines.push(format!("          role: {}\n", role.to_lowercase()));
             }
         }
-        lines.extend(instance_custom_metrics(custom_sqls, Some(sid), alias));
+        lines.extend(instance_custom_metrics(
+            custom_sqls,
+            entry.sid.as_deref(),
+            entry.tns_alias.as_deref(),
+        ));
     }
     // SIDs and aliases only referenced by SQLS_SIDS/SQLS_TNSALIAS need an
     // own entry to carry the metrics
@@ -560,7 +582,12 @@ fn format_instances(
         lines.push(format!("      - alias: {alias}\n"));
         lines.extend(instance_custom_metrics(custom_sqls, None, Some(&alias)));
     }
-    lines
+    if lines.is_empty() {
+        return Vec::new();
+    }
+    let mut out = vec!["    instances:\n".to_string()];
+    out.extend(lines);
+    out
 }
 
 fn instance_custom_metrics(
@@ -584,8 +611,8 @@ fn instance_custom_metrics(
 /// instance entry; a section with a TNS alias contributes only the alias
 fn custom_sql_only_sids_and_aliases(
     custom_sqls: &[LegacyCustomSql],
-    known_sids: &[&str],
-    known_aliases: &[&str],
+    known_sids: &[String],
+    known_aliases: &[String],
 ) -> (Vec<String>, Vec<String>) {
     let mut seen_sids = HashSet::new();
     let mut seen_aliases = HashSet::new();
@@ -593,16 +620,15 @@ fn custom_sql_only_sids_and_aliases(
         .iter()
         .filter(|c| c.tns_alias.is_none())
         .flat_map(|c| &c.sids)
-        .filter(|sid| !known_sids.contains(&sid.as_str()))
+        .filter(|sid| !known_sids.contains(sid))
         .filter(|sid| seen_sids.insert(sid.as_str()))
         .cloned()
         .collect();
     let aliases = custom_sqls
         .iter()
-        .filter_map(|c| c.tns_alias.as_deref())
+        .filter_map(|c| c.tns_alias.clone())
         .filter(|alias| !known_aliases.contains(alias))
-        .filter(|alias| seen_aliases.insert(*alias))
-        .map(String::from)
+        .filter(|alias| seen_aliases.insert(alias.clone()))
         .collect();
     (sids, aliases)
 }
@@ -955,8 +981,7 @@ mod tests {
         assert!(result.contains("# --- Known environment variables defined in legacy config ---\n"));
         assert!(result.contains("# --- Unified Config ---\n"));
         assert!(result.contains("hostname: localhost"));
-        assert!(result.contains("      - sid: XE"));
-        assert!(result.contains("        alias: XE"));
+        assert!(result.contains("      - alias: XE"));
         assert!(result.contains("username: \"checkmk\""));
         assert!(result.contains("password: \"secret\""));
     }
@@ -1334,11 +1359,22 @@ sec3 () {
     }
 
     #[test]
+    fn test_format_instances_empty_hostname_defaults_to_localhost() {
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
+        // port without hostname: connection block must fall back to localhost
+        let xe = make_dbuser(Some("XE"), "", "", "", Some("1522"), None, None);
+        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+        assert!(out.contains(
+            "        connection:\n          hostname: localhost\n          port: 1522\n"
+        ));
+    }
+
+    #[test]
     fn test_format_instances_tnsalias_attaches_to_existing_alias() {
-        let dbuser = make_dbuser(None, "user", "pass", "", None, None, "$ORACLE_SID");
-        let xe = make_dbuser(Some("XE"), "", "", "", None, None, "PROD");
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
+        let xe = make_dbuser(Some("XE"), "", "", "", None, None, Some("PROD"));
         let mut custom = make_custom_sql("sec1", None, "a.sql", &[]);
-        custom.tns_alias = Some("PROD".into());
+        custom.tns_alias = Some("PROD".to_owned());
         let out: String = format_instances(&dbuser, &[xe], &[custom]).join("");
         assert!(out.contains(
             "      - sid: XE\n        alias: PROD\n        custom_metrics:\n          - sec1:\n              path: a.sql\n"
@@ -1351,7 +1387,7 @@ sec3 () {
 
     #[test]
     fn test_format_instances_tnsalias_creates_shared_alias_entry() {
-        let dbuser = make_dbuser(None, "user", "pass", "", None, None, "$ORACLE_SID");
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         let mut c1 = make_custom_sql("sec1", None, "a.sql", &[]);
         c1.tns_alias = Some("REPORTING".into());
         let mut c2 = make_custom_sql("sec2", None, "b.sql", &[]);
@@ -1369,7 +1405,7 @@ sec3 () {
 
     #[test]
     fn test_format_instances_tnsalias_takes_precedence_over_sids() {
-        let dbuser = make_dbuser(None, "user", "pass", "", None, None, "$ORACLE_SID");
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE"]);
         custom.tns_alias = Some("PROD".into());
         let out: String = format_instances(&dbuser, &[], &[custom]).join("");
@@ -1638,11 +1674,23 @@ sec3 () {
     }
 
     #[test]
-    fn test_convert_dbuser_instance_no_connection_no_auth() {
+    fn test_convert_main_dbuser_alias_no_duplicate_connection_or_auth() {
+        // The main DBUSER carries a TNS alias but no SID, so it becomes an
+        // alias-only instance. Its connection and authentication belong to
+        // `main:`; the instance entry must not duplicate them (8-space-indented
+        // blocks are instance-level, 4-space ones are main-level).
         let vars = HashMap::from([("DBUSER".into(), "admin:secret::myhost:1522:ORCL".into())]);
         let result = convert("", "/test/cfg", &vars, TS).unwrap();
-        assert!(result.contains("      - sid: ORCL\n        alias: ORCL\n"));
-        assert!(!result.contains("      - sid: ORCL\n        alias: ORCL\n        connection:"));
+        assert!(result.contains("      - alias: ORCL\n"), "got: {result}");
+        assert!(!result.contains("      - sid"), "got: {result}");
+        assert!(
+            !result.contains("        connection:\n"),
+            "alias-only instance must inherit connection from main:, got: {result}"
+        );
+        assert!(
+            !result.contains("        authentication:\n"),
+            "alias-only instance must inherit auth from main:, got: {result}"
+        );
     }
 
     #[test]
@@ -1688,7 +1736,7 @@ sec3 () {
         assert_eq!(db.role.as_deref(), Some("SYSDBA"));
         assert_eq!(db.hostname, "myhost");
         assert_eq!(db.port.as_deref(), Some("1522"));
-        assert_eq!(db.alias_or_sid, "ORCL");
+        assert_eq!(db.tns_alias, Some("ORCL".to_owned()));
     }
 
     #[test]
@@ -1696,7 +1744,7 @@ sec3 () {
         let db = parse_dbuser("DBUSER_XE1", "/:::::oooo").unwrap();
         assert_eq!(db.sid.as_deref(), Some("XE1"));
         assert!(db.username.is_empty(), "'/' replaced with empty");
-        assert_eq!(db.alias_or_sid, "oooo");
+        assert_eq!(db.tns_alias, Some("oooo".to_owned()));
     }
 
     #[test]
@@ -1708,7 +1756,7 @@ sec3 () {
         assert!(db.role.is_none());
         assert!(db.hostname.is_empty());
         assert!(db.port.is_none());
-        assert_eq!(db.alias_or_sid, "$ORACLE_SID");
+        assert!(db.tns_alias.is_none());
     }
 
     #[test]
@@ -1720,7 +1768,7 @@ sec3 () {
         assert!(db.role.is_none());
         assert!(db.hostname.is_empty());
         assert!(db.port.is_none());
-        assert_eq!(db.alias_or_sid, "$ORACLE_SID");
+        assert!(db.tns_alias.is_none());
     }
 
     #[test]
@@ -1751,7 +1799,7 @@ sec3 () {
         assert_eq!(ri.hostname, "myRemoteHost");
         assert_eq!(ri.port.as_deref(), Some("1521"));
         assert_eq!(ri.piggyback_host.as_deref(), Some("myOracleHost"));
-        assert_eq!(ri.alias_or_sid, "MYINST3");
+        assert_eq!(ri.tns_alias, Some("MYINST3".to_string()));
     }
 
     #[test]
@@ -1855,7 +1903,7 @@ sec3 () {
         hostname: &str,
         port: Option<&str>,
         role: Option<&str>,
-        alias_or_sid: &str,
+        tns_alias: Option<&str>,
     ) -> LegacyDbUser {
         LegacyDbUser {
             sid: sid.map(String::from),
@@ -1864,7 +1912,7 @@ sec3 () {
             hostname: hostname.to_string(),
             port: port.map(String::from),
             role: role.map(String::from),
-            alias_or_sid: alias_or_sid.to_string(),
+            tns_alias: tns_alias.map(|s| s.to_string()),
             piggyback_host: None,
         }
     }
@@ -1878,11 +1926,11 @@ sec3 () {
             "localhost",
             Some("1521"),
             None,
-            "$ORACLE_SID",
+            None,
         );
         // XE1: inherits main connection/auth, custom alias
-        let xe1 = make_dbuser(Some("XE1"), "", "", "", None, None, "myalias");
-        // XE2: own connection + auth + role, alias=$ORACLE_SID (omitted)
+        let xe1 = make_dbuser(Some("XE1"), "", "", "", None, None, Some("myalias"));
+        // XE2: own connection + auth + role, alias=None
         let xe2 = make_dbuser(
             Some("XE2"),
             "xe2user",
@@ -1890,20 +1938,20 @@ sec3 () {
             "dbhost",
             Some("1522"),
             Some("SYSDBA"),
-            "$ORACLE_SID",
+            None,
         );
 
         let out: String = format_instances(&dbuser, &[xe1, xe2], &[]).join("");
 
-        // DBUSER: sid from alias_or_sid, alias emitted
-        assert!(out.contains("      - sid: $ORACLE_SID\n"));
-        assert!(out.contains("        alias: $ORACLE_SID\n"));
+        // DBUSER without sid/alias contributes no instance entry:
+        // the first entry after the header is XE1
+        assert!(out.starts_with("    instances:\n      - sid: XE1\n"));
         // XE1: sid=XE1, alias=myalias, no connection/auth block
         assert!(out.contains("      - sid: XE1\n"));
         assert!(out.contains("        alias: myalias\n"));
         assert!(!out.contains("      - sid: XE1\n        alias: myalias\n        connection:"));
         assert!(!out.contains("      - sid: XE1\n        alias: myalias\n        authentication:"));
-        // XE2: sid=XE2, alias omitted ($ORACLE_SID), has connection + auth + role
+        // XE2: sid=XE2, alias omitted, has connection + auth + role
         assert!(out.contains("      - sid: XE2\n"));
         assert!(!out.contains("      - sid: XE2\n        alias:"));
         assert!(out.contains("          hostname: dbhost\n"));

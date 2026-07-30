@@ -2,6 +2,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
+load("//bazel/rules:dependency_info.bzl", "dependency_info")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
 load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 
@@ -21,14 +22,38 @@ cc_library(
 )
 
 # Our generated & patched headers for Nagios 3 & 4
+dependency_info(
+    name = "nagios3_dependency_info",
+    package_name = "nagios",
+    cpe_format_str = "cpe:2.3:a:nagios:nagios:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "3.2.0",
+)
+
 cc_library(
-    name = "neb_nagios_headers",
-    hdrs = glob(
-        [
-            "third_party/include/nagios/*.h",
-            "third_party/include/nagios4/*.h",
-        ],
-    ),
+    name = "neb_nagios3_headers",
+    hdrs = glob(["third_party/include/nagios/*.h"]),
+    package_metadata = [":nagios3_dependency_info"],
+    strip_include_prefix = "third_party/include/",
+    tags = ["manual"],
+)
+
+dependency_info(
+    name = "nagios4_dependency_info",
+    package_name = "nagios",
+    cpe_format_str = "cpe:2.3:a:nagios:nagios:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "4.0.2",
+)
+
+cc_library(
+    name = "neb_nagios4_headers",
+    hdrs = glob(["third_party/include/nagios4/*.h"]),
+    package_metadata = [":nagios4_dependency_info"],
     strip_include_prefix = "third_party/include/",
     tags = ["manual"],
 )
@@ -71,7 +96,8 @@ cc_library(
     ],
     strip_include_prefix = "include/",
     deps = [
-        ":neb_nagios_headers",
+        ":neb_nagios3_headers",
+        ":neb_nagios4_headers",
         ":neb_version",
         "//packages/livestatus:livestatus_headers",
         "@asio",

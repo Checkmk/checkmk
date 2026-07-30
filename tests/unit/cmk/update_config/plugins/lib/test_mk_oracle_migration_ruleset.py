@@ -116,6 +116,20 @@ def test_disabled_flag_is_passed_through_when_false(rulespec: Rulespec) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
+def test_disabled_legacy_rule_is_migrated_as_disabled(rulespec: Rulespec) -> None:
+    folder = folder_tree().root_folder()
+    legacy_ruleset = Ruleset("agent_config:mk_oracle", rulespec=rulespec)
+    legacy_ruleset.append_rule(
+        folder, _legacy_rule(folder, legacy_ruleset, rule_id="legacy-1", disabled=True)
+    )
+    unified_ruleset = Ruleset("agent_config:mk_oracle_unified", rulespec=rulespec)
+
+    results, _ = migrate_ruleset(legacy_ruleset, unified_ruleset, disabled=False)
+
+    assert results[0].new_rule.rule_options.disabled is True
+
+
+@pytest.mark.usefixtures("request_context")
 def test_new_rule_description_with_legacy_description(rulespec: Rulespec) -> None:
     folder = folder_tree().root_folder()
     legacy_ruleset = Ruleset("agent_config:mk_oracle", rulespec=rulespec)

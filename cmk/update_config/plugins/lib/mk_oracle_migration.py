@@ -391,7 +391,8 @@ def migrate_ruleset(
             ruleset=unified_ruleset,
             conditions=rule.conditions.clone(),
             options=RuleOptions(
-                disabled=disabled,
+                # a disabled legacy rule must never come back enabled
+                disabled=disabled or rule.is_disabled(),
                 description=f"(Migrated) {rule.description()}"
                 if rule.description()
                 else "(Migrated)",

@@ -73,6 +73,7 @@ py_test(
         ":test_licenses_main",
         requirement("pydantic"),
         requirement("pytest"),
+        requirement("pyspdx"),
     ],
 )
 

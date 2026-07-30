@@ -88,21 +88,6 @@ watch(
   width: 250px;
   border-right: 1px solid var(--ucl-elements-border-color);
   flex-shrink: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ucl-nav-tree-scroll-bar-color) transparent;
-}
-
-.ucl-app__sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ucl-app__sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ucl-app__sidebar::-webkit-scrollbar-thumb {
-  background-color: var(--ucl-nav-tree-scroll-bar-color);
-  border-radius: 20px;
 }
 
 .ucl-app__main {
@@ -110,19 +95,6 @@ watch(
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-.ucl-app__main::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ucl-app__main::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ucl-app__main::-webkit-scrollbar-thumb {
-  background-color: var(--ucl-nav-tree-scroll-bar-color);
-  border-radius: 20px;
 }
 
 .ucl-app__area {

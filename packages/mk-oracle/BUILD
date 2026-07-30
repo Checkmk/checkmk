@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
@@ -135,6 +136,23 @@ static_crt_test(
     binary = ":mk-oracle-windows",
 )
 
+build_test(
+    name = "build_test",
+    targets = [":mk-oracle"],
+)
+
+genrule(
+    name = "test-runtime-dir",
+    outs = [
+        "runtimes/plugins/packages/mk-oracle/.marker",
+        # fake client libraries: runtime detection accepts a directory only
+        # if it contains one
+        "runtimes/plugins/packages/mk-oracle/libclntsh.so",
+        "runtimes/plugins/packages/mk-oracle/oci.dll",
+    ],
+    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/packages/mk-oracle && touch $(OUTS)",
+)
+
 rust_test(
     name = "mk-oracle-lib-test-internal",
     compile_data = [
@@ -144,9 +162,12 @@ rust_test(
         "tests/files/test-mini.yml",
     ],
     crate = ":mk-oracle-lib",
-    env_inherit = [
-        "MK_CONFDIR",
+    data = [
+        ":test-runtime-dir",
     ],
+    env = {
+        "MK_CONFDIR": "packages/mk-oracle",
+    },
 )
 
 rust_library(

@@ -34,7 +34,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
     RowAction,
 )
 
-from ._actions import PermittedHostActions
+from .._actions import PermittedHostActions
 
 _PAGE_TITLE = _("All hosts (experimental)")
 

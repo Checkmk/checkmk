@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from typing import cast
 
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.monitor.hosts._pages._actions import PermittedHostActions
+from cmk.gui.monitor.hosts._actions import PermittedHostActions
 from cmk.gui.views.command.registry import CommandRegistry
 
 

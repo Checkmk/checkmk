@@ -365,8 +365,7 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
                 self._verify_unique_schema_entries(value, self.inner.schema.fields)
             else:
                 self._verify_unique_scalar_entries(value)
-        if (min_length := self.metadata.get("minLength")) is not None:
-            if len(value) < min_length:
-                raise self.make_error("minLength")
+        if (min_length := self.metadata.get("minLength")) is not None and len(value) < min_length:
+            raise self.make_error("minLength")
 
         return value

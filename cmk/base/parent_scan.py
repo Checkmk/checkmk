@@ -240,11 +240,10 @@ def scan_parents_of(
                 continue
             # Do (optional) PING check in order to determine if that
             # gateway can be monitored via the standard host check
-            if ping_probes:
-                if not gateway_reachable_via_ping(r, ping_probes):
-                    console.verbose(f"(not using {r}, not reachable)", file=sys.stderr)
-                    skipped_gateways += 1
-                    continue
+            if ping_probes and not gateway_reachable_via_ping(r, ping_probes):
+                console.verbose(f"(not using {r}, not reachable)", file=sys.stderr)
+                skipped_gateways += 1
+                continue
             this_route = r
             break
         if not this_route:

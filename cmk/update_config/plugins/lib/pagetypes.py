@@ -129,9 +129,10 @@ class PreUpdatePagetypes[TOverridable_co: Overridable](PreUpdateAction):
                     },
                 )
 
-        if encountered_update_errors or encountered_deserialization_errors:
-            if _continue_per_users_choice(conflict_mode).is_abort():
-                raise MKUserError(None, f"{self._element_name_for_logging} errors")
+        if (
+            encountered_update_errors or encountered_deserialization_errors
+        ) and _continue_per_users_choice(conflict_mode).is_abort():
+            raise MKUserError(None, f"{self._element_name_for_logging} errors")
 
 
 def _continue_per_users_choice(conflict_mode: ConflictMode) -> Resume:

@@ -175,17 +175,18 @@ def _anonymize_service_condition(
                             ) in all_service_descriptions.items():
                                 check_plugin = get_check_plugin(entry.check_plugin_name, plugins)
                                 if (
-                                    check_plugin is not None
-                                    and RuleGroup.CheckgroupParameters(
-                                        check_plugin.check_ruleset_name
-                                    )
-                                    == ruleset.name
-                                    and host in rule_folder_hosts
-                                ):
-                                    if entry.item is not None and re.match(regex_value, entry.item):
-                                        matched_items.add(
-                                            f"^{anon_interface.get_item(entry.item)}$"
+                                    (
+                                        check_plugin is not None
+                                        and RuleGroup.CheckgroupParameters(
+                                            check_plugin.check_ruleset_name
                                         )
+                                        == ruleset.name
+                                        and host in rule_folder_hosts
+                                    )
+                                    and entry.item is not None
+                                    and re.match(regex_value, entry.item)
+                                ):
+                                    matched_items.add(f"^{anon_interface.get_item(entry.item)}$")
                             if not matched_items:
                                 # if nothing matched, return a regex that matches nothing
                                 return {"$regex": "$^"}

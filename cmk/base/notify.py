@@ -1942,24 +1942,24 @@ def _rbn_match_ec_priority(
 def _rbn_match_ec_facility(
     options: ConditionEventConsoleAlertsType, context: EventContext
 ) -> str | None:
-    if "match_facility" in options:
-        if options["match_facility"] != int(context["EC_FACILITY"]):
-            return "Wrong syslog facility {}, required is {}".format(
-                context["EC_FACILITY"],
-                options["match_facility"],
-            )
+    if "match_facility" in options and options["match_facility"] != int(context["EC_FACILITY"]):
+        return "Wrong syslog facility {}, required is {}".format(
+            context["EC_FACILITY"],
+            options["match_facility"],
+        )
     return None
 
 
 def _rbn_match_ec_comment(
     options: ConditionEventConsoleAlertsType, context: EventContext
 ) -> str | None:
-    if "match_comment" in options:
-        if not regex(options["match_comment"]).search(context["EC_COMMENT"]):
-            return "The event comment '{}' does not match the regular expression '{}'".format(
-                context["EC_COMMENT"],
-                options["match_comment"],
-            )
+    if "match_comment" in options and not regex(options["match_comment"]).search(
+        context["EC_COMMENT"]
+    ):
+        return "The event comment '{}' does not match the regular expression '{}'".format(
+            context["EC_COMMENT"],
+            options["match_comment"],
+        )
     return None
 
 

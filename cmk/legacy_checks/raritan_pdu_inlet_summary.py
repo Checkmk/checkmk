@@ -18,16 +18,15 @@ check_info = {}
 def parse_raritan_pdu_inlet_summary(string_table):
     summary: dict[str, tuple] = {}
     for sensor_type, decimal_digits, availability, sensor_state, value in string_table:
-        if availability == "1":
-            if sensor_type in raritan_map_type:  # handled sensor types
-                key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include
-                value = float(value) / 10 ** int(decimal_digits)
-                state, state_info = raritan_map_state[sensor_state]
+        if availability == "1" and sensor_type in raritan_map_type:  # handled sensor types
+            key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include
+            value = float(value) / 10 ** int(decimal_digits)
+            state, state_info = raritan_map_state[sensor_state]
 
-                if state > 0:
-                    summary[key] = (value, (state, state_info))
-                else:
-                    summary[key] = (value, None)
+            if state > 0:
+                summary[key] = (value, (state, state_info))
+            else:
+                summary[key] = (value, None)
 
     return {"Summary": summary} if summary else None
 

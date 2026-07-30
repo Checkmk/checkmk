@@ -28,12 +28,11 @@ def check_viprinet_router(_no_item, params, info):
         # Requires mode found on inventory
         if expect_mode == "inv":
             expect_mode = params.get("mode_inv")
-        if expect_mode in router_mode_map:
-            if expect_mode != current_mode:
-                return (
-                    2,
-                    f"Mode '{mode}' differs from expected mode '{router_mode_map.get(expect_mode)}'",
-                )
+        if expect_mode in router_mode_map and expect_mode != current_mode:
+            return (
+                2,
+                f"Mode '{mode}' differs from expected mode '{router_mode_map.get(expect_mode)}'",
+            )
 
     if mode:
         return (0, mode)

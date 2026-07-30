@@ -220,13 +220,6 @@ ignore = [
 # change, which applies the fix and enforces the rule in that scope.
 # cmk/plugins
 "cmk/plugins/**" = ["SIM102"]
-# cmk base & misc
-"cmk/base/**" = ["SIM102"]
-"cmk/legacy_checks/**" = ["SIM102"]
-"cmk/config_anonymizer/**" = ["SIM102"]
-"cmk/fields/**" = ["SIM102"]
-"cmk/server_side_calls_backend/**" = ["SIM102"]
-"cmk/update_config/**" = ["SIM102"]
 # packages/cmk-plugins
 "packages/cmk-plugins/**" = ["SIM102"]
 # non-free

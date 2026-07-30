@@ -102,8 +102,7 @@ class SpecialAgent:
         if (special_agent := self._plugins.get(name)) is None:
             return
 
-        if self._for_relay:
-            if self._make_family(name) not in self._relay_compatible_families:
-                raise NotSupportedError("This special agent is not supported on relays.")
+        if self._for_relay and self._make_family(name) not in self._relay_compatible_families:
+            raise NotSupportedError("This special agent is not supported on relays.")
 
         yield from self._iter_commands(special_agent, params)

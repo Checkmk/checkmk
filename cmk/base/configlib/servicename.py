@@ -333,7 +333,6 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "statgrab_mem": lambda item: ("Memory used", item),
     "tplink_mem": lambda item: ("Memory used", item),
     "ups_bat_temp": lambda item: ("Temperature Battery %s", item),
-    "ups_eaton_environment": lambda item: ("Enviroment", None),
     "vms_diskstat_df": lambda item: ("fs_%s", item),
     "wmic_process": lambda item: ("proc_%s", item),
     "zfsget": lambda item: ("fs_%s", item),

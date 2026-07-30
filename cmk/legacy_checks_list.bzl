@@ -610,7 +610,7 @@ LEGACY_CHECKS = [
     "ups_cps_battery",
     "ups_cps_inphase",
     "ups_cps_outphase",
-    "ups_eaton_environment",
+    "ups_eaton_enviroment",
     "ups_in_freq",
     "ups_in_voltage",
     "ups_out_voltage",

@@ -13,10 +13,10 @@
 
 import pytest
 
-from cmk.base.legacy_checks.ups_eaton_environment import (
-    check_ups_eaton_environment,
-    inventory_ups_eaton_environment,
-    parse_ups_eaton_environment,
+from cmk.base.legacy_checks.ups_eaton_enviroment import (
+    check_ups_eaton_enviroment,
+    inventory_ups_eaton_enviroment,
+    parse_ups_eaton_enviroment,
 )
 
 
@@ -31,18 +31,18 @@ def string_table_fixture() -> list[list[str]]:
 @pytest.fixture(name="parsed")
 def parsed_fixture(string_table: list[list[str]]) -> list[list[str]]:
     """Parsed UPS Eaton environment data"""
-    return parse_ups_eaton_environment(string_table)
+    return parse_ups_eaton_enviroment(string_table)
 
 
-def test_inventory_ups_eaton_environment(parsed: list[list[str]]) -> None:
+def test_inventory_ups_eaton_enviroment(parsed: list[list[str]]) -> None:
     """Test environment discovery creates single service"""
-    discovered = list(inventory_ups_eaton_environment(parsed))
+    discovered = list(inventory_ups_eaton_enviroment(parsed))
     assert len(discovered) == 1
     assert discovered[0][0] is None  # No item name
     assert discovered[0][1] == {}  # Empty parameters
 
 
-def test_check_ups_eaton_environment_with_thresholds(parsed: list[list[str]]) -> None:
+def test_check_ups_eaton_enviroment_with_thresholds(parsed: list[list[str]]) -> None:
     """Test environment check with warning/critical thresholds"""
     params = {
         "temp": (40, 50),
@@ -50,7 +50,7 @@ def test_check_ups_eaton_environment_with_thresholds(parsed: list[list[str]]) ->
         "humidity": (65, 80),
     }
 
-    result = list(check_ups_eaton_environment(None, params, parsed))
+    result = list(check_ups_eaton_enviroment(None, params, parsed))
 
     # Should return 3 individual results for temp, remote_temp, humidity
     assert len(result) == 3
@@ -67,7 +67,7 @@ def test_check_ups_eaton_environment_with_thresholds(parsed: list[list[str]]) ->
     assert result[2] == (0, "Humidity: 3.0%", [("humidity", 3, 65, 80)])
 
 
-def test_check_ups_eaton_environment_critical_state(parsed: list[list[str]]) -> None:
+def test_check_ups_eaton_enviroment_critical_state(parsed: list[list[str]]) -> None:
     """Test environment check with critical threshold breach"""
     # Set very low thresholds to trigger critical state
     params = {
@@ -76,7 +76,7 @@ def test_check_ups_eaton_environment_critical_state(parsed: list[list[str]]) -> 
         "humidity": (1, 2),  # humidity=3 hits critical
     }
 
-    result = list(check_ups_eaton_environment(None, params, parsed))
+    result = list(check_ups_eaton_enviroment(None, params, parsed))
 
     # Should return 3 individual results for temp, remote_temp, humidity
     assert len(result) == 3
@@ -97,7 +97,7 @@ def test_check_ups_eaton_environment_critical_state(parsed: list[list[str]]) -> 
     assert "warn/crit at 1.0%/2.0%" in result[2][1]
 
 
-def test_check_ups_eaton_environment_ok_state() -> None:
+def test_check_ups_eaton_enviroment_ok_state() -> None:
     """Test environment check with all values OK"""
     # Good values within thresholds
     good_data = [["25", "30", "50"]]  # temp=25°C, remote_temp=30°C, humidity=50%
@@ -108,21 +108,21 @@ def test_check_ups_eaton_environment_ok_state() -> None:
         "humidity": (65, 80),
     }
 
-    assert list(check_ups_eaton_environment(None, params, good_data)) == [
+    assert list(check_ups_eaton_enviroment(None, params, good_data)) == [
         (0, "Temperature: 25.0 °C", [("temp", 25, 40, 50)]),
         (0, "Remote-Temperature: 30.0 °C", [("remote_temp", 30, 40, 50)]),
         (0, "Humidity: 50.0%", [("humidity", 50, 65, 80)]),
     ]
 
 
-def test_inventory_ups_eaton_environment_empty_data() -> None:
+def test_inventory_ups_eaton_enviroment_empty_data() -> None:
     """Test discovery with empty data returns no services"""
     empty_data: list[list[str]] = []
-    discovered = list(inventory_ups_eaton_environment(empty_data))
+    discovered = list(inventory_ups_eaton_enviroment(empty_data))
     assert len(discovered) == 0
 
 
-def test_parse_ups_eaton_environment(string_table: list[list[str]]) -> None:
+def test_parse_ups_eaton_enviroment(string_table: list[list[str]]) -> None:
     """Test that parsing returns the data unchanged"""
-    parsed = parse_ups_eaton_environment(string_table)
+    parsed = parse_ups_eaton_enviroment(string_table)
     assert parsed == string_table

@@ -127,31 +127,25 @@ def parse_akcp_sensor_humidity(
     string_table: StringTable,
 ) -> Mapping[str, ProbeHumiditySensor | None]:
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 2, 3))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: ProbeHumiditySensor(
-                status=SensorProbeHumidityStatus(status),
-                percent=int(percent) if percent else None,
-                online=online == "1",
-            )
-            for description, percent, status, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: ProbeHumiditySensor(
+            status=SensorProbeHumidityStatus(status),
+            percent=int(percent) if percent else None,
+            online=online == "1",
+        )
+        for description, percent, status, online in rows
     }
 
 
 def parse_akcp_humidity(string_table: StringTable) -> Mapping[str, HumiditySensor | None]:
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 2, 3))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: HumiditySensor(
-                status=SensorHumidityStatus(status),
-                percent=int(percent) if percent else None,
-                online=online == "1",
-            )
-            for description, percent, status, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: HumiditySensor(
+            status=SensorHumidityStatus(status),
+            percent=int(percent) if percent else None,
+            online=online == "1",
+        )
+        for description, percent, status, online in rows
     }
 
 
@@ -514,23 +508,17 @@ RelaySection = Mapping[str, WaterSensor | None] | Mapping[str, SmokeSensor | Non
 
 def parse_akcp_water(string_table: StringTable) -> Mapping[str, WaterSensor | None]:
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: WaterSensor(status=SensorWaterStatus(status), online=online == "1")
-            for description, status, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: WaterSensor(status=SensorWaterStatus(status), online=online == "1")
+        for description, status, online in rows
     }
 
 
 def parse_akcp_smoke(string_table: StringTable) -> Mapping[str, SmokeSensor | None]:
     rows, broken = filter_broken_rows(string_table, required_columns=(0, 1, 2))
-    return {
-        **dict.fromkeys(broken),
-        **{
-            description: SmokeSensor(status=SensorSmokeStatus(status), online=online == "1")
-            for description, status, online in rows
-        },
+    return dict.fromkeys(broken) | {
+        description: SmokeSensor(status=SensorSmokeStatus(status), online=online == "1")
+        for description, status, online in rows
     }
 
 

@@ -15,8 +15,10 @@ from cmk.gui.dashboard import (
     declare_builtin_dashboard_permissions,
 )
 from cmk.gui.legacy_plugins import get_failed_plugins as get_failed_plugins
+from cmk.gui.main_menu_pages import main_menu_page_registry
 from cmk.gui.main_navigation import main_navigation_renderer_registry, MainNavigation
 from cmk.gui.openapi import endpoint_family_registry, versioned_endpoint_registry
+from cmk.gui.pages import page_registry
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
 from cmk.gui.sidebar import SidebarRenderer, snapin_registry
 from cmk.gui.visuals.filter import filter_registry
@@ -51,6 +53,8 @@ def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationCo
         dashlet_registry=dashlet_registry,
         endpoint_family_registry=endpoint_family_registry,
         filter_registry=filter_registry,
+        main_menu_page_registry=main_menu_page_registry,
+        page_registry=page_registry,
         replication_path_registry=replication_path_registry,
         snapin_registry=snapin_registry,
         versioned_endpoint_registry=versioned_endpoint_registry,

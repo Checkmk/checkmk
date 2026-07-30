@@ -14,6 +14,7 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_pages import main_menu_page_registry
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
@@ -138,6 +139,11 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
         pages_to_show.append(
             (all_hosts_experimental_visual_spec["name"], all_hosts_experimental_visual_spec)
         )
+    # Pages a feature plugin registered, rather than hardcoded above: this module is
+    # edition-independent and must not import the non-free plugins themselves.
+    for main_menu_page in main_menu_page_registry.values():
+        if main_menu_page.is_permitted():
+            pages_to_show.append((main_menu_page.ident, main_menu_page.visual_spec()))
 
     visuals_to_show: list[VisualMenuItem] = [
         VisualMenuItem("views", VisualItem(k, v)) for k, v in get_permitted_views().items()

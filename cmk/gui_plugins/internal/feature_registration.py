@@ -9,8 +9,10 @@ from dataclasses import dataclass
 from cmk.ccc.version import Edition
 from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.dashboard import DashboardConfig, DashboardName, DashletRegistry
+from cmk.gui.main_menu_pages import MainMenuPageRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
+from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -36,6 +38,8 @@ class RegistrationContext:
     dashlet_registry: DashletRegistry
     endpoint_family_registry: EndpointFamilyRegistry
     filter_registry: FilterRegistry
+    main_menu_page_registry: MainMenuPageRegistry
+    page_registry: PageRegistry
     replication_path_registry: ReplicationPathRegistry
     snapin_registry: SnapinRegistry
     versioned_endpoint_registry: VersionedEndpointRegistry

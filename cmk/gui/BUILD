@@ -185,6 +185,7 @@ py_library(
         "forms.py",
         "header.py",
         "main_menu.py",
+        "main_menu_pages.py",
         "main_menu_types.py",
         "page_menu.py",
         "page_state.py",

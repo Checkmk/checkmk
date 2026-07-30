@@ -79,6 +79,25 @@ The hosted UI component library is built from the master branch daily. It can al
 be manually deployed by triggering the "Build and deploy ui-component-library"
 jenkins job.
 
+### Navigation status chips
+
+A page in the UCL sidebar navigation can carry an optional status chip.
+
+**When you add a UCL page or notably change one, set its status.** Declare it
+on the page's `new Page(...)` definition, which lives in the `index.ts` of its
+area (e.g. `ui-component-library/components/index.ts` or
+`ui-component-library/form/index.ts`):
+
+```ts
+new Page('CmkFoo', UclCmkFoo, { status: 'new', statusSince: '2026-07-30' })
+```
+
+Supported statuses:
+
+* `new` — recently added page; the chip disappears once the user opens the page
+* `updated` — notably changed page; same dismissal behavior as `new`
+* `deprecated` — stays visible until the status is removed from the page definition
+
 ### AI tooling (MCP server)
 
 The UCL MCP server exposes component data to AI tools (e.g. Claude Code) via

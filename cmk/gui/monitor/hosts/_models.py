@@ -107,6 +107,9 @@ class HostSortColumn(enum.StrEnum):
     NUM_SERVICES_CRIT = "num_services_crit"
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
+    FOLDER = "folder"
+    LAST_CHECK = "last_check"
+    LAST_STATE_CHANGE = "last_state_change"
 
     @classmethod
     def options(cls) -> str:
@@ -122,6 +125,7 @@ _NATURAL_SORT_COLUMNS = frozenset(
         HostSortColumn.NAME,
         HostSortColumn.ALIAS,
         HostSortColumn.ADDRESS,
+        HostSortColumn.FOLDER,
     }
 )
 

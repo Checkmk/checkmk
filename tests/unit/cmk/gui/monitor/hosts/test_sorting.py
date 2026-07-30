@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime as dt
 import functools
 
 import pytest
@@ -70,6 +71,24 @@ def test_multi_column_sorting() -> None:
         ("127.0.0.1", 15),
         ("127.0.0.1", 5),
         ("127.0.0.2", 10),
+    ]
+
+    assert value == expected
+
+
+def test_host_sorter_timestamp_columns() -> None:
+    hosts = [
+        HostFactory.build(last_check=dt.datetime(2026, 1, 3, tzinfo=dt.UTC)),
+        HostFactory.build(last_check=dt.datetime(2026, 1, 1, tzinfo=dt.UTC)),
+        HostFactory.build(last_check=dt.datetime(2026, 1, 2, tzinfo=dt.UTC)),
+    ]
+    sorters = [HostSort(column=HostSortColumn.LAST_CHECK, direction=HostSortDirection.ASC)]
+
+    value = [host.last_check for host in sorted(hosts, key=host_sorter(sorters))]
+    expected = [
+        dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
+        dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
+        dt.datetime(2026, 1, 3, tzinfo=dt.UTC),
     ]
 
     assert value == expected
@@ -196,6 +215,33 @@ def test_sort_naturally_sorts_numbers_correctly() -> None:
         "HOST10",
         "host10",
         "host20",
+    ]
+
+    assert value == expected
+
+
+def test_sort_naturally_sorts_folders_correctly() -> None:
+    folders = [
+        "/network",
+        "/",
+        "",
+        "/network/switches",
+        "/orgs",
+        "/orgs/zone10",
+        "/orgs/zone2",
+        "/NETWORK",
+    ]
+
+    value = sorted(folders, key=functools.cmp_to_key(sort_naturally))
+    expected = [
+        "",
+        "/",
+        "/NETWORK",
+        "/network",
+        "/network/switches",
+        "/orgs",
+        "/orgs/zone2",
+        "/orgs/zone10",
     ]
 
     assert value == expected

@@ -11,7 +11,7 @@ when instantiated.
 """
 
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import PurePosixPath
 
 from cmk.ccc.hostaddress import HostName
@@ -32,6 +32,7 @@ from ._models import (
     HostLabelValue,
     HostOverview,
     HostSort,
+    HostSortColumn,
     HostState,
     RescheduleTarget,
     ServiceCounts,
@@ -234,7 +235,17 @@ def _build_query_filter(query: str) -> QueryExpression:
     )
 
 
+_LIVESTATUS_COLUMN_OVERRIDES: Mapping[HostSortColumn, str] = {
+    HostSortColumn.FOLDER: "filename",
+}
+
+
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
-    condition = f"{sorters[0].column} {sorters[0].direction}" if sorters else "name asc"
-    natural_sort_flag = " natural" if sorters[0].column.natural_sort else ""
-    return f"OrderBy: {condition}{natural_sort_flag}"
+    if not sorters:
+        return "OrderBy: name asc"
+
+    primary = sorters[0]
+    column = _LIVESTATUS_COLUMN_OVERRIDES.get(primary.column, primary.column.value)
+    natural_sort_flag = " natural" if primary.column.natural_sort else ""
+
+    return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"

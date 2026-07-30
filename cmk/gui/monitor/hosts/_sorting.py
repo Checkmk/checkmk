@@ -34,6 +34,12 @@ def host_sorter(sorters: Sequence[HostSort]) -> Callable[[Host], Any]:
                 return host.service_counts.unknown
             case HostSortColumn.NUM_SERVICES_PENDING:
                 return host.service_counts.pending
+            case HostSortColumn.FOLDER:
+                return host.folder
+            case HostSortColumn.LAST_CHECK:
+                return host.last_check
+            case HostSortColumn.LAST_STATE_CHANGE:
+                return host.last_state_change
             case _:
                 assert_never(column)
 

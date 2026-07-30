@@ -38,7 +38,9 @@ snmp_section_akcp_sensor_temp = SimpleSNMPSection(
             "9",  # hhmsSensorArrayTempLowWarning
             "7",  # hhmsSensorArrayTempHighWarning
             "8",  # hhmsSensorArrayTempHighCritical
-            "14",  # hhmsSensorArrayTempTestStatus
+            # Same OID, two meanings: SPAGENT-MIB has sensorProbeTempDegreeRaw here
+            # ("SP Only", read-only), HHMSAGENT-MIB hhmsSensorArrayTempTestStatus (1-7).
+            "14",  # sensorProbeTempDegreeRaw
             "5",  # hhmsSensorArrayTempOnline (1: online, 2: offline)
         ],
     ),

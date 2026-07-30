@@ -19,7 +19,7 @@ pub mod connection;
 pub mod defines;
 pub mod merge;
 pub mod migration;
-mod options;
+pub mod options;
 pub mod ora_sql;
 pub mod section;
 pub mod system;

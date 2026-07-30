@@ -4,6 +4,10 @@
   "url": "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
   "overlay": {
     "BUILD.bazel": "sha256-kFkuYNKKudt3UeJSNdT26JfQKTkcwJglS6W0RaeLFDc=",
-    "MODULE.bazel": "sha256-ir6Jyc83r/4zpa0yDOM+btGJLP3bve71rcjE5fF7Za4="
-  }
+    "MODULE.bazel": "sha256-P/MMtBazMQny3wsKEn2n0thxBZ/50AGSGCdUUpJoZrE="
+  },
+  "patches": {
+    "0001-configure_remove_intltool.patch": "sha256-T/XzDQVi1UYhFXaa1xBrnmVvg016o58c4QOFK79XXgI="
+  },
+  "patch_strip": 1
 }

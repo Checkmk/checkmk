@@ -528,3 +528,38 @@ def test_parse_resolves_reads_operation_display_from_the_quantity() -> None:
             CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
         )
     ]
+
+
+def test_parse_graph_from_api_bidirectional_range_widens_each_end_on_its_own() -> None:
+    # A quantity bound at one end must not cost the other end its envelope: the qos class-traffic
+    # graph states a numeric lower and a MaximumOf upper in both halves.
+    bidir = graphs_v1.Bidirectional(
+        name="b",
+        title=Title("title"),
+        upper=graphs_v1.Graph(
+            name="up",
+            title=Title("up"),
+            compound_lines=["b"],
+            minimal_range=graphs_v1.MinimalRange(
+                5, metrics_v1.MaximumOf("b", metrics_v1.Color.GRAY)
+            ),
+        ),
+        lower=graphs_v1.Graph(
+            name="lo",
+            title=Title("lo"),
+            compound_lines=["a"],
+            minimal_range=graphs_v1.MinimalRange(
+                0, metrics_v1.MaximumOf("a", metrics_v1.Color.GRAY)
+            ),
+        ),
+    )
+
+    parsed = parse_graph_from_api(bidir, [_SERVICE], _id, _METRICS, kind=_KIND)
+
+    assert parsed.vertical_range is not None
+    # The comparable end is the envelope of both halves; the two quantity uppers cannot be compared
+    # before evaluation, so the upper half's is kept.
+    assert parsed.vertical_range.lower == 0
+    assert parsed.vertical_range.upper == ScalarOf(
+        metric=_rrd("b"), scalar_kind=ScalarKind.MAXIMUM, color="#8c8c8c"
+    )

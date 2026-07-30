@@ -314,6 +314,17 @@ def _parse_range(
     )
 
 
+def _widest_bound(
+    of_upper: Bound | None,
+    of_lower: Bound | None,
+    pick: Callable[[float, float], float],
+) -> Bound | None:
+    if isinstance(of_upper, int | float) and isinstance(of_lower, int | float):
+        return pick(of_upper, of_lower)
+    # Two quantity bounds cannot be compared before they are evaluated, so the upper half's wins.
+    return of_lower if of_upper is None else of_upper
+
+
 def _bidirectional_range(
     graph: graphs_v1.Bidirectional | graphs_v2_unstable.Bidirectional,
     context: _ParseContext,
@@ -324,17 +335,13 @@ def _bidirectional_range(
         return lower
     if lower is None:
         return upper
-    if (
-        isinstance(upper.lower, int | float)
-        and isinstance(upper.upper, int | float)
-        and isinstance(lower.lower, int | float)
-        and isinstance(lower.upper, int | float)
-    ):
-        return MinimalRange(
-            lower=min(upper.lower, lower.lower),
-            upper=max(upper.upper, lower.upper),
-        )
-    return upper
+    # The graph draws both halves around one axis, so its range has to span both. Each end widens on
+    # its own: taking only the upper half's whenever any single bound was a quantity threw away the
+    # ends that could be compared.
+    return MinimalRange(
+        lower=_widest_bound(upper.lower, lower.lower, min),
+        upper=_widest_bound(upper.upper, lower.upper, max),
+    )
 
 
 def build_curve(

@@ -408,12 +408,6 @@
             padding-top: 0;
             overflow-x: hidden;
             overflow-y: scroll;
-            //TODO: Replace this with simplebar
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            &::-webkit-scrollbar {
-              display: none;
-            }
 
             h2 {
               z-index: 5;

@@ -314,7 +314,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
-        current_config = settings.get("trusted_certificate_authorities", self.default_globals())
+        # default_globals() is keyed by config variable, so the fallback has to be
+        # the *value* of our one variable, not the whole mapping.
+        current_config = settings.get(
+            "trusted_certificate_authorities",
+            self.default_globals()["trusted_certificate_authorities"],
+        )
 
         # We need to activate this immediately to make syncs to distributed
         # setup remote sites possible right after changing the option

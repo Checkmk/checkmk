@@ -227,6 +227,22 @@ class TestConfigDomainCACertificates:
         )
         assert load_text_from_file(mocked_ca_config.trusted_cas_file) == expected_file_content
 
+    def test_save_without_the_setting_falls_back_to_the_default(
+        self,
+        mocked_ca_config: ConfigDomainCACertificates,
+    ) -> None:
+        """A save that carries no CA setting must use the default, not raise.
+
+        ``save_global_settings`` hands each domain only the variables present in the
+        settings dict, so this domain is regularly called without its own key — it
+        used to fall back to the whole ``default_globals()`` mapping and then
+        KeyError on the variable name one level down.
+        """
+        mocked_ca_config.save({})
+        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == (
+            "system_cert_1\nsystem_cert_2"
+        )
+
     def test_remote_sites_cas(self) -> None:
         longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=UTC)
 

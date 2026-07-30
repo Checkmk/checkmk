@@ -289,6 +289,97 @@ oracle:
     );
 }
 
+#[cfg(unix)]
+fn write_use_host_client_config(
+    dir: &std::path::Path,
+    client_dir: &std::path::Path,
+) -> std::path::PathBuf {
+    let config = dir.join("mk-oracle.yml");
+    fs::write(
+        &config,
+        format!(
+            r#"---
+oracle:
+  main:
+    options:
+      use_host_client: {}
+    connection:
+      hostname: localhost
+    authentication:
+      username: dummy
+      password: dummy
+      type: standard
+"#,
+            client_dir.display()
+        ),
+    )
+    .unwrap();
+    config
+}
+
+#[cfg(unix)]
+#[test]
+fn test_find_runtime_derives_oracle_home_for_full_home_lib_dir() {
+    // full home layout: <home>/lib with the client library, oracore next to it
+    let tmp = tempfile::tempdir().unwrap();
+    let home = tmp.path().join("dbhome_1");
+    let home_lib = home.join("lib");
+    fs::create_dir_all(&home_lib).unwrap();
+    fs::File::create(home_lib.join(CLIENT_LIB_NAME)).unwrap();
+    fs::create_dir_all(home.join("oracore/mesg")).unwrap();
+    let config = write_use_host_client_config(tmp.path(), &home_lib);
+
+    let output = run_bin()
+        .env("MK_LIBDIR", tmp.path())
+        .env_remove("ORACLE_HOME")
+        .env_remove("LD_LIBRARY_PATH")
+        .args(["-c", config.to_str().unwrap(), "--find-runtime"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "--find-runtime must succeed");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let first_line = stdout.lines().next().unwrap_or_default();
+    assert!(
+        first_line.starts_with(&format!("LD_LIBRARY_PATH={}", home_lib.display())),
+        "first line must report the configured runtime, got: {stdout}"
+    );
+    assert!(
+        stdout.contains(&format!("ORACLE_HOME={}\n", home.display())),
+        "the home derived from the lib dir must be reported, got: {stdout}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn test_find_runtime_no_oracle_home_for_instant_client_dir() {
+    // Instant Client layout: the client library directly in the directory,
+    // no ORACLE_HOME needed
+    let tmp = tempfile::tempdir().unwrap();
+    let instant_client = tmp.path().join("instantclient_19_19");
+    fs::create_dir_all(&instant_client).unwrap();
+    fs::File::create(instant_client.join(CLIENT_LIB_NAME)).unwrap();
+    let config = write_use_host_client_config(tmp.path(), &instant_client);
+
+    let output = run_bin()
+        .env("MK_LIBDIR", tmp.path())
+        .env_remove("ORACLE_HOME")
+        .env_remove("LD_LIBRARY_PATH")
+        .args(["-c", config.to_str().unwrap(), "--find-runtime"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "--find-runtime must succeed");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let first_line = stdout.lines().next().unwrap_or_default();
+    assert!(
+        first_line.starts_with(&format!("LD_LIBRARY_PATH={}", instant_client.display())),
+        "first line must report the configured runtime, got: {stdout}"
+    );
+    assert!(
+        !stdout.contains("ORACLE_HOME="),
+        "no home must be derived for an Instant Client dir, got: {stdout}"
+    );
+}
+
 #[cfg(not(windows))]
 #[test]
 fn test_user_config_overrides_bakery() {

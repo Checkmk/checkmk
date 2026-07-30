@@ -40,6 +40,7 @@ from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledRule
 from cmk.gui import fields as gui_fields
 from cmk.gui.bi import BIManager, get_cached_bi_packs
+from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -47,6 +48,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_sch
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.utils.timeout_manager import timeout_manager
 
 from .._valuespecs import may_use_rules_in_pack
 
@@ -68,6 +70,11 @@ BI_PACK_ID = {
         example="pack1",
     ),
 }
+
+# Bounds how long a single request may occupy an Apache worker. Stays below the
+# timeout of the proxy connection from system Apache to site Apache, see
+# `omdlib.system_apache`, so that a proxied client still receives our response.
+_AGGREGATION_STATE_TIMEOUT = 90
 
 
 def _make_error(message: str) -> ProblemException:
@@ -306,7 +313,7 @@ class BIAggregationStateResponseSchema(Schema):
     tag_group="Monitoring",
     skip_locking=True,
     update_config_generation=False,
-    additional_status_codes=[403, 503],
+    additional_status_codes=[403, 503, 504],
 )
 def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -330,7 +337,7 @@ def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     response_schema=BIAggregationStateResponseSchema,
     permissions_required=RO_PERMISSIONS,
     tag_group="Monitoring",
-    additional_status_codes=[403, 503],
+    additional_status_codes=[403, 503, 504],
 )
 def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -342,6 +349,31 @@ def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
 
 def _aggregation_state(
     filter_names: list[str] | None = None, filter_groups: list[str] | None = None
+) -> dict[str, object]:
+    """Compute the aggregation state, bounded by a request timeout.
+
+    Compilation and state fetching are both unbounded operations. Without a
+    timeout they keep the Apache worker busy indefinitely, letting requests
+    stack up until the site stops responding.
+    """
+    timeout_manager.enable_timeout(_AGGREGATION_STATE_TIMEOUT)
+    try:
+        return _compute_aggregation_state(filter_names, filter_groups)
+    except RequestTimeout:
+        raise ProblemException(
+            status=504,
+            title=http.client.responses[504],
+            detail=(
+                "Computing the aggregation state timed out "
+                f"after {_AGGREGATION_STATE_TIMEOUT} seconds."
+            ),
+        )
+    finally:
+        timeout_manager.disable_timeout()
+
+
+def _compute_aggregation_state(
+    filter_names: list[str] | None, filter_groups: list[str] | None
 ) -> dict[str, object]:
     bi_manager = BIManager()
     bi_aggregation_filter = BIAggregationFilter(

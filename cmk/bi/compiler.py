@@ -26,7 +26,7 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.i18n import _
 from cmk.utils.redis import get_redis_client
 
@@ -80,7 +80,16 @@ class BICompiler:
     def load_compiled_aggregations(self) -> None:
         try:
             self._check_compilation_status()
-        finally:
+        except MKTimeout:
+            # We are out of time. Skip the load below: the alarm that interrupted us
+            # fires only once, so it would run without any timeout left to bound it,
+            # occupying the worker for a result the aborting caller discards anyway.
+            raise
+        except Exception:
+            # Best effort: let the caller work with the aggregations the store holds.
+            self._load_compiled_aggregations()
+            raise
+        else:
             self._load_compiled_aggregations()
 
     def get_frozen_aggr_id(self, frozen_info: FrozenBIInfo) -> str:

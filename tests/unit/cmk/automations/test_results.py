@@ -125,7 +125,7 @@ class TestTryDiscoveryResult:
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={HostName("my_host"): [HostLabel("cmk/foo", "bar", SectionName("baz"))]},
             config_warnings=["Don't leave your luggage unattended."],
         )

@@ -1621,7 +1621,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
-    source_results={"agent": (0, "Success")},
+    source_results=[(0, "Success")],
     labels_by_host={
         HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
     },

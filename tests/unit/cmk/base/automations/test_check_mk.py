@@ -437,7 +437,7 @@ class TestWarnServiceNameConflicts:
         return CheckPreview(
             table={HostName("my_host"): entries},
             labels=QualifiedDiscovery.empty(),
-            source_results={},
+            source_results=[],
             kept_labels={},
         )
 

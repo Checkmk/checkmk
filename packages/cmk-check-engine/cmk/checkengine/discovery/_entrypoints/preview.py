@@ -89,7 +89,7 @@ class CheckPreviewEntry:
 class CheckPreview:
     table: Mapping[HostName, Sequence[CheckPreviewEntry]]
     labels: QualifiedDiscovery[HostLabel]
-    source_results: Mapping[str, ActiveCheckResult]
+    source_results: Sequence[ActiveCheckResult]
     kept_labels: Mapping[HostName, Sequence[HostLabel]]
 
 
@@ -232,10 +232,7 @@ def get_check_preview(
     return CheckPreview(
         table={h: [*passive_rows] for h, passive_rows in passive_rows_by_host.items()},
         labels=host_labels,
-        source_results={
-            src.ident: result
-            for (src, _sections), result in zip(host_sections, summarizer(host_sections))
-        },
+        source_results=list(summarizer(host_sections)),
         kept_labels=kept_labels,
     )
 

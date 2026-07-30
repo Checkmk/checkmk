@@ -105,7 +105,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
-    source_results={"agent": (0, "Success")},
+    source_results=[(0, "Success")],
     labels_by_host={
         HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
     },
@@ -319,7 +319,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={
                 sample_host_name: [
                     HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -388,7 +388,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         },
         vanished_labels={},
         changed_labels={},
-        sources={"agent": (0, "Success")},
+        sources=[(0, "Success")],
         labels_by_host={
             sample_host_name: [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -481,7 +481,7 @@ def test_perform_discovery_fix_all_removes_vanished_service(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={},
+            source_results=[],
             labels_by_host={},
             config_warnings=[],
         ),
@@ -536,7 +536,7 @@ def test_perform_discovery_fix_all_removes_vanished_service(
         new_labels={},
         vanished_labels={},
         changed_labels={},
-        sources={},
+        sources=[],
         labels_by_host={sample_host_name: []},
         config_warnings=(),
     )
@@ -628,7 +628,7 @@ def test_perform_fix_all_clears_host_labels_without_service_changes(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={
                 HostName("TODAY"): [
                     HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -671,7 +671,7 @@ def test_perform_fix_all_clears_host_labels_without_service_changes(
         new_labels={},
         vanished_labels={"cmk/os_family": {"value": "linux", "plugin_name": "check_mk"}},
         changed_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
-        sources={},
+        sources=[],
         labels_by_host={sample_host_name: []},
         config_warnings=(),
     )
@@ -738,7 +738,7 @@ def test_perform_fix_all_does_not_write_ignored_services_to_autochecks(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={},
+            source_results=[],
             labels_by_host={},
             config_warnings=[],
         ),
@@ -814,7 +814,7 @@ def test_perform_fix_all_does_not_write_ignored_services_to_autochecks(
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
-                sources={},
+                sources=[],
                 labels_by_host={sample_host_name: []},
                 config_warnings=(),
             ),
@@ -935,7 +935,7 @@ def test_perform_discovery_single_update(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={
                 HostName("TODAY"): [
                     HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -1049,7 +1049,7 @@ def test_perform_discovery_single_update(
         new_labels={},
         vanished_labels={},
         changed_labels={},
-        sources={"agent": (0, "Success")},
+        sources=[(0, "Success")],
         labels_by_host={
             HostName("TODAY"): [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -1192,7 +1192,7 @@ def test_perform_discovery_single_update__ignore(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={
                 HostName("host23"): [],
             },
@@ -1266,10 +1266,10 @@ def test_perform_discovery_single_update__ignore(
         vanished_labels={},
         changed_labels={},
         labels_by_host={HostName("host22"): [], HostName("host23"): [], sample_host_name: []},
-        sources={
-            "agent": (0, "[agent] Success"),
-            "piggyback": (0, "[piggyback] Success (but no data found for this host)"),
-        },
+        sources=[
+            (0, "[agent] Success"),
+            (0, "[piggyback] Success (but no data found for this host)"),
+        ],
         config_warnings=(),
     )
 
@@ -1323,7 +1323,7 @@ def test_perform_discovery_single_update__ignore_does_not_re_add_existing_disabl
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={sample_host_name: []},
             config_warnings=(),
         ),
@@ -1397,7 +1397,7 @@ def test_perform_discovery_single_update__ignore_does_not_re_add_existing_disabl
         vanished_labels={},
         changed_labels={},
         labels_by_host={sample_host_name: []},
-        sources={"agent": (0, "[agent] Success")},
+        sources=[(0, "[agent] Success")],
         config_warnings=(),
     )
 
@@ -1512,7 +1512,7 @@ class TestPerformDiscoverySingleUpdate:
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
-                source_results={"agent": (0, "Success")},
+                source_results=[(0, "Success")],
                 labels_by_host={},
                 config_warnings=[],
             ),
@@ -1546,10 +1546,10 @@ class TestPerformDiscoverySingleUpdate:
                 vanished_labels={},
                 changed_labels={},
                 labels_by_host={sample_host_name: []},
-                sources={
-                    "agent": (0, "[agent] Success"),
-                    "piggyback": (0, "[piggyback] Success (but no data found for this host)"),
-                },
+                sources=[
+                    (0, "[agent] Success"),
+                    (0, "[piggyback] Success (but no data found for this host)"),
+                ],
                 config_warnings=[],
             ),
             selected_services=selected_serives,
@@ -1680,7 +1680,7 @@ class TestPerformDiscoverySingleUpdate:
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
-                source_results={},
+                source_results=[],
                 labels_by_host={},
                 config_warnings=[],
             ),
@@ -1703,7 +1703,7 @@ class TestPerformDiscoverySingleUpdate:
                 vanished_labels={},
                 changed_labels={},
                 labels_by_host={sample_host_name: []},
-                sources={},
+                sources=[],
                 config_warnings=[],
             ),
             selected_services=(("ignored_plugin", "X"),),
@@ -1785,7 +1785,7 @@ def test_perform_discovery_action_update_services(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={
                 HostName("TODAY"): [
                     HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -1888,7 +1888,7 @@ def test_perform_discovery_action_update_services(
         new_labels={},
         vanished_labels={},
         changed_labels={},
-        sources={"agent": (0, "Success")},
+        sources=[(0, "Success")],
         labels_by_host={
             HostName("TODAY"): [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
@@ -1978,7 +1978,7 @@ def test_perform_discovery_action_update_host_labels(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={"agent": (0, "Success")},
+            source_results=[(0, "Success")],
             labels_by_host={
                 HostName(sample_host_name): [
                     HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
@@ -2017,7 +2017,7 @@ def test_perform_discovery_action_update_host_labels(
         new_labels={},
         vanished_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
         changed_labels={},
-        sources={"agent": (0, "Success")},
+        sources=[(0, "Success")],
         labels_by_host={
             HostName(sample_host_name): [
                 HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
@@ -2088,7 +2088,7 @@ def _make_discovery_result(
         vanished_labels={},
         changed_labels={},
         labels_by_host={},
-        sources={},
+        sources=[],
         config_warnings=(),
     )
 
@@ -2343,7 +2343,7 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
             new_labels={},
             vanished_labels={},
             changed_labels={},
-            source_results={},
+            source_results=[],
             labels_by_host={},
             config_warnings=[],
         ),
@@ -2366,7 +2366,7 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
             vanished_labels={},
             changed_labels={},
             labels_by_host={sample_host_name: []},
-            sources={},
+            sources=[],
             config_warnings=[],
         ),
         selected_services=(("some_plugin", "A"),),

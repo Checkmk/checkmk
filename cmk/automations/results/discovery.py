@@ -126,15 +126,27 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     vanished_labels: DiscoveredHostLabelsDict
     changed_labels: DiscoveredHostLabelsDict
     labels_by_host: Mapping[HostName, Sequence[HostLabel]]
-    source_results: Mapping[str, tuple[int, str]]
+    source_results: Sequence[tuple[int, str]]
     config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        # Before 3.0.0b1 source_results was a Mapping keyed by source ident. The
+        # ident is no longer available here; emit synthetic keys so an older peer's
+        # value-only consumers keep working.
+        source_results: Mapping[int, tuple[int, str]] | Sequence[tuple[int, str]] = (
+            dict(enumerate(self.source_results))
+            if for_cmk_version < cmk_version.Version.from_str("3.0.0b1")
+            else self.source_results
+        )
         if for_cmk_version < cmk_version.Version.from_str("2.5.0b1"):
-            return self._serialize_as_dict(skip_keys={"config_warnings"})
-        return self._serialize_as_dict(skip_keys=())
+            return self._serialize_as_dict(source_results, skip_keys={"config_warnings"})
+        return self._serialize_as_dict(source_results, skip_keys=())
 
-    def _serialize_as_dict(self, skip_keys: Container[str]) -> SerializedResult:
+    def _serialize_as_dict(
+        self,
+        source_results: Mapping[int, tuple[int, str]] | Sequence[tuple[int, str]],
+        skip_keys: Container[str],
+    ) -> SerializedResult:
         raw = asdict(self)
         return SerializedResult(
             repr(
@@ -144,6 +156,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
                         str(host_name): [label.serialize() for label in labels]
                         for host_name, labels in self.labels_by_host.items()
                     },
+                    "source_results": source_results,
                 }
             )
         )
@@ -168,7 +181,13 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
                 ]
                 for raw_host_name, raw_host_labels in raw["labels_by_host"].items()
             },
-            source_results=raw["source_results"],
+            # An older peer (< 3.0.0b1) sends a Mapping keyed by source ident; the
+            # key was never consumed, so we only keep the values.
+            source_results=(
+                list(raw_source_results.values())
+                if isinstance(raw_source_results := raw["source_results"], dict)
+                else raw_source_results
+            ),
             config_warnings=raw["config_warnings"],
         )
 

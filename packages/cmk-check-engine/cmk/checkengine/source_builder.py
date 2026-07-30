@@ -107,7 +107,7 @@ class SourceBuilder:
         self._metrics_association: Final = metrics_association
         self.omd_root: Final = omd_root
 
-        self._elems: dict[str, Source] = {}
+        self._elems: set[Source] = set()
         self._initialize_agent_based()
         self._initialize_optional_sources(
             SourceContext(
@@ -161,7 +161,7 @@ class SourceBuilder:
     def sources(self) -> Sequence[Source]:
         # Always execute piggyback at the end
         return sorted(
-            self._elems.values(),
+            self._elems,
             key=lambda args: (
                 args.source_info().fetcher_type is FetcherType.PIGGYBACK,
                 args.source_info().ident,
@@ -300,7 +300,7 @@ class SourceBuilder:
                 assert_never(self.management_protocol)
 
     def _add(self, source: Source) -> None:
-        self._elems[source.source_info().ident] = source
+        self._elems.add(source)
 
     def _add_agent(self) -> None:
         if self.datasource_programs:

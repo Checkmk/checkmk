@@ -163,7 +163,7 @@ class DiscoveryResult(NamedTuple):
     vanished_labels: Mapping[str, HostLabelValueDict]
     changed_labels: Mapping[str, HostLabelValueDict]
     labels_by_host: Mapping[HostName, Sequence[HostLabel]]
-    sources: Mapping[str, tuple[int, str]]
+    sources: Sequence[tuple[int, str]]
     config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: Version) -> str:
@@ -183,7 +183,14 @@ class DiscoveryResult(NamedTuple):
                 str(host_name): [label.serialize() for label in host_labels]
                 for host_name, host_labels in self.labels_by_host.items()
             },
-            self.sources,
+            # Before 3.0.0b1 sources was a Mapping keyed by source ident. The ident
+            # is no longer available here; emit synthetic keys so an older peer's
+            # value-only consumers keep working.
+            (
+                dict(enumerate(self.sources))
+                if for_cmk_version < Version.from_str("3.0.0b1")
+                else self.sources
+            ),
             self.config_warnings,
         )
         if for_cmk_version < Version.from_str("2.5.0b1"):
@@ -223,7 +230,9 @@ class DiscoveryResult(NamedTuple):
                 ]
                 for raw_host_name, raw_host_labels in raw_labels_by_host.items()
             },
-            sources,
+            # An older peer (< 3.0.0b1) sends a Mapping keyed by source ident; the
+            # key was never consumed, so we only keep the values.
+            list(sources.values()) if isinstance(sources, dict) else sources,
             config_warnings,
         )
 
@@ -1329,7 +1338,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
-                source_results={},
+                source_results=[],
                 labels_by_host={},
                 config_warnings=[],
             ),

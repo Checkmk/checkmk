@@ -737,9 +737,7 @@ def _get_discovery_preview(
                 [l for l in check_preview.labels.vanished if l.name not in changed_labels]
             ),
             changed_labels=changed_labels,
-            source_results={
-                k: (r.state, r.as_text()) for k, r in check_preview.source_results.items()
-            },
+            source_results=[(r.state, r.as_text()) for r in check_preview.source_results],
             labels_by_host=check_preview.kept_labels,
             config_warnings=config_warnings.get_configuration(additional_warnings=()),
         )

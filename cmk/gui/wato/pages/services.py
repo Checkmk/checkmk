@@ -804,7 +804,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         current: DiscoveryResult,
     ) -> bool:
         """Only consider CRIT sources failed"""
-        return previous is None and any(source[0] == 2 for source in current.sources.values())
+        return previous is None and any(source[0] == 2 for source in current.sources)
 
 
 class DiscoveryPageRenderer:
@@ -877,11 +877,11 @@ class DiscoveryPageRenderer:
             style="display: inline; margin-left: 10px",
         )
 
-    def render_datasources(self, sources: Mapping[str, tuple[int, str]]) -> str | None:
+    def render_datasources(self, sources: Sequence[tuple[int, str]]) -> str | None:
         if not sources:
             return None
 
-        states = [s for s, _output in sources.values()]
+        states = [s for s, _output in sources]
         overall_state = worst_service_state(*states, default=0)
 
         with output_funnel.plugged():
@@ -917,7 +917,7 @@ class DiscoveryPageRenderer:
                 self._host.effective_attributes().get("cmk_agent_connection") == "push-agent"
             )
             html.open_table()
-            for state, output in sources.values():
+            for state, output in sources:
                 show_agent_tooltip = (
                     ("[agent]" in output or "[push-agent]" in output)
                     and state == 2

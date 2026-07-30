@@ -10,6 +10,7 @@ import UclColumnPicker from './UclColumnPicker.vue'
 import UclColumnPinning from './UclColumnPinning.vue'
 import UclEditableTable from './UclEditableTable.vue'
 import UclMonitoringActionBar from './UclMonitoringActionBar.vue'
+import UclMonitoringPagination from './UclMonitoringPagination.vue'
 import UclRefreshCountdown from './UclRefreshCountdown.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
 import UclTableColumnFilters from './UclTableColumnFilters.vue'
@@ -49,6 +50,7 @@ export const pages: Array<Folder | Page> = [
   ]),
   new Page('ActionFormPane', UclActionFormPane),
   new Page('MonitoringActionBar', UclMonitoringActionBar),
+  new Page('MonitoringPagination', UclMonitoringPagination),
   new Page('RefreshCountdown', UclRefreshCountdown),
   new Page('Editable table', UclEditableTable),
   new Page('Table cell breakpoints', UclTableCellBreakpoints),

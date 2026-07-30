@@ -757,4 +757,152 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
   })
+
+  describe('paging', () => {
+    function makePagedService(matched: number, pageSize: number, maxOffset?: number) {
+      const items = Array.from({ length: pageSize }, (_unused, index) => ({
+        id: `item-${index}`,
+        value: index
+      }))
+      // Echo back whichever offset was asked for, the way a paging backend does.
+      // The holder breaks the cycle: the mock is needed to build the service.
+      const paged: { service?: TestService } = {}
+      const fetchBatch = vi.fn().mockImplementation(() =>
+        Promise.resolve({
+          items,
+          meta: {
+            limit: pageSize,
+            matched,
+            total: matched,
+            offset: paged.service?.offset.value ?? 0,
+            ...(maxOffset === undefined ? {} : { maxOffset })
+          }
+        })
+      )
+      const service = new TestService(fetchBatch, { limitTiers: [pageSize] })
+      paged.service = service
+      return { fetchBatch, service }
+    }
+
+    it('starts unpaged, with no offset and no ceiling', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch)
+
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.offset.value).toBe(0)
+      // A listing whose backend does not page never reports one.
+      expect(service.maxOffset.value).toBeNull()
+      expect(service.hasPreviousPage.value).toBe(false)
+
+      service.stopPolling()
+    })
+
+    it('reports the page bounds of the visible rows', async () => {
+      const { service } = makePagedService(1000, 100)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.pageFirst.value).toBe(1)
+      expect(service.pageLast.value).toBe(100)
+
+      service.stopPolling()
+    })
+
+    it('reports zero bounds while nothing matched', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.pageFirst.value).toBe(0)
+      expect(service.pageLast.value).toBe(0)
+
+      service.stopPolling()
+    })
+
+    it('nextPage steps by the page size and refetches', async () => {
+      const { fetchBatch, service } = makePagedService(1000, 100)
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.nextPage()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.offset.value).toBe(100)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.stopPolling()
+    })
+
+    it('previousPage steps back and never below zero', async () => {
+      const { service } = makePagedService(1000, 100)
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.setOffset(50)
+      await vi.advanceTimersByTimeAsync(0)
+      service.previousPage()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.offset.value).toBe(0)
+
+      service.stopPolling()
+    })
+
+    it('has no next page once the matched rows run out', async () => {
+      const { service } = makePagedService(100, 100)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.hasNextPage.value).toBe(false)
+
+      service.stopPolling()
+    })
+
+    it('stops at the offset ceiling the backend reports', async () => {
+      const { service } = makePagedService(1_000_000, 100, 150)
+      await vi.advanceTimersByTimeAsync(0)
+
+      // 100 is still within the ceiling, 200 would exceed it.
+      expect(service.hasNextPage.value).toBe(true)
+      service.setOffset(100)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(service.hasNextPage.value).toBe(false)
+
+      service.stopPolling()
+    })
+
+    it.each([
+      ['updateSearch', (service: TestService) => service.updateSearch('web')],
+      ['updateSort', (service: TestService) => service.updateSort([{ id: 'name', desc: false }])],
+      [
+        'updateFilters',
+        (service: TestService) =>
+          service.updateFilters({ type: 'condition', field: 'name', op: 'contains', value: 'web' })
+      ],
+      ['setRequestedLimit', (service: TestService) => service.setRequestedLimit(1000)]
+    ])('%s resets the offset, because it invalidates the page', async (_name, narrow) => {
+      const { service } = makePagedService(1000, 100)
+      await vi.advanceTimersByTimeAsync(0)
+      service.setOffset(300)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(service.offset.value).toBe(300)
+
+      narrow(service)
+
+      expect(service.offset.value).toBe(0)
+
+      service.stopPolling()
+    })
+
+    it('trusts the offset the backend served over the requested one', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue({
+        items: [{ id: 'a', value: 1 }],
+        meta: { limit: 100, matched: 500, total: 500, offset: 42 }
+      })
+      const service = new TestService(fetchBatch, { limitTiers: [100] })
+
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.offset.value).toBe(42)
+
+      service.stopPolling()
+    })
+  })
 })

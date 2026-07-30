@@ -35,6 +35,10 @@ export interface PagedResponse<T> {
     limit: number | null
     matched: number
     total: number
+    /** Offset the returned items start at. Absent for listings that do not page. */
+    offset?: number
+    /** Highest offset the backend serves. Absent for listings that do not page. */
+    maxOffset?: number
   }
 }
 
@@ -122,6 +126,13 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   readonly offeredLimits: RequestedLimit[]
   readonly requestedLimit: Ref<RequestedLimit>
+  /**
+   * Offset of the visible page into the matched rows. Stays 0 for listings that
+   * are bounded by a limit instead of paged.
+   */
+  readonly offset: Ref<number> = ref(0)
+  /** Highest offset the backend serves, or `null` while it has not said. */
+  readonly maxOffset: Ref<number | null> = ref(null)
   /** The kind of fetch currently in flight, or `'idle'`. */
   readonly fetchState: Ref<FetchState> = ref('idle')
   readonly hasLoaded: Ref<boolean> = ref(false)
@@ -150,6 +161,31 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly paused: ComputedRef<boolean> = computed(
     () => this.manualPaused.value || this.autoPauseCount.value > 0
   )
+
+  /** 1-based position of the first visible row, or 0 when nothing matched. */
+  readonly pageFirst: ComputedRef<number> = computed(() =>
+    this.items.value.length === 0 ? 0 : this.offset.value + 1
+  )
+  /** 1-based position of the last visible row, or 0 when nothing matched. */
+  readonly pageLast: ComputedRef<number> = computed(
+    () => this.offset.value + this.items.value.length
+  )
+  readonly hasPreviousPage: ComputedRef<boolean> = computed(() => this.offset.value > 0)
+  readonly hasNextPage: ComputedRef<boolean> = computed(() => {
+    const next = this.offset.value + this.pageSize
+    return (
+      next < this.matched.value && (this.maxOffset.value === null || next <= this.maxOffset.value)
+    )
+  })
+
+  /**
+   * Rows per page. An unbounded listing has no page size of its own, so it
+   * steps by however many rows came back - which keeps `nextPage()` honest even
+   * though such a listing never offers paging in practice.
+   */
+  private get pageSize(): number {
+    return this.requestedLimit.value ?? this.items.value.length
+  }
 
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
   private refreshTimer: ReturnType<typeof setTimeout> | null = null
@@ -241,11 +277,13 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   updateSort(sortState: SortingState): void {
     this.sortState.value = sortState
+    this.offset.value = 0
     void this.fetch()
   }
 
   updateSearch(searchQuery: string): void {
     this.searchQuery.value = searchQuery
+    this.offset.value = 0
     void this.fetch()
   }
 
@@ -268,7 +306,33 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   updateFilters(node: FilterNode | undefined): void {
     this.filterState.value = node
+    this.offset.value = 0
     void this.fetch()
+  }
+
+  /**
+   * Jump to an offset into the matched rows. Narrowing or resizing invalidates
+   * the current page, so search, sort, filter and limit changes reset it to 0.
+   */
+  setOffset(value: number): void {
+    const next = Math.max(0, value)
+    if (next === this.offset.value) {
+      return
+    }
+    this.offset.value = next
+    void this.fetch()
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage.value) {
+      this.setOffset(this.offset.value + this.pageSize)
+    }
+  }
+
+  previousPage(): void {
+    if (this.hasPreviousPage.value) {
+      this.setOffset(this.offset.value - this.pageSize)
+    }
   }
 
   // Selecting "no limit" pauses the auto-refresh so an unbounded result set isn't re-fetched on
@@ -279,6 +343,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
     }
     const wasUnlimited = this.requestedLimit.value === null
     this.requestedLimit.value = value
+    this.offset.value = 0
     if (value === null) {
       this.manualPaused.value = true
     } else if (wasUnlimited) {
@@ -372,6 +437,14 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.items.value = response.items
       this.matched.value = response.meta.matched
       this.total.value = response.meta.total
+      // A paging backend reports which page it actually served; trust it over the
+      // requested offset, which it may have clamped.
+      if (response.meta.offset !== undefined) {
+        this.offset.value = response.meta.offset
+      }
+      if (response.meta.maxOffset !== undefined) {
+        this.maxOffset.value = response.meta.maxOffset
+      }
       this.committedSearchQuery.value = searchQueryForFetch
     } catch (error: unknown) {
       if (this.currentAbort !== abort) {

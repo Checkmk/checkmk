@@ -23,13 +23,13 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_ups_eaton_environment(info):
+def inventory_ups_eaton_enviroment(info):
     if len(info) > 0:
         return [(None, {})]
     return []
 
 
-def check_ups_eaton_environment(item, params, info):
+def check_ups_eaton_enviroment(item, params, info):
     wert = list(map(saveint, info[0]))
     i = 0
     state = 0
@@ -65,13 +65,13 @@ def check_ups_eaton_environment(item, params, info):
     return (state, ", ".join(messages), perfdata)
 
 
-def parse_ups_eaton_environment(string_table: StringTable) -> StringTable:
+def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ups_eaton_environment"] = LegacyCheckDefinition(
-    name="ups_eaton_environment",
-    parse_function=parse_ups_eaton_environment,
+check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
+    name="ups_eaton_enviroment",
+    parse_function=parse_ups_eaton_enviroment,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
@@ -81,9 +81,9 @@ check_info["ups_eaton_environment"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],
     ),
-    service_name="Environment",
-    discovery_function=inventory_ups_eaton_environment,
-    check_function=check_ups_eaton_environment,
+    service_name="Enviroment",
+    discovery_function=inventory_ups_eaton_enviroment,
+    check_function=check_ups_eaton_enviroment,
     check_ruleset_name="eaton_enviroment",
     check_default_parameters={
         "temp": (40, 50),

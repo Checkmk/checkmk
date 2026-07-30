@@ -1121,7 +1121,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "ups_cps_battery",
         "ups_cps_inphase",
         "ups_cps_outphase",
-        "ups_eaton_environment",
+        "ups_eaton_enviroment",
         "ups_in_freq",
         "ups_in_voltage",
         "ups_modulys_alarms",

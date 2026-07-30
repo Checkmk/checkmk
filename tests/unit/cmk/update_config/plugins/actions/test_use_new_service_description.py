@@ -305,7 +305,6 @@ _PRE_DATA_FORMAT_MIGRATION_SAMPLE_CONFIG = [
     "statgrab_mem",
     "tplink_mem",
     "ups_bat_temp",
-    "ups_eaton_environment",
     "vms_diskstat_df",
     "wmic_process",
     "zfsget",

@@ -5,9 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { NetworkFlowFlowExplorerApp } from 'cmk-shared-typing/typescript/network_flow/flow_explorer'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { onBeforeUnmount, provide } from 'vue'
+import { computed, onBeforeUnmount, provide } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
@@ -21,6 +23,7 @@ import RefreshCountdown from '@/monitoring/shared/components/RefreshCountdown.vu
 import { FlowApi, type FlowEntry } from './api/flows'
 import { buildFlowColumnPinning, buildFlowColumns } from './columns'
 import FlowRow from './components/FlowRow.vue'
+import { csvFilename, downloadCsv, flowsToCsv } from './export/flowCsv'
 import { FlowService } from './services/FlowService'
 
 const { _t } = usei18n()
@@ -47,6 +50,12 @@ onBeforeUnmount(() => {
 function rowKey(row: FlowEntry): string {
   return `${row.flow_id}-${row.first_seen}`
 }
+
+const canExport = computed(() => flowService.items.value.length > 0)
+
+function exportCsv(): void {
+  downloadCsv(csvFilename(Date.now()), flowsToCsv(flowService.items.value))
+}
 </script>
 
 <template>
@@ -64,7 +73,17 @@ function rowKey(row: FlowEntry): string {
       </div>
     </div>
     <div class="network-flow-flow-explorer-app__table-toolbar">
-      <div class="network-flow-flow-explorer-app__actions" />
+      <div class="network-flow-flow-explorer-app__actions">
+        <CmkButton
+          variant="optional"
+          :disabled="!canExport"
+          :title="_t('Export the flows on this page as a CSV file')"
+          @click="exportCsv"
+        >
+          <CmkIcon name="download-csv" size="small" />
+          {{ _t('Export CSV') }}
+        </CmkButton>
+      </div>
       <div class="network-flow-flow-explorer-app__table-toolbar-end">
         <MonitoringPagination :unit="_t('flows')" />
         <MonitoringTotalCount />

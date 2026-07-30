@@ -5,6 +5,7 @@
 
 import ast
 import json
+import os
 import sys
 import traceback
 from collections.abc import Sequence
@@ -59,6 +60,16 @@ def _migrate_path_locations(home: Path, paths: Paths) -> None:
                     f"Please move it manually; this automatic migration will be "
                     f"removed at the start of September 2026.\n"
                 )
+
+
+def write_secret(secret_file: Path, secret: str) -> None:
+    secret_file.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    # The mode above is only applied while creating the file. Rotating a secret truncates
+    # the one that is already there, which would keep whatever mode it carried.
+    os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w") as fp:
+        fp.write(secret)
 
 
 def load_legacy_stash_from_file(paths: Paths) -> LegacyStash:

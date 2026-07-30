@@ -35,6 +35,7 @@ from .id_pool import (
     migrate_werk_ids_file,
     pick_id_from_stash,
     WerkIDsClient,
+    write_secret,
 )
 from .in_out_elements import (
     bail_out,
@@ -740,12 +741,9 @@ def main_init() -> None:
             migrate_werk_ids_file(paths)
         return
 
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     while True:
         secret = getpass.getpass("Secret: ")
-        fd = os.open(paths.secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as fp:
-            fp.write(secret)
+        write_secret(paths.secret_file, secret)
 
         # Only migrate the legacy file once the secret is confirmed correct. A wrong
         # secret leaves the legacy stash untouched, so it stays usable for 'werk create'.

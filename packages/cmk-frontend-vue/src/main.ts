@@ -37,6 +37,7 @@ import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import AllHostsApp from './monitoring/all-hosts/AllHostsApp.vue'
 import HostServicesApp from './monitoring/host-services/HostServicesApp.vue'
 import MonitoringPageLinkButton from './monitoring/shared/components/MonitoringPageLinkButton.vue'
+import FlowExplorerApp from './network-flow/flow-explorer/FlowExplorerApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
 import ProfilingFlamegraphApp from './profiling/ProfilingFlamegraphApp.vue'
@@ -75,6 +76,7 @@ defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2Conn
 defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
 defineCmkComponent('cmk-monitoring-host-services', HostServicesApp)
 defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)
+defineCmkComponent('cmk-network-flow-explorer', FlowExplorerApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)

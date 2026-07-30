@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Network Flow - Flow Explorer App",
+  "properties": {
+    "poll_interval_ms": {
+      "type": "number",
+      "default": 60000
+    },
+    "limit_tiers": {
+      "description": "Selectable page sizes, smallest first.",
+      "type": "array",
+      "items": { "type": "number" },
+      "default": [100, 500, 1000]
+    },
+    "default_time_range_seconds": {
+      "description": "Time range the page starts on when the URL carries no time filter.",
+      "type": "number",
+      "default": 86400
+    },
+    "max_time_range_seconds": {
+      "description": "Longest range the flow database can answer, from the retention setting.",
+      "type": "number",
+      "default": 5184000
+    }
+  },
+  "required": [
+    "poll_interval_ms",
+    "limit_tiers",
+    "default_time_range_seconds",
+    "max_time_range_seconds"
+  ]
+}

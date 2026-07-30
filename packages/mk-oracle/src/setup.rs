@@ -16,6 +16,7 @@
 
 use crate::args::Args;
 use crate::config::merge;
+use crate::config::options::Options;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::constants::{get_user_config_file, RUNTIME_DIR};
@@ -496,7 +497,23 @@ pub fn detect_runtime_dir(
     let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
     log::info!("Use host client {:?}", use_host_client);
     let runtime = detect_runtime(&use_host_client, mk_lib_dir)?;
-    if check_permissions && !validate_permissions(&runtime) {
+    if !check_permissions {
+        log::info!("Skip permissions check for runtime path {:?}", runtime);
+        return Some(runtime);
+    }
+    let options = if cfg!(windows) {
+        config
+            .ora_sql()
+            .map(|c| c.options().clone())
+            .unwrap_or_default()
+    } else {
+        Options::default()
+    };
+    if !validate_permissions(
+        &runtime,
+        options.permissions_check(),
+        options.permissions_safe_entries(),
+    ) {
         log::error!("Runtime path {:?} has wrong permissions", runtime);
         return None;
     }
@@ -559,13 +576,10 @@ pub fn detect_oracle_home(
             return None;
         }
         let lib_dir = local.home.join("lib");
-        if lib_dir.is_dir() && validate_permissions(&lib_dir) {
+        if lib_dir.is_dir() {
             Some(local.home)
         } else {
-            log::warn!(
-                "Oracle home {:?} has no lib dir or it has wrong permissions",
-                local.home
-            );
+            log::warn!("Oracle home {:?} has no lib dir", local.home);
             None
         }
     });
@@ -645,14 +659,14 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// built-in Administrators, Domain Admins, Enterprise Admins) whenever the
 /// plugin runs elevated. In both cases a non-privileged caller always
 /// passes.
-pub fn validate_permissions(p: &Path) -> bool {
+pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> bool {
     #[cfg(unix)]
     {
-        crate::permissions_linux::validate(p)
+        crate::permissions_linux::validate(p, check, safe_entries)
     }
     #[cfg(windows)]
     {
-        crate::permissions_windows::validate(p)
+        crate::permissions_windows::validate(p, check, safe_entries)
     }
 }
 

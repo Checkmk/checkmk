@@ -3466,7 +3466,6 @@ _EXPECTED_OLD_DESCRIPTIONS = {
     "statgrab_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "tplink_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "ups_bat_temp": TestServiceDescription("test_item", "Temperature Battery test_item"),
-    "ups_eaton_environment": TestServiceDescription("test_item", "Enviroment"),
     "vms_diskstat_df": TestServiceDescription("test_item", "fs_test_item"),
     "wmic_process": TestServiceDescription("test_item", "proc_test_item"),
     "zfsget": TestServiceDescription("test_item", "fs_test_item"),

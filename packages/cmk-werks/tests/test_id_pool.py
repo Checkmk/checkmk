@@ -26,6 +26,7 @@ from cmk.werks.cli import (
     Stash,
     WerkId,
     WerkIDsClient,
+    write_secret,
 )
 
 # ---------------------------------------------------------------------------
@@ -200,6 +201,29 @@ def test_paths_object_migration_does_not_overwrite_new_locations(tmp_path: Path)
 
     assert old_secret.read_text(encoding="utf-8") == "old"
     assert paths.secret_file.read_text(encoding="utf-8") == "new"
+
+
+def test_write_secret_creates_it_readable_by_the_owner_only(tmp_path: Path) -> None:
+    secret_file = make_paths_object(tmp_path).secret_file
+
+    write_secret(secret_file, "s3cret")
+
+    assert secret_file.read_text(encoding="utf-8") == "s3cret"
+    assert secret_file.stat().st_mode & 0o777 == 0o600
+
+
+def test_write_secret_restricts_a_file_that_is_already_there(tmp_path: Path) -> None:
+    # os.open() only applies its mode while creating, so rotating a secret used to keep
+    # the mode of the existing file
+    secret_file = make_paths_object(tmp_path).secret_file
+    secret_file.parent.mkdir(parents=True, exist_ok=True)
+    secret_file.write_text("old", encoding="utf-8")
+    secret_file.chmod(0o664)
+
+    write_secret(secret_file, "s3cret")
+
+    assert secret_file.read_text(encoding="utf-8") == "s3cret"
+    assert secret_file.stat().st_mode & 0o777 == 0o600
 
 
 def test_paths_object_migration_survives_cross_device_rename(

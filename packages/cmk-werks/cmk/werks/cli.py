@@ -215,6 +215,16 @@ def _migrate_path_locations(home: Path, paths: Paths) -> None:
                 )
 
 
+def write_secret(secret_file: Path, secret: str) -> None:
+    secret_file.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    # The mode above is only applied while creating the file. Rotating a secret truncates
+    # the one that is already there, which would keep whatever mode it carried.
+    os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w") as fp:
+        fp.write(secret)
+
+
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
     TTY_RED = "\033[31m"
@@ -1208,12 +1218,9 @@ def main_init() -> None:
             migrate_werk_ids_file(paths)
         return
 
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     while True:
         secret = getpass.getpass("Secret: ")
-        fd = os.open(paths.secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as fp:
-            fp.write(secret)
+        write_secret(paths.secret_file, secret)
 
         # Only migrate the legacy file once the secret is confirmed correct. A wrong
         # secret leaves the legacy stash untouched, so it stays usable for 'werk create'.

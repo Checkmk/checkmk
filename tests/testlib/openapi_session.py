@@ -1568,6 +1568,7 @@ class LDAPConnectionAPI(BaseAPI):
             "active_directory_manual", "open_ldap", "389_directory_server"
         ] = "active_directory_manual",
         sync_interval_minutes: int = 1,
+        sync_plugins: dict[str, Any] | None = None,
     ) -> None:
         """Create an LDAP connection via REST API.
 
@@ -1581,6 +1582,11 @@ class LDAPConnectionAPI(BaseAPI):
         users on ``uid`` (vs Active Directory's ``samaccountname``) — the right
         choice for an ``inetOrgPerson`` directory whose users must be imported by
         sync.
+
+        ``sync_plugins`` selects which user attributes the connection copies from
+        LDAP; the default (none) creates a connection that syncs no attribute at
+        all. Pass e.g. ``{"alias": {"state": "enabled", "attribute_to_sync": "cn"}}``
+        for a connection whose sync has an observable effect on the user record.
         """
         users = {
             "user_base_dn": user_base_dn,
@@ -1628,7 +1634,7 @@ class LDAPConnectionAPI(BaseAPI):
             json={
                 "users": users,
                 "groups": groups,
-                "sync_plugins": {},
+                "sync_plugins": sync_plugins or {},
                 "other": {
                     "sync_interval": {
                         "days": sync_interval_minutes // (24 * 60),

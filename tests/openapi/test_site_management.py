@@ -23,6 +23,8 @@ from cmk.gui.rest_api_types.site_connection import (
     StatusHost,
 )
 from cmk.gui.watolib.site_changes import SiteChanges
+from cmk.gui.watolib.sites import SitesConfigFile
+from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -556,6 +558,67 @@ def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
     extensions = resp.json["extensions"]
     extensions.pop("logged_in", None)
     assert extensions == config
+
+
+def test_update_site_connection_preserves_settings_it_cannot_express(
+    clients: ClientRegistry,
+) -> None:
+    """Stored settings that this endpoint does not model must survive an update."""
+
+    def _stored_config_keys(site_id: str) -> list[str]:
+        """The keys the site connection actually has on disk, bypassing the rest-api."""
+        return sorted(SitesConfigFile().load_for_reading()[SiteId(site_id)])
+
+    rest_api_keys = {
+        "alias",
+        "authentication_connections",
+        "disable_wato",
+        "disabled",
+        "id",
+        "insecure",
+        "is_trusted",
+        "message_broker_port",
+        "multisiteurl",
+        "persist",
+        "proxy",
+        "replicate_ec",
+        "replicate_mkps",
+        "replication",
+        "socket",
+        "status_host",
+        "timeout",
+        "url_prefix",
+        "user_attribute_sync_connections",
+        "user_login",
+    }
+
+    additional_ui_keys = ["globals"]
+    assert set(additional_ui_keys) <= set(SiteConfiguration.__annotations__)
+
+    # create the config via the rest-api:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    # see what keys were created
+    assert set(_stored_config_keys(site_id)) == rest_api_keys
+
+    # simulate adding two other keys via ui:
+    sites_config_file = SitesConfigFile()
+    sites = sites_config_file.load_for_modification()
+    sites[SiteId(site_id)]["authentication_connections"] = ("all", ["saml"])
+    sites[SiteId(site_id)]["globals"] = {"log_levels": {"cmk.web": 15}}
+    sites_config_file.save(sites, pprint_value=False)
+
+    # expect more keys on disk:
+    keys_after_ui_change = _stored_config_keys(site_id)
+    assert keys_after_ui_change == sorted([*rest_api_keys, *additional_ui_keys])
+
+    # update using the rest-api:
+    clients.SiteManagement.update(site_id=site_id, site_config=config)
+
+    keys_after_rest_api_update = set(_stored_config_keys(site_id))
+    # TODO: THIS IS A BUG: we lost two keys. this should be keys_after_ui_change!
+    assert keys_after_rest_api_update == rest_api_keys
 
 
 def test_update_site_connection_user_sync_with_ldap_connections_200(

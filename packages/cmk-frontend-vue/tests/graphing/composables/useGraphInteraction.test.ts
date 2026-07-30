@@ -221,6 +221,27 @@ test('a reset commits the baseline time range', () => {
   expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE, 'changed_timerange_span')
 })
 
+test('a reset commits the range the page requested, not the snapped one the backend served', () => {
+  const requested: RequestedTimeRange = { start: 1000, end: 2000 }
+  const served: TimeRange = { start: 960, end: 2040, step: 60 }
+  const onTimeRangeCommit = vi.fn()
+  const graph = useGraphInteraction(
+    () => served,
+    undefined,
+    () => requested,
+    onTimeRangeCommit
+  )
+  graph.onZoom({ timeRange: ZOOMED })
+  onTimeRangeCommit.mockClear()
+
+  graph.onReset()
+
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
+    { start: 1000, end: 2000, step: 60 },
+    'changed_timerange_span'
+  )
+})
+
 test('a reset does not commit when there is no baseline yet', () => {
   const onTimeRangeCommit = vi.fn()
   const graph = useGraphInteraction(() => undefined, undefined, undefined, onTimeRangeCommit)

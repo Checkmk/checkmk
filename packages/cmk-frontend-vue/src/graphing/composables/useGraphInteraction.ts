@@ -52,6 +52,11 @@ export function useGraphInteraction(
   // effect right before it started (consumed by onReset), lastCommittedRequest is the range
   // this session last asked onTimeRangeCommit to publish. The two always start and end
   // together, hence one nullable object rather than two separately-nullable refs.
+  //
+  // resetTarget is the range the page asked for, not the baseline the backend answered with:
+  // the served range is snapped to the RRD step, so publishing it would end the reset on a
+  // range that is a step longer than any of the time picker's presets and drop the picker to
+  // "Custom time range". The baseline is the fallback for hosts that request nothing.
   const zoomSession: Ref<{
     resetTarget: TimeRange
     lastCommittedRequest: RequestedTimeRange
@@ -88,7 +93,10 @@ export function useGraphInteraction(
     if (zoomSession.value === null) {
       const baseline = getBaseline()
       if (baseline !== undefined) {
-        zoomSession.value = { resetTarget: baseline, lastCommittedRequest: rounded }
+        zoomSession.value = {
+          resetTarget: { ...baseline, ...getRequestedTimeRange?.() },
+          lastCommittedRequest: rounded
+        }
       }
     } else {
       zoomSession.value = { ...zoomSession.value, lastCommittedRequest: rounded }

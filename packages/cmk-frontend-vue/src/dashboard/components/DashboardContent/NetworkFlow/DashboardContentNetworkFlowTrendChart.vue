@@ -9,10 +9,10 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed, inject } from 'vue'
 
-import { autonomousSystemSlideInKey } from '@/dashboard/types/injectionKeys.ts'
 import type { NetworkFlowTrendChartContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkTrendChart from '@/network-flow/CmkTrendChart'
+import { autonomousSystemSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'

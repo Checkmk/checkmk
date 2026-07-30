@@ -20,6 +20,8 @@ import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import MonitoringTotalCount from '@/monitoring/shared/components/MonitoringTotalCount.vue'
 import RefreshCountdown from '@/monitoring/shared/components/RefreshCountdown.vue'
+import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
+import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
 import { FlowApi, type FlowEntry } from './api/flows'
 import { buildFlowColumnPinning, buildFlowColumns } from './columns'
@@ -50,6 +52,9 @@ const flowService = new FlowService(new FlowApi(), getKeyShortcutServiceInstance
 })
 
 provide(MONITORING_SERVICE, flowService)
+
+// Clicking an address or an autonomous system in a row opens its detail panel.
+const slideIns = useNetworkFlowSlideIns()
 
 onBeforeUnmount(() => {
   flowService.destruct()
@@ -118,6 +123,7 @@ function exportCsv(): void {
         <MonitoringEmptyState />
       </template>
     </MonitoringTable>
+    <NetworkFlowSlideIns :slide-ins="slideIns" />
   </div>
 </template>
 

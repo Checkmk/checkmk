@@ -27,8 +27,6 @@ import {
 
 import DashboardBreadcrumb from '@/dashboard/components/DashboardBreadcrumb/DashboardBreadcrumb.vue'
 import DashboardComponent from '@/dashboard/components/DashboardComponent.vue'
-import NetworkFlowAutonomousSystemSlideIn from '@/dashboard/components/DashboardContent/NetworkFlow/AutonomousSystemSlideIn/NetworkFlowAutonomousSystemSlideIn.vue'
-import NetworkFlowHostSlideIn from '@/dashboard/components/DashboardContent/NetworkFlow/HostSlideIn/NetworkFlowHostSlideIn.vue'
 import DashboardFilterSettings from '@/dashboard/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -58,11 +56,7 @@ import {
   type DashboardModel
 } from '@/dashboard/types/dashboard.ts'
 import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
-import {
-  autonomousSystemSlideInKey,
-  hostSlideInKey,
-  urlParamsKey
-} from '@/dashboard/types/injectionKeys.ts'
+import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { DashboardPageProperties } from '@/dashboard/types/page.ts'
 import type {
   WidgetContent,
@@ -72,6 +66,8 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
+import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
+import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
@@ -115,48 +111,8 @@ useProvideVisualInfos()
 // So far, this is only needed and used by the DashboardContentNtop component
 provide(urlParamsKey, props.url_params)
 
-// Network flow host detail slide-in, opened via hostSlideInKey from flow
-// widgets. Switching hosts while open toggles closed/open so the panel reloads.
-const hostSlideInIp = ref<string | null>(null)
-const hostSlideInOpen = computed(() => hostSlideInIp.value !== null)
-
-function openHostSlideIn(ip: string): void {
-  if (hostSlideInIp.value !== null && hostSlideInIp.value !== ip) {
-    hostSlideInIp.value = null
-    void nextTick(() => {
-      hostSlideInIp.value = ip
-    })
-  } else {
-    hostSlideInIp.value = ip
-  }
-}
-
-function closeHostSlideIn(): void {
-  hostSlideInIp.value = null
-}
-
-provide(hostSlideInKey, openHostSlideIn)
-
-// Network flow autonomous system detail slide-in, same open/toggle pattern.
-const autonomousSystemSlideInAsn = ref<number | null>(null)
-const autonomousSystemSlideInOpen = computed(() => autonomousSystemSlideInAsn.value !== null)
-
-function openAutonomousSystemSlideIn(asn: number): void {
-  if (autonomousSystemSlideInAsn.value !== null && autonomousSystemSlideInAsn.value !== asn) {
-    autonomousSystemSlideInAsn.value = null
-    void nextTick(() => {
-      autonomousSystemSlideInAsn.value = asn
-    })
-  } else {
-    autonomousSystemSlideInAsn.value = asn
-  }
-}
-
-function closeAutonomousSystemSlideIn(): void {
-  autonomousSystemSlideInAsn.value = null
-}
-
-provide(autonomousSystemSlideInKey, openAutonomousSystemSlideIn)
+// The network flow detail slide-ins, opened from the flow widgets nested below.
+const networkFlowSlideIns = useNetworkFlowSlideIns()
 
 const dashboardsManager = useDashboardsManager()
 useProvideDashboardConstants(dashboardsManager.constants)
@@ -763,16 +719,7 @@ const reviewFilters = () => {
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
         />
-        <NetworkFlowHostSlideIn
-          :open="hostSlideInOpen"
-          :ip="hostSlideInIp"
-          @close="closeHostSlideIn"
-        />
-        <NetworkFlowAutonomousSystemSlideIn
-          :open="autonomousSystemSlideInOpen"
-          :asn="autonomousSystemSlideInAsn"
-          @close="closeAutonomousSystemSlideIn"
-        />
+        <NetworkFlowSlideIns :slide-ins="networkFlowSlideIns" />
       </div>
       <div class="db-app__content">
         <template v-if="dashboardsManager.isInitialized.value && !loadingError">

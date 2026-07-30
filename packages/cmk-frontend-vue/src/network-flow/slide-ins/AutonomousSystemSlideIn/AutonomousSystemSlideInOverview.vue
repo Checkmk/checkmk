@@ -10,11 +10,12 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import type { ComputedNetworkFlowAutonomousSystem } from '@/dashboard/types/widget.ts'
 import KpiSparkLine from '@/network-flow/CmkKpiStatCard/KpiSparkLine.vue'
 import CmkRankedTable from '@/network-flow/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/network-flow/CmkRankedTable'
 import { CHART_COLOR_CSS } from '@/network-flow/colors'
+
+import type { ComputedNetworkFlowAutonomousSystem } from '../api/context'
 
 const { _t } = usei18n()
 
@@ -47,9 +48,9 @@ const localHostRows = computed<RankedTableRow[]>(() =>
 </script>
 
 <template>
-  <div class="db-autonomous-system-slide-in-overview">
-    <section class="db-autonomous-system-slide-in-overview__traffic">
-      <dl class="db-autonomous-system-slide-in-overview__metrics">
+  <div class="network-flow-autonomous-system-slide-in-overview">
+    <section class="network-flow-autonomous-system-slide-in-overview__traffic">
+      <dl class="network-flow-autonomous-system-slide-in-overview__metrics">
         <div>
           <dt>{{ _t('Throughput') }}</dt>
           <dd>{{ throughputFormatter.render(autonomousSystem.throughput) }}</dd>
@@ -59,12 +60,12 @@ const localHostRows = computed<RankedTableRow[]>(() =>
           <dd>{{ autonomousSystem.active_flows }}</dd>
         </div>
       </dl>
-      <div class="db-autonomous-system-slide-in-overview__sparkline">
+      <div class="network-flow-autonomous-system-slide-in-overview__sparkline">
         <KpiSparkLine :series="autonomousSystem.series" :color="CHART_COLOR_CSS.green" />
       </div>
     </section>
 
-    <dl class="db-autonomous-system-slide-in-overview__seen">
+    <dl class="network-flow-autonomous-system-slide-in-overview__seen">
       <div>
         <dt>{{ _t('First seen') }}</dt>
         <dd>{{ autonomousSystem.first_seen || '—' }}</dd>
@@ -75,7 +76,7 @@ const localHostRows = computed<RankedTableRow[]>(() =>
       </div>
     </dl>
 
-    <section class="db-autonomous-system-slide-in-overview__table">
+    <section class="network-flow-autonomous-system-slide-in-overview__table">
       <CmkHeading type="h4">{{ _t('Top local hosts') }}</CmkHeading>
       <CmkParagraph v-if="localHostRows.length === 0">
         {{ _t('No traffic in the last 30 minutes.') }}
@@ -83,7 +84,7 @@ const localHostRows = computed<RankedTableRow[]>(() =>
       <CmkRankedTable v-else :columns="localHostColumns" :rows="localHostRows" bar-color="blue" />
     </section>
 
-    <section class="db-autonomous-system-slide-in-overview__table">
+    <section class="network-flow-autonomous-system-slide-in-overview__table">
       <CmkHeading type="h4">{{ _t('Top applications') }}</CmkHeading>
       <CmkParagraph v-if="applicationRows.length === 0">
         {{ _t('No application traffic in the last 30 minutes.') }}
@@ -99,52 +100,52 @@ const localHostRows = computed<RankedTableRow[]>(() =>
 </template>
 
 <style scoped>
-.db-autonomous-system-slide-in-overview {
+.network-flow-autonomous-system-slide-in-overview {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-double);
 }
 
-.db-autonomous-system-slide-in-overview__traffic {
+.network-flow-autonomous-system-slide-in-overview__traffic {
   display: flex;
   gap: var(--spacing-double);
   align-items: center;
   justify-content: space-between;
 }
 
-.db-autonomous-system-slide-in-overview__metrics,
-.db-autonomous-system-slide-in-overview__seen {
+.network-flow-autonomous-system-slide-in-overview__metrics,
+.network-flow-autonomous-system-slide-in-overview__seen {
   display: flex;
   gap: var(--spacing-double);
   margin: 0;
 }
 
-.db-autonomous-system-slide-in-overview__metrics dt,
-.db-autonomous-system-slide-in-overview__seen dt {
+.network-flow-autonomous-system-slide-in-overview__metrics dt,
+.network-flow-autonomous-system-slide-in-overview__seen dt {
   font-size: 0.85em;
   color: var(--color-mid-grey-50);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.db-autonomous-system-slide-in-overview__metrics dd {
+.network-flow-autonomous-system-slide-in-overview__metrics dd {
   margin: 0;
   font-size: 1.4em;
   font-variant-numeric: tabular-nums;
 }
 
-.db-autonomous-system-slide-in-overview__seen dd {
+.network-flow-autonomous-system-slide-in-overview__seen dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
 
-.db-autonomous-system-slide-in-overview__sparkline {
+.network-flow-autonomous-system-slide-in-overview__sparkline {
   flex: 1;
   max-width: 200px;
   height: 48px;
 }
 
-.db-autonomous-system-slide-in-overview__table {
+.network-flow-autonomous-system-slide-in-overview__table {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);

@@ -9,8 +9,7 @@ import type { SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
-import { dashboardAPI } from '@/dashboard/utils.ts'
-
+import { networkFlowContextApi } from '../api/context'
 import AutonomousSystemSlideInOverview from './AutonomousSystemSlideInOverview.vue'
 
 const { _t } = usei18n()
@@ -38,7 +37,7 @@ const tabs = computed<SlideInTab[]>(() => {
       id: 'overview',
       title: _t('Overview'),
       component: markRaw(AutonomousSystemSlideInOverview),
-      load: async () => (await dashboardAPI.computeNetworkFlowAutonomousSystemContext(asn)).value
+      load: () => networkFlowContextApi.autonomousSystemContext(asn)
     }
   ]
 })

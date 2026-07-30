@@ -11,11 +11,12 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import type { ComputedNetworkFlowHost } from '@/dashboard/types/widget.ts'
 import KpiSparkLine from '@/network-flow/CmkKpiStatCard/KpiSparkLine.vue'
 import CmkRankedTable from '@/network-flow/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/network-flow/CmkRankedTable'
 import { CHART_COLOR_CSS } from '@/network-flow/colors'
+
+import type { ComputedNetworkFlowHost } from '../api/context'
 
 const { _t } = usei18n()
 
@@ -75,9 +76,9 @@ const peerRows = computed<RankedTableRow[]>(() =>
 </script>
 
 <template>
-  <div class="db-host-slide-in-overview">
-    <section class="db-host-slide-in-overview__identity">
-      <div class="db-host-slide-in-overview__title-row">
+  <div class="network-flow-host-slide-in-overview">
+    <section class="network-flow-host-slide-in-overview__identity">
+      <div class="network-flow-host-slide-in-overview__title-row">
         <CmkHeading type="h3">{{ host.hostname ?? host.ip }}</CmkHeading>
         <CmkBadge v-if="stateBadge" :color="stateBadge.color" size="small">
           {{ stateBadge.label }}
@@ -86,20 +87,23 @@ const peerRows = computed<RankedTableRow[]>(() =>
           {{ localityBadge }}
         </CmkBadge>
       </div>
-      <CmkParagraph v-if="host.hostname !== null" class="db-host-slide-in-overview__subtitle">
+      <CmkParagraph
+        v-if="host.hostname !== null"
+        class="network-flow-host-slide-in-overview__subtitle"
+      >
         {{ host.ip }}
       </CmkParagraph>
       <a
         v-if="host.service_page_url"
-        class="db-host-slide-in-overview__host-link"
+        class="network-flow-host-slide-in-overview__host-link"
         :href="host.service_page_url"
       >
         {{ _t('Open host in Checkmk') }}
       </a>
     </section>
 
-    <section class="db-host-slide-in-overview__traffic">
-      <dl class="db-host-slide-in-overview__metrics">
+    <section class="network-flow-host-slide-in-overview__traffic">
+      <dl class="network-flow-host-slide-in-overview__metrics">
         <div>
           <dt>{{ _t('Ingress') }}</dt>
           <dd>{{ byteFormatter.render(host.ingress) }}</dd>
@@ -109,12 +113,12 @@ const peerRows = computed<RankedTableRow[]>(() =>
           <dd>{{ byteFormatter.render(host.egress) }}</dd>
         </div>
       </dl>
-      <div class="db-host-slide-in-overview__sparkline">
+      <div class="network-flow-host-slide-in-overview__sparkline">
         <KpiSparkLine :series="host.series" :color="CHART_COLOR_CSS.green" />
       </div>
     </section>
 
-    <section class="db-host-slide-in-overview__table">
+    <section class="network-flow-host-slide-in-overview__table">
       <CmkHeading type="h4">{{ _t('Top applications') }}</CmkHeading>
       <CmkParagraph v-if="applicationRows.length === 0">
         {{ _t('No application traffic in the last 30 minutes.') }}
@@ -127,7 +131,7 @@ const peerRows = computed<RankedTableRow[]>(() =>
       />
     </section>
 
-    <section class="db-host-slide-in-overview__table">
+    <section class="network-flow-host-slide-in-overview__table">
       <CmkHeading type="h4">{{ _t('Top peers') }}</CmkHeading>
       <CmkParagraph v-if="peerRows.length === 0">
         {{ _t('No peer traffic in the last 30 minutes.') }}
@@ -138,60 +142,60 @@ const peerRows = computed<RankedTableRow[]>(() =>
 </template>
 
 <style scoped>
-.db-host-slide-in-overview {
+.network-flow-host-slide-in-overview {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-double);
 }
 
-.db-host-slide-in-overview__title-row {
+.network-flow-host-slide-in-overview__title-row {
   display: flex;
   gap: var(--spacing);
   align-items: center;
 }
 
-.db-host-slide-in-overview__subtitle {
+.network-flow-host-slide-in-overview__subtitle {
   color: var(--color-mid-grey-50);
 }
 
-.db-host-slide-in-overview__host-link {
+.network-flow-host-slide-in-overview__host-link {
   display: inline-block;
   margin-top: var(--spacing-half);
 }
 
-.db-host-slide-in-overview__traffic {
+.network-flow-host-slide-in-overview__traffic {
   display: flex;
   gap: var(--spacing-double);
   align-items: center;
   justify-content: space-between;
 }
 
-.db-host-slide-in-overview__metrics {
+.network-flow-host-slide-in-overview__metrics {
   display: flex;
   gap: var(--spacing-double);
   margin: 0;
 }
 
-.db-host-slide-in-overview__metrics dt {
+.network-flow-host-slide-in-overview__metrics dt {
   font-size: 0.85em;
   color: var(--color-mid-grey-50);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.db-host-slide-in-overview__metrics dd {
+.network-flow-host-slide-in-overview__metrics dd {
   margin: 0;
   font-size: 1.4em;
   font-variant-numeric: tabular-nums;
 }
 
-.db-host-slide-in-overview__sparkline {
+.network-flow-host-slide-in-overview__sparkline {
   flex: 1;
   max-width: 200px;
   height: 48px;
 }
 
-.db-host-slide-in-overview__table {
+.network-flow-host-slide-in-overview__table {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);

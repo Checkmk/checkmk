@@ -80,11 +80,21 @@ class CheckParamsDeviceStatus(TypedDict):
     last_reported_upper_levels: SimpleLevelsConfigModel[int]
 
 
+_DEFAULT_STATUS_MAP: Mapping[str, int] = {
+    "online": State.OK.value,
+    "alerting": State.CRIT.value,
+    "offline": State.WARN.value,
+    "dormant": State.WARN.value,
+}
+
+
 def check_device_status(params: CheckParamsDeviceStatus, section: Section) -> CheckResult:
-    yield Result(
-        state=State(params["status_map"][section.status]),
-        summary=f"Status: {section.status}",
-    )
+    try:
+        raw_state = params["status_map"][section.status]
+    except KeyError:
+        raw_state = _DEFAULT_STATUS_MAP.get(section.status, State.UNKNOWN.value)
+
+    yield Result(state=State(raw_state), summary=f"Status: {section.status}")
 
     _, levels_upper = params["last_reported_upper_levels"]
 
@@ -102,12 +112,7 @@ check_plugin_cisco_meraki_org_device_status = CheckPlugin(
     discovery_function=discover_device_status,
     check_function=check_device_status,
     check_default_parameters=CheckParamsDeviceStatus(
-        status_map={
-            "online": State.OK.value,
-            "alerting": State.CRIT.value,
-            "offline": State.WARN.value,
-            "dormant": State.WARN.value,
-        },
+        status_map=_DEFAULT_STATUS_MAP,
         last_reported_upper_levels=("no_levels", None),
     ),
     check_ruleset_name="cisco_meraki_org_device_status",

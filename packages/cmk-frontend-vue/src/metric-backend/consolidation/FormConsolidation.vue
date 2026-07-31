@@ -157,10 +157,15 @@ const activeErrors = computed<string[]>(() => {
   }
 })
 
-// Veto closing while the active function's param is invalid (which includes a
-// blank required field), revealing the error the first time leaving is blocked.
+const lookbackErrors = ref<string[]>([])
+
+const validationMessages = computed<string[]>(() =>
+  showValidationErrors.value ? [...activeErrors.value, ...lookbackErrors.value] : []
+)
+
+// Veto leaving while a param or the lookback is invalid, revealing the error on the first attempt.
 function canLeaveEdit(): boolean {
-  if (activeErrors.value.length > 0) {
+  if (activeErrors.value.length > 0 || lookbackErrors.value.length > 0) {
     showValidationErrors.value = true
     return false
   }
@@ -175,7 +180,7 @@ const editAriaLabel = computed(
 
 <template>
   <div class="metric-backend-form-consolidation">
-    <CmkInlineValidation :validation="showValidationErrors ? activeErrors : []" />
+    <CmkInlineValidation :validation="validationMessages" />
     <InlineEditPill
       :editing="editing"
       :tab-focusable="false"
@@ -271,6 +276,8 @@ const editAriaLabel = computed(
             :title="''"
             :input-hint="null"
             :displayed-magnitudes="['minute', 'second']"
+            hide-validation-message
+            @update:validation="lookbackErrors = $event"
           />
         </span>
       </template>

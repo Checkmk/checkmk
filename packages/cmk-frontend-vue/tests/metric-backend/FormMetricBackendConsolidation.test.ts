@@ -159,6 +159,19 @@ test('editing the lookback writes back to the aggregation-lookback model', async
   await waitFor(() => expect(models.aggregationLookback.value).toBe(300))
 })
 
+test('a negative lookback surfaces its message and blocks leaving', async () => {
+  renderConsolidation({ aggregationLookback: 120, metricTypes: ['sum'] })
+
+  await userEvent.click(chip())
+  const minutes = screen.getByLabelText('Lookback Minutes')
+  await userEvent.clear(minutes)
+  await userEvent.type(minutes, '-1')
+  await userEvent.keyboard('{Escape}')
+
+  expect(await screen.findByText('The time span cannot be negative.')).toBeVisible()
+  expect(screen.getByLabelText('Lookback Minutes')).toBeVisible()
+})
+
 test('editing the quantile writes the percentile back as a percentage', async () => {
   const models = renderConsolidation({
     aggregationHistogramPercentile: 90,

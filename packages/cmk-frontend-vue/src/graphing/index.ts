@@ -5,6 +5,8 @@
  */
 export { default as GraphGroup } from './components/GraphGroup.vue'
 export { default as GraphFigure } from './components/GraphFigure/GraphFigure.vue'
+// The dashboard's own graph widgets state their failures with the same notice.
+export { default as GraphNotice } from './components/GraphNotice.vue'
 export type { GraphFigureProps } from './components/GraphFigure/types'
 export type { TimerangeModel } from './components/GraphFigure/computeEpochTimeRange'
 export type {

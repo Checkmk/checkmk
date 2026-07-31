@@ -12,6 +12,7 @@ import pytest
 import requests
 
 from cmk.werks.tool.id_pool import (
+    _ensure_stash_file_writable,
     _server_error_message,
     add_id_to_stash,
     dump_stash_to_file,
@@ -26,6 +27,20 @@ from cmk.werks.tool.id_pool import (
     write_secret,
 )
 from cmk.werks.tool.schemas.werk import LegacyStash, Stash, WerkId
+
+
+def _write_secret(paths: Paths) -> None:
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+
+
+def _make_stash_location_unwritable(paths: Paths) -> None:
+    # A regular file where the stash directory belongs is the one unwritable state that
+    # mode bits cannot express: root may write any file, but no user can create one below
+    # a file. Tests relying on modes alone would silently skip whenever they run as root.
+    paths.stash_file.parent.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.parent.write_text("", encoding="utf-8")
+
 
 # ---------------------------------------------------------------------------
 # Stash unit tests
@@ -295,6 +310,19 @@ class FakeEmptyServerClient(WerkIDsClient):
         return []
 
 
+class FakeForbiddenServerClient(WerkIDsClient):
+    def reserve_werk_ids(self, _secret_file_path: Path, _stored_werk_ids: int) -> Sequence[int]:
+        raise AssertionError("the werk IDs server must not be contacted")
+
+
+def _prepare_stash(tmp_path: Path, stash: Stash) -> Paths:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(stash.model_dump_json(by_alias=True), encoding="utf-8")
+    return paths
+
+
 def test_load_or_update_stash_legacy_stash_skips_server(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     legacy = LegacyStash(ids_by_project={"cmk": [1, 2]})
@@ -322,13 +350,7 @@ def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
 
 
 def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.write_text("secret", encoding="utf-8")
-    paths.stash_file.write_text(
-        Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
-    )
+    paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
 
     stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
 
@@ -337,13 +359,7 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
 
 
 def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.write_text("secret", encoding="utf-8")
-    paths.stash_file.write_text(
-        Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
-    )
+    paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
 
     stash = load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
 
@@ -352,14 +368,62 @@ def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -
 
 
 def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.write_text("secret", encoding="utf-8")
-    paths.stash_file.write_text(Stash(ids=[]).model_dump_json(by_alias=True), encoding="utf-8")
+    paths = _prepare_stash(tmp_path, Stash(ids=[]))
 
     with pytest.raises(SystemExit):
         load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
+
+
+def test_load_or_update_stash_unwritable_stash_location_skips_server(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # IDs reserved from the server are lost when the stash they belong in cannot be
+    # written, so the server must not be contacted at all in that case.
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    _make_stash_location_unwritable(paths)
+
+    with pytest.raises(SystemExit):
+        load_or_update_stash(paths, FakeForbiddenServerClient("http://werk-ids.test"))
+
+    assert str(paths.stash_file) in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------
+# _ensure_stash_file_writable tests
+# ---------------------------------------------------------------------------
+
+
+def test_ensure_stash_file_writable_creates_no_stash_file(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+
+    _ensure_stash_file_writable(paths)
+
+    assert not paths.stash_file.exists()
+
+
+def test_ensure_stash_file_writable_keeps_the_stash(tmp_path: Path) -> None:
+    paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
+    raw_stash = paths.stash_file.read_text(encoding="utf-8")
+
+    _ensure_stash_file_writable(paths)
+
+    assert paths.stash_file.read_text(encoding="utf-8") == raw_stash
+
+
+def test_ensure_stash_file_writable_bails_out_for_an_unwritable_stash_location(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The stash file does not exist yet, so the directory it will be created in decides.
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    _make_stash_location_unwritable(paths)
+
+    with pytest.raises(SystemExit):
+        _ensure_stash_file_writable(paths)
+
+    assert str(paths.stash_file) in capsys.readouterr().err
 
 
 def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> None:
@@ -380,11 +444,6 @@ def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> Non
 # ---------------------------------------------------------------------------
 # Migration tests
 # ---------------------------------------------------------------------------
-
-
-def _write_secret(paths: Paths) -> None:
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.write_text("secret", encoding="utf-8")
 
 
 def test_migrate_no_legacy_file_writes_empty_stash(tmp_path: Path) -> None:

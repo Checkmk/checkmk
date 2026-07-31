@@ -70,7 +70,8 @@ def _write_rules_to_disk(site: Site) -> Iterator[None]:
             if ruleset_name in skip_rulesets:
                 continue
             rules_filename = f"{ruleset_shortname}.json"
-            rules_dirpath = repo_path() / "tests" / "update" / "rules"
+            # consumed by tests/system/update (see RULES_DIR in its helpers module)
+            rules_dirpath = repo_path() / "tests" / "system" / "update" / "rules"
             rules_filepath = rules_dirpath / f"{ruleset_shortname}.json"
 
             # reformat rules for dump

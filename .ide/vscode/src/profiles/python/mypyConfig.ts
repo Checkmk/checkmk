@@ -16,15 +16,10 @@ const PACKAGE_BASE_DIRS = ['packages', 'non-free/packages']
 
 const TOP_LEVEL_TEST_TREES = [
   'tests/unit',
-  'tests/system/singlesite',
-  'tests/system/multisite',
-  'tests/system/gui',
-  'tests/system/gui_crawl',
+  'tests/system',
   'tests/code_quality',
   'tests/agent-plugin-unit',
-  'tests/system/mk_oracle',
   'tests/extension_compatibility',
-  'tests/system/redfish',
   'tests/packaging'
 ]
 

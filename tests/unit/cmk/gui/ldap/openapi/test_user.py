@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
@@ -15,10 +17,12 @@ from cmk.gui.user_connection_config_types import (
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
 )
-from cmk.gui.userdb import get_user_attributes, UserConnectionConfigFile
+from cmk.gui.userdb import get_user_attributes, load_users, UserConnectionConfigFile
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.users import create_user, default_sites
 from tests.testlib.rest_api_client import ClientRegistry
+
+LDAP_CONNECTION_ID = "CMKTest"
 
 
 def _test_pending_changes() -> PendingChanges:
@@ -31,10 +35,106 @@ def _test_pending_changes() -> PendingChanges:
     )
 
 
+def _ldap_owned_user(name: UserId) -> None:
+    """Register an LDAP connection and create a user it owns.
+
+    The connection's ``groups_to_roles`` plug-in makes ``roles`` one of its
+    locked attributes, so edits touching ``roles`` must be refused.
+    """
+    ldap_config = _ldap_connection_config()
+    UserConnectionConfigFile().save([ldap_config], pprint_value=False)
+    # Hope that this is not needed anymore soon
+    active_config.user_connections = [ldap_config]
+    create_user(
+        name,
+        _ldap_owned_user_spec(),
+        default_sites,
+        get_user_attributes([]),
+        user_connections=[ldap_config],
+        pending_changes=_test_pending_changes(),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+        pprint_value=False,
+    )
+
+
 def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
     name = UserId("foo")
-    ldap_config = LDAPUserConnectionConfig(
-        id="CMKTest",
+    _ldap_owned_user(name)
+
+    clients.User.edit(
+        username=name,
+        roles=["admin"],
+        expect_ok=False,
+        customer=None,
+    ).assert_status_code(403)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="CMK-37481: an auth_option flips the connector to htpasswd before the "
+    "locked-attribute guard reads it, so the guard is skipped entirely",
+)
+def test_edit_ldap_user_with_auth_option_must_not_bypass_locked_attributes(
+    clients: ClientRegistry,
+) -> None:
+    """Authentication details in the request must not disarm the locked-attribute guard.
+
+    The request below is the ``roles`` change the test above proves is refused,
+    with an ``auth_option`` added. That addition must not change the verdict:
+    the LDAP connection still owns the user and still locks ``roles``, so the
+    edit has to be refused, the user has to stay owned by the connection, and
+    ``roles`` has to keep its stored value.
+    """
+    name = UserId("bar")
+    _ldap_owned_user(name)
+
+    clients.User.edit(
+        username=name,
+        roles=["admin"],
+        auth_option={"auth_type": "password", "password": "supersecretpassword123"},
+        expect_ok=False,
+        customer=None,
+    ).assert_status_code(403)
+
+    user_spec = load_users()[name]
+    assert user_spec["connector"] == LDAP_CONNECTION_ID, (
+        "the edit reassigned the user to local authentication, detaching them from LDAP"
+    )
+    assert user_spec["roles"] == ["guest"], (
+        "the edit wrote a locked attribute the owning connection manages"
+    )
+
+
+def _ldap_owned_user_spec() -> UserSpec:
+    return UserSpec(
+        ui_theme=None,
+        ui_sidebar_position=None,
+        nav_hide_icons_title=None,
+        icons_per_item=None,
+        show_mode=None,
+        start_url=None,
+        force_authuser=False,
+        enforce_pw_change=True,
+        alias="cmkADAdmin",
+        locked=False,
+        pager="",
+        roles=["guest"],
+        contactgroups=[],
+        email="",
+        fallback_contact=False,
+        password=PasswordHash(
+            "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+        ),
+        serial=1,
+        connector=LDAP_CONNECTION_ID,
+        disable_notifications={},
+    )
+
+
+def _ldap_connection_config() -> LDAPUserConnectionConfig:
+    return LDAPUserConnectionConfig(
+        id=LDAP_CONNECTION_ID,
         description="",
         comment="",
         docu_url="",
@@ -87,49 +187,3 @@ def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
         cache_livetime=300,
         type="ldap",
     )
-
-    UserConnectionConfigFile().save([ldap_config], pprint_value=False)
-    # Hope that this is not needed anymore soon
-    active_config.user_connections = [ldap_config]
-
-    user_object: UserSpec = {
-        "ui_theme": None,
-        "ui_sidebar_position": None,
-        "nav_hide_icons_title": None,
-        "icons_per_item": None,
-        "show_mode": None,
-        "start_url": None,
-        "force_authuser": False,
-        "enforce_pw_change": True,
-        "alias": "cmkADAdmin",
-        "locked": False,
-        "pager": "",
-        "roles": ["guest"],
-        "contactgroups": [],
-        "email": "",
-        "fallback_contact": False,
-        "password": PasswordHash(
-            "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
-        ),
-        "serial": 1,
-        "connector": "CMKTest",
-        "disable_notifications": {},
-    }
-    create_user(
-        name,
-        user_object,
-        default_sites,
-        get_user_attributes([]),
-        user_connections=[ldap_config],
-        pending_changes=_test_pending_changes(),
-        use_git=False,
-        acting_user=LoggedInSuperUser(),
-        pprint_value=False,
-    )
-
-    clients.User.edit(
-        username=name,
-        roles=["admin"],
-        expect_ok=False,
-        customer=None,
-    ).assert_status_code(403)

@@ -2,6 +2,18 @@
 
 /// file: windows.groovy
 
+/// Assemble the CorrelationId sent along with every Azure artifact signing request.
+///
+/// Azure reports the value back in the signing diagnostics, so it tells us which CI job
+/// triggered a signing request.
+///
+/// Quotes are stripped: on Windows agents `make print-%` echoes values wrapped in single quotes
+/// (defines.make), which cmd.exe does not strip, so branch_name may arrive as e.g. '3.0.0'.
+/// Azure's CorrelationId is an opaque tracking string.
+String azure_signing_correlation_id(String branch_name) {
+    return "${branch_name}_${env.AZURE_ARTIFACT_SIGNING_CORRELATION_ID_SUFFIX}".replaceAll("['\"]", "");
+}
+
 def build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';

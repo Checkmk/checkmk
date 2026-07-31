@@ -4,29 +4,9 @@
 """Starlark rule that builds the Windows ``python-3.cab`` on Linux.
 
 The CAB has the same shape as the one historically produced by
-``agents/modules/windows/Makefile`` on a Windows build node, but the build
-runs on Linux with no Wine / MSBuild / makecab.exe in the picture, and all
-tools are Bazel-managed:
-
-* ``extract_msi.py`` (pure Python) drives ``msiinfo`` from ``@msitools``
-  and the vendored ``@cabarchive`` to unpack the per-feature MSIs.
-* ``pip_offline.py`` installs the ``win_amd64`` wheels *offline* from the
-  fetch-phase ``@windows_python_wheels`` closure with
-  ``--no-index --find-links`` (cross-platform flags still select win_amd64).
-  It runs under the repo's hermetic CPython (same 3.13 line as the CAB), so
-  pip-written metadata (RECORD bytecode entries) matches the CAB's Python.
-* ``.venv/`` is laid down by hand to match production: interpreter + runtime
-  DLL copies, the stdlib extension modules virtualenv mirrored into
-  ``Scripts/``, the venv launchers from ``Lib/venv/scripts/nt``, generated
-  console-script ``.exe`` wrappers (``make_exe_wrappers.py``), and the
-  activation scripts under ``venv_scripts/``.
-* ``pack_cab.py`` (vendored ``@cabarchive`` writer) produces the cabinet.
-
-The action takes no network: the MSIs come from five ``http_file`` repos and
-the wheels from ``@windows_python_wheels`` (a ``repository_rule`` that downloads
-the sha256-pinned closure at the fetch phase), all declared in ``MODULE.bazel``.
-Refresh the MSI pins via ``agents/modules/windows/refresh_msi_pins.py`` and the
-wheel pins via ``agents/modules/windows/refresh_wheel_pins.py`` on a bump.
+``agents/modules/windows/Makefile`` on a Windows build node, but no
+Wine / MSBuild / makecab.exe is involved: every tool the action runs is a
+Bazel-managed input (see their py_binary targets in BUILD.bazel).
 
 Known deliberate deviations from the historic Windows-built CAB (all dead
 weight with no source in the pinned python.org MSI set):
@@ -43,10 +23,8 @@ weight with no source in the pinned python.org MSI set):
 """
 
 # Stdlib subtrees to strip from the *base* interpreter, ported from
-# agents/modules/windows/clean_environment.cmd (phase 1 + phase 2 cleanups).
-# ``ensurepip`` is in this list because production's CAB ships without it,
-# even though clean_environment.cmd's phase 1 keeps it; phase 2 does
-# ``rd /Q /S Lib\ensurepip`` which removes it.
+# clean_environment.cmd.  ensurepip is stripped because production's CAB
+# ships without it (its phase 2 removes what phase 1 kept).
 _BASE_LIB_STRIP = [
     "test",
     "unittest",
@@ -104,9 +82,8 @@ _UCRT_RUNTIME_GLOBS = [
 # agent's install path on the target host.  See clean_environment.cmd.
 _PYVENV_HOME = "C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 
-# Interpreter the generated .exe wrappers exec at runtime.  The historic
-# Windows build baked the *build machine's* venv path here, which broke the
-# wrappers on customer hosts; we bake the production path.
+# Interpreter the generated .exe wrappers exec at runtime — the production
+# install path (see make_exe_wrappers.py for why not the build machine's).
 _WRAPPER_SHEBANG = _PYVENV_HOME + "\\.venv\\Scripts\\python.exe"
 
 def _python_version_short(version):
@@ -216,12 +193,10 @@ if [ ! -f "$PY_DIR/python.exe" ] || [ ! -f "$PY_DIR/python{py_short}.dll" ]; the
     exit 1
 fi
 
-# 2. Give the base interpreter its pip.  pip.msi has an empty File table —
-# the python.org installer runs ``python -m ensurepip`` via a CustomAction,
-# which msiextract can't replay.  The historic flow then let pipenv upgrade
-# the bootstrapped pip to the latest release, so we skip the bootstrap and
-# install the pinned pip wheel directly (by name, so pip writes no
-# direct_url.json pointing at build-machine paths).
+# 2. Give the base interpreter its pip.  pip.msi has an empty File table
+# (the python.org installer bootstraps via a CustomAction msiextract can't
+# replay), so install the pinned pip wheel directly — by name, so pip
+# writes no direct_url.json pointing at build-machine paths.
 "$exec_root/{pip_offline}" "$WHEELDIR" install \\
     --no-index \\
     --find-links "$WHEELDIR" \\
@@ -270,17 +245,15 @@ for f in {ucrt_globs}; do
     [ -f "$PY_DIR/$f" ] && cp "$PY_DIR/$f" "$VENV/Scripts/"
 done
 
-# Activation scripts (production paths baked in; see venv_scripts/).
-# The .tmpl suffix only keeps repo formatters/linters away from the
-# shipped-verbatim payloads; strip it on copy.
+# Activation scripts (production paths baked in; see venv_scripts/).  The
+# .tmpl suffix only keeps repo formatters/linters away; strip it on copy.
 for f in {venv_scripts}; do
     cp "$f" "$VENV/Scripts/$(basename "$f" .tmpl)"
 done
 
-# 4. Install the locked closure into .venv/Lib/site-packages using the
-# pinned pip in cross-platform mode, offline.  Every name==version pin is an
-# explicit argument, so each dist-info gets a REQUESTED marker — exactly
-# what the historic pipenv flow produced.
+# 4. Install the locked closure into .venv/Lib/site-packages, offline.
+# Every name==version pin is an explicit argument, so each dist-info gets
+# a REQUESTED marker — exactly what the historic pipenv flow produced.
 "$exec_root/{pip_offline}" "$WHEELDIR" install \\
     --no-index \\
     --find-links "$WHEELDIR" \\
@@ -297,11 +270,10 @@ done
 # writes no REQUESTED.
 rm -f "$VENV/Lib/site-packages"/pip-*.dist-info/REQUESTED
 
-# Console entry points: pip's cross-platform --target install drops POSIX
-# scripts into <target>/bin/.  Production ships distlib .exe launchers in
-# Scripts/ instead — regenerate those, rewrite the RECORD lines that point
-# at bin/, keep the plain-script payloads (pywin32_postinstall.py etc.)
-# like a native Windows install does, and drop the bin/ dir.
+# Console entry points: the cross-platform pip install drops POSIX scripts
+# into <target>/bin/; production ships distlib .exe launchers in Scripts/
+# instead.  Regenerate those, fix up the RECORDs, and drop bin/ (keeping
+# its plain-script payloads like a native Windows install does).
 "$exec_root/{make_exe_wrappers}" \\
     --pip-wheel "$WHEELDIR" \\
     --scripts-dir "$VENV/Scripts" \\
@@ -316,9 +288,8 @@ fi
 # 5. Write the production-shape pyvenv.cfg.
 cp "$exec_root/{pyvenv_cfg}" "$VENV/pyvenv.cfg"
 
-# 6. Strip from the base interpreter what production strips.  See
-# clean_environment.cmd; this list is the union of phase-1 and phase-2
-# cleanups.
+# 6. Strip from the base interpreter what production strips (the union of
+# clean_environment.cmd's phase-1 and phase-2 cleanups).
 for d in {base_lib_strip}; do
     rm -rf "$PY_DIR/Lib/$d"
 done
@@ -329,14 +300,11 @@ done
     # nullglob via 'find -name' so missing files don't fail the loop.
     find . -maxdepth 1 -name "$g" -delete 2>/dev/null || true
 done )
-# NOTE: clean_environment.cmd contains ``del /Q DLLs/*.ico`` and
-# ``del /Q DLLs/*.cat`` but the production reference CAB still ships
-# py.ico, pyc.ico, pyd.ico, and python_lib.cat — the del's forward-slash
-# path apparently no-ops on cmd.exe.  Keep them here to match production.
+# clean_environment.cmd also dels DLLs/*.ico and DLLs/*.cat, but production
+# still ships them (the forward-slash del no-ops on cmd.exe) — keep them.
 rm -f "$PY_DIR/Lib/turtle.py" 2>/dev/null || true
-# The base pip's entry-point scripts land under <target>/bin/ as POSIX
-# scripts; production has no base bin/ (its Scripts/ equivalent is stripped
-# via _ROOT_DIR_STRIP above).
+# The base pip's entry-point scripts land under bin/; production has no
+# base bin/ (its Scripts/ equivalent is stripped via _ROOT_DIR_STRIP above).
 rm -rf "$PY_DIR/Lib/site-packages/bin" 2>/dev/null || true
 
 # Installing by name from --find-links must not leave PEP 610 direct-url

@@ -18,10 +18,9 @@ The CI entry point is `buildscripts/scripts/winagt-build-modules-linux.groovy`,
 which runs on a Linux build node and pushes the resulting cab to
 `agents/modules/windows/artefacts/python-3.cab`.
 
-Build prerequisites on the Linux node: only `bazel` itself plus the
-standard toolchain bazel modules need (a C compiler for the foreign-cc
-builds of `msitools` / `cabextract`). Everything else is hermetic via
-bazel modules:
+Build prerequisites on the Linux node: only `bazel` itself plus a C
+compiler for the foreign-cc builds of `msitools` / `cabextract`.
+Everything else is hermetic via bazel modules:
 
 - `msiinfo` (from `@msitools`) — reads MSI tables and extracts cabinet
   streams.
@@ -42,7 +41,8 @@ bazel modules:
 - CPython version: `PYTHON_VERSION_WINDOWS` in `defines.make` (also baked
   into `BUILD.bazel`'s `python_version`).
 - Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): SHA256-pinned
-  `http_file` entries in `MODULE.bazel`.
+  `http_file` entries in the `//bazel/extensions:python_cab_repositories.bzl` module
+  extension, wired up by `bazel/module/python_cab.MODULE.bazel`.
 - Python packages: `pipfiles/3/Pipfile` is the human source of truth (plus
   the pip seed pin in `refresh_wheel_pins.py`); the resolved win_amd64
   closure is pinned in `windows_python_wheels.lock.json`, from which the
@@ -57,7 +57,8 @@ bazel run //agents/modules/windows:refresh_wheel_pins -- 3.13.13
 ```
 
 Paste the printed `http_file(...)` blocks over the matching ones in
-`MODULE.bazel`, update `python_version` in `BUILD.bazel` and
+`bazel/extensions/python_cab_repositories.bzl`, update `python_version` in
+`BUILD.bazel` and
 `PYTHON_VERSION_WINDOWS` in `defines.make`.
 
 ## Layout produced
@@ -101,8 +102,7 @@ these deliberate differences:
 
 ## Why not Wine
 
-Earlier proofs of concept (`~/Projects/personal/windows/experiments/
-python_cab_pipenv/`) used `wine msiexec /a` for MSI extraction and a
+Earlier proofs of concept used `wine msiexec /a` for MSI extraction and a
 Wine-side `pip` for package installation. Both are removable:
 
 - MSIs are zip-of-cab containers with a structured stream catalog;

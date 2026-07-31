@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -37,7 +35,7 @@ class Config(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def default_current_version_from_context(
-        cls, data: dict[str, object], info: ValidationInfo
+        cls, data: dict[str, object], info: ValidationInfo[Mapping[str, object] | None]
     ) -> dict[str, object]:
         """
         Use the 'current_version' specified via context if it is missing from the model data.

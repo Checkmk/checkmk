@@ -9,6 +9,7 @@ import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_s
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { nextTick } from 'vue'
 
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
@@ -101,7 +102,12 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.useRealTimers()
 })
+
+const skeletons = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-skeleton')
+
+const group = (): Element | null => document.querySelector('.graphing-graph-group')
 
 function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')]) {
   return render(GraphGroup, {
@@ -113,10 +119,81 @@ function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU ut
   })
 }
 
-test('shows the loading state while the fetch is pending', () => {
+test('holds the skeletons back for a second, then shows one per graph definition', async () => {
+  vi.useFakeTimers()
+  postSpy.mockReturnValue(new Promise(() => {}))
+  renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+
+  await nextTick()
+  expect(skeletons()).toHaveLength(0)
+
+  vi.advanceTimersByTime(1_000)
+  await nextTick()
+
+  expect(skeletons()).toHaveLength(2)
+  // The skeletons are aria-hidden; the announcement comes from the group's live region.
+  expect(screen.getByRole('status')).toBeInTheDocument()
+})
+
+test('reports the busy state from the first moment, ahead of the skeletons', async () => {
+  vi.useFakeTimers()
   postSpy.mockReturnValue(new Promise(() => {}))
   renderGroup()
-  expect(screen.getByText('Loading graphs…')).toBeInTheDocument()
+
+  await nextTick()
+  expect(skeletons()).toHaveLength(0)
+  expect(group()).toHaveAttribute('aria-busy', 'true')
+})
+
+test('stays clear of the busy state while refetching with panels on screen', async () => {
+  renderGroup()
+  // Waiting on the request count would be too early: it is still an initial load until data lands.
+  expect(await screen.findAllByTestId('graph-panel')).toHaveLength(1)
+  expect(group()).toHaveAttribute('aria-busy', 'false')
+
+  postSpy.mockReturnValue(new Promise(() => {}))
+  await fireEvent.click(await screen.findByText('pan'))
+  await nextTick()
+
+  expect(document.querySelectorAll('[data-testid="graph-panel"]')).toHaveLength(1)
+  expect(group()).toHaveAttribute('aria-busy', 'false')
+})
+
+test('an error arriving after the skeletons are up replaces them', async () => {
+  vi.useFakeTimers()
+  let fail!: (reason: Error) => void
+  postSpy.mockReturnValue(
+    new Promise((_resolve, reject) => {
+      fail = reject
+    })
+  )
+  renderGroup()
+
+  vi.advanceTimersByTime(1_000)
+  await nextTick()
+  expect(skeletons()).toHaveLength(1)
+
+  fail(new Error('crash'))
+  await vi.advanceTimersByTimeAsync(0)
+
+  expect(skeletons()).toHaveLength(0)
+  expect(screen.getByText('crash')).toBeInTheDocument()
+  expect(group()).toHaveAttribute('aria-busy', 'false')
+})
+
+test('a fast load resolves straight into the panels without a skeleton', async () => {
+  vi.useFakeTimers()
+  renderGroup()
+
+  // Flush the already-resolved fetch without reaching the one-second threshold.
+  await vi.advanceTimersByTimeAsync(999)
+  expect(document.querySelectorAll('[data-testid="graph-panel"]')).toHaveLength(1)
+  expect(skeletons()).toHaveLength(0)
+  expect(group()).toHaveAttribute('aria-busy', 'false')
+
+  // The pending delay must have been cancelled, not merely outrun by the data.
+  await vi.advanceTimersByTimeAsync(1_000)
+  expect(skeletons()).toHaveLength(0)
 })
 
 test('renders one panel per graph definition once data arrives', async () => {

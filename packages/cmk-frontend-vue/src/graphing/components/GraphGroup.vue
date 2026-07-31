@@ -11,7 +11,9 @@ Registered as the cmk-graph-group custom element via defineCmkComponent in main.
 
 <script setup lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { computed, ref, watch } from 'vue'
 
 import { useBrushCoordination } from '../composables/useBrushCoordination'
@@ -19,6 +21,7 @@ import { type GraphCombinationMode, useGraphData } from '../composables/useGraph
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import GraphPanel from './GraphPanel.vue'
+import GraphSkeleton from './GraphSkeleton.vue'
 import type { ConsolidationFn } from './consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from './constants'
 
@@ -83,17 +86,30 @@ const { graphs: overviewGraphs } = useGraphData(
 const overviews = computed(() =>
   overviewGraphs.value.map((graph) => ({ metrics: graph.metrics, timeRange: graph.timeRange }))
 )
+
+// A refetch (zoom, pan, brush, global picker) keeps the panels rendered, so it is not an initial
+// load. Both the skeletons and aria-busy key off this rather than off `isLoading`.
+const isInitialLoad = computed(() => isLoading.value && graphs.value.length === 0)
+
+// Only the visuals wait; aria-busy below is undelayed.
+const showSkeletons = useDelayedFlag(() => isInitialLoad.value, LOADING_AFFORDANCE_DELAY_MS)
+
+// Named because the resolved `graphs` above shadows `props.graphs` in the template.
+const definitionCount = computed(() => props.graphs.length)
 </script>
 
 <template>
-  <div class="graphing-graph-group">
-    <!--
-      Only the very first load (no graphs yet) shows the full placeholder. A refetch
-      triggered later (zoom, pan, brush, global picker) must not unmount the panels below.
-    -->
-    <div v-if="isLoading && graphs.length === 0" class="graphing-graph-group__loading">
-      {{ _t('Loading graphs…') }}
-    </div>
+  <div class="graphing-graph-group" :aria-busy="isInitialLoad">
+    <!-- Until the delay elapses no branch matches and no panels exist yet, leaving the area blank. -->
+    <template v-if="showSkeletons">
+      <CmkVisuallyHidden :text="_t('Loading graphs…')" live="polite" />
+      <GraphSkeleton
+        v-for="n in definitionCount"
+        :key="n"
+        class="graphing-graph-group__panel"
+        :figure-width="figure_width"
+      />
+    </template>
     <div v-else-if="error" class="graphing-graph-group__error">{{ error }}</div>
     <template v-else>
       <GraphPanel
@@ -127,7 +143,6 @@ const overviews = computed(() =>
   gap: calc(var(--spacing) * 4);
 }
 
-.graphing-graph-group__loading,
 .graphing-graph-group__error {
   padding: calc(var(--spacing) * 2);
   color: var(--font-color);

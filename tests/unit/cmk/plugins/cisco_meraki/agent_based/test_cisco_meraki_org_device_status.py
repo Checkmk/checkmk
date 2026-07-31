@@ -39,6 +39,54 @@ def test_parse_device_status_no_payload(string_table: StringTable) -> None:
     assert not parse_device_status(string_table)
 
 
+@pytest.mark.xfail(strict=True, reason="Crash report group: 4816")
+def test_parse_device_status_disconnected_power_supply() -> None:
+    device_status = _RawDevicesStatusFactory.build(
+        components={
+            "powerSupplies": [
+                {
+                    "slot": 1,
+                    "serial": None,
+                    "model": None,
+                    "status": "disconnected",
+                    "poe": {"unit": "watts", "maximum": 0},
+                },
+            ]
+        },
+    )
+    string_table = _get_string_table_from_device_status(device_status)
+
+    section = _parse_and_assert_not_none(string_table)
+
+    assert not section.power_supplies["1"].model
+    assert not section.power_supplies["1"].serial
+
+
+@pytest.mark.xfail(strict=True, reason="Crash report group: 4816")
+def test_check_device_status_ps_disconnected() -> None:
+    device_status = _RawDevicesStatusFactory.build(
+        components={
+            "powerSupplies": [
+                {
+                    "slot": 1,
+                    "serial": None,
+                    "model": None,
+                    "status": "disconnected",
+                    "poe": {"unit": "watts", "maximum": 0},
+                },
+            ]
+        },
+    )
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+    params = CheckParamsPowerSupply(state_not_powering=State.WARN.value)
+
+    value = list(check_device_status_ps("1", params, section))
+    expected = [Result(state=State.WARN, summary="Status: disconnected")]
+
+    assert value == expected
+
+
 @pytest.mark.parametrize(
     "device_status",
     [

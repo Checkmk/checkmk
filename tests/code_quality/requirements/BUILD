@@ -25,6 +25,8 @@ py_cmk_test(
         "//:constraints.txt",
         "//:requirements.txt",
         "//:runtime-requirements.txt",
+        "//agents/modules/windows:constraints-windows.txt",
+        "//agents/modules/windows:requirements-windows.in",
         "//agents/plugins:dev-requirements.in",
         "//cmk:requirements.in",
         "//packages:dev_python_requirements",

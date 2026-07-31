@@ -447,7 +447,7 @@ test-system-update-cross-edition-community-to-ultimate() {
 test-system-plugins() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/plugins")" \
-        --ignore=system/plugins/nonfree/pro/test_plugin_piggyback.py \
+        --ignore="$(realpath "$SCRIPT_DIR/system/plugins")/nonfree/pro/test_plugin_piggyback.py" \
         --session-timeout 7200
 }
 

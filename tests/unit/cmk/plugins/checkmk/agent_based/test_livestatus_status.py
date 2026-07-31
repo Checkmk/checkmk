@@ -918,9 +918,6 @@ _INCOMPLETE_STATUS = {
 }
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report f258daec-8051-11f1-a575-005056849565: KeyError"
-)
 def test_check_incomplete_status_data() -> None:
     assert list(
         livestatus_status._generate_livestatus_results(

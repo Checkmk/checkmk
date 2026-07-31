@@ -4608,6 +4608,10 @@ msgstr ""
 msgid "Add new group"
 msgstr "Adăugați un nou grup"
 
+#, fuzzy
+msgid "Add new group or user"
+msgstr "Adăugați un grup"
+
 msgid "Add new grouping definition"
 msgstr "Adăugați o nouă definiție a grupării"
 
@@ -51415,6 +51419,9 @@ msgstr "ORACLE Total scrieri mici"
 msgid "Oracle binaries permissions check %s"
 msgstr ""
 
+msgid "Oracle binaries permissions check (Windows only)"
+msgstr ""
+
 #, fuzzy
 msgid "Oracle block change"
 msgstr "Rata de schimbare"
@@ -60935,6 +60942,10 @@ msgstr ""
 #, fuzzy
 msgid "SaaS version: Skip request ID verification"
 msgstr "Licență fără restricții: Treceți peste verificarea ID-ului cererii."
+
+#, fuzzy
+msgid "Safe groups and/or users"
+msgstr "Adăugați un grup"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Statisticile evenimentelor Safenet HSM"

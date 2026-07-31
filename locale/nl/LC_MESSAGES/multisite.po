@@ -4594,6 +4594,10 @@ msgstr ""
 msgid "Add new group"
 msgstr "Nieuwe groep toevoegen"
 
+#, fuzzy
+msgid "Add new group or user"
+msgstr "Groep toevoegen"
+
 msgid "Add new grouping definition"
 msgstr "Nieuwe groeperingsdefinitie toevoegen"
 
@@ -51283,6 +51287,9 @@ msgstr "ORACLE Totaal kleine schrijffouten"
 msgid "Oracle binaries permissions check %s"
 msgstr ""
 
+msgid "Oracle binaries permissions check (Windows only)"
+msgstr ""
+
 #, fuzzy
 msgid "Oracle block change"
 msgstr "Snelheid van verandering"
@@ -60797,6 +60804,10 @@ msgstr ""
 #, fuzzy
 msgid "SaaS version: Skip request ID verification"
 msgstr "Ongebonden licentie: Verzoek ID-verificatie overslaan"
+
+#, fuzzy
+msgid "Safe groups and/or users"
+msgstr "Groep toevoegen"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSM gebeurtenisstatistieken"

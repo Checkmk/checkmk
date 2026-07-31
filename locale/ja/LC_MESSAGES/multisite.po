@@ -4448,6 +4448,10 @@ msgstr ""
 msgid "Add new group"
 msgstr "新しいグループを追加する"
 
+#, fuzzy
+msgid "Add new group or user"
+msgstr "グループまたはユーザーを追加"
+
 msgid "Add new grouping definition"
 msgstr "新しいグループ定義を追加する"
 
@@ -48739,6 +48743,10 @@ msgstr "Oracle アーカイブログ 小規模書き込み"
 msgid "Oracle binaries permissions check %s"
 msgstr "Oracle バイナリのパーミッション・チェック %s"
 
+#, fuzzy
+msgid "Oracle binaries permissions check (Windows only)"
+msgstr "Oracle バイナリのパーミッション・チェック %s"
+
 msgid "Oracle block change"
 msgstr "Oracle ブロック変更"
 
@@ -57631,6 +57639,10 @@ msgstr ""
 
 msgid "SaaS version: Skip request ID verification"
 msgstr "SaaS バージョン: リクエスト ID の検証をスキップする"
+
+#, fuzzy
+msgid "Safe groups and/or users"
+msgstr "グループまたはユーザーを追加"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSMイベント統計"

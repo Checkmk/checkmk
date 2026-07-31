@@ -4547,6 +4547,10 @@ msgstr ""
 msgid "Add new group"
 msgstr "Neue Gruppe hinzufügen"
 
+#, fuzzy
+msgid "Add new group or user"
+msgstr "Gruppe oder Benutzer hinzufügen"
+
 msgid "Add new grouping definition"
 msgstr "Neue Gruppendefinition hinzufügen"
 
@@ -48932,6 +48936,10 @@ msgstr "Oracle Archiv-Log Small Writes"
 msgid "Oracle binaries permissions check %s"
 msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
 
+#, fuzzy
+msgid "Oracle binaries permissions check (Windows only)"
+msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
+
 msgid "Oracle block change"
 msgstr "Oracle Blockänderung"
 
@@ -57777,6 +57785,10 @@ msgstr "SYSOPER"
 
 msgid "SaaS version: Skip request ID verification"
 msgstr "SaaS Version: Anfrage der ID-Verifizierung überspringen"
+
+#, fuzzy
+msgid "Safe groups and/or users"
+msgstr "Gruppe oder Benutzer hinzufügen"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSM Ereignis-Metriken"

@@ -40,9 +40,6 @@ def test_may_fail_catches_mk_auth_exception() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.xfail(
-    strict=True, reason="Crash report f8c2471c-898c-11f1-971b-6af99b1b7e5a: ValueError"
-)
 def test_get_site_id_for_host_unknown_host(mock_livestatus: MockLiveStatusConnection) -> None:
     mock_livestatus.add_table("hosts", [])
     with mock_livestatus(expect_status_query=True) as live, SuperUserContext():

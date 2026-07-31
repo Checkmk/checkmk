@@ -103,7 +103,6 @@ function setVisible(id: string, visible: boolean): void {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
-  width: 100%;
   border: 0;
   background-color: transparent;
   padding: var(--dimension-2);

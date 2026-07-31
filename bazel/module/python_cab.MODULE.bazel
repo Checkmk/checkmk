@@ -1,7 +1,5 @@
 # Repositories of the python-3.cab build (agents/modules/windows): the
 # python.org per-feature MSIs, the CAB writer, and the win_amd64 wheel closure.
-windows_python_wheels = use_repo_rule("//agents/modules/windows:windows_python_wheels.bzl", "windows_python_wheels")
-
 python_cab = use_extension("//bazel/extensions:python_cab_repositories.bzl", "repos")
 use_repo(
     python_cab,
@@ -13,7 +11,13 @@ use_repo(
     "python_msi_ucrt",
 )
 
-windows_python_wheels(
-    name = "windows_python_wheels",
-    lock = "//agents/modules/windows:windows_python_wheels.lock.json",
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "windows_python_wheels",
+    python_version = "3.14",
+    requirements_by_platform = {
+        "@//agents/modules/windows:requirements-windows.txt": "windows_x86_64",
+    },
+    target_platforms = ["windows_x86_64"],
 )
+use_repo(pip, "windows_python_wheels")

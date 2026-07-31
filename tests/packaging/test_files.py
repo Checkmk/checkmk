@@ -568,39 +568,47 @@ def test_monitoring_cores_packaging(package_path: str) -> None:
     assert len(_get_file_from_package(package_path, version_rel_path="bin/nagios")) > 0
 
 
-def _parse_pipfile_packages(pipfile_path: Path) -> tuple[str, dict[str, str]]:
-    """Parse package names/versions and python_version from a Pipfile.
+def _parse_windows_requirements(
+    requirements_in_path: Path, requirements_txt_path: Path
+) -> dict[str, str]:
+    """Map the direct python-3.cab requirements to their resolved versions.
 
-    Returns (python_version, {package_name: exact_version_or_empty}).
-    Version is empty string for non-exact specs (e.g. ~=).
+    requirements-windows.in names what the CAB ships (unpinned), the resolved
+    requirements-windows.txt holds the versions.  Returns
+    {package_name: version}.
     """
-    python_version = ""
+    resolved: dict[str, str] = {}
+    for line in requirements_txt_path.read_text().splitlines():
+        if match := re.match(r"([A-Za-z0-9._-]+)(?:\[[^]]*\])?==(\S+?)\s*\\?$", line):
+            resolved[match.group(1).lower()] = match.group(2)
+
     packages: dict[str, str] = {}
-    in_packages = False
-
-    for line in pipfile_path.read_text().splitlines():
-        stripped = line.strip()
-        if stripped == "[packages]":
-            in_packages = True
+    for line in requirements_in_path.read_text().splitlines():
+        stripped = line.split("#", 1)[0].strip()
+        if not stripped:
             continue
-        if stripped.startswith("["):
-            in_packages = False
+        match = re.match(r"([A-Za-z0-9._-]+)(?:\[[^]]*\])?$", stripped)
+        assert match, (
+            f"unparsable requirement line: {line!r}"
+            " (requirements-windows.in must stay unpinned, bounds go into constraints.txt)"
+        )
+        name = match.group(1)
+        assert name.lower() in resolved, (
+            f"{name} is not in {requirements_txt_path.name};"
+            " run `bazel run //agents/modules/windows:requirements_windows`"
+        )
+        packages[name] = resolved[name.lower()]
+    return packages
 
-        if stripped.startswith("python_version"):
-            match = re.search(r'"([\d.]+)"', stripped)
-            if match:
-                python_version = match.group(1)
 
-        if in_packages and "=" in stripped and not stripped.startswith("#"):
-            name = stripped.split("=", 1)[0].strip().strip('"')
-            version_match = re.search(r"==\s*([\d.]+)", stripped)
-            if version_match:
-                packages[name] = version_match.group(1)
-            else:
-                version_match = re.search(r'version\s*=\s*"([\d.]+)"', stripped)
-                packages[name] = version_match.group(1) if version_match else ""
-
-    return python_version, packages
+def _windows_python_version(package_versions_path: Path) -> str:
+    """major.minor of PYTHON_VERSION_WINDOWS from package_versions.bzl."""
+    match = re.search(
+        r'PYTHON_VERSION_WINDOWS\s*=\s*"(\d+)\.(\d+)',
+        package_versions_path.read_text(),
+    )
+    assert match, f"PYTHON_VERSION_WINDOWS not found in {package_versions_path}"
+    return f"{match.group(1)}.{match.group(2)}"
 
 
 @pytest.mark.skip_if_faked_artifacts
@@ -618,8 +626,12 @@ def test_python3_cab_integrity(package_path: str) -> None:
     )
     assert len(data) > 0, f"python-3.cab is empty in {os.path.basename(package_path)}"
 
-    pipfile_path = Path(__file__).parents[2] / "agents/modules/windows/pipfiles/3/Pipfile"
-    python_version, packages = _parse_pipfile_packages(pipfile_path)
+    repo_root = Path(__file__).parents[2]
+    packages = _parse_windows_requirements(
+        repo_root / "agents/modules/windows/requirements-windows.in",
+        repo_root / "agents/modules/windows/requirements-windows.txt",
+    )
+    python_version = _windows_python_version(repo_root / "package_versions.bzl")
 
     cab_strings = data.decode("ascii", errors="ignore")
 
@@ -632,10 +644,7 @@ def test_python3_cab_integrity(package_path: str) -> None:
     missing = []
     found = []
     for name, version in packages.items():
-        if version:  # noqa: SIM108
-            pattern = f"{name}-{version}.dist-info"
-        else:
-            pattern = f"{name}-"
+        pattern = f"{name}-{version}.dist-info"
         if pattern.lower() not in cab_strings.lower():
             missing.append(pattern)
         else:

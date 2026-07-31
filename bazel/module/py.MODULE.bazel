@@ -7,6 +7,21 @@ python.single_version_platform_override(
         "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-unknown-linux-gnu-install_only.tar.gz",
     ],
 )
+
+# Needed by the Windows agent's python-3.cab wheel closure, which transitions to
+# //bazel/platforms:x86_64-windows (see //agents/modules/windows:wheels).  Kept
+# next to the linux override because both must stay on the same
+# python-build-standalone release; a single_version_platform_override cannot live
+# in a module extension, so the version is spelled out rather than loaded from
+# PYTHON_VERSION_WINDOWS -- fail_on_python_minor_mismatch guards the drift.
+python.single_version_platform_override(
+    platform = "x86_64-pc-windows-msvc",
+    python_version = "3.14.7",
+    sha256 = "b06367695ce177e4abb2e02a8ff00fa60903c29fb381e40affaee2f51ef6115a",
+    urls = [
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-pc-windows-msvc-install_only.tar.gz",
+    ],
+)
 python.defaults(python_version = "3.14")
 python.toolchain(
     configure_coverage_tool = True,

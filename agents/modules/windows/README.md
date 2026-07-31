@@ -1,6 +1,6 @@
 # Windows agent Python module (`python-3.cab`)
 
-The Windows agent ships a self-contained CPython runtime + a Pipfile worth
+The Windows agent ships a self-contained CPython runtime + a pinned set
 of Python packages, bundled as `python-3.cab`. The MSI installer drops it
 under `C:\ProgramData\checkmk\agent\modules\python-3`, and the agent runs
 `postinstall.cmd` to verify the directories on the target host.
@@ -30,40 +30,76 @@ Everything else is hermetic via bazel modules:
 - `cabarchive` (Python, vendored via `@cabarchive`) — writes the final
   `python-3.cab` (MSZIP-compressed, fixed timestamps; bit-identical
   given the same inputs).
-- the sha256-pinned `pip` wheel from `@windows_python_wheels`, run under
-  the repo's hermetic CPython (`pip_offline.py`) — resolves Windows
-  wheels offline via `--no-index --find-links` with
-  `--platform win_amd64 --only-binary=:all:`. Nothing Windows runs
+- the pinned `pip` wheel from the `@windows_python_wheels` hub, run
+  under the repo's hermetic CPython (`pip_offline.py`) — installs the
+  Windows wheels offline (`--no-index --find-links`,
+  `--platform win_amd64 --only-binary=:all:`). Nothing Windows runs
   during the build, and the build action needs no network.
 
 ## Pinning
 
 - CPython version: `PYTHON_VERSION_WINDOWS` in `package_versions.bzl`, the
-  single source of truth for the CAB's CPython version. Nothing holds a second
-  copy: `defines.make` `sed`-reads it out of there at make time, `BUILD.bazel`
-  `load()`s it into `python_version`, and the MSI URLs below derive from it.
-  Bumping it therefore needs no hand-edits beyond refreshing the hashes.
+  single source of truth for the CAB's CPython version: `defines.make`
+  `sed`-reads it out of there at make time, `BUILD.bazel` `load()`s it into
+  `python_version`, and the MSI URLs below derive from it. Only
+  `MODULE.bazel` files duplicate the version — they cannot `load()` it; see
+  the bump procedure below.
 - Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): declared by the
   `//bazel/extensions:python_cab_repositories.bzl` module extension (wired up by
   `bazel/module/python_cab.MODULE.bazel`), which builds the download URLs from
   `PYTHON_VERSION_WINDOWS` — a `.bzl` file can `load()` it, whereas
   `MODULE.bazel` cannot, so the version is not spelled out twice. Only the
   SHA256 hashes (`_MSI_SHA256`) are maintained by hand.
-- Python packages: `pipfiles/3/Pipfile` is the human source of truth (plus
-  the pip seed pin in `refresh_wheel_pins.py`); the resolved win_amd64
-  closure is pinned in `windows_python_wheels.lock.json`, from which the
-  fetch-phase repo also generates the `REQUIREMENTS` list `BUILD.bazel`
-  installs — request and closure can't diverge.
+- Python packages: edit `requirements-windows.in`, then regenerate the
+  sha256-pinned `requirements-windows.txt` with
+  `bazel run //agents/modules/windows:requirements_windows` (same uv flow
+  as the repo's other requirements files). The `@windows_python_wheels`
+  pip.parse hub (`bazel/module/py.MODULE.bazel`) downloads the pinned
+  wheels; stale pins fail `:requirements_windows_test` in CI
+  (`make check_python_requirements`).
+
+  Keep `requirements-windows.in` unpinned — the resolved
+  `requirements-windows.txt` is the pin. Version bounds go into
+  `constraints-windows.txt`, which the resolution consumes via
+  `:requirements-windows-in`. That file is deliberately separate from
+  `//:constraints.txt`: the CAB resolves for `win_amd64` with
+  `--only-binary=:all:`, so a bound that is satisfiable for the site can be
+  unsatisfiable here, and a shared file would let a server-side hold break
+  the agent build (and vice versa). Every entry needs a `CMK-<id>` ticket for
+  its removal, enforced by
+  `//tests/code_quality/requirements:requirements_files`.
+
+  Note that `uv`'s `--python-version` for this resolution comes from the host
+  py3 toolchain (`PYTHON_VERSION`), not from `PYTHON_VERSION_WINDOWS` —
+  rules_uv appends it after `extra_args`, so it cannot be overridden from
+  `BUILD.bazel`. A `fail()` there guards against the two drifting apart in
+  their minor version, which is what the `cp3xx` wheel tag encodes.
+
+  `requirements-windows.txt` is also a `manifest_srcs` entry of
+  `//omd/dependency_management:list_of_dependencies`. The SBOM aspect already
+  finds the CAB's packages in the build graph, through the `package_metadata`
+  of the hub's generated whl repositories, but it carries no artifact hashes
+  for them -- the manifest entry is what fills in their SHA256 hashes and a
+  `path` property naming this file. Without it, the packages whose only source
+  is the CAB (`chardet`, `colorama`, `pip`, `pysocks`, `pywin32`, `urllib3`)
+  reach the bill of materials with an empty `hashes` list.
+
+  Because the aspect sees them from the hub alone, a package is in the bill of
+  materials from the moment the hub exists, so adding one also needs a license
+  in `automatically_researched_licenses.json` (via
+  `bazel run //omd/dependency_management:research_licenses`) or
+  `manually_researched_licenses.json`, else
+  `//omd/dependency_management:test_licenses` fails.
 
 To refresh after a CPython version bump:
 
 - bump `PYTHON_VERSION_WINDOWS` in `package_versions.bzl` — the MSI URLs
   follow automatically,
-- then regenerate the MSI hashes and the wheel lock:
+- then regenerate the hashes and the wheel closure:
 
   ```bash
   bazel run //agents/modules/windows:refresh_msi_pins
-  bazel run //agents/modules/windows:refresh_wheel_pins -- <version>
+  bazel run //agents/modules/windows:requirements_windows
   ```
 
   `refresh_msi_pins` takes no version: the `py_binary` passes
@@ -71,7 +107,12 @@ To refresh after a CPython version bump:
   different version than the extension requests.
 
 - paste the printed `_MSI_SHA256` map over the one in
-  `bazel/extensions/python_cab_repositories.bzl`.
+  `bazel/extensions/python_cab_repositories.bzl`,
+- bump the `x86_64-pc-windows-msvc` `single_version_platform_override`
+  (url + sha256) in `bazel/module/py.MODULE.bazel` to match. That one still
+  duplicates the version, because it lives in a `MODULE.bazel` file;
+  `fail_on_python_minor_mismatch` in `python_cab.bzl` catches a minor-version
+  drift between it and `PYTHON_VERSION_WINDOWS`.
 
 ## Layout produced
 
@@ -88,7 +129,7 @@ python-3.cab
     |-- Scripts/             # interpreter + runtime DLL copies, stdlib .pyd mirror,
     |                        # venv launchers, console-script .exe wrappers (pip,
     |                        # chardetect, ...), activation scripts, UCRT redistributables
-    +-- Lib/site-packages/   # Pipfile packages + pip, installed cross-platform from Linux
+    +-- Lib/site-packages/   # pinned packages + pip, installed cross-platform from Linux
 ```
 
 ## Fidelity vs the historic Windows-built CAB
@@ -120,7 +161,7 @@ Wine-side `pip` for package installation. Both are removable:
 - MSIs are zip-of-cab containers with a structured stream catalog;
   `msiextract` walks the File/Directory tables natively on Linux.
 - Linux `pip install --platform win_amd64 --only-binary=:all:` resolves
-  Windows wheels without executing them. Every Pipfile dependency
+  Windows wheels without executing them. Every pinned dependency
   (incl. `cryptography`, `pywin32`, `pyyaml`) ships a `cp313-win_amd64`
   wheel.
 

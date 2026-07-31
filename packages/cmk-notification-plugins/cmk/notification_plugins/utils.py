@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -13,12 +12,12 @@ import os
 import re
 import sys
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Container, Iterable
+from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from email.utils import formataddr
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Any, NamedTuple, NoReturn, override
+from typing import NamedTuple, NoReturn, override
 
 import requests
 from requests import JSONDecodeError
@@ -456,14 +455,14 @@ class StatusCodeMatcher(ResponseMatcher):
 @dataclass(frozen=True, slots=True)
 class JsonFieldMatcher(ResponseMatcher):
     field: str
-    value: Any
+    value: object
 
     @override
     def matches(self, response: requests.Response, body: JsonOrText) -> bool:
         return isinstance(body, dict) and _get_details_from_json(body, self.field) == self.value
 
 
-def _get_details_from_json(json_response: dict[str, Any], key: str) -> Any:
+def _get_details_from_json(json_response: Mapping[str, object], key: str) -> object:
     if key in json_response:
         return json_response[key]
 
@@ -479,7 +478,7 @@ def process_by_matchers(
 ) -> NoReturn:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
-    details = ""
+    details: object = ""
 
     try:
         body = response.json()

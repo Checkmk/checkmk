@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 r"""
 Send notification messages to PagerDuty
 =======================================
 
 """
-
-from typing import Any
 
 from cmk.notification_plugins.utils import (
     get_password_from_env_or_context,
@@ -54,7 +50,7 @@ def _notification_source_from_context(context: dict[str, str]) -> str:
     return context.get("HOSTADDRESS") or context.get("HOSTNAME") or "Undeclared Host identifier"
 
 
-def _pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
+def _pagerduty_msg(context: dict[str, str]) -> dict[str, object]:
     """Build the PagerDuty incident payload"""
 
     if context.get("WHAT") == "SERVICE":
@@ -70,7 +66,7 @@ def _pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
         output = context["HOSTOUTPUT"]
         incident_url = host_url_from_context(context)
 
-    msg_payload = {
+    msg_payload: dict[str, object] = {
         "routing_key": get_password_from_env_or_context(
             key="PARAMETER_ROUTING_KEY", context=context
         ),

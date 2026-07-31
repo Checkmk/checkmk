@@ -237,6 +237,10 @@ def _generate_livestatus_results(
         yield Result(state=State(params["site_stopped"]), summary="Site is currently not running")
         return
 
+    if "livestatus_version" not in status:
+        yield Result(state=State.UNKNOWN, summary="Incomplete livestatus status data received")
+        return
+
     yield Result(state=State.OK, summary="Livestatus version: %s" % status["livestatus_version"])
 
     for metric_name, key, title in [

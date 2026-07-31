@@ -182,10 +182,11 @@ The historical suites are named after the machinery a test needs — ``compositi
 The target layout classifies every test by scope and groups system level tests by the feature under test (``redfish``, ``otel``, ``piggyback``, ``agent bakery``, ...):
 
 * Package tests (unit + component) live in the owning package's own ``tests/`` directory and are fully Bazel-managed.
-* Cross-package tests without a running site live under ``tests/integration/``.
+* Cross-package tests without a running site live under ``tests/integration/`` (the name is reused for that new scope; the former ``tests/integration/`` suite was a system level suite and is now ``tests/system/singlesite/``).
 * System level tests (the former ``integration``/``composition``/``gui_e2e`` suites) move under ``tests/system/<feature>/``, are parametrized over the site edition, and declare the feature they exercise rather than carrying edition-specific skips.
 
-The first steps are visible under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``, ``tests/system/singlesite/``, the former ``tests/integration/``, and ``tests/system/multisite/``, the former ``tests/composition/``); most suites still follow the old fixture-based grouping.
+All system level suites now live under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``, ``tests/system/singlesite/``, the former ``tests/integration/``, and ``tests/system/multisite/``, the former ``tests/composition/``).
+What is still outstanding is the grouping *within* ``tests/system/``: ``singlesite``, ``multisite``, ``gui``, ``gui_crawl``, ``update`` and ``plugins`` are transitional, fixture-named buckets to be dissolved into feature directories.
 
 Tooling: Make to Bazel
 ===========================

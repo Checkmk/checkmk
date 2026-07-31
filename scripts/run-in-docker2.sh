@@ -44,7 +44,7 @@ Custom images can be used like:
     IMAGE_ID=artifacts.lan.tribe29.com:4000/ubuntu-22.04:master-latest run-in-docker2.sh <CMD>
 
 Run a specific Pytest and stay inside the container after the test completed for further debugging:
-    run-in-docker2.sh --keep-going TEST_FILTER="-k test_apache_restart_trigger" tests/run_tests.sh test-my-job
+    run-in-docker2.sh --keep-going TEST_FILTER="-k test_apache_restart_trigger" tests/run_tests.sh test-system-singlesite
 
 Options:
     -h, --help                    Show this message and exit

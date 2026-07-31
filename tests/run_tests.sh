@@ -56,7 +56,6 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-redfish                     Run system tests for redfish
   test-system-relay                       Run system tests for the relay (ultimate edition)
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
-  test-system-mk-oracle-docker            Run system tests for the mk_oracle agent plugins in docker
   test-system-otel                        Run system tests for otel (ultimate edition)
   test-system-mcp                         Run system tests for the mcp-server (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
@@ -311,6 +310,9 @@ test-system-relay() {
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
 }
 
+# Unlike the -docker variants generated further below, which run the site in a
+# container via run-dockerized.py, this one only runs the test code itself in a
+# build container via run-in-docker.sh. Same for test-system-mk-oracle-docker.
 test-system-relay-docker() {
     DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
         "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-system-relay

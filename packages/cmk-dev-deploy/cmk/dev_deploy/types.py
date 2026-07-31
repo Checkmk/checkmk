@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Core data types for cmk-dev-deploy."""
 
 from __future__ import annotations
@@ -13,7 +11,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import TextIO
 
 
 class Edition(StrEnum):
@@ -354,7 +352,7 @@ class StepResult:
     message: str | None
     elapsed: float
     start_offset: float = 0.0
-    captured_output: tuple[tuple[str, Any], ...] = ()
+    captured_output: tuple[tuple[str, TextIO | None], ...] = ()
 
 
 @dataclass(frozen=True)

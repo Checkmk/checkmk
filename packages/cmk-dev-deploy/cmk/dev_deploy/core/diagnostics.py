@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Automatic diagnostic bundle capture for cmk-dev-deploy.
 
 On any :class:`~cmk.dev_deploy.errors.DeployError` (or subclass), captures
@@ -27,7 +25,7 @@ import sys
 import traceback
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core.timeouts import BAZEL_INFO_QUICK
 from cmk.dev_deploy.errors import DeployError
@@ -69,7 +67,7 @@ def capture_diagnostic_bundle(
     Returns:
         Path to the written crash file, or None if writing failed.
     """
-    bundle: dict[str, Any] = {
+    bundle: dict[str, object] = {
         "timestamp": datetime.now(tz=UTC).isoformat(),
         "tool_version": _get_tool_version(),
         "command_args": sys.argv[1:],
@@ -129,9 +127,9 @@ def _get_tool_version() -> str:
     return "unknown"
 
 
-def _collect_environment(repo_root: Path | None) -> dict[str, Any]:
+def _collect_environment(repo_root: Path | None) -> dict[str, object]:
     """Collect environment info without capturing env vars."""
-    env: dict[str, Any] = {
+    env: dict[str, object] = {
         "python_version": sys.version,
         "platform": platform.platform(),
         "machine": platform.machine(),
@@ -194,9 +192,9 @@ def _collect_environment(repo_root: Path | None) -> dict[str, Any]:
     return env
 
 
-def _collect_bazel_state(repo_root: Path | None) -> dict[str, Any]:
+def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
     """Collect Bazel server state (PID, memory) with timeouts."""
-    state: dict[str, Any] = {}
+    state: dict[str, object] = {}
     if repo_root is None:
         return state
 
@@ -267,11 +265,11 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, Any]:
     return state
 
 
-def _collect_site_info(site: SiteInfo) -> dict[str, Any]:
+def _collect_site_info(site: SiteInfo) -> dict[str, object]:
     """Collect site information."""
     from cmk.dev_deploy.site.version_clone import is_clone_active
 
-    info: dict[str, Any] = {
+    info: dict[str, object] = {
         "site_name": site.name,
         "edition": site.edition.value,
     }
@@ -282,11 +280,11 @@ def _collect_site_info(site: SiteInfo) -> dict[str, Any]:
     return info
 
 
-def _collect_manifest_state() -> dict[str, Any]:
+def _collect_manifest_state() -> dict[str, object]:
     """Collect manifest state metadata."""
     from cmk.dev_deploy.manifest.reader import manifest_path
 
-    state: dict[str, Any] = {"manifest_exists": manifest_path().is_file()}
+    state: dict[str, object] = {"manifest_exists": manifest_path().is_file()}
     if manifest_path().is_file():
         try:
             stat = manifest_path().stat()
@@ -303,7 +301,7 @@ def _collect_manifest_state() -> dict[str, Any]:
     return state
 
 
-def _collect_deploy_state(site: SiteInfo | None) -> dict[str, Any]:
+def _collect_deploy_state(site: SiteInfo | None) -> dict[str, object]:
     """Collect deploy state metadata."""
     if site is None:
         return {}
@@ -325,9 +323,9 @@ def _collect_deploy_state(site: SiteInfo | None) -> dict[str, Any]:
         return {"state_file_exists": "error"}
 
 
-def _collect_error_info(error: BaseException, phase: str) -> dict[str, Any]:
+def _collect_error_info(error: BaseException, phase: str) -> dict[str, object]:
     """Collect error details."""
-    info: dict[str, Any] = {
+    info: dict[str, object] = {
         "type": type(error).__name__,
         "message": str(error.message) if isinstance(error, DeployError) else str(error),
         "traceback": traceback.format_exception(type(error), error, error.__traceback__),
@@ -357,7 +355,7 @@ def _read_log_tail() -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def _write_bundle(bundle: dict[str, Any]) -> Path | None:
+def _write_bundle(bundle: dict[str, object]) -> Path | None:
     """Write the diagnostic bundle to disk and prune old files."""
     try:
         _diagnostics_dir().mkdir(parents=True, exist_ok=True)

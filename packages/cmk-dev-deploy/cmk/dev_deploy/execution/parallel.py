@@ -126,7 +126,7 @@ def _run_step(name: str, action: Callable[[], str | None], cycle_start: float) -
             message=message,
             elapsed=elapsed,
             start_offset=start_offset,
-            captured_output=tuple(tuple(e) for e in captured),
+            captured_output=tuple(captured),
         )
     except Exception as exc:
         elapsed = time.monotonic() - t0
@@ -137,5 +137,5 @@ def _run_step(name: str, action: Callable[[], str | None], cycle_start: float) -
             message=str(exc),
             elapsed=elapsed,
             start_offset=start_offset,
-            captured_output=tuple(tuple(e) for e in captured),
+            captured_output=tuple(captured),
         )

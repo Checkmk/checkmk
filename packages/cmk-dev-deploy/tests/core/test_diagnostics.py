@@ -120,7 +120,9 @@ class TestCollectBazelState:
             side_effect=TimeoutExpired(["bazel"], 3),
         ):
             state = _collect_bazel_state(tmp_path)
-        assert "unavailable" in state.get("output_base", "")
+        output_base = state.get("output_base", "")
+        assert isinstance(output_base, str)
+        assert "unavailable" in output_base
 
     def test_collects_server_pid(self, tmp_path: Path) -> None:
         """Server PID is collected from bazel info server_pid."""
@@ -175,8 +177,10 @@ class TestCollectManifestState:
         with patch("cmk.dev_deploy.manifest.reader.manifest_path", return_value=manifest):
             state = _collect_manifest_state()
         assert state["manifest_exists"] is True
-        assert state["manifest_spec_count"]["wheel_prefixes"] == 3
-        assert state["manifest_spec_count"]["config_specs"] == 1
+        spec_count = state["manifest_spec_count"]
+        assert isinstance(spec_count, dict)
+        assert spec_count["wheel_prefixes"] == 3
+        assert spec_count["config_specs"] == 1
 
 
 # ---------------------------------------------------------------------------

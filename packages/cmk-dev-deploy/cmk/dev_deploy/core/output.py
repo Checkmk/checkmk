@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Terminal output helpers for cmk-dev-deploy.
 
 Provides ANSI color constants (auto-disabled when not a TTY), prefixed
@@ -30,7 +28,7 @@ from datetime import datetime, UTC
 from enum import IntEnum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, TYPE_CHECKING
+from typing import TextIO, TYPE_CHECKING
 
 from cmk.dev_deploy.types import ChangeCategory, DiffBaseSource
 
@@ -196,19 +194,19 @@ def _verbose_only[**P](fn: Callable[P, None]) -> Callable[P, None]:
 
 def start_buffering() -> None:
     """Enable output buffering for the current thread."""
-    _config.thread_local.buffer = []  # list[tuple[str, Any]]
+    _config.thread_local.buffer = []  # list[tuple[str, TextIO | None]]
     _config.thread_local.buffering = True
 
 
-def flush_buffer() -> list[tuple[str, Any]]:
+def flush_buffer() -> list[tuple[str, TextIO | None]]:
     """Disable buffering and return accumulated ``(message, file)`` entries."""
-    entries: list[tuple[str, Any]] = getattr(_config.thread_local, "buffer", [])
+    entries: list[tuple[str, TextIO | None]] = getattr(_config.thread_local, "buffer", [])
     _config.thread_local.buffer = []
     _config.thread_local.buffering = False
     return entries
 
 
-def write_buffered_output(entries: list[tuple[str, Any]]) -> None:
+def write_buffered_output(entries: list[tuple[str, TextIO | None]]) -> None:
     """Print all *entries* atomically under a single lock acquisition."""
     if not entries:
         return
@@ -217,7 +215,7 @@ def write_buffered_output(entries: list[tuple[str, Any]]) -> None:
             _tty_print(msg, file=file)
 
 
-def _tty_print(msg: str, *, file: Any = None) -> None:
+def _tty_print(msg: str, *, file: TextIO | None = None) -> None:
     """Print *msg* with explicit ``\\r\\n`` line endings on a TTY."""
     target = file or sys.stdout
     if _config.is_tty:
@@ -227,7 +225,7 @@ def _tty_print(msg: str, *, file: Any = None) -> None:
         print(msg, file=target)
 
 
-def _print_locked(msg: str, *, file: Any = None) -> None:
+def _print_locked(msg: str, *, file: TextIO | None = None) -> None:
     _log_to_file(msg)
     if getattr(_config.thread_local, "log_only", False):
         return

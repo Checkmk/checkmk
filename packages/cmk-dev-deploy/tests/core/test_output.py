@@ -9,6 +9,7 @@ from __future__ import annotations
 import sys
 import threading
 from collections.abc import Iterator
+from typing import TextIO
 from unittest.mock import patch
 
 import pytest
@@ -408,7 +409,7 @@ class TestOutputBuffer:
         import cmk.dev_deploy.core.output as output_mod
         from cmk.dev_deploy.core.output import write_buffered_output
 
-        entries: list[tuple[str, object]] = [(f"line-{i}", None) for i in range(5)]
+        entries: list[tuple[str, TextIO | None]] = [(f"line-{i}", None) for i in range(5)]
 
         acquire_count = 0
         real_lock = threading.Lock()

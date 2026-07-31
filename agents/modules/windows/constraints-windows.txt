@@ -1,0 +1,8 @@
+# Version bounds for the Windows agent's python-3.cab closure, i.e. for
+# requirements-windows.in.  Normally empty.  Kept separate from
+# //:constraints.txt so a hold needed on one side cannot block the other.
+#
+# Same rules as //:constraints.txt: pins belong in the resolved
+# requirements-windows.txt, not here.  Add an entry only to hold a version
+# back, and give it a CMK-<id> ticket for its removal — enforced by
+# //tests/code_quality/requirements:requirements_files.

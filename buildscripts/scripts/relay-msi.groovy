@@ -12,16 +12,20 @@ void main() {
     def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
 
-    def correlation_id = windows.azure_signing_correlation_id(branch_name);
-
     def edition = params.EDITION;
     // When FORCE_SIGN parameter is present we honour it. Otherwise we sign the MSI.
     def should_sign = (params.FORCE_SIGN == null) || (params.FORCE_SIGN == true);
     def use_azure = (params.SIGN_METHOD == "azure");
 
     def allowed_editions = ["cloud", "ultimate", "ultimatemt"];
+    // The correlation ID suffix is a shared secret appended to every CorrelationId we send to
+    // Azure, so signing requests which did not originate from our CI can be spotted in the signing
+    // diagnostics. It therefore lives in the credential store, not in an env var. It stays bound
+    // for the whole build: the Azure client echoes the CorrelationId, and Jenkins only masks the
+    // secret inside this block.
     def azure_creds = [
         string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
+        string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
     ];
     // Choose the signing method, mirroring winagt-build.groovy. Azure signs in-process
     // against the cloud service (no YubiKey / win_sign_key lock); YubiKey is the fallback.
@@ -36,6 +40,8 @@ void main() {
     dir("${checkout_dir}") {
         if (use_azure && should_sign) {
             withCredentials(azure_creds) {
+                // Assembled inside the binding block: the suffix is only available there.
+                def correlation_id = windows.azure_signing_correlation_id(branch_name);
                 withEnv([
                     "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",
                     "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",

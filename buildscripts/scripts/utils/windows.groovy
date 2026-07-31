@@ -7,13 +7,18 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 /// Assemble the CorrelationId sent along with every Azure artifact signing request.
 ///
 /// Azure reports the value back in the signing diagnostics, so it tells us which CI job
-/// triggered a signing request.
+/// triggered a signing request. The suffix is a shared secret, so that signing requests which did
+/// not originate from our CI can be spotted in those diagnostics.
+///
+/// The caller binds `azure_artifact_signing_correlation_suffix` and must keep it bound for the
+/// whole signing step: the Azure client prints its metadata (CorrelationId included) to stdout,
+/// and Jenkins only masks the secret while its `withCredentials` block is open.
 ///
 /// Quotes are stripped: on Windows agents `make print-%` echoes values wrapped in single quotes
 /// (defines.make), which cmd.exe does not strip, so branch_name may arrive as e.g. '3.0.0'.
 /// Azure's CorrelationId is an opaque tracking string.
 String azure_signing_correlation_id(String branch_name) {
-    return "${branch_name}_${env.AZURE_ARTIFACT_SIGNING_CORRELATION_ID_SUFFIX}".replaceAll("['\"]", "");
+    return "${branch_name}_${env.AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX}".replaceAll("['\"]", "");
 }
 
 void build(Map args) {

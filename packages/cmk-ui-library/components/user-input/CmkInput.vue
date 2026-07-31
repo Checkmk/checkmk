@@ -39,7 +39,8 @@ const {
   unit,
   externalErrors,
   validators,
-  inline = false
+  inline = false,
+  hideValidationMessage = false
 } = defineProps<{
   type?: T
   fieldSize?: keyof typeof inputSizes
@@ -47,6 +48,7 @@ const {
   externalErrors?: string[]
   validators?: ((value: InputDataType<T>) => string[])[]
   inline?: boolean
+  hideValidationMessage?: boolean
 }>()
 
 const wrapperStyle = computed(() => (inline ? { display: 'inline-block' } : undefined))
@@ -86,7 +88,7 @@ immediateWatch(
 
 <template>
   <div class="cmk-input__wrapper" :style="wrapperStyle">
-    <CmkInlineValidation :validation="validation"></CmkInlineValidation>
+    <CmkInlineValidation v-if="!hideValidationMessage" :validation="validation" />
     <div class="cmk-input__input-unit-container">
       <input
         ref="inputRef"

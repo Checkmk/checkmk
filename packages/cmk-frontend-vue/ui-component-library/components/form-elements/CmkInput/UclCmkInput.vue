@@ -75,6 +75,12 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'External Error',
     initialState: ''
+  },
+  hideValidationMessage: {
+    type: 'boolean' as const,
+    title: 'Hide validation message',
+    help: 'When enabled, the field keeps its invalid styling but does not render the validation message, letting a parent place it elsewhere.',
+    initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkInput>
 </script>
@@ -109,6 +115,7 @@ const propState = new PanelStateCreator<typeof CmkInput>().createRef(panelConfig
           :unit="propState.unit"
           :inline="propState.inline"
           :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
+          :hide-validation-message="propState.hideValidationMessage"
         />
         Adjacent text to CmkInput
       </div>

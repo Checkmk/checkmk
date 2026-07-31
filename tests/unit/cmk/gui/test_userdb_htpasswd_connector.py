@@ -120,3 +120,43 @@ def test_user_connector_verify_password_locked_users(
             [cfg],
             default_user_profile={},
         )
+
+
+def test_save_users_drops_hash_of_user_owned_by_another_connector(
+    htpasswd_file: Path,
+) -> None:
+    """A user owned by an LDAP/SAML connection keeps no local password hash.
+
+    ``save_users`` rebuilds the htpasswd file from scratch and skips every user
+    whose ``connector`` is not ``htpasswd``, so an externally-owned user has no
+    local credential -- which is why deleting their connection locks them out
+    entirely instead of falling back to a local login (the resolution side of
+    that is pinned in
+    ``tests/unit/cmk/gui/userdb/test_identity_unification.py``).
+    """
+    connector = htpasswd.HtpasswdUserConnector(
+        HtpasswdUserConnectionConfig({"type": "htpasswd", "id": "htpasswd", "disabled": False})
+    )
+    local_hash = htpasswd.hash_password(Password("cmk"))
+
+    connector.save_users(
+        {
+            UserId("local_user"): {
+                "connector": "htpasswd",
+                "password": local_hash,
+                "locked": False,
+            },
+            UserId("ldap_user"): {
+                "connector": "ldap_corp",
+                "password": local_hash,
+                "locked": False,
+            },
+        }
+    )
+
+    written = htpasswd_file.read_text(encoding="utf-8")
+    assert "local_user:" in written
+    assert "ldap_user" not in written, (
+        "an LDAP-owned user must not keep a local password hash -- otherwise "
+        "connector ownership would not decide where the user authenticates"
+    )

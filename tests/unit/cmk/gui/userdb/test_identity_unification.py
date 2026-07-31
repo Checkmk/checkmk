@@ -304,6 +304,54 @@ def test_login_via_second_connector_resolves_to_existing_record(
     assert calls["do_sync"] == 0
 
 
+def test_orphaned_owning_connector_denies_login_without_creating_a_record(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A user whose owning connection has been deleted cannot log in, and is
+    not silently re-provisioned under whatever connector answers next.
+
+    Deleting a connection does not rewrite the users it owns, so their
+    ``connector`` keeps naming a connection that is no longer configured. That
+    id is absent from ``active_connections``, so the owner-first reordering has
+    nothing to hoist and every remaining connector is asked in declaration
+    order. None of them knows the user -- an LDAP/SAML-owned user has no
+    htpasswd hash to fall back on (see
+    ``tests/unit/cmk/gui/test_userdb_htpasswd_connector.py``) -- so resolution
+    runs off the end of the chain and denies the login.
+
+    The account must also survive: returning ``False`` rather than creating a
+    fresh record is what keeps the user recoverable by re-adding the
+    connection, instead of leaving a duplicate owned by the wrong connector.
+    """
+    htpasswd_connector = _FakeConnector("htpasswd", result=None)
+    calls = _patch_resolution(
+        monkeypatch,
+        connectors=[("htpasswd", htpasswd_connector)],
+        existing=True,
+        owning_connector="ldap_deleted",
+    )
+
+    result = _check_credentials.check_credentials(
+        UserId("judy"),
+        Password("pw"),
+        [],
+        [],
+        _NOW,
+        _default_profile(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    assert result is False, (
+        "a user whose owning connection was deleted must not be authenticated by another connector"
+    )
+    assert htpasswd_connector.consulted is True, (
+        "the orphaned owner id must not abort the chain -- the remaining "
+        "connectors still get their turn"
+    )
+    assert calls["save_users"] == 0, "a denied login must not re-provision the user record"
+
+
 def test_new_user_template_stamps_single_owning_connector() -> None:
     """A freshly provisioned user carries exactly the creating
     connector id, so a new record has one unambiguous owner."""

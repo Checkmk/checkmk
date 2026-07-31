@@ -39,8 +39,8 @@ import sys
 import zipfile
 from pathlib import Path
 
-# Console entry points the historic CAB shipped as .exe wrappers, and the
-# exact __main__.py each wrapper executed.  The pip wrappers use the (older)
+# Console entry points the CAB ships as .exe wrappers, and the exact
+# __main__.py each wrapper executes.  The pip wrappers use the (older)
 # template virtualenv's seeder generated; the rest use pip's own template.
 _PIP_MAIN = (
     "# -*- coding: utf-8 -*-\n"
@@ -68,7 +68,8 @@ _WRAPPERS = {
     "pip3.exe": _PIP_MAIN,
     "pip3.13.exe": _PIP_MAIN,
     "pip-3.13.exe": _PIP_MAIN,
-    "chardetect.exe": _plain_main("chardet.cli.chardetect", "main"),
+    "cffi-gen-src.exe": _plain_main("cffi._cffi_gen_src", "run"),
+    "chardetect.exe": _plain_main("chardet.cli", "main"),
     "idna.exe": _plain_main("idna.cli", "main"),
     "normalizer.exe": _plain_main("charset_normalizer.cli", "cli_detect"),
     "pywin32_postinstall.exe": _plain_main("win32.scripts.pywin32_postinstall", "main"),
@@ -87,6 +88,7 @@ _RECORD_SCRIPT_TO_WRAPPER = {
     "pip": "pip.exe",
     "pip3": "pip3.exe",
     "pip3.13": "pip3.13.exe",
+    "cffi-gen-src": "cffi-gen-src.exe",
     "chardetect": "chardetect.exe",
     "idna": "idna.exe",
     "normalizer": "normalizer.exe",
@@ -134,10 +136,19 @@ def _fixup_records(site_packages: Path, wrappers: dict[str, bytes]) -> None:
                     wrapper = _RECORD_SCRIPT_TO_WRAPPER[name]
                     data = wrappers[wrapper]
                     line = f"../../Scripts/{wrapper},{_record_hash(data)},{len(data)}"
-                else:
+                elif name.endswith(".py") or "__pycache__" in name:
                     # Plain script payloads (and their __pycache__ entries)
                     # move from bin/ to Scripts/ verbatim.
                     line = "../../Scripts/" + rest
+                else:
+                    # A pip-generated console script that never ships (only
+                    # bin/*.py is copied to Scripts/); its RECORD hash covers
+                    # the build machine's interpreter path, breaking reproducibility.
+                    sys.exit(
+                        f"error: {record}: console script {name!r} has no .exe wrapper; "
+                        "add it to _WRAPPERS/_RECORD_SCRIPT_TO_WRAPPER in "
+                        "make_exe_wrappers.py"
+                    )
             lines.append(line)
         record.write_text(eol.join(lines) + eol)
 

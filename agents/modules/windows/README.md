@@ -147,6 +147,9 @@ these deliberate differences:
 - **Working wrapper/activation scripts.** The old build baked the _build
   machine's_ path (`D:\w\workspace\...`) into the `.exe` wrappers' shebangs
   and the activate scripts; we bake the production install path.
+- **One extra wrapper.** `.venv/Scripts/cffi-gen-src.exe` — cffi grew the
+  console entry point after the historic lock; a native Windows pip
+  install of the current closure would ship it.
 - **MSZIP instead of LZX:18** (~20% larger cab; no Linux tool writes LZX,
   `expand.exe` reads both) and fixed member timestamps (reproducible
   output).

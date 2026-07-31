@@ -72,51 +72,29 @@ describe('fromModel', () => {
 })
 
 describe('buildAutocompleteContext', () => {
-  test('emits per-type cascading attrs plus metric name and static keys', () => {
-    const context = buildAutocompleteContext(modelFromLists(lists), {
-      metricName: 'http_requests',
-      staticResourceAttributeKeys: ['service.name']
-    })
-
-    expect(context).toEqual({
-      metric_name: 'http_requests',
-      resource_attributes: [{ key: 'service.name', value: 'frontend' }],
-      scope_attributes: [{ key: 'otel.library.name', value: 'http' }],
-      data_point_attributes: [
-        { key: 'http.method', value: 'GET' },
-        { key: 'http.route', value: '/api' }
-      ],
-      static_resource_attribute_keys: ['service.name']
-    })
-  })
-
-  test('omits incomplete conditions (missing key or value) from the context', () => {
-    const model = group(
-      { id: 'a', attributeKind: 'resource', key: 'service.name', operator: 'eq', value: '' },
-      { id: 'b', attributeKind: 'resource', key: 'host.name', operator: 'eq', value: 'web-01' }
-    )
-
-    expect(buildAutocompleteContext(model)).toEqual({
-      resource_attributes: [{ key: 'host.name', value: 'web-01' }]
-    })
-  })
-
-  test('excludes the condition being edited via excludeId', () => {
+  test('encodes the model as a recursive filter, dropping the excluded pill, plus the options', () => {
     const model = group(
       { id: 'self', attributeKind: 'data_point', key: 'http.method', operator: 'eq', value: 'GET' },
       { id: 'other', attributeKind: 'data_point', key: 'http.route', operator: 'eq', value: '/api' }
     )
 
     expect(
-      buildAutocompleteContext(model, { attributeKey: 'http.method', excludeId: 'self' })
+      buildAutocompleteContext(model, {
+        metricName: 'http_requests',
+        staticResourceAttributeKeys: ['service.name'],
+        attributeKey: 'http.method',
+        excludeId: 'self'
+      })
     ).toEqual({
-      data_point_attributes: [{ key: 'http.route', value: '/api' }],
-      attribute_key: 'http.method'
+      metric_name: 'http_requests',
+      static_resource_attribute_keys: ['service.name'],
+      attribute_key: 'http.method',
+      attribute_filter: {
+        type: 'equals',
+        key: { kind: 'data_point', name: 'http.route' },
+        value: '/api'
+      }
     })
-  })
-
-  test('omits empty optional fields', () => {
-    expect(buildAutocompleteContext([])).toEqual({})
   })
 })
 

@@ -168,12 +168,16 @@ async function queryValueSuggestions(
   if (condition.attributeKind === null || !condition.key) {
     return new Response([])
   }
+  // Scope suggestions to the edited pill's AND group; sibling OR disjuncts must not narrow them.
+  const editedGroup = filterModel.value.find((group) =>
+    group.conditions.some((candidate) => candidate.id === condition.id)
+  )
   const autocompleter: Autocompleter = {
     fetch_method: 'rest_autocomplete',
     data: {
       ident: VALUE_IDENTS[condition.attributeKind],
       params: {
-        context: buildAutocompleteContext(filterModel.value, {
+        context: buildAutocompleteContext(editedGroup ? [editedGroup] : [], {
           metricName: props.metricName,
           staticResourceAttributeKeys: props.staticResourceAttributeKeys,
           attributeKey: condition.key,

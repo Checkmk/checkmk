@@ -186,10 +186,8 @@ export function fromModel(model: AttributeFilterModel): ThreeLists {
 export interface AutoCompleteContext {
   metric_name?: string
   attribute_key?: string
-  resource_attributes?: GraphLineQueryAttributes
-  scope_attributes?: GraphLineQueryAttributes
-  data_point_attributes?: GraphLineQueryAttributes
   static_resource_attribute_keys?: string[]
+  attribute_filter: AttributeFilter
 }
 
 export interface ContextOptions {
@@ -199,39 +197,18 @@ export interface ContextOptions {
   excludeId?: string
 }
 
-type AttrsKey = 'resource_attributes' | 'scope_attributes' | 'data_point_attributes'
-
-const CONTEXT_KEYS: Record<AttributeKindKey, AttrsKey> = {
-  resource: 'resource_attributes',
-  scope: 'scope_attributes',
-  data_point: 'data_point_attributes'
-}
-
-// Exclude the condition being edited (excludeId) so it does not constrain its own
-// value suggestions.
 export function buildAutocompleteContext(
   model: AttributeFilterModel,
   options: ContextOptions = {}
 ): AutoCompleteContext {
-  const context: AutoCompleteContext = {}
+  // Drop the pill being edited so it does not constrain its own value suggestions.
+  const withoutEditedPill = model.map((group) => ({
+    ...group,
+    conditions: group.conditions.filter((condition) => condition.id !== options.excludeId)
+  }))
+  const context: AutoCompleteContext = { attribute_filter: toAttributeFilter(withoutEditedPill) }
   if (options.metricName) {
     context.metric_name = options.metricName
-  }
-  const conditions = model.flatMap((group) => group.conditions)
-  for (const attributeKind of ATTRIBUTE_KIND_ORDER) {
-    const attrs = conditions
-      .filter(
-        (c) =>
-          c.attributeKind === attributeKind &&
-          c.id !== options.excludeId &&
-          c.key !== null &&
-          c.key !== '' &&
-          c.value !== ''
-      )
-      .map((c) => ({ key: c.key as string, value: c.value }))
-    if (attrs.length > 0) {
-      context[CONTEXT_KEYS[attributeKind]] = attrs
-    }
   }
   if (options.attributeKey) {
     context.attribute_key = options.attributeKey

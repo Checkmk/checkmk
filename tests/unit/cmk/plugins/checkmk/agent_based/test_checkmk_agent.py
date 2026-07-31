@@ -157,6 +157,25 @@ def test_check_version_at_least_daily_build() -> None:
     ]
 
 
+@pytest.mark.xfail(
+    strict=True, reason="Crash report 38f93b7a-d104-11f0-8fee-005056b5a2f6: ValueError"
+)
+def test_check_version_at_least_daily_build_with_release_prefix() -> None:
+    assert [
+        *_check_version(
+            "2.4.0-2025.11.04",
+            "site.version",
+            ("at_least", {"daily_build": "2.4.0-2025.12.04"}),
+            State.WARN,
+        )
+    ] == [
+        Result(
+            state=State.WARN,
+            summary="Version: 2.4.0-2025.11.04 (expected at least 2.4.0-2025.12.04)",
+        )
+    ]
+
+
 def test_check_version_at_least_daily_build_vs_release() -> None:
     assert [
         *_check_version(

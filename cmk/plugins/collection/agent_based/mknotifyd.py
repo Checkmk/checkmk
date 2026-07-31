@@ -50,6 +50,7 @@
 # InputBuffer:              0 Bytes
 # OutputBuffer:             0 Bytes
 
+import time
 from dataclasses import dataclass
 from ipaddress import ip_address, IPv6Address
 
@@ -187,7 +188,10 @@ def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
 def parse_mknotifyd(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> MkNotifySection:
-    timestamp, data = float(string_table[0][0]), string_table[1:]
+    try:
+        timestamp, data = float(string_table[0][0]), string_table[1:]
+    except (IndexError, ValueError):
+        timestamp, data = time.time(), string_table
 
     sites: dict[str, Site] = {}
 

@@ -146,6 +146,7 @@ dependency_list(
         "//:Cargo.lock",
         "//:pnpm-lock.yaml",
         "//:runtime-requirements.txt",
+        "//agents/modules/windows:requirements-windows.txt",
         "manual_dependency_manifest.yml",
     ],
     sbom_target = select({

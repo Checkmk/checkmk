@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from typing import Any
 
 from marshmallow import fields
@@ -22,7 +20,7 @@ _JSON_TYPES: dict[type, str] = {
 
 
 class Constant(base.OpenAPIAttributes, fields.Constant):
-    def __init__(self, constant: Any, **kwargs: Any) -> None:
+    def __init__(self, constant: object, **kwargs: Any) -> None:  # type: ignore[explicit-any]
         super().__init__(constant, **kwargs)
         # A marshmallow Constant renders into JSON Schema without a ``type`` (its MRO maps to
         # the generic ``Field`` type in apispec). Discriminator validation in

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -17,7 +16,7 @@ from marshmallow.types import StrSequenceOrSet
 
 
 class OpenAPIAttributes:
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[explicit-any]
         metadata = kwargs.setdefault("metadata", {})
         for key in [
             "deprecated",
@@ -212,7 +211,7 @@ class Integer(OpenAPIAttributes, fields.Integer):
         return value
 
 
-def _freeze(obj: Any, partial: tuple[str, ...] | None = None) -> Hashable:
+def _freeze(obj: object, partial: tuple[str, ...] | None = None) -> Hashable:
     """Freeze all the things, so we can put them in a set.
 
     Examples:
@@ -242,11 +241,12 @@ def _freeze(obj: Any, partial: tuple[str, ...] | None = None) -> Hashable:
     if isinstance(obj, list):
         return tuple(_freeze(entry) for entry in obj)
 
+    assert isinstance(obj, Hashable)
     return obj
 
 
 class HasMakeError(Protocol):
-    def make_error(self, key: str, **kwargs: Any) -> ValidationError: ...
+    def make_error(self, key: str, **kwargs: object) -> ValidationError: ...
 
 
 class UniqueFields:

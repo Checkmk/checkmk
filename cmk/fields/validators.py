@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 
 import ipaddress
 import re
 from collections.abc import Iterable
-from typing import Any
 
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
@@ -18,7 +16,7 @@ from cmk.ccc.hostaddress import HostAddress
 
 
 class ValidateIPv4(Validator):
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: str) -> None:
         try:
             ipaddress.IPv4Address(value)
         except ValueError as exc:
@@ -44,7 +42,7 @@ class ValidateIPv6(Validator):
     ):
         self.allow_unspecified = allow_unspecified
 
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: str) -> None:
         try:
             address = ipaddress.IPv6Address(value)
         except ValueError as exc:
@@ -81,7 +79,7 @@ class ValidateIPv4Network(Validator):
         self.min_prefix = min_prefix
         self.max_prefix = max_prefix
 
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: str) -> None:
         try:
             network = ipaddress.IPv4Network(value)
         except ValueError as exc:
@@ -100,7 +98,7 @@ class ValidateAnyOfValidators(Validator):
     def __init__(self, validators: Iterable[Validator]) -> None:
         self.validators = validators
 
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: object) -> None:
         errors = ["Any of this needs to be true:"]
         for validator in self.validators:
             try:
@@ -128,7 +126,7 @@ class IsValidRegexp(Validator):
 
     """
 
-    def __call__(self, value: Any) -> None:
+    def __call__(self, value: str) -> None:
         try:
             re.compile(value)
         except re.error as exc:
@@ -161,7 +159,7 @@ class HostNameValidator(Validator):
 
     """
 
-    def __call__(self, hostname: Any) -> None:
+    def __call__(self, hostname: str) -> None:
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
         if len(hostname) > 255:
             raise ValidationError("Host name too long")
@@ -184,7 +182,7 @@ class HostNameValidator(Validator):
 
 
 class ValidateHostName(Validator):
-    def __call__(self, value: Any, **kwargs: Any) -> None:
+    def __call__(self, value: str, **kwargs: object) -> None:
         try:
             HostAddress(value)
         except ValueError as exception:

@@ -59,7 +59,8 @@ from .in_out_elements import (
     TTY_NORMAL,
     TTY_RED,
 )
-from .schemas.werk import LegacyStash, Stash, Werk, WerkId
+from .stash import LegacyStash, Stash
+from .werk import Werk, WerkId
 
 WerkVersion = Literal["v1", "markdown"]
 

@@ -12,7 +12,7 @@ from cmk.werks.tool.cli import (
     _reject_ids_unsupported_by_legacy_workflow,
     _reserve_werk_ids,
 )
-from cmk.werks.tool.cli.schemas.werk import WerkId
+from cmk.werks.tool.cli.werk import WerkId
 
 
 def tw(data: Iterable[int]) -> list[WerkId]:

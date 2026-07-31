@@ -16,7 +16,8 @@ from typing import Final, Protocol
 import requests
 
 from .in_out_elements import bail_out, TTY_NORMAL, TTY_RED
-from .schemas.werk import LegacyStash, Stash, WerkId
+from .stash import LegacyStash, Stash
+from .werk import WerkId
 
 # Use a single short timeout for every request so commands fail fast when the werk IDs
 # server is unreachable (e.g. outside the VPN, where DNS/connect behaviour differs)

@@ -28,7 +28,8 @@ from cmk.werks.tool.cli.id_pool import (
     WerkIDsClient,
     write_secret,
 )
-from cmk.werks.tool.cli.schemas.werk import LegacyStash, Stash, WerkId
+from cmk.werks.tool.cli.stash import LegacyStash, Stash
+from cmk.werks.tool.cli.werk import WerkId
 
 
 def _write_secret(paths: Paths) -> None:

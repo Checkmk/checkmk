@@ -51,12 +51,14 @@ const props = withDefaults(
     staticResourceAttributeKeys?: string[] | null
     indent?: boolean
     operators?: Operator[]
+    allowOr?: boolean
   }>(),
   {
     metricName: null,
     staticResourceAttributeKeys: null,
     indent: false,
-    operators: () => SUPPORTED_OPERATORS
+    operators: () => SUPPORTED_OPERATORS,
+    allowOr: true
   }
 )
 
@@ -242,7 +244,7 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
       <component :is="props.indent ? CmkIndent : 'div'">
         <FormAttributeFilter
           v-model="filterModel"
-          :allow-or="false"
+          :allow-or="props.allowOr"
           :operators="props.operators"
           :query-suggestions="querySuggestions"
           :query-value-suggestions="queryValueSuggestions"

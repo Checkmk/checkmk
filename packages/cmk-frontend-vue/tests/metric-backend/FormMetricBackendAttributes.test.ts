@@ -41,21 +41,32 @@ afterAll(() => server.close())
 
 type AttributeFilterModel = ReturnType<typeof ref<AttributeFilter | null | undefined>>
 
-function renderAttributes(attributeFilter?: AttributeFilter | null): AttributeFilterModel {
+function renderAttributes(
+  attributeFilter?: AttributeFilter | null,
+  allowOr = true
+): AttributeFilterModel {
   const model = ref<AttributeFilter | null | undefined>(attributeFilter)
   const wrapper = defineComponent({
     components: { FormMetricBackendAttributes },
     setup() {
-      return { model }
+      return { model, allowOr }
     },
     template: `
       <table><tbody>
-        <FormMetricBackendAttributes v-model:attribute-filter="model" />
+        <FormMetricBackendAttributes v-model:attribute-filter="model" :allow-or="allowOr" />
       </tbody></table>
     `
   })
   render(wrapper)
   return model
+}
+
+const OR_FILTER: AttributeFilter = {
+  type: 'or',
+  disjuncts: [
+    { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'web' },
+    { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'db' }
+  ]
 }
 
 const THREE_ATTRIBUTES: AttributeFilter = {
@@ -149,6 +160,13 @@ test('a key with no value keeps the emitted filter empty', async () => {
 
 test('emits an empty AND (match everything) when there are no attributes', () => {
   expect(renderAttributes().value).toEqual({ type: 'and', conjuncts: [] })
+})
+
+test.each([true, false])('allowOr=%s shows the OR connector only when enabled', (allowOr) => {
+  renderAttributes(OR_FILTER, allowOr)
+
+  const connector = screen.queryByRole('button', { name: 'Toggle connector, currently OR' })
+  expect(Boolean(connector)).toBe(allowOr)
 })
 
 test('initializes the pills from a provided attribute filter, including exists', () => {

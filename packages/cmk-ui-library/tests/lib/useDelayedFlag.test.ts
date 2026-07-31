@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
+import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { type Ref, effectScope, nextTick, ref } from 'vue'
 
@@ -22,6 +22,10 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers()
+})
+
+test('the shared loading threshold is one second', () => {
+  expect(LOADING_AFFORDANCE_DELAY_MS).toBe(1000)
 })
 
 describe('useDelayedFlag', () => {
@@ -46,8 +50,7 @@ describe('useDelayedFlag', () => {
     source.value = false
     await nextTick()
 
-    // The pending delay must be cancelled, not merely ignored: letting the clock run past the
-    // original deadline may not resurrect the flag.
+    // Running past the original deadline must not resurrect the flag.
     vi.advanceTimersByTime(DELAY)
     expect(flag.value).toBe(false)
   })

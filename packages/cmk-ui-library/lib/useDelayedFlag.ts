@@ -14,8 +14,6 @@ export const LOADING_AFFORDANCE_DELAY_MS = 1000
 /**
  * A flag that turns true only once `source` has stayed true for `delay` ms. It drops back to false
  * the moment `source` does, cancelling a delay still in flight.
- *
- * Loading affordances gate on this so a fast response never flashes a placeholder.
  */
 export function useDelayedFlag(source: () => boolean, delay: number): Readonly<Ref<boolean>> {
   const delayed = ref(false)

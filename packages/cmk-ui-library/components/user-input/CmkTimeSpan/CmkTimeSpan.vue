@@ -8,7 +8,7 @@ import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineV
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 
 import {
   type Magnitude,
@@ -26,7 +26,10 @@ const props = defineProps<{
   displayedMagnitudes: Magnitude[]
   externalErrors?: string[]
   ariaLabel?: string
+  hideValidationMessage?: boolean
 }>()
+
+const emit = defineEmits<{ 'update:validation': [string[]] }>()
 const selectedMagnitudes = ref<Array<Magnitude>>([])
 
 watchEffect(() => {
@@ -95,10 +98,13 @@ function getPlaceholder(magnitude: Magnitude): string {
 }
 
 const localValidation = ref<Array<string>>([])
+
+const validation = computed(() => [...(props.externalErrors ?? []), ...localValidation.value])
+watch(validation, (messages) => emit('update:validation', messages), { immediate: true })
 </script>
 
 <template>
-  <CmkInlineValidation :validation="[...(props.externalErrors ?? []), ...localValidation]" />
+  <CmkInlineValidation v-if="!props.hideValidationMessage" :validation="validation" />
   {{ props.label }}
   <span role="group" :aria-label="props.ariaLabel || props.label || props.title">
     <label v-for="magnitude in selectedMagnitudes" :key="magnitude">

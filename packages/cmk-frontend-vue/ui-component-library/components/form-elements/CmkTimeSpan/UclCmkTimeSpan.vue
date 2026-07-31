@@ -8,7 +8,13 @@ import { type BoolPropDef, type PanelConfigFor } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkTimeSpanCodeExample.vue?raw'
 
-type OmittedProps = 'modelValue' | 'ariaLabel' | 'title' | 'externalErrors' | 'displayedMagnitudes'
+type OmittedProps =
+  | 'modelValue'
+  | 'ariaLabel'
+  | 'title'
+  | 'externalErrors'
+  | 'displayedMagnitudes'
+  | 'hideValidationMessage'
 type AdditionalProps = {
   showDay: BoolPropDef
   showHour: BoolPropDef

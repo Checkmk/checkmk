@@ -38,8 +38,8 @@ class _Components(TypedDict):
 
 class _PowerSupply(TypedDict):
     slot: int
-    serial: str
-    model: str
+    serial: str | None
+    model: str | None
     status: str
     poe: _Poe
 

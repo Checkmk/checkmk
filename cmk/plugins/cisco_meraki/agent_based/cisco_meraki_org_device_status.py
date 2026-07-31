@@ -35,8 +35,8 @@ type Section = DeviceStatus
 
 class PowerSupply(BaseModel, frozen=True):
     slot: int
-    model: str
-    serial: str
+    model: str | None
+    serial: str | None
     status: str
 
 
@@ -140,8 +140,12 @@ def check_device_status_ps(
         state = State(params["state_not_powering"])
 
     yield Result(state=state, summary=f"Status: {power_supply.status}")
-    yield Result(state=State.OK, notice=f"Model: {power_supply.model}")
-    yield Result(state=State.OK, notice=f"Serial: {power_supply.serial}")
+
+    if power_supply.model:
+        yield Result(state=State.OK, notice=f"Model: {power_supply.model}")
+
+    if power_supply.serial:
+        yield Result(state=State.OK, notice=f"Serial: {power_supply.serial}")
 
 
 check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(

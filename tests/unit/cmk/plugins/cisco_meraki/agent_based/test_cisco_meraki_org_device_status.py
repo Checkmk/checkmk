@@ -39,7 +39,6 @@ def test_parse_device_status_no_payload(string_table: StringTable) -> None:
     assert not parse_device_status(string_table)
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report group: 4816")
 def test_parse_device_status_disconnected_power_supply() -> None:
     device_status = _RawDevicesStatusFactory.build(
         components={
@@ -62,7 +61,6 @@ def test_parse_device_status_disconnected_power_supply() -> None:
     assert not section.power_supplies["1"].serial
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report group: 4816")
 def test_check_device_status_ps_disconnected() -> None:
     device_status = _RawDevicesStatusFactory.build(
         components={

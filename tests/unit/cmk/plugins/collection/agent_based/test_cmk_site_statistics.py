@@ -449,3 +449,26 @@ def test_check_cmk_site_statistics(
         )
         == expected_result
     )
+
+
+# The agent delivered the certificate lines of the livestatus_ssl_certs section inside the
+# livestatus_status section, so the status mapping holds none of the expected columns.
+_SECTION_LIVESTATUS_STATUS_INCOMPLETE = {
+    "gestern": {
+        "/omd/sites/gestern/etc/ssl/ca.pem|33063756788": (
+            "/omd/sites/gestern/etc/ssl/sites/gestern.pem|33063756788"
+        )
+    }
+}
+
+
+def test_check_cmk_site_statistics_status_without_core_pid() -> None:
+    results = list(
+        check_cmk_site_statistics(
+            "gestern",
+            _SECTION_CMK_SITE_STATISTICS,
+            _SECTION_LIVESTATUS_STATUS_INCOMPLETE,
+        )
+    )
+    assert results
+    assert all("Core PID" not in r.details for r in results if isinstance(r, Result))

@@ -10,7 +10,8 @@ A compact pill stating why a graph has nothing to show, optionally offering a re
 Layout-neutral: the host positions it, since the box it is centred in differs per surface.
 
 The geometry follows dashboard/components/StatusMessage.vue, which is already this shape. The
-colours are fixed rather than theme-derived: the design shows the same dark pill on both canvases.
+colours are CmkAlertBox's: the design's pills are that box's dark-theme backgrounds and icon
+colours, so its tokens are bound rather than restated, and the light theme follows it for free.
 -->
 
 <script setup lang="ts">
@@ -20,7 +21,7 @@ import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-export type GraphNoticeVariant = 'error' | 'loading' | 'info'
+export type GraphNoticeVariant = 'error' | 'warning' | 'loading' | 'info'
 
 const { _t } = usei18n()
 
@@ -43,15 +44,28 @@ const role = computed(() => {
   if (props.silent) {
     return undefined
   }
+  // Only a failure interrupts. A warning stays polite: the data it advises about is on screen and
+  // valid.
   return props.variant === 'error' ? 'alert' : 'status'
 })
 
 // `v-else` in the template does not narrow `loading` out of `variant`, so resolve the name here.
-const multitoneIconName = computed<'error' | 'info'>(() =>
-  props.variant === 'info' ? 'info' : 'error'
-)
+const multitoneIconName = computed<'error' | 'warning' | 'info'>(() => {
+  switch (props.variant) {
+    case 'info':
+      return 'info'
+    case 'warning':
+      return 'warning'
+    default:
+      return 'error'
+  }
+})
 
-const ICON_COLOR = { custom: 'var(--color-white-100)' }
+// The icon colour CmkAlertBox pairs with the background below. `loading` draws a plain icon
+// instead, so it never reaches this.
+const iconColor = computed(() => ({
+  custom: `var(--cmk-alert-box-${props.variant}-icon-color)`
+}))
 </script>
 
 <template>
@@ -65,7 +79,7 @@ const ICON_COLOR = { custom: 'var(--color-white-100)' }
     <CmkMultitoneIcon
       v-else
       :name="multitoneIconName"
-      :primary-color="ICON_COLOR"
+      :primary-color="iconColor"
       size="medium"
       class="graphing-graph-notice__icon"
     />
@@ -92,16 +106,23 @@ const ICON_COLOR = { custom: 'var(--color-white-100)' }
   padding: var(--dimension-4) var(--dimension-6);
   border-radius: var(--dimension-3);
   font-size: var(--font-size-normal);
-  color: var(--color-white-100);
+  color: var(--font-color);
 }
 
 .graphing-graph-notice--error {
-  background-color: var(--color-dark-red-100);
+  background-color: var(--cmk-alert-box-error-bg-color);
 }
 
-.graphing-graph-notice--loading,
+.graphing-graph-notice--warning {
+  background-color: var(--cmk-alert-box-warning-bg-color);
+}
+
 .graphing-graph-notice--info {
-  background-color: var(--color-midnight-grey-50);
+  background-color: var(--cmk-alert-box-info-bg-color);
+}
+
+.graphing-graph-notice--loading {
+  background-color: var(--cmk-alert-box-loading-bg-color);
 }
 
 .graphing-graph-notice__icon {
@@ -121,7 +142,7 @@ const ICON_COLOR = { custom: 'var(--color-white-100)' }
 }
 
 .graphing-graph-notice__description {
-  color: var(--color-mid-grey-0);
+  color: var(--cmk-alert-box-text-color);
 }
 
 /* An inline link rather than a CmkButton: the design puts the action at the end of the sentence. */

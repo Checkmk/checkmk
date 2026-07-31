@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
@@ -111,6 +111,11 @@ const skeletons = (): NodeListOf<Element> => document.querySelectorAll('.graphin
 
 const group = (): Element | null => document.querySelector('.graphing-graph-group')
 
+// Scoped deliberately: the group's live region carries the same message as the pill, so an
+// unscoped text query matches twice.
+const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
+const notices = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-notice')
+
 function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')]) {
   return render(GraphGroup, {
     props: {
@@ -179,7 +184,8 @@ test('an error arriving after the skeletons are up replaces them', async () => {
   await vi.advanceTimersByTimeAsync(0)
 
   expect(skeletons()).toHaveLength(0)
-  expect(screen.getByText('crash')).toBeInTheDocument()
+  expect(within(notice()!).getByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(within(notice()!).getByText('crash')).toBeInTheDocument()
   expect(group()).toHaveAttribute('aria-busy', 'false')
 })
 
@@ -206,10 +212,76 @@ test('renders one panel per graph definition once data arrives', async () => {
   expect(screen.getByText('Memory')).toBeInTheDocument()
 })
 
-test('shows the error message when fetching fails', async () => {
+test('states a readable headline over the technical detail when fetching fails', async () => {
   postSpy.mockRejectedValue(new Error('crash'))
   renderGroup()
-  expect(await screen.findByText('crash')).toBeInTheDocument()
+
+  await waitFor(() => expect(notice()).toBeInTheDocument())
+  expect(within(notice()!).getByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(within(notice()!).getByText('crash')).toBeInTheDocument()
+  // The pill is silent; the announcement comes from the group's own region.
+  expect(notice()).not.toHaveAttribute('role')
+  expect(screen.getByRole('alert')).toBeInTheDocument()
+})
+
+test('retrying after a failure refetches both the graph and its overview', async () => {
+  postSpy.mockRejectedValue(new Error('crash'))
+  renderGroup()
+  await screen.findByRole('button', { name: 'Retry' })
+
+  // One call per useGraphData instance: the panel's own range and the brush overview's domain.
+  expect(postSpy).toHaveBeenCalledTimes(2)
+  postSpy.mockResolvedValue({
+    data: FETCHED,
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
+  expect(await screen.findByTestId('graph-panel')).toBeInTheDocument()
+  expect(notice()).not.toBeInTheDocument()
+})
+
+test('keeps the panels on screen when a refetch fails, stating the error over them', async () => {
+  renderGroup()
+  expect(await screen.findByTestId('graph-panel')).toBeInTheDocument()
+
+  postSpy.mockRejectedValue(new Error('gone'))
+  await fireEvent.click(screen.getByText('pan'))
+  await waitFor(() => expect(screen.getByText('gone')).toBeInTheDocument())
+
+  expect(screen.getByTestId('graph-panel')).toBeInTheDocument()
+})
+
+test('acknowledges a retry in flight instead of leaving the error in place', async () => {
+  postSpy.mockRejectedValue(new Error('crash'))
+  renderGroup()
+  await screen.findByRole('button', { name: 'Retry' })
+
+  postSpy.mockReturnValue(new Promise(() => {}))
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  // No waiting out LOADING_AFFORDANCE_DELAY_MS: the click needs acknowledging at once.
+  expect(within(notice()!).getByText('Loading data …')).toBeInTheDocument()
+  expect(within(notice()!).queryByText('Graph data could not be loaded.')).not.toBeInTheDocument()
+  expect(skeletons()).toHaveLength(0)
+})
+
+test("reports the response's own per-metric errors, which no retry would fix", async () => {
+  postSpy.mockResolvedValue({
+    data: { ...FETCHED, errors: ['Metrics backend is unavailable.'] },
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+  renderGroup()
+
+  await waitFor(() => expect(notice()).toBeInTheDocument())
+  expect(within(notice()!).getByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  // The panel still renders whatever data did resolve.
+  expect(screen.getByTestId('graph-panel')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
 })
 
 test('fetches the graph with the initial range and the overview with the multiplied domain', async () => {
@@ -282,4 +354,16 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
   expect(ranges).toContainEqual({ start: 100, end: 200, step: 60 })
   // 100s span → 7× multiplier → 700s overview domain centered on the new range.
   expect(ranges).toContainEqual({ start: -200, end: 500, step: 60 })
+})
+
+test('announces one message for the group rather than one per panel', async () => {
+  renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+  expect(await screen.findAllByTestId('graph-panel')).toHaveLength(2)
+
+  postSpy.mockRejectedValue(new Error('gone'))
+  await fireEvent.click(screen.getAllByText('pan')[0]!)
+  await waitFor(() => expect(notices()).toHaveLength(2))
+
+  // A pill over each panel, but a single live region for the whole group.
+  expect(screen.getAllByRole('alert')).toHaveLength(1)
 })

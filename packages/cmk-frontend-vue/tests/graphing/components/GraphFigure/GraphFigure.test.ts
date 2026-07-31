@@ -120,10 +120,86 @@ test('renders the graph once data arrives', async () => {
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
 })
 
-test('shows the error message when the fetch fails', async () => {
+test('states a readable headline over the technical detail when the fetch fails', async () => {
   postSpy.mockRejectedValue(new Error('crash'))
   renderFigure()
-  expect(await screen.findByText(/crash/)).toBeInTheDocument()
+
+  expect(await screen.findByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(screen.getByText('crash')).toBeInTheDocument()
+  expect(loadingIcon()).not.toBeInTheDocument()
+})
+
+test('retrying after a failure refetches and restores the graph', async () => {
+  postSpy.mockRejectedValue(new Error('crash'))
+  renderFigure()
+  await screen.findByRole('button', { name: 'Retry' })
+
+  postSpy.mockResolvedValue({
+    data: FETCHED,
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+  expect(screen.queryByText('Graph data could not be loaded.')).not.toBeInTheDocument()
+})
+
+test('keeps the graph on screen when a refetch fails, stating the error over it', async () => {
+  renderFigure()
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+
+  postSpy.mockRejectedValue(new Error('gone'))
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+  await waitFor(() => expect(screen.getByText('gone')).toBeInTheDocument())
+
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+test("reports the response's own per-metric errors alongside the graph", async () => {
+  postSpy.mockResolvedValue({
+    data: { ...FETCHED, errors: ['Metrics backend is unavailable.'] },
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+  renderFigure()
+
+  expect(await screen.findByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+test("states the response's warnings as advisory, with no retry offered", async () => {
+  postSpy.mockResolvedValue({
+    data: { ...FETCHED, warnings: ['The query matched more than 100 time series.'] },
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+  renderFigure()
+
+  const message = await screen.findByText('The query matched more than 100 time series.')
+  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
+  // A retry would only reproduce the truncation, so none is offered.
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+test('states errors and warnings together, at the error severity', async () => {
+  postSpy.mockResolvedValue({
+    data: {
+      ...FETCHED,
+      errors: ['Metrics backend is unavailable.'],
+      warnings: ['The query matched more than 100 time series.']
+    },
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+  renderFigure()
+
+  // One pill states both, so the advice is not dropped for arriving next to a failure.
+  const message = await screen.findByText(
+    'Metrics backend is unavailable. The query matched more than 100 time series.'
+  )
+  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--error')
 })
 
 test('fetches the definition via fetch_data with the max consolidation', async () => {

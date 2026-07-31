@@ -18,8 +18,10 @@ import { computed, ref, watch } from 'vue'
 
 import { useBrushCoordination } from '../composables/useBrushCoordination'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
+import { useGraphNotice } from '../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
 import type { ConsolidationFn } from './consolidation'
@@ -68,7 +70,7 @@ watch(requestedTimeRange, (range) => {
   }
 })
 
-const { graphs, isLoading, error } = useGraphData(
+const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
   () => props.graphs,
   () => requestedTimeRange.value,
   () => props.figure_width - CANVAS_MARGIN_HORIZONTAL,
@@ -76,7 +78,7 @@ const { graphs, isLoading, error } = useGraphData(
   () => props.combination_mode
 )
 
-const { graphs: overviewGraphs } = useGraphData(
+const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => props.graphs,
   () => brushCoordination.brushDomain.value,
   () => props.figure_width - CANVAS_MARGIN_HORIZONTAL,
@@ -91,8 +93,25 @@ const overviews = computed(() =>
 // load. Both the skeletons and aria-busy key off this rather than off `isLoading`.
 const isInitialLoad = computed(() => isLoading.value && graphs.value.length === 0)
 
-// Only the visuals wait; aria-busy below is undelayed.
-const showSkeletons = useDelayedFlag(() => isInitialLoad.value, LOADING_AFFORDANCE_DELAY_MS)
+// Only the visuals wait; aria-busy below is undelayed. The skeleton also stands down for a failure,
+// which already occupies the area with its own notice.
+const showSkeletons = useDelayedFlag(
+  () => isInitialLoad.value && error.value === null,
+  LOADING_AFFORDANCE_DELAY_MS
+)
+
+const notice = useGraphNotice({
+  error: () => error.value,
+  isLoading: () => isLoading.value,
+  partialErrors: () => partialErrors.value,
+  warnings: () => warnings.value
+})
+
+// The overview feeds the brush below the plot, so a retry has to refresh it too.
+function onRetry(): void {
+  reload()
+  reloadOverview()
+}
 
 // Named because the resolved `graphs` above shadows `props.graphs` in the template.
 const definitionCount = computed(() => props.graphs.length)
@@ -110,27 +129,47 @@ const definitionCount = computed(() => props.graphs.length)
         :figure-width="figure_width"
       />
     </template>
-    <div v-else-if="error" class="graphing-graph-group__error">{{ error }}</div>
     <template v-else>
-      <GraphPanel
-        v-for="(graph, i) in graphs"
-        :key="i"
-        class="graphing-graph-group__panel"
-        :metrics="graph.metrics"
-        :data-time-range="graph.timeRange"
-        :requested-time-range="requestedTimeRange"
-        :title="graph.title"
-        :show-title="true"
-        :show-timestamp="true"
-        :show-consolidation="true"
-        :show-legend="true"
-        :interaction="props.graphs[i]!.interaction"
-        :overview="overviews[i]"
-        :horizontal-lines="graph.horizontalLines"
-        :figure-width="figure_width"
-        :add-to="graph?.addTo"
-        @update:requested-time-range="onPanelTimeRange"
-        @update:consolidation-fn="consolidationFn = $event"
+      <!-- The pills below repeat one message over every panel, so they stay silent and the group
+           announces it once here. -->
+      <CmkVisuallyHidden
+        v-if="notice"
+        :text="notice.message"
+        :live="notice.variant === 'error' ? 'assertive' : 'polite'"
+      />
+      <div v-for="(graph, i) in graphs" :key="i" class="graphing-graph-group__panel">
+        <GraphPanel
+          :metrics="graph.metrics"
+          :data-time-range="graph.timeRange"
+          :requested-time-range="requestedTimeRange"
+          :title="graph.title"
+          :show-title="true"
+          :show-timestamp="true"
+          :show-consolidation="true"
+          :show-legend="true"
+          :interaction="props.graphs[i]!.interaction"
+          :overview="overviews[i]"
+          :horizontal-lines="graph.horizontalLines"
+          :figure-width="figure_width"
+          :add-to="graph?.addTo"
+          @update:requested-time-range="onPanelTimeRange"
+          @update:consolidation-fn="consolidationFn = $event"
+        />
+        <GraphNotice
+          v-if="notice"
+          v-bind="notice"
+          silent
+          class="graphing-graph-group__notice"
+          @retry="onRetry"
+        />
+      </div>
+      <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->
+      <GraphNotice
+        v-if="notice && graphs.length === 0"
+        v-bind="notice"
+        silent
+        class="graphing-graph-group__notice--standalone"
+        @retry="onRetry"
       />
     </template>
   </div>
@@ -143,12 +182,19 @@ const definitionCount = computed(() => props.graphs.length)
   gap: calc(var(--spacing) * 4);
 }
 
-.graphing-graph-group__error {
-  padding: calc(var(--spacing) * 2);
-  color: var(--font-color);
+.graphing-graph-group__panel {
+  position: relative;
 }
 
-.graphing-graph-group__error {
-  color: var(--color-state-crit-background);
+// Centred on the panel, not on its plot alone: the plot's box is GraphPanel's own business.
+.graphing-graph-group__notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.graphing-graph-group__notice--standalone {
+  align-self: center;
 }
 </style>

@@ -10,7 +10,7 @@ import GraphNotice, { type GraphNoticeVariant } from '@/graphing/components/Grap
 const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
 
 test('states the message for every variant', () => {
-  for (const variant of ['error', 'loading', 'info'] satisfies GraphNoticeVariant[]) {
+  for (const variant of ['error', 'warning', 'loading', 'info'] satisfies GraphNoticeVariant[]) {
     const { unmount } = render(GraphNotice, {
       props: { variant, message: `${variant} happened` }
     })
@@ -27,7 +27,14 @@ test('announces an error assertively and the other variants politely', () => {
   expect(notice()).toHaveAttribute('role', 'alert')
   unmount()
 
-  render(GraphNotice, { props: { variant: 'loading', message: 'Loading data …' } })
+  const { unmount: unmountLoading } = render(GraphNotice, {
+    props: { variant: 'loading', message: 'Loading data …' }
+  })
+  expect(notice()).toHaveAttribute('role', 'status')
+  unmountLoading()
+
+  // A warning too: the data it advises about is on screen and valid, so it does not interrupt.
+  render(GraphNotice, { props: { variant: 'warning', message: 'Truncated' } })
   expect(notice()).toHaveAttribute('role', 'status')
 })
 

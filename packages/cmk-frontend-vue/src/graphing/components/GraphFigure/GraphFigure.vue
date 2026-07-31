@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
-import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
@@ -13,9 +12,11 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useGraphData'
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
+import { useGraphNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange, TimeRange } from '../../types.ts'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
+import GraphNotice from '../GraphNotice.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size } from '../TimeSeriesGraph'
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
@@ -37,8 +38,6 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showBurgerMenu: false,
   burgerMenuGroups: () => []
 })
-
-const { _t } = usei18n()
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
 // The renderer draws into this outer figure size and insets the axis/label margins itself, so the
@@ -67,7 +66,7 @@ const zoomSessionActive = ref(false)
 
 const graphDefinitions = computed(() => [{ internal: props.internal }])
 
-const { graphs, isLoading, error } = useGraphData(
+const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
   () => graphDefinitions.value,
   () => requestedTimeRange.value,
   () => plotWidth.value,
@@ -77,16 +76,32 @@ const { graphs, isLoading, error } = useGraphData(
 )
 const graph = computed(() => graphs.value[0] ?? null)
 
-// Held back so a quick load renders the figure directly, with no icon flashing over it first.
+// Held back so a quick load renders the figure directly, with no icon flashing over it first. A
+// failure states itself through the notice below instead.
 const showLoadingIcon = useDelayedFlag(
-  () => isLoading.value && graph.value === null,
+  () => isLoading.value && graph.value === null && error.value === null,
   LOADING_AFFORDANCE_DELAY_MS
 )
+
+const notice = useGraphNotice({
+  error: () => error.value,
+  isLoading: () => isLoading.value,
+  partialErrors: () => partialErrors.value,
+  warnings: () => warnings.value
+})
 
 const refresh = () => {
   requestedTimeRange.value = computeEpochTimeRange(props.timerange)
 }
 const timer = useTimer(refresh, REFRESH_INTERVAL_MS)
+
+// `start` alone would leave the backoff `reportFailure` scheduled, so stop first: the retry then
+// resumes the normal cadence rather than the penalised one.
+function onRetry(): void {
+  reload()
+  timer.stop()
+  timer.start()
+}
 
 watch(isLoading, (loading) => {
   if (loading || zoomSessionActive.value) {
@@ -176,9 +191,6 @@ onBeforeUnmount(() => {
       size="xlarge"
       class="graphing-graph-figure__loading-icon"
     />
-    <div v-else-if="error" class="graphing-graph-figure__error error">
-      {{ _t('Failed to fetch graph data:') }} {{ error }}
-    </div>
     <template v-else-if="graph">
       <div v-if="showTimestamp || showBurgerMenu" class="graphing-graph-figure__header">
         <GraphTimestamp v-if="showTimestamp" :time-range="graph.timeRange" />
@@ -220,6 +232,14 @@ onBeforeUnmount(() => {
         @hover-metric="highlightedMetricName = $event"
       />
     </template>
+    <!-- A sibling of the graph rather than a branch beside it, so a failed refetch states itself
+         over the data it was going to replace. -->
+    <GraphNotice
+      v-if="notice"
+      v-bind="notice"
+      class="graphing-graph-figure__notice"
+      @retry="onRetry"
+    />
   </div>
 </template>
 
@@ -229,14 +249,19 @@ onBeforeUnmount(() => {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .graphing-graph-figure__loading-icon {
   margin: auto;
 }
 
-.graphing-graph-figure__error {
-  padding: var(--dimension-6);
+.graphing-graph-figure__notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
 }
 
 .graphing-graph-figure__header {

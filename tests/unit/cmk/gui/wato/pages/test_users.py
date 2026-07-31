@@ -25,6 +25,38 @@ from cmk.gui.wato.pages.users import (
 
 
 @pytest.mark.usefixtures("request_context")
+def test_edit_user_keeps_the_stored_connector(test_edition: Edition) -> None:
+    """Saving a user in Setup preserves whoever owns them.
+
+    ``_get_identity_userattrs`` copies the connector from the *stored* user, so
+    an LDAP- or SAML-owned account stays owned by that connection across an
+    edit. Nothing in the Setup form can reassign it -- a crafted ``connector``
+    request variable is ignored -- which is what stops an ordinary edit from
+    silently migrating the user to local authentication and detaching them from
+    their directory.
+    """
+    request.set_var("alias", "Directory User")
+    request.set_var("pager", "")
+    # First alternative of each valuespec on this form ("Use the global
+    # configuration" / "All sites"), so it parses without further input.
+    request.set_var("idle_timeout_use", "0")
+    request.set_var("authorized_sites_use", "0")
+    # A hand-crafted form field must not be able to reassign ownership.
+    request.set_var("connector", "htpasswd")
+
+    mode = ModeEditUser(test_edition)
+    mode._user = UserSpec(connector="ldap_corp", alias="Directory User")
+
+    user_attrs = UserSpec()
+    mode._get_identity_userattrs(user_attrs)
+
+    assert user_attrs["connector"] == "ldap_corp", (
+        "an edit must not reassign the owning connector -- doing so would "
+        "migrate the user to local authentication and orphan them from LDAP/SAML"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
 def test_get_user_role_links() -> None:
     """If a user role doesn't exist in the roles mapping, do not crash when building urls."""
     roles: Mapping[str, _RoleAlias] = {"admin": {"alias": "Administrator"}}

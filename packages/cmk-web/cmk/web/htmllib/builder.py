@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from __future__ import annotations
 
 import json
-from typing import Any, assert_never
+from collections.abc import Mapping
+from typing import assert_never
 
 from cmk.web.htmllib.tag_rendering import (
     HTMLContent,
@@ -592,7 +591,7 @@ class HtmlBuilder:
 
     @staticmethod
     def render_vue_component(
-        component_name: str, data: dict[str, Any], **attrs: HTMLTagAttributeValue
+        component_name: str, data: Mapping[str, object], **attrs: HTMLTagAttributeValue
     ) -> HTML:
         return render_element(
             component_name,

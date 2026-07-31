@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
 import html
 from collections.abc import Iterable
-from typing import Any
 
 
 # TODO: In case one tries to __add__ or __iadd__ a str to a HTML object, this should fail by default
@@ -62,7 +60,7 @@ class HTML:
         return cls(value, escape=True)
 
     @staticmethod
-    def _ensure_str(value: HTML | str) -> str:
+    def _ensure_str(value: object) -> str:
         """return escaped string or HTML as str
 
         >>> HTML._ensure_str("foo<b>bar</b>")
@@ -110,16 +108,16 @@ class HTML:
         """
         return HTML(self._value.join(map(self._ensure_str, iterable)), escape=False)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return self._value == self._ensure_str(other)
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return self._value != self._ensure_str(other)
 
     def __len__(self) -> int:
         return len(self._value)
 
-    def __getitem__(self, index: int | slice) -> HTML:
+    def __getitem__(self, index: int | slice[int | None, int | None, int | None]) -> HTML:
         return HTML(self._value[index], escape=False)
 
     def __contains__(self, item: HTML | str) -> bool:

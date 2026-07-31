@@ -120,18 +120,17 @@ def _parse_proxy_protocol(
 
 
 def _migrate_edition(value: object) -> str:
-    if isinstance(value, str):
-        match value:
-            case "64bit":
-                return "bit64"
-            case "32bit" | "bit32" | "script":
-                # 32bit binaries are no longer supported, migrate to script since that is the
-                # only alternative for 32bit systems.
-                return "script"
-            case _:
-                raise ValueError(value)
-
-    raise ValueError(value)
+    match value:
+        case (str(choice), None):
+            return _migrate_edition(choice)
+        case "bit64" | "64bit":
+            return "bit64"
+        case "32bit" | "bit32" | "script":
+            # 32bit binaries are no longer supported, migrate to script since that is the
+            # only alternative for 32bit systems.
+            return "script"
+        case _:
+            raise ValueError(value)
 
 
 def _migrate_certificates(value: object) -> Sequence[Any]:

@@ -92,16 +92,12 @@ def test_returns_false_when_remote_site_flags_are_false(
             "bit64",
             "bit64",
             id="already-migrated-binary",
-            marks=pytest.mark.xfail(strict=True, reason="Crash group 4644: ValueError on 'bit64'"),
         ),
         pytest.param("script", "script", id="already-migrated-script"),
         pytest.param(
             ("bit64", None),
             "bit64",
             id="choice-with-empty-parameters",
-            marks=pytest.mark.xfail(
-                strict=True, reason="Crash group 4641: ValueError on ('bit64', None)"
-            ),
         ),
     ],
 )

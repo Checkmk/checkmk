@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
@@ -29,6 +30,9 @@ const figureId = computed(() => `db-content-figure-${props.widget_id}`)
 
 const currentDimensions = ref({ width: 0, height: 0 })
 const isLoading = ref(true)
+
+// Only the icon waits out the delay; the wrapper below stays hidden on the raw flag throughout.
+const showLoadingIcon = useDelayedFlag(() => isLoading.value, LOADING_AFFORDANCE_DELAY_MS)
 
 let figure: FigureBase | null = null
 let mutationObserver: MutationObserver | null = null
@@ -197,7 +201,7 @@ onBeforeUnmount(() => {
   >
     <div class="db-content-figure__loading-container">
       <CmkIcon
-        v-if="isLoading"
+        v-if="showLoadingIcon"
         name="load-graph"
         size="xlarge"
         class="db-content-figure__loading-icon"

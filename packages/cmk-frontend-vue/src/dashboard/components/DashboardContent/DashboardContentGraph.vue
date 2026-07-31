@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
+import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
 import { type Ref, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -30,6 +31,9 @@ const cmkToolkit = window['cmk']
 const contentDiv = ref<HTMLDivElement | null>(null)
 const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 const isLoading = ref<boolean>(true)
+
+// Only the icon waits out the delay; the graph below stays hidden on the raw flag throughout.
+const showLoadingIcon = useDelayedFlag(() => isLoading.value, LOADING_AFFORDANCE_DELAY_MS)
 
 const resolveObservedElement = (): HTMLElement | null => {
   if (props.isPreview && showLegend.value && contentDiv.value) {
@@ -131,7 +135,7 @@ onBeforeUnmount(() => {
     :is-scrollable-preview="isPreview && showLegend"
   >
     <CmkIcon
-      v-show="isLoading"
+      v-show="showLoadingIcon"
       name="load-graph"
       size="xlarge"
       class="db-content-graph__loading-icon"

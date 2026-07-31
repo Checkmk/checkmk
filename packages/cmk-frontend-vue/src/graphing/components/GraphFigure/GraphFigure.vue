@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -74,6 +75,12 @@ const { graphs, isLoading, error } = useGraphData(
   () => props.combinationMode
 )
 const graph = computed(() => graphs.value[0] ?? null)
+
+// Held back so a quick load renders the figure directly, with no icon flashing over it first.
+const showLoadingIcon = useDelayedFlag(
+  () => isLoading.value && graph.value === null,
+  LOADING_AFFORDANCE_DELAY_MS
+)
 
 const refresh = () => {
   requestedTimeRange.value = computeEpochTimeRange(props.timerange)
@@ -161,10 +168,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="graphing-graph-figure">
-    <!-- The spinner only covers the initial load; while a refetch is pending the held
-         data stays rendered (the transient zoom bridges it). -->
+    <!-- Initial load only: while a refetch is pending the held data stays rendered
+         (the transient zoom bridges it). -->
     <CmkIcon
-      v-if="isLoading && graph === null"
+      v-if="showLoadingIcon"
       name="load-graph"
       size="xlarge"
       class="graphing-graph-figure__loading-icon"

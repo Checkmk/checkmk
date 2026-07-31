@@ -7,6 +7,7 @@ import type * as intl from '@internationalized/date'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { nextTick } from 'vue'
 
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 
@@ -66,7 +67,11 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.useRealTimers()
 })
+
+const loadingIcon = (): Element | null =>
+  document.querySelector('.graphing-graph-figure__loading-icon')
 
 function renderFigure(props: Record<string, unknown> = {}) {
   return render(GraphFigure, {
@@ -78,11 +83,33 @@ function renderFigure(props: Record<string, unknown> = {}) {
   })
 }
 
-test('shows the loading spinner while the fetch is pending', () => {
+test('holds the loading icon back for a second while the fetch is pending', async () => {
+  vi.useFakeTimers()
   postSpy.mockReturnValue(new Promise(() => {}))
   renderFigure()
-  expect(document.querySelector('.graphing-graph-figure__loading-icon')).toBeInTheDocument()
+
+  await nextTick()
+  expect(loadingIcon()).not.toBeInTheDocument()
   expect(screen.queryByTestId('time-series-graph')).not.toBeInTheDocument()
+
+  vi.advanceTimersByTime(1_000)
+  await nextTick()
+  expect(loadingIcon()).toBeInTheDocument()
+  expect(screen.queryByTestId('time-series-graph')).not.toBeInTheDocument()
+})
+
+test('a fast load renders the graph without ever showing the loading icon', async () => {
+  vi.useFakeTimers()
+  renderFigure()
+
+  // Flush the already-resolved fetch without reaching the one-second threshold.
+  await vi.advanceTimersByTimeAsync(999)
+  expect(screen.queryByTestId('time-series-graph')).toBeInTheDocument()
+  expect(loadingIcon()).not.toBeInTheDocument()
+
+  // The pending delay must have been cancelled, not merely outrun by the data.
+  await vi.advanceTimersByTimeAsync(1_000)
+  expect(loadingIcon()).not.toBeInTheDocument()
 })
 
 test('renders the graph once data arrives', async () => {

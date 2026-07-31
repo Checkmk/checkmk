@@ -253,7 +253,11 @@ def read_manifests(paths: list[Path]) -> list[Component]:
     components = []
     for path in paths:
         match path:
-            case Path(name="runtime-requirements.txt") | Path(name="requirements.txt"):
+            case (
+                Path(name="runtime-requirements.txt")
+                | Path(name="requirements.txt")
+                | Path(name="requirements-windows.txt")
+            ):
                 parser = RequirementsTxtParser(path)
                 parser.parse()
                 components.extend(parser.components())

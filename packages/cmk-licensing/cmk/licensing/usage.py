@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from __future__ import annotations
 
 import json
@@ -17,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, NamedTuple, Protocol
+from typing import NamedTuple, Protocol
 from uuid import UUID
 
 import cmk.ccc.version as cmk_version
@@ -214,7 +212,7 @@ def _cmk_edition_to_licensing_edition(cmk_edition: str) -> str:
     }[cmk_edition]
 
 
-def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
+def _get_from_livestatus(query: str) -> Sequence[Sequence[livestatus.LivestatusColumn]]:
     connection = livestatus.LocalConnection()
     connection.set_timeout(5)
     return connection.query(query)
@@ -226,7 +224,9 @@ class HostsOrServicesCounter(NamedTuple):
     num_excluded: int
 
     @classmethod
-    def make(cls, livestatus_response: Sequence[Sequence[Any]]) -> HostsOrServicesCounter:
+    def make(
+        cls, livestatus_response: Sequence[Sequence[livestatus.LivestatusColumn]]
+    ) -> HostsOrServicesCounter:
         stats = livestatus_response[0]
         return cls(num=int(stats[0]), num_shadow=int(stats[1]), num_excluded=int(stats[2]))
 
@@ -269,7 +269,9 @@ class HostsOrServicesCloudCounter:
     services: int
 
     @classmethod
-    def make(cls, livestatus_response: Sequence[Sequence[Any]]) -> HostsOrServicesCloudCounter:
+    def make(
+        cls, livestatus_response: Sequence[Sequence[livestatus.LivestatusColumn]]
+    ) -> HostsOrServicesCloudCounter:
         def _contains_cloud_service(services: Sequence[str]) -> bool:
             return any(service.startswith(tuple(CLOUD_SERVICE_PREFIXES)) for service in services)
 

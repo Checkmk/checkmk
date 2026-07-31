@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Discovery and collection of feature-specific license usage counters.
 
 Features that contribute counters to the license usage sample expose a
@@ -17,8 +15,9 @@ import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
+import cmk.livestatus_client as livestatus
 from cmk.discover_plugins import discover_plugins_from_modules
 
 LICENSE_LABEL_NAME = "cmk/licensing"
@@ -39,7 +38,7 @@ LicenseUsageCounterName = Literal[
 @dataclass(frozen=True)
 class CounterCollectionContext:
     omd_root: Path
-    query_livestatus: Callable[[str], Sequence[Sequence[Any]]]
+    query_livestatus: Callable[[str], Sequence[Sequence[livestatus.LivestatusColumn]]]
 
 
 @dataclass(frozen=True)

@@ -579,8 +579,9 @@ class ModeCheckManPage(WatoMode):
         checks = get_check_information(debug=active_config.debug).plugin_infos
         if (check_info := checks.get(self._check_plugin_name)) is not None:
             self._check_type = "check_mk"
-            self._service_description = check_info["service_description"]
+            self._service_description = str(check_info["service_description"])
             ruleset_name = check_info.get("check_ruleset_name")
+            assert ruleset_name is None or isinstance(ruleset_name, str)
             self._ruleset: str | None = self._get_full_ruleset_name(ruleset_name)
             self._check_default_parameters = check_info.get("check_default_parameters")
 

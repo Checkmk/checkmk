@@ -516,7 +516,7 @@ def get_check_information(*, debug: bool) -> results.GetCheckInformationResult:
 
 
 @request_memoize()
-def get_check_information_cached(*, debug: bool) -> Mapping[CheckPluginName, Mapping[str, str]]:
+def get_check_information_cached(*, debug: bool) -> Mapping[CheckPluginName, Mapping[str, object]]:
     raw_check_dict = get_check_information(debug=debug).plugin_infos
     return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 

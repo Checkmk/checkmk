@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -37,7 +37,7 @@ class ServiceInfo(TypedDict, total=False):
     checktype: str
     item: Item
     inv_parameters: LegacyCheckParameters
-    factory_settings: Mapping[str, Any] | None
+    factory_settings: Mapping[str, object] | None
     parameters: TimespecificParameters | LegacyCheckParameters
     command_line: str
 

@@ -52,7 +52,7 @@ class _CheckTypeHostSelection(DualListChoice):
         except Exception:
             return []
         return [
-            (str(cn), (str(cn) + " - " + c["title"])[:60])
+            (str(cn), f"{cn} - {c['title']}"[:60])
             for (cn, c) in checks.items()
             # filter out plug-ins implemented *explicitly* for management boards
             if not cn.is_management_name()
@@ -69,6 +69,5 @@ class _CheckTypeMgmtSelection(DualListChoice):
         except Exception:
             return []
         return [
-            (str(cn.create_basic_name()), (str(cn) + " - " + c["title"])[:60])
-            for (cn, c) in checks.items()
+            (str(cn.create_basic_name()), f"{cn} - {c['title']}"[:60]) for (cn, c) in checks.items()
         ]

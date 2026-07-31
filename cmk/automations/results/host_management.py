@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
 
 from cmk.automations.results._base import ABCAutomationResult, result_type_registry
 from cmk.ccc.hostaddress import HostName
@@ -79,7 +78,7 @@ result_type_registry.register(ReloadResult)
 
 @dataclass
 class GetConfigurationResult(ABCAutomationResult):
-    result: Mapping[str, Any]
+    result: Mapping[str, object]
 
     @staticmethod
     def automation_call() -> AutomationID:
@@ -91,7 +90,7 @@ result_type_registry.register(GetConfigurationResult)
 
 @dataclass
 class GetCheckInformationResult(ABCAutomationResult):
-    plugin_infos: Mapping[str, Mapping[str, Any]]
+    plugin_infos: Mapping[str, Mapping[str, object]]
 
     @staticmethod
     def automation_call() -> AutomationID:

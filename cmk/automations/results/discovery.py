@@ -15,7 +15,7 @@ import json
 from ast import literal_eval
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, Self
+from typing import Self
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -55,18 +55,32 @@ def _serialize_discovery_report(
     }
 
 
+def _as_int(value: object) -> int:
+    assert isinstance(value, int)
+    return value
+
+
+def _as_optional_str(value: object) -> str | None:
+    assert value is None or isinstance(value, str)
+    return value
+
+
 def _deserialize_discovery_report(
-    serialized: Mapping[str, Any],
+    serialized: Mapping[str, object],
 ) -> DiscoveryReport:
+    services = serialized["services"]
+    host_labels = serialized["host_labels"]
+    assert isinstance(services, Mapping)
+    assert isinstance(host_labels, Mapping)
     return DiscoveryReport(
-        services=TransitionCounter(**serialized["services"]),
-        host_labels=TransitionCounter(**serialized["host_labels"]),
-        clustered_new=serialized["clustered_new"],
-        clustered_old=serialized["clustered_old"],
-        clustered_vanished=serialized["clustered_vanished"],
-        clustered_ignored=serialized["clustered_ignored"],
-        error_text=serialized["error_text"],
-        diff_text=serialized["diff_text"],
+        services=TransitionCounter(**services),
+        host_labels=TransitionCounter(**host_labels),
+        clustered_new=_as_int(serialized["clustered_new"]),
+        clustered_old=_as_int(serialized["clustered_old"]),
+        clustered_vanished=_as_int(serialized["clustered_vanished"]),
+        clustered_ignored=_as_int(serialized["clustered_ignored"]),
+        error_text=_as_optional_str(serialized["error_text"]),
+        diff_text=_as_optional_str(serialized["diff_text"]),
     )
 
 
@@ -76,12 +90,12 @@ class ServiceDiscoveryResult(ABCAutomationResult):
 
     def _to_dict(
         self, for_cmk_version: cmk_version.Version
-    ) -> Mapping[HostName, Mapping[str, Any]]:
+    ) -> Mapping[HostName, Mapping[str, object]]:
         return {k: _serialize_discovery_report(v, for_cmk_version) for k, v in self.hosts.items()}
 
     @staticmethod
     def _from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]],
+        serialized: Mapping[HostName, Mapping[str, object]],
     ) -> Mapping[HostName, DiscoveryReport]:
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
@@ -180,12 +194,12 @@ class AutodiscoveryResult(ABCAutomationResult):
 
     def _hosts_to_dict(
         self, for_cmk_version: cmk_version.Version
-    ) -> Mapping[HostName, Mapping[str, Any]]:
+    ) -> Mapping[HostName, Mapping[str, object]]:
         return {k: _serialize_discovery_report(v, for_cmk_version) for k, v in self.hosts.items()}
 
     @staticmethod
     def _hosts_from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]],
+        serialized: Mapping[HostName, Mapping[str, object]],
     ) -> Mapping[HostName, DiscoveryReport]:
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 

@@ -66,7 +66,7 @@ def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> Cho
 
 def check_types_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return [
-        (str(cn), (str(cn) + " - " + c["title"]))
+        (str(cn), f"{cn} - {c['title']}")
         for (cn, c) in get_check_information_cached(debug=config.debug).items()
         if not cn.is_management_name()
     ]

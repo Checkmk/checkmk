@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """FormSpecs that can be composed of other FormSpecs"""
 
 from collections.abc import Mapping, Sequence
@@ -56,7 +54,7 @@ class CascadingSingleChoiceElement[ModelT]:
 
 
 @dataclass(frozen=True, kw_only=True)
-class CascadingSingleChoice(FormSpec[tuple[str, object]]):
+class CascadingSingleChoice(FormSpec[tuple[str, object]]):  # type: ignore[explicit-any]
     """Specification for a single-selection from multiple options.
 
     Every option can have its own configuration form.
@@ -75,7 +73,7 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     **********
     """
 
-    elements: Sequence[CascadingSingleChoiceElement[Any]]
+    elements: Sequence[CascadingSingleChoiceElement[Any]]  # type: ignore[explicit-any]
     """Elements to choose from."""
     label: Label | None = None
     """Text displayed in front of the input field."""
@@ -133,7 +131,7 @@ class DictElement[ModelT]:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Dictionary(FormSpec[Mapping[str, object]]):
+class Dictionary(FormSpec[Mapping[str, object]]):  # type: ignore[explicit-any]
     """
     Specifies a (multi-)selection of configuration options.
 
@@ -147,7 +145,7 @@ class Dictionary(FormSpec[Mapping[str, object]]):
     **********
     """
 
-    elements: Mapping[str, DictElement[Any]]
+    elements: Mapping[str, DictElement[Any]]  # type: ignore[explicit-any]
     """key-value mapping where the key identifies the option and the value specifies how
     the nested form can be configured. The key has to be a valid Python identifier."""
 

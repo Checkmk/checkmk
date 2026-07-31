@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, override, Protocol, runtime_checkable
+from typing import override, Protocol, runtime_checkable
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -41,7 +39,7 @@ class AutocompleterParams(Protocol):
     @property
     def world(self) -> str | None: ...
     @property
-    def context(self) -> Mapping[str, Any] | None: ...
+    def context(self) -> Mapping[str, object] | None: ...
     @property
     def input_hint(self) -> str | None: ...
 
@@ -139,7 +137,7 @@ class MultipleChoiceExtended(FormSpec[Sequence[str]]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class DictionaryExtended(Dictionary):
+class DictionaryExtended(Dictionary):  # type: ignore[explicit-any]
     # Usage of default_checked is advised against: if you want an optional
     # element prefilled with options, reconsider and flip your approach. If
     # something should be the default, it should not need configuration. Add

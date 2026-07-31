@@ -34,6 +34,7 @@ exports_files(
         "defines.make",
         "host.Cargo.lock.bazel",
         "module_layers.toml",
+        "package_versions.bzl",
         "pnpm-lock.yaml",
         "pyproject.toml",
         "requirements.txt",

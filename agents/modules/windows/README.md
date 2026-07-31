@@ -31,8 +31,9 @@ Everything else is hermetic via bazel modules:
   `python-3.cab` (MSZIP-compressed, fixed timestamps; bit-identical
   given the same inputs).
 - the pinned `pip` wheel from the `@windows_python_wheels` hub, run
-  under the repo's hermetic CPython (`pip_offline.py`) — installs the
-  Windows wheels offline (`--no-index --find-links`,
+  under the hermetic CPython of the CAB's `major.minor` line
+  (`pip_offline.py`, pinned via its `py_binary`'s `python_version`) —
+  installs the Windows wheels offline (`--no-index --find-links`,
   `--platform win_amd64 --only-binary=:all:`). Nothing Windows runs
   during the build, and the build action needs no network.
 
@@ -53,9 +54,12 @@ Everything else is hermetic via bazel modules:
 - Python packages: edit `requirements-windows.in`, then regenerate the
   sha256-pinned `requirements-windows.txt` with
   `bazel run //agents/modules/windows:requirements_windows` (same uv flow
-  as the repo's other requirements files). The `@windows_python_wheels`
-  pip.parse hub (`bazel/module/py.MODULE.bazel`) downloads the pinned
-  wheels; stale pins fail `:requirements_windows_test` in CI
+  as the repo's other requirements files, but resolved under the hermetic
+  interpreter of `PYTHON_VERSION_WINDOWS`'s `major.minor` line — rules_uv's
+  `py3_runtime` — so the lock tracks the CAB's Python, independent of the
+  site toolchain). The `@windows_python_wheels` pip.parse hub
+  (`bazel/module/python_cab.MODULE.bazel`) downloads the pinned wheels; stale pins
+  fail `:requirements_windows_test` in CI
   (`make check_python_requirements`).
 
   Keep `requirements-windows.in` unpinned — the resolved
@@ -68,12 +72,6 @@ Everything else is hermetic via bazel modules:
   the agent build (and vice versa). Every entry needs a `CMK-<id>` ticket for
   its removal, enforced by
   `//tests/code_quality/requirements:requirements_files`.
-
-  Note that `uv`'s `--python-version` for this resolution comes from the host
-  py3 toolchain (`PYTHON_VERSION`), not from `PYTHON_VERSION_WINDOWS` —
-  rules_uv appends it after `extra_args`, so it cannot be overridden from
-  `BUILD.bazel`. A `fail()` there guards against the two drifting apart in
-  their minor version, which is what the `cp3xx` wheel tag encodes.
 
   `requirements-windows.txt` is also a `manifest_srcs` entry of
   `//omd/dependency_management:list_of_dependencies`. The SBOM aspect already
@@ -91,7 +89,17 @@ Everything else is hermetic via bazel modules:
   `manually_researched_licenses.json`, else
   `//omd/dependency_management:test_licenses` fails.
 
-To refresh after a CPython version bump:
+## Bumping the Python version
+
+`PYTHON_VERSION_WINDOWS` tracks the CAB's Python independently of the site
+toolchain (`PYTHON_VERSION`); everything a `BUILD`/`.bzl` file can `load()`
+derives from it. `MODULE.bazel` files cannot `load()`, so a few literals
+live there and are cross-checked against `PYTHON_VERSION_WINDOWS` by
+`//tests/code_quality/requirements:requirements_files` — that test's failure
+message is the authoritative checklist if this section and reality ever
+disagree.
+
+For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 
 - bump `PYTHON_VERSION_WINDOWS` in `package_versions.bzl` — the MSI URLs
   follow automatically,
@@ -108,11 +116,30 @@ To refresh after a CPython version bump:
 
 - paste the printed `_MSI_SHA256` map over the one in
   `bazel/extensions/python_cab_repositories.bzl`,
-- bump the `x86_64-pc-windows-msvc` `single_version_platform_override`
-  (url + sha256) in `bazel/module/py.MODULE.bazel` to match. That one still
-  duplicates the version, because it lives in a `MODULE.bazel` file;
-  `fail_on_python_minor_mismatch` in `python_cab.bzl` catches a minor-version
-  drift between it and `PYTHON_VERSION_WINDOWS`.
+- optionally bump the `x86_64-pc-windows-msvc`
+  `single_version_platform_override` (version + url + sha256) in
+  `bazel/module/py.MODULE.bazel` — python-build-standalone releases can lag
+  python.org, and a patch-level drift between the build-time toolchain and
+  the shipped MSIs is harmless.
+
+For a **minor bump** (e.g. 3.13.x → 3.14.x), additionally:
+
+- update `pip.parse(python_version = ...)` for the `windows_python_wheels`
+  hub in `bazel/module/python_cab.MODULE.bazel`,
+- in `bazel/module/py.MODULE.bazel`: update the `x86_64-pc-windows-msvc`
+  `single_version_platform_override` to the new minor (and add an
+  `x86_64-unknown-linux-gnu` one for it, so the resolver runtime is pinned
+  too), and update the `use_repo(python, "python_<X_Y>_x86_64-unknown-linux-gnu")`
+  repo name,
+- while the minor differs from the site toolchain's, also register it:
+  `python.toolchain(python_version = "3.YY")` — and drop that registration
+  again once the two re-converge; rules_python rejects a duplicate
+  registration of the same version from one module. A minor unknown to the
+  pinned rules_python release needs a rules_python bump first.
+
+A stale literal fails at analysis time anyway (the hub's aliases and the
+toolchain resolution hard-fail on a version mismatch), but the code-quality
+test is the curated diagnostic that names every spot.
 
 ## Layout produced
 
@@ -120,7 +147,7 @@ To refresh after a CPython version bump:
 python-3.cab
 |-- postinstall.cmd          # verbatim from agents/modules/windows/postinstall.cmd
 |-- python.exe               # base interpreter (from core.msi + exe.msi)
-|-- python313.dll
+|-- python3XX.dll            # XX = PYTHON_VERSION_WINDOWS's minor
 |-- DLLs/
 |-- Lib/                     # stdlib (from lib.msi); strip list mirrors clean_environment.cmd history
 |-- Lib/site-packages/pip/   # the pinned pip wheel (replaces the ensurepip bootstrap)
@@ -163,10 +190,12 @@ Wine-side `pip` for package installation. Both are removable:
 
 - MSIs are zip-of-cab containers with a structured stream catalog;
   `msiextract` walks the File/Directory tables natively on Linux.
-- Linux `pip install --platform win_amd64 --only-binary=:all:` resolves
-  Windows wheels without executing them. Every pinned dependency
-  (incl. `cryptography`, `pywin32`, `pyyaml`) ships a `cp313-win_amd64`
-  wheel.
+- Wheels are zip archives, so installing one is unpacking it plus writing
+  metadata — no Windows interpreter needed. `uv` resolves the closure for
+  `x86_64-pc-windows-msvc` with `--only-binary=:all:`, so every pin is a
+  `win_amd64` or pure-Python wheel and never an sdist that would want a
+  compiler; `pip_offline.py` then installs those wheels on Linux with
+  `--no-index --find-links`.
 
 The post-install scripts that `pywin32` and friends ship are _not_ run by
 this build, and the historical Windows-side build did not run them

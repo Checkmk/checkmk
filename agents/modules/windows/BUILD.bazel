@@ -1,11 +1,10 @@
-load("@aspect_bazel_lib//lib:transitions.bzl", "platform_transition_filegroup")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
-load("//:package_versions.bzl", "PYTHON_VERSION", "PYTHON_VERSION_WINDOWS")
+load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
-load(":python_cab.bzl", "fail_on_python_minor_mismatch", "python_cab")
+load(":python_cab.bzl", "py_platform_transition_filegroup", "python_cab", "python_version_major_minor")
 
 exports_files([
     "constraints-windows.txt",
@@ -13,11 +12,12 @@ exports_files([
     "requirements-windows.txt",
 ])
 
-# :requirements_windows resolves for the host toolchain's Python, not for
-# PYTHON_VERSION_WINDOWS; keep the two from drifting apart.
-fail_on_python_minor_mismatch(
-    python_version = PYTHON_VERSION,
-    python_version_windows = PYTHON_VERSION_WINDOWS,
+_PY_WIN_MAJOR_MINOR = python_version_major_minor(PYTHON_VERSION_WINDOWS)
+
+# Linux runtime of the CAB's interpreter line (use_repo'd in
+# //bazel/module:py.MODULE.bazel); uv resolves the lock under it.
+_PY_WIN_RESOLVER_RUNTIME = "@python_{}_x86_64-unknown-linux-gnu//:py3_runtime".format(
+    _PY_WIN_MAJOR_MINOR.replace(".", "_"),
 )
 
 # Pure-Python CAB writer driver, vendored via @cabarchive (LGPL-2.1-or-later).
@@ -42,12 +42,13 @@ py_binary(
 )
 
 # Offline pip driver — runs the sha256-pinned pip wheel from the closure
-# under the repo's hermetic CPython, so the metadata pip writes matches the
-# CAB's Python version instead of the build host's.
+# under the CAB's major.minor CPython, so pip-written metadata (RECORD
+# bytecode tags, versioned script names) matches the CAB's Python.
 py_binary(
     name = "pip_offline",
     srcs = ["pip_offline.py"],
     main = "pip_offline.py",
+    python_version = _PY_WIN_MAJOR_MINOR,
     visibility = ["//visibility:public"],
 )
 
@@ -82,6 +83,7 @@ pip_compile(
         # than silently resolving an sdist the hub cannot build.
         "--only-binary=:all:",
     ],
+    py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
     python_platform = "x86_64-pc-windows-msvc",
     requirements_in = ":requirements-windows-in",
     requirements_txt = ":requirements-windows.txt",
@@ -125,9 +127,10 @@ filegroup(
     output_group = "cabextract",
 )
 
-platform_transition_filegroup(
+py_platform_transition_filegroup(
     name = "wheels",
     srcs = all_whl_requirements,
+    python_version = PYTHON_VERSION_WINDOWS,
     target_platform = "//bazel/platforms:x86_64-windows",
 )
 

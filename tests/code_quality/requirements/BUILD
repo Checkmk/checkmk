@@ -20,14 +20,20 @@ py_library(
 py_cmk_test(
     name = "requirements_files",
     size = "small",
-    srcs = ["test_requirements_files.py"],
+    srcs = [
+        "test_requirements_files.py",
+        "test_windows_python_version.py",
+    ],
     data = [
         "//:constraints.txt",
+        "//:package_versions.bzl",
         "//:requirements.txt",
         "//:runtime-requirements.txt",
         "//agents/modules/windows:constraints-windows.txt",
         "//agents/modules/windows:requirements-windows.in",
         "//agents/plugins:dev-requirements.in",
+        "//bazel/module:py.MODULE.bazel",
+        "//bazel/module:python_cab.MODULE.bazel",
         "//cmk:requirements.in",
         "//packages:dev_python_requirements",
         "//packages:python_requirements",

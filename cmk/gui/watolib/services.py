@@ -35,6 +35,7 @@ from cmk.automations.results import (
     SerializedResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
+    SourceResult,
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore, TextSerializer
@@ -163,7 +164,7 @@ class DiscoveryResult(NamedTuple):
     vanished_labels: Mapping[str, HostLabelValueDict]
     changed_labels: Mapping[str, HostLabelValueDict]
     labels_by_host: Mapping[HostName, Sequence[HostLabel]]
-    sources: Sequence[tuple[int, str]]
+    sources: Sequence[SourceResult]
     config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: Version) -> str:

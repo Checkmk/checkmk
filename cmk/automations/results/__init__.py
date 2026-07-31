@@ -127,6 +127,9 @@ from cmk.automations.results.discovery import (
     SetAutochecksV2Result as SetAutochecksV2Result,
 )
 from cmk.automations.results.discovery import (
+    SourceResult as SourceResult,
+)
+from cmk.automations.results.discovery import (
     SpecialAgentDiscoveryPreviewResult as SpecialAgentDiscoveryPreviewResult,
 )
 from cmk.automations.results.discovery import (

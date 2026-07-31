@@ -25,6 +25,7 @@ from typing import Any, Literal, NamedTuple, override
 from pydantic import BaseModel, Field
 
 import cmk.utils.render
+from cmk.automations.results import SourceResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
@@ -877,7 +878,7 @@ class DiscoveryPageRenderer:
             style="display: inline; margin-left: 10px",
         )
 
-    def render_datasources(self, sources: Sequence[tuple[int, str]]) -> str | None:
+    def render_datasources(self, sources: Sequence[SourceResult]) -> str | None:
         if not sources:
             return None
 

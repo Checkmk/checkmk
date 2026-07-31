@@ -29,10 +29,15 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryReport, TransitionCounter
 from cmk.checkengine.plugins import AutocheckEntry
+from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.servicename import ServiceName
 
 from ..types import AutomationID
+
+# Worst state and rendered plug-in output of a single data source. This is a lossy
+# projection of an ActiveCheckResult (summary/details/metrics collapsed via as_text()).
+type SourceResult = tuple[ServiceState, str]
 
 
 def _serialize_discovery_report(
@@ -126,14 +131,14 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     vanished_labels: DiscoveredHostLabelsDict
     changed_labels: DiscoveredHostLabelsDict
     labels_by_host: Mapping[HostName, Sequence[HostLabel]]
-    source_results: Sequence[tuple[int, str]]
+    source_results: Sequence[SourceResult]
     config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         # Before 3.0.0b1 source_results was a Mapping keyed by source ident. The
         # ident is no longer available here; emit synthetic keys so an older peer's
         # value-only consumers keep working.
-        source_results: Mapping[int, tuple[int, str]] | Sequence[tuple[int, str]] = (
+        source_results: Mapping[int, SourceResult] | Sequence[SourceResult] = (
             dict(enumerate(self.source_results))
             if for_cmk_version < cmk_version.Version.from_str("3.0.0b1")
             else self.source_results
@@ -144,7 +149,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
 
     def _serialize_as_dict(
         self,
-        source_results: Mapping[int, tuple[int, str]] | Sequence[tuple[int, str]],
+        source_results: Mapping[int, SourceResult] | Sequence[SourceResult],
         skip_keys: Container[str],
     ) -> SerializedResult:
         raw = asdict(self)

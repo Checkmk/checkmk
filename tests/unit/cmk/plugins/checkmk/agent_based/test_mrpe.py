@@ -5,6 +5,8 @@
 
 from typing import Final
 
+import pytest
+
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.checkmk.agent_based.mrpe import (
     check_mrpe,
@@ -132,5 +134,30 @@ def test_check_invalid_metric() -> None:
         Result(
             state=State.UNKNOWN,
             summary="Undefined metric: invalid metric value ''",
+        ),
+    ]
+
+
+@pytest.mark.xfail(
+    strict=True, reason="Crash report 47e6281a-d865-11f0-a45a-bc24110e4e87: TypeError"
+)
+def test_check_metric_name_with_invalid_character() -> None:
+    # check_disk names its metrics after the mount point, so the label is "/"
+    section = {
+        "Disk": PluginData(
+            name=None,
+            state=State.OK,
+            info=["DISK OK - free space: / 12483 MB|/=1234MB;;;0;13717"],
+            cache_info=None,
+        )
+    }
+    assert list(check_mrpe("Disk", section)) == [
+        Result(
+            state=State.OK,
+            summary="DISK OK - free space: / 12483 MB",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Undefined metric: invalid character(s) in metric name: '/'",
         ),
     ]

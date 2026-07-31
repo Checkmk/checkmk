@@ -17,9 +17,11 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, reactive, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../../GlobalRefreshControl/useGlobalRefresh'
+import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
+import { useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
 import { type CustomGraphObject, updateCustomGraph } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
@@ -120,6 +122,13 @@ const drawnOverview = computed(() => {
         metrics: overview.metrics.filter((metric) => !hiddenSourceIds.value.has(metric.source_id)),
         timeRange: overview.timeRange
       }
+})
+
+const previewNotice = useGraphNotice({
+  error: () => data.error.value,
+  isLoading: () => data.isLoading.value,
+  partialErrors: () => data.partialErrors.value,
+  warnings: () => data.warnings.value
 })
 
 const { refreshTick } = useGlobalRefresh()
@@ -223,42 +232,46 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
 
 <template>
   <div ref="graphContainer" class="graphing-designer-body">
-    <CmkAlertBox v-if="data.error.value !== null" variant="error">
-      {{ data.error.value }}
-    </CmkAlertBox>
-
     <DesignerSettings
       v-model:open="displaySettings"
       :graph-options="graphOptions"
       @update-settings="onSettingsUpdate"
     />
 
-    <GraphPanel
-      v-model:hidden-metric-names="hiddenMetricNames"
-      v-model:hidden-line-names="hiddenLineNames"
-      v-model:highlighted-metric-name="highlightedMetricName"
-      class="graphing-designer-body__preview"
-      :metrics="drawnMetrics"
-      :data-time-range="data.dataTimeRange.value"
-      :horizontal-lines="data.horizontalLines.value"
-      :requested-time-range="requestedTimeRange"
-      :title="graph.title ?? graphName"
-      show-title
-      show-timestamp
-      :figure-width="figureWidth"
-      :figure-height="200"
-      :show-legend="false"
-      :interaction="{
-        brush: mode === 'view' ? 'enabled' : 'disabled',
-        burger: 'disabled',
-        hover: 'enabled',
-        panning: 'disabled',
-        zoom: 'disabled',
-        pin: 'enabled'
-      }"
-      :overview="drawnOverview"
-      @update:requested-time-range="requestedTimeRange = $event"
-    />
+    <div class="graphing-designer-body__preview-container">
+      <GraphPanel
+        v-model:hidden-metric-names="hiddenMetricNames"
+        v-model:hidden-line-names="hiddenLineNames"
+        v-model:highlighted-metric-name="highlightedMetricName"
+        class="graphing-designer-body__preview"
+        :metrics="drawnMetrics"
+        :data-time-range="data.dataTimeRange.value"
+        :horizontal-lines="data.horizontalLines.value"
+        :requested-time-range="requestedTimeRange"
+        :title="graph.title ?? graphName"
+        show-title
+        show-timestamp
+        :figure-width="figureWidth"
+        :figure-height="200"
+        :show-legend="false"
+        :interaction="{
+          brush: mode === 'view' ? 'enabled' : 'disabled',
+          burger: 'disabled',
+          hover: 'enabled',
+          panning: 'disabled',
+          zoom: 'disabled',
+          pin: 'enabled'
+        }"
+        :overview="drawnOverview"
+        @update:requested-time-range="requestedTimeRange = $event"
+      />
+      <GraphNotice
+        v-if="previewNotice"
+        v-bind="previewNotice"
+        class="graphing-designer-body__notice"
+        @retry="data.refetch()"
+      />
+    </div>
 
     <CmkAlertBox v-if="mode === 'edit' && saveError !== null" variant="error">
       {{ saveError }}
@@ -353,8 +366,21 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
   --graphing-designer-body-table-overflow: auto;
 }
 
+.graphing-designer-body__preview-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .graphing-designer-body__preview {
   flex-shrink: 0;
+}
+
+.graphing-designer-body__notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
 }
 
 .graphing-designer-body__scroll-region {

@@ -233,3 +233,45 @@ describe('settings slide-out', () => {
     expect(await screen.findByRole('checkbox', { name: 'Show zero values' })).toBeChecked()
   })
 })
+
+test('states a failed preview fetch over the preview, offering a retry', async () => {
+  const postSpy = vi.spyOn(client, 'POST')
+  postSpy.mockRejectedValue(new Error('crash'))
+  renderBody('view')
+
+  expect(await screen.findByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(screen.getByText('crash')).toBeInTheDocument()
+
+  postSpy.mockResolvedValue(fetchDataResponse())
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  await waitFor(() =>
+    expect(screen.queryByText('Graph data could not be loaded.')).not.toBeInTheDocument()
+  )
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+test("states the response's own per-metric errors without offering a retry", async () => {
+  const response = fetchDataResponse() as { data: Record<string, unknown> }
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    ...response,
+    data: { ...response.data, errors: ['Metrics backend is unavailable.'] }
+  } as never)
+  renderBody('view')
+
+  expect(await screen.findByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+})
+
+test("states the response's own warnings over the preview it drew anyway", async () => {
+  const response = fetchDataResponse() as { data: Record<string, unknown> }
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    ...response,
+    data: { ...response.data, warnings: ['The query for A matched more than 100 time series.'] }
+  } as never)
+  renderBody('view')
+
+  const message = await screen.findByText('The query for A matched more than 100 time series.')
+  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+})

@@ -408,3 +408,88 @@ test('a preferred refresh time is preselected and used by the auto-started refre
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
 })
+
+test('a failed graph load offers a retry that reloads the definition', async () => {
+  getSpy.mockImplementation((path: string) => {
+    if (isFilterPath(path)) {
+      return Promise.resolve(okResponse({ value: [] }))
+    }
+    if (path === METADATA_COLLECTION_PATH) {
+      return Promise.resolve(okResponse(metadataCollection()))
+    }
+    return Promise.reject(new Error('graph is gone'))
+  })
+  await renderApp()
+
+  const retry = await screen.findByRole('button', { name: 'Retry' })
+  expect(screen.getByText('graph is gone')).toBeInTheDocument()
+
+  mockGraphGet()
+  await fireEvent.click(retry)
+
+  expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
+  expect(screen.queryByText('graph is gone')).not.toBeInTheDocument()
+})
+
+test('a failed filter load offers a retry that reloads only the definitions', async () => {
+  let filtersFail = true
+  getSpy.mockImplementation((path: string) => {
+    if (isFilterPath(path)) {
+      return filtersFail
+        ? Promise.reject(new Error('filters are gone'))
+        : Promise.resolve(okResponse({ value: [] }))
+    }
+    return Promise.resolve(
+      path === METADATA_COLLECTION_PATH
+        ? okResponse(metadataCollection())
+        : okResponse(graphObject())
+    )
+  })
+  await renderApp()
+
+  const retry = await screen.findByRole('button', { name: 'Retry' })
+  expect(screen.getByText('filters are gone')).toBeInTheDocument()
+
+  const filterCalls = (): number =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getSpy.mock.calls.filter((call: any) => isFilterPath(call[0] as string)).length
+  const graphCalls = (): number =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getSpy.mock.calls.filter((call: any) => call[0] === GRAPH_PATH).length
+  const filtersBefore = filterCalls()
+  const graphBefore = graphCalls()
+
+  filtersFail = false
+  await fireEvent.click(retry)
+
+  await waitFor(() => expect(filterCalls()).toBeGreaterThan(filtersBefore))
+  // The graph loaded fine, so the retry leaves it alone and re-runs only what failed.
+  expect(graphCalls()).toBe(graphBefore)
+  // `loadFilters` clears the message before re-requesting, so only the body proves it succeeded.
+  await waitFor(() => expect(document.querySelector('.graphing-designer-body')).toBeInTheDocument())
+  expect(screen.queryByText('filters are gone')).not.toBeInTheDocument()
+})
+
+test('a retry after a failed load still honours an edit deep link', async () => {
+  let graphFails = true
+  getSpy.mockImplementation((path: string) => {
+    if (isFilterPath(path)) {
+      return Promise.resolve(okResponse({ value: [] }))
+    }
+    if (path === METADATA_COLLECTION_PATH) {
+      return Promise.resolve(okResponse(metadataCollection()))
+    }
+    return graphFails
+      ? Promise.reject(new Error('graph is gone'))
+      : Promise.resolve(okResponse(graphObject()))
+  })
+  await renderApp({ mode: 'edit' })
+
+  const retry = await screen.findByRole('button', { name: 'Retry' })
+  graphFails = false
+  await fireEvent.click(retry)
+
+  // The first load never reached the point of switching the mode, so the retry has to take the
+  // requested one rather than the default it is still sitting on.
+  expect(await screen.findByRole('button', { name: 'Save' })).toBeInTheDocument()
+})

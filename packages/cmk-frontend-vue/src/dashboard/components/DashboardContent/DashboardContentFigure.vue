@@ -13,6 +13,7 @@ import DashboardContentContainer from '@/dashboard/components/DashboardContent/D
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
+import { GraphNotice, useGraphNotice } from '@/graphing'
 
 import { FigureBase } from './cmk_figures.ts'
 import type { ContentProps } from './types.ts'
@@ -30,9 +31,25 @@ const figureId = computed(() => `db-content-figure-${props.widget_id}`)
 
 const currentDimensions = ref({ width: 0, height: 0 })
 const isLoading = ref(true)
+// null until a fetch fails; then the legacy node's text, which the notice shows as the detail
+// under its headline. Empty when that node carried none.
+const error = ref<string | null>(null)
 
-// Only the icon waits out the delay; the wrapper below stays hidden on the raw flag throughout.
-const showLoadingIcon = useDelayedFlag(() => isLoading.value, LOADING_AFFORDANCE_DELAY_MS)
+const notice = useGraphNotice({
+  error: () => error.value,
+  isLoading: () => isLoading.value,
+  // This transport reports a failure and nothing else: it carries no channel for the diagnostics a
+  // 200 from the graph endpoints would bring.
+  partialErrors: () => [],
+  warnings: () => []
+})
+
+// Only the icon waits out the delay; the wrapper below stays hidden on the raw flag throughout. The
+// icon also stands down for a failure, which the notice states instead.
+const showLoadingIcon = useDelayedFlag(
+  () => isLoading.value && error.value === null,
+  LOADING_AFFORDANCE_DELAY_MS
+)
 
 let figure: FigureBase | null = null
 let mutationObserver: MutationObserver | null = null
@@ -148,6 +165,9 @@ function setupMutationObserver(targetElement: HTMLElement) {
       }
       for (const node of mutation.addedNodes) {
         if (node instanceof HTMLElement && node.id === 'figure_error') {
+          // Left hidden behind the wrapper's modifier rather than removed here; only `onRetry`
+          // removes it, so that a repeat failure stays observable.
+          error.value = node.textContent?.trim() ?? ''
           isLoading.value = false
           return
         }
@@ -170,9 +190,27 @@ const initializeFigure = () => {
     props.content,
     updateInterval
   )
+  // FigureBase calls its post-render hooks only from process_data, so reaching here means success.
   figure.instance.subscribe_post_render_hook(() => {
     isLoading.value = false
+    error.value = null
   })
+}
+
+const onRetry = () => {
+  if (!figure) {
+    return
+  }
+  // FigureBase writes #figure_error through a d3 join and clears it only on a successful render,
+  // so without removing it here a second failure in a row rewrites the text of a node already
+  // there, mutating nothing the observer watches, and the widget loads forever.
+  figure.instance.clear_error_info()
+  isLoading.value = true
+  figure.update(
+    dataEndpointUrl.value,
+    new URLSearchParams(httpVars.value).toString(),
+    props.content
+  )
 }
 
 onMounted(() => {
@@ -206,10 +244,16 @@ onBeforeUnmount(() => {
         size="xlarge"
         class="db-content-figure__loading-icon"
       />
+      <GraphNotice
+        v-if="notice"
+        v-bind="notice"
+        class="db-content-figure__notice"
+        @retry="onRetry"
+      />
       <div
         ref="wrapperDiv"
         class="db-content-figure__wrapper"
-        :class="{ 'db-content-figure__wrapper--loading': isLoading }"
+        :class="{ 'db-content-figure__wrapper--loading': isLoading || error !== null }"
       >
         <div
           :id="figureId"
@@ -240,12 +284,17 @@ onBeforeUnmount(() => {
   min-height: 0;
 }
 
-.db-content-figure__loading-icon {
+.db-content-figure__loading-icon,
+.db-content-figure__notice {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1;
+}
+
+.db-content-figure__notice {
+  max-width: 100%;
 }
 
 .db-content-figure__wrapper {

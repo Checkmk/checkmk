@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
@@ -22,8 +22,11 @@ class FakeResizeObserver {
 }
 
 // The graph body arrives through the legacy cmk ajax toolkit as raw HTML. Capturing the response
-// handler lets a test replay the moment it lands, which is what clears the loading flag.
+// handler lets a test replay the moment it lands, which is what clears the loading flag; the error
+// handler drives the failure path, and the count tells whether a retry issued a fresh request.
 let respond: ((data: null, body: string) => void) | null = null
+let fail: (() => void) | null = null
+let requestCount = 0
 
 const baseProps = {
   widget_id: 'w1',
@@ -63,8 +66,16 @@ beforeEach(() => {
   vi.stubGlobal('ResizeObserver', FakeResizeObserver)
   vi.stubGlobal('cmk', {
     ajax: {
-      call_ajax: (_url: string, opts: { response_handler: (data: null, body: string) => void }) => {
+      call_ajax: (
+        _url: string,
+        opts: {
+          response_handler: (data: null, body: string) => void
+          error_handler: () => void
+        }
+      ) => {
+        requestCount += 1
         respond = opts.response_handler
+        fail = opts.error_handler
       }
     },
     utils: { execute_javascript_by_object: () => {} }
@@ -73,6 +84,8 @@ beforeEach(() => {
 
 afterEach(() => {
   respond = null
+  fail = null
+  requestCount = 0
   resizeCallback = null
   vi.unstubAllGlobals()
   vi.useRealTimers()
@@ -112,4 +125,51 @@ test('keeps the graph hidden from the start, undelayed, until it has rendered', 
   respond!(null, '<svg />')
   await nextTick()
   expect(graphBody()).toBeVisible()
+})
+
+test('states the failure and stops the loading icon when the request errors', async () => {
+  renderWidget()
+  await nextTick()
+  await deliverSize()
+
+  fail!()
+  await nextTick()
+
+  expect(screen.getByText('Graph data could not be loaded.')).toBeInTheDocument()
+  // Regression: the icon used to keep spinning, because only the refresh timer was told.
+  vi.advanceTimersByTime(1_000)
+  await nextTick()
+  expect(loadingIcon()).not.toBeVisible()
+})
+
+test('retrying issues a fresh request and clears the notice once it lands', async () => {
+  renderWidget()
+  await nextTick()
+  await deliverSize()
+  fail!()
+  await nextTick()
+
+  const before = requestCount
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+  expect(requestCount).toBe(before + 1)
+
+  respond!(null, '<svg />')
+  await nextTick()
+
+  expect(screen.queryByText('Graph data could not be loaded.')).not.toBeInTheDocument()
+  expect(graphBody()).toBeVisible()
+})
+
+test('acknowledges a retry at once rather than blanking the widget', async () => {
+  renderWidget()
+  await nextTick()
+  await deliverSize()
+  fail!()
+  await nextTick()
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  // No waiting out LOADING_AFFORDANCE_DELAY_MS: the notice holds the wait immediately.
+  expect(screen.getByText('Loading data …')).toBeInTheDocument()
+  expect(loadingIcon()).not.toBeVisible()
 })

@@ -14,6 +14,7 @@ import { type Ref, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { FilterHTTPVars, GraphWidgetContent } from '@/dashboard/types/widget.ts'
+import { GraphNotice, useGraphNotice } from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
@@ -31,9 +32,25 @@ const cmkToolkit = window['cmk']
 const contentDiv = ref<HTMLDivElement | null>(null)
 const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 const isLoading = ref<boolean>(true)
+// null until a fetch fails. This transport reports through its error handler alone, with no
+// response body to quote, so the value is empty: a failure with no detail under the headline.
+const error = ref<string | null>(null)
 
-// Only the icon waits out the delay; the graph below stays hidden on the raw flag throughout.
-const showLoadingIcon = useDelayedFlag(() => isLoading.value, LOADING_AFFORDANCE_DELAY_MS)
+const notice = useGraphNotice({
+  error: () => error.value,
+  isLoading: () => isLoading.value,
+  // The server-rendered HTML states its own diagnostics, so nothing reaches the notice but the
+  // failure the error handler reports.
+  partialErrors: () => [],
+  warnings: () => []
+})
+
+// Only the icon waits out the delay; the graph below stays hidden on the raw flag throughout. The
+// icon also stands down for a failure, which the notice states instead.
+const showLoadingIcon = useDelayedFlag(
+  () => isLoading.value && error.value === null,
+  LOADING_AFFORDANCE_DELAY_MS
+)
 
 const resolveObservedElement = (): HTMLElement | null => {
   if (props.isPreview && showLegend.value && contentDiv.value) {
@@ -71,11 +88,24 @@ const handleRefreshData = (_handlerData: null, body: string) => {
     cmkToolkit.utils.execute_javascript_by_object(contentDiv.value)
   }
   isLoading.value = false
+  error.value = null
   timer.reportSuccess()
 }
 
+// Clearing the loading flag matters as much as reporting the error: the icon spun on without it.
 const handleRefreshError = () => {
+  error.value = ''
+  isLoading.value = false
   timer.reportFailure()
+}
+
+// `error` stays set so the notice holds the failure as its loading variant rather than blanking
+// the widget for the affordance delay. `start` alone would leave the backoff scheduled.
+const onRetry = () => {
+  isLoading.value = true
+  updateGraph()
+  timer.stop()
+  timer.start()
 }
 
 const updateGraph = () => {
@@ -140,6 +170,7 @@ onBeforeUnmount(() => {
       size="xlarge"
       class="db-content-graph__loading-icon"
     />
+    <GraphNotice v-if="notice" v-bind="notice" class="db-content-graph__notice" @retry="onRetry" />
     <div
       v-show="!isLoading"
       :id="`db-content-graph-${widget_id}`"
@@ -155,6 +186,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .db-content-graph__loading-icon {
+  margin: auto;
+}
+
+.db-content-graph__notice {
   margin: auto;
 }
 

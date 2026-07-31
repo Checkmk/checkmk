@@ -12,6 +12,7 @@ import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
 import {
@@ -27,6 +28,7 @@ import type { SelectableGraph } from './components/GraphSelector.vue'
 import { pushUrlState, replaceUrlState } from './urlState'
 
 const props = defineProps<CustomGraphDesigner>()
+const { _t } = usei18n()
 
 // Single owner of the shared time-range default; header and body only read/update it.
 const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
@@ -90,8 +92,13 @@ function urlState(): { name: string; owner: string; mode: CustomGraphDesignerMod
 // Guards against a slow response arriving after a newer load was issued.
 let loadToken = 0
 
+// `mode` below only advances once a load has succeeded, so a retry reads this instead: otherwise a
+// failed first load leaves it at its default and drops what an `?mode=edit` deep link asked for.
+let lastRequestedMode: CustomGraphDesignerMode = props.mode
+
 async function load(requestedMode: CustomGraphDesignerMode): Promise<void> {
   const token = ++loadToken
+  lastRequestedMode = requestedMode
   isLoading.value = true
   loadError.value = null
   try {
@@ -116,12 +123,8 @@ async function load(requestedMode: CustomGraphDesignerMode): Promise<void> {
   }
 }
 
-const { setRefreshPaused } = useGlobalRefresh()
-const onPopState = (): void => window.location.reload()
-
-onMounted(() => {
-  setRefreshPaused(false)
-  window.addEventListener('popstate', onPopState)
+function loadFilters(): void {
+  filtersError.value = null
   void loadFilterDefinitions()
     .then(() => {
       filtersReady.value = true
@@ -129,6 +132,26 @@ onMounted(() => {
     .catch((e: unknown) => {
       filtersError.value = e instanceof Error ? e.message : String(e)
     })
+}
+
+// The graph and the filter definitions load independently and the box states whichever failed, so
+// retry re-runs the one that did; otherwise a filter error would stand with nothing refreshing it.
+function onRetry(): void {
+  if (filtersError.value !== null) {
+    loadFilters()
+  }
+  if (loadError.value !== null) {
+    void load(lastRequestedMode)
+  }
+}
+
+const { setRefreshPaused } = useGlobalRefresh()
+const onPopState = (): void => window.location.reload()
+
+onMounted(() => {
+  setRefreshPaused(false)
+  window.addEventListener('popstate', onPopState)
+  loadFilters()
   void load(props.mode)
 })
 
@@ -192,7 +215,11 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
     </header>
 
     <div class="graphing-custom-graph-designer-app__content">
-      <CmkAlertBox v-if="loadError !== null || filtersError !== null" variant="error">
+      <CmkAlertBox
+        v-if="loadError !== null || filtersError !== null"
+        variant="error"
+        :main-button="{ title: _t('Retry'), onclick: onRetry }"
+      >
         {{ loadError ?? filtersError }}
       </CmkAlertBox>
       <CmkIcon

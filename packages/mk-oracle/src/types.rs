@@ -190,9 +190,10 @@ pub struct InstanceVersion(String);
 #[derive(PartialEq, From, Clone, Copy, Debug, Display, Default, Into, PartialOrd)]
 pub struct InstanceNumVersion(u32);
 
+/// Used to express CDB property of instances AND applicability of queries.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Tenant {
-    All,
+    All, // Only for queries: Query applies to both CDB and non-CDB instances.
     Cdb,
     NoCdb,
 }
@@ -204,12 +205,11 @@ pub enum AsmInstance {
 }
 
 impl Tenant {
-    pub fn new(tenant: &str) -> Self {
-        match tenant.to_lowercase().as_str() {
-            "all" => Tenant::All,
-            "cdb" | "yes" => Tenant::Cdb,
-            "nocdb" | "no" => Tenant::NoCdb,
-            _ => panic!("Unknown tenant type: {}", tenant),
+    pub fn from_cdb_column(cdb_column: &str) -> Option<Self> {
+        match cdb_column.to_lowercase().as_str() {
+            "yes" => Some(Tenant::Cdb),
+            "no" => Some(Tenant::NoCdb),
+            _ => None,
         }
     }
 }
@@ -361,14 +361,11 @@ mod tests {
 
     #[test]
     fn test_tenant() {
-        assert_eq!(Tenant::new("all"), Tenant::All);
-        assert_eq!(Tenant::new("cdb"), Tenant::Cdb);
-        assert_eq!(Tenant::new("nocdb"), Tenant::NoCdb);
-        assert_eq!(Tenant::new("yEs"), Tenant::Cdb);
-        assert_eq!(Tenant::new("no"), Tenant::NoCdb);
-        // panic on unknown tenant
-        let result = std::panic::catch_unwind(|| Tenant::new("unknown"));
-        assert!(result.is_err());
+        assert_eq!(Tenant::from_cdb_column("yEs"), Some(Tenant::Cdb));
+        assert_eq!(Tenant::from_cdb_column("no"), Some(Tenant::NoCdb));
+        assert!(Tenant::from_cdb_column("cdb").is_none());
+        assert!(Tenant::from_cdb_column("unknown").is_none());
+        assert!(Tenant::from_cdb_column("").is_none());
     }
 
     #[test]

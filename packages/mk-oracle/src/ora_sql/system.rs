@@ -118,9 +118,7 @@ fn _detect_version(spot: &OpenedSpot) -> Result<DetectedVersion> {
 fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_InstanceEntries> {
     if let Some(query) = custom_query {
         // Replaces the probe entirely; the caller owns the column set.
-        return Ok(_to_instance_entries(
-            spot.query_table(&SqlQuery::new(query, &Vec::new())).0?,
-        ));
+        return _to_instance_entries(spot.query_table(&SqlQuery::new(query, &Vec::new())).0?);
     }
 
     let detected = _detect_version(spot)?;
@@ -143,7 +141,7 @@ fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_Inst
             *version_column = detected.version().clone().into();
         }
     }
-    Ok(_to_instance_entries(result))
+    _to_instance_entries(result)
 }
 
 fn _extract_version(result: Vec<String>) -> Option<String> {
@@ -158,25 +156,29 @@ fn _extract_version(result: Vec<String>) -> Option<String> {
         .map(str::to_string)
 }
 
-fn _to_instance_entries(result: Vec<Vec<String>>) -> _InstanceEntries {
-    let hashmap: _InstanceEntries = result
+/// Consumes columns 0, 2 and 4. Instance info we cannot interpret fails the
+/// endpoint, which surfaces as a FAILURE row, rather than guessing a tenancy
+/// that would silently reshape every section.
+fn _to_instance_entries(result: Vec<Vec<String>>) -> Result<_InstanceEntries> {
+    result
         .into_iter()
-        .filter_map(|x| {
-            if x.len() < 2 {
-                log::error!(
-                    "Unexpected result from v$instance: expected at least 2 columns, got {}",
-                    x.len()
+        .map(|row| {
+            let (Some(name), Some(version), Some(tenant)) = (row.first(), row.get(2), row.get(4))
+            else {
+                anyhow::bail!(
+                    "Unexpected result from v$instance: expected at least 5 columns, got {}",
+                    row.len()
                 );
-                None
-            } else {
-                Some((
-                    InstanceName::from(x[0].as_str()),
-                    (InstanceVersion::from(x[2].clone()), Tenant::new(&x[4])),
-                ))
-            }
+            };
+            let tenant = Tenant::from_cdb_column(tenant).ok_or_else(|| {
+                anyhow::anyhow!("Unexpected v$database.cdb value '{tenant}' for instance {name}")
+            })?;
+            Ok((
+                InstanceName::from(name.as_str()),
+                (InstanceVersion::from(version.clone()), tenant),
+            ))
         })
-        .collect();
-    hashmap
+        .collect()
 }
 pub fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVersion> {
     let tops = String::from(version.clone())
@@ -198,7 +200,7 @@ pub fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVe
 mod tests {
     use super::*;
     use crate::config::ora_sql::Endpoint;
-    use crate::ora_sql::backend::test_support::MiniOra;
+    use crate::ora_sql::backend::test_support::{instance_row, MiniOra};
     use crate::ora_sql::backend::SpotBuilder;
 
     /// Returns the derived (version, tenant) plus every query the run issued.
@@ -320,6 +322,30 @@ mod tests {
             .unwrap()
             .get_full_version(&InstanceName::from("HURZ"))
             .is_none());
+    }
+
+    #[test]
+    fn test_instance_entries_tenant_from_cdb_column() {
+        for (cdb, expected) in [("NO", Tenant::NoCdb), ("YES", Tenant::Cdb)] {
+            let entries =
+                _to_instance_entries(vec![instance_row("ORCL", "19.28.0.0.0", cdb)]).unwrap();
+            assert_eq!(
+                entries.get(&InstanceName::from("ORCL")).unwrap().1,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_instance_entries_short_row_is_skipped_not_panic() {
+        for row in [vec!["ORCL".to_string()], vec!["ORCL".into(), "0".into()]] {
+            assert!(_to_instance_entries(vec![row]).is_err());
+        }
+    }
+
+    #[test]
+    fn test_instance_entries_unknown_cdb_value_fails() {
+        assert!(_to_instance_entries(vec![instance_row("ORCL", "19.28.0.0.0", "MAYBE")]).is_err());
     }
 
     #[test]

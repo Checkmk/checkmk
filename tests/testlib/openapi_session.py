@@ -459,16 +459,17 @@ class ChangesAPI(BaseAPI):
         finally:
             if activation_id:
                 activation_status = self.get_activation_status(activation_id)
-                if "status_per_site" in activation_status["extensions"]:
-                    if not_succeeded_sites := [
+                if "status_per_site" in activation_status["extensions"] and (
+                    not_succeeded_sites := [
                         status
                         for status in activation_status["extensions"]["status_per_site"]
                         if status["state"] != "success"
-                    ]:
-                        raise RuntimeError(
-                            "Activation of the following sites did not succeed:\n"
-                            f"{pprint.pformat(not_succeeded_sites)}"
-                        )
+                    ]
+                ):
+                    raise RuntimeError(
+                        "Activation of the following sites did not succeed:\n"
+                        f"{pprint.pformat(not_succeeded_sites)}"
+                    )
                 logger.info(
                     "%s Use `--log-cli-level=DEBUG` for analysis.",
                     activation_status.get(

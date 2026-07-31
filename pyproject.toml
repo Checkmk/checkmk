@@ -216,8 +216,6 @@ ignore = [
   "UP045",  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 ]
 
-# SIM102 incremental rollout: each labelled group is removed by its follow-up
-# change, which applies the fix and enforces the rule in that scope.
 # packages misc
 "packages/cmk-agent-receiver/**" = ["SIM102"]
 "packages/cmk-backup/**" = ["SIM102"]
@@ -230,10 +228,6 @@ ignore = [
 "packages/cmk-ruleset-matcher/**" = ["SIM102"]
 "packages/cmk-werks/**" = ["SIM102"]
 "packages/cmk-wsgi/**" = ["SIM102"]
-# omd, tests, scripts
-"omd/packages/omd/**" = ["SIM102"]
-"tests/**" = ["SIM102"]
-"scripts/gerrit_api/**" = ["SIM102"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

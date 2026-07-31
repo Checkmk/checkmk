@@ -73,9 +73,11 @@ class ChangeDetails(BaseModel):
             # iterate dict
             for label in record.get("labels", []):
                 try:
-                    if label["label"] == "Code-Review":
-                        if int(label["applied_by"][_ACCOUNT_ID]) != self._owner_id:
-                            return True
+                    if (
+                        label["label"] == "Code-Review"
+                        and int(label["applied_by"][_ACCOUNT_ID]) != self._owner_id
+                    ):
+                        return True
                 except KeyError as exc:
                     exc.add_note(
                         "Expected missing attribute! "

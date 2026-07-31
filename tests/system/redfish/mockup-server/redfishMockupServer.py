@@ -537,11 +537,13 @@ class RfMockupServer(BaseHTTPRequestHandler):
             output_data.pop("@Redfish.Copyright", None)
 
             # Query Subscriptions should not return HttpHeaders.
-            if "EventService/Subscriptions" in self.path:
-                if output_data.get("HttpHeaders") is not None:
-                    # This array is null or an empty array in responses.
-                    # An empty array is the preferred return value on read operations.
-                    output_data["HttpHeaders"] = []
+            if (
+                "EventService/Subscriptions" in self.path
+                and output_data.get("HttpHeaders") is not None
+            ):
+                # This array is null or an empty array in responses.
+                # An empty array is the preferred return value on read operations.
+                output_data["HttpHeaders"] = []
 
             # Query evaluate
             if output_data.get("Members") is not None:
@@ -958,14 +960,13 @@ def main():
             sys.stderr.flush()
             sys.exit(1)
 
-    if shortForm:
-        if (
-            os.path.isdir(mockDir) is not True
-            or os.path.isfile(os.path.join(mockDir, "index.json")) is not True
-        ):
-            logger.info("ERROR: Invalid Mockup Directory--dir or index.json does not exist")
-            sys.stderr.flush()
-            sys.exit(1)
+    if shortForm and (
+        os.path.isdir(mockDir) is not True
+        or os.path.isfile(os.path.join(mockDir, "index.json")) is not True
+    ):
+        logger.info("ERROR: Invalid Mockup Directory--dir or index.json does not exist")
+        sys.stderr.flush()
+        sys.exit(1)
 
     myServer = HTTPServer((hostname, port), RfMockupServer)
 

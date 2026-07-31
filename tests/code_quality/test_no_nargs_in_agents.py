@@ -65,9 +65,8 @@ def _is_safe_nargs(node: ast.Call) -> bool:
             elif isinstance(kw.value, ast.UnaryOp):
                 # e.g. nargs=-1 (unlikely but handle gracefully)
                 nargs_value = "unknown"
-        if kw.arg == "action":
-            if isinstance(kw.value, ast.Constant):
-                action_value = kw.value.value
+        if kw.arg == "action" and isinstance(kw.value, ast.Constant):
+            action_value = kw.value.value
 
     return nargs_value == 1 and action_value == "append"
 

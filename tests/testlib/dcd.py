@@ -130,13 +130,14 @@ def execute_dcd_cycle(
         for idx, batch_stdout in enumerate(all_batches_stdout):
             # check if there is at least one completed batch containing the expected number of PB
             # hosts
-            if all(string in batch_stdout for string in ["Done", f"{expected_pb_hosts} hosts"]):
-                # check that all following batches also contain the expected number of PB hosts
-                if all(
-                    f"{expected_pb_hosts} hosts" in next_batch_stdout
-                    for next_batch_stdout in all_batches_stdout[idx + 1 :]
-                ):
-                    return True
+            # check that all following batches also contain the expected number of PB hosts
+            if all(
+                string in batch_stdout for string in ["Done", f"{expected_pb_hosts} hosts"]
+            ) and all(
+                f"{expected_pb_hosts} hosts" in next_batch_stdout
+                for next_batch_stdout in all_batches_stdout[idx + 1 :]
+            ):
+                return True
         return False
 
     try:

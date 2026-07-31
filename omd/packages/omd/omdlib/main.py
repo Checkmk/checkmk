@@ -2730,17 +2730,23 @@ def main_init_action(
         config = read_site_config(site_home)
 
         # Handle non autostart sites
-        if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
-            if not global_opts.force and config.get("AUTOSTART", "on") != "on":
-                if bare:
-                    continue
-
-                if not parallel:
-                    sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site.name)
-                else:
-                    parallel_output(site.name, "Ignoring since autostart is disabled\n")
-
+        if (
+            (
+                command in ["start", "restart", "reload"]
+                or ("auto" in options and command == "status")
+            )
+            and not global_opts.force
+            and config.get("AUTOSTART", "on") != "on"
+        ):
+            if bare:
                 continue
+
+            if not parallel:
+                sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site.name)
+            else:
+                parallel_output(site.name, "Ignoring since autostart is disabled\n")
+
+            continue
 
         if command == "status" and bare:
             sys.stdout.write("[%s]\n" % site.name)

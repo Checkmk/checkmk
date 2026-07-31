@@ -117,9 +117,8 @@ def _setup(
         inject_dumps(test_site, DUMPS_DIR, check_dumps_up_to_date=False)
         create_password(test_site)
         disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
-        if not edition_from_env().is_cloud_edition():
-            if not disable_rules_injection:
-                inject_rules(test_site)
+        if not edition_from_env().is_cloud_edition() and not disable_rules_injection:
+            inject_rules(test_site)
 
         hostname = get_dump_names(DUMPS_DIR)[0]
         with _setup_host(test_site, hostname=hostname, ip_address="127.0.0.1"):

@@ -71,7 +71,6 @@ def _has_test_signal(diff_text: str) -> bool:
             if _NEW_TEST_PAT.match(line):
                 return True
             continue
-        if (m := _HUNK_HEADER_PAT.match(line)) is not None:
-            if _TEST_SCOPE_PAT.match(m.group(1)):
-                return True
+        if (m := _HUNK_HEADER_PAT.match(line)) is not None and _TEST_SCOPE_PAT.match(m.group(1)):
+            return True
     return False

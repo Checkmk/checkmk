@@ -124,9 +124,8 @@ def _check_script_status(
             sys.stdout.write("%-20s" % (script.daemon + ":"))
             sys.stdout.write(tty.bold)
 
-    if bare:
-        if state != 5 or verbose:
-            sys.stdout.write("%d\n" % state)
+    if bare and (state != 5 or verbose):
+        sys.stdout.write("%d\n" % state)
 
     if state == 0:
         if display and not bare:

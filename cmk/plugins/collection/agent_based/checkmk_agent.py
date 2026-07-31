@@ -150,7 +150,9 @@ def _render_agent_version_mismatch(
 
     # spec_type == "at_least"
     if _is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
-        if int(agent_version.split("-")[-1].replace(".", "")) < int(at_least.replace(".", "")):
+        if int(agent_version.split("-")[-1].replace(".", "")) < int(
+            at_least.rsplit("-", maxsplit=1)[-1].replace(".", "")
+        ):
             return f" (expected at least {at_least})"
 
     if (at_least := spec.get("release")) is None:

@@ -8,6 +8,7 @@ import type { ScaleTime } from 'd3-scale'
 import { type Ref, computed, onBeforeUnmount, ref } from 'vue'
 
 import {
+  type MeasureLabel,
   type TimeAxisTick,
   computeTimeAxis
 } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
@@ -17,11 +18,13 @@ import type { TimeRange } from './types'
 // A drag shorter than this is treated as a click, not a pan (mirrors the zoom threshold).
 const DRAG_THRESHOLD_PX = 4
 
+// The ruler extends one span either side of the visible window so labels slide in during a drag.
+const PAN_RULER_SPANS = 3
+
 export interface PanGestureOptions {
   panEnabled: () => boolean
   timeRange: () => TimeRange
-  // Drives the ruler's tick-density heuristic (ex units).
-  fontSizePt: () => number | undefined
+  measureLabel: MeasureLabel
   plotWidth: Ref<number>
   // The same instance the renderer draws with, so ruler ticks stay aligned with the plot.
   xScale: ScaleTime<number, number>
@@ -53,12 +56,12 @@ export function usePanGesture(options: PanGestureOptions) {
     ev.preventDefault()
     const range = options.timeRange()
     const span = range.end - range.start
-    const pixelsPerEx = (options.fontSizePt() || 10) * (2 / 3)
     panRulerTicks.value = computeTimeAxis(
       range.start - span,
       range.end + span,
-      options.plotWidth.value / pixelsPerEx,
-      range.step
+      options.plotWidth.value * PAN_RULER_SPANS,
+      range.step,
+      options.measureLabel
     )
     panAnchorX = point.x
     panDx.value = 0

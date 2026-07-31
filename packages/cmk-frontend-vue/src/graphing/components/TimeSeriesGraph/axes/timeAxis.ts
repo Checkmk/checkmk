@@ -3,9 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-// Ported from cmk/gui/graphing/_artwork.py::_compute_graph_t_axis. Not a literal
-// translation but faithful to the backend. The timezone is injected (rather than read
-// from the ambient local zone) so the axis is deterministic and testable across zones.
+// Ported from cmk/gui/graphing/_artwork.py::_compute_graph_t_axis: the label-format bands, the
+// candidate step ladder and the calendar-aligned tick positions all follow the backend. The
+// timezone is injected (rather than read from the ambient local zone) so the axis is deterministic
+// and testable across zones.
+//
+// One deliberate divergence: the backend estimates how many labels fit from a per-format character
+// budget expressed in ex, calibrated against its fixed 11px-per-ex layout grid. Here the label
+// widths are measured instead, so tick density follows the text that is really drawn.
 import {
   type ZonedDateTime,
   fromAbsolute,
@@ -28,15 +33,18 @@ export function sampleCount(timeRange: TimeRange): number {
 
 const SECONDS_PER_DAY = 86_400
 
+const MIN_LABEL_GAP_PX = 24
+
 export interface TimeAxisTick {
   position: number
   text: string | null
   lineWidth: number
 }
 
+export type MeasureLabel = (text: string) => number
+
 interface Labelling {
   format: string
-  labelSize: number
   labelShift: number
   labelDistanceAtLeast: number
 }
@@ -47,23 +55,48 @@ function pickLabelling(start: ZonedDateTime, end: ZonedDateTime, timeRangeDays: 
   const sameDate = sameMonth && start.day === end.day
 
   if (sameDate) {
-    return { format: '%H:%M', labelSize: 5, labelShift: 0, labelDistanceAtLeast: 0 }
+    return { format: '%H:%M', labelShift: 0, labelDistanceAtLeast: 0 }
   }
   if (timeRangeDays < 7) {
-    return { format: '%a %H:%M', labelSize: 9, labelShift: 0, labelDistanceAtLeast: 0 }
+    return { format: '%a %H:%M', labelShift: 0, labelDistanceAtLeast: 0 }
   }
   if (timeRangeDays < 32 && sameMonth) {
     return {
       format: '%d',
-      labelSize: 2.5,
       labelShift: SECONDS_PER_DAY / 2,
       labelDistanceAtLeast: SECONDS_PER_DAY
     }
   }
   if (sameYear) {
-    return { format: '%m-%d', labelSize: 5, labelShift: 0, labelDistanceAtLeast: 0 }
+    return { format: '%m-%d', labelShift: 0, labelDistanceAtLeast: 0 }
   }
-  return { format: '%Y-%m-%d', labelSize: 8, labelShift: 0, labelDistanceAtLeast: 0 }
+  return { format: '%Y-%m-%d', labelShift: 0, labelDistanceAtLeast: 0 }
+}
+
+// Every label of a given format has the same digit count, so one sample stands in for all of them.
+const WIDEST_LABEL_SAMPLE: Record<string, string> = {
+  '%H:%M': '00:00',
+  '%d': '00',
+  '%m-%d': '00-00',
+  '%Y-%m-%d': '0000-00-00'
+}
+
+const DAYS_PER_WEEK = 7
+
+function widestLabelWidth(
+  labelling: Labelling,
+  start: ZonedDateTime,
+  measureLabel: MeasureLabel
+): number {
+  if (labelling.format === '%a %H:%M') {
+    let widest = 0
+    for (let dayOffset = 0; dayOffset < DAYS_PER_WEEK; dayOffset++) {
+      const label = formatLabel(labelling.format, start.add({ days: dayOffset }))
+      widest = Math.max(widest, measureLabel(label))
+    }
+    return widest
+  }
+  return measureLabel(WIDEST_LABEL_SAMPLE[labelling.format] ?? WIDEST_LABEL_SAMPLE['%Y-%m-%d']!)
 }
 
 function formatLabel(format: string, zdt: ZonedDateTime): string {
@@ -134,14 +167,8 @@ function monthsProducer(
 }
 
 function selectTickProducer(
-  timeRange: number,
-  widthEx: number,
-  labelSize: number,
-  labelDistanceAtLeast: number
+  minDistance: number
 ): (start: ZonedDateTime, end: ZonedDateTime) => ZonedDateTime[] {
-  const numLabels = Math.max(Math.floor((widthEx - 7) / labelSize), 2)
-  const minDistance = Math.max(labelDistanceAtLeast, timeRange / numLabels)
-
   for (const distMinutes of [1, 2, 5, 10, 20, 30, 60, 120, 240, 360, 480, 720]) {
     if (minDistance <= distMinutes * 60) {
       const stepSeconds = distMinutes * 60
@@ -167,34 +194,37 @@ function selectTickProducer(
 export function computeTimeAxis(
   startTime: number,
   endTime: number,
-  widthEx: number,
+  plotWidth: number,
   step: number,
+  measureLabel: MeasureLabel,
   timeZone: string = getLocalTimeZone()
 ): TimeAxisTick[] {
-  startTime += step
-  endTime -= step
+  const secondsPerPixel = (endTime - startTime) / Math.max(plotWidth, 1)
+  const positionToX = (position: number): number => (position - startTime) / secondsPerPixel
 
-  const timeRange = endTime - startTime
+  const firstTickTime = startTime + step
+  const lastTickTime = endTime - step
+  const timeRange = lastTickTime - firstTickTime
   if (timeRange <= 0) {
     return []
   }
-  const safeWidthEx = Math.max(widthEx, 8)
 
-  const startZoned = fromAbsolute(startTime * 1000, timeZone)
-  const endZoned = fromAbsolute(endTime * 1000, timeZone)
+  const startZoned = fromAbsolute(firstTickTime * 1000, timeZone)
+  const endZoned = fromAbsolute(lastTickTime * 1000, timeZone)
   const timeRangeDays = timeRange / SECONDS_PER_DAY
 
   const labelling = pickLabelling(startZoned, endZoned, timeRangeDays)
+  const requiredDistance =
+    (widestLabelWidth(labelling, startZoned, measureLabel) + MIN_LABEL_GAP_PX) * secondsPerPixel
   const producer = selectTickProducer(
-    timeRange,
-    safeWidthEx,
-    labelling.labelSize,
-    labelling.labelDistanceAtLeast
+    // Half the range is the floor the backend also keeps (its label count bottoms out at two), so
+    // even a plot too narrow for a single label still gets a couple of grid lines.
+    Math.max(labelling.labelDistanceAtLeast, Math.min(requiredDistance, timeRange / 2))
   )
 
   const ticks: TimeAxisTick[] = []
-  const secondsPerChar = timeRange / (safeWidthEx - 7)
   const emittedLabels = new Set<string>()
+  let previousLabelRightEdge = -Infinity
   for (const positionZoned of producer(startZoned, endZoned)) {
     let lineWidth = 2
     let position = Math.round(positionZoned.toDate().getTime() / 1000)
@@ -206,17 +236,22 @@ export function computeTimeAxis(
       position += labelling.labelShift
     }
 
-    if (label !== null && (label.length / 3.5) * secondsPerChar > endTime - position) {
-      label = null
-    }
     // A DST fall-back repeats a local hour, so wall-clock labels ("02:00") would show up
     // twice (hour-level counterpart of Werk #14830). Keep the tick but suppress the
     // repeated label so every rendered label stays unambiguous.
+    if (label !== null && emittedLabels.has(label)) {
+      label = null
+    }
     if (label !== null) {
-      if (emittedLabels.has(label)) {
+      const halfWidth = measureLabel(label) / 2
+      const center = positionToX(position)
+      const overlapsPrevious = center - halfWidth < previousLabelRightEdge + MIN_LABEL_GAP_PX
+      const overflowsPlot = center - halfWidth < 0 || center + halfWidth > plotWidth
+      if (overlapsPrevious || overflowsPlot) {
         label = null
       } else {
         emittedLabels.add(label)
+        previousLabelRightEdge = center + halfWidth
       }
     }
     ticks.push({ position, text: label, lineWidth })

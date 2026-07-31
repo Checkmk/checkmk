@@ -14,6 +14,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { ConsolidationFn } from '../consolidation'
 import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT } from '../constants'
+import { measureTimeLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
 import { computeYDomain } from './axes/valueAxis'
 import { downsampleToColumns, m4 } from './decimation/decimate'
@@ -52,6 +53,8 @@ const M4_BUCKETS = 4000
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const axesContainer = ref<SVGGElement | null>(null)
+
+const measureLabel = (text: string): number => measureTimeLabel(text, axesContainer.value)
 
 // size is the outer figure size; the plot (canvas) area is what remains after
 // subtracting the axis/label margins.
@@ -142,7 +145,7 @@ const { panActive, panDx, panRulerTicks, panClipId, panCursor, panTickX, onPanMo
   usePanGesture({
     panEnabled: () => props.panEnabled,
     timeRange: () => props.time_range,
-    fontSizePt: () => props.options.font_size_pt,
+    measureLabel,
     plotWidth,
     xScale,
     plotCoords,
@@ -198,15 +201,12 @@ function draw(): void {
     .domain([new Date(props.time_range.start * 1000), new Date(props.time_range.end * 1000)])
     .range([0, plotWidth.value])
 
-  // The tick algorithm measures available width in ex units. 1 ex ≈ half an em, and pt→px
-  // is ×4/3, so pixels-per-ex ≈ font_size_pt · 2/3.
-  const pixelsPerEx = (props.options.font_size_pt || 10) * (2 / 3)
-  const widthEx = plotWidth.value / pixelsPerEx
   const xTicks = computeTimeAxis(
     props.time_range.start,
     props.time_range.end,
-    widthEx,
-    props.time_range.step
+    plotWidth.value,
+    props.time_range.step,
+    measureLabel
   )
 
   // Line metrics contribute their drawn extremes; stacked metrics their cumulative band

@@ -174,7 +174,6 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
         "
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
-        :backend-validation="props.backendValidation ?? []"
       />
       <slot name="additional-rows"></slot>
     </tbody>

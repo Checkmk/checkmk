@@ -126,6 +126,10 @@ const componentId = useId()
                 role="group"
                 :aria-label="dict_element.dict_config.parameter_form.title"
               >
+                <FormHelp
+                  v-if="!dict_element.is_active && titleRequired(dict_element.dict_config)"
+                  :help="dict_element.dict_config.parameter_form.help"
+                />
                 <template v-if="titleRequired(dict_element.dict_config)">
                   <CmkLabel
                     v-if="dict_element.dict_config.required"
@@ -159,10 +163,6 @@ const componentId = useId()
                     "
                   />
                 </template>
-                <FormHelp
-                  v-if="!dict_element.is_active && titleRequired(dict_element.dict_config)"
-                  :help="dict_element.dict_config.parameter_form.help"
-                />
                 <FormIndent
                   v-if="dict_element.is_active"
                   :indent="indentRequired(dict_element.dict_config, group.layout)"

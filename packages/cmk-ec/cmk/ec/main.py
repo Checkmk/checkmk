@@ -241,9 +241,10 @@ def allowed_ip(
     if any(ip in entry for entry in access_list):
         return True
 
-    if not str(ip).startswith("::ffff:"):
-        if any(ipaddress.ip_address(f"::ffff:{str(ip)}") in entry for entry in access_list):
-            return True
+    if not str(ip).startswith("::ffff:") and any(
+        ipaddress.ip_address(f"::ffff:{str(ip)}") in entry for entry in access_list
+    ):
+        return True
 
     if isinstance(ip, ipaddress.IPv6Address):
         return any(ip.ipv4_mapped in entry for entry in access_list)

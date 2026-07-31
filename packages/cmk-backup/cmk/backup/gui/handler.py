@@ -545,9 +545,8 @@ class ModeBackup(WatoMode[object]):
         elif action == "stop":
             self._stop_job(job)
 
-        elif action == "refresh":
-            if not job.is_running():
-                flash("Backup completed")
+        elif action == "refresh" and not job.is_running():
+            flash("Backup completed")
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 

@@ -99,9 +99,12 @@ def in_extraconf_hostlist(hostlist: Sequence[str], hostname: str | bool) -> bool
             if not use_regex and hostname == hostentry:
                 return not negate
             # Handle Regex. Note: hostname == True -> generic unknown host
-            if use_regex and isinstance(hostname, str):
-                if regex(hostentry).match(hostname) is not None:
-                    return not negate
+            if (
+                use_regex
+                and isinstance(hostname, str)
+                and regex(hostentry).match(hostname) is not None
+            ):
+                return not negate
         except MKGeneralException:
             if cmk.ccc.debug.enabled():
                 raise

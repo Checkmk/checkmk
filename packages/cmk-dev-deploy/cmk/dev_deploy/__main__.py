@@ -104,9 +104,12 @@ def _compute_skip_results(
         for deployer_name in ("config_spec", "install_spec"):
             result = check_skip(deployer_name, repo_root, site.root, state, head)
             skip_results[deployer_name] = result
-            if result.paths_checked == () and not result.should_skip:
-                if "HEAD fallback" in result.reason:
-                    output.print_fallback_note(DEPLOYER_DISPLAY_NAMES[deployer_name])
+            if (
+                result.paths_checked == ()
+                and not result.should_skip
+                and "HEAD fallback" in result.reason
+            ):
+                output.print_fallback_note(DEPLOYER_DISPLAY_NAMES[deployer_name])
     return skip_results
 
 

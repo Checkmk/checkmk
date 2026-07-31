@@ -428,9 +428,8 @@ def git_move(source: Path, destination: Path) -> None:
 def git_commit(werk: Werk, custom_files: list[str]) -> None:
     title = werk.content.metadata["title"]
     for classid, _classname, prefix in get_config().classes:
-        if werk.content.metadata["class"] == classid:
-            if prefix:
-                title = f"{prefix} {title}"
+        if werk.content.metadata["class"] == classid and prefix:
+            title = f"{prefix} {title}"
 
     title = f"{werk.content.metadata['id'].rjust(5, '0')} {title}"
 
@@ -1009,12 +1008,13 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
                 ),
             )
 
-    if found_werk_path is not None:
-        if found_werk_path.source.exists() or found_werk_path.destination.exists():
-            bail_out(
-                f"Trying to pick Werk {found_werk_path.source} to {found_werk_path.destination}, "
-                "but Werk already present. Aborted."
-            )
+    if found_werk_path is not None and (
+        found_werk_path.source.exists() or found_werk_path.destination.exists()
+    ):
+        bail_out(
+            f"Trying to pick Werk {found_werk_path.source} to {found_werk_path.destination}, "
+            "but Werk already present. Aborted."
+        )
 
     # Cherry-pick the commit in question from the other branch
     cmd = ["git", "cherry-pick"]

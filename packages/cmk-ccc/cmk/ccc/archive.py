@@ -230,9 +230,8 @@ class CheckmkTarArchive:
         if member.name == "":
             # This should never happen
             raise NotAValidArchive("Archive member name is cannot be empty")
-        if not self.allow_symlinks:
-            if member.islnk() or member.issym():
-                raise SecurityViolation(f"Symlink or hardlink not allowed: {member.name}")
+        if not self.allow_symlinks and (member.islnk() or member.issym()):
+            raise SecurityViolation(f"Symlink or hardlink not allowed: {member.name}")
         if member.ischr() or member.isblk() or member.isfifo():
             raise SecurityViolation(f"Special file not allowed: {member.name}")
         self.validate_per_file_limit(member)

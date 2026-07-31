@@ -276,9 +276,8 @@ def edit(
         raise PackageError(f"No such package installed: {pacname}")
 
     # Renaming: check for collision
-    if pacname != new_manifest.name:
-        if installer.is_installed(new_manifest.name):
-            raise PackageError("Cannot rename package: a package with that name already exists.")
+    if pacname != new_manifest.name and installer.is_installed(new_manifest.name):
+        raise PackageError("Cannot rename package: a package with that name already exists.")
 
     _raise_for_invalid_files_entries(new_manifest, path_config)
     _validate_package_files(new_manifest, installer)

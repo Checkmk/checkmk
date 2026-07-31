@@ -249,14 +249,13 @@ def create_agent_section_plugin(
     """
     section_name = SectionName(agent_section_spec.name)
 
-    if validate:
-        if agent_section_spec.host_label_function is not None:
-            _validate_host_label_kwargs(
-                host_label_function=agent_section_spec.host_label_function,
-                host_label_default_parameters=agent_section_spec.host_label_default_parameters,
-                host_label_ruleset_name=agent_section_spec.host_label_ruleset_name,
-                host_label_ruleset_type=agent_section_spec.host_label_ruleset_type,
-            )
+    if validate and agent_section_spec.host_label_function is not None:
+        _validate_host_label_kwargs(
+            host_label_function=agent_section_spec.host_label_function,
+            host_label_default_parameters=agent_section_spec.host_label_default_parameters,
+            host_label_ruleset_name=agent_section_spec.host_label_ruleset_name,
+            host_label_ruleset_type=agent_section_spec.host_label_ruleset_type,
+        )
 
     return AgentSectionPlugin(
         name=section_name,

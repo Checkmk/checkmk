@@ -175,10 +175,11 @@ def resolve_services(
                 raw.extend(spec.services)
                 matched_explicit = True
 
-            if not matched_explicit:
-                # Tier 2: Wheel convention for target packages
-                if any(target.package == wp.rstrip("/") for wp in wheel_prefixes):
-                    raw.extend(_WHEEL_CONVENTION_DEFAULTS)
+            # Tier 2: Wheel convention for target packages
+            if not matched_explicit and any(
+                target.package == wp.rstrip("/") for wp in wheel_prefixes
+            ):
+                raw.extend(_WHEEL_CONVENTION_DEFAULTS)
 
     # Deduplicate: RESTART trumps RELOAD for the same service
     by_service: dict[Service, ServiceAction] = {}

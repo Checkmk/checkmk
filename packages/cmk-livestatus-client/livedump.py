@@ -221,9 +221,8 @@ def livedump_config(args: Arguments) -> None:
             sys.stdout.write(f"  contacts           {row['contactsstring']}\n")
         else:
             sys.stdout.write(f"  contact_groups     {row['contact_groups']}\n")
-        if args.include_host_icon:
-            if row.get("icon_image"):
-                sys.stdout.write(f"  icon_image         {row['icon_image']}\n")
+        if args.include_host_icon and row.get("icon_image"):
+            sys.stdout.write(f"  icon_image         {row['icon_image']}\n")
         sys.stdout.write("}\n\n")
 
     # Dump service config

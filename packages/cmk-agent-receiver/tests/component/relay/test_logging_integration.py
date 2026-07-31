@@ -36,8 +36,5 @@ def test_middleware_adds_request_id_to_logs(
     # but middleware should still bind the request_id to the logging context
     config = get_config()
     logfile = config.log_path
-    if logfile.exists():
-        if log_content := logfile.read_text().strip():
-            assert trace_id in log_content, (
-                f"Request ID {trace_id} not found in logs: {log_content}"
-            )
+    if logfile.exists() and (log_content := logfile.read_text().strip()):
+        assert trace_id in log_content, f"Request ID {trace_id} not found in logs: {log_content}"

@@ -5,7 +5,8 @@
 """Recompute SHA256 hashes for the five python.org per-feature MSIs.
 
 Run after bumping ``PYTHON_VERSION_WINDOWS`` in ``defines.make``.
-Prints the ``http_file(...)`` blocks ready to paste into ``MODULE.bazel``.
+Prints the ``http_file(...)`` blocks ready to paste over the matching ones in
+``//bazel/extensions:python_cab_repositories.bzl``.
 
 Usage:
     python3 agents/modules/windows/refresh_msi_pins.py 3.13.13

@@ -38,6 +38,7 @@ from cmk.gui import (
     welcome,
     werks,
 )
+from cmk.gui.availability import registration as availability_registration
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
@@ -350,6 +351,11 @@ def register(
         endpoint_family_registry,
         job_registry,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
+    )
+    availability_registration.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
     )
 
     register_userroles(config_file_registry)

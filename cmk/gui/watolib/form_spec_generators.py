@@ -19,6 +19,7 @@ from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.host_attributes import (
+    ABCHostAttributeFormSpec,
     ABCHostAttributeValueSpec,
     all_host_attributes,
     sorted_host_attribute_topics,
@@ -120,7 +121,7 @@ def create_host_attributes_selection(
         host_attributes, for_what="host", new=False
     ):
         for attr in sorted_host_attributes_by_topic(host_attributes, topic):
-            if not isinstance(attr, ABCHostAttributeValueSpec):
+            if not isinstance(attr, ABCHostAttributeValueSpec | ABCHostAttributeFormSpec):
                 continue
 
             if not attr.is_visible(for_what="host", new=False) or not attr.editable():

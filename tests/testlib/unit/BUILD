@@ -26,6 +26,7 @@ py_library(
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui/form_specs",
         "//cmk/gui/graphing",
         "//cmk/gui/mkeventd",
         "//cmk/gui/nodevis:utils",

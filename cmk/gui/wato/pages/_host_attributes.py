@@ -24,6 +24,7 @@ from cmk.gui.valuespec import FixedValue, ValueSpec
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
+    ABCHostAttributeFormSpec,
     ABCHostAttributeValueSpec,
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
@@ -357,18 +358,24 @@ def configure_attributes(
                     value = inherited_value
 
             if for_what != "host_search" and not (for_what == "bulk" and not unique):
-                _tdclass, content = attr.paint(value, HostName(""))
-                if not content:
-                    content = _("empty")
-
-                if isinstance(attr, ABCHostAttributeValueSpec):
-                    html.open_b()
-                    html.write_text_permissive(content)
-                    html.close_b()
-                elif isinstance(attr, str):
-                    html.b(_u(cast(str, content)))
+                if isinstance(attr, ABCHostAttributeFormSpec):
+                    if value is None:
+                        html.b(_("empty"))
+                    else:
+                        attr.render_input_readonly(varprefix, value)
                 else:
-                    html.b(content)
+                    _tdclass, content = attr.paint(value, HostName(""))
+                    if not content:
+                        content = _("empty")
+
+                    if isinstance(attr, ABCHostAttributeValueSpec):
+                        html.open_b()
+                        html.write_text_permissive(content)
+                        html.close_b()
+                    elif isinstance(attr, str):
+                        html.b(_u(cast(str, content)))
+                    else:
+                        html.b(content)
 
             html.write_text_permissive(explanation)
             html.close_div()

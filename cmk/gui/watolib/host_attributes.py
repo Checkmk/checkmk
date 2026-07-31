@@ -31,6 +31,16 @@ from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-modu
 from cmk.fields import String
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    DEFAULT_VALUE,
+    DisplayMode,
+    get_title_and_help,
+    get_visitor,
+    RawDiskData,
+    read_data_from_frontend,
+    render_form_spec,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -1029,6 +1039,109 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         prefix = varprefix + self.name()
         vs.validate_datatype(value, prefix)
         vs.validate_value(value, prefix)
+
+
+class ABCHostAttributeFormSpec(ABCHostAttribute):
+    """An attribute whose whole lifecycle is backed by a FormSpec."""
+
+    @abc.abstractmethod
+    def form_spec(self) -> FormSpec:
+        raise NotImplementedError
+
+    def _field_id(self, varprefix: str) -> str:
+        return varprefix + self.name()
+
+    @override
+    def title(self) -> str:
+        title, _help_text = get_title_and_help(self.form_spec())
+        return title
+
+    @override
+    def help(self) -> str | HTML | None:
+        _title, help_text = get_title_and_help(self.form_spec())
+        return help_text or None
+
+    @override
+    def default_value(self) -> Any:
+        visitor = get_visitor(
+            self.form_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+        )
+        try:
+            return visitor.to_disk(DEFAULT_VALUE)
+        except MKGeneralException:
+            # FormSpecs whose prefill is only an input hint have no representable default value:
+            # the field is empty (unset) until the user fills it in.
+            return None
+
+    @override
+    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
+        # A readonly HTML representation of a FormSpec value without a valuespec is not solved
+        # yet. Until then we fall back to a plain textual representation, which is sufficient
+        # for the attributes migrated so far: assert_show_in_table_attributes_paint_plain_text
+        # guards that no attribute shown in the host table outgrows it.
+        if value is None:
+            return "", ""
+        return "", str(value)
+
+    @override
+    def render_input(self, varprefix: str, value: Any) -> None:
+        field_id = self._field_id(varprefix)
+        if request.has_var(field_id):
+            # Re-render after a submit (e.g. a failed validation of this or another attribute):
+            # show the value the user just entered together with inline validation messages
+            # instead of silently discarding the input.
+            render_form_spec(
+                self.form_spec(), field_id, read_data_from_frontend(field_id), do_validate=True
+            )
+            return
+
+        render_form_spec(
+            self.form_spec(),
+            field_id,
+            RawDiskData(value) if value is not None else DEFAULT_VALUE,
+            do_validate=False,
+        )
+
+    def render_input_readonly(self, varprefix: str, value: Any) -> None:
+        render_form_spec(
+            self.form_spec(),
+            self._field_id(varprefix) + "_inherited",
+            RawDiskData(value) if value is not None else DEFAULT_VALUE,
+            do_validate=False,
+            display_mode=DisplayMode.READONLY,
+        )
+
+    @override
+    def from_html_vars(self, varprefix: str) -> Any:
+        field_id = self._field_id(varprefix)
+        visitor = get_visitor(
+            self.form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
+        )
+        data = read_data_from_frontend(field_id)
+        try:
+            return visitor.to_disk(data)
+        except MKGeneralException:
+            # The submitted data does not even parse into the form spec's model. The rendered
+            # widget cannot produce that, but a hand-crafted request must yield a user error
+            # instead of a crash report.
+            raise MKUserError(
+                field_id,
+                " ".join(message.message for message in visitor.validate(data))
+                or _("Invalid value"),
+            )
+
+    @override
+    def validate_input(self, value: Any, varprefix: str) -> None:
+        visitor = get_visitor(
+            self.form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
+        )
+        if validation_errors := visitor.validate(RawDiskData(value)):
+            # Surface the concrete FormSpec validation message(s) so that classic consumers
+            # (host edit dialog, bulk import, ...) can display a meaningful error.
+            raise MKUserError(
+                self._field_id(varprefix),
+                " ".join(message.message for message in validation_errors),
+            )
 
 
 class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):

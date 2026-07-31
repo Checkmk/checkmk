@@ -37,7 +37,6 @@ network_flow = ["cmk.network_flow"]
 plugin_apis = [
   "cmk.agent_based.internal",
   "cmk.agent_based.legacy",
-  "cmk.agent_based.prediction_backend",
   "cmk.agent_based.v1",
   "cmk.agent_based.v2",
   "cmk.agent_based.v3_unstable",
@@ -46,16 +45,19 @@ plugin_apis = [
   "cmk.bakery.v2_unstable",
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",
+  "cmk.diagnostics.internal",
   "cmk.graphing.v1",
   "cmk.graphing.v2_unstable",
   "cmk.inventory_ui.v1_unstable",
   "cmk.password_store.v1_unstable",
+  "cmk.post_rename_site.internal",
   "cmk.rulesets.internal",
+  "cmk.rulesets.internal.form_specs",
   "cmk.rulesets.v1",
+  "cmk.rulesets.v1.form_specs",
   "cmk.server_side_calls.internal",
   "cmk.server_side_calls.v1",
   "cmk.server_side_programs.v1_unstable",
-  "cmk.diagnostics.internal",
 ]
 
 relay_protocols = ["cmk.relay_protocols"]
@@ -118,8 +120,6 @@ clean = [
 [plugin_families.violations.azure_deprecated]
 allows = [
   "cmk.plugins.azure_deprecated_extended",
-  # FIXME
-  "cmk.agent_based.v1",
   # FormSpec validation
   "cmk.ccc.hostaddress",
   "cmk.utils.http_proxy_config",
@@ -164,8 +164,6 @@ allows = [
 [plugin_families.violations.checkmk]
 allows = [
   "@livestatus_client",
-  # FIXME
-  "cmk.agent_based.v1",
   "cmk.base",
   "cmk.bi",
   "cmk.ccc",
@@ -175,7 +173,6 @@ allows = [
   "cmk.crypto",
   "cmk.gui",
   "cmk.messaging",
-  "cmk.post_rename_site.internal",
   "cmk.ruleset_matcher",
   "cmk.server_side_calls_backend",
   "cmk.utils",
@@ -191,14 +188,13 @@ allows = [
   "cmk.gui.watolib.automations",
   "cmk.gui.watolib.hosts_and_folders",
   "cmk.gui.watolib.rulesets",
-  "cmk.post_rename_site.internal",
   "cmk.utils.paths",
   "cmk.utils.redis",
   "cmk.ruleset_matcher",
 ]
 
 [plugin_families.violations.dcd]
-allows = ["@ccc", "cmk.dcd", "cmk.gui.config", "cmk.post_rename_site.internal"]
+allows = ["@ccc", "cmk.dcd", "cmk.gui.config"]
 
 [plugin_families.violations.otel_collector]
 allows = [
@@ -208,7 +204,6 @@ allows = [
   "cmk.gui.watolib.audit_log",
   "cmk.gui.watolib.pending_changes",
   "cmk.otel_collector.gui",
-  "cmk.post_rename_site.internal",
 ]
 
 [plugin_families.violations.custom_query_metric_backend]
@@ -238,11 +233,7 @@ allows = [
 ]
 
 [plugin_families.violations.gcp]
-allows = [
-  # FIXME
-  "cmk.agent_based.v1",
-  "cmk.plugins.gcp_extended",
-]
+allows = ["cmk.plugins.gcp_extended"]
 
 [plugin_families.violations.jolokia]
 allows = ["cmk.utils.paths"]
@@ -546,6 +537,7 @@ allows = [
   "@relay_protocols",
   "@trace",
   "cmk.automations",
+  "cmk.agent_based.prediction_backend",
   "cmk.checkengine",
   "cmk.core_client",
   "cmk.crash",
@@ -912,7 +904,6 @@ allows = [
   "@mkp_tool",
   "@plugin_apis",
   "cmk.backup",
-  "cmk.bakery.internal",
   "cmk.bakery.shared",
   "cmk.dcd.gui",
   "cmk.discover_plugins",
@@ -1067,6 +1058,7 @@ allows = [
   "@plugin_apis",
   "@trace",
   "@werks",
+  "cmk.agent_based.prediction_backend",
   "cmk.automations",
   "cmk.bi",
   "cmk.checkengine",
@@ -1330,6 +1322,7 @@ allows = [
   "@plugin_apis",
   "@trace",
   "@werks",
+  "cmk.agent_based.prediction_backend",
   "cmk.backup",
   "cmk.base",
   "cmk.checkengine",
@@ -1437,7 +1430,6 @@ allows = [
   "@plugin_apis",
   # I don't think we have any idea of how to fix this.
   "cmk.bakery.base",
-  "cmk.bakery.internal",
   "cmk.bakery.shared",
   "cmk.base.plugins.bakery",
   "cmk.checkengine",
@@ -1522,12 +1514,7 @@ allows = [
 allows = ["@ccc", "cmk.crash", "cmk.utils"]
 
 [components."cmk.post_rename_site"]
-allows = [
-  "@ccc",
-  "cmk.discover_plugins",
-  "cmk.post_rename_site.internal",
-  "cmk.utils",
-]
+allows = ["@ccc", "@plugin_apis", "cmk.discover_plugins", "cmk.utils"]
 
 [components."cmk.post_rename_site.internal"]
 allows = []

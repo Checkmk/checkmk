@@ -12,11 +12,15 @@
 /// whole signing step: the Azure client prints its metadata (CorrelationId included) to stdout,
 /// and Jenkins only masks the secret while its `withCredentials` block is open.
 ///
-/// Quotes are stripped: on Windows agents `make print-%` echoes values wrapped in single quotes
-/// (defines.make), which cmd.exe does not strip, so branch_name may arrive as e.g. '3.0.0'.
-/// Azure's CorrelationId is an opaque tracking string.
+/// Quotes and whitespace are stripped: on Windows agents `make print-%` echoes values wrapped in
+/// single quotes (defines.make), which cmd.exe does not strip, so branch_name may arrive as e.g.
+/// '3.0.0', and job names may contain spaces. Azure's CorrelationId is an opaque tracking string.
 String azure_signing_correlation_id(String branch_name) {
-    return "${branch_name}_${env.AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX}".replaceAll("['\"]", "");
+    def job_name = env.JOB_NAME.tokenize("/").last();
+    return (
+        "branch_${branch_name}_job_${job_name}_buildid_${env.BUILD_ID}" +
+        "_gitcommit_${effective_git_ref}_${env.AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX}"
+    ).replaceAll("['\"\\s]", "");
 }
 
 def build(Map args) {

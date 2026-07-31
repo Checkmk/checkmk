@@ -121,4 +121,17 @@ describe('FormMetricNameAutocompleter', () => {
     // mount to resolve and render its type(s) on the closed button.
     expect(await screen.findByTitle('cpu (gauge)')).toBeInTheDocument()
   })
+
+  test('the clear button removes the selected metric and its types', async () => {
+    mockNamesWithTypes([{ name: 'cpu', types: ['gauge'] }])
+    const user = userEvent.setup()
+    const { metricName, metricTypes } = renderFormMetricNameAutocompleter('cpu')
+
+    await waitFor(() => expect(metricTypes.value).toEqual(['gauge']))
+    await user.click(screen.getByLabelText('Clear selection'))
+
+    await waitFor(() => expect(metricName.value).toBeNull())
+    expect(metricTypes.value).toEqual([])
+    expect(screen.queryByLabelText('Clear selection')).toBeNull()
+  })
 })

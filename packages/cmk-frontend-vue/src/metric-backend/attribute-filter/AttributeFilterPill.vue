@@ -10,6 +10,7 @@ import type { QuerySuggestionsFn } from 'cmk-ui-library/components/CmkSuggestion
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
+import DropdownClearButton from '../DropdownClearButton.vue'
 import InlineEditPill from '../InlineEditPill.vue'
 import { ATTRIBUTE_KIND_LABELS, attributeKindPrefix, operatorPhrase, pillLabel } from './pill-label'
 import {
@@ -152,6 +153,17 @@ const attributeKindInput = computed<string | null>({
   }
 })
 
+// Clearing unmounts the clear button, so refocus the dropdown to keep focus in the pill.
+function clearKey(): void {
+  onKeyUpdate(null)
+  void nextTick(() => keyDropdownRef.value?.focus())
+}
+
+function clearValue(): void {
+  onValueUpdate(null)
+  void nextTick(() => valueDropdownRef.value?.focus())
+}
+
 watch(
   () => props.condition.key,
   (next, prev) => {
@@ -282,7 +294,11 @@ defineExpose({
           :required="validationVisible"
           :form-validation="validationVisible && keyEmpty"
           @update:model-value="onKeyUpdate"
-        />
+        >
+          <template v-if="!keyEmpty" #buttons-end>
+            <DropdownClearButton data-af-item @clear="clearKey" />
+          </template>
+        </CmkDropdown>
       </span>
       <span
         v-if="showOperator"
@@ -315,7 +331,11 @@ defineExpose({
           :required="validationVisible"
           :form-validation="validationVisible && valueEmpty"
           @update:model-value="onValueUpdate"
-        />
+        >
+          <template v-if="!valueEmpty" #buttons-end>
+            <DropdownClearButton data-af-item @clear="clearValue" />
+          </template>
+        </CmkDropdown>
       </span>
     </template>
     <template #read-only>

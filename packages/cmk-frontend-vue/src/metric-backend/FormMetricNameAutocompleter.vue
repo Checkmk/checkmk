@@ -15,7 +15,9 @@ import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch'
 import type { CmkError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { watch } from 'vue'
+import { nextTick, useTemplateRef, watch } from 'vue'
+
+import DropdownClearButton from './DropdownClearButton.vue'
 
 const { _t } = usei18n()
 
@@ -94,10 +96,19 @@ watch(metricName, resolveMetricTypes)
 // Keep a stable reference: an inline object literal would change identity on every render
 // and retrigger CmkDropdown's/CmkSuggestions' suggestion watchers.
 const dropdownOptions = { type: 'callback-filtered' as const, querySuggestions }
+
+const dropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('dropdownRef')
+
+// Clearing unmounts the clear button, so refocus the dropdown to keep focus.
+function clearMetricName(): void {
+  metricName.value = null
+  void nextTick(() => dropdownRef.value?.focus())
+}
 </script>
 
 <template>
   <CmkDropdown
+    ref="dropdownRef"
     v-model="metricName"
     :options="dropdownOptions"
     :input-hint="placeholder"
@@ -106,5 +117,9 @@ const dropdownOptions = { type: 'callback-filtered' as const, querySuggestions }
     :no-results-hint="_t('No results found')"
     :form-validation="hasError || false"
     :disabled="disabled || false"
-  />
+  >
+    <template v-if="metricName !== null && !disabled" #buttons-end>
+      <DropdownClearButton @clear="clearMetricName" />
+    </template>
+  </CmkDropdown>
 </template>

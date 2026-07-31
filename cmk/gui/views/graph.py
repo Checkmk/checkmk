@@ -440,7 +440,8 @@ class PainterServiceGraphs(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return ["pnp_timerange", "graph_render_options"]
+        # No pnp_timerange: the engine takes its time range from the global time picker.
+        return ["graph_render_options"]
 
     @property
     def parameters(self) -> MigrateNotUpdated:
@@ -495,7 +496,8 @@ class PainterHostGraphs(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return ["pnp_timerange", "graph_render_options"]
+        # No pnp_timerange: the engine takes its time range from the global time picker.
+        return ["graph_render_options"]
 
     @property
     def parameters(self) -> MigrateNotUpdated:
@@ -633,7 +635,8 @@ class PainterHostPnpgraph(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return ["pnp_timerange"]
+        # No pnp_timerange: the engine takes its time range from the global time picker.
+        return []
 
     @property
     def parameters(self) -> Transform:

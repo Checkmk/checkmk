@@ -36,7 +36,7 @@ from ._graph_specification import GraphSpecification
 
 # A view carrying one of these is driven by the global time picker rather than the
 # pnp_timerange painter option, and must not auto-reload.
-ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset({"svc_pnpgraph"})
+ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset({"svc_pnpgraph", "service_graphs"})
 
 
 def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:

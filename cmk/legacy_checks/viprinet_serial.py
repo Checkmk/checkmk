@@ -3,38 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
-check_info = {}
+
+def discover_viprinet_serial(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def discover_viprinet_serial(info):
-    if info:
-        return [(None, None)]
-    return []
-
-
-def check_viprinet_serial(_no_item, _no_params, info):
-    return 0, info[0][0]
+def check_viprinet_serial(section: StringTable) -> CheckResult:
+    yield Result(state=State.OK, summary=section[0][0])
 
 
 def parse_viprinet_serial(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["viprinet_serial"] = LegacyCheckDefinition(
+snmp_section_viprinet_serial = SimpleSNMPSection(
     name="viprinet_serial",
-    parse_function=parse_viprinet_serial,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.1",
         oids=["2"],
     ),
+    parse_function=parse_viprinet_serial,
+)
+
+
+check_plugin_viprinet_serial = CheckPlugin(
+    name="viprinet_serial",
     service_name="Serial Number",
     discovery_function=discover_viprinet_serial,
     check_function=check_viprinet_serial,

@@ -80,3 +80,30 @@ def test_returns_false_when_remote_site_flags_are_false(
     )
 
     assert cmk_update_agent._is_ultimatemt_remote_site() is False
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param("64bit", "bit64", id="legacy-64bit"),
+        pytest.param("32bit", "script", id="legacy-32bit"),
+        pytest.param("bit32", "script", id="legacy-bit32"),
+        pytest.param(
+            "bit64",
+            "bit64",
+            id="already-migrated-binary",
+            marks=pytest.mark.xfail(strict=True, reason="Crash group 4644: ValueError on 'bit64'"),
+        ),
+        pytest.param("script", "script", id="already-migrated-script"),
+        pytest.param(
+            ("bit64", None),
+            "bit64",
+            id="choice-with-empty-parameters",
+            marks=pytest.mark.xfail(
+                strict=True, reason="Crash group 4641: ValueError on ('bit64', None)"
+            ),
+        ),
+    ],
+)
+def test_migrate_edition(value: object, expected: str) -> None:
+    assert cmk_update_agent._migrate_edition(value) == expected

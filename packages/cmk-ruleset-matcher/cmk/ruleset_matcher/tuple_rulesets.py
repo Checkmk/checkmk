@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Iterable, Sequence
 from re import Pattern
-from typing import Any
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
@@ -29,15 +26,15 @@ NEGATE = "@negate"  # negation in boolean lists
 
 def get_rule_options(
     entry: (
-        tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, Any]]
+        tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, object]]
         | tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
-        | tuple[str, Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[str], Sequence[str], dict[str, object]]
         | tuple[str, Sequence[str], Sequence[str]]
     ),
 ) -> tuple[
     tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
     | tuple[str, Sequence[str], Sequence[str]],
-    dict[str, Any],
+    dict[str, object],
 ]:
     """Get the options from a rule.
 

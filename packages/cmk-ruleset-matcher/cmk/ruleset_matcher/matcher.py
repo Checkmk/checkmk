@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="redundant-expr"
 
 """This module provides generic Check_MK ruleset processing functionality"""
@@ -393,10 +392,10 @@ class RulesetOptimizer:
         # It is used to determine the best rule evualation method
         self._all_processed_hosts_similarity = 1.0
 
-        self.__service_ruleset_cache: dict[
+        self.__service_ruleset_cache: dict[  # type: ignore[explicit-any]
             tuple[int, bool], Sequence[_PreprocessedServiceRule[Any]]
         ] = {}
-        self.__host_ruleset_cache: dict[tuple[int, bool], Mapping[HostAddress, Sequence[Any]]] = {}
+        self.__host_ruleset_cache: dict[tuple[int, bool], Mapping[HostAddress, Sequence[Any]]] = {}  # type: ignore[explicit-any]
         self._all_matching_hosts_match_cache: dict[
             tuple[_ConditionCacheID, bool], set[HostName]
         ] = {}

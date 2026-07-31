@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 
 """Helper functions for dealing with Checkmk labels of all kind"""
@@ -17,7 +16,7 @@ from ast import literal_eval
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Final, Literal, Self, TypedDict
+from typing import Final, Literal, Self, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -147,7 +146,7 @@ class HostLabel(BaseLabel):
     def __repr__(self) -> str:
         return f"HostLabel({self.name!r}, {self.value!r}, plugin_name={self.plugin_name!r})"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HostLabel):
             raise TypeError(f"{other!r} is not of type HostLabel")
         return (
@@ -156,7 +155,7 @@ class HostLabel(BaseLabel):
             and self.plugin_name == other.plugin_name
         )
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
 
@@ -268,15 +267,16 @@ LabelGroups = Sequence[tuple[AndOrNotLiteral, LabelGroup]]
 
 
 def single_label_group_from_labels(
-    labels: Sequence[str] | dict[str, Any], operator: AndOrNotLiteral = "and"
+    labels: Sequence[str] | Mapping[str, str | Mapping[str, str]],
+    operator: AndOrNotLiteral = "and",
 ) -> LabelGroups:
-    if isinstance(labels, dict):
+    if isinstance(labels, Mapping):
         # Convert the old condition labels to a label group
         # e.g.: labels = {"os": "linux", "foo": {"$ne": "bar"}}
         #           ->   [("and", [("and", "os:linux"), ("not", "foo:bar")])]
         andornot_labels: list[tuple[AndOrNotLiteral, str]] = []
         for key, value in labels.items():
-            if isinstance(value, dict):
+            if isinstance(value, Mapping):
                 andornot_labels.append(("not", f"{key}:{value['$ne']}"))
             else:
                 andornot_labels.append(("and", f"{key}:{value}"))

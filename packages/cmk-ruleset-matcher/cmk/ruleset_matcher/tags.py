@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 
@@ -15,7 +14,7 @@ from __future__ import annotations
 import contextlib
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from typing import Any, Final, NamedTuple, NewType, NotRequired, Self, TypedDict
+from typing import Final, NamedTuple, NewType, NotRequired, Self, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -58,7 +57,7 @@ class HostTags:
         tag_config_spec: TagConfigSpec,
         raw_host_tags: object,
         tagged_hosts: Iterable[str],
-        shadow_hosts: Mapping[HostName, Mapping[str, Any]],
+        shadow_hosts: Mapping[HostName, Mapping[str, object]],
     ) -> Self:
         """Calculate the effective tags for all configured hosts
 
@@ -87,9 +86,15 @@ class HostTags:
                 )
 
         for shadow_host_name, shadow_host_spec in shadow_hosts.items():
-            tags_sequences[shadow_host_name] = tuple(
-                set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
-            )
+            custom_variables = shadow_host_spec.get("custom_variables", {})
+            if not isinstance(custom_variables, Mapping):
+                raise TypeError(
+                    f"custom_variables must be a mapping. Got: {type(custom_variables)}"
+                )
+            raw_shadow_tags = custom_variables.get("TAGS", "")
+            if not isinstance(raw_shadow_tags, str):
+                raise TypeError(f"TAGS must be a string. Got: {type(raw_shadow_tags)}")
+            tags_sequences[shadow_host_name] = tuple(TagID(t) for t in set(raw_shadow_tags.split()))
             tags_maps[shadow_host_name] = cls._tag_list_to_tag_groups(
                 tag_to_group_map, tags_sequences[shadow_host_name]
             )

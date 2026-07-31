@@ -428,8 +428,16 @@ Case = CasePass | CaseFail
 
 
 # The attributes available in every edition, so every edition's module composes its cases
-# on top of these. No attribute is FormSpec-native yet; each migration adds its values here.
-BASE_FORM_SPEC_CASES: Mapping[str, list[Case]] = {}
+# on top of these.
+BASE_FORM_SPEC_CASES: Mapping[str, list[Case]] = {
+    "ipaddress": [
+        CaseFail("empty", ""),
+        CasePass("ipv4", "10.0.0.1"),
+        CasePass("hostname", "host.example.com"),
+        CaseFail("ipv6", "2001:db8::1"),
+        CaseFail("wrong-type", 123),
+    ],
+}
 
 
 def form_spec_attributes() -> dict[str, ABCHostAttributeFormSpec]:

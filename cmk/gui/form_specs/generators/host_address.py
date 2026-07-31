@@ -7,7 +7,7 @@ import socket
 from collections.abc import Iterable
 
 from cmk.rulesets.v1 import Help, Message, Title
-from cmk.rulesets.v1.form_specs import String
+from cmk.rulesets.v1.form_specs import InputHint, Prefill, String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
@@ -112,6 +112,7 @@ def create_host_address(
     allow_ipv4_address: bool = True,
     allow_ipv6_address: bool = True,
     allow_empty: bool = True,
+    prefill: Prefill[str] = InputHint(""),
 ) -> String:
     validator = HostAddressValidator(
         allow_host_name=allow_host_name,
@@ -120,4 +121,4 @@ def create_host_address(
         allow_empty=allow_empty,
     )
 
-    return String(title=title, help_text=help_text, custom_validate=[validator])
+    return String(title=title, help_text=help_text, custom_validate=[validator], prefill=prefill)

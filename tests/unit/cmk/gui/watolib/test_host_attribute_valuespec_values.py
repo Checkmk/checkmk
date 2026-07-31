@@ -66,13 +66,6 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("str", "false"),
         CaseFail("int", 0),
     ],
-    "ipaddress": [
-        # The "unset" default ("") is rejected by the ValueSpec itself.
-        CaseFail("empty", ""),
-        CasePass("ipv4", "10.0.0.1"),
-        CasePass("hostname", "host.example.com"),
-        CaseFail("wrong-type", 123),
-    ],
     "ipv6address": [
         CaseFail("empty", ""),
         CasePass("ipv6", "2001:db8::1"),

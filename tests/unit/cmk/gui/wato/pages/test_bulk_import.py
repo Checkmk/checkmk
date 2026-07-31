@@ -346,7 +346,7 @@ def test_host_rows_to_bulk(
         pytest.param(
             CSV_WITH_IP_VALIDATION_ERROR,
             ["host_name", "ipaddress"],
-            "Invalid host address",
+            "Host- or DNS name",
             id="field does not pass validation",
         ),
         pytest.param(

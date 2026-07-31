@@ -54,6 +54,10 @@ export interface CustomGraphData {
   overview: Readonly<Ref<OverviewData | undefined>>
   isLoading: Readonly<Ref<boolean>>
   error: Readonly<Ref<string | null>>
+  /** Non-fatal per-metric problems reported with a 200, unlike the fatal `error` above. */
+  partialErrors: Readonly<Ref<readonly string[]>>
+  /** Advisory notes about the data that did resolve, e.g. a query truncated at its series limit. */
+  warnings: Readonly<Ref<readonly string[]>>
   /** Fetch now, bypassing the debounce (live-refresh tick, mode transitions). */
   refetch: () => void
 }
@@ -89,6 +93,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   const overview = ref<OverviewData | undefined>(undefined)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const partialErrors = ref<string[]>([])
+  const warnings = ref<string[]>([])
 
   let requestCounter = 0
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -109,6 +115,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     horizontalLines.value = []
     overview.value = undefined
     error.value = null
+    partialErrors.value = []
+    warnings.value = []
   }
 
   async function load(): Promise<void> {
@@ -130,7 +138,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     const consolidationFunction = options.getConsolidationFn()
 
     isLoading.value = true
-    error.value = null
+    // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
     try {
       const [main, overviewResponse] = await Promise.all([
         fetchCustomGraphData({
@@ -164,6 +172,10 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         overviewResponse === null
           ? undefined
           : { metrics: [...overviewResponse.metrics], timeRange: overviewResponse.time_range }
+      // The overview repeats the main fetch's diagnostics, so only the main response is read.
+      partialErrors.value = [...main.errors]
+      warnings.value = [...main.warnings]
+      error.value = null
     } catch (e) {
       if (requestId !== requestCounter) {
         return
@@ -227,6 +239,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     overview,
     isLoading: readonly(isLoading),
     error: readonly(error),
+    partialErrors: readonly(partialErrors),
+    warnings: readonly(warnings),
     refetch
   }
 }

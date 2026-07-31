@@ -47,6 +47,13 @@ export interface FetchedGraph {
   metrics: Metric[]
   timeRange: TimeRange
   horizontalLines: HorizontalLine[]
+  // Non-fatal per-metric problems the fetch reported alongside whatever data did resolve. Carried
+  // through so a source that hit one is stated rather than rendering as a silently missing curve.
+  errors: string[]
+  // Advisory notes about the data that did resolve, e.g. a query truncated at the maximum number of
+  // time series. Carried through as well: these surfaces are the only renderer of the fetch
+  // endpoints, so a note left unread here reaches nobody.
+  warnings: string[]
 }
 
 /**
@@ -75,7 +82,9 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
     title: fetched.title,
     metrics: fetched.metrics,
     timeRange: fetched.time_range,
-    horizontalLines: fetched.horizontal_lines
+    horizontalLines: fetched.horizontal_lines,
+    errors: fetched.errors,
+    warnings: fetched.warnings
   }
 }
 
@@ -105,21 +114,32 @@ export function useGraphData(
   graphs: Readonly<Ref<ResolvedGraph[]>>
   isLoading: Readonly<Ref<boolean>>
   error: Readonly<Ref<string | null>>
+  partialErrors: Readonly<Ref<readonly string[]>>
+  warnings: Readonly<Ref<readonly string[]>>
+  reload: () => void
 } {
   const graphsRef = ref<ResolvedGraph[]>([])
   const isLoadingRef = ref(false)
   const errorRef = ref<string | null>(null)
+  // Kept apart from the fatal `error` above; FetchedGraph.errors documents what they are.
+  const partialErrorsRef = ref<string[]>([])
+  // Apart again from those: FetchedGraph.warnings are advisory, not a failure of any kind.
+  const warningsRef = ref<string[]>([])
 
   // Step of the most recently requested load; a resize only re-fetches when the
   // width-derived step actually changes.
   let lastRequestedStep: number | null = null
 
+  // Drops a response landing after a newer load was issued; a clickable retry makes that likely.
+  let loadToken = 0
+
   async function load() {
+    const token = ++loadToken
     const definitions = getGraphs()
     const range = getRequestedTimeRange()
 
     isLoadingRef.value = true
-    errorRef.value = null
+    // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
 
     try {
       const step = computeStep(range.start, range.end, getCanvasWidth())
@@ -128,7 +148,7 @@ export function useGraphData(
       const consolidationFunction = getConsolidationFn()
       const combinationMode = getCombinationMode()
 
-      graphsRef.value = await Promise.all(
+      const resolved = await Promise.all(
         definitions.map(async (definition) => {
           const fetched = await fetchGraph(definition, {
             requestedTimeRange,
@@ -136,20 +156,39 @@ export function useGraphData(
             combinationMode
           })
           return {
-            title: fetched.title || (definition.options?.header.title ?? ''),
-            metrics: fetched.metrics,
-            timeRange: fetched.timeRange,
-            horizontalLines: fetched.horizontalLines,
-            addTo: definition.add_to,
-            internal: definition.internal
+            graph: {
+              title: fetched.title || (definition.options?.header.title ?? ''),
+              metrics: fetched.metrics,
+              timeRange: fetched.timeRange,
+              horizontalLines: fetched.horizontalLines,
+              addTo: definition.add_to,
+              internal: definition.internal
+            },
+            // `GraphDataFetcher` is a public extension point, so guard both fields rather than
+            // trusting them: `flatMap` would fold a missing array into a one-element one and raise
+            // a notice, with no message in it, over a fetch that had in fact succeeded.
+            errors: fetched.errors ?? [],
+            warnings: fetched.warnings ?? []
           }
         })
       )
+      if (token !== loadToken) {
+        return
+      }
+      graphsRef.value = resolved.map((entry) => entry.graph)
+      partialErrorsRef.value = resolved.flatMap((entry) => entry.errors)
+      warningsRef.value = resolved.flatMap((entry) => entry.warnings)
+      errorRef.value = null
     } catch (e) {
+      if (token !== loadToken) {
+        return
+      }
+      // Graphs are left in place, so a failed refetch keeps the data the caller overlays.
       errorRef.value = e instanceof Error ? e.message : String(e)
-      graphsRef.value = []
     } finally {
-      isLoadingRef.value = false
+      if (token === loadToken) {
+        isLoadingRef.value = false
+      }
     }
   }
 
@@ -175,6 +214,9 @@ export function useGraphData(
   return {
     graphs: graphsRef,
     isLoading: readonly(isLoadingRef),
-    error: readonly(errorRef)
+    error: readonly(errorRef),
+    partialErrors: readonly(partialErrorsRef),
+    warnings: readonly(warningsRef),
+    reload: () => void load()
   }
 }

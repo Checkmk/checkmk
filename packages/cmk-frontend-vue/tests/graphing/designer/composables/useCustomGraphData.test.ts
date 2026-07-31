@@ -67,7 +67,9 @@ function fetchResponse(
       data_points: [1.0, 2.0]
     })),
     group_titles: groupTitles,
-    horizontal_lines: []
+    horizontal_lines: [],
+    warnings: [],
+    errors: []
   }
 }
 
@@ -287,4 +289,83 @@ test('exposes request errors and recovers on the next fetch', async () => {
   await flush()
   expect(data.error.value).toBeNull()
   expect(data.metrics.value).toHaveLength(1)
+})
+
+test("exposes the response's own non-fatal errors and warnings, each apart", async () => {
+  postSpy.mockImplementationOnce(async () => ({
+    data: {
+      ...(fetchResponse(['A']) as object),
+      errors: ['Metrics backend is unavailable.'],
+      warnings: ['The query for A matched more than 100 time series.']
+    },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }))
+  const { data } = mount([rrdMetricItem('A')])
+  await flush()
+
+  expect(data.partialErrors.value).toEqual(['Metrics backend is unavailable.'])
+  // Apart from the errors, so a truncation can be stated as advisory rather than as a failure.
+  expect(data.warnings.value).toEqual(['The query for A matched more than 100 time series.'])
+  // Non-fatal, both of them: the fetch itself succeeded.
+  expect(data.error.value).toBeNull()
+})
+
+test('keeps a failure visible while the retry is still in flight', async () => {
+  postSpy.mockImplementationOnce(async () => ({
+    data: undefined,
+    error: { title: 'boom' },
+    response: new Response('', { status: 500 })
+  }))
+  const { data } = mount([rrdMetricItem('A')])
+  await flush()
+  expect(data.error.value).not.toBeNull()
+
+  let release!: () => void
+  postSpy.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        release = () =>
+          resolve({
+            data: fetchResponse(['A']),
+            error: undefined,
+            response: new Response(null, { status: 200 })
+          })
+      })
+  )
+  data.refetch()
+  await flush()
+
+  // Still set, so the caller can state the failure until a result supersedes it.
+  expect(data.isLoading.value).toBe(true)
+  expect(data.error.value).not.toBeNull()
+
+  release()
+  await flush()
+  expect(data.error.value).toBeNull()
+})
+
+test('clears the diagnostics when the last data source is removed', async () => {
+  postSpy.mockImplementationOnce(async () => ({
+    data: {
+      ...(fetchResponse(['A']) as object),
+      errors: ['Metrics backend is unavailable.'],
+      warnings: ['The query for A matched more than 100 time series.']
+    },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }))
+  const { data, items } = mount([rrdMetricItem('A')])
+  await flush()
+  expect(data.partialErrors.value).toHaveLength(1)
+  expect(data.warnings.value).toHaveLength(1)
+
+  // Removing the last row short-circuits load() through clear(), which never reaches the
+  // success path that would otherwise reassign them.
+  items.value = []
+  await flush()
+
+  expect(data.partialErrors.value).toEqual([])
+  expect(data.warnings.value).toEqual([])
+  expect(data.metrics.value).toEqual([])
 })

@@ -7,9 +7,9 @@ import { render, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { type Ref, defineComponent, h } from 'vue'
 
-import { useGraphData } from '@/graphing/composables/useGraphData'
+import { type GraphDataFetcher, useGraphData } from '@/graphing/composables/useGraphData'
 import type { RequestedTimeRange } from '@/graphing/types'
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
@@ -29,7 +29,9 @@ const FETCHED = {
     }
   ],
   time_range: { start: 1_000, end: 2_000, step: 60 },
-  horizontal_lines: []
+  horizontal_lines: [],
+  warnings: [],
+  errors: []
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,4 +128,63 @@ describe('useGraphData — requested resolution', () => {
     const samplesPerColumn = (eightDays.end - eightDays.start) / step / columns
     expect(samplesPerColumn).toBeCloseTo(4, 1)
   })
+})
+
+/** Mounts the composable on the given fetcher and hands back the diagnostics it exposes. */
+function renderWithFetcher(fetchGraph: GraphDataFetcher): {
+  graphs: Readonly<Ref<unknown[]>>
+  partialErrors: Readonly<Ref<readonly string[]>>
+  warnings: Readonly<Ref<readonly string[]>>
+} {
+  let exposed!: ReturnType<typeof useGraphData>
+  const harness = defineComponent({
+    setup() {
+      exposed = useGraphData(
+        () => [{ internal: '{"graphs": []}', add_to: null } as never],
+        () => ({ start: 0, end: 3_600 }),
+        () => 800,
+        () => 'max',
+        () => null,
+        fetchGraph
+      )
+      return () => h('div')
+    }
+  })
+  render(harness)
+  return exposed
+}
+
+test('a fetcher that reports no diagnostics fields leaves them empty', async () => {
+  // `GraphDataFetcher` is a public extension point, and one supplied from untyped code can omit the
+  // fields. Unguarded, flatMap folds that into a one-element array and the caller states a notice
+  // over a fetch that in fact succeeded.
+  const { graphs, partialErrors, warnings } = renderWithFetcher((async () => ({
+    title: 'CPU',
+    metrics: [],
+    timeRange: { start: 0, end: 3_600, step: 60 },
+    horizontalLines: []
+  })) as never)
+
+  // Waiting on the resolved graphs, not on the call: the diagnostics are assigned only after the
+  // fetch settles, so asserting earlier would read the initial empty value either way.
+  await waitFor(() => expect(graphs.value).toHaveLength(1))
+  // Length, not toEqual: that ignores undefined array items and would read [undefined] as empty.
+  expect(partialErrors.value).toHaveLength(0)
+  expect(warnings.value).toHaveLength(0)
+})
+
+test("exposes a fetch's warnings apart from its errors", async () => {
+  const { graphs, partialErrors, warnings } = renderWithFetcher(async () => ({
+    title: 'CPU',
+    metrics: [],
+    timeRange: { start: 0, end: 3_600, step: 60 },
+    horizontalLines: [],
+    errors: [],
+    warnings: ['The query for CPU matched more than 100 time series.']
+  }))
+
+  await waitFor(() => expect(graphs.value).toHaveLength(1))
+  expect(warnings.value).toEqual(['The query for CPU matched more than 100 time series.'])
+  // Apart, so a caller can state a truncation as advisory rather than as a failure.
+  expect(partialErrors.value).toHaveLength(0)
 })

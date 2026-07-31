@@ -96,7 +96,9 @@ function fetchDataResponse(series: { sourceId: string; points: number[] }[]): un
       data_points: points
     })),
     group_titles: [],
-    horizontal_lines: []
+    horizontal_lines: [],
+    warnings: [],
+    errors: []
   }
 }
 
@@ -177,7 +179,9 @@ beforeEach(() => {
       time_range: { start: 0, end: 3600, step: 60 },
       metrics: [],
       group_titles: [],
-      horizontal_lines: []
+      horizontal_lines: [],
+      warnings: [],
+      errors: []
     })
   )
   putSpy = vi.spyOn(client, 'PUT')
@@ -352,7 +356,9 @@ test('edit mode fetches hidden rows as visible and shows their stats', async () 
             time_range: { start: 0, end: 3600, step: 60 },
             metrics: [],
             group_titles: [],
-            horizontal_lines: []
+            horizontal_lines: [],
+            warnings: [],
+            errors: []
           })
     )
   )

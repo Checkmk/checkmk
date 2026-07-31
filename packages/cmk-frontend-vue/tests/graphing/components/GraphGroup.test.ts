@@ -80,7 +80,9 @@ const FETCHED = {
     }
   ],
   time_range: { start: 1_000, end: 2_000, step: 60 },
-  horizontal_lines: []
+  horizontal_lines: [],
+  warnings: [],
+  errors: []
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

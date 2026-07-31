@@ -31,7 +31,9 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
       title: fetched.title,
       metrics: fetched.metrics,
       timeRange: fetched.time_range,
-      horizontalLines: fetched.horizontal_lines
+      horizontalLines: fetched.horizontal_lines,
+      errors: fetched.errors,
+      warnings: fetched.warnings
     }
   }
 }

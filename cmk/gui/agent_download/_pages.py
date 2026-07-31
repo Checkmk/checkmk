@@ -10,9 +10,9 @@
 import abc
 import fnmatch
 import os
-from collections.abc import Callable, Collection, Generator, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Sequence
 from dataclasses import dataclass
-from functools import cached_property, lru_cache
+from functools import lru_cache
 from pathlib import Path
 from typing import Final, override
 
@@ -55,8 +55,21 @@ DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE = "download_local_agent_plugin"
 
 
 @dataclass(frozen=True)
-class PluginFamilyAgentDir:
-    """An agent plugin directory of a single plugin family (cmk.bakery.v2).
+class DownloadFile:
+    """A single file offered for download.
+
+    The link text is not always the file name: the same file can be shipped with the
+    version and installed locally, in which case both are offered and have to be told
+    apart.
+    """
+
+    path: str
+    label: str
+
+
+@dataclass(frozen=True)
+class PluginFamilyDir:
+    """One agent plugin directory of a plugin family (cmk.bakery.v2).
 
     These live under lib/python3/cmk/plugins/<family>/agents/ - i.e. outside the
     statically served share/check_mk/agents tree - so files found here must be
@@ -64,31 +77,58 @@ class PluginFamilyAgentDir:
     """
 
     path: Path
-    title: str
     is_local: bool
 
 
+@dataclass(frozen=True)
+class PluginFamilyAgents:
+    """The agent plugin directories belonging to one plugin family."""
+
+    title: str
+    dirs: Sequence[PluginFamilyDir]
+
+
 @lru_cache  # This is based on python imports and thus never changes for a running process
-def _plugin_family_agent_dirs() -> Sequence[PluginFamilyAgentDir]:
-    """Discover the agent plugin directory of every plugin family.
+def _plugin_family_agents() -> Sequence[PluginFamilyAgents]:
+    """Discover the agent plugin directories of every plugin family.
 
     ``discover_families`` returns keys like ``cmk.plugins.oracle``; we use the
     last dotted component ("oracle") as a human readable section title ("Oracle")
     so that files of different families are not all lumped under one generic
     "Agents" header on the download page.
 
-    It also finds the families installed below ``local/`` (e.g. via MKP). Those are
-    not shipped with the version, so they are marked to be handled separately.
+    A family can be found in more than one place: shipped with the version and
+    installed below ``local/`` (e.g. via MKP). Both belong to the same family and
+    hence to the same section of the download page, so the directories are grouped
+    per family, the shipped one first. Only the local ones require a login to be
+    downloaded.
     """
     return [
-        PluginFamilyAgentDir(
-            path=Path(family_path, AGENT_PLUGINS_FOLDER),
+        PluginFamilyAgents(
             title=family.split(".")[-1].capitalize(),
-            is_local=Path(family_path).is_relative_to(cmk.utils.paths.local_root),
+            dirs=sorted(
+                (
+                    PluginFamilyDir(
+                        path=Path(family_path, AGENT_PLUGINS_FOLDER),
+                        is_local=Path(family_path).is_relative_to(cmk.utils.paths.local_root),
+                    )
+                    for family_path in family_paths
+                ),
+                key=lambda pf_dir: pf_dir.is_local,
+            ),
         )
         for family, family_paths in sorted(discover_families(raise_errors=False).items())
-        for family_path in family_paths
     ]
+
+
+def _local_agent_file_label(filename: str) -> str:
+    """Link text for an agent file of a locally installed plugin family.
+
+    Such a file is offered right next to the one of the same name shipped with the
+    version, so mark which one it is - and that it is the only one whose download
+    requires a login.
+    """
+    return _("%(filename)s (local, download requires login)") % {"filename": filename}
 
 
 def download_href(path: str) -> str:
@@ -202,22 +242,29 @@ class ABCModeDownloadAgents(WatoMode):
             "/windows/plugins/.gitattributes",
         }
 
+    def _extra_sections(self) -> Iterable[tuple[str, list[DownloadFile]]]:
+        """Sections that are not the result of walking the ``_walk_base_dirs``."""
+        return []
+
     @override
     def page(self, config: Config) -> None:
         html.open_div(class_="rulesets")
 
         if packed := self._packed_agents():
-            self._download_table(_("Packaged agents"), packed)
+            self._download_table(
+                _("Packaged agents"), [DownloadFile(p, p.split("/")[-1]) for p in packed]
+            )
 
-        for title, file_paths in sorted(
-            entry for base_dir in self._walk_base_dirs() for entry in self._walk_dir(base_dir)
-        ):
-            useful_file_paths = [p for p in file_paths if not p.endswith("/CONTENTS")]
-            if useful_file_paths:
-                self._download_table(title, sorted(useful_file_paths))
+        sections = [
+            *(entry for base_dir in self._walk_base_dirs() for entry in self._walk_dir(base_dir)),
+            *self._extra_sections(),
+        ]
+        for title, files in sorted(sections, key=lambda section: section[0]):
+            if useful_files := [f for f in files if not f.path.endswith("/CONTENTS")]:
+                self._download_table(title, useful_files)
         html.close_div()
 
-    def _walk_dir(self, dir_path: str) -> Generator[tuple[str, list[str]]]:
+    def _walk_dir(self, dir_path: str) -> Generator[tuple[str, list[DownloadFile]]]:
         banned_paths = self._exclude_paths()
         packed = self._packed_agents()
 
@@ -240,7 +287,7 @@ class ABCModeDownloadAgents(WatoMode):
                 if path not in packed and "deprecated" not in path:
                     file_paths.append(path)
 
-            yield (title, file_paths)
+            yield (title, [DownloadFile(p, p.split("/")[-1]) for p in sorted(file_paths)])
 
     def _exclude_by_pattern(self, rel_file_path: str) -> bool:
         for exclude_pattern in self._exclude_file_glob_patterns():
@@ -252,19 +299,18 @@ class ABCModeDownloadAgents(WatoMode):
         """Section title for the files found directly below ``root``."""
         return self._TITLES.get(relpath, relpath)
 
-    def _download_table(self, title: str, paths: list[str]) -> None:
+    def _download_table(self, title: str, files: Sequence[DownloadFile]) -> None:
         forms.header(title)
         forms.container()
-        for path in paths:
-            os_path = path
-            filename = path.split("/")[-1]
+        for file in files:
+            filename = file.path.split("/")[-1]
 
-            file_size = os.stat(os_path).st_size
+            file_size = os.stat(file.path).st_size
 
             # FIXME: Rename classes etc. to something generic
             html.open_div(class_="ruleset")
             html.open_div(style="width:300px;", class_="text")
-            html.a(filename, href=download_href(path), download=filename)
+            html.a(file.label, href=download_href(file.path), download=filename)
             html.span("." * 200, class_="dots")
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
@@ -288,17 +334,54 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
 
     @override
     def _walk_base_dirs(self) -> list[str]:
-        return [
-            str(cmk.utils.paths.agents_dir),
-            # With cmk.bakery.v2, agent plugin files are grouped according to their plugin family.
-            # This does not play nicely with the structure of this page.
-            # We just include all of those files here for now (discarding the information about their family).
-            # It would be nice to support some sort of meta data file per family, providing maybe
-            # * general information
-            # * a (allow/deny) list of the files that should be exposed for download
-            # * description / title for those.
-            *(str(d.path) for d in _plugin_family_agent_dirs()),
-        ]
+        return [str(cmk.utils.paths.agents_dir)]
+
+    @override
+    def _extra_sections(self) -> Iterator[tuple[str, list[DownloadFile]]]:
+        """One section per plugin family (cmk.bakery.v2).
+
+        The agent plugin files of a family live in their own agents directory outside
+        the statically served share tree, so they are not found by walking it. They are
+        not organized in sub directories either, which is why they do not go through
+        ``_walk_dir`` (and its path based exclusions) at all.
+
+        It would be nice to support some sort of meta data file per family, providing
+        maybe
+        * general information
+        * a (allow/deny) list of the files that should be exposed for download
+        * description / title for those.
+        """
+        for family in _plugin_family_agents():
+            found = [
+                (path.name, agent_dir.is_local, path)
+                for agent_dir in family.dirs
+                for path in self._plugin_family_agent_files(agent_dir.path)
+            ]
+            if found:
+                # Sorting by (name, is_local) shows the locally installed version of a
+                # file right below the one shipped with the version.
+                yield (
+                    family.title,
+                    [
+                        DownloadFile(str(path), _local_agent_file_label(name) if is_local else name)
+                        for name, is_local, path in sorted(found)
+                    ],
+                )
+
+    def _plugin_family_agent_files(self, agents_dir: Path) -> Iterator[Path]:
+        try:
+            candidates = agents_dir.iterdir()
+        except OSError:
+            return
+
+        for path in candidates:
+            if not path.is_file():
+                continue
+            if self._exclude_by_pattern(f"/{path.name}"):
+                continue
+            if "deprecated" in path.name:
+                continue
+            yield path
 
     @override
     def _exclude_file_glob_patterns(self) -> list[str]:
@@ -310,29 +393,6 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             "*.solaris",
             "*robotmk*",
         ]
-
-    @cached_property
-    def _title_map(self) -> Mapping[str, str]:
-        return {
-            str(d.path): (
-                # Downloading these requires a login, while all other offered files
-                # are served without authentication. Say so.
-                _("%(family)s (locally installed, download requires login)") % {"family": d.title}
-                if d.is_local
-                else d.title
-            )
-            for d in _plugin_family_agent_dirs()
-        }
-
-    @override
-    def _title_for_root(self, root: str, relpath: str) -> str:
-        # Files of a plugin family live in their own agents directory outside the
-        # share tree; title their section by the family instead of the generic
-        # "Agents" that the path based lookup would yield.
-        try:
-            return self._title_map[root]
-        except KeyError:
-            return super()._title_for_root(root, relpath)
 
     @override
     def _exclude_paths(self) -> set[str]:

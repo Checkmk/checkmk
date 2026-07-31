@@ -344,7 +344,6 @@ module = [
   "cmk.mcp.*",
   "cmk.notification_plugins.*",
   "cmk.plugins.*",
-  "cmk.relay_fetcher_trigger.*",
   "cmk.ruleset_matcher.*",
   "cmk.rulesets.*",
   "cmk.server_side_calls.*",

@@ -23,7 +23,7 @@ from contextlib import suppress
 from datetime import timedelta
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final
+from typing import Final
 
 from cmk.ccc import store
 
@@ -35,7 +35,6 @@ from ._crash import (
     CrashInfo,
     CrashOccurrences,
     RobustJSONEncoder,
-    TDetails,
 )
 from ._fingerprint import (
     _drop_from_index,
@@ -186,7 +185,7 @@ class CrashReportStore:
     def __init__(self, *, keep_num_crashes: int = 200) -> None:
         self.keep_num_crashes: Final = keep_num_crashes
 
-    def save(self, crash: ABCCrashReport[Any]) -> None:
+    def save[TDetails](self, crash: ABCCrashReport[TDetails]) -> None:
         """Save the crash report instance to it's crash report directory"""
         base_dir = crash.crash_dir().parent
         base_dir.mkdir(parents=True, exist_ok=True)
@@ -203,6 +202,7 @@ class CrashReportStore:
             for key, value in crash.serialize().items():
                 fname = "crash.info" if key == "crash_info" else key
 
+                # TODO: Find out if this is still needed. If so, the typing is wrong and should be fixed.
                 if value is None:  # type: ignore[comparison-overlap]
                     continue  # type: ignore[unreachable]
 
@@ -228,8 +228,8 @@ class CrashReportStore:
             self._cleanup_old_crashes(base_dir, index)
             _save_fingerprint_index(base_dir, index)
 
-    def _get_existing_crash(
-        self, crash: ABCCrashReport[Any], base_dir: Path, index: dict[str, str]
+    def _get_existing_crash[TDetails](
+        self, crash: ABCCrashReport[TDetails], base_dir: Path, index: dict[str, str]
     ) -> Path | None:
         if not base_dir.exists():
             return None
@@ -276,7 +276,9 @@ class CrashReportStore:
 
         return None
 
-    def _merge_into_existing(self, crash: ABCCrashReport[Any], crash_info_path: Path) -> None:
+    def _merge_into_existing[TDetails](
+        self, crash: ABCCrashReport[TDetails], crash_info_path: Path
+    ) -> None:
         existing_info = json.loads(store.load_text_from_file(crash_info_path))
         existing_occ = read_occurrences(existing_info)
         # ``crash`` is an individual, freshly-produced crash: a single occurrence.
@@ -298,7 +300,7 @@ class CrashReportStore:
         crash.crash_info["id"] = crash_info_path.parent.name
 
     @staticmethod
-    def _lift_to_aggregate(
+    def _lift_to_aggregate[TDetails](
         crash_info: CrashInfo[TDetails],
     ) -> AggregatedCrashInfo[TDetails]:
         """Lift a freshly produced individual crash into a new aggregated record (count 1)."""
@@ -347,7 +349,7 @@ class CrashReportStore:
         )
 
     @classmethod
-    def _dump_crash_info(cls, d: Any) -> Any:
+    def _dump_crash_info(cls, d: object) -> object:
         if not isinstance(d, dict):
             return d
         return {

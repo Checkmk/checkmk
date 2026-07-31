@@ -18,7 +18,7 @@ import urllib.parse
 import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Final, NotRequired, TypedDict, TypeVar
+from typing import cast, Final, NotRequired, TypedDict
 
 from cmk.ccc.version_info import VersionInfo, VersionInfoBase
 
@@ -35,9 +35,6 @@ Version history:
   2 (current): ``time`` is dropped in favor of a dedicated ``occurrences``
      (``CrashOccurrences``) key. See ``AggregatedCrashInfo``.
 """
-
-
-TDetails = TypeVar("TDetails", bound=dict[str, object] | None)
 
 
 class BaseDetails(TypedDict):
@@ -208,13 +205,16 @@ def _get_generic_crash_info[TDetails](
         )
     )
 
-    # TODO: The typing gets *really* chaotic here, hence the Any a.k.a implicit cast. :-P
-    modified_details: Any = details
+    # TODO: The typing gets *really* chaotic here, hence the cast. :-P
+    modified_details = details
     if isinstance(details, Mapping) and "vars" in details:
-        modified_details = {
-            k: format_var_for_export(v, maxdepth=5) if k == "vars" else v
-            for k, v in details.items()
-        }
+        modified_details = cast(
+            TDetails,
+            {
+                k: format_var_for_export(v, maxdepth=5) if k == "vars" else v
+                for k, v in details.items()
+            },
+        )
 
     return CrashInfo(
         crash_info_version=CRASH_INFO_VERSION,

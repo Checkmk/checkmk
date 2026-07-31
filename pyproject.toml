@@ -306,7 +306,6 @@ module = [
   "cmk.bi.*",
   "cmk.ccc.store.*",
   "cmk.checkengine.*",
-  "cmk.crash.*",
   "cmk.dcd.*",
   "cmk.dev_deploy.*",
   "cmk.diagnostics.*",

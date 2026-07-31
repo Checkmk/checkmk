@@ -27,7 +27,6 @@ from ._crash import (
     RobustJSONEncoder,
     SENSITIVE_KEYWORDS,
     SerializedCrashReport,
-    TDetails,
 )
 from ._fingerprint import (
     crash_fingerprint,
@@ -60,7 +59,6 @@ __all__ = [
     "RobustJSONEncoder",
     "SENSITIVE_KEYWORDS",
     "SerializedCrashReport",
-    "TDetails",
     "VersionInfo",
     "crash_fingerprint",
     "format_var_for_export",

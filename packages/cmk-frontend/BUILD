@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
@@ -7,23 +8,68 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:py_test.bzl", "py_test")
 load("//bazel/rules:css_library.bzl", "css_library")
+load("//bazel/rules:dependency_info.bzl", "dependency_info")
 
 exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
 
-SRCS = glob([
-    # TODO: tsconfig.json is missing
-    "src/css/*",  # just for the directory
-    "src/js/**/*.js",
-    "src/js/**/*.ts",
-    "src/openapi/**/*.*",
-    "src/sounds/**/*.*",
-    "src/themes/**/*.*",
-]) + [
+dependency_info(
+    name = "redoc_dependency_info",
+    package_name = "redoc",
+    license_kind = "@package_metadata//licenses/spdx:MIT",
+    license_text = "src/openapi/redoc.standalone.js.LICENSE.txt",
+    purl_namespace = None,
+    purl_type = "npm",
+    version = "2.2.0",
+)
+
+copy_to_bin(
+    name = "redoc",
+    srcs = [
+        "src/openapi/redoc.standalone.js",
+        "src/openapi/redoc.standalone.js.LICENSE.txt",
+    ],
+    package_metadata = [":redoc_dependency_info"],
+)
+
+dependency_info(
+    name = "colorpicker_dependency_info",
+    package_name = "FlexiColorPicker",
+    license_kind = "@package_metadata//licenses/spdx:MIT",
+    purl_namespace = "DavidDurman",
+    purl_type = "github",
+    version = "ec614a74e808a39b51a9f6883476aad6e77066f8",
+)
+
+copy_to_bin(
+    name = "colorpicker",
+    srcs = ["src/js/modules/colorpicker.js"],
+    package_metadata = [":colorpicker_dependency_info"],
+)
+
+SRCS = glob(
+    [
+        # TODO: tsconfig.json is missing
+        "src/css/*",  # just for the directory
+        "src/js/**/*.js",
+        "src/js/**/*.ts",
+        "src/openapi/**/*.*",
+        "src/sounds/**/*.*",
+        "src/themes/**/*.*",
+    ],
+    exclude = [
+        "src/js/modules/colorpicker.js",
+        "src/openapi/redoc.standalone.js",
+        "src/openapi/redoc.standalone.js.LICENSE.txt",
+    ],
+) + [
+    ":colorpicker",
+    ":redoc",
     "//packages/cmk-frontend/src/images:nuvola-icons",
     "//packages/cmk-frontend/src/jquery",
     "//packages/cmk-frontend/src/openapi/swagger-ui-5.20.6:swagger-ui",
+    "//packages/cmk-frontend/src/themes/facelift/fonts/inter",
 ]
 
 BUILD_DEPS = [

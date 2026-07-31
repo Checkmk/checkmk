@@ -14,8 +14,6 @@ void main() {
 
     def edition = params.EDITION;
 
-    def correlation_id = windows.azure_signing_correlation_id(branch_name);
-
     // When FORCE_SIGN parameter is present we honour it. Otherwise we sign the MSI.
     def should_sign = (params.FORCE_SIGN == null) || (params.FORCE_SIGN == true);
 
@@ -24,8 +22,14 @@ void main() {
     def use_azure = (params.SIGN_METHOD == "azure");
     def sign_target = use_azure ? 'relay_msi_with_sign_azure' : 'relay_msi_with_sign';
 
+    // The correlation ID suffix is a shared secret appended to every CorrelationId we send to
+    // Azure, so signing requests which did not originate from our CI can be spotted in the signing
+    // diagnostics. It therefore lives in the credential store, not in an env var. It stays bound
+    // for the whole build: the Azure client echoes the CorrelationId, and Jenkins only masks the
+    // secret inside this block.
     def azure_creds = [
         string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
+        string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
     ];
 
     def allowed_editions = ["cloud", "ultimate", "ultimatemt"];
@@ -38,6 +42,8 @@ void main() {
     dir("${checkout_dir}") {
         if (use_azure && should_sign) {
             withCredentials(azure_creds) {
+                // Assembled inside the binding block: the suffix is only available there.
+                def correlation_id = windows.azure_signing_correlation_id(branch_name);
                 withEnv([
                     "AZURE_ARTIFACT_SIGNING_ENDPOINT=${env.AZURE_ARTIFACT_SIGNING_ENDPOINT}",
                     "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",

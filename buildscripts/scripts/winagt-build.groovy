@@ -18,8 +18,6 @@ void main() {
     def use_azure = (params.SIGN_METHOD == "azure");
     def sign_target = use_azure ? "agent_with_sign_azure" : "agent_with_sign";
 
-    def correlation_id = windows.azure_signing_correlation_id(branch_name);
-
     def common_creds = [
         usernamePassword(
             credentialsId: 'nexus',
@@ -39,9 +37,18 @@ void main() {
         }
 
         if (use_azure) {
+            // The correlation ID suffix is a shared secret appended to every CorrelationId we send
+            // to Azure, so signing requests which did not originate from our CI can be spotted in
+            // the signing diagnostics. It therefore lives in the credential store, not in an env
+            // var. It stays bound for the whole build: the Azure client echoes the CorrelationId,
+            // and Jenkins only masks the secret inside this block.
             withCredentials(common_creds + [
                 string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
+                string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
             ]) {
+                // Assembled inside the binding block: the suffix is only available there.
+                def correlation_id = windows.azure_signing_correlation_id(branch_name);
+
                 // The windows.build function will create stages.
                 withEnv([
                     "CMK_VERSION=${cmk_version}",

@@ -313,7 +313,17 @@ def folder_slug(folder: Folder) -> str:
 
 def get_site_id_for_host(connection: MultiSiteConnection, host_name: str) -> SiteId:
     with detailed_connection(connection) as conn:
-        return Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(conn)
+        try:
+            return Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(
+                conn
+            )
+        except ValueError:
+            raise ProblemException(
+                status=404,
+                title="The requested host was not found",
+                detail=f"Could not find exactly one host with the name {host_name!r} "
+                "in the monitoring.",
+            )
 
 
 def mutually_exclusive_fields[T](

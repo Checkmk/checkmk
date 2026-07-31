@@ -81,6 +81,46 @@ def test_check_device_status() -> None:
     assert value == expected
 
 
+@pytest.mark.xfail(strict=True, reason="Crash report group: 4745")
+def test_check_device_status_missing_status_key_falls_back_to_default() -> None:
+    device_status = _RawDevicesStatusFactory.build(status="online")
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+    params = CheckParamsDeviceStatus(
+        status_map={
+            "alerting": State.CRIT.value,
+            "offline": State.WARN.value,
+            "dormant": State.WARN.value,
+        },
+        last_reported_upper_levels=("no_levels", None),
+    )
+
+    value = list(check_device_status(params, section=section))[0]
+    expected = Result(state=State.OK, summary="Status: online")
+
+    assert value == expected
+
+
+@pytest.mark.xfail(strict=True, reason="Crash report group: 4745")
+def test_check_device_status_unrecognized_status_is_unknown() -> None:
+    device_status = _RawDevicesStatusFactory.build(status="quarantined")
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+    params = CheckParamsDeviceStatus(
+        status_map={
+            "alerting": State.CRIT.value,
+            "offline": State.WARN.value,
+            "dormant": State.WARN.value,
+        },
+        last_reported_upper_levels=("no_levels", None),
+    )
+
+    value = list(check_device_status(params, section=section))[0]
+    expected = Result(state=State.UNKNOWN, summary="Status: quarantined")
+
+    assert value == expected
+
+
 @pytest.mark.parametrize(
     ("device_status", "expected"),
     [

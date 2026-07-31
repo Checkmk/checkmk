@@ -61,7 +61,7 @@ def _pipfile_requirements(pipfile: Path) -> list[str]:
     specs: list[str] = []
     for name, value in data.get("packages", {}).items():
         if isinstance(value, str):
-            specs.append(f"{name}{value}")
+            specs.append(f"{name}{value if value != '*' else ''}")
             continue
         # Inline-table form, e.g. requests = {extras = ["socks"], version = "2.31.0"}.
         extras = value.get("extras")

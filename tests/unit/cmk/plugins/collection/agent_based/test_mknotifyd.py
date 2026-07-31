@@ -473,3 +473,32 @@ def test_check_mknotifyd_connection_v2(
     section: MkNotifySection,
 ) -> None:
     assert list(check_mknotifyd_connection_v2(item, section)) == expected_output
+
+
+INFO_WITHOUT_TIMESTAMP = [
+    ["[dfkt_master]"],
+    ["Version:         2.4.0p15"],
+    ["Updated:         1763453023 (2025-11-18 09:03:43)"],
+    ["Started:         1763450536 (2025-11-18 08:22:16, 2487 sec ago)"],
+    ["Configuration:   1763450536 (2025-11-18 08:22:16, 2487 sec ago)"],
+    ["Listening FD:    None"],
+]
+
+
+def test_parse_mknotifyd_without_timestamp() -> None:
+    with time_machine.travel(
+        datetime.datetime.fromisoformat("2025-11-18T09:04:00").replace(tzinfo=ZoneInfo("UTC"))
+    ):
+        parsed = parse_mknotifyd(INFO_WITHOUT_TIMESTAMP)
+    assert parsed.timestamp == 1763456640.0
+    assert parsed.sites["dfkt_master"].version == "2.4.0p15"
+    assert parsed.sites["dfkt_master"].updated == 1763453023
+
+
+def test_parse_mknotifyd_empty_section() -> None:
+    with time_machine.travel(
+        datetime.datetime.fromisoformat("2025-11-18T09:04:00").replace(tzinfo=ZoneInfo("UTC"))
+    ):
+        parsed = parse_mknotifyd([])
+    assert parsed.timestamp == 1763456640.0
+    assert parsed.sites == {}

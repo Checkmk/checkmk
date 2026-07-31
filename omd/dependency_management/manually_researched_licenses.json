@@ -102,6 +102,7 @@
   "pkg:pypi/python-dateutil@2.9.0.post0": "BSD-3-Clause",
   "pkg:pypi/pytokens@0.4.1": "MIT",
   "pkg:pypi/pywin32@311": " PSF-2.0",
+  "pkg:pypi/pywin32@312": " PSF-2.0",
   "pkg:pypi/redfish@3.3.7": "BSD-3-Clause",
   "pkg:pypi/reportlab@5.0.0": "BSD-3-Clause",
   "pkg:pypi/requests-unixsocket@0.4.1": "Apache-2.0",

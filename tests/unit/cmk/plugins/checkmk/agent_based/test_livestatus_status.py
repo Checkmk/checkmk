@@ -904,3 +904,32 @@ def test_check_no_warn_on_cmc_with_commercial_edition() -> None:
 
 def test_check_no_warn_when_omd_info_missing() -> None:
     assert not _has_nagios_warn(_run_core_warn_check("3.5.1", None))
+
+
+# The agent sent livestatus_ssl_certs content inside the livestatus_status section, so the
+# status parser paired two certificate lines into a mapping that has none of the status
+# columns. Splitting used the status separator, hence the unsplit "path|valid_until" keys.
+_INCOMPLETE_STATUS = {
+    "mysite": {
+        "/omd/sites/mysite/etc/ssl/ca.pem|33063756788": (
+            "/omd/sites/mysite/etc/ssl/sites/mysite.pem|33063756788"
+        )
+    }
+}
+
+
+@pytest.mark.xfail(
+    strict=True, reason="Crash report f258daec-8051-11f1-a575-005056849565: KeyError"
+)
+def test_check_incomplete_status_data() -> None:
+    assert list(
+        livestatus_status._generate_livestatus_results(
+            "mysite",
+            livestatus_status.livestatus_status_default_levels,
+            _INCOMPLETE_STATUS,
+            None,
+            None,
+            {},
+            581785200,
+        )
+    ) == [Result(state=State.UNKNOWN, summary="Incomplete livestatus status data received")]

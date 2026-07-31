@@ -1115,6 +1115,23 @@ class WerkIDsClient:
         return []
 
 
+def _ensure_stash_file_writable(paths: Paths) -> None:
+    target = paths.active_stash_file
+    if target.exists():
+        # pathlib offers no os.access() equivalent
+        writable = os.access(target, os.W_OK)
+    else:
+        # dump_stash_to_file() creates the file, and the directories leading to it, so the
+        # deepest one that is already there has to allow that.
+        writable = os.access(next(p for p in target.parents if p.exists()), os.W_OK | os.X_OK)
+    if not writable:
+        bail_out(
+            f"{TTY_RED}Cannot write the werk IDs file {target}.\n"
+            "Not reserving IDs from the werk IDs server, they would be lost. "
+            f"Please make it, or the directory it goes into, writable and try again.{TTY_NORMAL}"
+        )
+
+
 def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> "LegacyStash | Stash":
     stash = load_stash_from_file(paths)
 
@@ -1125,6 +1142,7 @@ def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> "Legac
         bail_out(f"No such secret file {paths.secret_file}")
 
     local_werk_ids_count = stash.count()
+    _ensure_stash_file_writable(paths)
 
     if reserved_werk_ids := werk_ids_client.reserve_werk_ids(
         paths.secret_file, local_werk_ids_count

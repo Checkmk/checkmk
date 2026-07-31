@@ -131,3 +131,25 @@ def test_check_invalid_metric() -> None:
             summary="Undefined metric: invalid metric value ''",
         ),
     ]
+
+
+def test_check_metric_name_with_invalid_character() -> None:
+    # check_disk names its metrics after the mount point, so the label is "/"
+    section = {
+        "Disk": PluginData(
+            name=None,
+            state=State.OK,
+            info=["DISK OK - free space: / 12483 MB|/=1234MB;;;0;13717"],
+            cache_info=None,
+        )
+    }
+    assert list(check_mrpe("Disk", section)) == [
+        Result(
+            state=State.OK,
+            summary="DISK OK - free space: / 12483 MB",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Undefined metric: invalid character(s) in metric name: '/'",
+        ),
+    ]

@@ -110,7 +110,7 @@ def _output_metrics(perfdata: Sequence[str]) -> CheckResult:
     for raw_metric in perfdata:
         try:
             yield _parse_nagios_perfstring(raw_metric)
-        except ValueError as exc:
+        except (TypeError, ValueError) as exc:
             yield Result(
                 state=State.UNKNOWN,
                 summary=f"Undefined metric: {exc}",

@@ -157,9 +157,6 @@ def test_check_version_at_least_daily_build() -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 38f93b7a-d104-11f0-8fee-005056b5a2f6: ValueError"
-)
 def test_check_version_at_least_daily_build_with_release_prefix() -> None:
     assert [
         *_check_version(

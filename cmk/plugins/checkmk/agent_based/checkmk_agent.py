@@ -150,7 +150,7 @@ def _render_agent_version_mismatch(
         _is_daily_build_version(agent_version)
         and (at_least := spec.get("daily_build")) is not None
         and int(agent_version.rsplit("-", maxsplit=1)[-1].replace(".", ""))
-        < int(at_least.replace(".", ""))
+        < int(at_least.rsplit("-", maxsplit=1)[-1].replace(".", ""))
     ):
         return f" (expected at least {at_least})"
 

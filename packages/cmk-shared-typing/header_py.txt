@@ -6,4 +6,7 @@
 # This file is auto-generated via the cmk-shared-typing package.
 # Do not edit manually.
 #
+# The JSON schemas leave some values untyped, which the generator renders as `Any`.
+# mypy: disable-error-code="explicit-any"
+#
 # fmt: off

@@ -89,6 +89,13 @@ pub struct Args {
     #[arg(short = 'M', long = "migrate-config")]
     pub migrate_config: Option<PathBuf>,
 
+    /// Input dir for migrated config, usually some/path/to/mk_oracle.d.
+    /// All cfg files located in the dir will be merged into the one config for migration.
+    /// Not supported on Windows.
+    #[cfg(not(windows))]
+    #[arg(long = "migrate-subdir", requires = "migrate_config")]
+    pub migrate_subdir: Option<PathBuf>,
+
     /// Output path for migrated config (default: stdout)
     #[arg(long = "migrate-output", requires = "migrate_config")]
     pub migrate_output: Option<PathBuf>,

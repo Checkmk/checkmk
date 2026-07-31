@@ -192,7 +192,9 @@ rust_test_suite(
         "references/output-optional.cfg",
         "references/output-optional.ps1",
         "references/output-xe-no-tnsalias.cfg",
-    ],
+        # Runtime fixtures for the config-directory merge tests, read via files_dir().
+        "tests/files/mk_oracle_main.cfg",
+    ] + glob(["tests/files/mk_oracle.d/**"]),
     env_inherit = [
         # CI_ORA2_DB_TEST: mandatory reference endpoint. CI_ORA1_DB_TEST:
         # optional second endpoint, included by the endpoint-iterating tests

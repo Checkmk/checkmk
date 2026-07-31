@@ -19,11 +19,32 @@ use anyhow::{bail, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+/// Read the legacy config from `input`, appending the content of every `*.cfg` file found in
+/// `mk_oracle_d` (when given). Files are merged in sorted order so the result is deterministic.
+pub fn read_legacy_config(input: &Path, mk_oracle_d: Option<&Path>) -> Result<String> {
+    let mut legacy = std::fs::read_to_string(input)?;
+    if let Some(dir) = mk_oracle_d {
+        let mut cfg_files = Vec::new();
+        for entry in std::fs::read_dir(dir)? {
+            let path = entry?.path();
+            if path.extension().is_some_and(|ext| ext == "cfg") {
+                cfg_files.push(path);
+            }
+        }
+        cfg_files.sort();
+        for path in cfg_files {
+            legacy.push('\n');
+            legacy.push_str(&std::fs::read_to_string(&path)?);
+        }
+    }
+    Ok(legacy)
+}
+
 /// Full migration pipeline: read legacy config, execute it, convert to new format.
 ///
 /// Returns the formatted output string. Caller decides whether to write to file or stdout.
-pub fn migrate(input: &Path) -> Result<String> {
-    let legacy = std::fs::read_to_string(input)?;
+pub fn migrate(input: &Path, mk_oracle_d: Option<&Path>) -> Result<String> {
+    let legacy = read_legacy_config(input, mk_oracle_d)?;
     let variables = convert_config(input).unwrap_or_default();
     let timestamp = format_timestamp();
     convert(

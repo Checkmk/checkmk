@@ -17,7 +17,6 @@ from collections.abc import Mapping, MutableMapping
 from os import getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any
 
 from pydantic import BaseModel, PrivateAttr
 
@@ -57,7 +56,6 @@ class CMASystemConfig(BaseModel, frozen=True):
 
     @classmethod
     def load(cls, path: Path) -> CMASystemConfig:
-        data: dict[str, Any] = {"targets": {}}
         # The default CMESystemConfig file (/etc/cma/backup.conf) has special permissions
         # The file is group-owned by omd. To fix this in the appliance will
         # take more time, considering the compatibility with older versions
@@ -71,12 +69,12 @@ class CMASystemConfig(BaseModel, frozen=True):
                         raise MKGeneralException(
                             _("/etc/cma/backup.conf has wrong permissions. Refusing to read file")
                         )
-                data = ast.literal_eval(path.read_text())
+                return cls.model_construct(**ast.literal_eval(path.read_text()))
         except (ValueError, SyntaxError, OSError, PermissionError, UnicodeDecodeError):
             # Note: MKGeneralException is explicitly not caught
             pass
 
-        return cls.model_construct(**data)
+        return cls(targets={})
 
 
 class Config(BaseModel, frozen=True):

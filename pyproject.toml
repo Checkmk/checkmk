@@ -301,7 +301,6 @@ disallow_untyped_calls = false
 [[tool.mypy.overrides]]
 module = [
   "cmk.agent_based.*",
-  "cmk.backup.*",
   "cmk.bakery.*",
   "cmk.base.*",
   "cmk.bi.*",

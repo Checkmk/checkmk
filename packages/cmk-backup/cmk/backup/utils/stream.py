@@ -7,7 +7,7 @@
 import os
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, IO
+from typing import IO
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.crypto.certificate import Certificate, CertificatePEM
@@ -97,7 +97,7 @@ class MKBackupStream:
     def _load_backup_keys(self) -> dict[str, dict[str, bytes]]:
         path = Path(os.environ["OMD_ROOT"], "etc/check_mk/backup_keys.mk")
 
-        variables: dict[str, dict[str, Any]] = {"keys": {}}
+        variables: dict[str, dict[str, dict[str, bytes]]] = {"keys": {}}
         if path.exists():
             exec(path.read_text(), variables, variables)  # nosec B102 # BNS:aee528
         # TODO: Verify value of keys.

@@ -93,6 +93,22 @@ def _python_version_short(version):
         fail("python_version must be a dotted version like 3.13.13, got %r" % version)
     return parts[0] + parts[1]
 
+def fail_on_python_minor_mismatch(python_version, python_version_windows):
+    """Guard the ABI the CAB installs against the ABI uv resolves for.
+
+    rules_uv appends ``--python-version`` (from the host toolchain, i.e.
+    ``PYTHON_VERSION``) after ``extra_args``, so ``pip_compile`` cannot override
+    it; only the minor matters — it is what the ``cp3xx`` wheel tag encodes.
+    """
+    if _python_version_short(python_version) != _python_version_short(python_version_windows):
+        fail(
+            ("PYTHON_VERSION (%s) and PYTHON_VERSION_WINDOWS (%s) disagree on the Python " +
+             "minor version, so requirements-windows.txt would be resolved for a different " +
+             "wheel ABI than python-3.cab installs.  Either realign the two in " +
+             "//:package_versions.bzl, or resolve with an explicit interpreter via " +
+             "rules_uv's py3_runtime attribute.") % (python_version, python_version_windows),
+        )
+
 def _python_cab_impl(ctx):
     cab = ctx.actions.declare_file(ctx.label.name + ".cab")
 
@@ -101,12 +117,24 @@ def _python_cab_impl(ctx):
     py_major_minor = ".".join(ctx.attr.python_version.split(".")[:2])  # "3.13"
     py_abi = "cp" + py_short  # "cp313"
 
+    # Derive the name==version install request from the wheel filenames
+    # (PEP 427), so it can never diverge from the fetched closure and every
+    # package installs as explicitly REQUESTED, like the historic pipenv flow.
+    wheel_files = ctx.files.wheels
+    requirements = []
+    for w in wheel_files:
+        segments = w.basename.split("-")
+        if len(segments) < 3 or not w.basename.endswith(".whl"):
+            fail("not a wheel filename: %r" % w.basename)
+        requirements.append("{}=={}".format(segments[0], segments[1]))
+    requirements = sorted(requirements)
+
     # The venv seeds pip (the historic flow's virtualenv did, so customers can
     # `.venv\Scripts\pip install` extra plugin deps); the same pinned wheel
     # also replaces the base interpreter's ensurepip bootstrap.
-    pip_pins = [r for r in ctx.attr.requirements if r.startswith("pip==")]
+    pip_pins = [r for r in requirements if r.startswith("pip==")]
     if len(pip_pins) != 1:
-        fail("requirements must contain exactly one pip== pin, got %r" % ctx.attr.requirements)
+        fail("wheels must contain exactly one pip wheel, got %r" % requirements)
     pip_requirement = pip_pins[0]
 
     # Production-shape 3-line pyvenv.cfg, written as a build input so we
@@ -141,9 +169,8 @@ def _python_cab_impl(ctx):
 
     requirements_args = " ".join([
         '"{}"'.format(req)
-        for req in ctx.attr.requirements
+        for req in requirements
     ])
-    wheel_files = ctx.files.wheels
     wheel_path_args = " ".join(['"$exec_root/{}"'.format(w.path) for w in wheel_files])
     venv_script_files = ctx.files.venv_scripts
     venv_script_args = " ".join(['"$exec_root/{}"'.format(f.path) for f in venv_script_files])
@@ -458,11 +485,6 @@ python_cab = rule(
             mandatory = True,
             doc = "Full CPython version (e.g. \"3.13.13\"); must match PYTHON_VERSION_WINDOWS in defines.make.",
         ),
-        "requirements": attr.string_list(
-            mandatory = True,
-            doc = "Pinned name==version closure (from @windows_python_wheels//:requirements.bzl) " +
-                  "installed into .venv/Lib/site-packages; must include exactly one pip== pin.",
-        ),
         "venv_scripts": attr.label_list(
             allow_files = True,
             doc = "Static venv activation scripts copied into .venv/Scripts (see venv_scripts/).",
@@ -470,7 +492,8 @@ python_cab = rule(
         "wheels": attr.label_list(
             allow_files = [".whl"],
             doc = "Pinned win_amd64/cp3xx wheel closure (the @windows_python_wheels " +
-                  "fetch-phase repo) that 'requirements' is installed from offline.",
+                  "pip.parse hub, resolved for the windows platform) installed " +
+                  "offline into the CAB; must include exactly one pip wheel.",
         ),
     },
 )

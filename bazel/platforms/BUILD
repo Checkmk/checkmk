@@ -29,6 +29,14 @@ platform(
 )
 
 platform(
+    name = "x86_64-windows",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
+platform(
     name = "x86_64-windows-msvc",
     constraint_values = [
         ":msvc",

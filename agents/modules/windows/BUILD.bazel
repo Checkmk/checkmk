@@ -1,17 +1,25 @@
+load("@aspect_bazel_lib//lib:transitions.bzl", "platform_transition_filegroup")
 load("@aspect_rules_py//py:defs.bzl", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
-load("@windows_python_wheels//:requirements.bzl", "REQUIREMENTS")
-load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
+load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
+load("//:package_versions.bzl", "PYTHON_VERSION", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
-load(":python_cab.bzl", "python_cab")
+load(":python_cab.bzl", "fail_on_python_minor_mismatch", "python_cab")
 
 exports_files([
     "constraints-windows.txt",
     "requirements-windows.in",
     "requirements-windows.txt",
 ])
+
+# :requirements_windows resolves for the host toolchain's Python, not for
+# PYTHON_VERSION_WINDOWS; keep the two from drifting apart.
+fail_on_python_minor_mismatch(
+    python_version = PYTHON_VERSION,
+    python_version_windows = PYTHON_VERSION_WINDOWS,
+)
 
 # Pure-Python CAB writer driver, vendored via @cabarchive (LGPL-2.1-or-later).
 # Replaces the historical gcab/makecab.exe dependency.
@@ -72,24 +80,13 @@ pip_compile(
     name = "requirements_windows",
     extra_args = [
         # Fail loudly if any (transitive) dep lacks a win_amd64 wheel rather
-        # than silently resolving an sdist that cannot be consumed.
+        # than silently resolving an sdist the hub cannot build.
         "--only-binary=:all:",
     ],
     python_platform = "x86_64-pc-windows-msvc",
     requirements_in = ":requirements-windows-in",
     requirements_txt = ":requirements-windows.txt",
     tags = ["manual"],
-    visibility = ["//visibility:public"],
-)
-
-# Maintainer tool: regenerates windows_python_wheels.lock.json (the sha256-pinned
-# win_amd64 wheel closure) from the Pipfile.  Run via `bazel run` so the resolving
-# pip matches the build's; writes back to the source tree via
-# BUILD_WORKSPACE_DIRECTORY.  See the bump workflow in its module docstring.
-py_binary(
-    name = "refresh_wheel_pins",
-    srcs = ["refresh_wheel_pins.py"],
-    main = "refresh_wheel_pins.py",
     visibility = ["//visibility:public"],
 )
 
@@ -129,16 +126,12 @@ filegroup(
     output_group = "cabextract",
 )
 
-# Linux-driven build of python-3.cab.  Replaces the historic
-# Windows-only flow under Makefile / build_the_module.cmd.
-#
-# The human source of truth for what the CAB ships is
-# agents/modules/windows/pipfiles/3/Pipfile (+ the pip seed pin in
-# refresh_wheel_pins.py).  REQUIREMENTS is the locked name==version closure
-# generated from windows_python_wheels.lock.json, so the install request and
-# the fetched wheels can never diverge; regenerate the lock with
-# `bazel run //agents/modules/windows:refresh_wheel_pins -- <version>`
-# whenever the Pipfile or python_version below change.
+platform_transition_filegroup(
+    name = "wheels",
+    srcs = all_whl_requirements,
+    target_platform = "//bazel/platforms:x86_64-windows",
+)
+
 python_cab(
     name = "python_3_cab",
     cabextract = ":_cabextract",
@@ -150,10 +143,9 @@ python_cab(
     pip_offline = ":pip_offline",
     postinstall_cmd = "postinstall.cmd",
     python_version = PYTHON_VERSION_WINDOWS,
-    requirements = REQUIREMENTS,
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
-    wheels = ["@windows_python_wheels//:wheels"],
+    wheels = [":wheels"],
 )
 
 py_test(

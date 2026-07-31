@@ -462,9 +462,6 @@ _SECTION_LIVESTATUS_STATUS_INCOMPLETE = {
 }
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 1a7ae074-8052-11f1-a575-005056849565: KeyError"
-)
 def test_check_cmk_site_statistics_status_without_core_pid() -> None:
     results = list(
         check_cmk_site_statistics(

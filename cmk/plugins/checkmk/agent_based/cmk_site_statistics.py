@@ -181,11 +181,15 @@ def check_cmk_site_statistics(
     # This part is needed for the timeseries graphs which show host and service problems in the
     # main dashboard (to as far as possible uniquely cross-match sites in this agent output with
     # sites to which are remotely connected)
-    if section_livestatus_status and (livestatus_status := section_livestatus_status.get(item)):
+    if (
+        section_livestatus_status
+        and (livestatus_status := section_livestatus_status.get(item))
+        # core_pid is missing for pre-1.6 CRE sites ...
+        and (core_pid := livestatus_status.get("core_pid") or livestatus_status.get("nagios_pid"))
+    ):
         yield Result(
             state=State.OK,
-            # core_pid is missing for pre-1.6 CRE sites ...
-            notice=f"Core PID: {livestatus_status.get('core_pid', livestatus_status['nagios_pid'])}",
+            notice=f"Core PID: {core_pid}",
         )
 
 

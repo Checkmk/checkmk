@@ -252,6 +252,7 @@ multirun(
         ":requirements",
         ":community_requirements",
         ":runtime_requirements",
+        "//agents/modules/windows:requirements_windows",
     ] + select({
         "@//:gpl+nonfree_repo": ["//omd/non-free/relay:requirements"],
         "@//:gpl_repo": [],
@@ -267,12 +268,16 @@ test_suite(
         ":community_requirements_test",
         ":requirements_test",
         ":runtime_requirements_test",
+        "//agents/modules/windows:requirements_windows_test",
     ],
 )
 
 test_suite(
     name = "py_requirements_test_gpl",
-    tests = [":community_requirements_test"],
+    tests = [
+        ":community_requirements_test",
+        "//agents/modules/windows:requirements_windows_test",
+    ],
 )
 
 write_file(

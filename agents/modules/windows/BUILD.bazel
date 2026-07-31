@@ -1,8 +1,16 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@windows_python_wheels//:requirements.bzl", "REQUIREMENTS")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 load(":python_cab.bzl", "python_cab")
+
+exports_files([
+    "constraints-windows.txt",
+    "requirements-windows.in",
+    "requirements-windows.txt",
+])
 
 # Pure-Python CAB writer driver, vendored via @cabarchive (LGPL-2.1-or-later).
 # Replaces the historical gcab/makecab.exe dependency.
@@ -51,6 +59,26 @@ py_binary(
 filegroup(
     name = "venv_scripts",
     srcs = glob(["venv_scripts/*"]),
+)
+
+compile_requirements_in(
+    name = "requirements-windows-in",
+    constraints = [":constraints-windows.txt"],
+    requirements = [":requirements-windows.in"],
+)
+
+pip_compile(
+    name = "requirements_windows",
+    extra_args = [
+        # Fail loudly if any (transitive) dep lacks a win_amd64 wheel rather
+        # than silently resolving an sdist that cannot be consumed.
+        "--only-binary=:all:",
+    ],
+    python_platform = "x86_64-pc-windows-msvc",
+    requirements_in = ":requirements-windows-in",
+    requirements_txt = ":requirements-windows.txt",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
 )
 
 # Maintainer tool: regenerates windows_python_wheels.lock.json (the sha256-pinned

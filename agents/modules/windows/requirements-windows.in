@@ -1,0 +1,21 @@
+# Direct requirements for the Windows agent's python-3.cab — the human
+# source of truth for what the CAB ships (formerly pipfiles/3/Pipfile).
+#
+# Keep this list unpinned: the resolved requirements-windows.txt is the pin,
+# regenerated with `bazel run //agents/modules/windows:requirements_windows`.
+# Version bounds belong in constraints-windows.txt.
+
+colorama  # Windows has to have some color output
+pyyaml  # to support the agent config
+certifi  # jolokia
+chardet  # jolokia
+idna  # jolokia
+requests[socks]  # jolokia, cmk_update_agent
+urllib3  # jolokia
+cryptography  # cmk_update_agent
+pywin32  # logwatch
+# The historic Windows build seeded pip into the CAB's .venv (via
+# virtualenv) and upgraded the base interpreter's pip (via pipenv), so
+# customers can extend the agent's Python with `.venv\Scripts\pip install`.
+# Keep that surface.
+pip

@@ -162,7 +162,7 @@ def test_binary_smoke_ultimate(binary: BinarySmoke, site: Site) -> None:
 )
 def test_repo_script_smoke(script: RepoScript) -> None:
     """Run build/dev scripts from the repository that are not installed in the site."""
-    repo_root = Path(__file__).parent.parent.parent
+    repo_root = Path(__file__).parent.parent.parent.parent
     binary_path = repo_root / script.path
 
     assert binary_path.exists(), f"Script not found: {binary_path}"

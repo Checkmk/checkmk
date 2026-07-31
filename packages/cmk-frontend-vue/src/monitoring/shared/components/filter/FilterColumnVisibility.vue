@@ -74,6 +74,7 @@ function setVisible(id: string, visible: boolean): void {
           :name="row.visible ? 'eye' : 'eye-crossed-out'"
           :primary-color="{ custom: 'var(--color-mist-grey-60)' }"
           aria-hidden="true"
+          style="pointer-events: none"
         />
         <span class="monitoring-filter-column-visibility__label">{{ row.label }}</span>
       </button>

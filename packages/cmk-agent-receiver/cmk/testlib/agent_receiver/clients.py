@@ -3,17 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from typing import Any, final
+from typing import final
 
 import httpx
 from fastapi.testclient import TestClient
+from starlette.types import Receive, Scope, Send
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
@@ -235,7 +234,7 @@ def _with_client_ip(
     original_app = original_transport.app
     client_tuple = (client_ip, client_port)
 
-    async def client_ip_wrapper(scope: Any, receive: Any, send: Any) -> None:
+    async def client_ip_wrapper(scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "http":
             scope["client"] = client_tuple
         await original_app(scope, receive, send)

@@ -145,6 +145,7 @@ py_library(
         requirement("fastapi"),
         requirement("httpx"),
         requirement("python-dateutil"),
+        requirement("starlette"),
         requirement("tenacity"),
     ],
 )

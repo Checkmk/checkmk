@@ -16,6 +16,7 @@ import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 const props = withDefaults(
   defineProps<{
@@ -60,6 +61,15 @@ function hasColumn(columnId: string): boolean {
 function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
+
+const lastCheck = computed(() =>
+  props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
+)
+const lastStateChange = computed(() =>
+  props.row.last_state_change === undefined
+    ? undefined
+    : formatTimestamp(props.row.last_state_change)
+)
 </script>
 
 <template>
@@ -79,7 +89,9 @@ function toggleSelected(selected: boolean): void {
     :button="true"
     @click="emit('open', row)"
   />
+  <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
   <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
+  <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <NumberCell
     v-if="hasColumn('num_services')"
     column-id="num_services"
@@ -211,6 +223,13 @@ function toggleSelected(selected: boolean): void {
             target: '_top'
           }
     "
+  />
+
+  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
+  <StringCell
+    v-if="hasColumn('last_state_change')"
+    column-id="last_state_change"
+    :value="lastStateChange"
   />
 
   <ActionsCell

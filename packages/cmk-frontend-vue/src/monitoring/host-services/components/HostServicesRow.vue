@@ -9,6 +9,7 @@ import { computed, inject } from 'vue'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 import type { ServiceEntry } from '../api/services'
 
@@ -18,15 +19,6 @@ const columns = inject(COLUMN_LAYOUT_KEY, null)
 
 function hasColumn(columnId: string): boolean {
   return columns?.value.has(columnId) ?? true
-}
-
-function formatTimestamp(iso: string): string {
-  const date = new Date(iso)
-  const pad = (value: number): string => String(value).padStart(2, '0')
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-  )
 }
 
 const lastCheck = computed(() => formatTimestamp(props.row.last_check))

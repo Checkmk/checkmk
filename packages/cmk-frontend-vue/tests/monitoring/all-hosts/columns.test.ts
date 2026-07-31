@@ -67,21 +67,30 @@ test('the optional columns are offered in the picker, labelled by their header',
   const offered = makeService().toggleableColumns
 
   expect(offered).toEqual([
+    { id: 'alias', label: 'Host alias' },
     { id: 'address', label: 'IP address' },
+    { id: 'folder', label: 'Folder' },
     { id: 'num_services', label: 'All services' },
     { id: 'num_services_ok', label: 'OK' },
     { id: 'num_services_warn', label: 'Wa' },
     { id: 'num_services_crit', label: 'Cr' },
     { id: 'num_services_unknown', label: 'Un' },
-    { id: 'num_services_pending', label: 'Pd' }
+    { id: 'num_services_pending', label: 'Pd' },
+    { id: 'last_check', label: 'Last check' },
+    { id: 'last_state_change', label: 'Last state change' }
   ])
 })
 
-test('every offered column is shown on first use', () => {
+test('most offered columns are shown on first use, but alias, folder and the timestamps start hidden', () => {
   const service = makeService()
 
-  expect(service.defaultColumnVisibility).toEqual({})
-  expect(service.columnVisibility.value).toEqual({})
+  expect(service.defaultColumnVisibility).toEqual({
+    alias: false,
+    folder: false,
+    last_check: false,
+    last_state_change: false
+  })
+  expect(service.columnVisibility.value).toEqual(service.defaultColumnVisibility)
 })
 
 test('the fixed columns keep their position around the optional ones', () => {
@@ -90,13 +99,17 @@ test('the fixed columns keep their position around the optional ones', () => {
     'state',
     'modes',
     'name',
+    'alias',
     'address',
+    'folder',
     'num_services',
     'num_services_ok',
     'num_services_warn',
     'num_services_crit',
     'num_services_unknown',
     'num_services_pending',
+    'last_check',
+    'last_state_change',
     'actions'
   ])
 })

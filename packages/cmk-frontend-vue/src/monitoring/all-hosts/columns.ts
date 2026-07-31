@@ -25,13 +25,17 @@ export interface HostColumnOptions {
  * These should satisfy the HostOptionalField type.
  */
 const HIDEABLE_COLUMNS = [
+  'alias',
   'address',
+  'folder',
   'num_services',
   'num_services_ok',
   'num_services_warn',
   'num_services_crit',
   'num_services_unknown',
-  'num_services_pending'
+  'num_services_pending',
+  'last_check',
+  'last_state_change'
 ] as const satisfies readonly HostOptionalField[]
 
 const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set(HIDEABLE_COLUMNS)
@@ -86,6 +90,11 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
   const nameFilter: StringInputFilter<'name'> = {
     type: 'string-input',
     field: 'name'
+  }
+
+  const aliasFilter: StringInputFilter<'alias'> = {
+    type: 'string-input',
+    field: 'alias'
   }
 
   const addressFilter: StringInputFilter<'address'> = {
@@ -164,12 +173,28 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       meta: { filter: nameFilter }
     },
     {
+      accessorKey: 'alias',
+      header: _t('Host alias'),
+      sortDescFirst: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { filter: aliasFilter, hidden: true }
+    },
+    {
       accessorKey: 'address',
       header: _t('IP address'),
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,
       meta: { filter: addressFilter }
+    },
+    {
+      accessorKey: 'folder',
+      header: _t('Folder'),
+      sortDescFirst: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true }
     },
     {
       accessorKey: 'num_services',
@@ -242,6 +267,22 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       },
       minSize: 70,
       maxSize: 70
+    },
+    {
+      accessorKey: 'last_check',
+      header: _t('Last check'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: { hidden: true }
+    },
+    {
+      accessorKey: 'last_state_change',
+      header: _t('Last state change'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: { hidden: true }
     },
     ...(includeActions
       ? [

@@ -11,6 +11,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 import HostOverviewChips from './HostOverviewChips.vue'
 import HostOverviewLabels from './HostOverviewLabels.vue'
@@ -45,15 +46,6 @@ function timeSince(iso: string): string {
     return _t('%{count} h', { count: hours })
   }
   return _t('%{count} d', { count: Math.round(hours / 24) })
-}
-
-function formatTimestamp(iso: string): string {
-  const date = new Date(iso)
-  const pad = (value: number): string => String(value).padStart(2, '0')
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-  )
 }
 </script>
 

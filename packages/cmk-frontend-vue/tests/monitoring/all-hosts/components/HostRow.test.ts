@@ -9,6 +9,7 @@ import { defineComponent, h } from 'vue'
 
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -16,6 +17,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     state: 'UP',
     address: '10.0.0.1',
     alias: 'web server 1',
+    folder: '/network',
     site_id: 'local',
     num_services: 6,
     num_services_ok: 5,
@@ -23,6 +25,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_crit: 0,
     num_services_unknown: 0,
     num_services_pending: 0,
+    last_check: '2026-07-13T11:38:30Z',
+    last_state_change: '2026-07-13T11:39:00Z',
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
     ...overrides
   }
@@ -52,6 +56,16 @@ test('renders host name and ip in their cells', () => {
 
   expect(screen.getByTitle('web-1')).toBeInTheDocument()
   expect(screen.getByTitle('10.0.0.1')).toBeInTheDocument()
+})
+
+test('renders alias, folder and formatted timestamps in their cells', () => {
+  const host = makeHost()
+  mountRow(host)
+
+  expect(screen.getByTitle('web server 1')).toBeInTheDocument()
+  expect(screen.getByTitle('/network')).toBeInTheDocument()
+  expect(screen.getByTitle(formatTimestamp(host.last_check!))).toBeInTheDocument()
+  expect(screen.getByTitle(formatTimestamp(host.last_state_change!))).toBeInTheDocument()
 })
 
 test('emits open with the host when the name cell button is clicked', async () => {
@@ -111,14 +125,15 @@ test('renders one cell per service state with its count', () => {
   )
 
   const tds = Array.from(container.querySelectorAll('td'))
-  // select, state, modes, name, address, total, ok, warn, crit, unknown, pending
-  expect(tds).toHaveLength(11)
-  expect(tds[5]).toHaveTextContent('15')
-  expect(tds[6]).toHaveTextContent('1')
-  expect(tds[7]).toHaveTextContent('2')
-  expect(tds[8]).toHaveTextContent('3')
-  expect(tds[9]).toHaveTextContent('4')
-  expect(tds[10]).toHaveTextContent('5')
+  // select, state, modes, name, alias, address, folder, total, ok, warn, crit, unknown, pending,
+  // last_check, last_state_change
+  expect(tds).toHaveLength(15)
+  expect(tds[7]).toHaveTextContent('15')
+  expect(tds[8]).toHaveTextContent('1')
+  expect(tds[9]).toHaveTextContent('2')
+  expect(tds[10]).toHaveTextContent('3')
+  expect(tds[11]).toHaveTextContent('4')
+  expect(tds[12]).toHaveTextContent('5')
 })
 
 test('toggles the row selection when the checkbox is clicked', async () => {

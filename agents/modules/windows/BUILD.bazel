@@ -66,11 +66,15 @@ py_binary(
 )
 
 # Maintainer tool: recomputes the sha256 hashes for the five python.org
-# per-feature MSIs and prints the http_file(...) blocks for MODULE.bazel.
-# Run after bumping PYTHON_VERSION_WINDOWS in defines.make.
+# per-feature MSIs and prints the _MSI_SHA256 map for
+# //bazel/extensions:python_cab_repositories.bzl.  Run after bumping
+# PYTHON_VERSION_WINDOWS in //:package_versions.bzl -- which it reads through
+# args below, so the hashes cannot be fetched for a different version than the
+# extension requests.
 py_binary(
     name = "refresh_msi_pins",
     srcs = ["refresh_msi_pins.py"],
+    args = ["--python-version=" + PYTHON_VERSION_WINDOWS],
     main = "refresh_msi_pins.py",
     visibility = ["//visibility:public"],
 )

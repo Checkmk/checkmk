@@ -38,11 +38,17 @@ Everything else is hermetic via bazel modules:
 
 ## Pinning
 
-- CPython version: `PYTHON_VERSION_WINDOWS` in `defines.make` (also baked
-  into `BUILD.bazel`'s `python_version`).
-- Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): SHA256-pinned
-  `http_file` entries in the `//bazel/extensions:python_cab_repositories.bzl` module
-  extension, wired up by `bazel/module/python_cab.MODULE.bazel`.
+- CPython version: `PYTHON_VERSION_WINDOWS` in `package_versions.bzl`, the
+  single source of truth for the CAB's CPython version. Nothing holds a second
+  copy: `defines.make` `sed`-reads it out of there at make time, `BUILD.bazel`
+  `load()`s it into `python_version`, and the MSI URLs below derive from it.
+  Bumping it therefore needs no hand-edits beyond refreshing the hashes.
+- Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): declared by the
+  `//bazel/extensions:python_cab_repositories.bzl` module extension (wired up by
+  `bazel/module/python_cab.MODULE.bazel`), which builds the download URLs from
+  `PYTHON_VERSION_WINDOWS` — a `.bzl` file can `load()` it, whereas
+  `MODULE.bazel` cannot, so the version is not spelled out twice. Only the
+  SHA256 hashes (`_MSI_SHA256`) are maintained by hand.
 - Python packages: `pipfiles/3/Pipfile` is the human source of truth (plus
   the pip seed pin in `refresh_wheel_pins.py`); the resolved win_amd64
   closure is pinned in `windows_python_wheels.lock.json`, from which the
@@ -51,15 +57,24 @@ Everything else is hermetic via bazel modules:
 
 To refresh after a CPython version bump:
 
-```bash
-python3 agents/modules/windows/refresh_msi_pins.py 3.13.13
-bazel run //agents/modules/windows:refresh_wheel_pins -- 3.13.13
-```
+- bump `PYTHON_VERSION_WINDOWS` in `package_versions.bzl` — the MSI URLs
+  follow automatically,
+- then regenerate the MSI hashes and the wheel lock:
 
-Paste the printed `http_file(...)` blocks over the matching ones in
-`bazel/extensions/python_cab_repositories.bzl`, update `python_version` in
-`BUILD.bazel` and
-`PYTHON_VERSION_WINDOWS` in `defines.make`.
+  ```bash
+  bazel run //agents/modules/windows:refresh_msi_pins
+  bazel run //agents/modules/windows:refresh_wheel_pins -- <version>
+  ```
+
+  `refresh_msi_pins` takes no version: the `py_binary` passes
+  `PYTHON_VERSION_WINDOWS` through `args`, so it cannot fetch hashes for a
+  different version than the extension requests.
+
+- paste the printed `_MSI_SHA256` map over the one in
+  `bazel/extensions/python_cab_repositories.bzl`,
+- regenerate `MODULE.bazel.lock` with `bazel mod deps --lockfile_mode=update`;
+  the extension's URLs and hashes are recorded there, so until it is refreshed
+  every build fails with "MODULE.bazel.lock is no longer up-to-date".
 
 ## Layout produced
 

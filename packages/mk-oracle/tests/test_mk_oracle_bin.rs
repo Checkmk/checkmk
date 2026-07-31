@@ -91,6 +91,12 @@ fn test_help() {
             "Missing option in --help output: {expected}"
         );
     }
+    // --migrate-subdir is compiled only on non-Windows targets.
+    #[cfg(not(windows))]
+    assert!(
+        stdout.contains("--migrate-subdir"),
+        "Missing option in --help output: --migrate-subdir"
+    );
 }
 
 struct TestEnv {

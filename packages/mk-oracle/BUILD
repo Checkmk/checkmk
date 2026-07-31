@@ -207,7 +207,8 @@ rust_test_suite(
         "references/output-optional.cfg",
         "references/output-optional.ps1",
         "references/output-xe-no-tnsalias.cfg",
-    ],
+        "tests/files/mk_oracle_main.cfg",
+    ] + glob(["tests/files/mk_oracle.d/**"]),
     env_inherit = [
         # CI_ORA2_DB_TEST: mandatory reference endpoint. CI_ORA1_DB_TEST:
         # optional second endpoint, included by the endpoint-iterating tests
@@ -295,6 +296,14 @@ filegroup(
     srcs = [
         "references/output-multiple.ps1",
         "references/output-optional.ps1",
+    ],
+    tags = ["lint-with-psscriptanalyzer"],
+)
+
+filegroup(
+    name = "test_fixture_scripts",
+    srcs = [
+        "tests/files/mk_oracle.d/ignore.ps1",
     ],
     tags = ["lint-with-psscriptanalyzer"],
 )

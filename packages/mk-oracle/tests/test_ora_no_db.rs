@@ -1198,3 +1198,37 @@ oracle:
         );
     }
 }
+
+/// Resolve `tests/files` for both Bazel (cwd is the runfiles root) and cargo (cwd is the crate).
+#[cfg(not(windows))]
+fn files_dir() -> std::path::PathBuf {
+    if cfg!(feature = "build_system_bazel") {
+        std::env::current_dir()
+            .unwrap()
+            .join("packages/mk-oracle/tests/files")
+    } else {
+        std::path::PathBuf::from("tests/files")
+    }
+}
+
+// Config-directory merging is not supported on Windows (the `--migrate-subdir` option is
+// compiled out there), so these tests only run on non-Windows targets.
+#[cfg(not(windows))]
+#[test]
+fn test_read_legacy_config_without_dir() {
+    let input = files_dir().join("mk_oracle_main.cfg");
+    let merged = mk_oracle::config::migration::read_legacy_config(&input, None).unwrap();
+    assert_eq!(merged, "MAIN=1\n");
+}
+
+#[cfg(not(windows))]
+#[test]
+fn test_read_legacy_config_merges_sorted_cfg_files() {
+    let files = files_dir();
+    let input = files.join("mk_oracle_main.cfg");
+    let dir = files.join("mk_oracle.d");
+    let merged = mk_oracle::config::migration::read_legacy_config(&input, Some(&dir)).unwrap();
+    // Only *.cfg files are merged (ignore.ps1 is skipped), in sorted order, each preceded by a
+    // newline. Sorting keeps the output stable regardless of the read_dir order.
+    assert_eq!(merged, "MAIN=1\n\nA=1\n\nB=2\n\nC=3\n");
+}

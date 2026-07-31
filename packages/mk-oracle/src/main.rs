@@ -22,7 +22,11 @@ use clap::Parser;
 async fn main() {
     let cli = Args::parse();
     if let Some(input) = &cli.migrate_config {
-        let code = match config::migration::migrate(input) {
+        #[cfg(not(windows))]
+        let dir = cli.migrate_subdir;
+        #[cfg(windows)]
+        let dir: Option<std::path::PathBuf> = None;
+        let code = match config::migration::migrate(input, dir.as_deref()) {
             Ok(yml) => match &cli.migrate_output {
                 Some(output) => match std::fs::write(output, &yml) {
                     Ok(()) => 0,

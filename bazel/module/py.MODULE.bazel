@@ -8,12 +8,10 @@ python.single_version_platform_override(
     ],
 )
 
-# Needed by the Windows agent's python-3.cab wheel closure, which transitions to
-# //bazel/platforms:x86_64-windows (see //agents/modules/windows:wheels).  Kept
-# next to the linux override because both must stay on the same
-# python-build-standalone release; a single_version_platform_override cannot live
-# in a module extension, so the version is spelled out rather than loaded from
-# PYTHON_VERSION_WINDOWS -- fail_on_python_minor_mismatch guards the drift.
+# Needed by the Windows agent's python-3.cab wheel closure (see
+# //agents/modules/windows:wheels).  MODULE.bazel cannot load()
+# PYTHON_VERSION_WINDOWS, so the version is spelled out; only its major.minor
+# must agree -- guarded by tests/code_quality/test_windows_python_version.py.
 python.single_version_platform_override(
     platform = "x86_64-pc-windows-msvc",
     python_version = "3.13.14",
@@ -27,6 +25,10 @@ python.toolchain(
     configure_coverage_tool = True,
     python_version = "3.13",
 )
+
+# rules_uv py3_runtime for //agents/modules/windows:requirements_windows; the
+# version infix must track PYTHON_VERSION_WINDOWS's major.minor (same guard).
+use_repo(python, "python_3_13_x86_64-unknown-linux-gnu")
 
 py3mod = use_extension("//bazel/extensions:create_python_requirements.bzl", "create_python_requirements")
 py3mod.requirements(

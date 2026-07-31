@@ -365,7 +365,8 @@ test-license-headers:
 	--python-files;
 
 test-requirements:
-	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_requirements.py;
+	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_requirements.py \
+	$(realpath code_quality)/test_windows_python_version.py;
 
 test-py-extensions:
 	# block 1: no changes file given, test all files

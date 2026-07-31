@@ -86,28 +86,61 @@ _PYVENV_HOME = "C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 # install path (see make_exe_wrappers.py for why not the build machine's).
 _WRAPPER_SHEBANG = _PYVENV_HOME + "\\.venv\\Scripts\\python.exe"
 
-def _python_version_short(version):
-    # "3.13.13" -> "313"
+def python_version_major_minor(version):
+    # "3.13.14" -> "3.13", the part the cp3xx wheel ABI tag encodes
     parts = version.split(".")
     if len(parts) < 2:
         fail("python_version must be a dotted version like 3.13.13, got %r" % version)
-    return parts[0] + parts[1]
+    return parts[0] + "." + parts[1]
 
-def fail_on_python_minor_mismatch(python_version, python_version_windows):
-    """Guard the ABI the CAB installs against the ABI uv resolves for.
+def _python_version_short(version):
+    # "3.13.13" -> "313"
+    return python_version_major_minor(version).replace(".", "")
 
-    rules_uv appends ``--python-version`` (from the host toolchain, i.e.
-    ``PYTHON_VERSION``) after ``extra_args``, so ``pip_compile`` cannot override
-    it; only the minor matters — it is what the ``cp3xx`` wheel tag encodes.
-    """
-    if _python_version_short(python_version) != _python_version_short(python_version_windows):
-        fail(
-            ("PYTHON_VERSION (%s) and PYTHON_VERSION_WINDOWS (%s) disagree on the Python " +
-             "minor version, so requirements-windows.txt would be resolved for a different " +
-             "wheel ABI than python-3.cab installs.  Either realign the two in " +
-             "//:package_versions.bzl, or resolve with an explicit interpreter via " +
-             "rules_uv's py3_runtime attribute.") % (python_version, python_version_windows),
-        )
+def _py_platform_transition_impl(_settings, attr):
+    return {
+        "//command_line_option:platforms": str(attr.target_platform),
+        "@rules_python//python/config_settings:python_version": python_version_major_minor(attr.python_version),
+    }
+
+_py_platform_transition = transition(
+    implementation = _py_platform_transition_impl,
+    inputs = [],
+    outputs = [
+        "//command_line_option:platforms",
+        "@rules_python//python/config_settings:python_version",
+    ],
+)
+
+def _py_platform_transition_filegroup_impl(ctx):
+    return [DefaultInfo(
+        files = depset(transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]),
+    )]
+
+py_platform_transition_filegroup = rule(
+    implementation = _py_platform_transition_filegroup_impl,
+    attrs = {
+        "python_version": attr.string(
+            mandatory = True,
+            doc = "CPython version whose major.minor selects the wheel ABI; " +
+                  "a full version is accepted, the patch level is ignored.",
+        ),
+        "srcs": attr.label_list(
+            allow_files = True,
+            cfg = _py_platform_transition,
+        ),
+        "target_platform": attr.label(
+            mandatory = True,
+            doc = "Target platform to transition srcs to.",
+        ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+    },
+    doc = "platform_transition_filegroup that also pins rules_python's " +
+          "python_version flag: a pip.parse hub selects wheels by python " +
+          "version, so the platform alone is not enough.",
+)
 
 def _python_cab_impl(ctx):
     cab = ctx.actions.declare_file(ctx.label.name + ".cab")
@@ -304,6 +337,7 @@ rm -f "$VENV/Lib/site-packages"/pip-*.dist-info/REQUESTED
 "$exec_root/{make_exe_wrappers}" \\
     --pip-wheel "$WHEELDIR" \\
     --scripts-dir "$VENV/Scripts" \\
+    --python-major-minor "{py_major_minor}" \\
     --shebang '{wrapper_shebang}' \\
     --fixup-records "$VENV/Lib/site-packages" \\
     --fixup-records "$PY_DIR/Lib/site-packages"
@@ -483,7 +517,8 @@ python_cab = rule(
         ),
         "python_version": attr.string(
             mandatory = True,
-            doc = "Full CPython version (e.g. \"3.13.13\"); must match PYTHON_VERSION_WINDOWS in defines.make.",
+            doc = "Full CPython version (e.g. \"3.13.13\"); must match PYTHON_VERSION_WINDOWS " +
+                  "in //:package_versions.bzl.",
         ),
         "venv_scripts": attr.label_list(
             allow_files = True,
@@ -492,7 +527,8 @@ python_cab = rule(
         "wheels": attr.label_list(
             allow_files = [".whl"],
             doc = "Pinned win_amd64/cp3xx wheel closure (the @windows_python_wheels " +
-                  "pip.parse hub, resolved for the windows platform) installed " +
+                  "pip.parse hub, resolved for the windows platform and the CAB's " +
+                  "python version by py_platform_transition_filegroup) installed " +
                   "offline into the CAB; must include exactly one pip wheel.",
         ),
     },

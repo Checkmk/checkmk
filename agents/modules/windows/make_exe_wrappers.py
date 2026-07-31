@@ -25,7 +25,8 @@ actually ship (matching what a native Windows pip install records).
 Usage::
 
     make_exe_wrappers.py --pip-wheel <pip wheel or find-links dir> \\
-        --scripts-dir <venv Scripts dir> --shebang <windows python.exe path> \\
+        --scripts-dir <venv Scripts dir> --python-major-minor <X.Y> \\
+        --shebang <windows python.exe path> \\
         [--fixup-records <site-packages dir> ...]
 """
 
@@ -35,6 +36,7 @@ import argparse
 import base64
 import hashlib
 import io
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -63,38 +65,42 @@ def _plain_main(module: str, func: str) -> str:
     )
 
 
-_WRAPPERS = {
-    "pip.exe": _PIP_MAIN,
-    "pip3.exe": _PIP_MAIN,
-    "pip3.13.exe": _PIP_MAIN,
-    "pip-3.13.exe": _PIP_MAIN,
-    "cffi-gen-src.exe": _plain_main("cffi._cffi_gen_src", "run"),
-    "chardetect.exe": _plain_main("chardet.cli", "main"),
-    "idna.exe": _plain_main("idna.cli", "main"),
-    "normalizer.exe": _plain_main("charset_normalizer.cli", "cli_detect"),
-    "pywin32_postinstall.exe": _plain_main("win32.scripts.pywin32_postinstall", "main"),
-    "pywin32_testall.exe": _plain_main("win32.scripts.pywin32_testall", "main"),
-}
+def _wrappers(python_major_minor: str) -> dict[str, str]:
+    return {
+        "pip.exe": _PIP_MAIN,
+        "pip3.exe": _PIP_MAIN,
+        f"pip{python_major_minor}.exe": _PIP_MAIN,
+        f"pip-{python_major_minor}.exe": _PIP_MAIN,
+        "cffi-gen-src.exe": _plain_main("cffi._cffi_gen_src", "run"),
+        "chardetect.exe": _plain_main("chardet.cli", "main"),
+        "idna.exe": _plain_main("idna.cli", "main"),
+        "normalizer.exe": _plain_main("charset_normalizer.cli", "cli_detect"),
+        "pywin32_postinstall.exe": _plain_main("win32.scripts.pywin32_postinstall", "main"),
+        "pywin32_testall.exe": _plain_main("win32.scripts.pywin32_testall", "main"),
+    }
+
 
 _STUB_IN_PIP_WHEEL = "pip/_vendor/distlib/t64.exe"
 
 # Fixed zip entry timestamp so rebuilt wrappers are bit-identical.
 _ZIP_DATE_TIME = (1980, 1, 1, 0, 0, 0)
 
-# RECORD line rewrites: the POSIX entry-point script name pip recorded
-# under bin/ -> the .exe wrapper that replaces it.  pip-3.13.exe is
-# virtualenv's extra alias and was never RECORDed, matching production.
-_RECORD_SCRIPT_TO_WRAPPER = {
-    "pip": "pip.exe",
-    "pip3": "pip3.exe",
-    "pip3.13": "pip3.13.exe",
-    "cffi-gen-src": "cffi-gen-src.exe",
-    "chardetect": "chardetect.exe",
-    "idna": "idna.exe",
-    "normalizer": "normalizer.exe",
-    "pywin32_postinstall": "pywin32_postinstall.exe",
-    "pywin32_testall": "pywin32_testall.exe",
-}
+
+def _record_script_to_wrapper(python_major_minor: str) -> dict[str, str]:
+    # RECORD line rewrites: the POSIX entry-point script name pip recorded
+    # under bin/ -> the .exe wrapper that replaces it.  pip-<X.Y>.exe is
+    # virtualenv's extra alias and was never RECORDed, matching production.
+    return {
+        "pip": "pip.exe",
+        "pip3": "pip3.exe",
+        f"pip{python_major_minor}": f"pip{python_major_minor}.exe",
+        "cffi-gen-src": "cffi-gen-src.exe",
+        "chardetect": "chardetect.exe",
+        "idna": "idna.exe",
+        "normalizer": "normalizer.exe",
+        "pywin32_postinstall": "pywin32_postinstall.exe",
+        "pywin32_testall": "pywin32_testall.exe",
+    }
 
 
 def _pip_wheel(path: Path) -> Path:
@@ -119,7 +125,9 @@ def _record_hash(data: bytes) -> str:
     return f"sha256={digest.decode()}"
 
 
-def _fixup_records(site_packages: Path, wrappers: dict[str, bytes]) -> None:
+def _fixup_records(
+    site_packages: Path, wrappers: dict[str, bytes], script_to_wrapper: dict[str, str]
+) -> None:
     for record in site_packages.glob("*.dist-info/RECORD"):
         original = record.read_text()
         if "../../bin/" not in original:
@@ -132,8 +140,8 @@ def _fixup_records(site_packages: Path, wrappers: dict[str, bytes]) -> None:
             if line.startswith("../../bin/"):
                 rest = line[len("../../bin/") :]
                 name = rest.split(",", 1)[0]
-                if name in _RECORD_SCRIPT_TO_WRAPPER:
-                    wrapper = _RECORD_SCRIPT_TO_WRAPPER[name]
+                if name in script_to_wrapper:
+                    wrapper = script_to_wrapper[name]
                     data = wrappers[wrapper]
                     line = f"../../Scripts/{wrapper},{_record_hash(data)},{len(data)}"
                 elif name.endswith(".py") or "__pycache__" in name:
@@ -146,7 +154,7 @@ def _fixup_records(site_packages: Path, wrappers: dict[str, bytes]) -> None:
                     # the build machine's interpreter path, breaking reproducibility.
                     sys.exit(
                         f"error: {record}: console script {name!r} has no .exe wrapper; "
-                        "add it to _WRAPPERS/_RECORD_SCRIPT_TO_WRAPPER in "
+                        "add it to _wrappers()/_record_script_to_wrapper() in "
                         "make_exe_wrappers.py"
                     )
             lines.append(line)
@@ -157,22 +165,30 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pip-wheel", required=True, type=Path)
     parser.add_argument("--scripts-dir", required=True, type=Path)
+    parser.add_argument("--python-major-minor", required=True)
     parser.add_argument("--shebang", required=True)
     parser.add_argument("--fixup-records", type=Path, action="append", default=[])
     args = parser.parse_args()
+
+    if not re.fullmatch(r"\d+\.\d+", args.python_major_minor):
+        sys.exit(
+            f"error: --python-major-minor must look like 3.13, got {args.python_major_minor!r}"
+        )
 
     with zipfile.ZipFile(_pip_wheel(args.pip_wheel)) as wheel:
         stub = wheel.read(_STUB_IN_PIP_WHEEL)
 
     wrappers = {
-        name: _wrapper_bytes(stub, args.shebang, main_py) for name, main_py in _WRAPPERS.items()
+        name: _wrapper_bytes(stub, args.shebang, main_py)
+        for name, main_py in _wrappers(args.python_major_minor).items()
     }
     args.scripts_dir.mkdir(parents=True, exist_ok=True)
     for name, data in wrappers.items():
         (args.scripts_dir / name).write_bytes(data)
 
+    script_to_wrapper = _record_script_to_wrapper(args.python_major_minor)
     for site_packages in args.fixup_records:
-        _fixup_records(site_packages, wrappers)
+        _fixup_records(site_packages, wrappers, script_to_wrapper)
     return 0
 
 

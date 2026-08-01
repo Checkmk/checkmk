@@ -401,7 +401,7 @@ class PageProfileData(Page):
         profile_path = store.get_profile(profile_id)
         response.set_content_type("application/json")
         if profile_path is None:
-            response.set_status_code(404)
+            response.status_code = 404
             response.set_data(json.dumps({"error": "Profile not found"}))
             return
 

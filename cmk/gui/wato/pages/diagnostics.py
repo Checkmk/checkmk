@@ -1006,13 +1006,18 @@ def _get_tarfile_from_remotesite(
 
 def _join_sub_tars(diagnostics_dir: Path, tarfile_paths: Sequence[str]) -> Path:
     tarfile_path = _create_file_path(diagnostics_dir)
+    added: set[str] = set()
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:
             with CheckmkTarArchive.from_path(Path(filepath)) as sub_tar:
-                dest_members = [m.name for m in dest.getmembers()]
                 for member in sub_tar:
-                    if member.name not in dest_members:
-                        dest.addfile(member, sub_tar.extractmember(member))
+                    if member.name in added:
+                        continue
+                    added.add(member.name)
+                    # Only regular files have a payload. Asking for the payload
+                    # of a directory or a (sym)link raises in streaming mode.
+                    payload = sub_tar.extractmember(member) if member.isfile() else None
+                    dest.addfile(member, payload)
     return tarfile_path
 
 

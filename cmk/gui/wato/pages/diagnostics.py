@@ -316,7 +316,85 @@ class ModeDiagnostics(WatoMode[object]):
             optional_keys=False,
         )
 
+    def _vs_site(self) -> tuple[str, FixedValue[str | None]]:
+        return (
+            "site",
+            FixedValue(
+                value=self._site,
+                title=_("Site"),
+                totext=self._site,
+                help=_("The site to create a dump for."),
+            ),
+        )
+
+    def _vs_timing(self) -> tuple[str, Dictionary]:
+        return (
+            "timing",
+            Dictionary(
+                title=_("Timeout"),
+                elements=[
+                    (
+                        "timeout",
+                        Integer(
+                            title=_(
+                                "If exceeded, an exception will appear. "
+                                "In extraordinary cases, consider calling "
+                                "support diagnostics from command line "
+                                "(see inline help)."
+                            ),
+                            help=_(
+                                "The timeout in seconds when gathering the support "
+                                "diagnostics data. The default is 110 seconds. When "
+                                "very large files are collected, it's also possible to "
+                                "call the support diagnostics from the command line "
+                                "using the command 'cmk --create-diagnostics-dump' with "
+                                "appropriate parameters in the context of the affected "
+                                "site. See the %(user_manual)s."
+                            )
+                            % {
+                                "user_manual": html.render_a(
+                                    "user manual",
+                                    href=doc_reference_url(
+                                        user.language,
+                                        DocReferenceUtm(
+                                            campaign="inline_help",
+                                            content="setup.diagnostics",
+                                        ),
+                                        DocReference.DIAGNOSTICS_CLI,
+                                    ),
+                                    target="_blank",
+                                )
+                            },
+                            default_value=timeout_default,
+                            minvalue=60,
+                            unit=_("seconds"),
+                        ),
+                    ),
+                ],
+            ),
+        )
+
+    def _vs_checkmk_server_host(self) -> tuple[str, MonitoredHostname]:
+        return (
+            "checkmk_server_host",
+            MonitoredHostname(
+                title=_("Checkmk server host"),
+                help=_(
+                    "Some of the diagnostics data needs to be collected from the host "
+                    "that represents the Checkmk server of the related site. "
+                    "In case your Checkmk server is not monitored by itself, but from "
+                    "a different site (which is actually recommended), please enter "
+                    "the name of that host here."
+                ),
+            ),
+        )
+
     def _vs_diagnostics(self) -> Dictionary:
+        elements: list[tuple[str, ValueSpec[Any]]] = [
+            self._vs_site(),
+            self._vs_timing(),
+            self._vs_checkmk_server_host(),
+        ]
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
@@ -340,73 +418,7 @@ class ModeDiagnostics(WatoMode[object]):
                 )
             },
             elements=[
-                (
-                    "site",
-                    FixedValue(
-                        value=self._site,
-                        title=_("Site"),
-                        totext=self._site,
-                        help=_("The site to create a dump for."),
-                    ),
-                ),
-                (
-                    "timing",
-                    Dictionary(
-                        title=_("Timeout"),
-                        elements=[
-                            (
-                                "timeout",
-                                Integer(
-                                    title=_(
-                                        "If exceeded, an exception will appear. "
-                                        "In extraordinary cases, consider calling "
-                                        "support diagnostics from command line "
-                                        "(see inline help)."
-                                    ),
-                                    help=_(
-                                        "The timeout in seconds when gathering the support "
-                                        "diagnostics data. The default is 110 seconds. When "
-                                        "very large files are collected, it's also possible to "
-                                        "call the support diagnostics from the command line "
-                                        "using the command 'cmk --create-diagnostics-dump' with "
-                                        "appropriate parameters in the context of the affected "
-                                        "site. See the %(user_manual)s."
-                                    )
-                                    % {
-                                        "user_manual": html.render_a(
-                                            "user manual",
-                                            href=doc_reference_url(
-                                                user.language,
-                                                DocReferenceUtm(
-                                                    campaign="inline_help",
-                                                    content="setup.diagnostics",
-                                                ),
-                                                DocReference.DIAGNOSTICS_CLI,
-                                            ),
-                                            target="_blank",
-                                        )
-                                    },
-                                    default_value=timeout_default,
-                                    minvalue=60,
-                                    unit=_("seconds"),
-                                ),
-                            ),
-                        ],
-                    ),
-                ),
-                (
-                    "checkmk_server_host",
-                    MonitoredHostname(
-                        title=_("Checkmk server host"),
-                        help=_(
-                            "Some of the diagnostics data needs to be collected from the host "
-                            "that represents the Checkmk server of the related site. "
-                            "In case your Checkmk server is not monitored by itself, but from "
-                            "a different site (which is actually recommended), please enter "
-                            "the name of that host here."
-                        ),
-                    ),
-                ),
+                *elements,
                 (
                     "general",
                     FixedValue(

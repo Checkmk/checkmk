@@ -22980,9 +22980,6 @@ msgstr ""
 msgid "Earliest entry in journal"
 msgstr "Frühester Eintrag im Journal"
 
-msgid "Eaton UPS: temperature and humidity sensors"
-msgstr "Eaton UPS: Temperatur- und Luftfeuchtigkeitssensoren"
-
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -97596,6 +97593,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Eaton UPS: temperature and humidity sensors"
+#~ msgstr "Eaton UPS: Temperatur- und Luftfeuchtigkeitssensoren"
 
 #, python-format
 #~ msgid ""

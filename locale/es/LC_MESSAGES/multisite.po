@@ -24120,10 +24120,6 @@ msgstr ""
 msgid "Earliest entry in journal"
 msgstr ""
 
-#, fuzzy
-msgid "Eaton UPS: temperature and humidity sensors"
-msgstr "Temperatura y humedad para los SAIs de Eaton"
-
 msgid "Edit"
 msgstr "Editar"
 
@@ -102516,6 +102512,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Eaton UPS: temperature and humidity sensors"
+#~ msgstr "Temperatura y humedad para los SAIs de Eaton"
 
 #, fuzzy, python-format
 #~ msgid ""

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-30 16:04+0000\n"
+"PO-Revision-Date: 2026-07-31 17:59+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -23958,10 +23958,6 @@ msgstr ""
 
 msgid "Earliest entry in journal"
 msgstr ""
-
-#, fuzzy
-msgid "Eaton UPS: temperature and humidity sensors"
-msgstr "Temperatura e Humidade para UPS Eaton"
 
 msgid "Edit"
 msgstr "Editar"
@@ -101692,6 +101688,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Eaton UPS: temperature and humidity sensors"
+#~ msgstr "Temperatura e Humidade para UPS Eaton"
 
 #, fuzzy, python-format
 #~ msgid ""

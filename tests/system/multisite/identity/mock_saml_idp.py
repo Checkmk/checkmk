@@ -35,7 +35,7 @@ from urllib.parse import parse_qs, urlparse
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from lxml import etree  # type: ignore[import-untyped]
+from lxml import etree
 
 from cmk.crypto.certificate import CertificateWithPrivateKey, PersistedCertificateWithPrivateKey
 from tests.system.multisite.identity.directory import Directory, DirectoryUser
@@ -55,7 +55,7 @@ def _free_port() -> int:
 
 def _generate_signing_keypair(out_dir: Path, common_name: str) -> tuple[Path, Path]:
     """Generate an RSA keypair and persist key + cert to disk (pysaml2 wants file paths)."""
-    from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+    from dateutil.relativedelta import relativedelta
 
     bundle = CertificateWithPrivateKey.generate_self_signed(
         common_name=common_name,
@@ -258,8 +258,8 @@ def _build_idp_config(
     cert_path: Path,
 ) -> dict[str, object]:
     """Build the pysaml2 ``IdPConfig`` dict (pure-Python XMLSecurity backend, in-memory only)."""
-    from saml2 import BINDING_HTTP_POST  # type: ignore[import-not-found]
-    from saml2.saml import NAME_FORMAT_URI  # type: ignore[import-not-found]
+    from saml2 import BINDING_HTTP_POST
+    from saml2.saml import NAME_FORMAT_URI
 
     return {
         "entityid": entity_id,
@@ -404,7 +404,7 @@ class MockSamlIdp:
 
     def fetch_metadata(self) -> str:
         """Return the IdP's SAML metadata XML (signed with the mock's keypair)."""
-        from saml2.metadata import entity_descriptor  # type: ignore[import-not-found]
+        from saml2.metadata import entity_descriptor
 
         return str(entity_descriptor(self._get_idp_server().config))
 
@@ -564,8 +564,8 @@ class MockSamlIdp:
         handler.wfile.write(body)
 
     def _get_idp_server(self) -> Any:
-        from saml2.config import IdPConfig  # type: ignore[import-not-found]
-        from saml2.server import Server  # type: ignore[import-not-found]
+        from saml2.config import IdPConfig
+        from saml2.server import Server
 
         with self._idp_lock:
             if self._idp_server is None:

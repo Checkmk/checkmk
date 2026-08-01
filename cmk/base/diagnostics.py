@@ -33,7 +33,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
-from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,
@@ -55,9 +54,6 @@ from cmk.diagnostics.internal import (
 from cmk.utils import log
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
-
-# TODO: why is there localization in this module?
-
 
 # TODO(3.1): delete together with the legacy wire sections below.
 DiagnosticsCLParameters = Sequence[str]
@@ -194,7 +190,7 @@ mode_create_diagnostics_dump = Mode(
 def handler(
     app: CheckmkBaseApp,
     args: DiagnosticsCLParameters,
-    plugins: AgentBasedPlugins | None,
+    plugins: object,
     loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpResult:
     buf = io.StringIO()
@@ -224,7 +220,7 @@ automation_create_diagnostics_dump = Automation(
 def handler_v2(
     app: CheckmkBaseApp,
     args: Sequence[str],
-    plugins: AgentBasedPlugins | None,
+    plugins: object,
     loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpV2Result:
     buf = io.StringIO()
@@ -821,24 +817,6 @@ class DiagnosticsDump:
         for _mtime, filepath in dumps:
             self._logger.filepath(filepath.relative_to(omd_root))
             filepath.unlink(missing_ok=True)
-
-
-# .
-#   .--collectors----------------------------------------------------------.
-#   |                        _ _           _                               |
-#   |               ___ ___ | | | ___  ___| |_ ___  _ __ ___               |
-#   |              / __/ _ \| | |/ _ \/ __| __/ _ \| '__/ __|              |
-#   |             | (_| (_) | | |  __/ (__| || (_) | |  \__ \              |
-#   |              \___\___/|_|_|\___|\___|\__\___/|_|  |___/              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------
-
-
-# @cache
-# def get_omd_config() -> site.OMDConfig:
-#    # Useless function, useless cache.  See comment
-#    # in cmk.ccc.site
-#    return site.get_omd_config(cmk.utils.paths.omd_root)
 
 
 @cache

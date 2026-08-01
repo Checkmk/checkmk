@@ -194,7 +194,6 @@ py_library(
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:tty",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:diagnostics",

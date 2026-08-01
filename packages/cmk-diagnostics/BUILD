@@ -13,12 +13,7 @@ exports_files([
 
 py_library(
     name = "engine",
-    srcs = [
-        "cmk/diagnostics/engine/__init__.py",
-        "cmk/diagnostics/engine/_loader.py",
-        "cmk/diagnostics/engine/_unsorted.py",
-        "cmk/diagnostics/engine/_wire.py",
-    ],
+    srcs = glob(["cmk/diagnostics/engine/**/*.py"]),
     data = [":engine_py_typed"],
     imports = ["."],
     visibility = ["//visibility:public"],

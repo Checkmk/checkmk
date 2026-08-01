@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._loader import load_diagnostics_plugins as load_diagnostics_plugins
+from ._selection import resolve_selection as resolve_selection
 from ._unsorted import CheckmkFileEncryption as CheckmkFileEncryption
 from ._unsorted import CheckmkFileInfo as CheckmkFileInfo
 from ._unsorted import CheckmkFileInfoByRelFilePathMap as CheckmkFileInfoByRelFilePathMap

@@ -52,6 +52,7 @@ from cmk.diagnostics.engine import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    resolve_selection,
 )
 from cmk.diagnostics.internal import (
     CollectContext,
@@ -102,13 +103,7 @@ def _resolve_cli_selection(
         (plugin.topic for plugin in catalogue.values()), default_threshold
     )
 
-    selected = {
-        plugin.name
-        for plugin in catalogue.values()
-        if not plugin.always
-        and (threshold := thresholds[plugin.topic]) is not None
-        and plugin.sensitivity <= threshold
-    }
+    selected = set(resolve_selection(catalogue.values(), thresholds))
     for name in options.get("plugins", "").split(",") if "plugins" in options else []:
         if name not in catalogue:
             raise MKGeneralException("Unknown plugin %r (see --list for available plugins)" % name)

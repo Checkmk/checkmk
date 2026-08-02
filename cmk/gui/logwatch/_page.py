@@ -566,7 +566,7 @@ def _extend_display_dropdown(request: Request, menu: PageMenu) -> None:
                     item=make_simple_link(
                         makeactionuri(
                             request,
-                            transactions,
+                            transactions.get(),
                             [
                                 (
                                     ("_show_backlog", "no")
@@ -615,7 +615,7 @@ def _page_menu_entry_acknowledge(
         icon_name=StaticIcon(IconNames.delete),
         item=make_simple_link(
             make_confirm_delete_link(
-                url=makeactionuri(request, transactions, urivars),
+                url=makeactionuri(request, transactions.get(), urivars),
                 title=_("Clear logs by deleting all stored messages"),
                 message=_(
                     "Clearing the log acknowledges and removes the stored messages."

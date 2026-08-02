@@ -655,7 +655,9 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])],
                 )
                 delete_url = make_confirm_delete_link(
-                    url=makeactionuri(request, transactions, [("_delete", custom_attr["name"])]),
+                    url=makeactionuri(
+                        request, transactions.get(), [("_delete", custom_attr["name"])]
+                    ),
                     title=_("Delete custom attribute #%(nr)d") % {"nr": nr},
                     suffix=custom_attr["title"],
                     message=_("Name: %(name)s") % {"name": custom_attr["name"]},

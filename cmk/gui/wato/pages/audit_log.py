@@ -248,7 +248,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     make_confirm_delete_link(
                         url=makeactionuri(
                             request,
-                            transactions,
+                            transactions.get(),
                             [
                                 ("_action", "clear"),
                             ],
@@ -279,7 +279,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 item=make_simple_link(
                     makeactionuri(
                         request,
-                        transactions,
+                        transactions.get(),
                         [
                             ("_action", "csv"),
                             ("file_selection", self._request_data.ok.selected_filename),
@@ -324,7 +324,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                         item=make_simple_link(
                             makeactionuri(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     ("show_details", "0" if self._show_details else "1"),
                                 ],
@@ -341,7 +341,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                         item=make_simple_link(
                             makeactionuri(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     ("show_object_type", "0" if self._show_object_type else "1"),
                                 ],
@@ -358,7 +358,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                         item=make_simple_link(
                             makeactionuri(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     ("show_object", "0" if self._show_object else "1"),
                                 ],
@@ -620,7 +620,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             html.icon_button(
                 makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     [
                         ("audit_options_start_sel", "0"),
                     ],
@@ -632,7 +632,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             html.icon_button(
                 makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     time_url_args(next_log_time),
                 ),
                 "{}: {}".format(_("Newer events"), render.date(next_log_time)),
@@ -646,7 +646,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             html.icon_button(
                 makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     time_url_args(previous_log_time),
                 ),
                 "{}: {}".format(_("Older events"), render.date(previous_log_time)),

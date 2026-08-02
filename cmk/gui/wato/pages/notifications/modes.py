@@ -1072,7 +1072,7 @@ class ModeNotifications(ABCNotificationsMode):
                         item=make_simple_link(
                             makeactionuri(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     (
                                         "_show_user",
@@ -1600,7 +1600,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         item=make_simple_link(
                             makeactionuri(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     ("_show_bulks", "" if self._show_bulks else "1"),
                                 ],
@@ -1617,7 +1617,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         item=make_simple_link(
                             makeactionuri(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     (
                                         "_show_user",
@@ -1734,7 +1734,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     onclick="cmk.wato.toggle_container('notification_context_%d')" % nr,
                 )
 
-                replay_url = makeactionuri(request, transactions, [("_replay", str(nr))])
+                replay_url = makeactionuri(request, transactions.get(), [("_replay", str(nr))])
                 html.icon_button(
                     replay_url,
                     _("Replay this notification, send it again!"),

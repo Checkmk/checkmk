@@ -1120,7 +1120,7 @@ class ModeFolder(WatoMode):
                 url_vars=[
                     ("what", what),
                     ("ident", ident),
-                    ("back_url", makeactionuri(request, transactions, [])),
+                    ("back_url", makeactionuri(request, transactions.get(), [])),
                 ],
             ),
             style=style,

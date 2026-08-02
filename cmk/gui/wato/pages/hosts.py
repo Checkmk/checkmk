@@ -790,7 +790,7 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
             title=_("Update DNS cache"),
             icon_name=StaticIcon(IconNames.update),
             item=make_simple_link(
-                makeactionuri(request, transactions, [("_update_dns_cache", "1")])
+                makeactionuri(request, transactions.get(), [("_update_dns_cache", "1")])
             ),
             shortcut_title=_("Update site DNS cache"),
             is_shortcut=True,
@@ -926,7 +926,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
-                        url=makeactionuri(request, transactions, [("delete", "1")]),
+                        url=makeactionuri(request, transactions.get(), [("delete", "1")]),
                         title=_("Delete host"),
                         suffix=host.name(),
                     )
@@ -947,7 +947,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=makeactionuri(
-                            request, transactions, [("_remove_tls_registration", "1")]
+                            request, transactions.get(), [("_remove_tls_registration", "1")]
                         ),
                         title=_("Remove TLS registration"),
                         message=remove_tls_registration_help(),

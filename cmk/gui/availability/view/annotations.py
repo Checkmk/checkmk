@@ -86,7 +86,7 @@ def show_annotations(
             html.icon_button(edit_url, _("Edit this annotation"), StaticIcon(IconNames.edit))
             del_anno: HTTPVariables = [("_delete_annotation", "1")]
             delete_url = make_confirm_delete_link(
-                url=makeactionuri(request, transactions, del_anno + anno_vars),
+                url=makeactionuri(request, transactions.get(), del_anno + anno_vars),
                 title=_("Delete annotation #%(nr)d") % {"nr": nr},
                 message=_("Annotation: %(text)s")
                 % {"text": " ".join(annotation["text"].strip().split())},

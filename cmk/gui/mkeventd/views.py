@@ -1143,7 +1143,11 @@ def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
         ("_show_result", "0"),
     ]
     url = makeactionuri(
-        request, transactions, urlvars, filename=filename, delvars=["selection", "show_checkboxes"]
+        request,
+        transactions.get(),
+        urlvars,
+        filename=filename,
+        delvars=["selection", "show_checkboxes"],
     )
     return html.render_icon_button(
         url, _("Archive this event"), StaticIcon(IconNames.archive_event)

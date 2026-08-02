@@ -290,7 +290,7 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("Synchronize users"),
                 icon_name=StaticIcon(IconNames.replicate),
-                item=make_simple_link(makeactionuri(request, transactions, [("_sync", 1)])),
+                item=make_simple_link(makeactionuri(request, transactions.get(), [("_sync", 1)])),
             )
 
             yield PageMenuEntry(

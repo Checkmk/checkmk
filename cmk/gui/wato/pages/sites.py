@@ -1247,7 +1247,7 @@ class ModeDistributedMonitoring(WatoMode):
         if delete_id in folder_site_stats.hosts:
             search_url = makeactionuri_contextless(
                 request,
-                transactions,
+                transactions.get(),
                 [
                     ("host_search_change_site", "on"),
                     ("host_search_site", delete_id),
@@ -1285,7 +1285,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         if empty_folders:
             delete_folders_url = makeactionuri_contextless(
-                request, transactions, [("_delete_folders", delete_id), ("mode", "sites")]
+                request, transactions.get(), [("_delete_folders", delete_id), ("mode", "sites")]
             )
             raise MKUserError(
                 None,
@@ -1577,7 +1577,9 @@ class ModeDistributedMonitoring(WatoMode):
         )
 
         delete_url = make_confirm_delete_link(
-            url=makeactionuri(request, transactions, [("_delete_connection_id", connection_id)]),
+            url=makeactionuri(
+                request, transactions.get(), [("_delete_connection_id", connection_id)]
+            ),
             title=_("Delete peer-to-peer connection to site"),
             message=_("ID: %(connection_id)s") % {"connection_id": connection_id},
         )
@@ -1607,7 +1609,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.empty_icon_button()
         else:
             delete_url = make_confirm_delete_link(
-                url=makeactionuri(request, transactions, [("_delete", site_id)]),
+                url=makeactionuri(request, transactions.get(), [("_delete", site_id)]),
                 title=_("Delete connection to site"),
                 suffix=site.get("alias", ""),
                 message=_("ID: %(site_id)s") % {"site_id": site_id},
@@ -2369,7 +2371,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 if cert_detail.is_ca:
                     url = makeactionuri(
                         request,
-                        transactions,
+                        transactions.get(),
                         [
                             ("_action", "trust"),
                             ("_digest", cert_detail.digest_sha256),

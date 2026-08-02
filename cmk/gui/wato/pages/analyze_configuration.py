@@ -219,7 +219,7 @@ class ModeAnalyzeConfig(WatoMode):
             html.icon_button(
                 makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     [
                         ("_do", "enable"),
                         ("_test_id", test_id),
@@ -232,7 +232,7 @@ class ModeAnalyzeConfig(WatoMode):
             html.icon_button(
                 makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     [
                         ("_do", "disable"),
                         ("_test_id", test_id),
@@ -276,7 +276,7 @@ class ModeAnalyzeConfig(WatoMode):
                     html.icon_button(
                         makeactionuri(
                             request,
-                            transactions,
+                            transactions.get(),
                             [
                                 ("_do", "unack"),
                                 ("_site_id", result.site_id),
@@ -292,7 +292,7 @@ class ModeAnalyzeConfig(WatoMode):
                     html.icon_button(
                         makeactionuri(
                             request,
-                            transactions,
+                            transactions.get(),
                             [
                                 ("_do", "ack"),
                                 ("_site_id", result.site_id),

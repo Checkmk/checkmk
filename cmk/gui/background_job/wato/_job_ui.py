@@ -238,7 +238,7 @@ class JobRenderer:
             html.icon_button(
                 make_confirm_delete_link(
                     url=makeactionuri(
-                        request, transactions, [(ActionHandler.stop_job_var, job_id)]
+                        request, transactions.get(), [(ActionHandler.stop_job_var, job_id)]
                     ),
                     title=_("Stop job"),
                     suffix=job_status.title,
@@ -253,7 +253,7 @@ class JobRenderer:
             html.icon_button(
                 make_confirm_delete_link(
                     url=makeactionuri(
-                        request, transactions, [(ActionHandler.delete_job_var, job_id)]
+                        request, transactions.get(), [(ActionHandler.delete_job_var, job_id)]
                     ),
                     title=_("Delete job"),
                     suffix=job_status.title,
@@ -407,13 +407,15 @@ class JobRenderer:
         html.open_td(css="job_actions")
         if job_info.may_stop:
             html.icon_button(
-                makeactionuri(request, transactions, [(ActionHandler.stop_job_var, job_id)]),
+                makeactionuri(request, transactions.get(), [(ActionHandler.stop_job_var, job_id)]),
                 _("Stop this job"),
                 StaticIcon(IconNames.disable_test),
             )
         if job_info.may_delete:
             html.icon_button(
-                makeactionuri(request, transactions, [(ActionHandler.delete_job_var, job_id)]),
+                makeactionuri(
+                    request, transactions.get(), [(ActionHandler.delete_job_var, job_id)]
+                ),
                 _("Delete this job"),
                 StaticIcon(IconNames.delete),
             )

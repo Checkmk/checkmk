@@ -123,7 +123,7 @@ class ModePerformanceProfiles(WatoMode[None]):
         delete_all_url = make_confirm_delete_link(
             url=makeactionuri_contextless(
                 request,
-                transactions,
+                transactions.get(),
                 [("mode", self.name()), ("_action", "delete_all")],
                 filename="wato.py",
             ),
@@ -133,7 +133,7 @@ class ModePerformanceProfiles(WatoMode[None]):
         housekeeping_url = make_confirm_delete_link(
             url=makeactionuri_contextless(
                 request,
-                transactions,
+                transactions.get(),
                 [("mode", self.name()), ("_action", "housekeeping")],
                 filename="wato.py",
             ),
@@ -258,7 +258,7 @@ class ModePerformanceProfiles(WatoMode[None]):
                     "delete_url": make_confirm_delete_link(
                         url=makeactionuri_contextless(
                             request,
-                            transactions,
+                            transactions.get(),
                             [
                                 ("mode", self.name()),
                                 ("_action", "delete"),

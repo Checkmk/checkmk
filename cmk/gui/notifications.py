@@ -272,7 +272,7 @@ class ClearFailedNotificationPage(Page):
             make_confirm_delete_link(
                 url=makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     [("acktime", str(acktime)), ("_confirm", "1")],
                 ),
                 title=_("Acknowledge all failed notifications"),

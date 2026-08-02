@@ -910,7 +910,7 @@ class SiteManagement:
         if site_id in tree.root_folder().all_site_ids():
             search_url = makeactionuri(
                 request,
-                transactions,
+                transactions.get(),
                 [
                     ("host_search_change_site", "on"),
                     ("host_search_site", site_id),

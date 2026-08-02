@@ -285,7 +285,7 @@ def page_list(
                         confirm_message += "<br>" + _("Owner: %(owner)s") % {"owner": owner}
                     html.icon_button(
                         make_confirm_delete_link(
-                            url=makeactionuri(request, transactions, add_vars),
+                            url=makeactionuri(request, transactions.get(), add_vars),
                             title=_("Delete %(title)s") % {"title": visual_type.title},
                             suffix=str(visual["title"]),
                             message=confirm_message,

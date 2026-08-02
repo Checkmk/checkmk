@@ -21,7 +21,6 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
-from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.web.utils.urls import is_allowed_url as is_allowed_url
 
 QueryVars = Mapping[str, Sequence[str]]
@@ -276,12 +275,12 @@ def makeuri_contextless(
 
 def makeactionuri(
     request: Request,
-    transaction_manager: TransactionManager,
+    transid: str,
     addvars: HTTPVariables,
     filename: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
-    session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
+    session_vars: HTTPVariables = [("_transid", transid)]
     if session and hasattr(session, "session_info"):
         session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
@@ -290,11 +289,11 @@ def makeactionuri(
 
 def makeactionuri_contextless(
     request: Request,
-    transaction_manager: TransactionManager,
+    transid: str,
     addvars: HTTPVariables,
     filename: str | None = None,
 ) -> str:
-    session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
+    session_vars: HTTPVariables = [("_transid", transid)]
     if session and hasattr(session, "session_info"):
         session_vars.append(("_csrf_token", session.session_info.csrf_token))
 

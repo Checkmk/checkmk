@@ -282,7 +282,7 @@ class ModeRoleTwoFactor(WatoMode):
     @override
     def page(self, config: Config) -> None:
         request.get_ascii_input_mandatory("two_factor_enforce")
-        confirm_url = makeactionuri(request, transactions, [("_action", "confirm")])
+        confirm_url = makeactionuri(request, transactions.get(), [("_action", "confirm")])
         cancel_url = makeuri_contextless(
             request,
             [("mode", ModeEditRole.name()), ("edit", self._role.name)],

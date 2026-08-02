@@ -179,7 +179,7 @@ class ModeKeyManagement(WatoMode[object]):
                         ) % {"owner": key.owner}
 
                     delete_url = make_confirm_delete_link(
-                        url=makeactionuri(request, transactions, [("_delete", key_id)]),
+                        url=makeactionuri(request, transactions.get(), [("_delete", key_id)]),
                         title=self._delete_confirm_title(nr),
                         suffix=key.alias,
                         message=message,

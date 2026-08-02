@@ -249,7 +249,7 @@ class ABCGlobalSettingsMode(WatoMode):
             item=make_simple_link(
                 makeactionuri(
                     request,
-                    transactions,
+                    transactions.get(),
                     [
                         ("_show_only_modified", "0" if self._show_only_modified else "1"),
                     ],
@@ -389,7 +389,9 @@ class ABCGlobalSettingsMode(WatoMode):
                         help_txt=(value_title + " " if value_title else "")
                         + _("Click to toggle this setting"),
                         href=makeactionuri(
-                            request, transactions, [("_action", "toggle"), ("_varname", varname)]
+                            request,
+                            transactions.get(),
+                            [("_action", "toggle"), ("_varname", varname)],
                         ),
                         class_=[*modified_cls, "large"],
                     )

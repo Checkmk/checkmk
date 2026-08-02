@@ -290,7 +290,7 @@ class ModeRevertChanges(WatoMode):
             html.close_div()
             return
 
-        confirm_url = makeactionuri(request, transactions, [("_action", "discard")])
+        confirm_url = makeactionuri(request, transactions.get(), [("_action", "discard")])
         cancel_url = makeuri_contextless(
             request,
             [("mode", ModeActivateChanges.name())],

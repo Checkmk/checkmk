@@ -51,7 +51,7 @@ def _make_action_url_builder(
     request: Request, transactions: TransactionManager
 ) -> ActionUrlBuilder:
     def make_action_url(variables: Sequence[tuple[str, str | int | None]], *, filename: str) -> str:
-        return makeactionuri(request, transactions, list(variables), filename=filename)
+        return makeactionuri(request, transactions.get(), list(variables), filename=filename)
 
     return make_action_url
 

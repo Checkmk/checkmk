@@ -597,7 +597,7 @@ class ModeBackup(WatoMode[object]):
                             "type": "redirect",
                             "url": makeactionuri_contextless(
                                 request,
-                                transactions,
+                                transactions.get(),
                                 [
                                     ("mode", "backup"),
                                     ("_action", "refresh"),
@@ -624,7 +624,7 @@ class ModeBackup(WatoMode[object]):
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri_contextless(
                         request,
-                        transactions,
+                        transactions.get(),
                         [
                             ("mode", "backup"),
                             ("_action", "delete"),
@@ -662,7 +662,7 @@ class ModeBackup(WatoMode[object]):
                 if not job.is_running():
                     start_url = makeactionuri_contextless(
                         request,
-                        transactions,
+                        transactions.get(),
                         [
                             ("mode", "backup"),
                             ("_action", "start"),
@@ -678,7 +678,7 @@ class ModeBackup(WatoMode[object]):
                 else:
                     stop_url = makeactionuri_contextless(
                         request,
-                        transactions,
+                        transactions.get(),
                         [
                             ("mode", "backup"),
                             ("_action", "stop"),
@@ -1798,7 +1798,7 @@ def _show_target_list(
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri_contextless(
                         request,
-                        transactions,
+                        transactions.get(),
                         [("mode", "backup_targets"), ("target", target.ident)],
                     ),
                     title=_("Delete target #%(nr)d") % {"nr": nr},
@@ -2298,7 +2298,7 @@ class ModeBackupRestore(WatoMode[object]):
                                         make_confirm_delete_link(
                                             url=makeactionuri(
                                                 request,
-                                                transactions,
+                                                transactions.get(),
                                                 [("_action", "stop")],
                                             ),
                                             title=_("Stop restore of backup"),
@@ -2319,7 +2319,7 @@ class ModeBackupRestore(WatoMode[object]):
                                     item=make_simple_link(
                                         makeactionuri(
                                             request,
-                                            transactions,
+                                            transactions.get(),
                                             [("_action", "complete")],
                                         )
                                     ),
@@ -2536,7 +2536,7 @@ class ModeBackupRestore(WatoMode[object]):
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri(
                         request,
-                        transactions,
+                        transactions.get(),
                         [("_action", "delete"), ("_backup", backup_ident)],
                     ),
                     title=_("Delete backup"),
@@ -2549,7 +2549,7 @@ class ModeBackupRestore(WatoMode[object]):
                 start_url = make_confirm_link(
                     url=makeactionuri(
                         request,
-                        transactions,
+                        transactions.get(),
                         [("_action", "start"), ("_backup", backup_ident)],
                     ),
                     title=_("Start restore of backup"),

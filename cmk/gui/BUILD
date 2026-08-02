@@ -806,6 +806,7 @@ py_library(
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",
         "//cmk/gui/mobile",
+        "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/monitor/services",
         "//cmk/gui/nagvis",

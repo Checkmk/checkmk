@@ -172,7 +172,7 @@ py_library(
     imports = ["."],
     deps = [
         "//cmk:validate_config",
-        "//cmk/base:config",
+        "//cmk/base/config",
         "//cmk/gui:app",
         "//cmk/utils:paths",
         "//cmk/utils:redis",

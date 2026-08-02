@@ -3188,8 +3188,10 @@ def test_get_active_service_data_crash(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: False)
+    # Patch the module that holds the binding actually being read, not the
+    # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
-        config,
+        config._impl,
         "load_active_checks",
         lambda **kw: {
             PluginLocation(

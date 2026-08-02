@@ -13,7 +13,7 @@ py_library(
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        "//cmk/base:config",
+        "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/core_client",
         "//cmk/utils",
@@ -47,7 +47,7 @@ py_library(
     deps = [
         ":core",
         "//cmk/base:app",
-        "//cmk/base:config",
+        "//cmk/base/config",
         "//cmk/base/modes",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",

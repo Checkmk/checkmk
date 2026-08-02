@@ -8,7 +8,7 @@ py_library(
     srcs = ["conftest.py"],
     visibility = [":__subpackages__"],
     deps = [
-        "//cmk/base:config",
+        "//cmk/base/config",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//tests/testlib/unit",
         requirement("flask"),

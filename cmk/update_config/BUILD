@@ -45,7 +45,7 @@ py_library(
         "//cmk:message_broker_certs",
         "//cmk:validate_config",
         "//cmk/base:app",
-        "//cmk/base:config",
+        "//cmk/base/config",
         "//cmk/checkengine",
         "//cmk/gui:app",
         "//cmk/gui:config",

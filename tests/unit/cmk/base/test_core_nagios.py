@@ -50,7 +50,6 @@ from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlug
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
-from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import ip_lookup
 from cmk.utils.servicename import ServiceName
 from tests.testlib.common.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
@@ -90,9 +89,11 @@ def _patch_plugin_loading(
     monkeypatch: pytest.MonkeyPatch,
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
 ) -> None:
+    # Patch the module that holds the binding actually being read, not the
+    # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
-        config,
-        load_active_checks.__name__,
+        config._impl,
+        "load_active_checks",
         lambda *a, **kw: loaded_active_checks,
     )
 

@@ -41,7 +41,6 @@ from cmk.checkengine.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
-from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import config_warnings
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -148,9 +147,11 @@ def _patch_plugin_loading(
     monkeypatch: pytest.MonkeyPatch,
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
 ) -> None:
+    # Patch the module that holds the binding actually being read, not the
+    # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
-        config,
-        load_active_checks.__name__,
+        config._impl,
+        "load_active_checks",
         lambda *a, **kw: loaded_active_checks,
     )
 

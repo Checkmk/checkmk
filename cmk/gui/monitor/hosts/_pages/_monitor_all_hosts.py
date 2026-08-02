@@ -14,6 +14,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
+from cmk.gui.monitor.command import MonitorCommands
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -27,7 +28,6 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.views.command.registry import CommandRegistry
 from cmk.shared_typing.monitoring.all_hosts import (
     MonitoringAllHostsApp,
     MonitoringPageLinkButton,
@@ -94,7 +94,7 @@ def monitor_all_hosts_visual_spec() -> Visual:
 
 
 class MonitorAllHostsPage(Page):
-    def __init__(self, commands: CommandRegistry) -> None:
+    def __init__(self, commands: MonitorCommands) -> None:
         self._commands = commands
 
     @override

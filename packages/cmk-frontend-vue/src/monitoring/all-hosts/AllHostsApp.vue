@@ -36,18 +36,12 @@ import ActionFeedback, {
 } from '../shared/components/action/ActionFeedback.vue'
 import MonitoringActionBar from '../shared/components/action/MonitoringActionBar.vue'
 import MonitoringActionPane from '../shared/components/action/MonitoringActionPane.vue'
-import {
-  ACK_ACTION_ID,
-  useAcknowledgeAction
-} from '../shared/components/action/actions/acknowledge'
+import { useAcknowledgeAction } from '../shared/components/action/actions/acknowledge'
 import {
   RESCHEDULE_ACTION_ID,
   useRescheduleAction
 } from '../shared/components/action/actions/reschedule'
-import {
-  SCHEDULE_DOWNTIME_ACTION_ID,
-  useScheduleDowntimeAction
-} from '../shared/components/action/actions/scheduleDowntime'
+import { useScheduleDowntimeAction } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { useMonitoringActions } from '../shared/services/useMonitoringActions'
 import { HostActionMenuApi } from './api/actionMenu'
@@ -64,16 +58,16 @@ const { _t } = usei18n()
 
 const props = defineProps<MonitoringAllHostsApp>()
 
-const ACTION_ICONS: Record<string, SimpleIcons> = {
-  [ACK_ACTION_ID]: 'ack',
-  [RESCHEDULE_ACTION_ID]: 'reload',
-  [SCHEDULE_DOWNTIME_ACTION_ID]: 'downtime'
+// Icons come from the command registry. Only commands whose registry icon has no counterpart in the
+// Vue icon set need an entry here.
+const ACTION_ICON_OVERRIDES: Record<string, SimpleIcons> = {
+  [RESCHEDULE_ACTION_ID]: 'reload'
 }
 
 const hostActions: CellAction[] = (props.actions ?? []).map((action) => ({
   id: action.ident,
   label: action.title as TranslatedString,
-  icon: ACTION_ICONS[action.ident] ?? 'action'
+  icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
 }))
 
 // Always-visible inline buttons (edit host, parameters). Their url keeps the {host} placeholder,
@@ -96,7 +90,7 @@ const rowCommands: CellAction[] = (props.actions ?? [])
   .map((action) => ({
     id: action.ident,
     label: action.title as TranslatedString,
-    icon: ACTION_ICONS[action.ident] ?? 'action'
+    icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
   }))
 
 const hasRowActions = rowActionButtons.length > 0 || rowCommands.length > 0

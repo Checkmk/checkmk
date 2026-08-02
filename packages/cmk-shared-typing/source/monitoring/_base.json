@@ -28,9 +28,10 @@
       "type": "object",
       "properties": {
         "ident": { "type": "string" },
-        "title": { "type": "string" }
+        "title": { "type": "string" },
+        "icon": { "type": "string" }
       },
-      "required": ["ident", "title"]
+      "required": ["ident", "title", "icon"]
     },
     "row_action": {
       "type": "object",

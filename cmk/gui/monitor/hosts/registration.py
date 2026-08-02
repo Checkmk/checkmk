@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.hooks import register_builtin
+from cmk.gui.monitor.command import MonitorCommands
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.views.command.registry import CommandRegistry
 
 from ._api._registration import register_endpoints
 from ._legacy_view_link import show_all_hosts_link_button
@@ -18,7 +18,7 @@ def register(
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     page_registry: PageRegistry,
-    command_registry: CommandRegistry,
+    command_registry: MonitorCommands,
 ) -> None:
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     register_pages(page_registry, command_registry)

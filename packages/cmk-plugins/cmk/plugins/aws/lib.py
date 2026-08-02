@@ -32,6 +32,8 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.aws.constants import AWS_REGIONS
 from cmk.plugins.lib.labels import ensure_valid_labels
 
+_AWS_REGIONS = dict(AWS_REGIONS)
+
 GenericAWSSection = Sequence[Any]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
 
@@ -360,6 +362,60 @@ def discover_aws_generic_single(
     """
     if requirement(required_metric in section for required_metric in required_metrics):
         yield Service()
+
+
+@dataclass(frozen=True)
+class ELBSummaryAvailabilityZone:
+    zone_name: str
+
+
+@dataclass(frozen=True)
+class ELBSummaryLoadBalancer:
+    load_balancer_name: str
+    # elb provides a list of zone strings, elbv2 a list of dicts including the
+    # zone name (modelled as ELBSummaryAvailabilityZone).
+    availability_zones: Sequence[str] | Sequence[ELBSummaryAvailabilityZone]
+    type: str | None = None
+
+
+def check_aws_elb_summary_generic(
+    load_balancers: Sequence[ELBSummaryLoadBalancer],
+) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Balancers: {len(load_balancers)}")
+
+    balancers_by_avail_zone: dict[str, list[str]] = {}
+    long_output = []
+    for row in load_balancers:
+        balancer_name = row.load_balancer_name
+        avail_zones_txt = []
+        for avail_zone in row.availability_zones:
+            zone_name = (
+                avail_zone.zone_name
+                if isinstance(avail_zone, ELBSummaryAvailabilityZone)
+                else avail_zone
+            )
+
+            try:
+                avail_zone_readable = f"{_AWS_REGIONS[zone_name[:-1]]} ({zone_name[-1]})"
+            except KeyError:
+                avail_zone_readable = f"unknown ({zone_name})"
+
+            balancers_by_avail_zone.setdefault(avail_zone_readable, []).append(balancer_name)
+            avail_zones_txt.append(avail_zone_readable)
+        long_output.append(
+            f"Balancer: {balancer_name}, Availability zones: {', '.join(avail_zones_txt)}"
+        )
+
+    for avail_zone, balancers in sorted(balancers_by_avail_zone.items()):
+        yield Result(state=State.OK, summary=f"{avail_zone}: {len(balancers)}")
+
+    if long_output:
+        yield Result(
+            state=State.OK,
+            summary=f"{len(long_output)} additional detail"
+            f"{'' if len(long_output) == 1 else 's'} available",
+            details="\n".join(long_output),
+        )
 
 
 def get_number_with_precision(

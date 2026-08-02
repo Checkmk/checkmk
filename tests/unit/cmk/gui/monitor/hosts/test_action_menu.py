@@ -9,7 +9,7 @@ from cmk.gui.monitor.hosts._api import _action_menu
 from cmk.gui.monitor.hosts._api._action_menu import _EXCLUDED_IDENTS, _icon_name, _serialize_entry
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import DynamicIconName, DynamicIconWithEmblem, IconNames, StaticIcon
-from cmk.gui.views.icon.painter import IconEntry
+from cmk.gui.views.icon.entries import IconEntry
 
 
 @pytest.fixture(name="passthrough_macros")

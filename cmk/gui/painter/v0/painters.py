@@ -81,6 +81,7 @@ from cmk.gui.view_utils import (
     get_labels,
     render_labels,
     render_tag_groups,
+    replace_action_url_macros,
 )
 from cmk.gui.visual_link import render_link_to_view
 from cmk.ruleset_matcher.labels import Labels
@@ -99,7 +100,6 @@ from .helpers import (
     paint_nagiosflag,
     render_cache_info,
     RenderLink,
-    replace_action_url_macros,
     tag_choices_for_group,
 )
 from .registry import PainterRegistry

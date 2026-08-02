@@ -13,11 +13,12 @@ from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry, register_painter, registry
-from cmk.gui.painter.v0.helpers import RenderLink, replace_action_url_macros
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.view_utils import replace_action_url_macros
 from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
 from cmk.gui.views.sort_url import _encode_sorter_url

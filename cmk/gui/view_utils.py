@@ -17,18 +17,19 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, IconNames, Row, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label
 from cmk.gui.utils.loading_transition import with_loading_transition
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import LabelGroups, Labels, LabelSource, LabelSources
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.utils.html import replace_state_markers
+from cmk.utils.macros import replace_macros_in_str
 
 
 def cmp_service_name_equiv(r: str) -> int:
@@ -452,4 +453,35 @@ def render_community_upgrade_button() -> None:
         icon=StaticIcon(IconNames.upgrade),
         target="_blank",
         cssclass="upgrade",
+    )
+
+
+def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | None]:
+    if isinstance(url_spec, tuple):
+        return url_spec
+    return (url_spec, None)
+
+
+def replace_action_url_macros(url: str, what: str, row: Row) -> str:
+    macros = {
+        "HOSTNAME": row["host_name"],
+        "HOSTADDRESS": row["host_address"],
+        "USER_ID": user.id,
+    }
+    if what == "service":
+        macros.update(
+            {
+                "SERVICEDESC": row["service_description"],
+            }
+        )
+    return replace_macros_in_str(
+        url,
+        {
+            k_mod: v_mod
+            for k_orig, v_orig in macros.items()
+            for k_mod, v_mod in (
+                (f"${k_orig}$", v_orig),
+                (f"${k_orig}_URL_ENCODED$", urlencode(v_orig)),
+            )
+        },
     )

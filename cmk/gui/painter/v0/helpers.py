@@ -17,46 +17,13 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLTagAttributeValue
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, HTTPVariables, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.urls import makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec, get_host_list_links
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
-from cmk.utils.macros import replace_macros_in_str
-
-
-def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | None]:
-    if isinstance(url_spec, tuple):
-        return url_spec
-    return (url_spec, None)
-
-
-def replace_action_url_macros(url: str, what: str, row: Row) -> str:
-    macros = {
-        "HOSTNAME": row["host_name"],
-        "HOSTADDRESS": row["host_address"],
-        "USER_ID": user.id,
-    }
-    if what == "service":
-        macros.update(
-            {
-                "SERVICEDESC": row["service_description"],
-            }
-        )
-    return replace_macros_in_str(
-        url,
-        {
-            k_mod: v_mod
-            for k_orig, v_orig in macros.items()
-            for k_mod, v_mod in (
-                (f"${k_orig}$", v_orig),
-                (f"${k_orig}_URL_ENCODED$", urlencode(v_orig)),
-            )
-        },
-    )
 
 
 def render_cache_info(what: str, row: Row) -> str:

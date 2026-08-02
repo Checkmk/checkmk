@@ -114,6 +114,7 @@ def _register_pre_21_plugin_api() -> None:
         data_source,
         display_options,
         painter_options,
+        view_utils,
         visual_link,
     )
     from cmk.gui.plugins.views import (  # astrein: disable=cmk-module-layer-violation
@@ -221,11 +222,15 @@ def _register_pre_21_plugin_api() -> None:
         "get_tag_groups",
         "paint_host_list",
         "paint_nagiosflag",
-        "transform_action_url",
         "render_cache_info",
-        "replace_action_url_macros",
     ):
         api_module.__dict__[name] = painter_helpers.__dict__[name]
+
+    for name in (
+        "transform_action_url",
+        "replace_action_url_macros",
+    ):
+        api_module.__dict__[name] = view_utils.__dict__[name]
 
     for name in (
         "get_perfdata_nth_value",

@@ -34,13 +34,13 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DynamicIcon, Row, StaticIcon
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.icon import IconConfig
-from cmk.gui.views.icon.painter import get_icons, IconEntry, query_icon_row
+from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
+from cmk.gui.views.icon.base import IconConfig
+from cmk.gui.views.icon.entries import get_icons, IconEntry, query_icon_row
 from cmk.livestatus_client import MKLivestatusNotFoundError
 
 from ._family import MONITOR_HOSTS_FAMILY

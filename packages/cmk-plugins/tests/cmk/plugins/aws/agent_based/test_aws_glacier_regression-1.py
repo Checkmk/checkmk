@@ -18,7 +18,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.aws_glacier import (
+from cmk.plugins.aws.agent_based.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
     discover_aws_glacier,

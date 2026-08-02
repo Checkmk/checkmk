@@ -14,7 +14,6 @@ py_library(
         "//cmk/legacy_includes",
         "//cmk/plugins",
         "//packages/cmk-plugin-apis:agent_based",
-        "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:lib",
         requirement("pydantic"),
         requirement("python-dateutil"),

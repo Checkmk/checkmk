@@ -110,7 +110,7 @@ from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher
 from cmk.ruleset_matcher import tuple_rulesets
-from cmk.ruleset_matcher.labels import LabelManager, Labels, LabelSources
+from cmk.ruleset_matcher.labels import BuiltinLabelsKey, LabelManager, Labels, LabelSources
 from cmk.ruleset_matcher.matcher import (
     RulesetMatcher,
     RulesetName,
@@ -2715,8 +2715,8 @@ class ConfigCache:
         if actions := self.icons_and_actions(hostname):
             attrs["_ACTIONS"] = ",".join(actions)
 
-        if self.edition is cmk_version.Edition.ULTIMATEMT:
-            attrs["_CUSTOMER"] = self._loaded_config.current_customer
+        if customer := self.label_manager.labels_of_host(hostname).get(BuiltinLabelsKey.CUSTOMER):
+            attrs["_CUSTOMER"] = customer
 
         return attrs
 

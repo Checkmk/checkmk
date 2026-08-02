@@ -273,7 +273,6 @@ def test_health_check(cache: Cache) -> None:
             host_tags=make_host_tags(loaded_config, make_hosts_config(loaded_config)),
             config_cache=ConfigCache(
                 loaded_config,
-                Edition.COMMUNITY,
                 make_hosts_config(loaded_config),
                 make_host_tags(loaded_config, make_hosts_config(loaded_config)),
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -485,7 +484,6 @@ def test_automation_cache_error_on_stale_config() -> None:
             host_tags=make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),
             config_cache=ConfigCache(
                 EMPTY_CONFIG,
-                Edition.COMMUNITY,
                 make_hosts_config(EMPTY_CONFIG),
                 make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),
                 autochecks_dir=cmk.utils.paths.autochecks_dir,

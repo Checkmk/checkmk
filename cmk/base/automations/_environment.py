@@ -109,9 +109,7 @@ class AutomationEnvironment:
         if plugins is None:
             plugins = load_plugins()
         if loading_result is None:
-            loading_result = load_config(
-                edition=app.edition,
-            )
+            loading_result = load_config()
         return cls(app=app, plugins=plugins, loading_result=loading_result)
 
     # --- Pass-through accessors (no caching — just re-expose what's already there).

@@ -160,7 +160,7 @@ def test_forbid_pending_change_writes_raises_on_accidental_write(
     )
     monkeypatch.setattr(main, "pre_update_action_registry", registry.PreUpdateActionRegistry())
     monkeypatch.setattr(main, "update_action_registry", reg)
-    monkeypatch.setattr(main, "_initialize_base_environment", lambda x: None)
+    monkeypatch.setattr(main, "_initialize_base_environment", lambda: None)
 
     # The leaky action defaults to continue_on_failure=True, so without a hard failure the write
     # would only be logged and swallowed. It must fail hard even without --debug.

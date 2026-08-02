@@ -173,7 +173,6 @@ def main(argv: Sequence[str] | None = None) -> None:
             builtin_host_labels = BuiltinHostLabelsStore(paths.builtin_host_labels_file).load()
 
             loaded_config_result = load(
-                edition=edition(paths.omd_root),
                 with_conf_d=True,
                 validate_hosts=False,
             )

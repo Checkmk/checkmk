@@ -13,7 +13,6 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.community_app import make_app
 from cmk.base.configlib.loaded_config import CustomCheck
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.nagios._create_config import create_nagios_servicedefs, NagiosConfig
@@ -236,7 +235,6 @@ def _generated_ping_service_config(
     hosts_config = config.make_hosts_config(loaded_config)
     config_cache = config.ConfigCache(
         loaded_config,
-        make_app().edition,
         hosts_config,
         config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,

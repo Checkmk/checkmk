@@ -25,7 +25,6 @@ from types import ModuleType
 from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, override
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
@@ -572,7 +571,6 @@ class LoadingResult:
 
 
 def load(
-    edition: cmk_version.Edition,
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> LoadingResult:
@@ -580,7 +578,6 @@ def load(
 
     loading_result = perform_post_config_loading_actions(
         raw_config,
-        edition=edition,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
@@ -609,7 +606,6 @@ def load(
 def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     loaded_context: Mapping[str, Any],
     *,
-    edition: cmk_version.Edition,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
@@ -619,7 +615,6 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
         BaseConfig(
             **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
         ),
-        edition=edition,
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
@@ -629,7 +624,6 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
 def make_loading_result(
     loaded_config: BaseConfig,
     *,
-    edition: cmk_version.Edition,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
@@ -652,7 +646,6 @@ def make_loading_result(
         host_tags=host_tags,
         config_cache=ConfigCache(
             loaded_config,
-            edition,
             hosts_config,
             host_tags,
             autochecks_dir=autochecks_dir,
@@ -1273,7 +1266,6 @@ class ConfigCache:
     def __init__(
         self,
         loaded_config: BaseConfig,
-        edition: cmk_version.Edition,
         hosts_config: Hosts,
         host_tags: HostTags,
         *,
@@ -1283,7 +1275,6 @@ class ConfigCache:
     ) -> None:
         super().__init__()
         self._loaded_config: Final = loaded_config
-        self.edition: Final = edition
         self._hosts_config = hosts_config
         self._host_tags = host_tags
         self.__enforced_services_table: dict[

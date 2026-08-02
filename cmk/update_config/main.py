@@ -259,7 +259,7 @@ def check_config(edition: Edition, logger: logging.Logger, conflict_mode: Confli
 
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
-        _initialize_base_environment(edition)
+        _initialize_base_environment()
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(
                 " %(yellow)s%(count)02d/%(total)02d%(normal)s %(title)s...",
@@ -288,7 +288,7 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
         _check_failed_gui_plugins(logger)
-        _initialize_base_environment(edition)
+        _initialize_base_environment()
 
         logger.info("Updating Checkmk configuration...")
 
@@ -353,10 +353,8 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
         )
 
 
-def _initialize_base_environment(edition: Edition) -> None:
-    base_config.load(
-        edition=edition,
-    )
+def _initialize_base_environment() -> None:
+    base_config.load()
 
 
 @contextmanager

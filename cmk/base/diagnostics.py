@@ -24,7 +24,6 @@ import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
 from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
 from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import tty
@@ -118,9 +117,9 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
             )
 
 
-def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
+def _mode_create_diagnostics_dump(_app: object, options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    loading_result = load_config(edition=app.edition)
+    loading_result = load_config()
     catalogue = _load_plugin_catalogue(logger=ConsoleLogger())
 
     if "list" in options:
@@ -128,7 +127,6 @@ def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModes
         return
 
     dump = create_diagnostics_dump_v2(
-        app=app,
         omd_root=cmk.utils.paths.omd_root,
         diagnostics_dir=cmk.utils.paths.diagnostics_dir,
         selection=_resolve_cli_selection(catalogue, options),
@@ -191,7 +189,7 @@ mode_create_diagnostics_dump = Mode(
 
 
 def handler(
-    app: CheckmkBaseApp,
+    _app: object,
     args: DiagnosticsCLParameters,
     plugins: object,
     loading_result: LoadingResult | None,
@@ -200,7 +198,6 @@ def handler(
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
         dump = create_diagnostics_dump(
-            app=app,
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             parameters=deserialize_cl_parameters(args),
@@ -221,7 +218,7 @@ automation_create_diagnostics_dump = Automation(
 
 
 def handler_v2(
-    app: CheckmkBaseApp,
+    _app: object,
     args: Sequence[str],
     plugins: object,
     loading_result: LoadingResult | None,
@@ -230,7 +227,6 @@ def handler_v2(
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
         dump = create_diagnostics_dump_v2(
-            app=app,
             omd_root=cmk.utils.paths.omd_root,
             diagnostics_dir=cmk.utils.paths.diagnostics_dir,
             selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
@@ -252,7 +248,6 @@ automation_create_diagnostics_dump_v2 = Automation(
 
 def create_diagnostics_dump(
     *,
-    app: CheckmkBaseApp,
     omd_root: Path,
     diagnostics_dir: Path,
     parameters: DiagnosticsOptionalParameters,
@@ -261,7 +256,6 @@ def create_diagnostics_dump(
     """Create a dump from legacy parameters (old automation wire and current CLI)"""
     selected_names, checkmk_server_host = _legacy_selection(parameters or {})
     return _create_dump(
-        app=app,
         omd_root=omd_root,
         diagnostics_dir=diagnostics_dir,
         selected_names=selected_names,
@@ -274,14 +268,12 @@ def create_diagnostics_dump(
 
 def create_diagnostics_dump_v2(
     *,
-    app: CheckmkBaseApp,
     omd_root: Path,
     diagnostics_dir: Path,
     selection: DumpSelection,
     loading_result: LoadingResult | None,
 ) -> DiagnosticsDump:
     return _create_dump(
-        app=app,
         omd_root=omd_root,
         diagnostics_dir=diagnostics_dir,
         selected_names=set(selection.plugins),
@@ -297,7 +289,6 @@ def create_diagnostics_dump_v2(
 
 def _create_dump(
     *,
-    app: CheckmkBaseApp,
     omd_root: Path,
     diagnostics_dir: Path,
     selected_names: set[str],
@@ -307,9 +298,7 @@ def _create_dump(
     loading_result: LoadingResult | None,
 ) -> DiagnosticsDump:
     log.logger.setLevel(logging.INFO)
-    loaded_config = (
-        load_config(edition=app.edition) if loading_result is None else loading_result
-    ).loaded_config
+    loaded_config = (load_config() if loading_result is None else loading_result).loaded_config
     omd_config = get_omd_config(omd_root)
     logger = ConsoleLogger()
 

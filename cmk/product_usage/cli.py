@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from cmk.ccc.version import edition
 from cmk.product_usage.collection import (
     collect_data,
     data_storage_path,
@@ -50,10 +49,7 @@ def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
     # disabled and not-due runs cheap and free of cmk.base imports.
     from cmk.base.config import load
 
-    this_edition = edition(paths.omd_root)
-    base_config = load(
-        edition=this_edition,
-    )
+    base_config = load()
 
     return get_proxy_config(
         proxy_setting=proxy_setting,

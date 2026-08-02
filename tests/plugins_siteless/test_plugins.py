@@ -20,7 +20,6 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.ccc.hostaddress import HostName, Hosts
-from cmk.ccc.version import edition
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.helper_interface import FetcherType, SourceInfo, SourceType
@@ -120,7 +119,6 @@ def test_checks_executor(
     submitter = BasicSubmitter(HOSTNAME)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        edition(paths.omd_root),
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, hosts_config),
         autochecks_dir=paths.autochecks_dir,

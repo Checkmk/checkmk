@@ -27,7 +27,7 @@ def main() -> int:
             config.load_all_plugins()
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
-            config.load(edition=edition)
+            config.load()
 
             result = validate_mk_files()
 

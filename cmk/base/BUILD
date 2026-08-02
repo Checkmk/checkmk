@@ -166,7 +166,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base-app",
         "//cmk/automations",
         "//cmk/base/automations",
         "//cmk/base/modes:modes-registry",

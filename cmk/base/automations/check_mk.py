@@ -1317,7 +1317,6 @@ def _execute_autodiscovery(
         plugins=env.plugins,
         loading_result=config.make_loading_result(
             env.loaded_config,
-            edition=app.edition,
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
@@ -1504,7 +1503,7 @@ def _automation_set_autochecks_v2(
 
 
 def _automation_update_host_labels(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -1519,9 +1518,7 @@ def _automation_update_host_labels(
     )
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     _trigger_discovery_check(
         loading_result.config_cache,
         loading_result.hosts_config,
@@ -2201,7 +2198,7 @@ class AutomationAnalyseServices:
 
 
 def _automation_analyse_host(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2209,9 +2206,7 @@ def _automation_analyse_host(
     host_name = HostName(args[0])
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2223,7 +2218,7 @@ def _automation_analyse_host(
 
 
 def _automation_analyze_host_rule_matches(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2233,9 +2228,7 @@ def _automation_analyze_host_rule_matches(
     match_rules = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2257,7 +2250,7 @@ def _automation_analyze_host_rule_matches(
 
 
 def _automation_analyze_service_rule_matches(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2271,9 +2264,7 @@ def _automation_analyze_service_rule_matches(
     match_rules, service_labels = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2301,7 +2292,7 @@ def _automation_analyze_service_rule_matches(
 
 
 def _automation_analyze_host_rule_effectiveness(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2310,9 +2301,7 @@ def _automation_analyze_host_rule_effectiveness(
     match_rules = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
 
     hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
@@ -2684,7 +2673,7 @@ def _execute_silently(
 
 
 def _automation_get_configuration(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2701,10 +2690,7 @@ def _automation_get_configuration(
     # that could be too much for the command line
     variable_names = ast.literal_eval(sys.stdin.read())
 
-    base_config = config.load(
-        edition=app.edition,
-        with_conf_d=False,
-    ).loaded_config
+    base_config = config.load(with_conf_d=False).loaded_config
 
     result = {}
     for varname in variable_names:
@@ -3112,13 +3098,13 @@ def _automation_diag_cmk_agent(
 
 
 def _automation_diag_snmp(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     _plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> DiagSnmpResult:
     diag_input = DiagSnmpInput.deserialize(sys.stdin.read())
-    loading_result = loading_result or load_config(edition=app.edition)
+    loading_result = loading_result or load_config()
     ip_address = diag_input.ip_address
 
     if not ip_address:
@@ -3876,14 +3862,12 @@ class AutomationActiveCheck:
 
 
 def _automation_update_passwords_merged_file(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     cmk.utils.password_store.save(
         {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
         cmk.utils.password_store.pending_secrets_path_site(),
@@ -4173,15 +4157,13 @@ def _automation_get_agent_output(
 
 
 def _automation_find_unknown_check_parameter_rule_sets(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loaded_config: config.LoadingResult | None,
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loaded_config = loaded_config or load_config(
-        edition=app.edition,
-    )
+    loaded_config = loaded_config or load_config()
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)
         for plugin in plugins.check_plugins.values()

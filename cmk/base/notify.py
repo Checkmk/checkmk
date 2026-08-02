@@ -373,7 +373,6 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(
-            edition=app.edition,
             with_conf_d=True,
             validate_hosts=False,
         )
@@ -847,9 +846,7 @@ def _automation_notification_replay(
     loading_result: config.LoadingResult | None,
 ) -> NotificationReplayResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -880,9 +877,7 @@ def _automation_notification_analyse(
     loading_result: config.LoadingResult | None,
 ) -> NotificationAnalyseResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -917,9 +912,7 @@ def _automation_notification_test(
     dispatch = args[1]
 
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        edition=app.edition,
-    )
+    loading_result = loading_result or load_config()
     ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -946,7 +939,7 @@ def _automation_notification_test(
 
 
 def _automation_get_bulks(
-    app: CheckmkBaseApp,
+    _app: object,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -954,9 +947,7 @@ def _automation_get_bulks(
     only_ripe = args[0] == "1"
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
     if loading_result is None:
-        loading_result = load_config(
-            edition=app.edition,
-        )
+        loading_result = load_config()
     return NotificationGetBulksResult(
         _find_bulks(
             only_ripe,

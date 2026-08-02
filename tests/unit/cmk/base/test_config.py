@@ -34,7 +34,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.base import config, notify
-from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
@@ -2455,7 +2454,6 @@ def test_config_cache_max_cachefile_age_no_cluster() -> None:
     loaded_config = dataclasses.replace(EMPTY_CONFIG, all_hosts=(xyz_host,))
     config_cache = config.ConfigCache(
         loaded_config,
-        make_app().edition,
         config.make_hosts_config(loaded_config),
         config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -2479,7 +2477,6 @@ def test_config_cache_max_cachefile_age_cluster() -> None:
     loaded_config = dataclasses.replace(EMPTY_CONFIG, clusters={clu: []})
     config_cache = config.ConfigCache(
         loaded_config,
-        make_app().edition,
         config.make_hosts_config(loaded_config),
         config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -2682,7 +2679,6 @@ def test_get_config_file_paths_with_confd(
 def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
     config_cache = config.ConfigCache(
         folder_path_test_config,
-        make_app().edition,
         config.make_hosts_config(folder_path_test_config),
         config.make_host_tags(
             folder_path_test_config, config.make_hosts_config(folder_path_test_config)
@@ -2809,9 +2805,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load(
-        edition=make_app().edition,
-    ).loaded_config
+    yield config.load().loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -2901,9 +2895,7 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        loading_result = config.load(
-            edition=make_app().edition,
-        )
+        loading_result = config.load()
         explicit_host_conf = loading_result.loaded_config.explicit_host_conf
         assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"

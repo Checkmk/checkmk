@@ -110,7 +110,6 @@ def main() -> int:
         }
         loading_result = config.perform_post_config_loading_actions(
             raw_config,
-            edition=app.edition,
             # Passing these files here is the result of a refactoring.
             # I think we should be passing the paths corresponding to
             # the latest _active_ config, though.

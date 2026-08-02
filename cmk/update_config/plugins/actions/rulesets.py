@@ -6,10 +6,8 @@
 from logging import Logger
 from typing import override
 
-import cmk.utils.paths as utils_paths
 from cmk.base import config as base_config
 from cmk.ccc.site import omd_site
-from cmk.ccc.version import edition
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
@@ -30,10 +28,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 class UpdateRulesets(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        omd_edition = edition(utils_paths.omd_root)
-        loading_result = base_config.load(
-            edition=omd_edition,
-        )
+        loading_result = base_config.load()
         pending_changes = PendingChanges(
             activation_sites=all_activation_sites(active_config.sites),
             local_site=omd_site(),

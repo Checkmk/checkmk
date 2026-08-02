@@ -63,7 +63,6 @@ class Scenario:
         BuiltinHostLabelsStore(cmk.utils.paths.builtin_host_labels_file).save(builtin_host_labels)
         config_cache = ConfigCache(
             loaded_config,
-            self._edition,
             hosts_config,
             host_tags,
             autochecks_dir=cmk.utils.paths.autochecks_dir,

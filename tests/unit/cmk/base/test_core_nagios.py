@@ -644,7 +644,6 @@ def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        make_app().edition,
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -848,7 +847,6 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        make_app().edition,
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -938,7 +936,6 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        make_app().edition,
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -1023,7 +1020,6 @@ def test_create_nagios_servicedefs_invalid_args(  # type: ignore[misc]
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        make_app().edition,
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -1129,7 +1125,6 @@ def test_create_nagios_config_commands(
     hosts_config = config.make_hosts_config(EMPTY_CONFIG)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
-        make_app().edition,
         hosts_config,
         config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,

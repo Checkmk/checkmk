@@ -117,10 +117,7 @@ def _application() -> FastAPI:
 
 def _reload_automation_config() -> config.LoadingResult:
     cache_manager.clear()
-    return config.load(
-        cmk_version.edition(omd_root),
-        validate_hosts=False,
-    )
+    return config.load(validate_hosts=False)
 
 
 def _clear_caches_before_each_call(config_cache: ConfigCache, hosts_config: Hosts) -> None:

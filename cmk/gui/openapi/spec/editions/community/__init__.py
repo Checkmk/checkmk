@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.agent_download.registration import (
+    register_endpoints as agent_download_register_endpoints,
+)
 from cmk.gui.agent_registration.api.registration import (
     register_endpoints as agent_registration_register_endpoints,
 )
@@ -113,6 +116,8 @@ def register_for_community() -> None:
         versioned_endpoint_registry,
         endpoint_family_registry,
     )
+    # Has to happen after the central registration, which registers the agent endpoint family.
+    agent_download_register_endpoints(endpoint_registry, versioned_endpoint_registry)
     availability_register(versioned_endpoint_registry, endpoint_family_registry)
     ldap_api_register(
         versioned_endpoint_registry=versioned_endpoint_registry,

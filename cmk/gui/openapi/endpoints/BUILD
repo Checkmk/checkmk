@@ -67,7 +67,6 @@ py_library(
         "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:agent",
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",

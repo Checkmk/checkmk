@@ -249,7 +249,6 @@ py_library(
         "//cmk/gui/search:matchers",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:agent_registration",
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:html",
         "//cmk/gui/utils:misc",

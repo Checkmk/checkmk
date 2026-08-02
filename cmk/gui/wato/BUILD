@@ -127,8 +127,6 @@ py_library(
         "//cmk/gui/search:matchers",
         "//cmk/gui/sidebar",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:agent",
-        "//cmk/gui/utils:agent_registration",
         "//cmk/gui/utils:autocompleter_config",
         "//cmk/gui/utils:confirm_with_preview",
         "//cmk/gui/utils:cookies",

@@ -30,7 +30,6 @@ from . import (
     check_catalog,
     custom_attributes,
     diagnostics,
-    download_agents,
     fetch_agent_output,
     folders,
     global_settings,
@@ -86,7 +85,6 @@ def register(
     check_catalog.register(mode_registry)
     custom_attributes.register(mode_registry)
     diagnostics.register(page_registry, mode_registry, automation_command_registry, job_registry)
-    download_agents.register(page_registry, mode_registry)
     fetch_agent_output.register(page_registry, automation_command_registry, job_registry)
     folders.register(page_registry, mode_registry)
     global_settings.register(edition, mode_registry, match_item_generator_registry)

@@ -21,7 +21,7 @@ def test_download_agent_shipped_with_checkmk(
         fo.write(agent_bin_data)
 
     packed_agent_path_patched = mocker.patch(
-        "cmk.gui.openapi.endpoints.agent.agent.packed_agent_path_linux_deb",
+        "cmk.gui.agent_download._endpoints.packed_agent_path_linux_deb",
         return_value=mocked_agent_path,
     )
 

@@ -36,6 +36,7 @@ from cmk.gui import (
     welcome,
     werks,
 )
+from cmk.gui.agent_download import registration as agent_download_registration
 from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.availability import registration as availability_registration
 from cmk.gui.background_job.job import BackgroundJobRegistry
@@ -365,6 +366,12 @@ def register(  # noqa: PLR0917
         endpoint_registry,
         versioned_endpoint_registry,
         endpoint_family_registry,
+    )
+    agent_download_registration.register(
+        page_registry,
+        mode_registry,
+        endpoint_registry,
+        versioned_endpoint_registry,
     )
     availability_registration.register(
         versioned_endpoint_registry=versioned_endpoint_registry,

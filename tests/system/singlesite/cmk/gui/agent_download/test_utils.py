@@ -7,7 +7,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.gui.utils import agent
+from cmk.gui.agent_download import _utils
 from tests.testlib.site import Site
 
 
@@ -19,9 +19,9 @@ def test_vanilla_agents_filenames(site: Site, mocker: MockerFixture) -> None:
     # we have a mixed situation here: we use the source code from git, but
     # check against the installed site. so we have to make sure the version
     # matches: we mock the source code to reflect the site version.
-    mocker.patch("cmk.gui.utils.agent.cmk_version", site.version.version)
+    mocker.patch("cmk.gui.agent_download._utils.cmk_version", site.version.version)
     mocker.patch("cmk.utils.paths.agents_dir", site.root / "share/check_mk/agents")
 
-    assert site.file_exists(agent.packed_agent_path_windows_msi().relative_to(site.root))
-    assert site.file_exists(agent.packed_agent_path_linux_deb().relative_to(site.root))
-    assert site.file_exists(agent.packed_agent_path_linux_rpm().relative_to(site.root))
+    assert site.file_exists(_utils.packed_agent_path_windows_msi().relative_to(site.root))
+    assert site.file_exists(_utils.packed_agent_path_linux_deb().relative_to(site.root))
+    assert site.file_exists(_utils.packed_agent_path_linux_rpm().relative_to(site.root))

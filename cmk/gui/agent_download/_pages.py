@@ -34,12 +34,17 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
-from cmk.gui.utils import agent
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
-from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.mode import WatoMode
+
+from ._utils import (
+    packed_agent_path_linux_deb,
+    packed_agent_path_linux_rpm,
+    packed_agent_path_windows_msi,
+)
 
 # Page names of the GUI handlers that stream agent plugin files which live outside
 # the statically served share/check_mk/agents tree (e.g. cmk/plugins/<family>/agents/).
@@ -47,34 +52,6 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 # below the statically served tree. Files of locally installed plugins are not.
 DOWNLOAD_AGENT_PLUGIN_PAGE = "download_agent_plugin"
 DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE = "download_local_agent_plugin"
-
-
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    mode_registry.register(ModeDownloadAgentsOther)
-    mode_registry.register(ModeDownloadAgentsWindows)
-    mode_registry.register(ModeDownloadAgentsLinux)
-
-    # The endpoints handing out the files need to filter for allowed ones themselves!
-    # Bonus: fills the cache of _plugin_family_agent_dirs at apache load.
-    available_dirs = [d.path for d in _plugin_family_agent_dirs()]
-    page_registry.register(
-        PageEndpoint(
-            f"noauth:{DOWNLOAD_AGENT_PLUGIN_PAGE}",
-            PageDownloadAgentPlugin(
-                [p for p in available_dirs if not p.is_relative_to(cmk.utils.paths.local_root)],
-                require_permission=False,
-            ),
-        )
-    )
-    page_registry.register(
-        PageEndpoint(
-            DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE,
-            PageDownloadAgentPlugin(
-                available_dirs,
-                require_permission=True,
-            ),
-        )
-    )
 
 
 @dataclass(frozen=True)
@@ -386,7 +363,7 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
 
     @override
     def _packed_agents(self) -> list[str]:
-        return [str(agent.packed_agent_path_windows_msi())]
+        return [str(packed_agent_path_windows_msi())]
 
     @override
     def _walk_base_dirs(self) -> list[str]:
@@ -408,7 +385,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
 
     @override
     def _packed_agents(self) -> list[str]:
-        return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
+        return [str(packed_agent_path_linux_deb()), str(packed_agent_path_linux_rpm())]
 
     @override
     def _walk_base_dirs(self) -> list[str]:

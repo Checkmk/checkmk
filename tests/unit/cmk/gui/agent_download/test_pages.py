@@ -11,12 +11,8 @@ from pytest_mock import MockerFixture
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request as global_request
-from cmk.gui.pages import PageContext
-from cmk.gui.wato.pages import download_agents
-from cmk.gui.wato.pages.download_agents import (
+from cmk.gui.agent_download import _pages
+from cmk.gui.agent_download._pages import (
     DOWNLOAD_AGENT_PLUGIN_PAGE,
     download_href,
     DOWNLOAD_LOCAL_AGENT_PLUGIN_PAGE,
@@ -24,6 +20,10 @@ from cmk.gui.wato.pages.download_agents import (
     PageDownloadAgentPlugin,
     PluginFamilyAgentDir,
 )
+from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request as global_request
+from cmk.gui.pages import PageContext
 
 
 def _shipped_page(allowed_dirs: Sequence[Path]) -> PageDownloadAgentPlugin:
@@ -77,8 +77,8 @@ def test_page_download_serves_allowed_plugin_file(
     plugin_file = plugin_agents_dir / "mk-oracle"
     plugin_file.write_bytes(b"binary payload")
 
-    mock_user = mocker.patch.object(download_agents, "user")
-    mock_response = mocker.patch.object(download_agents, "response")
+    mock_user = mocker.patch.object(_pages, "user")
+    mock_response = mocker.patch.object(_pages, "response")
     mock_response.headers = {}
 
     page_context.request.set_var("path", str(plugin_file))
@@ -102,8 +102,8 @@ def test_page_download_local_requires_permission(
     plugin_file = local_agents_dir / "mk-custom"
     plugin_file.write_bytes(b"local payload")
 
-    mock_user = mocker.patch.object(download_agents, "user")
-    mock_response = mocker.patch.object(download_agents, "response")
+    mock_user = mocker.patch.object(_pages, "user")
+    mock_response = mocker.patch.object(_pages, "response")
     mock_response.headers = {}
 
     page_context.request.set_var("path", str(plugin_file))
@@ -125,7 +125,7 @@ def test_page_download_unauthenticated_rejects_local_plugin_file(
     local_file = local_agents_dir / "mk-custom"
     local_file.write_bytes(b"local payload")
 
-    mocker.patch.object(download_agents, "user")
+    mocker.patch.object(_pages, "user")
 
     page_context.request.set_var("path", str(local_file))
     with pytest.raises(MKUserError, match="not available for download"):
@@ -144,7 +144,7 @@ def test_page_download_local_rejects_shipped_plugin_file(
     local_agents_dir = tmp_path / "local" / "custom" / "agents"
     local_agents_dir.mkdir(parents=True)
 
-    mocker.patch.object(download_agents, "user")
+    mocker.patch.object(_pages, "user")
 
     page_context.request.set_var("path", str(shipped_file))
     with pytest.raises(MKUserError, match="not available for download"):
@@ -161,7 +161,7 @@ def test_page_download_rejects_traversal_outside_allowed_dirs(
     secret = tmp_path / "secret.txt"
     secret.write_bytes(b"top secret")
 
-    mocker.patch.object(download_agents, "user")
+    mocker.patch.object(_pages, "user")
 
     page_context.request.set_var("path", str(secret))
     with pytest.raises(MKUserError, match="not available for download"):
@@ -176,7 +176,7 @@ def test_page_download_rejects_missing_file(
     plugin_agents_dir = tmp_path / "oracle" / "agents"
     plugin_agents_dir.mkdir(parents=True)
 
-    mocker.patch.object(download_agents, "user")
+    mocker.patch.object(_pages, "user")
 
     page_context.request.set_var("path", str(plugin_agents_dir / "does-not-exist"))
     with pytest.raises(MKUserError, match="does not exist"):
@@ -190,11 +190,11 @@ def fixture_uncached_plugin_family_agent_dirs() -> Iterator[None]:
     Clearing it upfront keeps the real families found at import time from shadowing the
     patched ones, clearing it afterwards keeps the patched ones out of later tests.
     """
-    download_agents._plugin_family_agent_dirs.cache_clear()
+    _pages._plugin_family_agent_dirs.cache_clear()
     try:
         yield
     finally:
-        download_agents._plugin_family_agent_dirs.cache_clear()
+        _pages._plugin_family_agent_dirs.cache_clear()
 
 
 def test_plugin_family_agent_dirs_marks_local_families(
@@ -202,7 +202,7 @@ def test_plugin_family_agent_dirs_marks_local_families(
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(
-        download_agents,
+        _pages,
         "discover_families",
         return_value={
             "cmk.plugins.oracle": [f"{cmk.utils.paths.lib_dir}/python3/cmk/plugins/oracle"],
@@ -210,7 +210,7 @@ def test_plugin_family_agent_dirs_marks_local_families(
         },
     )
 
-    assert {d.title: d.is_local for d in download_agents._plugin_family_agent_dirs()} == {
+    assert {d.title: d.is_local for d in _pages._plugin_family_agent_dirs()} == {
         "Oracle": False,
         "Custom": True,
     }
@@ -222,7 +222,7 @@ def test_other_mode_titles_plugin_family_section_by_family(
     test_edition: cmk_version.Edition,
 ) -> None:
     mocker.patch.object(
-        download_agents,
+        _pages,
         "_plugin_family_agent_dirs",
         return_value=[
             PluginFamilyAgentDir(

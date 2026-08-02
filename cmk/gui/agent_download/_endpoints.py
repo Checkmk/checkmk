@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
+from cmk import fields
 from cmk.gui.http import ContentDispositionType, Response
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -16,11 +18,66 @@ from cmk.gui.openapi.framework import (
     QueryParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.shared_endpoint_families.agent import AGENTS_FAMILY
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentDownloadToken, get_token_store
-from cmk.gui.utils import agent
+
+from ._utils import (
+    packed_agent_path_linux_deb,
+    packed_agent_path_linux_rpm,
+    packed_agent_path_windows_msi,
+)
+
+OS_TYPES_AVAILABLE_IN_RAW = ["linux_rpm", "linux_deb", "windows_msi"]
+
+OS_TYPE_RAW = {
+    "os_type": fields.String(
+        description=(
+            "The type of the operating system. May be one of "
+            + ", ".join(OS_TYPES_AVAILABLE_IN_RAW)
+        ),
+        enum=sorted(OS_TYPES_AVAILABLE_IN_RAW),
+        example="linux_deb",
+        required=True,
+    ),
+}
+
+
+@Endpoint(
+    constructors.domain_type_action_href("agent", "download"),
+    "cmk/download",
+    method="get",
+    content_type="application/octet-stream",
+    query_params=[OS_TYPE_RAW],
+    family_name=AGENTS_FAMILY.name,
+)
+def download_agent(params: Mapping[str, object]) -> Response:
+    """Download agents shipped with Checkmk"""
+    os_type = params.get("os_type")
+    response = Response()
+
+    if os_type == "windows_msi":
+        agent_path = packed_agent_path_windows_msi()
+        response.set_content_type("application/x-msi")
+    elif os_type == "linux_rpm":
+        agent_path = packed_agent_path_linux_rpm()
+        response.set_content_type("application/x-rpm")
+    elif os_type == "linux_deb":
+        agent_path = packed_agent_path_linux_deb()
+        response.set_content_type("application/x-deb")
+    else:
+        # This should never happen. Due to validation `os_type` can only be one
+        # of the three elements above.
+        raise AssertionError(f"Agent: os_type '{os_type}' not known in raw edition.")
+
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, agent_path.name)
+
+    with open(agent_path, mode="rb") as f:
+        response.data = f.read()
+    response.status_code = 200
+    return response
+
 
 _OS_TYPES_AVAILABLE = ["linux_deb", "linux_rpm", "windows_msi"]
 
@@ -55,13 +112,13 @@ def download_agent_by_token(
 
     response = Response()
     if os_type == "windows_msi":
-        agent_path = agent.packed_agent_path_windows_msi()
+        agent_path = packed_agent_path_windows_msi()
         response.set_content_type("application/x-msi")
     elif os_type == "linux_rpm":
-        agent_path = agent.packed_agent_path_linux_rpm()
+        agent_path = packed_agent_path_linux_rpm()
         response.set_content_type("application/x-rpm")
     elif os_type == "linux_deb":
-        agent_path = agent.packed_agent_path_linux_deb()
+        agent_path = packed_agent_path_linux_deb()
         response.set_content_type("application/x-deb")
     else:
         raise AssertionError(f"Agent: os_type '{os_type}' not known in this edition.")
@@ -75,7 +132,7 @@ def download_agent_by_token(
 
 ENDPOINT_DOWNLOAD_BY_TOKEN = VersionedEndpoint(
     metadata=EndpointMetadata(
-        path=domain_type_action_href("agent", "download_by_token"),
+        path=constructors.domain_type_action_href("agent", "download_by_token"),
         link_relation="cmk/download_by_token",
         method="get",
         content_type="application/octet-stream",

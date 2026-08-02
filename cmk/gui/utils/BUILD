@@ -211,19 +211,6 @@ py_library(
 )
 
 py_library(
-    name = "agent_registration",
-    srcs = ["agent_registration.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:core_toolkit",
-    ],
-)
-
-py_library(
     name = "time",
     srcs = ["time.py"],
     imports = ["../../.."],
@@ -243,20 +230,6 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
-    ],
-)
-
-py_library(
-    name = "agent",
-    srcs = ["agent.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/utils:paths",
-        "//packages/cmk-ccc:version",
     ],
 )
 

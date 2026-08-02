@@ -14,7 +14,6 @@ from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.permissions import PermissionRegistry
-from cmk.gui.utils.agent import raw_linux_agent_wget_commands
 from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
@@ -160,6 +159,24 @@ def build_agent_status_cmds() -> AgentStatusCmds:
         aix=AIX_STATUS_CMD,
         solaris=SOLARIS_STATUS_CMD,
     )
+
+
+_LINUX_RPM_DOWNLOAD_URL = (
+    "{{SERVER}}/{{SITE}}/check_mk/agents/check-mk-agent-{version}-1.noarch.rpm"
+)
+_LINUX_DEB_DOWNLOAD_URL = "{{SERVER}}/{{SITE}}/check_mk/agents/check-mk-agent_{version}-1_all.deb"
+
+
+def raw_linux_agent_wget_commands(version: str) -> list[str]:
+    """`wget` commands for the basic, unbaked Linux agent packages.
+
+    The asymmetric naming (RPM uses `-`, DEB uses `_`) matches the on-disk
+    filenames produced by the build (see `Makefile`, `tests/system/multisite/utils.py`).
+    """
+    return [
+        f"wget {_LINUX_RPM_DOWNLOAD_URL.format(version=version)}",
+        f"wget {_LINUX_DEB_DOWNLOAD_URL.format(version=version)}",
+    ]
 
 
 def baked_agents_available(

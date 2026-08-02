@@ -6,7 +6,6 @@
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
-    agent,
     audit_log,
     aux_tags,
     broker_connection,
@@ -71,7 +70,6 @@ def register(
 
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
-    agent.register(endpoint_registry)
     audit_log.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)

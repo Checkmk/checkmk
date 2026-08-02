@@ -12,6 +12,7 @@ py_library(
     deps = [
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui/agent_download",
         "//cmk/gui/agent_registration",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/wato",

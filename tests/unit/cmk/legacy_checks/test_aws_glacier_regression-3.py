@@ -16,6 +16,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
@@ -110,13 +111,9 @@ def test_discover_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
     discovered = list(discover_aws_glacier(parsed))
 
     assert len(discovered) == 2
-    vault_names = [item[0] for item in discovered]
+    vault_names = [service.item for service in discovered]
     assert "axi_empty_vault" in vault_names
     assert "axi_vault" in vault_names
-
-    # Check parameters are empty
-    for _, params in discovered:
-        assert params == {}
 
 
 def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
@@ -124,51 +121,31 @@ def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> Non
     discovered = list(discover_aws_glacier_summary(parsed))
 
     assert len(discovered) == 1
-    item, params = discovered[0]
-    assert item is None
-    assert params == {}
+    assert discovered[0].item is None
 
 
 def test_check_aws_glacier_archives_axi_empty_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for first empty vault"""
     result = list(check_aws_glacier_archives("axi_empty_vault", {}, parsed))
 
-    assert len(result) == 2
-
-    # Vault size check
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Vault size: 0 B" in summary
-    assert len(metrics) == 1
-    assert metrics[0] == ("aws_glacier_vault_size", 0, None, None)
-
-    # Number of archives check
-    state, summary, metrics = result[1]
-    assert state == 0
-    assert "Number of archives: 0" in summary
-    assert len(metrics) == 1
-    assert metrics[0] == ("aws_glacier_num_archives", 0)
+    assert result == [
+        Result(state=State.OK, summary="Vault size: 0 B"),
+        Metric("aws_glacier_vault_size", 0.0),
+        Result(state=State.OK, summary="Number of archives: 0"),
+        Metric("aws_glacier_num_archives", 0.0),
+    ]
 
 
 def test_check_aws_glacier_archives_axi_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for second empty vault"""
     result = list(check_aws_glacier_archives("axi_vault", {}, parsed))
 
-    assert len(result) == 2
-
-    # Vault size check
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Vault size: 0 B" in summary
-    assert len(metrics) == 1
-    assert metrics[0] == ("aws_glacier_vault_size", 0, None, None)
-
-    # Number of archives check
-    state, summary, metrics = result[1]
-    assert state == 0
-    assert "Number of archives: 0" in summary
-    assert len(metrics) == 1
-    assert metrics[0] == ("aws_glacier_num_archives", 0)
+    assert result == [
+        Result(state=State.OK, summary="Vault size: 0 B"),
+        Metric("aws_glacier_vault_size", 0.0),
+        Result(state=State.OK, summary="Number of archives: 0"),
+        Metric("aws_glacier_num_archives", 0.0),
+    ]
 
 
 def test_check_aws_glacier_archives_nonexistent_vault(parsed: Mapping[str, GlacierVault]) -> None:
@@ -181,23 +158,12 @@ def test_check_aws_glacier_archives_nonexistent_vault(parsed: Mapping[str, Glaci
 
 def test_check_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
     """Test summary aggregates values from both empty vaults"""
-    result = list(check_aws_glacier_summary(None, {}, parsed))
+    result = list(check_aws_glacier_summary({}, parsed))
 
-    assert len(result) == 2
-
-    # Total size check
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Total size: 0 B" in summary
-    assert len(metrics) == 1
-    assert metrics[0] == ("aws_glacier_total_vault_size", 0, None, None)
-
-    # Largest vault check - should pick one of the two vaults (both are same size)
-    state, summary, metrics = result[1]
-    assert state == 0
-    assert "Largest vault:" in summary
-    assert "(0 B)" in summary
-    # Could be either vault since both have same size
-    assert "axi_empty_vault" in summary or "axi_vault" in summary
-    assert len(metrics) == 1
-    assert metrics[0] == ("aws_glacier_largest_vault_size", 0)
+    # Both vaults have the same size, so the last one wins as "largest".
+    assert result == [
+        Result(state=State.OK, summary="Total size: 0 B"),
+        Metric("aws_glacier_total_vault_size", 0.0),
+        Result(state=State.OK, summary="Largest vault: axi_vault (0 B)"),
+        Metric("aws_glacier_largest_vault_size", 0.0),
+    ]

@@ -17,6 +17,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
@@ -90,7 +91,7 @@ def test_discover_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
     """Test vault discovery finds both vaults"""
     discovered = list(discover_aws_glacier(parsed))
     assert len(discovered) == 2
-    vault_names = [item[0] for item in discovered]
+    vault_names = [service.item for service in discovered]
     assert "axi_empty_vault" in vault_names
     assert "axi_vault" in vault_names
 
@@ -98,56 +99,44 @@ def test_discover_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
 def test_check_aws_glacier_archives_axi_empty_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for empty vault with minimal data"""
     result = list(check_aws_glacier_archives("axi_empty_vault", {}, parsed))
-    assert len(result) >= 1
-    # Should have vault size check
-    vault_size_result = result[0]
-    assert vault_size_result[0] == 0  # OK status
-    assert "Vault size" in vault_size_result[1]
 
-    # Should have number of archives
-    num_archives_result = result[1]
-    assert num_archives_result[0] == 0  # OK status
-    assert "Number of archives: 0" in num_archives_result[1]
+    assert result == [
+        Result(state=State.OK, summary="Vault size: 12 B"),
+        Metric("aws_glacier_vault_size", 12.12),
+        Result(state=State.OK, summary="Number of archives: 0"),
+        Metric("aws_glacier_num_archives", 0.0),
+    ]
 
 
 def test_check_aws_glacier_archives_axi_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for vault with archives but zero size"""
     result = list(check_aws_glacier_archives("axi_vault", {}, parsed))
-    assert len(result) >= 2
 
-    # Should have vault size check
-    vault_size_result = result[0]
-    assert vault_size_result[0] == 0  # OK status
-    assert "Vault size" in vault_size_result[1]
-
-    # Should have number of archives
-    num_archives_result = result[1]
-    assert num_archives_result[0] == 0  # OK status
-    assert "Number of archives: 15" in num_archives_result[1]
+    assert result == [
+        Result(state=State.OK, summary="Vault size: 0 B"),
+        Metric("aws_glacier_vault_size", 0.0),
+        Result(state=State.OK, summary="Number of archives: 15"),
+        Metric("aws_glacier_num_archives", 15.5),
+    ]
 
 
 def test_check_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
     """Test summary aggregates values from all vaults"""
-    result = list(check_aws_glacier_summary(None, {}, parsed))
-    assert len(result) >= 1
+    result = list(check_aws_glacier_summary({}, parsed))
 
-    # Should have total size
-    total_size_result = result[0]
-    assert total_size_result[0] == 0  # OK status
-    assert "Total size" in total_size_result[1]
-
-    # Should have largest vault info
-    if len(result) > 1:
-        largest_vault_result = result[1]
-        assert largest_vault_result[0] == 0  # OK status
-        assert "Largest vault" in largest_vault_result[1]
+    assert result == [
+        Result(state=State.OK, summary="Total size: 12 B"),
+        Metric("aws_glacier_total_vault_size", 12.12),
+        Result(state=State.OK, summary="Largest vault: axi_empty_vault (12 B)"),
+        Metric("aws_glacier_largest_vault_size", 12.12),
+    ]
 
 
 def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
     """Test summary discovery creates summary item"""
     discovered = list(discover_aws_glacier_summary(parsed))
     assert len(discovered) == 1
-    assert discovered[0][0] is None  # No item name for summary
+    assert discovered[0].item is None  # No item name for summary
 
 
 def test_parse_aws_glacier(string_table: list[list[str]]) -> None:

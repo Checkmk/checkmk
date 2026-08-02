@@ -3,17 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    LevelsT,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.aws.lib import parse_aws
-
-check_info = {}
 
 
 @dataclass(frozen=True)
@@ -26,6 +34,8 @@ class GlacierVault:
 
 Section = Mapping[str, GlacierVault]
 
+Params = Mapping[str, tuple[float | None, ...] | None]
+
 
 def parse_aws_glacier(string_table: StringTable) -> Section:
     parsed_by_vault: dict[str, GlacierVault] = {}
@@ -37,6 +47,16 @@ def parse_aws_glacier(string_table: StringTable) -> Section:
             tagging=vault.get("Tagging"),
         )
     return parsed_by_vault
+
+
+def _vault_size_levels(params: Params) -> LevelsT[float]:
+    # The ruleset still stores the legacy levels format: either a (warn, crit)
+    # tuple or a tuple consisting solely of `None`s ("no levels").
+    match params.get("vault_size_levels"):
+        case (float() | int() as warn, float() | int() as crit):
+            return ("fixed", (warn, crit))
+        case _:
+            return ("no_levels", None)
 
 
 # .
@@ -55,44 +75,44 @@ def parse_aws_glacier(string_table: StringTable) -> Section:
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_glacier(parsed: Section):
-    for vault_name in parsed:
-        yield vault_name, {}
+def discover_aws_glacier(section: Section) -> DiscoveryResult:
+    for vault_name in section:
+        yield Service(item=vault_name)
 
 
-def check_aws_glacier_archives(item, params, parsed: Section):
-    if (data := parsed.get(item)) is None:
+def check_aws_glacier_archives(item: str, params: Params, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
         return
-    vault_size = data.size_in_bytes
-    yield check_levels(
-        vault_size,
-        "aws_glacier_vault_size",
-        params.get("vault_size_levels", (None, None)),
-        human_readable_func=render.disksize,
-        infoname="Vault size",
+
+    yield from check_levels(
+        data.size_in_bytes,
+        metric_name="aws_glacier_vault_size",
+        levels_upper=_vault_size_levels(params),
+        render_func=render.disksize,
+        label="Vault size",
     )
 
     num_archives = data.number_of_archives
-    yield (
-        0,
-        "Number of archives: %s" % int(num_archives),
-        [("aws_glacier_num_archives", num_archives)],
-    )
+    yield Result(state=State.OK, summary=f"Number of archives: {int(num_archives)}")
+    yield Metric("aws_glacier_num_archives", num_archives)
 
-    tag_infos = []
-    for key, value in list((data.tagging or {}).items()):
-        tag_infos.append(f"{key}: {value}")
-    if tag_infos:
-        yield 0, "[Tags]: %s" % ", ".join(tag_infos)
+    if tag_infos := [f"{key}: {value}" for key, value in (data.tagging or {}).items()]:
+        yield Result(state=State.OK, summary=f"[Tags]: {', '.join(tag_infos)}")
 
 
-check_info["aws_glacier"] = LegacyCheckDefinition(
+agent_section_aws_glacier = AgentSection(
     name="aws_glacier",
     parse_function=parse_aws_glacier,
+)
+
+
+check_plugin_aws_glacier = CheckPlugin(
+    name="aws_glacier",
     service_name="AWS/Glacier Vault: %s",
     discovery_function=discover_aws_glacier,
     check_function=check_aws_glacier_archives,
     check_ruleset_name="aws_glacier_vault_archives",
+    check_default_parameters={},
 )
 
 # .
@@ -110,42 +130,44 @@ check_info["aws_glacier"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------
 
 
-def discover_aws_glacier_summary(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_aws_glacier_summary(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_aws_glacier_summary(item, params, parsed: Section):
+def check_aws_glacier_summary(params: Params, section: Section) -> CheckResult:
     sum_size = 0.0
     largest_vault = None
     largest_vault_size = 0.0
-    for vault_name in sorted(parsed):
-        vault_size = parsed[vault_name].size_in_bytes
+    for vault_name in sorted(section):
+        vault_size = section[vault_name].size_in_bytes
         sum_size += vault_size
         if vault_size >= largest_vault_size:
             largest_vault = vault_name
             largest_vault_size = vault_size
-    yield check_levels(
+
+    yield from check_levels(
         sum_size,
-        "aws_glacier_total_vault_size",
-        params.get("vault_size_levels", (None, None)),
-        human_readable_func=render.disksize,
-        infoname="Total size",
+        metric_name="aws_glacier_total_vault_size",
+        levels_upper=_vault_size_levels(params),
+        render_func=render.disksize,
+        label="Total size",
     )
 
     if largest_vault:
-        yield (
-            0,
-            f"Largest vault: {largest_vault} ({render.disksize(largest_vault_size)})",
-            [("aws_glacier_largest_vault_size", largest_vault_size)],
+        yield Result(
+            state=State.OK,
+            summary=f"Largest vault: {largest_vault} ({render.disksize(largest_vault_size)})",
         )
+        yield Metric("aws_glacier_largest_vault_size", largest_vault_size)
 
 
-check_info["aws_glacier.summary"] = LegacyCheckDefinition(
+check_plugin_aws_glacier_summary = CheckPlugin(
     name="aws_glacier_summary",
     service_name="AWS/Glacier Summary",
     sections=["aws_glacier"],
     discovery_function=discover_aws_glacier_summary,
     check_function=check_aws_glacier_summary,
     check_ruleset_name="aws_glacier_vaults",
+    check_default_parameters={},
 )

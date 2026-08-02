@@ -86,7 +86,10 @@ http_proxies: dict[str, HTTPProxySpec] = {}
 # SNMP communities and encoding
 
 # Global config for SNMP Backend
-snmp_backend_default: Literal["inline", "classic"] = "inline"
+# The inline backend is not shipped in all editions, so the default must be
+# the one backend that is always available. Editions shipping the inline
+# backend configure it explicitly (see the sample config).
+snmp_backend_default: Literal["inline", "classic"] = "classic"
 
 # Ruleset to enable specific SNMP Backend for each host.
 snmp_backend_hosts: list[RuleSpec[object]] = []

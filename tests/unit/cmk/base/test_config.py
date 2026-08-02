@@ -725,6 +725,47 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.STORED_WALK
 
 
+def test_default_snmp_backend_is_classic(monkeypatch: MonkeyPatch) -> None:
+    hostname = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(hostname)
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.CLASSIC
+
+
+def test_snmp_backend_hosts_selects_the_configured_backend(monkeypatch: MonkeyPatch) -> None:
+    # we return the configured backend in every edition -- creating it fails
+    # if this installation does not provide it.
+    hostname = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset(
+        "snmp_backend_hosts",
+        [
+            {
+                "id": "01",
+                "condition": {"host_name": [hostname]},
+                "value": "inline",
+            },
+        ],
+    )
+
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.INLINE
+
+
+def test_unknown_default_snmp_backend_is_rejected(monkeypatch: MonkeyPatch) -> None:
+    # we must not silently monitor with a backend the user did not configure
+    hostname = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("snmp_backend_default", "some rubbish")
+
+    config_cache = ts.apply(monkeypatch).config_cache
+    with pytest.raises(MKGeneralException, match="Bad SNMP backend configuration"):
+        config_cache.get_snmp_backend(hostname)
+
+
 def test_bulkwalk_hosts_ruleset_enables_use_bulkwalk(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(

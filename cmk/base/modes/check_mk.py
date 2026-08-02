@@ -110,13 +110,14 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
-from cmk.checkengine.snmp_backend_builder import make_backend
+from cmk.checkengine.snmp_backend_builder import BackendError, make_backend
 from cmk.checkengine.snmplib import (
     get_single_oid,
     OID,
     oids_to_walk,
     SNMPBackend,
     SNMPBackendEnum,
+    SNMPHostConfig,
     SNMPSectionName,
     walk_for_export,
 )
@@ -1210,6 +1211,14 @@ def _execute_walks_for_dump(
                 raise
 
 
+def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
+    """Create the configured backend, reporting an unavailable one as user error"""
+    try:
+        return make_backend(snmp_config)
+    except BackendError as exc:
+        raise MKGeneralException(str(exc)) from exc
+
+
 def _mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> None:
     if _oids:
         options["oids"] = _oids
@@ -1246,7 +1255,7 @@ def _mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> 
         )
         _do_snmpwalk(
             options,
-            backend=make_backend(snmp_config),
+            backend=_make_backend(snmp_config),
         )
 
 
@@ -1343,7 +1352,7 @@ def _mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequ
             SourceType.HOST,
             backend_override=snmp_backend_override,
         )
-        backend = make_backend(snmp_config)
+        backend = _make_backend(snmp_config)
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 

@@ -178,7 +178,6 @@ from cmk.checkengine.snmplib import (
     get_snmp_table,
     oids_to_walk,
     SNMPBackend,
-    SNMPBackendEnum,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPVersion,
@@ -3121,6 +3120,7 @@ def _automation_diag_snmp(
     loading_result: config.LoadingResult | None,
 ) -> DiagSnmpResult:
     diag_input = DiagSnmpInput.deserialize(sys.stdin.read())
+    loading_result = loading_result or load_config(edition=app.edition)
     ip_address = diag_input.ip_address
 
     if not ip_address:
@@ -3156,9 +3156,6 @@ def _automation_diag_snmp(
     elif diag_input.snmp_community:
         credentials = diag_input.snmp_community
     else:
-        loading_result = loading_result or load_config(
-            edition=app.edition,
-        )
         credentials = loading_result.loaded_config.snmp_default_community
 
     # Determine SNMP version
@@ -3190,7 +3187,9 @@ def _automation_diag_snmp(
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
-        snmp_backend=SNMPBackendEnum.INLINE,
+        # Test the backend the host is configured with. Hosts that are not configured
+        # (yet) get the default backend, there are no rules matching them.
+        snmp_backend=loading_result.config_cache.get_snmp_backend(diag_input.host_name),
         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
     )
 

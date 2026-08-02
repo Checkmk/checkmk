@@ -2433,9 +2433,6 @@ class ConfigCache:
         # nothing configured for this host -> use default
         return self._loaded_config.snmp_default_community
 
-    def _is_inline_backend_supported(self) -> bool:
-        return "netsnmp" in sys.modules and self.edition is not cmk_version.Edition.COMMUNITY
-
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
         if result := self.__snmp_backend.get(host_name):
             return result
@@ -2450,26 +2447,24 @@ class ConfigCache:
         ):
             return SNMPBackendEnum.STORED_WALK
 
-        with_inline_snmp = self._is_inline_backend_supported()
-
         if host_backend_config := self.ruleset_matcher.get_host_values_all(
             host_name, self._loaded_config.snmp_backend_hosts, self.label_manager.labels_of_host
         ):
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
-            if with_inline_snmp and host_backend == "inline":
+            if host_backend == "inline":
                 return SNMPBackendEnum.INLINE
             if host_backend == "classic":
                 return SNMPBackendEnum.CLASSIC
             raise MKGeneralException(f"Bad Host SNMP Backend configuration: {host_backend}")
 
-        if with_inline_snmp and self._loaded_config.snmp_backend_default == "inline":
+        if self._loaded_config.snmp_backend_default == "inline":
             return SNMPBackendEnum.INLINE
         if self._loaded_config.snmp_backend_default == "classic":
             return SNMPBackendEnum.CLASSIC
-        # Note: in the above case we raise here.
-        # I am not sure if this different behavior is intentional.
-        return SNMPBackendEnum.CLASSIC
+        raise MKGeneralException(
+            f"Bad SNMP backend configuration: {self._loaded_config.snmp_backend_default}"
+        )
 
     def snmp_credentials_of_version(
         self, hostname: HostName, snmp_version: int

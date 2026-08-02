@@ -324,7 +324,7 @@ def register(
     rulespec_registry.register(Snmpv2CHosts)
     rulespec_registry.register(SnmpTiming)
     rulespec_registry.register(NonInlineSnmpHosts)
-    rulespec_registry.register(SnmpBackendHosts)
+    rulespec_registry.register(make_snmp_backend_hosts_rulespec(edition))
     rulespec_registry.register(UsewalkHosts)
     rulespec_registry.register(SnmpPorts)
     rulespec_registry.register(AgentPorts)
@@ -3169,6 +3169,18 @@ ConfigVariableUseDNSCache = ConfigVariable(
 )
 
 
+def _snmp_backend_choices(edition: Edition) -> list[fs.SingleChoiceElement]:
+    """Offer the backends this installation can actually provide
+
+    We would rather discover the available backends (as the fetchers do) than
+    dispatch on the edition here, but that would mean a dependency of the GUI on
+    the check engine, which we do not want at the moment.
+    """
+    classic = fs.SingleChoiceElement(name="classic", title=Title("Use classic SNMP backend"))
+    inline = fs.SingleChoiceElement(name="inline", title=Title("Use inline SNMP backend"))
+    return [classic] if edition is Edition.COMMUNITY else [inline, classic]
+
+
 def _transform_snmp_backend_from_valuespec(
     backend: SNMPBackendEnum,
 ) -> Literal["classic", "inline"]:
@@ -3191,12 +3203,9 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
     ident="snmp_backend_default",
     form_spec=lambda context: fs.SingleChoice(
         title=Title("Choose SNMP backend"),
-        elements=[
-            fs.SingleChoiceElement(name="classic", title=Title("Use classic SNMP backend")),
-            fs.SingleChoiceElement(name="inline", title=Title("Use inline SNMP backend")),
-        ],
+        elements=_snmp_backend_choices(context.edition_of_local_site),
         help_text=Help(
-            "By default, Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
+            "The SNMP backend to use for all SNMP hosts. The classic backend uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information, executing a new command line program for each request. The inline backend, which is shipped in the commercial editions, calls the respective libraries directly via their Python bindings instead. This increases the performance of SNMP checks in a significant way, especially in large installations. Only the backends this installation provides are offered here. You can override this setting for individual hosts with the ruleset 'Hosts using a specific SNMP Backend'."
         ),
         prefill=fs.DefaultValue("classic"),
         migrate=_migrate_snmp_backend_default,
@@ -5648,13 +5657,15 @@ NonInlineSnmpHosts = BinaryHostRulespec(
 
 def _help_snmp_backend() -> str:
     return _(
-        "Checkmk has an efficient SNMP implementation called inline SNMP "
-        "which reduces the load produced by SNMP monitoring on the "
-        "monitoring host significantly. Inline SNMP is enabled by default "
-        "for all SNMP hosts and it is a good idea to keep this default "
-        "setting. However, there are SNMP devices which have problems "
-        "with some SNMP implementations. You can use this rule to select "
-        "the SNMP backend for these hosts."
+        "The backend used for all SNMP hosts is configured with the global "
+        "setting 'Choose SNMP backend'. Some SNMP devices have problems with "
+        "one or the other SNMP implementation, so you can use this rule to "
+        "select the backend for these hosts. The classic backend calls the "
+        "Net-SNMP command line tools, starting a new program for every "
+        "request. The inline backend, which is shipped in the commercial "
+        "editions, calls the respective libraries directly via their Python "
+        "bindings and reduces the load on the monitoring host significantly. "
+        "Only the backends this installation provides are offered here."
     )
 
 
@@ -5668,27 +5679,27 @@ def _transform_snmp_backend_hosts_to_valuespec(backend: object) -> SNMPBackendEn
             raise MKConfigError(f"SNMPBackendEnum {other!r} not implemented")
 
 
-def _valuespec_snmp_backend() -> Transform:
+def _valuespec_snmp_backend(edition: Edition) -> Transform:
+    classic = (SNMPBackendEnum.CLASSIC, _("Use classic backend"))
+    inline = (SNMPBackendEnum.INLINE, _("Use inline SNMP backend"))
     return Transform(
         valuespec=DropdownChoice(
             title=_("Choose SNMP backend"),
-            choices=[
-                (SNMPBackendEnum.INLINE, _("Use inline SNMP backend")),
-                (SNMPBackendEnum.CLASSIC, _("Use classic backend")),
-            ],
+            choices=[classic] if edition is Edition.COMMUNITY else [inline, classic],
         ),
         to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
         from_valuespec=_transform_snmp_backend_from_valuespec,
     )
 
 
-SnmpBackendHosts = HostRulespec(
-    valuespec=_valuespec_snmp_backend,
-    group=RulespecGroupAgentSNMP,
-    help_func=_help_snmp_backend,
-    name="snmp_backend_hosts",
-    title=lambda: _("Hosts using a specific SNMP backend"),
-)
+def make_snmp_backend_hosts_rulespec(edition: Edition) -> HostRulespec:
+    return HostRulespec(
+        valuespec=lambda: _valuespec_snmp_backend(edition),
+        group=RulespecGroupAgentSNMP,
+        help_func=_help_snmp_backend,
+        name="snmp_backend_hosts",
+        title=lambda: _("Hosts using a specific SNMP backend"),
+    )
 
 
 def _help_usewalk_hosts() -> str:

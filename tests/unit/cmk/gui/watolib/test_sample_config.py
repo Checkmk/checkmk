@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.sample_config import (
@@ -55,6 +56,8 @@ def test_init_wato_data_structures(request_context: None) -> None:
     assert not Path(omd_root, "var/check_mk/web/automation").exists()
     assert Path(omd_root, "var/check_mk/web/agent_registration").exists()
     assert Path(omd_root, "var/check_mk/web/agent_registration/automation.secret").exists()
+    # the classic backend is the shipped default, no need to configure it
+    assert "snmp_backend_default" not in load_configuration_settings()
 
 
 @pytest.mark.usefixtures("request_context")

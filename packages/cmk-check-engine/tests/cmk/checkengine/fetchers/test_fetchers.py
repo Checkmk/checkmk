@@ -526,6 +526,7 @@ def _create_fetcher(
     sections: Mapping[SNMPSectionName, SNMPSectionMeta] | None = None,
     do_status_data_inventory: bool = False,
     caching_config: Mapping[SNMPSectionName, int] | None = None,
+    snmp_backend: SNMPBackendEnum = SNMPBackendEnum.CLASSIC,
 ) -> SNMPFetcher:
     return SNMPFetcher(
         sections={} if sections is None else sections,
@@ -548,7 +549,7 @@ def _create_fetcher(
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
-            snmp_backend=SNMPBackendEnum.CLASSIC,
+            snmp_backend=snmp_backend,
             stored_walk_path=Path("/tmp/foo"),
         ),
         base_path=Path("/"),
@@ -561,6 +562,13 @@ def _create_fetcher(
 
 
 class TestSNMPFetcherFetch:
+    def test_open_unavailable_backend(self, tmp_path: Path) -> None:
+        # this package does not ship the inline backend
+        fetcher = _create_fetcher(path=tmp_path, snmp_backend=SNMPBackendEnum.INLINE)
+
+        with pytest.raises(FetcherError, match="'Inline' SNMP backend is not available"):
+            fetcher.open()
+
     def test_fetch_from_io_non_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: table)

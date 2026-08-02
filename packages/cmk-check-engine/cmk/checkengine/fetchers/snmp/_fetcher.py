@@ -22,8 +22,7 @@ from typing import Any, Final, override, Self, TypedDict
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import DeserializationContext, Fetcher, FetcherError, Mode
-from cmk.checkengine.snmp_backend_builder import make_backend
-from cmk.checkengine.snmp_backends._utils import BackendError
+from cmk.checkengine.snmp_backend_builder import BackendError, make_backend
 from cmk.checkengine.snmplib import (
     get_snmp_table,
     SNMPBackend,
@@ -242,10 +241,13 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
         snmp_config = dataclasses.replace(
             self.snmp_config, stored_walk_path=self.base_path / self.relative_stored_walk_path
         )
-        self._backend = make_backend(
-            snmp_config,
-            use_cache=self.force_stored_walks,
-        )
+        try:
+            self._backend = make_backend(
+                snmp_config,
+                use_cache=self.force_stored_walks,
+            )
+        except BackendError as exc:
+            raise FetcherError(str(exc)) from exc
 
     @override
     def close(self) -> None:

@@ -8695,7 +8695,7 @@ service_tag_rules = [
 globals().setdefault('snmp_backend_hosts', [])
 
 snmp_backend_hosts = [
-{'id': '0e05eb2d-f293-4d3c-b47e-97de509bf417', 'value': 'inline', 'condition': {}, 'options': {'disabled': False}},
+{'id': '0e05eb2d-f293-4d3c-b47e-97de509bf417', 'value': 'classic', 'condition': {}, 'options': {'disabled': False}},
 ] + snmp_backend_hosts
 
 

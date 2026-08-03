@@ -23,7 +23,7 @@ from omdlib.users_and_groups import run_as_site_user
 from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
 
 from cmk.ccc import tty
-from cmk.ccc.archive import CheckmkTarArchive
+from cmk.ccc.tar_archive import CheckmkTarArchive
 
 
 def tmpfs_mounted(sitename: str) -> bool:

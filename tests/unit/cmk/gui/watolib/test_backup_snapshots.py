@@ -12,8 +12,8 @@ from collections.abc import Generator
 import pytest
 
 import cmk.utils.paths
-from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.tar_archive import CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.gui.watolib import backup_snapshots
 

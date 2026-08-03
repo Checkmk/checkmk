@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.archive import (
+from cmk.ccc.tar_archive import (
     ArchiveSettings,
     CheckmkTarArchive,
     NotAValidArchive,

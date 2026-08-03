@@ -35,7 +35,7 @@ py_binary(
     srcs = ["build-cmk-container.py"],
     deps = [
         ":lib",
-        "//packages/cmk-ccc:archive",
+        "//packages/cmk-ccc:tar-archive",
         requirement("docker"),
     ],
 )

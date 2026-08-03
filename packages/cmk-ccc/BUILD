@@ -166,8 +166,8 @@ py_library(
 )
 
 py_library(
-    name = "archive",
-    srcs = ["cmk/ccc/archive.py"],
+    name = "tar-archive",
+    srcs = ["cmk/ccc/tar_archive.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
 )
@@ -211,7 +211,6 @@ py_library(
 )
 
 _ALL = [
-    "archive",
     "cleanup",
     "config-path",
     "cpu-tracking",
@@ -228,6 +227,7 @@ _ALL = [
     "regex",
     "site",
     "store",
+    "tar-archive",
     "timeout",
     "translations",
     "tty",
@@ -345,13 +345,13 @@ py_cmk_test(
 )
 
 py_cmk_test(
-    name = "archive-tests",
+    name = "tar-archive-tests",
     size = "small",
     srcs = [
-        "tests/test_archive.py",
+        "tests/test_tar_archive.py",
     ],
     deps = [
-        "archive",
+        "tar-archive",
     ],
 )
 

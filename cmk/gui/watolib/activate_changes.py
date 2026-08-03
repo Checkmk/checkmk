@@ -57,11 +57,11 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
 from cmk.ccc import store, version
-from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import get_omd_config, omd_site, SiteId
+from cmk.ccc.tar_archive import CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path

@@ -11,7 +11,7 @@ from typing import Any
 
 from marshmallow import Schema
 
-from cmk.ccc.archive import (
+from cmk.ccc.tar_archive import (
     CheckmkTarArchive,
     SecurityViolation,
     UnpackedArchiveTooLargeError,

@@ -55,7 +55,7 @@ from typing import NamedTuple
 
 import docker
 
-from cmk.ccc.archive import CheckmkTarArchive
+from cmk.ccc.tar_archive import CheckmkTarArchive
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from buildscripts.scripts.lib.common import cwd, strtobool

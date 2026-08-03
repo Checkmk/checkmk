@@ -24,8 +24,8 @@ from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils.paths
 from cmk import trace
-from cmk.ccc.archive import BaseSafeTarFile, CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.tar_archive import BaseSafeTarFile, CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

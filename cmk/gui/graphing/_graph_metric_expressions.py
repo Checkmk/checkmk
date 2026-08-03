@@ -203,11 +203,11 @@ class HistogramFractionBetween:
 
 
 @dataclass(frozen=True, kw_only=True)
-class HistogramPercentileBy:
+class HistogramPreserveQuantile:
     lookback_seconds: float
     percentile: float
     group_by: tuple[GraphLineGroupByKey, ...]
-    type_: Literal["histogram_percentile_by"] = "histogram_percentile_by"
+    type_: Literal["histogram_preserve_quantile"] = "histogram_preserve_quantile"
 
 
 type ConsolidationFunction = (
@@ -226,7 +226,7 @@ type ConsolidationFunction = (
     | HistogramSumRaw
     | HistogramFractionBelow
     | HistogramFractionBetween
-    | HistogramPercentileBy
+    | HistogramPreserveQuantile
 )
 
 

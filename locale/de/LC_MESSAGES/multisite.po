@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-29 18:04+0000\n"
+"PO-Revision-Date: 2026-08-03 13:59+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -4110,9 +4110,8 @@ msgstr "Aktive Spot-Fleet-Anfragen"
 msgid "Active time range"
 msgstr "Aktiver Zeitraum"
 
-#, fuzzy
 msgid "Active undo blocks"
-msgstr "Aktive Jobs"
+msgstr ""
 
 msgid "Active unit"
 msgstr "Aktive Einheit"
@@ -4547,9 +4546,8 @@ msgstr ""
 msgid "Add new group"
 msgstr "Neue Gruppe hinzufügen"
 
-#, fuzzy
 msgid "Add new group or user"
-msgstr "Gruppe oder Benutzer hinzufügen"
+msgstr "Neue Gruppe oder neuen Benutzer hinzufügen"
 
 msgid "Add new grouping definition"
 msgstr "Neue Gruppendefinition hinzufügen"
@@ -10165,13 +10163,11 @@ msgstr ""
 msgid "Buffer cache size"
 msgstr "Größe des Puffer-Cache"
 
-#, fuzzy
 msgid "Buffer hit ratio"
-msgstr "Regelzugriffe (Verhältnis)"
+msgstr "Trefferquote des Puffers"
 
-#, fuzzy
 msgid "Buffer pool statistics"
-msgstr "Oracle Bufferpool-Statistiken"
+msgstr "Bufferpool-Statistiken"
 
 msgid "Buffered I/O"
 msgstr "Gepufferter I/O"
@@ -38915,9 +38911,8 @@ msgstr "Libelle Business Shadow"
 msgid "Libraries"
 msgstr "Bibliotheken"
 
-#, fuzzy
 msgid "Library cache hit ratio"
-msgstr "Oracle Bibliotheks-Cache Hit Ratio"
+msgstr "Trefferquote des Bibliotheks-Cache"
 
 msgid "Licence state"
 msgstr "Lizenzzustand"
@@ -39962,9 +39957,8 @@ msgstr "Zugriff auf Regeln loggen"
 msgid "Log search query"
 msgstr "Log-Suchanfrage"
 
-#, fuzzy
 msgid "Log switches (last hour)"
-msgstr "Logswitches / Stunde"
+msgstr "Log Switches (letzte Stunde)"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "Logswitches in den letzten 60 Sekunden"
@@ -48933,9 +48927,8 @@ msgstr "Oracle Archiv-Log Small Writes"
 msgid "Oracle binaries permissions check %s"
 msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
 
-#, fuzzy
 msgid "Oracle binaries permissions check (Windows only)"
-msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
+msgstr "Berechtigungsprüfung für Oracle-Binärdateien (nur Windows)"
 
 msgid "Oracle block change"
 msgstr "Oracle Blockänderung"
@@ -48952,9 +48945,8 @@ msgstr "Oracle Puffer-Cache-Größe"
 msgid "Oracle buffer hit ratio"
 msgstr "Oracle Puffer Trefferquote"
 
-#, fuzzy
 msgid "Oracle buffer hit ratio (gauge)"
-msgstr "Oracle Puffer Trefferquote"
+msgstr "Oracle Puffer Trefferquote (Tachometer)"
 
 msgid "Oracle buffer pool statistics"
 msgstr "Oracle Bufferpool-Statistiken"
@@ -49220,9 +49212,8 @@ msgstr "Oracle große Poolgröße"
 msgid "Oracle library cache hit ratio"
 msgstr "Oracle Bibliotheks-Cache Hit Ratio"
 
-#, fuzzy
 msgid "Oracle library cache hit ratio (gauge)"
-msgstr "Oracle Bibliotheks-Cache Hit Ratio"
+msgstr "Cache Hit Ratio der Oracle-Bibliothek (Tachometer)"
 
 msgid "Oracle library cache statistics"
 msgstr "Oracle Bibliotheks-Cache Statistiken"
@@ -49359,9 +49350,8 @@ msgstr "Oracle gemeinsame E/A-Poolgröße"
 msgid "Oracle shared pool size"
 msgstr "Oracle gemeinsame Poolgröße"
 
-#, fuzzy
 msgid "Oracle single database"
-msgstr "Oracle-Datenbanken"
+msgstr "einzelne Oracle-Datenbank"
 
 msgid "Oracle streams pool size"
 msgstr "Oracle Poolgröße von Strömen"
@@ -51491,9 +51481,8 @@ msgstr "Physikalische CPU Nutzung"
 msgid "Physical Disks"
 msgstr "Physikalische Platten"
 
-#, fuzzy
 msgid "Physical IO"
-msgstr "Physikalisch"
+msgstr "Physikalische E/A"
 
 msgid "Physical address (MAC)"
 msgstr "Physikalische Adresse (MAC)"
@@ -57368,9 +57357,8 @@ msgstr "SELECT Anfragen"
 msgid "SELinux information"
 msgstr "SELinux-Information"
 
-#, fuzzy
 msgid "SGA memory"
-msgstr "Speicher"
+msgstr "SGA-Speicher"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1 (SHA-96)"
@@ -57783,9 +57771,8 @@ msgstr "SYSOPER"
 msgid "SaaS version: Skip request ID verification"
 msgstr "SaaS Version: Anfrage der ID-Verifizierung überspringen"
 
-#, fuzzy
 msgid "Safe groups and/or users"
-msgstr "Gruppe oder Benutzer hinzufügen"
+msgstr "Gruppen und/oder Benutzer speichern"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSM Ereignis-Metriken"
@@ -85545,14 +85532,13 @@ msgstr "WARN/CRIT"
 msgid "WARNING"
 msgstr "WARNUNG"
 
-#, fuzzy
 msgid ""
 "WARNING: This section will increase the load of your Checkmk server and may "
 "increase load of your Database. To see results, you also have to activate "
 "'Create additional service for I/O stats bytes' or 'Create additional "
 "service for I/O stats requests' in 'Oracle performance discovery'."
 msgstr ""
-"WARNUNG: Diese Sektion erhöht die Belastung Ihres Checkmk-Servers und kann "
+"Warnung: Diese Sektion erhöht die Belastung Ihres Checkmk-Servers und kann "
 "die Belastung Ihrer Datenbank erhöhen. Um Ergebnisse zu sehen, müssen Sie "
 "auch 'Zusätzlichen Service für E/A-Stats Bytes erstellen' oder 'Zusätzlichen "
 "Service für E/A-Stats-Anfragen erstellen' in 'Oracle Performance-Erkennung' "

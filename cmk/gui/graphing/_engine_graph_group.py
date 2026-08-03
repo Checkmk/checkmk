@@ -26,7 +26,6 @@ def render_engine_graph_group(
     service_name: str,
     size: Size,
     time_range: tuple[int, int],
-    show_pin: bool,
     show_graph_time: bool,
     debug: bool,
     show_consolidation: bool = True,
@@ -57,7 +56,6 @@ def render_engine_graph_group(
                 built.graph,
                 size=size,
                 interaction=interaction,
-                show_pin=show_pin,
                 show_graph_time=show_graph_time,
                 add_to_specification=built.specification,
             )

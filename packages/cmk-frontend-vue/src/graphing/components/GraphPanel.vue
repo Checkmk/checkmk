@@ -54,7 +54,7 @@ const {
   clearPin
 } = useGraphInteraction(
   () => props.dataTimeRange, // getBaseline
-  () => true, // getShowPin; TODO: make this a prop to allow disabling pinning
+  () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
   (timeRange, kind) =>
     updateTimeRange(
@@ -192,16 +192,15 @@ const showGraphHeader: Ref<boolean> = computed(
           :inspecting="inspectionActive"
           :pan-enabled="interaction.panning === 'enabled'"
           :zoom-enabled="interaction.zoom === 'enabled'"
+          :pin-enabled="interaction.pin === 'enabled'"
           :options="{
             header: { title: title ?? null, show_graph_time: false },
             name: title ?? '',
             x_axis: null,
             y_axis: yAxis,
-            show_pin: false,
             font_size_pt: 10
           }"
           :highlighted-metric-name="highlightedMetricName"
-          :show-pin="true"
           :pin-time="pinTime"
           @zoom="onZoom"
           @pan="onPan"

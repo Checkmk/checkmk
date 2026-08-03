@@ -9,6 +9,7 @@
 import copy
 import time
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from typing import Literal
 from uuid import uuid4
 
@@ -35,7 +36,7 @@ from cmk.gui.graphing import (
     TemplateGraphSpecification,
     vs_graph_render_options,
 )
-from cmk.gui.graphing._frontend import default_time_range_seconds
+from cmk.gui.graphing._frontend import _DEFAULT_INTERACTION, default_time_range_seconds
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
@@ -347,7 +348,9 @@ def _render_engine_graph_group(
             mode="resizable" if display_config.resizable else "fixed",
         ),
         time_range=raw_time_range,
-        show_pin=display_config.show_pin,
+        interaction=replace(
+            _DEFAULT_INTERACTION, pin="enabled" if display_config.show_pin else "disabled"
+        ),
         show_graph_time=display_config.show_time_range_previews,
         debug=debug,
     )

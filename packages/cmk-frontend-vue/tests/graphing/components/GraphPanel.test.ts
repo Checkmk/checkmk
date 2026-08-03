@@ -20,14 +20,21 @@ vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'time_range', 'inspecting', 'highlightedMetricName', 'showPin', 'pinTime'],
+    props: [
+      'metrics',
+      'time_range',
+      'inspecting',
+      'highlightedMetricName',
+      'pinEnabled',
+      'pinTime'
+    ],
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
       <span data-testid="view-start">{{ time_range.start }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
       <span data-testid="highlighted">{{ highlightedMetricName }}</span>
-      <span data-testid="show-pin">{{ showPin }}</span>
+      <span data-testid="show-pin">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
       <span data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
       <span data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
@@ -82,7 +89,8 @@ const INTERACTION_NONE: GraphPanelProps['interaction'] = {
   zoom: 'disabled',
   panning: 'disabled',
   hover: 'disabled',
-  brush: 'disabled'
+  brush: 'disabled',
+  pin: 'disabled'
 }
 
 function makeMetric(name: string, title: string): Metric {
@@ -574,7 +582,7 @@ test('the renderer is told to offer the pin affordance', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      interaction: INTERACTION_NONE
+      interaction: { ...INTERACTION_NONE, pin: 'enabled' }
     }
   })
 

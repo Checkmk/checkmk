@@ -153,7 +153,6 @@ const graphOptions = computed(
     header: { title: null, show_graph_time: false },
     x_axis: null,
     y_axis: deriveYAxis(graph.value?.metrics ?? []),
-    show_pin: false,
     font_size_pt: FONT_SIZE_PT
   })
 )

@@ -99,6 +99,7 @@ _DEFAULT_INTERACTION = Interaction(
     panning="enabled",
     hover="enabled",
     brush="enabled",
+    pin="enabled",
 )
 
 
@@ -116,7 +117,6 @@ def to_cmk_time_series_graph(
     *,
     size: Size,
     interaction: Interaction = _DEFAULT_INTERACTION,
-    show_pin: bool = True,
     font_size_pt: float = 8.0,
     show_graph_time: bool = True,
     x_axis: XAxis | None = None,
@@ -132,7 +132,6 @@ def to_cmk_time_series_graph(
             name=graph.name,
             x_axis=x_axis,
             y_axis=y_axis,
-            show_pin=show_pin,
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,

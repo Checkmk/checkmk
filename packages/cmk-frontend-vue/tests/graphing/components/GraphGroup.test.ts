@@ -57,7 +57,6 @@ function makeGraphDefinition(title: string): CmkTimeSeriesGraph {
       name: title.toLowerCase(),
       x_axis: null,
       y_axis: null,
-      show_pin: true,
       font_size_pt: 8
     },
     interaction: {
@@ -65,7 +64,8 @@ function makeGraphDefinition(title: string): CmkTimeSeriesGraph {
       burger: 'enabled',
       zoom: 'enabled',
       panning: 'enabled',
-      hover: 'enabled'
+      hover: 'enabled',
+      pin: 'enabled'
     },
     internal: '{"graphs": []}'
   }

@@ -77,7 +77,6 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
     name: 'graph',
     x_axis: null,
     y_axis: null,
-    show_pin: false,
     font_size_pt: 10
   },
   time_range: { start: 1_000, end: 2_000, step: 60 },

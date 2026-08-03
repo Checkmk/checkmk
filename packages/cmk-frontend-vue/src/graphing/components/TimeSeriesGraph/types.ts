@@ -62,7 +62,7 @@ export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 
   inspecting: boolean
   panEnabled: boolean
   zoomEnabled: boolean
+  pinEnabled?: boolean
   highlightedMetricName: string | null
-  showPin?: boolean
   pinTime?: number | null
 }

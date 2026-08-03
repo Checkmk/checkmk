@@ -82,11 +82,15 @@ def test_to_cmk_time_series_graph_shell() -> None:
         name="mygraph",
         x_axis=None,
         y_axis=None,
-        show_pin=True,
         font_size_pt=8.0,
     )
     assert result.interaction == Interaction(
-        burger="enabled", zoom="enabled", panning="enabled", hover="enabled", brush="enabled"
+        burger="enabled",
+        zoom="enabled",
+        panning="enabled",
+        hover="enabled",
+        brush="enabled",
+        pin="enabled",
     )
     # No evaluation happens here: the data (metrics/horizontal_lines) and the resampled range are
     # fetched separately, so the shell has a null time range.

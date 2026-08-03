@@ -58,12 +58,12 @@ const axesContainer = ref<SVGGElement | null>(null)
 const figureWidth = computed(() => props.size.width)
 const figureHeight = computed(() => props.size.height)
 const plotWidth = computed(() => figureWidth.value - MARGIN.left - MARGIN.right)
-const plotTop = computed(() => MARGIN.top + (props.showPin ? PIN_HANDLE_HEADROOM : 0))
+const plotTop = computed(() => MARGIN.top + (props.pinEnabled ? PIN_HANDLE_HEADROOM : 0))
 const plotHeight = computed(() => figureHeight.value - plotTop.value - MARGIN.bottom)
 
 const pinVisible = computed(
   () =>
-    props.showPin === true &&
+    props.pinEnabled === true &&
     typeof props.pinTime === 'number' &&
     props.pinTime >= props.time_range.start &&
     props.pinTime <= props.time_range.end
@@ -480,7 +480,7 @@ watch(
       @action="onPinActionClick"
     />
     <PinHandle
-      v-if="showPin && hoverState"
+      v-if="pinEnabled && hoverState"
       variant="add"
       :style="{ left: `${MARGIN.left + hoverState.snapX}px`, top: `${plotTop}px` }"
       @action="onPinAddClick"

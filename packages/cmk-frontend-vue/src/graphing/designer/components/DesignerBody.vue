@@ -232,7 +232,8 @@ const calculationDelete = useDeleteWithDependents(store)
         burger: 'disabled',
         hover: 'enabled',
         panning: 'disabled',
-        zoom: 'disabled'
+        zoom: 'disabled',
+        pin: 'enabled'
       }"
       :overview="drawnOverview"
       @update:requested-time-range="requestedTimeRange = $event"

@@ -12,7 +12,7 @@ import dataclasses
 import queue
 import re
 import time
-from collections.abc import Collection, Mapping
+from collections.abc import Collection, Mapping, Sequence
 from multiprocessing import JoinableQueue, Process
 from typing import Any, cast, NamedTuple, Protocol
 
@@ -399,7 +399,10 @@ class SiteManagement:
             CascadingSingleChoiceElement(
                 name="list",
                 title=Title("Use the following"),
-                parameter_form=cls._editable_connections_form_spec(),
+                parameter_form=cls._editable_connections_form_spec(
+                    ldap_choices=connection_choices(),
+                    saml_choices=saml_connection_choices() if saml_supported else None,
+                ),
             ),
             CascadingSingleChoiceElement(
                 name="all",
@@ -479,14 +482,19 @@ class SiteManagement:
         )
 
     @classmethod
-    def _editable_connections_form_spec(cls) -> List[tuple[str, object]]:
+    def _editable_connections_form_spec(
+        cls,
+        *,
+        ldap_choices: Sequence[tuple[str, str]],
+        saml_choices: Sequence[tuple[str, str]] | None,
+    ) -> List[tuple[str, object]]:
         """Editable list of LDAP/SAML connection picks (the ``"list"`` form)."""
         ldap_elements = [
             SingleChoiceElementExtended(  # astrein: disable=localization-checker
                 name=id_,
                 title=Title(label),  # astrein: disable=localization-checker
             )
-            for id_, label in connection_choices()
+            for id_, label in ldap_choices
         ]
         connection_elements: list[CascadingSingleChoiceElement[Any]] = [
             CascadingSingleChoiceElement(
@@ -498,13 +506,13 @@ class SiteManagement:
                 ),
             ),
         ]
-        if distributed_saml_supported():
+        if saml_choices is not None:
             saml_elements = [
                 SingleChoiceElementExtended(  # astrein: disable=localization-checker
                     name=id_,
                     title=Title(label),  # astrein: disable=localization-checker
                 )
-                for id_, label in saml_connection_choices()
+                for id_, label in saml_choices
             ]
             connection_elements.append(
                 CascadingSingleChoiceElement(

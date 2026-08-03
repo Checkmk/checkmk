@@ -305,28 +305,22 @@ def test_user_attribute_sync_form_spec_choices(
     ]
 
 
-def _editable_connection_elements(
-    monkeypatch: pytest.MonkeyPatch, *, saml_supported: bool
-) -> list[Any]:
+def _editable_connection_elements(*, saml_supported: bool) -> list[Any]:
     """Return the per-entry connection choices of the nested ``"list"`` widget
-    with stubbed connection choices."""
-    monkeypatch.setattr("cmk.gui.watolib.sites.connection_choices", lambda: [("ldap_a", "LDAP A")])
-    monkeypatch.setattr(
-        "cmk.gui.watolib.sites.saml_connection_choices", lambda: [("saml_a", "SAML A")]
-    )
-    monkeypatch.setattr("cmk.gui.watolib.sites.distributed_saml_supported", lambda: saml_supported)
-    template = SiteManagement._editable_connections_form_spec().element_template
+    built from stubbed connection choices."""
+    template = SiteManagement._editable_connections_form_spec(
+        ldap_choices=[("ldap_a", "LDAP A")],
+        saml_choices=[("saml_a", "SAML A")] if saml_supported else None,
+    ).element_template
     assert hasattr(template, "elements")
     return list(template.elements)
 
 
-def test_editable_connections_form_spec_offers_ldap_and_saml_when_supported(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_editable_connections_form_spec_offers_ldap_and_saml_when_supported() -> None:
     """The nested "list" connection widget renders an LDAP pick and, when distributed
     SAML is supported, a SAML pick whose sub-form carries the connection_id,
     metadata_endpoint and acs_endpoint fields."""
-    elements = _editable_connection_elements(monkeypatch, saml_supported=True)
+    elements = _editable_connection_elements(saml_supported=True)
     assert [element.name for element in elements] == ["ldap", "saml"]
     assert [choice.name for choice in elements[0].parameter_form.elements] == ["ldap_a"]
     saml_subform = elements[1].parameter_form
@@ -336,9 +330,7 @@ def test_editable_connections_form_spec_offers_ldap_and_saml_when_supported(
     ] == ["saml_a"]
 
 
-def test_connection_pick_accepts_dash_in_connection_id(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_connection_pick_accepts_dash_in_connection_id() -> None:
     """A connection id containing a dash can be offered as a per-site pick.
 
     The product's own id rule (the ``ID`` valuespec behind the connection's "ID"
@@ -347,15 +339,10 @@ def test_connection_pick_accepts_dash_in_connection_id(
     otherwise required to be Python identifiers, which a dash is not — so
     building the pick must not choke on an id the creation form let through.
     """
-    monkeypatch.setattr(
-        "cmk.gui.watolib.sites.connection_choices", lambda: [("ldap-with-dash", "LDAP dashed")]
-    )
-    monkeypatch.setattr(
-        "cmk.gui.watolib.sites.saml_connection_choices", lambda: [("saml-with-dash", "SAML dashed")]
-    )
-    monkeypatch.setattr("cmk.gui.watolib.sites.distributed_saml_supported", lambda: True)
-
-    template = SiteManagement._editable_connections_form_spec().element_template
+    template = SiteManagement._editable_connections_form_spec(
+        ldap_choices=[("ldap-with-dash", "LDAP dashed")],
+        saml_choices=[("saml-with-dash", "SAML dashed")],
+    ).element_template
     assert hasattr(template, "elements")
     elements = list(template.elements)
 
@@ -377,9 +364,7 @@ def test_auth_connections_round_trip_dashed_connection_id() -> None:
     assert _auth_connections_to_disk(("list", entries)) == entries
 
 
-def test_editable_connections_form_spec_omits_saml_when_not_supported(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_editable_connections_form_spec_omits_saml_when_not_supported() -> None:
     """Without distributed SAML support the nested "list" widget offers only the LDAP pick."""
-    elements = _editable_connection_elements(monkeypatch, saml_supported=False)
+    elements = _editable_connection_elements(saml_supported=False)
     assert [element.name for element in elements] == ["ldap"]

@@ -4,16 +4,22 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-defineProps<{ title: string }>()
+defineProps<{ title: string; isCompact?: boolean }>()
 </script>
 
 <template>
-  <div class="graphing-graph-title">{{ title }}</div>
+  <div class="graphing-graph-title" :class="{ 'graphing-graph-title--compact': !!isCompact }">
+    {{ title }}
+  </div>
 </template>
 
 <style scoped>
 .graphing-graph-title {
   font-size: var(--font-size-large);
   font-weight: var(--font-weight-bold);
+}
+
+.graphing-graph-title--compact {
+  font-size: var(--font-size-xsmall);
 }
 </style>

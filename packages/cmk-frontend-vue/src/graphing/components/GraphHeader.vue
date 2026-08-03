@@ -35,6 +35,7 @@ const props = withDefaults(
     showConsolidation?: boolean | undefined
     showBurgerMenu?: boolean | undefined
     burgerMenuGroups?: BurgerMenuGroup[] | undefined
+    isCompact?: boolean | undefined
   }>(),
   { showControls: true }
 )
@@ -92,8 +93,8 @@ const resolutionLabel = computed(() =>
 </script>
 
 <template>
-  <div class="graphing-graph-header">
-    <GraphTitle v-if="showTitle" :title="title ?? ''" />
+  <div class="graphing-graph-header" :class="{ 'graphing-graph-header--compact': !!isCompact }">
+    <GraphTitle v-if="showTitle" :title="title ?? ''" :is-compact="!!isCompact" />
     <div class="graphing-graph-header__controls">
       <template v-if="showConsolidation">
         <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
@@ -151,5 +152,10 @@ const resolutionLabel = computed(() =>
 
 .graphing-graph-header__resolution {
   font-weight: var(--font-weight-bold);
+}
+
+.graphing-graph-header--compact .graphing-graph-header__title,
+.graphing-graph-header--compact .graphing-graph-header__timestamp {
+  font-size: var(--font-size-xsmall);
 }
 </style>

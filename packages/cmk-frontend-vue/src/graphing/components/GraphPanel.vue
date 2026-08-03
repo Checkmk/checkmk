@@ -146,6 +146,8 @@ const showGraphHeader: Ref<boolean> = computed(
     zoomControlsEnabled.value ||
     props.showConsolidation
 )
+
+const headerIsCompact = computed(() => props.figureWidth < 400)
 </script>
 
 <template>
@@ -160,6 +162,7 @@ const showGraphHeader: Ref<boolean> = computed(
           v-if="showGraphHeader"
           v-model:zoom-mode="zoomMode"
           class="graphing-graph-panel__header"
+          :class="{ 'graphing-graph-panel__header--compact': headerIsCompact }"
           :title="title"
           :show-title="showTitle"
           :time-range="dataTimeRange"
@@ -168,6 +171,7 @@ const showGraphHeader: Ref<boolean> = computed(
           :show-consolidation="showConsolidation"
           :show-burger-menu="showBurgerMenu"
           :burger-menu-groups="burgerMenuGroups"
+          :is-compact="headerIsCompact"
           @do-action="triggerBurgerMenuAction"
         />
 
@@ -253,6 +257,10 @@ const showGraphHeader: Ref<boolean> = computed(
 <style scoped lang="scss">
 .graphing-graph-panel__header {
   margin-bottom: var(--spacing-double);
+}
+
+.graphing-graph-panel__header--compact {
+  margin: var(--spacing-half) var(--spacing);
 }
 
 .graphing-graph-panel__container--legend-right {

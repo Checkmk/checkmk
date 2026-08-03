@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from collections.abc import Mapping
-from typing import Any
+from typing import Literal, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -31,7 +28,16 @@ def discover_viprinet_router(section: StringTable) -> DiscoveryResult:
         yield Service(parameters={"mode_inv": section[0][0][0]})
 
 
-def check_viprinet_router(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+type ExpectMode = Literal["inventory", "node", "hub", "hub_hotspare", "hub_hotspare_replacing"]
+
+
+class CheckParams(TypedDict):
+    expect_mode: NotRequired[ExpectMode]
+    # Router mode found during discovery (hidden in ruleset).
+    mode_inv: NotRequired[str]
+
+
+def check_viprinet_router(params: CheckParams, section: StringTable) -> CheckResult:
     router_mode_map = {
         "0": "Node",
         "1": "Hub",

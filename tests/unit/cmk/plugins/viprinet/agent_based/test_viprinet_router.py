@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
-
-from collections.abc import Mapping
-from typing import Any
-
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.viprinet.agent_based.viprinet_router import (
     check_viprinet_router,
+    CheckParams,
     discover_viprinet_router,
     parse_viprinet_router,
 )
@@ -66,7 +61,7 @@ def test_discover_viprinet_router_no_data() -> None:
         ),
     ],
 )
-def test_check_viprinet_router(params: Mapping[str, Any], expected: list[Result]) -> None:
+def test_check_viprinet_router(params: CheckParams, expected: list[Result]) -> None:
     section = parse_viprinet_router(_STRING_TABLE)
     assert list(check_viprinet_router(params, section)) == expected
 

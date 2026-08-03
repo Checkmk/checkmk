@@ -136,6 +136,13 @@ monitor_paths = [
     "SAP CCMS Monitor Templates/Dialog Overview/*",
 ]
 monitor_types = []  # type: list[str]
+
+# A list of strings using the same unix shell pattern syntax as
+# monitor_paths (see above). All monitoring objects whose path matches at
+# least one of these patterns are excluded from monitoring, even if the
+# path is matched by one of the monitor_paths patterns. This can be used
+# to skip single objects below a monitor_paths wildcard.
+exclude_paths = []  # type: list[str]
 config_file = MK_CONFDIR + "/sap.cfg"
 
 cfg = {}  # type: list[dict[Any, Any]] | dict[Any, Any]
@@ -208,6 +215,15 @@ class SapError(Exception):
 
 
 def to_be_monitored(path, toplevel_match=False):
+    # Exclude rules are always matched against the full path. They are
+    # intentionally not shortened during toplevel matching: Shortening a
+    # rule which targets a single subtree node would exclude the whole
+    # monitor instead. A rule matching the toplevel path itself still
+    # skips the whole monitor and saves the RFC calls for its tree.
+    for rule in exclude_paths:
+        if fnmatch.fnmatch(path, rule):
+            return False
+
     for rule in monitor_paths:
         if toplevel_match and rule.count("/") > 1:
             rule = "/".join(rule.split("/")[:2])

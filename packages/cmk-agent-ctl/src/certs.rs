@@ -331,6 +331,18 @@ pub fn render_asn1_time(asn1_tine: &x509_parser::time::ASN1Time) -> String {
     }
 }
 
+/// SHA-256 fingerprint of a DER-encoded certificate, rendered as uppercase hex
+/// bytes separated by colons (e.g. "AB:CD:...:9F"). This matches the format the
+/// Checkmk GUI uses for certificate fingerprints.
+pub fn sha256_fingerprint(der: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    Sha256::digest(der)
+        .iter()
+        .map(|byte| format!("{byte:02X}"))
+        .collect::<Vec<_>>()
+        .join(":")
+}
+
 pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<PrivateKeyDer<'static>> {
     if let Item::Pkcs8Key(it) = rustls_pemfile::read_one(&mut key_pem.to_owned().as_bytes())?
         .context("Could not load private key")?

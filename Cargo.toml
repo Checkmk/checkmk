@@ -74,6 +74,7 @@ scrypt = { version = "*", default-features = false }
 serde = "1.0"
 serde_json = "1.0"
 serde_with = "3.11"
+sha2 = "*"
 socket2 = "0.5"
 tempfile = "*"
 tiberius = "0.12.3"

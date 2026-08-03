@@ -1,5 +1,5 @@
 {
-  "checksum": "bf5829b7801309c2c09efa5f9a05978b13d0bbbb82161b0fa7096fd1606a702d",
+  "checksum": "7ce8fae990db1192913f3fe99fe455c865af5a5c3dca6a56df7d4b37e68eab05",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -3316,6 +3316,10 @@
             {
               "id": "serde_with 3.14.0",
               "target": "serde_with"
+            },
+            {
+              "id": "sha2 0.10.9",
+              "target": "sha2"
             },
             {
               "id": "socket2 0.5.10",
@@ -20795,6 +20799,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -31000,6 +31011,7 @@
     "serde 1.0.228",
     "serde_json 1.0.143",
     "serde_with 3.14.0",
+    "sha2 0.10.9",
     "shellexpand 3.1.2",
     "socket2 0.5.10",
     "tiberius 0.12.3",

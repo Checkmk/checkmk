@@ -23,9 +23,25 @@ enum CertParsingResult {
 }
 
 #[derive(serde::Serialize)]
+struct TrustedCaInfo {
+    common_name: String,
+    fingerprint: String,
+    from: String,
+    to: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(untagged)]
+enum TrustedCaParsingResult {
+    Success(TrustedCaInfo),
+    Error(String),
+}
+
+#[derive(serde::Serialize)]
 struct LocalConnectionStatus {
     connection_mode: config::ConnectionMode,
     cert_info: CertParsingResult,
+    trusted_cas: Vec<TrustedCaParsingResult>,
 }
 
 enum Remote {
@@ -101,6 +117,32 @@ impl CertParsingResult {
     }
 }
 
+impl TrustedCaInfo {
+    fn from(certificate: &str) -> AnyhowResult<TrustedCaInfo> {
+        let pem = certs::parse_pem(certificate)?;
+        let x509 = pem.parse_x509()?;
+        Ok(TrustedCaInfo {
+            common_name: certs::common_names(x509.subject())?.join(", "),
+            fingerprint: certs::sha256_fingerprint(&pem.contents),
+            from: certs::render_asn1_time(&x509.validity().not_before),
+            to: certs::render_asn1_time(&x509.validity().not_after),
+        })
+    }
+}
+
+impl TrustedCaParsingResult {
+    fn from(certificate: &str) -> TrustedCaParsingResult {
+        match TrustedCaInfo::from(certificate) {
+            Ok(info) => TrustedCaParsingResult::Success(info),
+            _ => TrustedCaParsingResult::Error(String::from("parsing_error")),
+        }
+    }
+
+    fn from_all(certificates: &[String]) -> Vec<TrustedCaParsingResult> {
+        certificates.iter().map(|c| Self::from(c)).collect()
+    }
+}
+
 impl ConnectionStatus {
     fn query_remote(
         site_id: &site_spec::SiteID,
@@ -128,6 +170,7 @@ impl ConnectionStatus {
             local: LocalConnectionStatus {
                 connection_mode: conn_mode,
                 cert_info: CertParsingResult::from(&conn.trust.certificate),
+                trusted_cas: TrustedCaParsingResult::from_all(&conn.trust.root_certs),
             },
             remote: match agent_rec_api {
                 Some(agent_rec_api) => {
@@ -145,6 +188,7 @@ impl ConnectionStatus {
             local: LocalConnectionStatus {
                 connection_mode: config::ConnectionMode::Pull,
                 cert_info: CertParsingResult::from(&conn.certificate),
+                trusted_cas: TrustedCaParsingResult::from_all(&conn.root_certs),
             },
             remote: Remote::Imported,
         }
@@ -172,6 +216,15 @@ impl ConnectionStatus {
             CertParsingResult::Error(..) => {
                 lines.push(mark_problematic("Certificate parsing failed"))
             }
+        }
+        for trusted_ca in &self.local.trusted_cas {
+            lines.push(match trusted_ca {
+                TrustedCaParsingResult::Success(info) => format!(
+                    "Trusted CA: {} (fingerprint: {}, valid: {} - {})",
+                    info.common_name, info.fingerprint, info.from, info.to
+                ),
+                TrustedCaParsingResult::Error(..) => mark_problematic("Trusted CA parsing failed"),
+            });
         }
         lines
     }
@@ -392,6 +445,7 @@ mod test_status {
         LocalConnectionStatus {
             connection_mode: config::ConnectionMode::Pull,
             cert_info: CertParsingResult::Success(cert_info()),
+            trusted_cas: vec![],
         }
     }
 
@@ -408,7 +462,8 @@ mod test_status {
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_mode: config::ConnectionMode::Pull,
-                        cert_info: CertParsingResult::Success(cert_info())
+                        cert_info: CertParsingResult::Success(cert_info()),
+                        trusted_cas: vec![],
                     },
                     remote: Remote::QueryDisabled
                 }
@@ -587,6 +642,73 @@ mod test_status {
         );
     }
 
+    #[test]
+    fn test_trusted_ca_parsing_success() {
+        match TrustedCaParsingResult::from(crate::constants::TEST_ROOT_CERT) {
+            TrustedCaParsingResult::Success(info) => {
+                assert_eq!(info.common_name, "Site 'heute' local CA");
+                // SHA-256 fingerprint: 32 bytes rendered as uppercase hex pairs joined by ":".
+                assert_eq!(info.fingerprint.len(), 32 * 3 - 1);
+                assert!(info
+                    .fingerprint
+                    .chars()
+                    .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_lowercase() || c == ':'));
+            }
+            TrustedCaParsingResult::Error(..) => panic!("expected a successful parse"),
+        }
+    }
+
+    #[test]
+    fn test_trusted_ca_parsing_error() {
+        assert!(matches!(
+            TrustedCaParsingResult::from("not a certificate"),
+            TrustedCaParsingResult::Error(..)
+        ));
+    }
+
+    #[test]
+    fn test_connection_status_fmt_trusted_cas() {
+        assert_eq!(
+            format!(
+                "{}",
+                ConnectionStatus {
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
+                    local: LocalConnectionStatus {
+                        connection_mode: config::ConnectionMode::Pull,
+                        cert_info: CertParsingResult::Success(cert_info()),
+                        trusted_cas: vec![
+                            TrustedCaParsingResult::Success(TrustedCaInfo {
+                                common_name: String::from("Site 'site' local CA"),
+                                fingerprint: String::from("AB:CD:EF"),
+                                from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
+                                to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
+                            }),
+                            TrustedCaParsingResult::Error(String::from("parsing_error")),
+                        ],
+                    },
+                    remote: Remote::QueryDisabled,
+                }
+            ),
+            String::from(
+                "Connection: localhost/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection mode: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \t\tTrusted CA: Site 'site' local CA (fingerprint: AB:CD:EF, valid: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000)\n\
+                 \t\tTrusted CA parsing failed (!!)\n\
+                 \tRemote:\n\
+                 \t\tRemote query disabled"
+            )
+        );
+    }
+
     fn build_status() -> Status {
         Status {
             version: String::from("1.0.0"),
@@ -623,6 +745,7 @@ mod test_status {
                             from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         }),
+                        trusted_cas: vec![],
                     },
                     remote: Remote::StatusResponse(Ok(
                         agent_receiver_api::RegistrationStatusV2Response::Registered(
@@ -749,6 +872,7 @@ mod test_status {
                  \t\tConnection mode: push-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate parsing failed (!!)\n\
+                 \t\tTrusted CA parsing failed (!!)\n\
                  \tRemote:\n\
                  \t\tConnection mode: pull-agent (!!)\n\
                  \t\tHostname: host",

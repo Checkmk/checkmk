@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -31,6 +30,7 @@ from cmk.base.config import (
     ObjectAttributes,
     ServicegroupName,
 )
+from cmk.base.configlib.loaded_config import CustomCheck
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.core.interface import MonitoringCore
 from cmk.base.core.shared import (
@@ -83,7 +83,7 @@ from cmk.utils.timeperiod import TimeperiodSpecs
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
 _ContactgroupName = str
-ObjectSpec = dict[str, Any]
+ObjectSpec = dict[str, Any]  # type: ignore[explicit-any]
 
 
 @dataclass(frozen=True)
@@ -652,7 +652,7 @@ def transform_active_service_command(
 _ServiceLabels = dict[ServiceName, Labels]
 
 
-def _process_services_data(
+def _process_services_data(  # type: ignore[explicit-any]
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -995,7 +995,7 @@ def create_nagios_servicedefs(
 
 
 def _create_custom_check(
-    entry: dict[str, Any],
+    entry: CustomCheck,
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -1148,7 +1148,7 @@ def _get_dependencies(
     )
 
 
-def _add_ping_service(
+def _add_ping_service(  # type: ignore[explicit-any]
     cfg: NagiosConfig,
     hosts_config: Hosts,
     config_cache: ConfigCache,

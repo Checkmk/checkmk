@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 # Defaults settings for global configuration
@@ -139,10 +138,10 @@ cmc_graphite: list[CMCGraphiteConnection] = []
 cmc_graphite_host_metrics: Sequence[RuleSpec[Sequence[str]]] = []
 cmc_graphite_service_metrics: Sequence[RuleSpec[Sequence[str]]] = []
 cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, Any]]] = []
-influxdb_connections: dict[str, dict[str, Any]] = {}
+influxdb_connections: dict[str, dict[str, object]] = {}
 cmc_host_limit: int | None = None  # Do not allow more than this number of hosts
 cmc_service_limit: int | None = None  # Do not allow more than this number of services
-shadow_hosts: dict[HostName, dict[str, Any]] = {}
+shadow_hosts: dict[HostName, dict[str, object]] = {}
 cmc_store_params_in_config = False
 cmc_service_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = []
 cmc_host_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = []

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
@@ -42,7 +41,7 @@ from cmk.base.configlib.exit_code import make_exit_code_spec
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.base.configlib.loaded_config import BaseConfig, CustomCheck
 from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
 from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicelevel import make_service_level_config
@@ -498,9 +497,6 @@ def _get_clustered_services(
     )
 
 
-CheckContext = dict[str, Any]
-GetCheckApiContext = Callable[[], dict[str, Any]]
-GetInventoryApiContext = Callable[[], dict[str, Any]]
 CheckIncludes = list[str]
 
 
@@ -520,7 +516,7 @@ class ResolvedHostCheckCommand:
 PingLevels = dict[str, int | tuple[float, float]]
 
 # TODO (sk): Make the type narrower: TypedDict isn't easy in the case - "too chaotic usage"(c) SP
-ObjectAttributes = dict[str, Any]
+ObjectAttributes = dict[str, Any]  # type: ignore[explicit-any]
 
 GroupDefinitions = dict[str, str]
 
@@ -535,7 +531,7 @@ def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
     )
 
 
-def get_default_config() -> dict[str, Any]:
+def get_default_config() -> dict[str, object]:
     """Provides a dictionary containing the Check_MK default configuration"""
     # Note: variable_defaults contains a lot of additional values not part of
     # BaseConfig:
@@ -610,7 +606,7 @@ def load(
     return loading_result
 
 
-def perform_post_config_loading_actions(
+def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     loaded_context: Mapping[str, Any],
     *,
     edition: cmk_version.Edition,
@@ -703,29 +699,36 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
         self._set_folder_paths(new_hosts)
         return super().update(new_hosts)
 
-    # Probably unused
+    # Probably unused+
     @override
-    def __setitem__(self, cluster_name: Any, value: Any) -> Any:
+    def __setitem__(self, cluster_name: str, value: object) -> None:
         self._set_folder_paths([cluster_name])
         return super().__setitem__(cluster_name, value)
 
 
-def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
+def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
     exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
 def _load_config(
-    target_context: dict[str, Any],
+    target_context: dict[str, object],
     storage_format: StorageFormat,
     *,
     with_conf_d: bool,
-) -> dict[str, Any]:
+) -> dict[str, object]:
     helper_vars = {
         "FOLDER_PATH": None,
     }
 
-    target_context["all_hosts"] = (all_hosts_h := SetFolderPathList(target_context["all_hosts"]))
-    target_context["clusters"] = (clusters_h := SetFolderPathDict(target_context["clusters"]))
+    raw_all_hosts = target_context["all_hosts"]
+    raw_clusters = target_context["clusters"]
+    if not isinstance(raw_all_hosts, Iterable):
+        raise TypeError("Load config error: The all_hosts parameter is not a list")
+    if not isinstance(raw_clusters, dict):
+        raise TypeError("Load config error: The clusters parameter is not a dict")
+
+    target_context["all_hosts"] = (all_hosts_h := SetFolderPathList(raw_all_hosts))
+    target_context["clusters"] = (clusters_h := SetFolderPathDict(raw_clusters))
 
     target_context |= helper_vars
 
@@ -754,17 +757,21 @@ def _load_config(
             else:
                 _load_config_file(path, target_context)
 
+            host_paths = target_context["host_paths"]
+            if not isinstance(host_paths, dict):
+                raise TypeError("Load config error: The host_paths parameter is not a dict")
+
             if not isinstance(target_context["all_hosts"], SetFolderPathList):
-                raise MKGeneralException(
+                raise TypeError(
                     "Load config error: The all_hosts parameter was modified through an other method than: x+=a or x=x+a"
                 )
-            target_context["host_paths"].update(target_context["all_hosts"].collected_host_paths)
+            host_paths.update(target_context["all_hosts"].collected_host_paths)
 
             if not isinstance(target_context["clusters"], SetFolderPathDict):
-                raise MKGeneralException(
+                raise TypeError(
                     "Load config error: The clusters parameter was modified through an other method than: x['a']=b or x.update({'a': b})"
                 )
-            target_context["host_paths"].update(target_context["clusters"].collected_host_paths)
+            host_paths.update(target_context["clusters"].collected_host_paths)
 
         except Exception as e:
             if cmk.ccc.debug.enabled():
@@ -917,9 +924,9 @@ class ServiceDependsOn:
     tag_list: Callable[[HostName], Sequence[TagID]]
     service_dependencies: Sequence[
         tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
-        | tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, object]]
         | tuple[str, Sequence[str], Sequence[str]]
-        | tuple[str, Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[str], Sequence[str], dict[str, object]]
     ]
 
     def __call__(self, hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
@@ -1273,7 +1280,7 @@ class ConfigCache:
         self.__is_piggyback_host: dict[HostName, bool] = {}
         self.__is_waiting_for_discovery_host: dict[HostName, bool] = {}
         self.__snmp_config: dict[tuple[HostName, HostAddress, SourceType], SNMPHostConfig] = {}
-        self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
+        self.__explicit_host_attributes: dict[HostName, ObjectAttributes] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self.__active_checks: dict[HostName, Sequence[SSCRules]] = {}
@@ -1820,7 +1827,7 @@ class ConfigCache:
                 assert_never(protocol)
 
     def explicit_host_attributes(self, host_name: HostName) -> ObjectAttributes:
-        def make_explicit_host_attributes() -> Iterator[tuple[str, str]]:
+        def make_explicit_host_attributes() -> Iterator[tuple[str, object]]:
             for key, mapping in self._loaded_config.explicit_host_conf.items():
                 with contextlib.suppress(KeyError):
                     yield key, mapping[host_name]
@@ -2164,7 +2171,7 @@ class ConfigCache:
                 )
                 continue
 
-    def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
+    def custom_checks(self, host_name: HostName) -> Sequence[CustomCheck]:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values_all(
             host_name, self._loaded_config.custom_checks, self.label_manager.labels_of_host
@@ -2523,8 +2530,10 @@ class ConfigCache:
     def _is_waiting_for_discovery(self, hostname: HostName) -> bool:
         """Check custom attribute set by WATO to signal
         the host may be not discovered and should be ignore"""
-        return self._loaded_config.host_attributes.get(hostname, {}).get(
-            "waiting_for_discovery", False
+        return bool(
+            self._loaded_config.host_attributes.get(hostname, {}).get(
+                "waiting_for_discovery", False
+            )
         )
 
     def check_mk_check_interval(self, host_name: HostName) -> float:
@@ -3007,7 +3016,7 @@ class ClusteringConfig:
 
     def get_clustered_service_configuration(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> tuple[ClusterMode, Mapping[str, Any]]:
+    ) -> tuple[ClusterMode, Mapping[str, object]]:
         matching_rules = self._clustered_services_configuration(
             host_name, service_name, service_labels
         )
@@ -3107,7 +3116,7 @@ class CoreObjectsConfig:
 
     def extra_attributes_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         attrs = dict[str, object](
             check_interval=self.check_interval(host_name, service_name) / 60.0,
         )
@@ -3367,7 +3376,7 @@ class EnforcedServicesTable:
         )
 
     @staticmethod
-    def _sanitize_enforced_entry(
+    def _sanitize_enforced_entry(  # type: ignore[explicit-any]
         raw_name: object,
         raw_item: object,
         raw_params: Any | None = None,  # Can be any value spec supplied type :-(

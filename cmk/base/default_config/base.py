@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Container, Iterable, Mapping, Sequence
@@ -280,13 +279,13 @@ only_hosts: list[RuleSpec[bool]] | None = None
 distributed_wato_site: str | None = None  # used by distributed WATO
 is_distributed_setup_remote_site = False
 extra_host_conf: dict[str, list[RuleSpec[Any]]] = {}
-explicit_host_conf: dict[str, dict[HostName, Any]] = {}
+explicit_host_conf: dict[str, dict[HostName, object]] = {}
 extra_service_conf: dict[str, list[RuleSpec[object]]] = {}
 extra_nagios_conf = ""
 service_descriptions: dict[str, str] = {}
 # host_attributes store explicitly configured attributes in WATO
 # and does not include inheritance from folders
-host_attributes: dict[HostName, dict[str, Any]] = {}
+host_attributes: dict[HostName, dict[str, Any]] = {}  # type: ignore[explicit-any]
 # special parameters for host/PING check_command
 _PingLevels = dict[str, int | tuple[float, float]]
 ping_levels: list[RuleSpec[_PingLevels]] = []

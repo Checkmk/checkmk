@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -11,6 +10,9 @@ from collections.abc import Container, Mapping, Sequence
 from typing import (
     Any,
     Literal,
+    NotRequired,
+    ReadOnly,
+    TypedDict,
 )
 
 import cmk.ruleset_matcher.tags
@@ -44,8 +46,23 @@ from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.servicename import ServiceName
 
 
+class CustomCheckFreshness(TypedDict):
+    interval: ReadOnly[int]
+    state: ReadOnly[int]
+    output: ReadOnly[str]
+
+
+class CustomCheck(TypedDict):
+    """A rule value of the "Integrate Nagios plug-ins" ruleset."""
+
+    service_description: ReadOnly[str]
+    command_line: NotRequired[ReadOnly[str]]
+    command_name: NotRequired[ReadOnly[str]]
+    freshness: NotRequired[ReadOnly[CustomCheckFreshness]]
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class BaseConfig:
+class BaseConfig:  # type: ignore[explicit-any]
     """Typed snapshot of the loaded base configuration.
 
     The config loader (`load()` / `load_packed_config()`) builds an instance
@@ -76,7 +93,7 @@ class BaseConfig:
     cmc_illegal_chars: str
     all_hosts: Sequence[str]
     clusters: Mapping[HostAddress, Sequence[HostAddress]]
-    shadow_hosts: dict[HostName, dict[str, Any]]
+    shadow_hosts: dict[HostName, dict[str, object]]
     service_dependencies: Sequence[tuple]
     fallback_agent_output_encoding: str
     agent_config: Mapping[str, Sequence[RuleSpec]]
@@ -134,7 +151,7 @@ class BaseConfig:
     oauth2_connections: Mapping[str, OAuth2Connection]
     extra_service_conf: Mapping[str, Sequence[RuleSpec[object]]]
     extra_host_conf: Mapping[str, Sequence[RuleSpec[Any]]]
-    host_attributes: Mapping[HostName, Mapping[str, Any]]
+    host_attributes: Mapping[HostName, Mapping[str, Any]]  # type: ignore[explicit-any]
     management_protocol: Mapping[HostName, Literal["snmp", "ipmi"]]
     management_snmp_credentials: Mapping[HostName, SNMPCredentials]
     management_ipmi_credentials: Mapping[HostName, IPMICredentials]
@@ -173,7 +190,7 @@ class BaseConfig:
     cmc_pnp_update_delay: int
     cmc_pnp_update_on_restart: bool
     max_long_output_size: int
-    influxdb_connections: Mapping[str, dict[str, Any]]
+    influxdb_connections: Mapping[str, dict[str, object]]
     cmc_graphite: Sequence[CMCGraphiteConnection]
     alert_handler_event_types: Sequence[Literal["statechange", "checkresult"]]
     alert_handler_rules: Sequence[EventRule]
@@ -223,7 +240,7 @@ class BaseConfig:
     notification_spool_to: object
     active_checks: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     special_agents: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
-    custom_checks: Sequence[RuleSpec[dict[Any, Any]]]
+    custom_checks: Sequence[RuleSpec[CustomCheck]]
     notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     inv_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     inv_retention_intervals: Sequence[RuleSpec[Sequence[RawIntervalFromConfig]]]
@@ -236,7 +253,7 @@ class BaseConfig:
     distributed_wato_site: str | None
     dyndns_hosts: Sequence[RuleSpec[bool]]
     parents: Sequence[RuleSpec[str]]
-    explicit_host_conf: Mapping[str, Mapping[HostName, Any]]
+    explicit_host_conf: Mapping[str, Mapping[HostName, object]]
     host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     host_labels: Mapping[HostName, Labels]

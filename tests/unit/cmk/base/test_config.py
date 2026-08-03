@@ -39,7 +39,7 @@ from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.base.configlib.loaded_config import BaseConfig, CustomCheck
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
     make_final_service_name_config,
@@ -1297,12 +1297,15 @@ def test_notification_plugin_parameters(
             [
                 (
                     "abc",
-                    [{"param1": 1}, {"param2": 2}],
+                    [
+                        CustomCheck(service_description="abc_01"),
+                        CustomCheck(service_description="abc_02"),
+                    ],
                 ),
                 (
                     "xyz",
                     [
-                        {"param2": 1},
+                        CustomCheck(service_description="xyz"),
                     ],
                 ),
             ],
@@ -1321,25 +1324,19 @@ def test_host_config_active_checks(
                 {
                     "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": {
-                        "param1": 1,
-                    },
+                    "value": CustomCheck(service_description="abc_01"),
                 },
                 {
                     "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": {
-                        "param2": 2,
-                    },
+                    "value": CustomCheck(service_description="abc_02"),
                 },
             ],
             "xyz": [
                 {
                     "id": "03",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": {
-                        "param2": 1,
-                    },
+                    "value": CustomCheck(service_description="xyz"),
                 },
             ],
         },
@@ -1355,7 +1352,7 @@ def test_host_config_active_checks(
     ],
 )
 def test_host_config_custom_checks(
-    monkeypatch: MonkeyPatch, hostname: HostName, result: list[dict[str, int]]
+    monkeypatch: MonkeyPatch, hostname: HostName, result: Sequence[CustomCheck]
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)

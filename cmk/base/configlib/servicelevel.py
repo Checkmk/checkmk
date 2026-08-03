@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -49,7 +47,12 @@ def make_service_level_config(
             loaded_config.extra_service_conf.get("_ec_sl", []),
             label_manager.labels_of_host,
         )
-        return _parse(out[0], int) if out else None
+        if not out:
+            return None
+        raw = out[0]
+        if not isinstance(raw, int | float | str):
+            raise TypeError(f"Invalid service level: {raw!r}")
+        return int(raw)
 
     def effective(host_name: HostName, service_name: ServiceName, service_labels: Labels) -> int:
         """Get the service level that applies to the current service."""
@@ -60,7 +63,3 @@ def make_service_level_config(
         return of_host(host_name) or 0
 
     return ServiceLevelConfig(of_host=of_host, of_service=of_service, effective=effective)
-
-
-def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
-    return type_(raw)

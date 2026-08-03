@@ -249,7 +249,7 @@ def _extra_service_attributes(
     service_name: ServiceName,
     service_labels: Labels,
 ) -> ObjectAttributes:
-    attrs = {}  # ObjectAttributes
+    attrs: ObjectAttributes = {}
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.

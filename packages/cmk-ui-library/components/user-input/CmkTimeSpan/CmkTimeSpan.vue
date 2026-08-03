@@ -7,13 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch, watchEffect } from 'vue'
 
 import {
   type Magnitude,
   getSelectedMagnitudes,
   joinToSeconds,
+  magnitudeLabels,
   splitToUnits as utilsSplitToUnits
 } from './timeSpan'
 
@@ -27,6 +27,8 @@ const props = defineProps<{
   externalErrors?: string[]
   ariaLabel?: string
   hideValidationMessage?: boolean
+  validators?: ((seconds: number | null) => string[])[]
+  showFieldErrors?: boolean
 }>()
 
 const emit = defineEmits<{ 'update:validation': [string[]] }>()
@@ -39,12 +41,8 @@ watchEffect(() => {
 const modelValue = defineModel<number | null>({ required: true })
 const values = ref<Partial<Record<Magnitude, number>>>(splitToUnits(0))
 
-const i18n: Record<Magnitude | 'validation_negative_number', TranslatedString | string> = {
-  day: _t('Days'),
-  hour: _t('Hours'),
-  minute: _t('Minutes'),
-  second: _t('Seconds'),
-  millisecond: _t('Milliseconds'),
+const i18n: Record<Magnitude, string> & { validation_negative_number: string } = {
+  ...magnitudeLabels(_t),
   validation_negative_number: _t('The time span cannot be negative.')
 }
 
@@ -69,12 +67,6 @@ watch(
   values,
   (newValue) => {
     modelValue.value = joinToSeconds(newValue)
-    localValidation.value = []
-    for (const [_magnitude, value] of Object.entries(newValue)) {
-      if (value < 0 && localValidation.value.length === 0) {
-        localValidation.value = [i18n.validation_negative_number]
-      }
-    }
   },
   { deep: true }
 )
@@ -97,7 +89,12 @@ function getPlaceholder(magnitude: Magnitude): string {
   return '0'
 }
 
-const localValidation = ref<Array<string>>([])
+const localValidation = computed<Array<string>>(() => {
+  if (Object.values(values.value).some((value) => value !== undefined && value < 0)) {
+    return [i18n.validation_negative_number]
+  }
+  return (props.validators ?? []).flatMap((validator) => validator(modelValue.value))
+})
 
 const validation = computed(() => [...(props.externalErrors ?? []), ...localValidation.value])
 watch(validation, (messages) => emit('update:validation', messages), { immediate: true })
@@ -112,6 +109,8 @@ watch(validation, (messages) => emit('update:validation', messages), { immediate
         v-model="values[magnitude]"
         :aria-label="`${props.ariaLabel} ${i18n[magnitude]}`"
         :placeholder="getPlaceholder(magnitude)"
+        :external-errors="props.showFieldErrors ? validation : []"
+        hide-validation-message
         step="any"
         size="5"
         type="number"

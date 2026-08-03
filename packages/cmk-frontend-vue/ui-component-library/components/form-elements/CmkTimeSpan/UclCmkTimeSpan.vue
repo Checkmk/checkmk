@@ -12,9 +12,9 @@ type OmittedProps =
   | 'modelValue'
   | 'ariaLabel'
   | 'title'
-  | 'externalErrors'
   | 'displayedMagnitudes'
   | 'hideValidationMessage'
+  | 'validators'
 type AdditionalProps = {
   showDay: BoolPropDef
   showHour: BoolPropDef
@@ -35,7 +35,18 @@ export const panelConfig = {
   showHour: { type: 'boolean' as const, title: 'Show Hours', initialState: true },
   showMinute: { type: 'boolean' as const, title: 'Show Minutes', initialState: true },
   showSecond: { type: 'boolean' as const, title: 'Show Seconds', initialState: true },
-  showMillisecond: { type: 'boolean' as const, title: 'Show Milliseconds', initialState: false }
+  showMillisecond: { type: 'boolean' as const, title: 'Show Milliseconds', initialState: false },
+  externalErrors: {
+    type: 'string' as const,
+    title: 'External Error',
+    initialState: ''
+  },
+  showFieldErrors: {
+    type: 'boolean' as const,
+    title: 'Show Field Errors',
+    help: 'When enabled, the individual duration fields are highlighted as invalid whenever the component reports a validation error.',
+    initialState: false
+  }
 } satisfies PanelConfigFor<typeof CmkTimeSpan, OmittedProps> & AdditionalProps
 </script>
 
@@ -90,6 +101,8 @@ const displayedMagnitudes = computed<Magnitude[]>(() => {
         title="Duration"
         :input-hint="propState.inputHint"
         :displayed-magnitudes="displayedMagnitudes"
+        :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
+        :show-field-errors="propState.showFieldErrors"
       />
 
       <template #properties>

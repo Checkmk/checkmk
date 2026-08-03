@@ -59,6 +59,36 @@ export function formatTimeSpan(
   return parts.join(' ')
 }
 
+export type TranslateFn = (msg: string, interpolation?: Record<string, string | number>) => string
+
+export function magnitudeLabels(_t: TranslateFn): Record<Magnitude, string> {
+  return {
+    day: _t('Days'),
+    hour: _t('Hours'),
+    minute: _t('Minutes'),
+    second: _t('Seconds'),
+    millisecond: _t('Milliseconds')
+  }
+}
+
+/** Builds a CmkTimeSpan validator rejecting durations shorter than `minimumSeconds`. */
+export function minimumSecondsValidator(
+  minimumSeconds: number,
+  displayedMagnitudes: Array<Magnitude>,
+  _t: TranslateFn
+): (seconds: number | null) => string[] {
+  return (seconds) => {
+    if (seconds === null || seconds >= minimumSeconds) {
+      return []
+    }
+    return [
+      _t('The time span must be at least %{min}.', {
+        min: formatTimeSpan(minimumSeconds, displayedMagnitudes, magnitudeLabels(_t))
+      })
+    ]
+  }
+}
+
 export function splitToUnits(
   value: number,
   selectedMagnitudes: Array<Magnitude>

@@ -3,9 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { formatTimeSpan } from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
+import {
+  formatTimeSpan,
+  minimumSecondsValidator
+} from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
 import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
+
+// Test double for _t: returns the msgid, interpolating any %{name} tokens.
+const _t = (msg: string, interpolation: Record<string, string | number> = {}): string =>
+  msg.replace(/%\{(\w+)\}/g, (_match, key) => String(interpolation[key]))
 
 describe('formatTimeSpan', () => {
   const labels = { hour: 'Hours', minute: 'Minutes', second: 'Seconds' }
@@ -36,5 +43,17 @@ describe('formatTimeSpan', () => {
   it('unwraps ref and getter labels (MaybeRefOrGetter)', () => {
     expect(formatTimeSpan(3600, ['hour'], { hour: ref('Hrs') })).toBe('1 Hrs')
     expect(formatTimeSpan(3600, ['hour'], { hour: () => 'Hr' })).toBe('1 Hr')
+  })
+})
+
+describe('minimumSecondsValidator', () => {
+  const validate = minimumSecondsValidator(1, ['minute', 'second'], _t)
+
+  it.each([
+    { seconds: null, expected: [] },
+    { seconds: 1, expected: [] },
+    { seconds: 0.5, expected: ['The time span must be at least 1 Seconds.'] }
+  ])('validates $seconds', ({ seconds, expected }) => {
+    expect(validate(seconds)).toEqual(expected)
   })
 })

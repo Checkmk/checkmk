@@ -129,10 +129,10 @@ def _run_new_plugin(oracle: OracleDatabase, config_path: Path | None = None) -> 
 def _run_new_plugin_as_root(oracle: OracleDatabase, config_path: Path | None = None) -> str:
     """Run the mk-oracle binary inside the container as root and return its output.
 
-    Unlike `_run_new_plugin`, success is not asserted: run as root against a
-    non-root-owned runtime the plugin refuses to load and exits non-zero, so
-    callers assert on the output instead of the exit code. `exec_run` merges
-    stderr into stdout, so the refusal message is part of the return value.
+    Unlike `_run_new_plugin`, success is not asserted: the permission validation
+    of the OCI runtime only applies to a privileged run, so callers here may well
+    be exercising a case the plugin is expected to refuse. `exec_run` merges
+    stderr into stdout, so a refusal message is part of the return value.
     """
     cfg = (config_path or oracle.new_plugin_cfg).as_posix()
     _, output = oracle.container.exec_run(
@@ -371,12 +371,22 @@ def test_mk_oracle_sid_only_connection(oracle: OracleDatabase) -> None:
         assert row.startswith(f"{oracle.SID}|"), f"Row does not start with SID: {row}"
 
 
-def test_mk_oracle_run_as_root_is_refused(oracle: OracleDatabase) -> None:
+def test_mk_oracle_run_as_root_uses_oracle_owned_home(oracle: OracleDatabase) -> None:
+    """CMK-37150: as root, an Oracle home owned by the Oracle software owner is usable.
+
+    The container's ``$ORACLE_HOME`` belongs to the ``oracle`` user, which is the
+    conventional layout. The plugin used to reject any runtime path not owned by
+    uid 0 and bailed out with "No runtime", so a root-run agent could not monitor
+    a local database at all.
+    """
+    oracle.use_new_plugin_credentials()
     output = _run_new_plugin_as_root(oracle)
-    assert "<<<" not in output, f"Expected no section output when run as root, got:\n{output}"
-    assert "No Oracle client runtime found" in output, (
-        f"Expected the runtime refusal when run as root, got:\n{output}"
+    assert "No Oracle client runtime found" not in output, (
+        f"Root run still refuses the oracle-owned Oracle home:\n{output}"
     )
+    rows = _parse_section_chunks(output).get("oracle_instance", [])
+    assert rows, f"No oracle_instance rows when run as root:\n{output}"
+    _assert_rows_start_with_sid(rows, oracle.SID)
 
 
 def test_mk_oracle_custom_instance_connection(oracle: OracleDatabase) -> None:
@@ -722,3 +732,260 @@ def test_legacy_config_migration_multi_pdb(oracle_with_pdbs: OracleDatabase) -> 
     """TC-ORA-700 (multi-PDB CDB): the same legacy → new migration comparison
     against a CDB that carries several extra PDBs."""
     _assert_migration_drop_in(oracle_with_pdbs)
+
+
+# ---------------------------------------------------------------------------
+# CMK-37150: permission validation of the OCI runtime, running as root
+# ---------------------------------------------------------------------------
+#
+# The validation only applies to a privileged run, so root is the only way to
+# reach it, and the ownership of the whole path has to be controlled - which
+# rules out a unit test. `--find-runtime` is used instead of a real monitoring
+# run: it stops right after the runtime is detected and validated, and runtime
+# detection accepts any directory holding a file named libclntsh.so*, so the
+# trees below need not contain a loadable library. Exit code 0 plus the
+# LD_LIBRARY_PATH line means accepted, exit code 1 plus "No Oracle client
+# runtime found" means refused.
+#
+# The trees are built under /opt, not inside $ORACLE_HOME: the container is
+# shared by the whole session, so the real Oracle home must stay untouched.
+
+_PERM_ROOT: Final = Path("/opt/cmk-permission-tests")
+# A user and group unrelated to both root and the Oracle software owner.
+_UNRELATED: Final = "nobody"
+
+
+def _exec_as_root(oracle: OracleDatabase, command: str) -> tuple[int | None, str]:
+    rc, output = oracle.container.exec_run(f"bash -c '{command}'", user="root")
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    return rc, output.decode("utf-8")
+
+
+def _install_runtime_tree(
+    oracle: OracleDatabase,
+    name: str,
+    *,
+    owner: str = "oracle",
+    lib_mode: str = "644",
+    symlink: bool = False,
+    then: tuple[str, ...] = (),
+) -> Path:
+    """Build a synthetic OCI runtime directory in the container, as root.
+
+    The parent stays root-owned, so only what `owner` and `then` set is under
+    test. `then` runs last and may break the tree in a specific way; its commands
+    may refer to the directory as ``{dir}`` and to the library as ``{lib}``.
+    """
+    path = _PERM_ROOT / name
+    lib = (path / "libclntsh.so.19.1").as_posix()
+    commands = [
+        f'rm -rf "{path.as_posix()}"',
+        f'mkdir -p "{path.as_posix()}"',
+        f'touch "{lib}"',
+        *([f'ln -s libclntsh.so.19.1 "{(path / "libclntsh.so").as_posix()}"'] if symlink else []),
+        f'chown -R {owner}: "{path.as_posix()}"',
+        f'chmod 755 "{path.as_posix()}"',
+        f'chmod {lib_mode} "{lib}"',
+        *(command.format(dir=path.as_posix(), lib=lib) for command in then),
+    ]
+    rc, output = _exec_as_root(oracle, " && ".join(commands))
+    assert rc == 0, f"Could not build the runtime tree {path}: {output}"
+    return path
+
+
+def _permissions_yml(
+    oracle: OracleDatabase,
+    runtime_dir: Path,
+    *,
+    permissions_check: bool | None = None,
+    safe_entries: list[str] | None = None,
+) -> str:
+    options = [f"      use_host_client: {runtime_dir.as_posix()}"]
+    if permissions_check is not None:
+        options.append(f"      permissions_check: {'yes' if permissions_check else 'no'}")
+    if safe_entries is not None:
+        entries = ", ".join(f'"{entry}"' for entry in safe_entries)
+        options.append(f"      permissions_safe_entries: [{entries}]")
+    return "\n".join(
+        [
+            "---",
+            "oracle:",
+            "  main:",
+            "    options:",
+            *options,
+            "    connection:",
+            "      hostname: localhost",
+            f"      port: {oracle.PORT}",
+            "    authentication:",
+            f"      username: {oracle.cmk_username}",
+            f"      password: {oracle.cmk_password}",
+            "      type: standard",
+            "    discovery:",
+            "      detect: no",
+            "    instances:",
+            f"      - sid: {oracle.SID}",
+        ]
+    )
+
+
+def _assert_runtime_accepted(
+    oracle: OracleDatabase,
+    runtime_dir: Path,
+    name: str,
+    *,
+    permissions_check: bool | None = None,
+    safe_entries: list[str] | None = None,
+) -> None:
+    cfg_path = _install_custom_config(
+        oracle,
+        _permissions_yml(
+            oracle,
+            runtime_dir,
+            permissions_check=permissions_check,
+            safe_entries=safe_entries,
+        ),
+        f"mk-oracle.perm-{name}.yml",
+    )
+    _, output = oracle.container.exec_run(
+        [oracle.new_plugin.as_posix(), "-c", cfg_path.as_posix(), "--find-runtime", "-l"],
+        user="root",
+    )
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    text = output.decode("utf-8")
+    assert f"LD_LIBRARY_PATH={runtime_dir.as_posix()}" in text, (
+        f"Runtime {runtime_dir} was not accepted as root:\n{text}"
+    )
+
+
+def _assert_runtime_refused(
+    oracle: OracleDatabase,
+    runtime_dir: Path,
+    name: str,
+) -> None:
+    cfg_path = _install_custom_config(
+        oracle,
+        _permissions_yml(oracle, runtime_dir),
+        f"mk-oracle.perm-{name}.yml",
+    )
+    _, output = oracle.container.exec_run(
+        [oracle.new_plugin.as_posix(), "-c", cfg_path.as_posix(), "--find-runtime", "-l"],
+        user="root",
+    )
+    assert isinstance(output, bytes)  # stream/socket/demux not used above
+    text = output.decode("utf-8")
+    assert "No Oracle client runtime found" in text, (
+        f"Runtime {runtime_dir} was accepted as root but should not be:\n{text}"
+    )
+
+
+@pytest.fixture(name="unrelated_account", scope="session")
+def _unrelated_account(oracle: OracleDatabase) -> str:
+    """Fail loudly rather than mysteriously if the image has no such account."""
+    rc, output = _exec_as_root(oracle, f"id -u {_UNRELATED} && getent group {_UNRELATED}")
+    assert rc == 0, f"The container has no {_UNRELATED} user and group: {output}"
+    return _UNRELATED
+
+
+def test_permissions_accept_an_oracle_owned_runtime(oracle: OracleDatabase) -> None:
+    """The CMK-37150 case, reduced to the validation itself."""
+    runtime = _install_runtime_tree(oracle, "oracle-owned")
+    _assert_runtime_accepted(oracle, runtime, "oracle-owned")
+
+
+def test_permissions_accept_a_group_writable_oracle_runtime(oracle: OracleDatabase) -> None:
+    """The Oracle installer leaves its directories group writable for oinstall.
+
+    In this image `$ORACLE_HOME` itself is `drwxrwxr-x oracle:oinstall`, so
+    without the group half of the exception a standard home would be refused.
+    """
+    runtime = _install_runtime_tree(oracle, "group-writable", lib_mode="664")
+    _assert_runtime_accepted(oracle, runtime, "group-writable")
+
+
+def test_permissions_accept_a_symlink_in_an_oracle_owned_runtime(oracle: OracleDatabase) -> None:
+    """Both Instant Client and full Oracle homes ship libclntsh.so as a symlink.
+
+    A symlink's own mode is 0777, so judging it by its mode bits refuses every
+    real runtime directory. Only the owner and what it resolves to may count.
+    """
+    runtime = _install_runtime_tree(oracle, "oracle-symlink", symlink=True)
+    _assert_runtime_accepted(oracle, runtime, "oracle-symlink")
+
+
+def test_permissions_accept_a_symlink_in_a_root_owned_runtime(oracle: OracleDatabase) -> None:
+    """The same, for the runtime shipped with the agent: root owned throughout,
+    so it isolates the symlink handling from the ownership rule."""
+    runtime = _install_runtime_tree(oracle, "root-symlink", owner="root", symlink=True)
+    _assert_runtime_accepted(oracle, runtime, "root-symlink")
+
+
+def test_permissions_refuse_a_world_writable_library(oracle: OracleDatabase) -> None:
+    runtime = _install_runtime_tree(oracle, "world-writable", lib_mode="666")
+    _assert_runtime_refused(oracle, runtime, "world-writable")
+
+
+def test_permissions_refuse_a_library_writable_by_an_unrelated_group(
+    oracle: OracleDatabase, unrelated_account: str
+) -> None:
+    runtime = _install_runtime_tree(
+        oracle,
+        "foreign-group",
+        then=(f'chgrp {unrelated_account} "{{lib}}"', 'chmod g+w "{lib}"'),
+    )
+    _assert_runtime_refused(oracle, runtime, "foreign-group")
+
+
+def test_permissions_refuse_a_library_owned_by_an_unrelated_user(
+    oracle: OracleDatabase, unrelated_account: str
+) -> None:
+    """Only reachable as root: an unprivileged test cannot chown to a third user."""
+    runtime = _install_runtime_tree(
+        oracle, "foreign-owner", then=(f'chown {unrelated_account} "{{lib}}"',)
+    )
+    _assert_runtime_refused(oracle, runtime, "foreign-owner")
+
+
+def test_permissions_refuse_a_runtime_owned_entirely_by_an_unrelated_user(
+    oracle: OracleDatabase, unrelated_account: str
+) -> None:
+    """The exception is `oracle:oinstall`, not "whoever owns the runtime".
+
+    A tree owned consistently by one unrelated account is exactly the shape that
+    a trusted owner derived from the path itself would have accepted, handing
+    that account code execution as root. It has to be refused; such a runtime
+    needs `permissions_safe_entries` or `permissions_check: no`.
+    """
+    runtime = _install_runtime_tree(oracle, "stranger-owned", owner=unrelated_account)
+    _assert_runtime_refused(oracle, runtime, "stranger-owned")
+
+
+def test_permissions_refuse_a_parent_directory_owned_by_an_unrelated_user(
+    oracle: OracleDatabase, unrelated_account: str
+) -> None:
+    """A writable parent lets the library be swapped, so the parents count too."""
+    parent = _PERM_ROOT / "foreign-parent"
+    runtime = _install_runtime_tree(oracle, "foreign-parent/runtime")
+    rc, output = _exec_as_root(oracle, f'chown {unrelated_account} "{parent.as_posix()}"')
+    assert rc == 0, f"Could not chown {parent}: {output}"
+    _assert_runtime_refused(oracle, runtime, "foreign-parent")
+
+
+def test_permissions_check_disabled_accepts_a_refused_runtime(oracle: OracleDatabase) -> None:
+    """`permissions_check: no` is the documented escape hatch, and used to be
+    silently ignored on Linux."""
+    runtime = _install_runtime_tree(oracle, "disabled-check", lib_mode="666")
+    _assert_runtime_refused(oracle, runtime, "disabled-check")
+    _assert_runtime_accepted(oracle, runtime, "disabled-check-off", permissions_check=False)
+
+
+def test_permissions_safe_entries_accept_a_refused_runtime(
+    oracle: OracleDatabase, unrelated_account: str
+) -> None:
+    """`permissions_safe_entries` too was ignored on Linux."""
+    runtime = _install_runtime_tree(
+        oracle, "safe-entries", then=(f'chown {unrelated_account} "{{lib}}"',)
+    )
+    _assert_runtime_refused(oracle, runtime, "safe-entries")
+    _assert_runtime_accepted(
+        oracle, runtime, "safe-entries-allowed", safe_entries=[unrelated_account]
+    )

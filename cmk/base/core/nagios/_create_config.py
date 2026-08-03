@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from socket import AddressFamily
-from typing import Any, assert_never, Final, IO, Literal, override
+from typing import assert_never, Final, IO, Literal, override
 
 from cmk.base import config
 from cmk.base.config import (
@@ -83,7 +83,7 @@ from cmk.utils.timeperiod import TimeperiodSpecs
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
 _ContactgroupName = str
-ObjectSpec = dict[str, Any]  # type: ignore[explicit-any]
+ObjectSpec = dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -321,7 +321,7 @@ class NagiosConfig:
     def write_str(self, x: str) -> None:
         self._outfile.write(x)
 
-    def write_object(self, name: str, spec: ObjectSpec) -> None:
+    def write_object(self, name: str, spec: Mapping[str, object]) -> None:
         self._outfile.write(_format_nagios_object(name, spec))
 
 
@@ -652,7 +652,7 @@ def transform_active_service_command(
 _ServiceLabels = dict[ServiceName, Labels]
 
 
-def _process_services_data(  # type: ignore[explicit-any]
+def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -665,7 +665,7 @@ def _process_services_data(  # type: ignore[explicit-any]
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     license_counter: Counter,
-    check_mk_attrs: dict[str, Any],
+    check_mk_attrs: ObjectAttributes,
 ) -> tuple[dict[ServiceName, AbstractServiceID], _ServiceLabels]:
     host_check_table = config_cache.check_table(
         hostname,
@@ -808,7 +808,7 @@ def create_nagios_servicedefs(
         license_counter["services"] += 1
 
     # legacy checks via active_checks
-    active_services = []
+    active_services: list[tuple[ServiceName, ObjectSpec]] = []
     for service_data in config_cache.active_check_services(
         hostname,
         ip_stack_config,
@@ -879,7 +879,7 @@ def create_nagios_servicedefs(
         )
 
         cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
-        active_services.append(service_spec)
+        active_services.append((service_data.description, service_spec))
 
     active_checks_rules_exist = any(params for _, params in config_cache.active_checks(hostname))
     # Note: ^- This is not the same as `active_checks_present = bool(active_services)`
@@ -889,13 +889,13 @@ def create_nagios_servicedefs(
         cfg.write_str("\n\n# Active checks\n")
 
         license_counter["services"] += len(active_services)
-        for service_spec in active_services:
+        for description, service_spec in active_services:
             cfg.write_object("service", service_spec)
             cfg.write_str(
                 _get_dependencies(
                     service_depends_on,
                     hostname,
-                    service_spec["service_description"],
+                    description,
                     nagios_core_config.service_dependency_template,
                 )
             )
@@ -1148,14 +1148,14 @@ def _get_dependencies(
     )
 
 
-def _add_ping_service(  # type: ignore[explicit-any]
+def _add_ping_service(
     cfg: NagiosConfig,
     hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    host_attrs: Mapping[str, Any],
+    host_attrs: ObjectAttributes,
     ping_service: _PingServiceNames,
     licensing_counter: Counter,
     pingonly_template: str,
@@ -1210,7 +1210,7 @@ def _make_ping_only_spec(
     service_labels: Labels,
     pingonly_template: str,
     define_servicegroups: Mapping[str, str],
-) -> dict[str, str | HostAddress]:
+) -> ObjectSpec:
     ping_command = "check-mk-ping"
     return (
         {
@@ -1233,7 +1233,7 @@ def _make_ping_only_spec(
     )
 
 
-def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
+def _format_nagios_object(object_type: str, object_spec: Mapping[str, object]) -> str:
     lines = ["define %s {" % object_type]
     for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
         # Use a base16 encoding for names and values of tags, labels and label
@@ -1243,7 +1243,7 @@ def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
             for prefix in ("__TAG_", "__LABEL_", "__LABELSOURCE_"):
                 if key.startswith(prefix):
                     key = prefix + _b16encode(key[len(prefix) :])
-                    val = _b16encode(val)
+                    val = _b16encode(str(val))
         lines.append("  %-29s %s" % (key, val))
     lines.append("}")
 

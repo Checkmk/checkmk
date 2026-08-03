@@ -69,7 +69,7 @@ def _pipfile_requirements(pipfile: Path) -> list[str]:
         extra_suffix = "[%s]" % ",".join(extras) if extras else ""
         # A bare "2.31.0" version means "==2.31.0" in Pipfile semantics.
         if version and version[0] not in "=<>~!":
-            version = f"=={version}"
+            version = f"=={version}" if version != "*" else ""
         specs.append(f"{name}{extra_suffix}{version}")
     return specs
 

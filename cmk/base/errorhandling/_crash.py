@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 """Check_MK base specific code of the crash reporting"""
@@ -11,9 +10,9 @@
 import contextlib
 import json
 import traceback
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, override, TypedDict
+from typing import Literal, override, TypedDict
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -81,7 +80,7 @@ def create_check_crash_dump(
     service_name: ServiceName,
     *,
     plugin_name: str | CheckPluginName,
-    plugin_kwargs: dict[str, Any],
+    plugin_kwargs: Mapping[str, object],
     is_cluster: bool,
     is_enforced: bool,
     snmp_backend: SNMPBackendEnum,
@@ -162,7 +161,7 @@ class CheckDetails(TypedDict):
     item: str
     host: str
     check_type: str
-    params: dict[str, Any]
+    params: Mapping[str, object]
     is_cluster: bool
     manual_check: bool
     enforced_service: bool

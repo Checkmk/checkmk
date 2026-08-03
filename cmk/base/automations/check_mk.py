@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
@@ -30,7 +29,7 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass, fields
 from itertools import chain, islice
 from pathlib import Path
-from typing import Any, Literal, override
+from typing import Literal, override
 
 import cmk.base.parent_scan
 import cmk.ccc.cleanup
@@ -2718,7 +2717,7 @@ def _automation_get_check_information(
     )
     plugins = plugins or load_plugins()
 
-    plugin_infos: dict[str, dict[str, Any]] = {}
+    plugin_infos: dict[str, dict[str, object]] = {}
     for plugin in plugins.check_plugins.values():
         plugin_info = plugin_infos.setdefault(
             str(plugin.name),

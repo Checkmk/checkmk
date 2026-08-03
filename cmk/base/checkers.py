@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -19,7 +18,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Literal, override
+from typing import Final, Literal, override
 
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
@@ -180,7 +179,7 @@ def _fetch_all(
     ]
 
 
-def _do_fetch(
+def _do_fetch(  # type: ignore[explicit-any]
     trigger: FetcherTrigger,
     source_info: SourceInfo,
     file_cache: FileCache,
@@ -787,7 +786,7 @@ def _compute_final_check_parameters(
     return Parameters({k: postprocess_configuration(v, config) for k, v in params.items()})
 
 
-def _get_check_function(
+def _get_check_function(  # type: ignore[explicit-any]
     plugin: CheckPluginAPI,
     get_clustered_service_configuration: Callable[
         [], tuple[cluster_mode.ClusterMode, Mapping[str, object]]
@@ -988,7 +987,7 @@ def _get_clustered_service_node_keys(
     return [HostKey(nodename, source_type) for nodename in used_nodes]
 
 
-def get_aggregated_result(
+def get_aggregated_result(  # type: ignore[explicit-any]
     host_name: HostName,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
@@ -1261,7 +1260,7 @@ def _make_discovery_parameters_getter(
     discovery_config: ABCDiscoveryConfig,
     check_plugin_name: CheckPluginName,
     *,
-    default_parameters: Mapping[str, Any] | None,
+    default_parameters: Mapping[str, object] | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:

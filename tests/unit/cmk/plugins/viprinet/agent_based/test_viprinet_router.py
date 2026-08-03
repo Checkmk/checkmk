@@ -39,7 +39,7 @@ def test_discover_viprinet_router_no_data() -> None:
             [Result(state=State.OK, summary="Hub")],
         ),
         (
-            {"expect_mode": "0"},
+            {"expect_mode": "node"},
             [
                 Result(
                     state=State.CRIT,
@@ -48,11 +48,11 @@ def test_discover_viprinet_router_no_data() -> None:
             ],
         ),
         (
-            {"expect_mode": "1"},
+            {"expect_mode": "hub"},
             [Result(state=State.OK, summary="Hub")],
         ),
         (
-            {"expect_mode": "inv", "mode_inv": "0"},
+            {"expect_mode": "inventory", "mode_inv": "0"},
             [
                 Result(
                     state=State.CRIT,
@@ -61,7 +61,7 @@ def test_discover_viprinet_router_no_data() -> None:
             ],
         ),
         (
-            {"expect_mode": "inv", "mode_inv": "1"},
+            {"expect_mode": "inventory", "mode_inv": "1"},
             [Result(state=State.OK, summary="Hub")],
         ),
     ],

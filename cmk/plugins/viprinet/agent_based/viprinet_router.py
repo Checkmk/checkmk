@@ -38,17 +38,26 @@ def check_viprinet_router(params: Mapping[str, Any], section: StringTable) -> Ch
         "2": "Hub running as HotSpare",
         "3": "Hotspare-Hub replacing another router",
     }
+    expected_mode_map = {
+        "node": "0",
+        "hub": "1",
+        "hub_hotspare": "2",
+        "hub_hotspare_replacing": "3",
+    }
     current_mode = section[0][0][0]
     mode = router_mode_map.get(current_mode)
 
     if expect_mode := params.get("expect_mode"):
         # Requires mode found on inventory
-        if expect_mode == "inv":
-            expect_mode = params.get("mode_inv")
-        if expect_mode in router_mode_map and expect_mode != current_mode:
+        expected_code = (
+            params.get("mode_inv")
+            if expect_mode == "inventory"
+            else expected_mode_map.get(expect_mode)
+        )
+        if expected_code in router_mode_map and expected_code != current_mode:
             yield Result(
                 state=State.CRIT,
-                summary=f"Mode '{mode}' differs from expected mode '{router_mode_map.get(expect_mode)}'",
+                summary=f"Mode '{mode}' differs from expected mode '{router_mode_map.get(expected_code)}'",
             )
             return
 

@@ -16,7 +16,6 @@
 
 use crate::args::Args;
 use crate::config::merge;
-use crate::config::options::Options;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::constants::{get_user_config_file, RUNTIME_DIR};
@@ -563,14 +562,10 @@ pub fn detect_runtime_dir(
         log::info!("Skip permissions check for runtime path {:?}", runtime);
         return Some(runtime);
     }
-    let options = if cfg!(windows) {
-        config
-            .ora_sql()
-            .map(|c| c.options().clone())
-            .unwrap_or_default()
-    } else {
-        Options::default()
-    };
+    let options = config
+        .ora_sql()
+        .map(|c| c.options().clone())
+        .unwrap_or_default();
     if !validate_permissions(
         &runtime,
         options.permissions_check(),
@@ -749,12 +744,14 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// Validate permissions of the given path before we load an Oracle client
 /// library from it. Dispatches to the platform-specific implementation.
 ///
-/// On Linux the path and, if it is a directory, its subtree must be
-/// only-root-modifiable whenever the plugin runs as root. On Windows the
-/// path's DACL must grant write access only to privileged SIDs (SYSTEM,
-/// built-in Administrators, Domain Admins, Enterprise Admins) whenever the
-/// plugin runs elevated. In both cases a non-privileged caller always
-/// passes.
+/// On Unix the path, its direct entries and its parent directories must only be
+/// writable by root, by the conventional Oracle owner `oracle:oinstall`, or by a
+/// user or group listed in `safe_entries`, whenever the plugin runs as root. On
+/// Windows the path's DACL must grant write access only to privileged SIDs
+/// (SYSTEM, built-in Administrators, Domain Admins, Enterprise Admins) or to a
+/// listed safe entry, whenever the plugin runs elevated. In both cases a
+/// non-privileged caller always passes, and `check` turns the validation off
+/// entirely.
 pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> bool {
     #[cfg(unix)]
     {

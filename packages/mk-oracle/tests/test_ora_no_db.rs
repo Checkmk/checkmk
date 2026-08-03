@@ -829,37 +829,31 @@ fn test_options_use_host_client_with_env_var() {
     }
 }
 
+/// Public-API level checks of the permission validation.
+///
+/// Only the short-circuits are asserted here, because they are the only outcomes
+/// that do not depend on the environment. Every real decision walks the
+/// directories above the path under test, and those are not ours to control:
+/// inside Bazel's sandbox `/` itself is owned by `nobody`, so an assertion about
+/// a rejection would hold no matter what the logic did. The decision itself is
+/// covered by the pure unit tests in `src/permissions_linux.rs` and, as root
+/// against a tree owned end to end, by `tests/system/mk_oracle`.
 #[cfg(unix)]
 mod permissions {
-    use mk_oracle::permissions_linux::{is_tree_only_root_modifiable, only_root_can_modify};
+    use mk_oracle::permissions_linux::{is_running_as_root, validate};
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
-    use std::path::Path;
-
-    fn set_mode(path: &Path, mode: u32) {
-        fs::set_permissions(path, fs::Permissions::from_mode(mode)).unwrap();
-    }
 
     #[test]
-    fn test_only_root_can_modify_rejects_world_writable_file() {
+    fn test_validate_as_non_root_accepts_a_world_writable_runtime() {
+        if is_running_as_root() {
+            return; // the short-circuit under test does not apply
+        }
         let tmp = tempfile::tempdir().expect("create temp dir");
-        let p = tmp.path().join("f");
-        fs::write(&p, b"").unwrap();
-        set_mode(&p, 0o666);
-        assert!(!only_root_can_modify(&p));
-    }
-
-    #[test]
-    fn test_is_tree_only_root_modifiable_rejects_world_writable_entry() {
-        let tmp = tempfile::tempdir().expect("create temp dir");
-        let sub = tmp.path().join("child");
-        fs::create_dir(&sub).unwrap();
-        let file = sub.join("lib.so");
-        fs::write(&file, b"").unwrap();
-        set_mode(tmp.path(), 0o755);
-        set_mode(&sub, 0o755);
-        set_mode(&file, 0o666);
-        assert!(!is_tree_only_root_modifiable(tmp.path()));
+        let lib = tmp.path().join("libclntsh.so.19.1");
+        fs::write(&lib, b"").unwrap();
+        fs::set_permissions(&lib, fs::Permissions::from_mode(0o666)).unwrap();
+        assert!(validate(tmp.path(), true, &[]));
     }
 }
 

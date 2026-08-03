@@ -406,11 +406,18 @@ options:
   use_host_client: never # optional, default: "auto"
   IGNORE_DB_NAME: 0 # optional, default: 0
   threads: 1 # optional, default: 1, parallel worker threads (range 1–8)
+  permissions_check: yes # optional, default: yes
+  permissions_safe_entries: [] # optional, default: none
 ```
 
 - `use_host_client` controls whether the plugin uses the OCI library installed on the host or the one bundled with the plugin. Values: `auto`, `never`, `always`, or a path to the directory containing the OCI library. When that path is the `lib` directory of a full Oracle installation (an `oracore` directory exists next to it), the plugin also derives `ORACLE_HOME` from its parent and exports it, so that OCI finds its message and timezone files (prevents `ORA-01804`). An Oracle Instant Client directory is used as is; it needs no `ORACLE_HOME`.
 - `IGNORE_DB_NAME`: when set to `1`, the plugin will not verify that the database name matches the instance name.
 - `threads`: number of worker threads used to process instances in parallel. Default is `1`, meaning sequential execution. The supported range is `1` to `8`. Higher values are clamped down to `8`.
+- `permissions_check` controls whether the permissions of the OCI runtime are validated before its library is loaded. Loading a library as a privileged user executes whoever may write it with those privileges, so the runtime is refused when it can be modified from outside the Oracle installation. The validation only ever applies to a privileged run: as an unprivileged user the library runs with the privileges the user already has, and the check is skipped. Set to `no` to load the runtime regardless — the last resort when the permissions cannot be corrected.
+
+  On Unix, when running as root, the runtime directory, the entries in it and its parent directories must be writable only by `root` or by the conventional Oracle owner — the user `oracle` and the group `oinstall`. That single exception is what lets a standard installation work unchanged, including the group-writable `$ORACLE_BASE` directories the Oracle installer creates. Anything world-writable, or owned by any other user, is refused — including a runtime owned consistently by some other account, which needs `permissions_safe_entries` or `permissions_check: no`. Subdirectories of the runtime directory are not descended into. On Windows, when running elevated, the DACL of the runtime must grant write access only to privileged SIDs (`SYSTEM`, the local `Administrators` group, `Domain Admins`, `Enterprise Admins`).
+
+- `permissions_safe_entries` lists users and groups that are accepted as writers in addition to the above, for installations that keep their Oracle software under a different account or group. On Unix an entry is a user name, a group name or a numeric ID; on Windows an account name. Example: `permissions_safe_entries: ["ora19", "dba"]`.
 
 ### Sections
 

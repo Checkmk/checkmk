@@ -49,6 +49,12 @@ function renderWidget() {
   return render(DashboardContentFigure, { props: baseProps as never })
 }
 
+// A changed filter context rewrites httpVars, which is what puts the widget back into loading.
+const REFILTERED = {
+  ...baseProps,
+  effective_filter_context: { uses_infos: [], filters: { host: 'other' }, context: {} }
+}
+
 beforeEach(() => {
   vi.useFakeTimers()
 })
@@ -73,6 +79,37 @@ test('a fast render never shows the loading icon', async () => {
   renderWidget()
   await nextTick()
 
+  finishRender()
+  await nextTick()
+
+  vi.advanceTimersByTime(1_000)
+  await nextTick()
+  expect(loadingIcon()).not.toBeInTheDocument()
+})
+
+test('re-arms the delay for a second load once the first has finished', async () => {
+  const { rerender } = renderWidget()
+  await nextTick()
+  finishRender()
+  await nextTick()
+
+  await rerender(REFILTERED as never)
+  await nextTick()
+  expect(loadingIcon()).not.toBeInTheDocument()
+
+  vi.advanceTimersByTime(1_000)
+  await nextTick()
+  expect(loadingIcon()).toBeInTheDocument()
+})
+
+test('a fast second load shows no icon either', async () => {
+  const { rerender } = renderWidget()
+  await nextTick()
+  finishRender()
+  await nextTick()
+
+  await rerender(REFILTERED as never)
+  await nextTick()
   finishRender()
   await nextTick()
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import NewType
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -16,27 +18,29 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
-
-def parse_viprinet_power(string_table: StringTable) -> StringTable:
-    return string_table
+PowerStatus = NewType("PowerStatus", str)
 
 
-def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
+def parse_viprinet_power(string_table: StringTable) -> PowerStatus | None:
+    match string_table:
+        case [[str(value)]]:
+            return PowerStatus(value)
+        case _:
+            return None
 
 
-def check_viprinet_power(section: StringTable) -> CheckResult:
-    power_map = {
-        "0": "no failure",
-        "1": "a single PSU is out of order",
-    }
+def discover_viprinet_power(section: PowerStatus) -> DiscoveryResult:
+    yield Service()
 
-    if power_info := power_map.get(section[0][0]):
-        yield Result(state=State.OK, summary=power_info)
-        return
 
-    yield Result(state=State.UNKNOWN, summary="Invalid power status")
+def check_viprinet_power(section: PowerStatus) -> CheckResult:
+    match section:
+        case "0":
+            yield Result(state=State.OK, summary="no failure")
+        case "1":
+            yield Result(state=State.OK, summary="a single PSU is out of order")
+        case _:
+            yield Result(state=State.UNKNOWN, summary="Invalid power status")
 
 
 snmp_section_viprinet_power = SimpleSNMPSection(

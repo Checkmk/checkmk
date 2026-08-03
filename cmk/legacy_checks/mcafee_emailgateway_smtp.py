@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY

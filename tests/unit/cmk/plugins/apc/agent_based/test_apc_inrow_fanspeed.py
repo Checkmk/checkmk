@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.apc.agent_based.apc_inrow_fanspeed import (
     check_apc_inrow_fanspeed,

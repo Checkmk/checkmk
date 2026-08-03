@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Callable, Sequence
 
 from cmk.ccc.user import UserId

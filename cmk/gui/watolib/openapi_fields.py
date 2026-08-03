@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Marshmallow field/schema definitions for watolib domain objects."""
-
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
+
+"""Marshmallow field/schema definitions for watolib domain objects."""
 
 import datetime
 import re

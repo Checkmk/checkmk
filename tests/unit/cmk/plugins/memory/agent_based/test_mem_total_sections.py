@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 import pytest
 
 from cmk.plugins.lib.memory import SectionMemTotal

@@ -6,9 +6,9 @@
 
 Checkmk special agent for SMB shares
 """
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="import-untyped"
 # mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
 
 import argparse
 import logging

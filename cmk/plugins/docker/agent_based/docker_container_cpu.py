@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-
 from typing import TypedDict
 
 from cmk.agent_based.v2 import AgentSection, StringTable

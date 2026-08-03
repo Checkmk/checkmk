@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-
 from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel

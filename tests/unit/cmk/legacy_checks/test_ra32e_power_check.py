@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-
 from cmk.agent_based.v2 import Service
 from cmk.legacy_checks.ra32e_power import check_ra32e_power, discover_ra32e_power
 

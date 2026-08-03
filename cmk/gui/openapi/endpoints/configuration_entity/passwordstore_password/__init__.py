@@ -2,13 +2,15 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="mutable-override"
+
 """Configuration entities / Passwordstore Password
 
 These endpoints can be used to manipulate passwordstore passwords via the
 configuration entity API, for more information see "Configuration entities"
 endpoints."""
-
-# mypy: disable-error-code="mutable-override"
 
 from collections.abc import Mapping
 from typing import Any

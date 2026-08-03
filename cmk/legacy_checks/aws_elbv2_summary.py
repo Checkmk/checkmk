@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from collections.abc import Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # .1.3.6.1.4.1.9.9.176.1.1.1.0   0  --> CISCO-RF-MIB::cRFStatusUnitId.0
 # .1.3.6.1.4.1.9.9.176.1.1.2.0   14 --> CISCO-RF-MIB::cRFStatusUnitState.0
 # .1.3.6.1.4.1.9.9.176.1.1.3.0   0  --> CISCO-RF-MIB::cRFStatusPeerUnitId.0

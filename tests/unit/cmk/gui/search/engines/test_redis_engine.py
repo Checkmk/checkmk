@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 

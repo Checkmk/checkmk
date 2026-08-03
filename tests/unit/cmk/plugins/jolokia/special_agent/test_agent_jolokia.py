@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-
 from collections.abc import Sequence
 
 import pytest

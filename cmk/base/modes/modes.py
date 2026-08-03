@@ -5,7 +5,6 @@
 
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 

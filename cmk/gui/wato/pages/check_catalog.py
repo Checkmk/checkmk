@@ -2,16 +2,18 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 """Display information about the Checkmk check plug-ins
 
 The maxium depth of the catalog paths is 3. The top level is being rendered
 like the Setup main menu. The second and third level are being rendered like
 the global settings.
 """
-
-# mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
 

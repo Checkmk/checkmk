@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
-
 from collections.abc import Sequence
 
 import pytest

@@ -2,11 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="no-untyped-call"
+
 """agent_storeonce4x
 
 Checkmk special agent for HP StoreOnce REST API Version 4.2.3"""
-
-# mypy: disable-error-code="no-untyped-call"
 
 # TODO: once this agent can be used on a 2.x live system, it should be checked for functionality
 #       and against known exceptions

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # ruff: noqa: SLF001  # Private member accessed - tests exercise the emission helpers directly.
 """Streaming/resilience tests for the Redfish special agent: each section must
 reach stdout as soon as it's gathered, and one failing endpoint must not abort

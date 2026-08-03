@@ -5,7 +5,6 @@
 """This file is synced from the check_mk repo to the cmk-license repo."""
 
 # mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="no-any-return"
 
 from __future__ import annotations

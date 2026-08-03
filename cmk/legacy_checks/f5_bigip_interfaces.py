@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
 import contextlib
 import dataclasses
 import time

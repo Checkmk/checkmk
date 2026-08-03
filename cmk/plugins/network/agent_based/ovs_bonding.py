@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.network import lib_bonding as bonding
 

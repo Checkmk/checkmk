@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from cmk.plugins.azure_deprecated.rulesets.azure import CCE_AZURE_SERVICES, RAW_AZURE_SERVICES
 from cmk.plugins.azure_deprecated.special_agent.agent_azure import ALL_METRICS
 

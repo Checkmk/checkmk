@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 # Golden Tests for the LDAP connector
 # trying to capture the current behavior of the connector to facilitate refactoring
 

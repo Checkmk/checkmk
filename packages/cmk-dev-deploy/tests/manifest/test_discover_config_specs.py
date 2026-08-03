@@ -2,6 +2,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 """Unit tests for _discover_config_specs grouping behavior."""
 
 from __future__ import annotations

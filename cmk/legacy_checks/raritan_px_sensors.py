@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 # we use raritan.include but here we have no infomation
 # about availability of the sensors
 # .1.3.6.1.4.1.13742.4.3.3.1.1.4 4 --> PDU-MIB::sensorID.4

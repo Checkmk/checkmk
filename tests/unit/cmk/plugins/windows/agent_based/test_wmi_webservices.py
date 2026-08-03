@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable

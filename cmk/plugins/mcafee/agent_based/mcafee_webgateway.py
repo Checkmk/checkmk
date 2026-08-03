@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
 """
 The McAfee Web Gateway has been rebranded to Skyhigh Secure Web Gateway with its release 12.2.2.
 Where possibile the "McAfee" string has been removed in favor of more generic therms.

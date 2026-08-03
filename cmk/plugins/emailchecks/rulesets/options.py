@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="type-arg"
-
 
 from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Literal

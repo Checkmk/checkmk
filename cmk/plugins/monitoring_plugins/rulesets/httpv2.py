@@ -2,11 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Mapping
 from typing import Any
 
-# mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="type-arg"
 from cmk.rulesets.internal.form_specs import InternalProxy, migrate_to_internal_proxy
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (

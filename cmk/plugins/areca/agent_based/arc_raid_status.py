@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # Example output from agent:
 # 1  Raid Set # 00        3 2250.5GB    0.0GB 123                Normal
 # ( # Name Disks TotalCap  FreeCap DiskChannels State )

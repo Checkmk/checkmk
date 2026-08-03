@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+
 # ruff: noqa: ARG002
 # ruff: noqa: SLF001
 

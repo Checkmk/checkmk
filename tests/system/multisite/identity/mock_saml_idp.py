@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 """In-process SAML IdP mock for the user identity & auth composition tests.
 
 A lightweight stand-in for the Keycloak container that authenticates the shared

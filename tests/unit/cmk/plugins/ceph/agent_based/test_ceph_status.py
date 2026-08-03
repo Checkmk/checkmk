@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-
 from functools import lru_cache
 
 import pytest

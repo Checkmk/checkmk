@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
+
 # ruff: noqa: SLF001  # Private member accessed
 
 

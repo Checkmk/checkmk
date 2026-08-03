@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
-
 import argparse
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass

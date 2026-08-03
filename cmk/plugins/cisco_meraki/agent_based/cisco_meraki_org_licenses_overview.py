@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 # Unpacking literal keys into dictionary with str keys is a known mypy bug:
 # https://github.com/python/mypy/issues/19893
 # mypy: disable-error-code="dict-item"
+# Pydantic requires the property to be under computed_field to work.
+# mypy: disable-error-code="prop-decorator"
 
 import json
 import time

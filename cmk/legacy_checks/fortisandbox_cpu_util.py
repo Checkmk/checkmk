@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition

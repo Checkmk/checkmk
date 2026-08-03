@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
-
 import pytest
 
 from cmk.gui.plugins.wato.check_parameters import kube_node_container_count

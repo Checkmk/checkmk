@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from collections.abc import Mapping
 
 import pytest

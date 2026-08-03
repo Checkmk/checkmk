@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 import signal
 import subprocess
 from collections.abc import Iterator

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-
 from __future__ import annotations
 
 import time

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # grep -r -E ".1.3.6.1.4.1.14525.3.1|.1.3.6.1.4.1.14525.3.3"
 # juniper-trpz-1         :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.6
 # juniper-trpz-2         :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13

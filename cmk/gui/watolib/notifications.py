@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-any"
+
 """Module for managing rule based notifications
 
 The class 'NotificationRule' represents a single rule object that bridges
@@ -20,8 +24,6 @@ obj = NotificationRule.from_mk_file_format(EventRule)
 obj = NotificationRule.from_api_request(APINotificationRule)
 
 """
-
-# mypy: disable-error-code="comparison-overlap"
 
 from __future__ import annotations
 

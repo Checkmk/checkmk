@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import datetime
 import random
 import time

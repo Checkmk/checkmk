@@ -5,9 +5,9 @@
 
 # mypy: disable-error-code="import"
 # mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="no-any-return"
 
 # fmt: off
 

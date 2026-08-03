@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, MigrateNotUpdated, TextInput

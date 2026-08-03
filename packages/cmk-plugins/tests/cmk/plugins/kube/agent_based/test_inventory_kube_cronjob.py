@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import polyfactory.factories.pydantic_factory
 
 from cmk.agent_based.v2 import Attributes

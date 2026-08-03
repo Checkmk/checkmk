@@ -2,6 +2,10 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="no-untyped-def"
+
 """Host tag groups
 
 Host tag groups are, besides the static folder structure, another more flexible way to
@@ -12,8 +16,6 @@ tag from the group.
 You can find an introduction to hosts including host tags and host tag groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
-
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 from typing import Any

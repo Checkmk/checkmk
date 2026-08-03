@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 import datetime
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence

@@ -2,15 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Modes for managing notification configuration"""
 
 # mypy: disable-error-code="comparison-overlap"
-
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
+"""Modes for managing notification configuration"""
 
 import abc
 import enum

@@ -2,12 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="unreachable"
+
 """agent_tinkerforge
 
 Checkmk special agent for monitoring Tinkerforge.
 """
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 ###################################################
 # plug-in to retrieve data from tinkerforge devices.

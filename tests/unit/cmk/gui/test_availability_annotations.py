@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-
 import datetime
 from collections.abc import Callable, Sequence
 from zoneinfo import ZoneInfo

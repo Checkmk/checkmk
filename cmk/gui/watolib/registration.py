@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Sequence
 from datetime import timedelta
 

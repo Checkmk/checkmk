@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
 import json
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition

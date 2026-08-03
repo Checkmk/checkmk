@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 
-
 from __future__ import annotations
 
 import dataclasses

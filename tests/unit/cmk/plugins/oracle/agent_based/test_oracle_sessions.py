@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from cmk.plugins.oracle.agent_based.oracle_sessions import (
     discover_oracle_sessions,
     parse_oracle_sessions,

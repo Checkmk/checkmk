@@ -6,7 +6,6 @@
 to hosts and that is the basis of the rules."""
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 

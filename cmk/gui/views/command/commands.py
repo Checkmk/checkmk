@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
 
 import time
 from collections.abc import Iterable, Sequence

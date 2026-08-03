@@ -5,7 +5,6 @@
 """Render graphs in PDF. Is also used for PNG image rendering."""
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="unreachable"
 
 from typing import TypeGuard

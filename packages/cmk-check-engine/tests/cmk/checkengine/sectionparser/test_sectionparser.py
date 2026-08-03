@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+
 # ruff: noqa: ARG001
 # ruff: noqa: ARG002
 # ruff: noqa: ARG005

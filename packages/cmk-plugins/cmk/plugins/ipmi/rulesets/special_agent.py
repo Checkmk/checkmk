@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Help, Label, Title

@@ -7,7 +7,6 @@ from cmk.plugins.docker import lib as docker
 from cmk.plugins.lib import memory
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="unreachable"
 
 

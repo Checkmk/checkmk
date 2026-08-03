@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from dataclasses import dataclass
 from typing import TypedDict
 

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
-
 import pytest
 
 from cmk.agent_based.v2 import StringTable

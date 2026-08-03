@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,

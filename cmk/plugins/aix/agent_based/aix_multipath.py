@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="var-annotated"
+
 # Example output:
 # <<<aix_multipath>>>
 # <<<aix_multipath>>>
@@ -10,8 +13,6 @@
 # hdisk1 vscsi0 Available Enabled
 # hdisk2 vscsi0 Available Enabled
 
-
-# mypy: disable-error-code="var-annotated"
 
 from collections.abc import Mapping
 from typing import Any

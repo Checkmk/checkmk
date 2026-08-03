@@ -2,16 +2,18 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
 """Decorators to expose API endpoints.
 
 Decorating a function with `Endpoint` will result in a change of the SPEC object,
 which then has to be dumped into the checkmk.yaml file.
 
 """
-
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

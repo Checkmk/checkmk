@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="redundant-expr"
-
 
 from cmk.agent_based.v2 import (
     CheckPlugin,

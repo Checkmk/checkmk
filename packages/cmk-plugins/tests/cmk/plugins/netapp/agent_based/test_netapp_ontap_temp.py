@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
 

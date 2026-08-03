@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import time
 from typing import TypedDict
 

@@ -2,6 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
 """Audit logs
 
 The audit log records the activities taking place in CheckMK. These endpoints allow you to read and clean these logs

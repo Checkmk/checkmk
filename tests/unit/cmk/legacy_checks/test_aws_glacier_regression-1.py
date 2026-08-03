@@ -6,13 +6,12 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="var-annotated"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
-
-# mypy: disable-error-code="var-annotated"
 
 from collections.abc import Mapping
 

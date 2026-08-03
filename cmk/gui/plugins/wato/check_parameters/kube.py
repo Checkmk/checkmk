@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from typing import Literal
 
 from cmk.gui.i18n import _

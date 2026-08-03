@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 
-
 from collections.abc import Callable
 from contextlib import suppress
 from typing import cast

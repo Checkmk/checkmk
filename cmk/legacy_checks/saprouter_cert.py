@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
 # Valid
 # <<<saprouter_cert>>>
@@ -27,8 +28,6 @@
 
 # Suggested by customer
 
-
-# mypy: disable-error-code="var-annotated"
 
 import time
 

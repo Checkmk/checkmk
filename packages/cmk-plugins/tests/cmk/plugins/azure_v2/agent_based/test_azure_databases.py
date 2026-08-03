@@ -2,10 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="misc"
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-# mypy: disable-error-code="misc"
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State

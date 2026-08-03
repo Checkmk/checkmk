@@ -2,6 +2,10 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="typeddict-unknown-key"
+
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.
 
 A child folder or host can override a label set by a parent folder back to
@@ -9,8 +13,6 @@ A child folder or host can override a label set by a parent folder back to
 the add-only inheritance merge and is stripped by Host.labels(), so consumers
 see the key as absent.
 """
-
-# mypy: disable-error-code="typeddict-unknown-key"
 
 import os
 import shutil

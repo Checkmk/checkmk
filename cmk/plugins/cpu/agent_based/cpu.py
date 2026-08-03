@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="possibly-undefined"
 
-
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib.cpu import Load, Section, Threads
 

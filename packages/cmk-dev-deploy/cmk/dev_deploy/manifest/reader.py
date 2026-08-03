@@ -2,6 +2,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 """Manifest reader: loads JSON manifest and constructs typed dataclass instances.
 
 Does NOT import ``cmk.dev_deploy.output`` to avoid circular dependencies.

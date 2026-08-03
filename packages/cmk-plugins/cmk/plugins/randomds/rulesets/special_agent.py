@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import FixedValue
 from cmk.rulesets.v1.form_specs._composed import DictElement, Dictionary

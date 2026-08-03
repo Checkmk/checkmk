@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # .1.3.6.1.4.1.9.9.392.1.1.1.0 = INTEGER: 150
 # .1.3.6.1.4.1.9.9.392.1.3.26.0 = Gauge32: 0
 # .1.3.6.1.4.1.9.9.392.1.3.27.0 = Counter32: 0

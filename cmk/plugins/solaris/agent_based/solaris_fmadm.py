@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # No faults:
 # Agent section is empty
 # From https://docs.oracle.com/cd/E23824_01/html/821-1451/glisy.html

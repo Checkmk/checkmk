@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 # Names are made available dynamically
 from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]
     Dashlet,

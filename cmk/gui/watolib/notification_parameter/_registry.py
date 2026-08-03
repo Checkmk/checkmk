@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Callable
 
 import cmk.gui.watolib.rulespecs as _rulespecs

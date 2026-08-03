@@ -15,7 +15,6 @@ This module does the following operations
 """
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 

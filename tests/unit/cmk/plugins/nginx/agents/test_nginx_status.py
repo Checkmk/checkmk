@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-
 from cmk.plugins.nginx.agents import nginx_status
 
 

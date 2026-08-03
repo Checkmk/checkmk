@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.plugins.netapp.agent_based.netapp_ontap_psu import _get_section_single_instance

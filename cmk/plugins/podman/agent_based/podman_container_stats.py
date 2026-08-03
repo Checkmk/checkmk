@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import json
 from collections.abc import Mapping
 

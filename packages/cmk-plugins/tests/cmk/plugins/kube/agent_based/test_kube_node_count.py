@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import polyfactory.factories.pydantic_factory
 import pytest
 

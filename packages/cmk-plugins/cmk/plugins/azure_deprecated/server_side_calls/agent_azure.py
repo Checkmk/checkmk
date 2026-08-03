@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="redundant-expr"
 
-
 from collections.abc import Iterable
 from typing import Literal
 

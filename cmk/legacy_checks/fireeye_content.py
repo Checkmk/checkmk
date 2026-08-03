@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
 import time
 from collections.abc import Iterable
 from typing import NamedTuple

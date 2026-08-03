@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 
+# mypy: disable-error-code="explicit-any"
+
 from collections import Counter
 from collections.abc import Sequence
 from typing import Any

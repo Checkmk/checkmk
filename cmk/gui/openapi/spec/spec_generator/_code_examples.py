@@ -9,6 +9,7 @@ be referenced in the result of _build_code_templates.
 
 """
 
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 

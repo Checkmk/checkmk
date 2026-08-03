@@ -2,15 +2,17 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 """This module collects code which helps with testing Checkmk.
 
 For code to be admitted to this module, it should itself be tested thoroughly, so we won't
 have any friction during testing with these helpers themselves.
 
 """
-
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

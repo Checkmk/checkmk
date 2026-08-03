@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
-
 import datetime
 from collections.abc import Mapping
 from zoneinfo import ZoneInfo

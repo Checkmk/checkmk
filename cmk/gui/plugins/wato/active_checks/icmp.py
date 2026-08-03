@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import check_icmp_params, HostRulespec, rulespec_registry

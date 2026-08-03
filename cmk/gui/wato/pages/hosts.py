@@ -5,7 +5,6 @@
 """Modes for creating and editing hosts"""
 
 # mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 

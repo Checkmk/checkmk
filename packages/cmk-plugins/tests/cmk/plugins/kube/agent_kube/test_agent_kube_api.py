@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 

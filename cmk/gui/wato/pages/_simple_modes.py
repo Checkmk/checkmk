@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="type-arg"
+
 """These modes implement a complete set of modes for managing a set of standard objects
 
 Together with WatoSimpleConfigFile() as store class this implements
@@ -10,8 +14,6 @@ a) A list mode where all objects are shown. All objects can be deleted here.
    New objects can be created from here.
 b) A edit mode which can be used to create and edit an object.
 """
-
-# mypy: disable-error-code="type-arg"
 
 import abc
 import copy

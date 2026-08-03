@@ -2,14 +2,16 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="no-any-return"
+
 """agent_datadog
 
 Checkmk special agent for monitoring Datadog monitors, events, and logs.
 The data is fetched from the Datadog API, https://docs.datadoghq.com/api/.
 Endpoints: Monitors (v1), Events (v1), Logs (v2).
 """
-
-# mypy: disable-error-code="no-any-return"
 
 import argparse
 import datetime

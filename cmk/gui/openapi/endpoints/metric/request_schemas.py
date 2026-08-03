@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="mutable-override"
 
-
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.fields import String

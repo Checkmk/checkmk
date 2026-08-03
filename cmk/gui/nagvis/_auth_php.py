@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # Creates a includable file for the needed programming languages.
 # It can be used to use the multisite permissions in other add-ons
 # for checking permissions.

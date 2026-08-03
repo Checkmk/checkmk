@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import re
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from logging import Logger

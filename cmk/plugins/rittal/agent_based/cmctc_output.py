@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import (

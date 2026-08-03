@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100

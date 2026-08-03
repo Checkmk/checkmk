@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="possibly-undefined"
 
-
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import AgentSection, CheckPlugin, StringTable

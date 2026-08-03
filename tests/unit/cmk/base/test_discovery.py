@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-
 import socket
 from collections.abc import Mapping, Sequence
 from pathlib import Path

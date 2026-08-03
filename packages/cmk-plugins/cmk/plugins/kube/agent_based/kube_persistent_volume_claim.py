@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="deprecated"
+# mypy: disable-error-code="explicit-any"
 
 import time
 from collections.abc import Iterator, Mapping, MutableMapping

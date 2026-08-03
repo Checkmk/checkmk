@@ -2,6 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 """Monitor MongoDB on Linux
 
 This agent plugin creates various sections out of the MongoDB server status information.
@@ -22,10 +28,6 @@ authentication and a MongoDB server 4.0 you will have to use a more recent
 version of pymongo (at least 2.8).
 
 """
-
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 __version__ = "3.0.0b1"
 

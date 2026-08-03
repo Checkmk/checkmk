@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import datetime
 from collections.abc import Sequence
 from io import StringIO

@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Protocol

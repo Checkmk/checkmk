@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import (

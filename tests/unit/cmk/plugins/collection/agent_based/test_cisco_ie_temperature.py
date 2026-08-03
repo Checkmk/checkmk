@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, StringTable

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Mapping
 
 import pytest

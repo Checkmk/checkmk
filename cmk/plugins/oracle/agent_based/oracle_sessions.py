@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="var-annotated"
 
 # <<<oracle_sessions>>>
 # pengt  15
 # hirni  22
 # newdb  47 772 65
 
-
-# mypy: disable-error-code="var-annotated"
 
 import contextlib
 from collections.abc import Mapping

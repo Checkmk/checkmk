@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-def"
+
 import importlib.util
 import os
 import os.path

@@ -2,6 +2,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 """Automatic diagnostic bundle capture for cmk-dev-deploy.
 
 On any :class:`~cmk.dev_deploy.errors.DeployError` (or subclass), captures

@@ -12,8 +12,9 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKTimeout
 from cmk.checkengine.snmplib import SNMPRawDataElem, SNMPRowInfo, SNMPSectionMarker, SNMPSectionName
 
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="no-any-return"
+
 logger = logging.getLogger(__name__)
 
 

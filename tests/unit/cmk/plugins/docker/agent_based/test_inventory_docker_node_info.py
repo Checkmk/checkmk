@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow

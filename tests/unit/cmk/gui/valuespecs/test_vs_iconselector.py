@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 
-
 import re
 from unittest.mock import MagicMock, patch
 

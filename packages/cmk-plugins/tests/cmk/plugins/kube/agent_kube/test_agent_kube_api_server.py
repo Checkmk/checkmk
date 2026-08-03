@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Mapping
 
 from polyfactory.factories.pydantic_factory import ModelFactory

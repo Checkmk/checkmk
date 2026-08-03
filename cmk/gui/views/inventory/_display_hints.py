@@ -4,14 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="unreachable"
-
 # mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="redundant-expr"
-
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
 

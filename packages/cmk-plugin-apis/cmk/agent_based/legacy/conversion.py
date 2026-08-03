@@ -9,7 +9,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import itertools
 from collections import defaultdict
 from collections.abc import Callable, Generator, Sequence

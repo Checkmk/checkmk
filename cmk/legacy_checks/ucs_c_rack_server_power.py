@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
 # exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
 #
@@ -15,8 +16,6 @@
 # of a rack servers motherboards. Reasonable values for the actual use case depend on the rack
 # servers configuration (racks used in rack server) and require customization via WATO rule.
 
-
-# mypy: disable-error-code="var-annotated"
 
 import contextlib
 

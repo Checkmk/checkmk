@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
@@ -11,8 +12,6 @@ from cmk.legacy_includes.temperature import check_temperature_list
 from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
 
 check_info = {}
-
-# mypy: disable-error-code="var-annotated"
 
 
 # .1.3.6.1.4.1.10222.2.1.2.9.1.1.1.1.1 1 --> ICS-CHASSIS-MIB::icsChassisSlotIndex.1.1.1

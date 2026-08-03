@@ -2,6 +2,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 """Build the deploy manifest from auto-discovered Bazel targets and TOML overrides.
 
 Auto-discovers config specs from ``deps_packages`` packaging targets and the

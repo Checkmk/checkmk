@@ -6,6 +6,7 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable

@@ -2,19 +2,21 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="attr-defined"
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 """agent_aws
 
 Checkmk special agent for monitoring Amazon Web Services (AWS).
 """
-
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="attr-defined"
 
 # TODO: Using BaseClient all over the place is wrong and leads to the tons of attr-defined errors.
 # The code and types have to be restructured to use the right subclass of BaseClient for the client

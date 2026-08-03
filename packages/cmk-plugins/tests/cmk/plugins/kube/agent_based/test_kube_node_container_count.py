@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
-
 import json
 from collections.abc import Mapping
 from unittest.mock import MagicMock

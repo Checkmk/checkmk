@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-
 from collections.abc import Iterator, Mapping
 from typing import Literal
 

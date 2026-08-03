@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
 from cmk.plugins.oracle.agent_based.libinstance import Instance
 
 

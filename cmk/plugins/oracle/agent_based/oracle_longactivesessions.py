@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+
 # <<<oracle_longactivesessions:seq(124)>>>
 # instance_name | sid | serial | machine | process | osuser | program | last_call_el | sql_id
 

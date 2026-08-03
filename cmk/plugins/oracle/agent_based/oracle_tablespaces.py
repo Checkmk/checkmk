@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from typing import Any

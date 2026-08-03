@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry

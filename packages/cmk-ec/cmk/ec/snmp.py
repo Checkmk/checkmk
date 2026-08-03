@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
 # NOTE: We *really* need type stubs or a typed version of the SNMP libraries...
 # mypy: disable-error-code="no-untyped-call"
 

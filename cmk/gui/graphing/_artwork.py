@@ -5,9 +5,9 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 import math
 import time

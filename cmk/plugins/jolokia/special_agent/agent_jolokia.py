@@ -7,8 +7,8 @@
 Checkmk special agent for monitoring JMX using Mbeans exposed by jolokia.
 """
 
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="import-not-found"
+# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="unused-ignore"
 
 import argparse

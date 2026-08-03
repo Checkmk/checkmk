@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-any"
+
 """Business intelligence (BI)
 
 BI is used in Checkmk to set up a tree based on the status of hosts and services as branches and to
@@ -12,8 +16,6 @@ A BI aggregation is a tree of nodes and a BI rule is used to define a node and i
 You can find an introduction to BI in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
-
-# mypy: disable-error-code="comparison-overlap"
 
 import http
 import http.client

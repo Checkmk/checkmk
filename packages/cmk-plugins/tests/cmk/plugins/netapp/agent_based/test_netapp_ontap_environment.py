@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 import json
 
 import pytest

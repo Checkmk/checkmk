@@ -2,6 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="mutable-override"
+
 """Configuration entities / OAuth2 connections API endpoints.
 
 This module defines the API endpoints for managing OAuth2 configuration entities
@@ -9,8 +13,6 @@ within the Checkmk monitoring system. It includes functionality to list OAuth2
 connections and integrates with the OpenAPI specification for documentation and
 client generation.
 """
-
-# mypy: disable-error-code="mutable-override"
 
 from collections.abc import Mapping
 from typing import Any

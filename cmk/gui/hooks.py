@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import functools
@@ -15,8 +17,6 @@ from typing import Any, Literal, NamedTuple
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
-
-# mypy: disable-error-code="no-any-return"
 
 tracer = trace.get_tracer()
 

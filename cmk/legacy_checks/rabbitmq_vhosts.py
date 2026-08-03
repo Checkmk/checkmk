@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
 # <<<rabbitmq_vhosts>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -21,8 +22,6 @@
 # 1556846120, "io_file_handle_open_attempt_count": 11, "cluster_links":
 # []}
 
-
-# mypy: disable-error-code="var-annotated"
 
 import json
 

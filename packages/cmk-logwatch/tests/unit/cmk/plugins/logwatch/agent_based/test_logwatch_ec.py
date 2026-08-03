@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path

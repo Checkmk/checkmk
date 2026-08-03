@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-
 from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
 
 from .lib import SectionPodmanContainerInspect

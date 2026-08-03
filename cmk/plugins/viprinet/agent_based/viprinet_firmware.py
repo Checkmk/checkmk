@@ -20,6 +20,15 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 
+def parse_viprinet_firmware(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_viprinet_firmware(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
 def check_viprinet_firmware(section: StringTable) -> CheckResult:
     name, status = section[0][0], section[0][1]
 
@@ -36,15 +45,6 @@ def check_viprinet_firmware(section: StringTable) -> CheckResult:
             yield Result(state=State.OK, summary=f"{name}, Installing Update")
         case _:
             yield Result(state=State.UNKNOWN, summary=f"{name}, No firmware status available")
-
-
-def parse_viprinet_firmware(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-def discover_viprinet_firmware(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
 
 
 snmp_section_viprinet_firmware = SimpleSNMPSection(

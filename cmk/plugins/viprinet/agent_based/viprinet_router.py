@@ -20,6 +20,15 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 
+def parse_viprinet_router(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_viprinet_router(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service(parameters={"mode_inv": section[0][0][0]})
+
+
 def check_viprinet_router(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     router_mode_map = {
         "0": "Node",
@@ -46,15 +55,6 @@ def check_viprinet_router(params: Mapping[str, Any], section: StringTable) -> Ch
         return
 
     yield Result(state=State.UNKNOWN, summary="Undefined Mode")
-
-
-def parse_viprinet_router(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-def discover_viprinet_router(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service(parameters={"mode_inv": section[0][0][0]})
 
 
 snmp_section_viprinet_router = SimpleSNMPSection(

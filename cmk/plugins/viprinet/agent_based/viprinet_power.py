@@ -17,6 +17,15 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 
+def parse_viprinet_power(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
 def check_viprinet_power(section: StringTable) -> CheckResult:
     power_map = {
         "0": "no failure",
@@ -28,15 +37,6 @@ def check_viprinet_power(section: StringTable) -> CheckResult:
         return
 
     yield Result(state=State.UNKNOWN, summary="Invalid power status")
-
-
-def parse_viprinet_power(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
 
 
 snmp_section_viprinet_power = SimpleSNMPSection(

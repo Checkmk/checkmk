@@ -17,6 +17,10 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 
+def parse_viprinet_serial(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 def discover_viprinet_serial(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
@@ -24,10 +28,6 @@ def discover_viprinet_serial(section: StringTable) -> DiscoveryResult:
 
 def check_viprinet_serial(section: StringTable) -> CheckResult:
     yield Result(state=State.OK, summary=section[0][0])
-
-
-def parse_viprinet_serial(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 snmp_section_viprinet_serial = SimpleSNMPSection(

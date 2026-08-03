@@ -17,16 +17,6 @@ from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 
-def check_viprinet_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
-    reading = int(section[0][item == "System"])
-    yield from check_temperature(
-        reading=reading,
-        params=params,
-        unique_name=f"viprinet_temp_{item}",
-        value_store=get_value_store(),
-    )
-
-
 def parse_viprinet_temp(string_table: StringTable) -> StringTable:
     return string_table
 
@@ -35,6 +25,16 @@ def discover_viprinet_temp(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service(item="CPU")
         yield Service(item="System")
+
+
+def check_viprinet_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+    reading = int(section[0][item == "System"])
+    yield from check_temperature(
+        reading=reading,
+        params=params,
+        unique_name=f"viprinet_temp_{item}",
+        value_store=get_value_store(),
+    )
 
 
 snmp_section_viprinet_temp = SimpleSNMPSection(

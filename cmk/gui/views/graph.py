@@ -9,11 +9,9 @@
 import copy
 import time
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict
 from typing import Literal
 from uuid import uuid4
 
-import cmk.gui.graphing._engine_plugins as engine_plugins
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
@@ -31,15 +29,13 @@ from cmk.gui.graphing import (
     metrics_from_api,
     RegisteredMetric,
     render_deferred_graphs_html,
+    render_engine_graph_group,
     render_graphs_html,
     resolve_user_size,
     TemplateGraphSpecification,
     vs_graph_render_options,
 )
-from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
-from cmk.gui.graphing._engine_template_graphs import build_template_graphs
-from cmk.gui.graphing._frontend import default_time_range_seconds, to_cmk_time_series_graph
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.graphing._frontend import default_time_range_seconds
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
@@ -340,41 +336,20 @@ def _render_engine_graph_group(
     debug: bool,
 ) -> HTML:
     """Render the graph-engine (Vue) graph group for a row's template graphs."""
-    engine_graphs = build_template_graphs(
-        graph_specification,
-        registered_graphs=engine_plugins.registered_graphs(),
-        registered_metrics=engine_plugins.registered_metrics(),
-        fetch_metric_names=EngineRRDFetchMetricNames(
-            host_name=row["host_name"],
-            service_name=row.get("service_description", "_HOST_"),
-            debug=debug,
-            registered_translations=engine_plugins.registered_translations(),
-        ),
-    )
-    vue_graphs = [
-        asdict(
-            to_cmk_time_series_graph(
-                built.graph,
-                size=Size(
-                    width=graph_size[0],
-                    height=graph_size[1],
-                    mode="resizable" if display_config.resizable else "fixed",
-                ),
-                show_pin=display_config.show_pin,
-                show_graph_time=display_config.show_time_range_previews,
-                add_to_specification=built.specification,
-            )
-        )
-        for built in engine_graphs
-    ]
     # TODO: Handle the case of shared dashboards (request.has_var("cmk-token"))
-    return HTMLWriter.render_vue_component(
-        "cmk-graph-group",
-        {
-            "initial_time_range_start": raw_time_range[0],
-            "initial_time_range_end": raw_time_range[1],
-            "graphs": vue_graphs,
-        },
+    return render_engine_graph_group(
+        graph_specification,
+        host_name=row["host_name"],
+        service_name=row.get("service_description", "_HOST_"),
+        size=Size(
+            width=graph_size[0],
+            height=graph_size[1],
+            mode="resizable" if display_config.resizable else "fixed",
+        ),
+        time_range=raw_time_range,
+        show_pin=display_config.show_pin,
+        show_graph_time=display_config.show_time_range_previews,
+        debug=debug,
     )
 
 

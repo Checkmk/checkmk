@@ -9,6 +9,7 @@ from ._artwork import (
     GraphArtworkAnnotations,
     iter_graph_artworks,
 )
+from ._engine_graph_group import render_engine_graph_group
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -208,6 +209,7 @@ __all__ = [
     "render_graph_pdf",
     "render_graph_png",
     "render_deferred_graphs_html",
+    "render_engine_graph_group",
     "render_graphs_html",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -20,7 +19,7 @@ import sys
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, cast, Literal, Protocol
+from typing import cast, Literal, Protocol
 from urllib.parse import quote, urlencode
 
 import cmk.ccc.daemon
@@ -503,7 +502,7 @@ def _update_enriched_context_from_notify_host_file(enriched_context: EnrichedEve
 
 
 # TODO: Use cmk.utils.render.*?
-def get_readable_rel_date(timestamp: Any) -> str:
+def get_readable_rel_date(timestamp: str) -> str:
     try:
         change = int(timestamp)
     except ValueError:
@@ -1096,7 +1095,6 @@ def event_match_servicelabels(
 def _event_handle_labels(
     rule: EventRule, context: EventContext, what: Literal["host", "service"]
 ) -> str | None:
-    labels: dict[str, Any] = {}
     context_str = "%sLABEL" % what.upper()
     labels = {
         variable.replace("%s_" % context_str, ""): value
@@ -1165,8 +1163,10 @@ def add_to_event_context(
 # int() function that return 0 for strings the
 # cannot be converted to a number
 # TODO: Clean this up!
-def saveint(i: Any) -> int:
+def saveint(i: str | None) -> int:
+    if i is None:
+        return 0
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except ValueError:
         return 0

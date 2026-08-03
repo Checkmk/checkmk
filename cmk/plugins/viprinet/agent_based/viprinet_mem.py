@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import NewType
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -17,31 +19,23 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
-
-def saveint(i: str) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
-    try:
-        return int(i)
-    except (TypeError, ValueError):
-        return 0
+MemoryUsedInBytes = NewType("MemoryUsedInBytes", int)
 
 
-def parse_viprinet_mem(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_viprinet_mem(string_table: StringTable) -> MemoryUsedInBytes | None:
+    match string_table:
+        case [[str(value)]] if value.isdigit():
+            return MemoryUsedInBytes(int(value))
+        case _:
+            return None
 
 
-def discover_viprinet_mem(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
+def discover_viprinet_mem(section: MemoryUsedInBytes) -> DiscoveryResult:
+    yield Service()
 
 
-def check_viprinet_mem(section: StringTable) -> CheckResult:
-    yield Result(state=State.OK, summary=f"Memory used: {render.bytes(saveint(section[0][0]))}")
+def check_viprinet_mem(section: MemoryUsedInBytes) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Memory used: {render.bytes(section)}")
 
 
 snmp_section_viprinet_mem = SimpleSNMPSection(

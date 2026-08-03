@@ -15,29 +15,30 @@ from cmk.plugins.viprinet.agent_based.viprinet_mem import (
 _STRING_TABLE = [["1048576"]]
 
 
+@pytest.mark.parametrize(
+    "string_table",
+    [
+        pytest.param([], id="empty payload"),
+        pytest.param([[]], id="empty nested payload"),
+        pytest.param([["not-a-number"]], id="not a number"),
+    ],
+)
+def test_parse_viprinet_mem_empty_values(string_table: StringTable) -> None:
+    assert parse_viprinet_mem(string_table) is None
+
+
 def test_discover_viprinet_mem() -> None:
     section = parse_viprinet_mem(_STRING_TABLE)
+    assert section is not None
+
     assert list(discover_viprinet_mem(section)) == [Service()]
 
 
-def test_discover_viprinet_mem_no_data() -> None:
-    section = parse_viprinet_mem([])
-    assert list(discover_viprinet_mem(section)) == []
+def test_check_viprinet_mem() -> None:
+    section = parse_viprinet_mem(_STRING_TABLE)
+    assert section is not None
 
+    value = list(check_viprinet_mem(section))
+    expected = [Result(state=State.OK, summary="Memory used: 1.00 MiB")]
 
-@pytest.mark.parametrize(
-    "string_table, expected",
-    [
-        (
-            [["1048576"]],
-            [Result(state=State.OK, summary="Memory used: 1.00 MiB")],
-        ),
-        (
-            [["not-a-number"]],
-            [Result(state=State.OK, summary="Memory used: 0 B")],
-        ),
-    ],
-)
-def test_check_viprinet_mem(string_table: StringTable, expected: list[Result]) -> None:
-    section = parse_viprinet_mem(string_table)
-    assert list(check_viprinet_mem(section)) == expected
+    assert value == expected

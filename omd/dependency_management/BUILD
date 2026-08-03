@@ -62,6 +62,7 @@ py_cmk_test(
     imports = ["."],
     deps = [
         requirement("pydantic"),
+        requirement("pyspdx"),
     ],
 )
 

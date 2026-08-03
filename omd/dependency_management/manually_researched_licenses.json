@@ -17,7 +17,7 @@
   "pkg:cpan/XML-SAX@0.99": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/base@2.18": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/common-sense@3.73": "Artistic-1.0-Perl OR GPL-1.0-or-later",
-  "pkg:deb/ubuntu/liblzma5@5.6.1%2Breally5.4.5-1?arch=amd64": "BSD0",
+  "pkg:deb/ubuntu/liblzma5@5.6.1%2Breally5.4.5-1?arch=amd64": "0BSD",
   "pkg:deb/ubuntu/base-files@13ubuntu10?arch=amd64": "GPL-2.0-or-later",
   "pkg:deb/ubuntu/bash@5.2.21-2ubuntu4?arch=amd64": "GPL-3.0-or-later",
   "pkg:deb/ubuntu/coreutils@9.4-3ubuntu6?arch=amd64": "GPL-3.0-or-later AND BSD-4-Clause-UC AND ISC",

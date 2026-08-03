@@ -3,25 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
-check_info = {}
 
-
-def check_viprinet_power(_no_item, params, info):
+def check_viprinet_power(section: StringTable) -> CheckResult:
     power_map = {
         "0": "no failure",
         "1": "a single PSU is out of order",
     }
-    power_info = power_map.get(info[0][0])
-    if power_info:
-        return (0, power_info)
-    return (3, "Invalid power status")
+
+    if power_info := power_map.get(section[0][0]):
+        yield Result(state=State.OK, summary=power_info)
+        return
+
+    yield Result(state=State.UNKNOWN, summary="Invalid power status")
 
 
 def parse_viprinet_power(string_table: StringTable) -> StringTable:
@@ -33,14 +39,19 @@ def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
         yield Service()
 
 
-check_info["viprinet_power"] = LegacyCheckDefinition(
+snmp_section_viprinet_power = SimpleSNMPSection(
     name="viprinet_power",
-    parse_function=parse_viprinet_power,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.2",
         oids=["5"],
     ),
+    parse_function=parse_viprinet_power,
+)
+
+
+check_plugin_viprinet_power = CheckPlugin(
+    name="viprinet_power",
     service_name="Power-Supply",
     discovery_function=discover_viprinet_power,
     check_function=check_viprinet_power,

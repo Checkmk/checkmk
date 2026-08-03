@@ -232,6 +232,7 @@ function addConditionInGroup(groupIndex: number, conditionIndex: number): void {
   editingId.value = condition.id
 }
 
+// A + after a group (outside the box) starts a new OR clause; a + inside adds AND.
 function addGroupAfter(groupIndex: number): void {
   if (!tryChangeFocus()) {
     return
@@ -345,102 +346,111 @@ function onGroupClickOutside(group: ConditionGroup): void {
       >
         {{ untranslated('OR') }}
       </button>
-      <div
-        v-if="group.conditions.length > 1"
-        v-click-outside="() => onGroupClickOutside(group)"
-        class="metric-backend-form-attribute-filter__group"
-        data-testid="attribute-filter-group"
-        :data-af-scope="isEntered(group) ? '' : undefined"
-        :tabindex="isEntered(group) ? -1 : 0"
-        :aria-label="_t('AND group of %{count} conditions', { count: group.conditions.length })"
-        @keydown="(e) => onGroupKeydown(e, group)"
-        @keydown.escape="(e) => onGroupEscape(e, group)"
-      >
-        <CmkIconButton
-          class="metric-backend-form-attribute-filter__remove-group"
-          name="close"
-          size="small"
-          data-af-item
-          :tabindex="isEntered(group) ? 0 : -1"
-          :title="_t('Remove group')"
-          :aria-label="_t('Remove group')"
-          @mousedown.prevent
-          @click="removeGroup(group)"
-        />
-        <template v-for="(condition, conditionIndex) in group.conditions" :key="condition.id">
-          <button
-            v-if="conditionIndex > 0"
-            type="button"
-            class="metric-backend-form-attribute-filter__connector"
-            data-af-item
-            :tabindex="isEntered(group) ? 0 : -1"
-            :aria-label="_t('Toggle connector, currently %{connector}', { connector: 'AND' })"
-            :title="_t('Toggle AND / OR')"
-            @mousedown.prevent
-            @click="splitGroup(groupIndex, conditionIndex)"
-          >
-            {{ untranslated('AND') }}
-          </button>
-          <AttributeFilterPill
-            :ref="pillRefSetter(condition.id)"
-            :condition="condition"
-            :operators="operators"
-            :query-suggestions="querySuggestions"
-            :query-value-suggestions="queryValueSuggestions"
-            removable
-            :editing="condition.id === editingId"
-            :tab-focusable="isEntered(group)"
-            @remove="removeCondition(condition)"
-            @edit="startEditing(condition.id)"
-            @done="onEditDone(condition.id)"
-            @update:key="(value) => updateKey(condition, value)"
-            @update:attribute-kind="(value) => updateAttributeKind(condition, value)"
-            @update:operator="(value) => updateOperator(condition, value)"
-            @update:value="(value) => updateValue(condition, value)"
-          />
+      <template v-if="group.conditions.length > 1">
+        <div
+          v-click-outside="() => onGroupClickOutside(group)"
+          class="metric-backend-form-attribute-filter__group"
+          data-testid="attribute-filter-group"
+          :data-af-scope="isEntered(group) ? '' : undefined"
+          :tabindex="isEntered(group) ? -1 : 0"
+          :aria-label="_t('AND group of %{count} conditions', { count: group.conditions.length })"
+          @keydown="(e) => onGroupKeydown(e, group)"
+          @keydown.escape="(e) => onGroupEscape(e, group)"
+        >
           <CmkIconButton
-            class="metric-backend-form-attribute-filter__add"
-            name="add"
-            size="large"
+            class="metric-backend-form-attribute-filter__remove-group"
+            name="close"
+            size="small"
             data-af-item
             :tabindex="isEntered(group) ? 0 : -1"
-            :title="_t('Add condition')"
-            :aria-label="addConditionLabel(condition)"
+            :title="_t('Remove group')"
+            :aria-label="_t('Remove group')"
             @mousedown.prevent
-            @click="addConditionInGroup(groupIndex, conditionIndex)"
+            @click="removeGroup(group)"
           />
-        </template>
-      </div>
-      <AttributeFilterPill
-        v-else
-        :ref="pillRefSetter(group.conditions[0]!.id)"
-        :condition="group.conditions[0]!"
-        :operators="operators"
-        :query-suggestions="querySuggestions"
-        :query-value-suggestions="queryValueSuggestions"
-        removable
-        :editing="group.conditions[0]!.id === editingId"
-        @remove="removeCondition(group.conditions[0]!)"
-        @edit="startEditing(group.conditions[0]!.id)"
-        @done="onEditDone(group.conditions[0]!.id)"
-        @update:key="(value) => updateKey(group.conditions[0]!, value)"
-        @update:attribute-kind="(value) => updateAttributeKind(group.conditions[0]!, value)"
-        @update:operator="(value) => updateOperator(group.conditions[0]!, value)"
-        @update:value="(value) => updateValue(group.conditions[0]!, value)"
-      />
-      <CmkIconButton
-        class="metric-backend-form-attribute-filter__add"
-        name="add"
-        size="large"
-        :title="_t('Add condition')"
-        :aria-label="
-          group.conditions.length > 1
-            ? _t('Add condition after this group')
-            : addConditionLabel(group.conditions[0]!)
-        "
-        @mousedown.prevent
-        @click="addGroupAfter(groupIndex)"
-      />
+          <template v-for="(condition, conditionIndex) in group.conditions" :key="condition.id">
+            <button
+              v-if="conditionIndex > 0"
+              type="button"
+              class="metric-backend-form-attribute-filter__connector"
+              data-af-item
+              :tabindex="isEntered(group) ? 0 : -1"
+              :aria-label="_t('Toggle connector, currently %{connector}', { connector: 'AND' })"
+              :title="_t('Toggle AND / OR')"
+              @mousedown.prevent
+              @click="splitGroup(groupIndex, conditionIndex)"
+            >
+              {{ untranslated('AND') }}
+            </button>
+            <AttributeFilterPill
+              :ref="pillRefSetter(condition.id)"
+              :condition="condition"
+              :operators="operators"
+              :query-suggestions="querySuggestions"
+              :query-value-suggestions="queryValueSuggestions"
+              removable
+              :editing="condition.id === editingId"
+              :tab-focusable="isEntered(group)"
+              @remove="removeCondition(condition)"
+              @edit="startEditing(condition.id)"
+              @done="onEditDone(condition.id)"
+              @update:key="(value) => updateKey(condition, value)"
+              @update:attribute-kind="(value) => updateAttributeKind(condition, value)"
+              @update:operator="(value) => updateOperator(condition, value)"
+              @update:value="(value) => updateValue(condition, value)"
+            />
+            <CmkIconButton
+              class="metric-backend-form-attribute-filter__add"
+              name="add"
+              size="large"
+              data-af-item
+              :tabindex="isEntered(group) ? 0 : -1"
+              :title="_t('Add condition')"
+              :aria-label="addConditionLabel(condition)"
+              @mousedown.prevent
+              @click="addConditionInGroup(groupIndex, conditionIndex)"
+            />
+          </template>
+        </div>
+        <!-- After-group +: starts a new OR clause. The per-pill +s inside the box add AND. -->
+        <CmkIconButton
+          class="metric-backend-form-attribute-filter__add"
+          name="add"
+          size="large"
+          :title="_t('Add condition')"
+          :aria-label="_t('Add condition after this group')"
+          @mousedown.prevent
+          @click="addGroupAfter(groupIndex)"
+        />
+      </template>
+      <template v-else>
+        <AttributeFilterPill
+          :ref="pillRefSetter(group.conditions[0]!.id)"
+          :condition="group.conditions[0]!"
+          :operators="operators"
+          :query-suggestions="querySuggestions"
+          :query-value-suggestions="queryValueSuggestions"
+          removable
+          :editing="group.conditions[0]!.id === editingId"
+          @remove="removeCondition(group.conditions[0]!)"
+          @edit="startEditing(group.conditions[0]!.id)"
+          @done="onEditDone(group.conditions[0]!.id)"
+          @update:key="(value) => updateKey(group.conditions[0]!, value)"
+          @update:attribute-kind="(value) => updateAttributeKind(group.conditions[0]!, value)"
+          @update:operator="(value) => updateOperator(group.conditions[0]!, value)"
+          @update:value="(value) => updateValue(group.conditions[0]!, value)"
+        />
+        <!-- Adding to a lone pill joins it into an AND group; OR needs a second pill first. -->
+        <CmkIconButton
+          class="metric-backend-form-attribute-filter__add"
+          name="add"
+          size="large"
+          :title="_t('Add condition')"
+          :aria-label="addConditionLabel(group.conditions[0]!)"
+          @mousedown.prevent
+          @click="addConditionInGroup(groupIndex, 0)"
+        />
+      </template>
     </template>
     <!-- AND-only mode: flat pills joined by a static AND label, no group box or connector toggles. -->
     <template v-for="(condition, index) in allowOr ? [] : flatConditions" :key="condition.id">

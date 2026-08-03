@@ -335,21 +335,22 @@ test('empty-state add button creates a single row with documented defaults', asy
   expect(conditions[0]!.id.length).toBeGreaterThan(0)
 })
 
-test('per-pill add button inserts a fresh row after it as a new OR clause, leaving siblings intact', async () => {
+test('per-pill add button inserts a fresh AND-joined row after it, leaving the other clause intact', async () => {
   const { model } = renderForm(makeModel())
   await userEvent.click(
     screen.getByRole('button', { name: 'Add condition after previous condition' })
   )
 
-  // makeModel is two OR clauses; adding after the first opens a third clause.
-  expect(model.value).toHaveLength(3)
-  const conditions = conditionsOf(model.value!)
-  expect(conditions[0]!.id).toBe('pill-a')
-  expect(conditions[2]!.id).toBe('pill-b')
-  expect(conditions[1]).toMatchObject({ attributeKind: null, key: '', operator: 'eq', value: '' })
-  expect(conditions[1]!.id).toEqual(expect.any(String))
-  expect(conditions[1]!.id).not.toBe('pill-a')
-  expect(conditions[1]!.id).not.toBe('pill-b')
+  // makeModel is two OR clauses; adding defaults to AND, so the first clause
+  // grows to two conditions and the second OR clause is left untouched.
+  expect(model.value).toHaveLength(2)
+  expect(model.value![0]!.conditions.map((c) => c.id)).toEqual(['pill-a', expect.any(String)])
+  expect(model.value![1]!.conditions.map((c) => c.id)).toEqual(['pill-b'])
+  const fresh = model.value![0]!.conditions[1]!
+  expect(fresh).toMatchObject({ attributeKind: null, key: '', operator: 'eq', value: '' })
+  expect(fresh.id).toEqual(expect.any(String))
+  expect(fresh.id).not.toBe('pill-a')
+  expect(fresh.id).not.toBe('pill-b')
 })
 
 test('value is preserved when switching between two comparison operators', async () => {
@@ -818,9 +819,11 @@ describe('combined group keyboard stop', () => {
     renderForm(TWO_PILL_AND)
     const group = await expandGroup()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Add condition after this group' }))
+    dispatchOutsideClick()
 
-    expect(group).toHaveAttribute('tabindex', '0')
+    await waitFor(() => {
+      expect(group).toHaveAttribute('tabindex', '0')
+    })
     expect(within(group).getByRole('button', { name: 'Remove group' })).toHaveAttribute(
       'tabindex',
       '-1'
@@ -970,14 +973,11 @@ test("newly added pill via '+' starts in edit mode", async () => {
     screen.getByRole('button', { name: 'Add condition after previous condition' })
   )
 
-  expect(model.value).toHaveLength(3)
-  const pills = pillsInOrder()
-  expect(pills).toHaveLength(3)
-  expect(within(pills[0]!).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
-  expect(
-    within(pills[1]!).getByRole('combobox', { name: 'Attribute operator' })
-  ).toBeInTheDocument()
-  expect(within(pills[2]!).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
+  // group-a gains the fresh AND-joined pill; the two originals stay read-only.
+  expect(model.value).toHaveLength(2)
+  expect(conditionsOf(model.value!)).toHaveLength(3)
+  expect(screen.getAllByRole('combobox', { name: 'Attribute operator' })).toHaveLength(1)
+  expect(screen.getAllByRole('button', { name: /^Edit condition:/ })).toHaveLength(2)
 })
 
 test("a freshly added pill via '+' does not display validation errors", async () => {
@@ -986,10 +986,11 @@ test("a freshly added pill via '+' does not display validation errors", async ()
     screen.getByRole('button', { name: 'Add condition after previous condition' })
   )
 
-  const freshPill = pillsInOrder()[1]!
+  // The fresh pill is the only one in edit mode, so its fields are the only comboboxes.
   for (const label of ['Attribute key', 'Attribute operator', 'Attribute value']) {
-    expect(field(freshPill, label)).not.toHaveClass(ERROR_CLASS)
-    expect(field(freshPill, label)).not.toHaveTextContent('(required)')
+    const combobox = screen.getByRole('combobox', { name: label })
+    expect(combobox).not.toHaveClass(ERROR_CLASS)
+    expect(combobox).not.toHaveTextContent('(required)')
   }
 })
 
@@ -1146,7 +1147,7 @@ test('every pill in an AND group has a per-pill + that inserts an AND pill at th
   expect(within(groups[0]!).getAllByRole('group')).toHaveLength(3)
 })
 
-test('the after-group + starts a new OR clause that renders as a bare pill', async () => {
+test('the after-group + (outside the box) starts a new OR clause that renders as a bare pill', async () => {
   const { model } = renderForm([
     conditionGroup(
       'g',

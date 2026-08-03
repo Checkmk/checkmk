@@ -95,6 +95,7 @@ function fetchDataResponse(series: { sourceId: string; points: number[] }[]): un
       render: { stack: null, inverse: false, hidden: false },
       data_points: points
     })),
+    group_titles: [],
     horizontal_lines: []
   }
 }
@@ -170,7 +171,12 @@ beforeEach(() => {
   mockGraphGet()
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue(
-    okResponse({ time_range: { start: 0, end: 3600, step: 60 }, metrics: [], horizontal_lines: [] })
+    okResponse({
+      time_range: { start: 0, end: 3600, step: 60 },
+      metrics: [],
+      group_titles: [],
+      horizontal_lines: []
+    })
   )
   putSpy = vi.spyOn(client, 'PUT')
   putSpy.mockResolvedValue(okResponse(graphObject(), '"etag-2"'))
@@ -343,6 +349,7 @@ test('edit mode fetches hidden rows as visible and shows their stats', async () 
         : okResponse({
             time_range: { start: 0, end: 3600, step: 60 },
             metrics: [],
+            group_titles: [],
             horizontal_lines: []
           })
     )

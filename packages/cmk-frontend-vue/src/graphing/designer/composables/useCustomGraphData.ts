@@ -48,6 +48,7 @@ export interface CustomGraphData {
   metrics: Readonly<Ref<CustomGraphMetric[]>>
   /** The same series grouped by the data-source row that produced them. */
   metricsBySource: Readonly<Ref<Map<ItemId, Metric[]>>>
+  groupTitlesBySource: Readonly<Ref<Map<ItemId, string>>>
   dataTimeRange: Readonly<Ref<TimeRange | undefined>>
   horizontalLines: Readonly<Ref<HorizontalLine[]>>
   overview: Readonly<Ref<OverviewData | undefined>>
@@ -82,6 +83,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
 
   const metrics = ref<CustomGraphMetric[]>([])
   const metricsBySource = ref<Map<ItemId, Metric[]>>(new Map())
+  const groupTitlesBySource = ref<Map<ItemId, string>>(new Map())
   const dataTimeRange = ref<TimeRange | undefined>(undefined)
   const horizontalLines = ref<HorizontalLine[]>([])
   const overview = ref<OverviewData | undefined>(undefined)
@@ -102,6 +104,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   function clear(): void {
     metrics.value = []
     metricsBySource.value = new Map()
+    groupTitlesBySource.value = new Map()
     dataTimeRange.value = undefined
     horizontalLines.value = []
     overview.value = undefined
@@ -152,6 +155,9 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       }
       metrics.value = [...main.metrics]
       metricsBySource.value = groupBySource(main.metrics)
+      groupTitlesBySource.value = new Map(
+        main.group_titles.map((groupTitle) => [groupTitle.source_id, groupTitle.title])
+      )
       dataTimeRange.value = main.time_range
       horizontalLines.value = main.horizontal_lines
       overview.value =
@@ -215,6 +221,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   return {
     metrics,
     metricsBySource,
+    groupTitlesBySource,
     dataTimeRange,
     horizontalLines,
     overview,

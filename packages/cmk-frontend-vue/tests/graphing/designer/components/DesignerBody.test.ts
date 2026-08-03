@@ -109,6 +109,7 @@ function fetchDataResponse(): unknown {
     data: {
       time_range: { start: 0, end: 3600, step: 60 },
       metrics: [metric('A', 'metric-a', 'CPU'), metric('B', 'metric-b', 'Memory')],
+      group_titles: [],
       horizontal_lines: []
     },
     error: undefined,

@@ -43,7 +43,10 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function fetchResponse(sourceIds: string[] = ['A']): unknown {
+function fetchResponse(
+  sourceIds: string[] = ['A'],
+  groupTitles: { source_id: string; title: string }[] = []
+): unknown {
   return {
     time_range: { start: 0, end: 3600, step: 60 },
     metrics: sourceIds.map((sourceId) => ({
@@ -63,6 +66,7 @@ function fetchResponse(sourceIds: string[] = ['A']): unknown {
       render: { stack: null, inverse: false, hidden: false },
       data_points: [1.0, 2.0]
     })),
+    group_titles: groupTitles,
     horizontal_lines: []
   }
 }
@@ -111,6 +115,18 @@ test('fetches immediately on mount and exposes the mapped response', async () =>
   expect(data.dataTimeRange.value).toEqual({ start: 0, end: 3600, step: 60 })
   expect(data.metricsBySource.value.get('A')).toHaveLength(1)
   expect(data.overview.value).toBeUndefined()
+})
+
+test('maps the response group titles by source id', async () => {
+  postSpy.mockImplementation(async () => ({
+    data: fetchResponse(['B'], [{ source_id: 'B', title: 'CPU load - <HOST_NAME>' }]),
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }))
+  const { data } = mount([rrdMetricItem('B')])
+  await flush()
+
+  expect(data.groupTitlesBySource.value.get('B')).toBe('CPU load - <HOST_NAME>')
 })
 
 test('fetches hidden rows as visible so their stats are available', async () => {

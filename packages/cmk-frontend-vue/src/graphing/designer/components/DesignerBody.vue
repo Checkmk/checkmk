@@ -289,7 +289,11 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
         </template>
         <template #tab-contents>
           <CmkTabContent id="appearance" class="graphing-designer-body__tab-panel">
-            <AppearanceTable :store="store" :metrics-by-source="data.metricsBySource.value" />
+            <AppearanceTable
+              :store="store"
+              :metrics-by-source="data.metricsBySource.value"
+              :group-titles-by-source="data.groupTitlesBySource.value"
+            />
           </CmkTabContent>
           <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
             <MetricsTable

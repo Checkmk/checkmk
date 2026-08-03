@@ -30,10 +30,12 @@ import type { DesignerItem } from '../drafts'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
 import StatsCells from './StatsCells.vue'
 
-const { store, metricsBySource } = defineProps<{
+const { store, metricsBySource, groupTitlesBySource } = defineProps<{
   store: GraphItemsStore
   /** Fetched series per data-source row, for the live-data columns. */
   metricsBySource: Map<ItemId, Metric[]>
+  /** Representative titles for group (fan-out) rows, macros filled with placeholders. */
+  groupTitlesBySource: Map<ItemId, string>
 }>()
 
 const { _t } = usei18n()
@@ -135,7 +137,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           vertical-align="middle"
           :expanded="expandedRows[row.id] === true"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
-          >{{ row.title }}</CollapsibleCell
+          >{{ groupTitlesBySource.get(row.id) ?? row.title }}</CollapsibleCell
         >
         <DropdownCell
           column-id="line_style"

@@ -33,9 +33,16 @@ function metric(name: string, points: (number | null)[], color = '#123456'): Met
   }
 }
 
-function renderTable(seed: DesignerItem[], metricsBySource: Map<ItemId, Metric[]>) {
+function renderTable(
+  seed: DesignerItem[],
+  metricsBySource: Map<ItemId, Metric[]>,
+  groupTitlesBySource: Map<ItemId, string> = new Map()
+) {
   const store = useGraphItems(PALETTE, seed)
-  return { store, ...render(AppearanceTable, { props: { store, metricsBySource } }) }
+  return {
+    store,
+    ...render(AppearanceTable, { props: { store, metricsBySource, groupTitlesBySource } })
+  }
 }
 
 test('shows the stats of rows that map to exactly one series', () => {
@@ -75,6 +82,16 @@ test('falls back to the stored title when a single-line row has no series', () =
   expect(screen.getByText('Custom raw title')).toBeInTheDocument()
 })
 
+test('shows the resolved group title for a multi-line row when provided', () => {
+  renderTable(
+    [rrdQueryItem('B', { title: '$DEFAULT_TITLE$' })],
+    new Map(),
+    new Map([['B', 'CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>']])
+  )
+  expect(screen.getByText('CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>')).toBeInTheDocument()
+  expect(screen.queryByText('$DEFAULT_TITLE$')).not.toBeInTheDocument()
+})
+
 test('expands a multi-line row into one legend-styled row per resolved line', async () => {
   const { container } = renderTable(
     [rrdQueryItem('B', { title: 'Query B' })],
@@ -83,7 +100,6 @@ test('expands a multi-line row into one legend-styled row per resolved line', as
     ])
   )
 
-  // The multi-line row keeps its raw stored title (only single-line rows resolve).
   expect(screen.getByText('Query B')).toBeInTheDocument()
   expect(screen.queryByText('line one')).not.toBeInTheDocument()
   expect(screen.queryByText('10')).not.toBeInTheDocument()

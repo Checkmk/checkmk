@@ -349,9 +349,9 @@ mailing-lists.
 
 You can check out the different states with the following hashes:
 local state:
-{local}
+{local!r}
 remote state:
-{remote}
+{remote!r}
 """
         ) from e
 

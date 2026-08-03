@@ -6,7 +6,7 @@
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Final, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -32,7 +32,6 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 # Matches absolute paths on Unix (/...), env var references ($VAR or ${VAR}),
 # and absolute Windows paths (C:\... or C:/...).
 USE_HOST_CLIENT_PATH_RE = r"^(/|\$[\w{]|[a-zA-Z]:[/\\]).*"
-WINDOWS_ONLY: Final = "(Windows only)"
 
 
 class Affinity(StrEnum):
@@ -557,22 +556,25 @@ def _discovery() -> Dictionary:
 
 def _permissions() -> CascadingSingleChoice:
     return CascadingSingleChoice(
-        title=Title("Oracle binaries permissions check %(WINDOWS_ONLY)s")
-        % {"WINDOWS_ONLY": WINDOWS_ONLY},
+        title=Title("Oracle binaries permissions check"),
         help_text=Help(
-            "Due to security reasons the plug-in being executed as admin will check "
-            "permissions for Oracle executables. If the modification of Oracle binaries "
-            "is allowed for non-admin users or groups then the plug-in stops processing "
-            "thus breaking Oracle monitoring: execution of normal user code at "
-            "elevated level means security vulnerability. "
-            "You may <tt>disable</tt> this option if it is the only method to "
-            "continue monitoring the Oracle database. "
-            "Usually you need to <tt>disable</tt> the option only in the following case: "
-            "It's impossible to correctly adjust permissions for Oracle binaries, "
-            "mode group with group Administrator is not applicable and "
-            "it is not possible to use a custom account to monitor the Oracle database. "
-            "Even if the check is enabled you may allow some groups and/or users to "
-            "still have write access to the Oracle binaries."
+            "For security reasons the plug-in checks the permissions of the Oracle client "
+            "files it is about to load, because loading them as an administrative user means "
+            "executing whoever may write them with those privileges. If they can be modified "
+            "from outside the Oracle installation, the plug-in stops processing and Oracle "
+            "monitoring breaks. "
+            "On Windows the client files may only be writable by privileged accounts "
+            "(SYSTEM, the local Administrators group, Domain and Enterprise Admins). "
+            "On Linux and UNIX the client library, its directory and their parent "
+            "directories may only be writable by <tt>root</tt> or by the conventional Oracle "
+            "owner, the user <tt>oracle</tt> and the group <tt>oinstall</tt>, so a standard "
+            "installation works unchanged. Oracle software kept under any other account or "
+            "group has to be allowed explicitly below. "
+            "You may <tt>disable</tt> this option if it is the only way to continue "
+            "monitoring the Oracle database - typically when the permissions cannot be "
+            "corrected and no dedicated account can be used to monitor it. "
+            "Even with the check enabled you may allow specific groups and/or users to have "
+            "write access to the Oracle client files."
         ),
         prefill=DefaultValue("enabled"),
         elements=[
@@ -585,6 +587,10 @@ def _permissions() -> CascadingSingleChoice:
                             required=False,
                             parameter_form=List(
                                 title=Title("Safe groups and/or users"),
+                                help_text=Help(
+                                    "Account names on Windows, user or group names - or "
+                                    "numeric IDs - on Linux and UNIX."
+                                ),
                                 element_template=String(),
                                 add_element_label=Label("Add new group or user"),
                                 editable_order=False,

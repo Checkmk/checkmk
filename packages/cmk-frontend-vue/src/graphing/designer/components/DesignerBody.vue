@@ -14,7 +14,7 @@ import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTab
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../../GlobalRefreshControl/useGlobalRefresh'
 import GraphPanel from '../../components/GraphPanel.vue'
@@ -30,6 +30,7 @@ import { fromApiDataSource, isComplete, toApiDataSources } from '../drafts'
 import type { FormulaDraft, ItemId } from '../types'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
+import DesignerSettings from './DesignerSettings.vue'
 import MetricsTable from './MetricsTable.vue'
 
 /** Fallback until the container is measured (e.g. non-DOM test environments). */
@@ -62,6 +63,8 @@ const emit = defineEmits<{
   saved: [graph: CustomGraphObject, etag: string | null]
 }>()
 
+const displaySettings = defineModel<boolean>('displaySettings', { default: false })
+
 const { _t } = usei18n()
 
 const store = useGraphItems(palette, graph.extensions.content.data_sources.map(fromApiDataSource))
@@ -85,9 +88,11 @@ const { observe } = useResizeObserver((entries) => {
 })
 observe(graphContainer)
 
+const graphOptions = reactive(graph.extensions.content.graph_options)
+
 const data = useCustomGraphData({
   getItems: () => store.items.value,
-  getGraphOptions: () => graph.extensions.content.graph_options,
+  getGraphOptions: () => graphOptions,
   getRequestedTimeRange: () => requestedTimeRange.value,
   getConsolidationFn: () => consolidationFn.value,
   getFigureWidth: () => figureWidth.value,
@@ -170,7 +175,7 @@ async function save(): Promise<void> {
         title: graph.title ?? graphName,
         metadata: graph.extensions.metadata,
         content: {
-          graph_options: graph.extensions.content.graph_options,
+          graph_options: graphOptions,
           data_sources: toApiDataSources(store.items.value)
         }
       },
@@ -205,6 +210,11 @@ function onCalculationUpdate(id: ItemId, draft: FormulaDraft, refVisibility: Ref
 }
 
 const calculationDelete = useDeleteWithDependents(store)
+
+const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
+  Object.assign(graphOptions, newGraphOptions)
+  displaySettings.value = false
+}
 </script>
 
 <template>
@@ -212,6 +222,12 @@ const calculationDelete = useDeleteWithDependents(store)
     <CmkAlertBox v-if="data.error.value !== null" variant="error">
       {{ data.error.value }}
     </CmkAlertBox>
+
+    <DesignerSettings
+      v-model:open="displaySettings"
+      :graph-options="graphOptions"
+      @update-settings="onSettingsUpdate"
+    />
 
     <GraphPanel
       v-model:hidden-metric-names="hiddenMetricNames"

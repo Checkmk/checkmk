@@ -5,10 +5,21 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { defineComponent, h } from 'vue'
 
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
+
+vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
+  default: defineComponent({
+    name: 'CmkSlideIn',
+    props: { open: { type: Boolean, required: true } },
+    setup(props, { slots }) {
+      return () => (props.open ? h('div', { 'data-testid': 'slide-in' }, slots.default?.()) : null)
+    }
+  })
+}))
 
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
@@ -113,7 +124,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function renderBody(mode: 'view' | 'edit') {
+function renderBody(mode: 'view' | 'edit', overrides: { displaySettings?: boolean } = {}) {
   return render(DesignerBody, {
     props: {
       graph: graphObject(),
@@ -124,7 +135,8 @@ function renderBody(mode: 'view' | 'edit') {
       palette: PALETTE,
       thresholds: { warning: '#ffd000', critical: '#ff3232' },
       metricBackendAvailable: false,
-      titleMacros: []
+      titleMacros: [],
+      ...overrides
     }
   })
 }
@@ -169,4 +181,50 @@ test('edit mode renders the config tabs beneath the preview, not the legend', as
   expect(await screen.findByRole('tab', { name: 'Graph appearance' })).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: 'Metrics selection' })).toBeInTheDocument()
   expect(container.querySelector('.graphing-graph-legend')).toBeNull()
+})
+
+describe('settings slide-out', () => {
+  test('is closed by default', () => {
+    renderBody('edit')
+
+    expect(screen.queryByRole('heading', { name: 'Custom graph settings' })).not.toBeInTheDocument()
+  })
+
+  test('opens when displaySettings is set, reflecting the current graph options', async () => {
+    renderBody('edit', { displaySettings: true })
+
+    expect(
+      await screen.findByRole('heading', { name: 'Custom graph settings' })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Show zero values' })).toBeChecked()
+  })
+
+  test('accepting a change closes the panel and persists it on the shared graph options', async () => {
+    const { emitted, rerender } = renderBody('edit', { displaySettings: true })
+
+    await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
+    await fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
+
+    // DesignerBody's onSettingsUpdate closes the panel via the displaySettings v-model.
+    expect(emitted()['update:displaySettings']).toEqual([[false]])
+
+    // Re-opening it shows the edited value was written back to the shared graph options
+    // (via Object.assign), not just kept in the settings panel's own local draft.
+    // (The test has to drive the model through the same false -> true transition a real
+    // parent would, since rerender() only reacts to an actual prop change.)
+    await rerender({ displaySettings: false })
+    await rerender({ displaySettings: true })
+    expect(await screen.findByRole('checkbox', { name: 'Show zero values' })).not.toBeChecked()
+  })
+
+  test('cancelling discards the change instead of persisting it', async () => {
+    const { rerender } = renderBody('edit', { displaySettings: true })
+
+    await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    await rerender({ displaySettings: false })
+    await rerender({ displaySettings: true })
+    expect(await screen.findByRole('checkbox', { name: 'Show zero values' })).toBeChecked()
+  })
 })

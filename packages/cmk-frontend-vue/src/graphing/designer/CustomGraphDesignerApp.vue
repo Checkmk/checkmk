@@ -50,6 +50,7 @@ const loadCounter = ref(0)
 const { loadFilterDefinitions } = useProvideFilterDefinitions()
 const filtersReady = ref(false)
 const filtersError = ref<string | null>(null)
+const displaySettings = ref<boolean>(false)
 
 const ownerParam = computed(() =>
   current.value.owner === props.logged_in_user ? undefined : current.value.owner
@@ -186,6 +187,7 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
         @save="bodyRef?.save()"
         @cancel-edit="onCancelEdit"
         @graph-change="onGraphChange"
+        @enter-settings="() => (displaySettings = true)"
       />
     </header>
 
@@ -202,6 +204,7 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
         v-else
         :key="`${current.owner}/${current.name}/${loadCounter}`"
         ref="bodyRef"
+        v-model:display-settings="displaySettings"
         :graph="graph"
         :graph-name="current.name"
         :etag="etag"

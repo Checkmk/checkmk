@@ -20,6 +20,10 @@ export type FetchCustomGraphDataRequest = components['schemas']['FetchCustomGrap
 /** One evaluated series with the id of the data source that produced it. */
 export type CustomGraphMetric = components['schemas']['CustomGraphMetric']
 
+export type CustomGraphOptions = components['schemas']['CustomGraphOptions']
+export type CustomGraphUnitNotationTypes =
+  components['schemas']['CustomGraphUnitNotationWithSymbol']['notation']
+
 const CONTENT_TYPE_HEADER = { 'Content-Type': 'application/json' } as const
 
 /** Path and optional `owner`-query params; `owner` is omitted, not `undefined`, for `exactOptionalPropertyTypes`. */

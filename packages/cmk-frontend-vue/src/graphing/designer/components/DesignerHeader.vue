@@ -29,6 +29,7 @@ const emit = defineEmits<{
   save: []
   'cancel-edit': []
   'graph-change': [graph: SelectableGraph]
+  'enter-settings': []
 }>()
 
 const { _t } = usei18n()
@@ -66,6 +67,11 @@ const range = computed<DateTimeRange>({
         </CmkButton>
       </template>
       <template v-else>
+        <CmkButton variant="optional" @click="emit('enter-settings')">
+          <CmkIcon name="global-settings" variant="inline" size="small" />
+          {{ _t('Settings') }}
+        </CmkButton>
+        <div class="graphing-designer-header__separator" />
         <CmkButton variant="primary" @click="emit('save')">
           {{ _t('Save') }}
         </CmkButton>
@@ -107,5 +113,13 @@ const range = computed<DateTimeRange>({
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
+}
+
+.graphing-designer-header__separator {
+  align-self: stretch;
+  width: var(--dimension-1);
+  padding: 0 var(--dimension-4);
+  background-color: var(--button-optional-border-color);
+  background-clip: content-box;
 }
 </style>

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -128,7 +129,9 @@ onMounted(() => {
     >
       <CmkHeading type="h4" class="result-heading">
         {{ _t('Recently searched') }}
-        <button
+        <CmkButton
+          variant="text"
+          size="small"
           @click.stop="
             () => {
               searchUtils.history?.resetQueries()
@@ -138,7 +141,7 @@ onMounted(() => {
           "
         >
           {{ _t('Clear all') }}
-        </button>
+        </CmkButton>
       </CmkHeading>
       <ResultList>
         <ResultItem
@@ -170,23 +173,6 @@ onMounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-}
-
-button {
-  font-weight: var(--font-weight-default);
-  background: transparent;
-  margin-right: 0;
-  text-decoration: underline;
-  border: 1px solid transparent;
-
-  &:hover {
-    background-color: var(--ux-theme-5);
-    text-decoration: none;
-  }
-
-  &:focus {
-    border: 1px solid var(--success);
-  }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

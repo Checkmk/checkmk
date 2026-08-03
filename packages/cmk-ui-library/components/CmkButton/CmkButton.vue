@@ -212,6 +212,24 @@ defineEmits(['click'])
   }
 }
 
+.cmk-button--variant-text {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+  font-weight: var(--font-weight-default);
+  text-decoration: underline;
+
+  &:hover:not(.cmk-button--disabled) {
+    background-color: var(--ux-theme-5);
+    text-decoration: none;
+  }
+
+  &:focus-visible:not(.cmk-button--disabled) {
+    outline: none;
+    border: 1px solid var(--success);
+  }
+}
+
 .cmk-button--disabled,
 button.cmk-button:disabled {
   opacity: 0.5;

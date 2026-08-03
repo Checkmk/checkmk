@@ -37,7 +37,8 @@ export const panelConfig = {
       { title: 'Success', name: 'success' },
       { title: 'Warning', name: 'warning' },
       { title: 'Danger', name: 'danger' },
-      { title: 'Info', name: 'info' }
+      { title: 'Info', name: 'info' },
+      { title: 'Text', name: 'text' }
     ] satisfies Options<ButtonVariants['variant']>[],
     initialState: 'optional' as const
   },

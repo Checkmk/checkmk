@@ -269,9 +269,14 @@ onBeforeUnmount(() => {
       @focusout="onFocusOut"
     >
       <div class="monitoring-filter-dropdown__content">
-        <button class="monitoring-filter-dropdown__clear" @click="clear">
+        <CmkButton
+          variant="text"
+          size="small"
+          class="monitoring-filter-dropdown__clear"
+          @click="clear"
+        >
           {{ props.clearLabel ?? _t('Clear') }}
-        </button>
+        </CmkButton>
 
         <hr class="monitoring-filter-dropdown__content-row-separator" />
 
@@ -322,18 +327,8 @@ onBeforeUnmount(() => {
 }
 
 .monitoring-filter-dropdown__clear {
-  border: 0;
-  background-color: transparent;
-  text-decoration: underline;
-  font-weight: var(--font-weight-default);
-  padding: 0;
   margin: var(--dimension-3);
   float: right;
-
-  &:hover {
-    text-decoration: none;
-    color: var(--cmk-link-hover-color);
-  }
 }
 
 .monitoring-filter-dropdown__content-row-separator {

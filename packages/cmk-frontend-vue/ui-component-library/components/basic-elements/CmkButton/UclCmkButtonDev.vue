@@ -60,6 +60,11 @@ defineProps<{ screenshotMode: boolean }>()
       <CmkButton variant="info" :disabled="true">info</CmkButton>
     </dd>
 
+    <dt><code>&lt;CmkButton variant="text"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton variant="text">button</CmkButton>
+    </dd>
+
     <dt>
       <code
         >&lt;CmkButton&gt;&lt;CmkIcon name="about-checkmk" variant="inline"

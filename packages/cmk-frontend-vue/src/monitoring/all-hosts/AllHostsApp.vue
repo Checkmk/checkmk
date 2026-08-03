@@ -350,12 +350,9 @@ function navigateToLegacy() {
             @deactivate="hostService.deactivateQuickFilter(chip)"
           />
         </div>
-        <button
-          class="monitoring-all-hosts-app__clear-filters"
-          @click="hostService.clearAllFilters()"
-        >
+        <CmkButton variant="text" size="small" @click="hostService.clearAllFilters()">
           {{ _t('Reset all filters') }}
-        </button>
+        </CmkButton>
       </div>
       <div class="monitoring-all-hosts-app__header-end">
         <RefreshCountdown
@@ -536,23 +533,6 @@ function navigateToLegacy() {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-4);
-}
-
-.monitoring-all-hosts-app__clear-filters {
-  border: 0;
-  background-color: transparent;
-  text-decoration: underline;
-  font-weight: var(--font-weight-default);
-  padding: 0;
-
-  &:focus-visible {
-    outline: 1px solid var(--success);
-    outline-offset: 2px;
-  }
-
-  &:hover {
-    color: var(--color-corporate-green-50);
-  }
 }
 
 .monitoring-all-hosts-app__split {

@@ -490,6 +490,7 @@ def available_by_owner(
 ) -> dict[VisualName, dict[UserId, TVisual]]:
     visuals: dict[VisualName, dict[UserId, TVisual]] = {}
     permprefix = what[:-1]
+    visuals_by_owner = sorted(all_visuals.items())
 
     def restricted_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}"
@@ -501,13 +502,13 @@ def available_by_owner(
 
     # 1. user's own visuals, if allowed to edit visuals
     if user.may("general.edit_" + what):
-        for (user_id, visual_name), visual in all_visuals.items():
+        for (user_id, visual_name), visual in visuals_by_owner:
             if user_id == user.id:
                 visuals.setdefault(visual_name, {})
                 visuals[visual_name][user_id] = visual
 
     # 2. visuals of special users allowed to globally override built-in visuals
-    for (user_id, visual_name), visual in all_visuals.items():
+    for (user_id, visual_name), visual in visuals_by_owner:
         # Honor original permissions for the current user
         if (
             visual_name not in visuals
@@ -520,7 +521,7 @@ def available_by_owner(
             visuals[visual_name][user_id] = visual
 
     # 3. Built-in visuals, if allowed.
-    for (user_id, visual_name), visual in all_visuals.items():
+    for (user_id, visual_name), visual in visuals_by_owner:
         if user_id == UserId.builtin() and user.may(f"{permprefix}.{visual_name}"):
             visuals.setdefault(visual_name, {})
             visuals[visual_name][user_id] = visual
@@ -529,7 +530,7 @@ def available_by_owner(
     #    for built-in visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
     if user.may("general.see_user_" + what):
-        for (user_id, visual_name), visual in all_visuals.items():
+        for (user_id, visual_name), visual in visuals_by_owner:
             # Is there a built-in visual with the same name? If yes, honor permissions.
             if (
                 visual_name not in visuals
@@ -541,7 +542,7 @@ def available_by_owner(
 
     # 5. packaged visuals
     if user.may("general.see_packaged_" + what):
-        for (user_id, visual_name), visual in all_visuals.items():
+        for (user_id, visual_name), visual in visuals_by_owner:
             if visual_name in visuals:
                 continue
             if not visual["packaged"]:

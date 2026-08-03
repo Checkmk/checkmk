@@ -28,9 +28,9 @@
 $CMK_VERSION = "2.5.0p12"
 
 function Show-Help {
-    Write-Host "Usage: GeneratePerDeviceReport.ps1 [-Server ServerName]"
-    Write-Host "If no ServerName is provided, then report generation"
-    Write-Host "is attempted at the host machine"
+    Write-Error "Usage: GeneratePerDeviceReport.ps1 [-Server ServerName]"
+    Write-Error "If no ServerName is provided, then report generation"
+    Write-Error "is attempted at the host machine"
     exit 1
 }
 
@@ -42,11 +42,11 @@ function Generate-PerDeviceReport {
     try {
         $ObjWMIService = Get-CimInstance -Namespace $NameSpace -ComputerName $ServerName -ClassName "Win32_TSLicenseKeyPack" -ErrorAction Stop
     } catch {
-        Write-Host "Unable to connect to the Namespace" -ForegroundColor Red
+        Write-Error "Unable to connect to the Namespace"
         exit 2
     }
     if ($ObjWMIService.Count -eq 0) {
-        Write-Host "No license key packs found" -ForegroundColor Red
+        Write-Error "No license key packs found"
         exit 5
     }
     Write-Host "<<<rds_licenses:sep(44)>>>"

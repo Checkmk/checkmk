@@ -286,6 +286,6 @@ def test_openapi_delete_non_existent_broker_connection(
 def test_openapi_list_broker_connections_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)
     res = clients.BrokerConnection.get_all(expect_ok=False)
     res.assert_status_code(403)

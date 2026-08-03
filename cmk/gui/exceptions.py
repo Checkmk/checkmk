@@ -47,6 +47,13 @@ class MKUnauthenticatedException(MKAuthException):
     pass
 
 
+class MKInsufficientScope(MKAuthException):
+    """A permission the user has, withheld by the credential they presented.
+
+    See RFC 6750 section 3.1: insufficient_scope.
+    """
+
+
 class MKConfigError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 

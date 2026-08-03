@@ -460,7 +460,7 @@ def test_openapi_endpoint_unauthenticated_stays_unauthorized(
 def test_audit_log_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)
     resp = clients.AuditLog.get_all(date="2017-07-21", expect_ok=False)
     resp.assert_status_code(403)
     assert "lack the permission" in resp.json["detail"]
@@ -469,7 +469,7 @@ def test_audit_log_permission_denied_is_forbidden(
 def test_pending_changes_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)
     resp = clients.ActivateChanges.list_pending_changes(expect_ok=False)
     resp.assert_status_code(403)
     assert "lack the permission" in resp.json["detail"]

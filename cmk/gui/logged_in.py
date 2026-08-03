@@ -25,7 +25,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import hooks
 from cmk.gui.authorization import request_authorization
 from cmk.gui.ctx_stack import session_attr
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import DismissableWarning, UserSpec
 from cmk.gui.utils.roles import UserPermissions
@@ -478,30 +478,45 @@ class LoggedInUser:
         hooks.call("permission-checked", permission_name)
         return they_may
 
-    def _may_by_roles(self, permission_name: str) -> bool:
-        return (
-            permission_name in self.explicitly_given_permissions
-        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
-
     def need_permission(self, permission: str | BasePerm) -> None:
         if isinstance(permission, BasePerm):
             for p in permission.iter_perms():
                 self.need_permission(p.name)
             return
 
-        if not self.may(permission):
-            perm = self._user_permissions._permissions.get(permission)
-            title = permission if perm is None else perm.title
-            log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
-            raise MKAuthException(
+        permitted_by_roles = self._may_by_roles(permission)
+        permitted_by_request = request_authorization().permits(permission)
+        hooks.call("permission-checked", permission)
+
+        if permitted_by_roles and permitted_by_request:
+            return
+
+        perm = self._user_permissions._permissions.get(permission)
+        title = permission if perm is None else perm.title
+        log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
+
+        if permitted_by_roles:
+            raise MKInsufficientScope(
                 _(
-                    "We are sorry, but you lack the permission "
-                    "for this operation. If you do not like this "
-                    "then please ask your administrator to provide you with "
-                    "the following permission: '<b>%(title)s</b>'."
+                    "The presented token scope was not granted the "
+                    "permission for this operation: '<b>%(title)s</b>'."
                 )
                 % {"title": title}
             )
+        raise MKAuthException(
+            _(
+                "We are sorry, but you lack the permission "
+                "for this operation. If you do not like this "
+                "then please ask your administrator to provide you with "
+                "the following permission: '<b>%(title)s</b>'."
+            )
+            % {"title": title}
+        )
+
+    def _may_by_roles(self, permission_name: str) -> bool:
+        return (
+            permission_name in self.explicitly_given_permissions
+        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
 
     def load_file(
         self,

@@ -27,6 +27,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
+from cmk.gui.utils import html
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -1878,6 +1879,12 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
 ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainCACertificates,
+    domain_hint=html.HTML.without_escaping(
+        _(
+            "Warning: changing these settings will affect all outgoing HTTPS requests, including "
+            "online license verification."
+        )
+    ),
     ident="trusted_certificate_authorities",
     valuespec=lambda context: Dictionary(
         title=_("Trusted certificate authorities for SSL"),

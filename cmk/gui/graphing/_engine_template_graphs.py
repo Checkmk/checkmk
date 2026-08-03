@@ -23,12 +23,10 @@ from cmk.graphing_engine import (
     RRDMetric,
 )
 from cmk.gui.config import active_config
+from cmk.gui.graphing._engine_codec import GraphCodec
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
 
-from ._engine_codec import (
-    graph_codec,
-)
 from ._engine_dispatch import (
     BuiltGraph,
     CommonGraphOptions,
@@ -144,8 +142,11 @@ class _EvaluateTemplateGraphs:
         )
 
 
-TEMPLATE_GRAPH_DISPATCHER = EngineGraphDispatcher(
-    kind="template",
-    codec=graph_codec(),
-    make_evaluate=_EvaluateTemplateGraphs.make,
-)
+def template_graph_dispatcher(codec: GraphCodec) -> EngineGraphDispatcher:
+    # The codec is the edition's, not this kind's: every graph of an edition is read with all of
+    # its quantities, so a definition holding one another kind introduced still round-trips.
+    return EngineGraphDispatcher(
+        kind="template",
+        codec=codec,
+        make_evaluate=_EvaluateTemplateGraphs.make,
+    )

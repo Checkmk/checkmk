@@ -27,7 +27,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.gui.graphing._engine_codec import graph_codec
+from cmk.gui.graphing._engine_codec import community_graph_codec
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
     global_time_picker_props,
@@ -185,5 +185,5 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     result = to_cmk_time_series_graph(graph, size=_SIZE)
 
     assert result.options.header.title == "My Graph"
-    [restored] = graph_codec().deserialize_graphs(json.loads(result.internal))
+    [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
     assert restored == graph

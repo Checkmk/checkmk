@@ -41,7 +41,12 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.gui.graphing._engine_codec import graph_codec, QuantitySpec
+from cmk.gui.graphing._engine_codec import (
+    community_graph_codec,
+    COMMUNITY_QUANTITY_SPECS,
+    graph_codec,
+    QuantitySpec,
+)
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
 
 _METRIC = RRDMetric(
@@ -183,13 +188,13 @@ def test_rrd_metric_site_id_round_trips() -> None:
         kind="template",
         lines=[Line(curve=Curve(quantity=metric, attributes=attributes), inverse=False)],
     )
-    [restored] = graph_codec().deserialize_graphs(serialize_graphs([graph]))
+    [restored] = community_graph_codec().deserialize_graphs(serialize_graphs([graph]))
     [line] = restored.lines
     assert line.curve.quantity == metric
 
 
 def test_template_round_trip_is_lossless() -> None:
-    codec = graph_codec()
+    codec = community_graph_codec()
     graphs = _rich_graphs()
     payload = serialize_graphs(graphs)
     # The payload is plain JSON.
@@ -242,7 +247,7 @@ _ENGINE_QUANTITY_SAMPLES: Mapping[str, Quantity] = {
 @pytest.mark.parametrize("kind", sorted(_ENGINE_QUANTITY_SAMPLES))
 def test_engine_quantity_round_trips_every_field(kind: str) -> None:
     quantity = _ENGINE_QUANTITY_SAMPLES[kind]
-    codec = graph_codec()
+    codec = community_graph_codec()
     serialized = json.loads(json.dumps(codec.serialize_quantity(quantity)))
     assert serialized["kind"] == kind
     assert codec.deserialize_quantity(serialized) == quantity
@@ -251,7 +256,7 @@ def test_engine_quantity_round_trips_every_field(kind: str) -> None:
 def test_every_engine_quantity_kind_is_covered() -> None:
     # The engine stays de/serialization-free, so a quantity's fields are mirrored by hand in the
     # codec. A new quantity kind must arrive with a round-trip sample above, or this fails.
-    assert set(_ENGINE_QUANTITY_SAMPLES) == set(graph_codec().quantity_kinds())
+    assert set(_ENGINE_QUANTITY_SAMPLES) == set(community_graph_codec().quantity_kinds())
 
 
 def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
@@ -261,4 +266,4 @@ def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
         lambda data, codec: Constant(0.0),
     )
     with pytest.raises(ValueError, match="duplicate quantity kind: constant"):
-        graph_codec((duplicate,))
+        graph_codec((*COMMUNITY_QUANTITY_SPECS, duplicate))

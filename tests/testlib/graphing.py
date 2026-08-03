@@ -47,7 +47,7 @@ from enum import StrEnum
 from typing import Final
 
 from cmk.graphing_engine import Graph
-from cmk.gui.graphing._engine_codec import ensure_type, graph_codec
+from cmk.gui.graphing._engine_codec import community_graph_codec, ensure_type
 from cmk.rrd import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from cmk.utils.misc import pnp_cleanup
 from tests.testlib.site import Site
@@ -215,7 +215,7 @@ def discovered_graphs(discovered: Mapping[str, object]) -> Sequence[Graph]:
     graphs: list[Graph] = []
     for definition in ensure_type(discovered["graphs"], list):
         internal = ensure_type(ensure_type(definition, dict)["internal"], str)
-        graphs.extend(graph_codec().deserialize_graphs(json.loads(internal)))
+        graphs.extend(community_graph_codec().deserialize_graphs(json.loads(internal)))
     return graphs
 
 

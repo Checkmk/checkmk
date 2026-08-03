@@ -428,19 +428,28 @@ class GraphCodec:
         return [self.deserialize_graph(graph) for graph in ensure_type(data["graphs"], list)]
 
 
-def graph_codec(additional: Sequence[QuantitySpec] = ()) -> GraphCodec:
-    # The standard engine quantities, optionally combined with a consumer's additional specs (e.g. the
-    # pro quantities), so a caller never has to reconstruct the engine set.
-    engine_specs = (
-        QuantitySpec("rrd_metric", _rrd_metric_to_json, _rrd_metric_from_json),
-        QuantitySpec("constant", _constant_to_json, _constant_from_json),
-        QuantitySpec("scalar_of", _scalar_of_to_json, _scalar_of_from_json),
-        QuantitySpec("sum", _sum_to_json, _sum_from_json),
-        QuantitySpec("product", _product_to_json, _product_from_json),
-        QuantitySpec("difference", _difference_to_json, _difference_from_json),
-        QuantitySpec("fraction", _fraction_to_json, _fraction_from_json),
-    )
-    return GraphCodec(QuantityCodec((*engine_specs, *additional)))
+def graph_codec(specs: Sequence[QuantitySpec]) -> GraphCodec:
+    return GraphCodec(QuantityCodec(specs))
+
+
+# What this edition can carry: the engine's own quantities. Every edition on top of it extends this
+# set, so a graph written by a smaller edition stays readable by a bigger one.
+COMMUNITY_QUANTITY_SPECS: Sequence[QuantitySpec] = (
+    QuantitySpec("rrd_metric", _rrd_metric_to_json, _rrd_metric_from_json),
+    QuantitySpec("constant", _constant_to_json, _constant_from_json),
+    QuantitySpec("scalar_of", _scalar_of_to_json, _scalar_of_from_json),
+    QuantitySpec("sum", _sum_to_json, _sum_from_json),
+    QuantitySpec("product", _product_to_json, _product_from_json),
+    QuantitySpec("difference", _difference_to_json, _difference_from_json),
+    QuantitySpec("fraction", _fraction_to_json, _fraction_from_json),
+)
+
+
+def community_graph_codec() -> GraphCodec:
+    # One codec per edition rather than one per graph kind: a definition may hold a quantity another
+    # kind introduced - a combined aggregation inside a custom graph - and every kind has to be able to
+    # read it back.
+    return graph_codec(COMMUNITY_QUANTITY_SPECS)
 
 
 def consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:

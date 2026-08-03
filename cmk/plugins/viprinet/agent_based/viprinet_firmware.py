@@ -32,7 +32,7 @@ def check_viprinet_firmware(section: StringTable) -> CheckResult:
     if fw_status:
         yield Result(state=State.OK, summary=f"{section[0][0]}, {fw_status}")
         return
-    yield Result(state=State.UNKNOWN, summary="%s, no firmware status available")
+    yield Result(state=State.UNKNOWN, summary=f"{section[0][0]}, No firmware status available")
     return
 
 

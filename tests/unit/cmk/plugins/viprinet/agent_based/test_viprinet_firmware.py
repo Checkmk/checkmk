@@ -48,10 +48,9 @@ def test_discover_viprinet_firmware_no_data() -> None:
             [["1.06", "4"]],
             [Result(state=State.OK, summary="1.06, Installing Update")],
         ),
-        pytest.param(
+        (
             [["1.06", "9"]],
             [Result(state=State.UNKNOWN, summary="1.06, No firmware status available")],
-            marks=[pytest.mark.xfail(strict=True, reason="missing interpolation")],
         ),
     ],
 )

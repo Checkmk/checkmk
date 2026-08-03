@@ -21,19 +21,21 @@ from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 
 def check_viprinet_firmware(section: StringTable) -> CheckResult:
-    fw_status_map = {
-        "0": "No new firmware available",
-        "1": "Update Available",
-        "2": "Checking for Updates",
-        "3": "Downloading Update",
-        "4": "Installing Update",
-    }
-    fw_status = fw_status_map.get(section[0][1])
-    if fw_status:
-        yield Result(state=State.OK, summary=f"{section[0][0]}, {fw_status}")
-        return
-    yield Result(state=State.UNKNOWN, summary=f"{section[0][0]}, No firmware status available")
-    return
+    name, status = section[0][0], section[0][1]
+
+    match status:
+        case "0":
+            yield Result(state=State.OK, summary=f"{name}, No new firmware available")
+        case "1":
+            yield Result(state=State.OK, summary=f"{name}, Update Available")
+        case "2":
+            yield Result(state=State.OK, summary=f"{name}, Checking for Updates")
+        case "3":
+            yield Result(state=State.OK, summary=f"{name}, Downloading Update")
+        case "4":
+            yield Result(state=State.OK, summary=f"{name}, Installing Update")
+        case _:
+            yield Result(state=State.UNKNOWN, summary=f"{name}, No firmware status available")
 
 
 def parse_viprinet_firmware(string_table: StringTable) -> StringTable:

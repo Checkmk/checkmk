@@ -565,62 +565,77 @@ def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
 def test_update_site_connection_preserves_settings_it_cannot_express(
     clients: ClientRegistry,
 ) -> None:
-    """Stored settings that this endpoint does not model must survive an update."""
+    """Any stored key the rest-api does not model must survive an update.
 
-    def _stored_config_keys(site_id: str) -> list[str]:
-        """The keys the site connection actually has on disk, bypassing the rest-api."""
-        return sorted(SitesConfigFile().load_for_reading()[SiteId(site_id)])
+    The unmodeled keys are derived from the `SiteConfiguration` TypedDict rather than
+    hard-coded, so a key added there is covered automatically -- hard-coding is how the
+    `authentication_connections` and `globals` regressions slipped in unnoticed.
+    """
 
-    rest_api_keys = {
-        "alias",
-        "authentication_connections",
-        "disable_wato",
-        "disabled",
-        "id",
-        "insecure",
-        "is_trusted",
-        "message_broker_port",
-        "multisiteurl",
-        "persist",
-        "proxy",
-        "replicate_ec",
-        "replicate_mkps",
-        "replication",
-        "socket",
-        "status_host",
-        "timeout",
-        "url_prefix",
-        "user_attribute_sync_connections",
-        "user_login",
-    }
+    def _stored_config(site_id: str) -> SiteConfiguration:
+        """The site connection as it actually is on disk, bypassing the rest-api."""
+        return SitesConfigFile().load_for_reading()[SiteId(site_id)]
 
-    additional_ui_keys = ["globals"]
-    assert set(additional_ui_keys) <= set(SiteConfiguration.__annotations__)
+    # `cache` and `tls` are computed at runtime when building a livestatus connection and never
+    # written to sites.mk. `customer` is only modeled by the rest-api in the editions that have it
+    # (see tests/openapi/nonfree/ultimatemt/test_openapi_site_management_customer.py), not in the
+    # community edition this test runs under.
+    not_applicable_keys = {"cache", "tls", "customer"}
+    all_known_keys = set(SiteConfiguration.__annotations__) - not_applicable_keys
 
     # create the config via the rest-api:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
 
-    # see what keys were created
-    assert set(_stored_config_keys(site_id)) == rest_api_keys
+    rest_api_keys = set(_stored_config(site_id))
+    unmodeled_keys = all_known_keys - rest_api_keys
+    assert unmodeled_keys, (
+        "the rest-api now models every known site connection key -- "
+        "this test (and the carve-outs in edit_site_connection_v1) can be simplified"
+    )
 
-    # simulate adding two other keys via ui:
+    # simulate settings that only Setup (or a direct login, for `secret`) can produce, one sentinel
+    # value per key the rest-api does not know about:
+    sentinel_values = {key: f"__sentinel_{key}__" for key in unmodeled_keys}
     sites_config_file = SitesConfigFile()
     sites = sites_config_file.load_for_modification()
-    sites[SiteId(site_id)]["authentication_connections"] = ("all", ["saml"])
-    sites[SiteId(site_id)]["globals"] = {"log_levels": {"cmk.web": 15}}
+    sites[SiteId(site_id)].update(sentinel_values)  # type: ignore[typeddict-item]
     sites_config_file.save(sites, pprint_value=False)
-
-    # expect more keys on disk:
-    keys_after_ui_change = _stored_config_keys(site_id)
-    assert keys_after_ui_change == sorted([*rest_api_keys, *additional_ui_keys])
 
     # update using the rest-api:
     clients.SiteManagement.update(site_id=site_id, site_config=config)
 
-    keys_after_rest_api_update = set(_stored_config_keys(site_id))
-    # TODO: THIS IS A BUG: we lost two keys. this should be keys_after_ui_change!
-    assert keys_after_rest_api_update == rest_api_keys
+    stored_after_update = _stored_config(site_id)
+    for key, value in sentinel_values.items():
+        assert stored_after_update.get(key) == value, (
+            f"{key!r} was dropped by a rest-api update -- carry it over in "
+            "edit_site_connection_v1, the same way `secret` and "
+            "`authentication_connections` already are"
+        )
+
+
+def test_update_site_connection_preserves_authentication_connections_value(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` needs its own test: `to_internal()` writes a hard-coded
+    default for it on create AND update, so the key is always present and the test above --
+    which derives unmodeled keys from those *absent* after `create()` -- never covers it.
+    """
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    # a value only Setup can produce, distinct from to_internal()'s ("all", ["ldap", "saml"]):
+    sites_config_file = SitesConfigFile()
+    sites = sites_config_file.load_for_modification()
+    sites[SiteId(site_id)]["authentication_connections"] = ("all", ["saml"])
+    sites_config_file.save(sites, pprint_value=False)
+
+    clients.SiteManagement.update(site_id=site_id, site_config=config)
+
+    stored_after_update = SitesConfigFile().load_for_reading()[SiteId(site_id)]
+    assert stored_after_update["authentication_connections"] == ("all", ["saml"]), (
+        "authentication_connections must survive an update, not reset to to_internal()'s default"
+    )
 
 
 def test_update_site_connection_user_sync_with_ldap_connections_200(

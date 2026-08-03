@@ -34,11 +34,33 @@ from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
     SitesApiMgr,
 )
+from cmk.livestatus_client import SiteConfiguration
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .models.request_models import SiteConnectionEditModel
 from .models.response_models import SiteConnectionModel
 from .utils import PERMISSIONS
+
+
+def _preserve_non_modeled_site_config_fields(
+    site_config_spec_from_request: SiteConfiguration,
+    old_site_config: SiteConfiguration,
+) -> None:
+    """Carry over stored fields the API request/response models do not expose.
+
+    Without this, rebuilding the config from the request body would drop them.
+    """
+    if (secret := old_site_config.get("secret")) is not None:
+        site_config_spec_from_request["secret"] = secret
+
+    # Unconditional: the request model has no field for this yet. Once it gains one, only apply
+    # this when the request omitted a value (the ApiOmitted sentinel pattern that
+    # SiteConnectionBaseModel.base_to_internal() already uses), or real updates get ignored.
+    if (auth_connections := old_site_config.get("authentication_connections")) is not None:
+        site_config_spec_from_request["authentication_connections"] = auth_connections
+
+    if (site_globals := old_site_config.get("globals")) is not None:
+        site_config_spec_from_request["globals"] = site_globals
 
 
 def edit_site_connection_v1(
@@ -58,12 +80,10 @@ def edit_site_connection_v1(
 
     sites_api_mgr = SitesApiMgr()
     old_site_config = sites_api_mgr.get_a_site(site_id)
-    if (secret := old_site_config.get("secret")) is not None:
-        site_config_spec_from_request["secret"] = secret
-    # The API does not expose `authentication_connections` yet; carry the
-    # configured value over instead of resetting it to the create default.
-    if (auth_connections := old_site_config.get("authentication_connections")) is not None:
-        site_config_spec_from_request["authentication_connections"] = auth_connections
+    _preserve_non_modeled_site_config_fields(
+        site_config_spec_from_request,
+        old_site_config,
+    )
 
     try:
         sites_to_update = sites_api_mgr.get_connected_sites_to_update(

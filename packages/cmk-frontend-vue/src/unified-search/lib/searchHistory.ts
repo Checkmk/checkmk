@@ -57,12 +57,13 @@ export class SearchHistoryService {
       .filter((value, index, array) => {
         return (
           array.findIndex(
-            (i) => i.input === value.input && i.filters.toString() === value.filters.toString()
+            (i) =>
+              i.input === value.input && JSON.stringify(i.filters) === JSON.stringify(value.filters)
           ) === index
         )
       })
       .reverse()
-      .slice(0, limit ? limit - 1 : limit)
+      .slice(0, limit)
   }
 
   public add(historyEntry: HistoryEntry): void {
@@ -94,29 +95,6 @@ export class SearchHistoryService {
 
     queries.push(historyEntry.query as UnifiedSearchQueryLike)
     this.queries.value = queries
-  }
-
-  public remove(historyEntry: HistoryEntry): void {
-    let idx = -1
-
-    const [entries, queries] = this.getCopy()
-    entries.forEach((hist, i) => {
-      if (historyEntry.element.title === hist.element.title) {
-        idx = i
-      }
-    })
-
-    if (idx >= 0) {
-      delete entries[idx]
-    }
-
-    idx = queries.indexOf(historyEntry.query as UnifiedSearchQueryLike)
-    if (idx !== -1) {
-      queries.splice(idx, 1)
-    }
-
-    this.queries.value = queries
-    this.entries.value = entries
   }
 
   public resetEntries(): void {

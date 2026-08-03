@@ -10,6 +10,10 @@ import type { Section, Suggestions } from 'cmk-ui-library/components/CmkSuggesti
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkTimeSpan from 'cmk-ui-library/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
+import {
+  type Magnitude,
+  minimumSecondsValidator
+} from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
@@ -129,6 +133,11 @@ const lookbackInput = computed<number | null>({
     }
   }
 })
+
+// Both consumers must share these so the validation message matches the shown fields.
+const lookbackMagnitudes: Magnitude[] = ['minute', 'second']
+// The backend rejects a sub-second lookback.
+const lookbackValidators = [minimumSecondsValidator(1, lookbackMagnitudes, _t)]
 
 function setParam(key: keyof ConsolidationParams, value: number | undefined): void {
   model.value = { ...model.value, params: { ...model.value.params, [key]: value } }
@@ -275,7 +284,9 @@ const editAriaLabel = computed(
             :label="''"
             :title="''"
             :input-hint="null"
-            :displayed-magnitudes="['minute', 'second']"
+            :displayed-magnitudes="lookbackMagnitudes"
+            :validators="lookbackValidators"
+            :show-field-errors="showValidationErrors"
             hide-validation-message
             @update:validation="lookbackErrors = $event"
           />

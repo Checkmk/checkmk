@@ -365,6 +365,25 @@ test('editing the lookback updates the chip once collapsed', async () => {
   expect(chip()).toHaveTextContent('1 m')
 })
 
+test('a sub-second lookback is flagged only on a blocked leave', async () => {
+  renderWidget()
+  await userEvent.click(chip())
+
+  // 300s shows as 5 minutes; empty it so the lookback collapses to 0 seconds.
+  await userEvent.clear(screen.getByLabelText('Lookback Minutes'))
+
+  // Pristine: no error while the value is still being edited.
+  expect(screen.queryByText('The time span must be at least 1 Seconds.')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('The time span must be at least 1 Seconds.')).toBeVisible()
+  expect(screen.getByLabelText('Lookback Minutes')).toBeVisible()
+
+  await userEvent.type(screen.getByLabelText('Lookback Seconds'), '1')
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByLabelText('Lookback Seconds')).toBeNull())
+})
+
 test('a changed metric type resets the function to the new type default', async () => {
   const { model, availableTypes } = renderWidget({ type: 'sum', function: 'sum_delta' }, ['sum'])
 

@@ -82,11 +82,14 @@ class FilterBehaviour(Enum):
     """Search finished, showing all results of previous filters."""
 
 
+def sanitize_regex(query: str) -> str:
+    """Convert glob patterns to valid regex wildcard patterns."""
+    return query.replace("*", ".*")
+
+
 def sanitize_and_validate_regex(query: str) -> str:
     """Validate and return sanitized regex string."""
-    # Regex sanitization:
-    #  * convert glob patterns to valid regex wildcard pattern
-    sanitized = query.replace("*", ".*")
+    sanitized = sanitize_regex(query)
     validate_regex(sanitized, varname=None)
     return sanitized
 
@@ -1343,7 +1346,7 @@ class LivestatusSearchEngine:
     @staticmethod
     def _is_invalid_regex(query: str) -> bool:
         try:
-            re.compile(query)
+            re.compile(sanitize_regex(query))
         except re.error:
             return True
         else:

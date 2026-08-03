@@ -10,6 +10,7 @@ from cmk.gui.search._engines._livestatus import (
     GroupMatchPlugin,
     HostMatchPlugin,
     LivestatusQuicksearchConductor,
+    LivestatusSearchEngine,
     ServiceStateMatchPlugin,
     UsedFilters,
 )
@@ -127,3 +128,27 @@ class TestServiceStateMatchPlugin:
         livestatus_table = plugin.get_preferred_livestatus_table()
         value = plugin.get_livestatus_filters(livestatus_table, used_filters)
         assert value == expected
+
+
+class TestIsInvalidRegex:
+    @pytest.mark.parametrize(
+        "query",
+        [
+            pytest.param("*heute", id="leading glob wildcard"),
+            pytest.param("*", id="glob wildcard only"),
+            pytest.param("heu*te", id="glob wildcard in the middle"),
+        ],
+    )
+    def test_glob_query_is_not_rejected_before_it_gets_sanitized(self, query: str) -> None:
+        assert LivestatusSearchEngine._is_invalid_regex(query) is False
+
+    @pytest.mark.parametrize(
+        "query",
+        [
+            pytest.param("(heute", id="unterminated group"),
+            pytest.param("+heute", id="nothing to repeat"),
+            pytest.param("heute[", id="unterminated character set"),
+        ],
+    )
+    def test_broken_regex_is_rejected(self, query: str) -> None:
+        assert LivestatusSearchEngine._is_invalid_regex(query) is True

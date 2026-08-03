@@ -669,7 +669,7 @@ class ModeEditHost(ABCHostMode):
         folder = folder_from_request(
             tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         )
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("folder", folder=folder.path()))
 
         if request.var("_update_dns_cache") and self._should_use_dns_cache(config.sites):
@@ -1030,7 +1030,7 @@ class CreateHostMode(ABCHostMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.transaction_valid():
+        if not transactions.transaction_valid(request):
             return redirect(mode_url("folder"))
 
         tree = folder_tree()
@@ -1051,7 +1051,7 @@ class CreateHostMode(ABCHostMode):
         Hostname().validate_value(request.get_ascii_input_mandatory(self.VAR_HOST), self.VAR_HOST)
 
         folder = folder_from_request(tree, request.var("folder"), hostname)
-        if transactions.check_transaction():
+        if transactions.check_transaction(request):
             folder.create_hosts(
                 [(hostname, attributes, cluster_nodes)],
                 pprint_value=config.wato_pprint_config,

@@ -1861,7 +1861,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         if self._event_simulation_action():
@@ -2407,7 +2407,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -2843,7 +2843,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("mkeventd_rule_packs"))
 
         existing_rules = [] if self._new else self._rule_pack["rules"]
@@ -3009,7 +3009,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
         if not self._new:
@@ -3347,7 +3347,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             self.make_global_settings_context(config),
         ).default_value()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         if varname in self._current_settings:
@@ -3550,7 +3550,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)

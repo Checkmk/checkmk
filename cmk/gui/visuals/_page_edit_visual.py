@@ -342,7 +342,7 @@ def page_edit_visual(
                         filename=visual_type.show_url,
                     )
 
-                if transactions.check_transaction():
+                if transactions.check_transaction(request):
                     assert owner_user_id is not None
                     # Since we have no way to parse the raw dictionary and Dictionary is also not
                     # typable, we need to hope here that page_dict fits with TVisual. On the mission to at

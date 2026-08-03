@@ -19,7 +19,6 @@ from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
-from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.shared_typing.main_menu import NavItem
@@ -50,7 +49,7 @@ class WatoMode[RequestOK](abc.ABC):
         """Overwrite this method to additionally check request-specific permissions if needed."""
         ensure_static_permissions(
             self.static_permissions(),
-            transactions.is_transaction(),
+            request.has_var("_transid"),
         )
 
     @classmethod

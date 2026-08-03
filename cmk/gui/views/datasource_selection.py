@@ -64,7 +64,7 @@ def show_create_view_dialog(config: Config, next_url: str | None = None) -> None
         user_role_ids=user.role_ids,
     )
 
-    if request.var("_save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction(request):
         try:
             ds = vs_ds.from_html_vars("ds")
             vs_ds.validate_value(ds, "ds")

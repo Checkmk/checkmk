@@ -238,7 +238,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         return breadcrumb
 
     def _action(self, user_permissions: UserPermissions) -> None:
-        if not transactions.transaction_valid():
+        if not transactions.transaction_valid(request):
             return
 
         action_handler = ActionHandler(self._breadcrumb(self._title(), user_permissions))

@@ -334,7 +334,7 @@ class ModeUsers(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         for message in get_flashed_messages():
@@ -923,7 +923,7 @@ class ModeEditUser(WatoMode):
 
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user: bool = self._user_id is None
-        self._users = userdb.load_users(lock=transactions.is_transaction())
+        self._users = userdb.load_users(lock=request.has_var("_transid"))
         new_user = new_user_template("htpasswd", active_config.default_user_profile)
 
         if self._user_id is not None:
@@ -1015,7 +1015,7 @@ class ModeEditUser(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("users"))
 
         if self._user_id is not None and request.has_var("_disable_two_factor"):

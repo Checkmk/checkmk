@@ -154,7 +154,7 @@ class ModeGroups(WatoMode, abc.ABC):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             request.del_var("_transid")
             return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
@@ -292,7 +292,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("%s_groups" % self.type_name))
 
         alias = request.get_str_input_mandatory("alias").strip()

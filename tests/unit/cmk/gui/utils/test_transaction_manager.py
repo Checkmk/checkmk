@@ -34,7 +34,6 @@ def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager]:
 @pytest.mark.usefixtures("request_context")
 def test_request_context_integration() -> None:
     assert callable(transactions.transaction_valid)
-    assert callable(transactions.is_transaction)
     assert callable(transactions.check_transaction)
 
 
@@ -87,18 +86,12 @@ def test_transaction_valid(
         assert transid is not None
         transaction_ids.append(transid)
 
-    assert tm.transaction_valid() == result
-
-
-def test_is_transaction(tm: TransactionManager, request_context: None) -> None:
-    assert not tm.is_transaction()
-    request.set_var("_transid", "123")
-    assert tm.is_transaction()
+    assert tm.transaction_valid(request) == result
 
 
 @pytest.mark.usefixtures("monkeypatch")
 def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:
-    assert tm.check_transaction() is False
+    assert tm.check_transaction(request) is False
 
 
 @pytest.mark.usefixtures("monkeypatch")
@@ -113,7 +106,7 @@ def test_check_transaction_valid(
     transaction_ids.append(valid_transid)
 
     invalidate = mocker.patch.object(tm, "_invalidate")
-    assert tm.check_transaction() is True
+    assert tm.check_transaction(request) is True
     invalidate.assert_called_once_with(valid_transid)
 
 
@@ -127,5 +120,5 @@ def test_check_transaction_automation(
     request.set_var("_transid", "-1")
 
     invalidate = mocker.patch.object(tm, "_invalidate")
-    assert tm.check_transaction() is True
+    assert tm.check_transaction(request) is True
     invalidate.assert_not_called()

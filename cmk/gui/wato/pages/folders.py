@@ -687,7 +687,7 @@ class ModeFolder(WatoMode):
         if request.var("_delete_folder"):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action cannot be performed on search results"))
-            if transactions.check_transaction():
+            if transactions.check_transaction(request):
                 self._folder.delete_subfolder(
                     request.get_ascii_input_mandatory("_delete_folder"),
                     pending_changes=_pending_changes(
@@ -700,7 +700,7 @@ class ModeFolder(WatoMode):
         if request.has_var("_move_folder_to"):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action cannot be performed on search results"))
-            if transactions.check_transaction():
+            if transactions.check_transaction(request):
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
                 what_folder = self._tree.folder(var_ident)
                 target_folder = self._tree.folder(
@@ -769,7 +769,7 @@ class ModeFolder(WatoMode):
                 return redirect(folder_url)
 
         # bulk operation on hosts
-        if not transactions.transaction_valid():
+        if not transactions.transaction_valid(request):
             return redirect(folder_url)
 
         # Host table: No error message on search filter reset
@@ -1603,7 +1603,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
                 self._tree, request.var("folder"), request.get_ascii_input("host")
             )
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("folder", folder=folder.path()))
 
         # Title

@@ -482,7 +482,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         )
         new_value: Any = None
         if request.var("_reset"):
-            if not transactions.check_transaction():
+            if not transactions.check_transaction(request):
                 return None
 
             if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
@@ -773,7 +773,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         config_variable = config_variable_registry[varname]
         def_value = self._default_values[varname]
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         old_settings: GlobalSettings = (

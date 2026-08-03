@@ -1091,7 +1091,7 @@ class ModeNotifications(ABCNotificationsMode):
         check_csrf_token()
 
         if request.has_var("_show_user"):
-            if transactions.check_transaction():
+            if transactions.check_transaction(request):
                 self._show_user_rules = bool(request.var("_show_user"))
                 self._save_notification_display_options()
 
@@ -1791,15 +1791,15 @@ class ModeAnalyzeNotifications(ModeNotifications):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if request.has_var("_show_bulks") and transactions.check_transaction():
+        if request.has_var("_show_bulks") and transactions.check_transaction(request):
             self._show_bulks = bool(request.var("_show_bulks"))
             self._save_analyze_notification_display_options()
 
-        if request.has_var("_show_user") and transactions.check_transaction():
+        if request.has_var("_show_user") and transactions.check_transaction(request):
             self._show_user_rules = bool(request.var("_show_user"))
             self._save_analyze_notification_display_options()
 
-        if request.has_var("_replay") and transactions.check_transaction():
+        if request.has_var("_replay") and transactions.check_transaction(request):
             replay_nr = request.get_integer_input_mandatory("_replay")
             notification_replay(replay_nr, debug=config.debug)
             flash(_("Replayed notification number %(nr)d") % {"nr": replay_nr + 1})
@@ -1995,11 +1995,11 @@ class ModeTestNotifications(ModeNotifications):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if request.has_var("_show_user") and transactions.check_transaction():
+        if request.has_var("_show_user") and transactions.check_transaction(request):
             self._show_user_rules = bool(request.var("_show_user"))
             self._save_test_notification_display_options()
 
-        if self._test_notification_ongoing() and transactions.check_transaction():
+        if self._test_notification_ongoing() and transactions.check_transaction(request):
             context, dispatch, test_type = self._infos_from_vars()
             return redirect(
                 makeuri(
@@ -2826,7 +2826,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     @override
     def _from_vars(self) -> None:
         self._users = userdb.load_users(
-            lock=transactions.is_transaction() or request.has_var("_move")
+            lock=request.has_var("_transid") or request.has_var("_move")
         )
 
         try:
@@ -2846,7 +2846,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url(user=self._user_id()))
 
         now = datetime.now()
@@ -3656,7 +3656,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return self._back_mode()
 
         vs = self._valuespec(config)
@@ -3733,7 +3733,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
 
     @override
     def _load_rules(self) -> list[EventRule]:
-        if transactions.is_transaction():
+        if request.has_var("_transid"):
             return NotificationRuleConfigFile().load_for_modification()
         return NotificationRuleConfigFile().load_for_reading()
 
@@ -3838,7 +3838,7 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
 
     @override
     def _load_rules(self) -> list[EventRule]:
-        self._users = userdb.load_users(lock=transactions.is_transaction())
+        self._users = userdb.load_users(lock=request.has_var("_transid"))
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
     @override
@@ -3942,7 +3942,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
 
     @override
     def _load_rules(self) -> list[EventRule]:
-        self._users = userdb.load_users(lock=transactions.is_transaction())
+        self._users = userdb.load_users(lock=request.has_var("_transid"))
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
     @override
@@ -4129,7 +4129,7 @@ class ABCNotificationParameterMode(WatoMode):
         return preserved_vars
 
     def _load_parameters(self) -> NotificationParameterSpecs:
-        if transactions.is_transaction():
+        if request.has_var("_transid"):
             return NotificationParameterConfigFile().load_for_modification()
         return NotificationParameterConfigFile().load_for_reading()
 
@@ -4646,7 +4646,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return self._back_mode()
 
         value = parse_data_from_field_id(

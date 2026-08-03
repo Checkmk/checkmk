@@ -154,7 +154,7 @@ class ModeParentScan(WatoMode):
         check_csrf_token()
 
         try:
-            transactions.check_transaction()
+            transactions.check_transaction(request)
 
             user.save_file("parentscan", self._settings)
 

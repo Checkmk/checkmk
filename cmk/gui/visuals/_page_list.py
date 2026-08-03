@@ -154,7 +154,7 @@ def page_list(
 
     # Deletion of visuals
     delname = request.var("_delete")
-    if delname and transactions.check_transaction():
+    if delname and transactions.check_transaction(request):
         if user.may("general.delete_foreign_%s" % what):
             user_id: UserId | None = request.get_validated_type_input_mandatory(
                 UserId, "_user_id", user.id

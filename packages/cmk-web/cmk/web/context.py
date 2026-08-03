@@ -3,15 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Protocol
+from typing import overload, Protocol
 
 
 class RequestProtocol(Protocol):
-    def var(self, varname: str, deflt: str | None = None) -> str | None: ...
+    @overload
+    def var(self, name: str) -> str | None: ...
+
+    @overload
+    def var(self, name: str, default: str) -> str: ...
+
+    @overload
+    def var(self, name: str, default: str | None) -> str | None: ...
 
     def has_var(self, varname: str) -> bool: ...
 
     def get_integer_input_mandatory(self, varname: str, deflt: int | None = None) -> int: ...
+
+    def get_str_input_mandatory(self, varname: str, deflt: str | None = None) -> str: ...
+
+    @property
+    def remote_ip(self) -> str | None: ...
 
 
 class UserProtocol(Protocol):

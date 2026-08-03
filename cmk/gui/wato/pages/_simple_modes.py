@@ -283,7 +283,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.transaction_valid():
+        if not transactions.transaction_valid(request):
             return None
 
         action_var = request.get_str_input("_action")
@@ -293,7 +293,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         if action_var != "delete":
             return self._handle_custom_action(action_var)
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url(self._mode_type.list_mode_name()))
 
         entries = self._store.load_for_modification()
@@ -824,7 +824,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.transaction_valid():
+        if not transactions.transaction_valid(request):
             return redirect(mode_url(self._mode_type.list_mode_name()))
 
         self._update_entry_from_vars()

@@ -222,7 +222,7 @@ class ModeEditKey(WatoMode[object]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(request):
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
             # which use the current page context will contain the passphrase which could
@@ -324,7 +324,7 @@ class ModeUploadKey(WatoMode[object]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(request):
             value = self._vs_key().from_html_vars("key")
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
@@ -494,7 +494,7 @@ class ModeDownloadKey(WatoMode[object]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(request):
             keys = self.key_store.load()
 
             try:

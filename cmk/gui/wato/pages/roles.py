@@ -133,7 +133,7 @@ class ModeRoles(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         if request.var("_delete"):

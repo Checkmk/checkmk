@@ -74,7 +74,7 @@ class ModeRandomHosts(WatoMode):
         folder = folder_from_request(
             folder_tree(), request.var("folder"), request.get_ascii_input("host")
         )
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("folder", folder=folder.path()))
 
         count = request.get_integer_input_mandatory("count")

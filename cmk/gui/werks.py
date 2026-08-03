@@ -189,7 +189,7 @@ class ChangeLogPage(Page):
 
 
 def handle_acknowledgement(request: Request) -> None:
-    if not transactions.check_transaction():
+    if not transactions.check_transaction(request):
         return
 
     if request.var("_werk_ack"):

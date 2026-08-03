@@ -455,7 +455,7 @@ class ModeBulkImport(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if transactions.transaction_valid():
+        if transactions.transaction_valid(request):
             if request.has_var("_do_upload"):
                 self._upload_csv_file()
 

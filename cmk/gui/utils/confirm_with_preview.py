@@ -39,7 +39,7 @@ def confirm_with_preview(
     """
     if request.var("_do_actions") == _("Cancel"):
         # User has pressed "Cancel", now invalidate the unused transid
-        transactions.check_transaction()
+        transactions.check_transaction(request)
         return None  # None --> "Cancel"
 
     if not any(request.has_var(varname) for _title, varname in confirm_options):
@@ -62,7 +62,7 @@ def confirm_with_preview(
         return False  # False --> "Dialog shown, no answer yet"
 
     # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
-    return True if transactions.check_transaction() else None
+    return True if transactions.check_transaction(request) else None
 
 
 # TODO Try to replace all call sites of confirm_with_preview() with command_confirm_dialog()
@@ -77,7 +77,7 @@ def command_confirm_dialog(
     deny_js_function: str | None = None,
 ) -> bool | None:
     if any(request.has_var(varname) for _title, varname in confirm_options):
-        return True if transactions.check_transaction() else None
+        return True if transactions.check_transaction(request) else None
     mobile = is_mobile(request, response)
 
     if mobile:

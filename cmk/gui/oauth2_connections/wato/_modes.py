@@ -573,14 +573,14 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.transaction_valid():
+        if not transactions.transaction_valid(request):
             return None
 
         action_var = request.get_str_input("_action")
         if action_var is None:
             return None
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url(self._mode_type.list_mode_name()))
 
         ident = request.get_ascii_input("_delete")

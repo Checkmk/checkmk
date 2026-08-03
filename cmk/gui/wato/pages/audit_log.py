@@ -379,7 +379,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
     @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         if request.var("_action") == "clear":

@@ -194,7 +194,7 @@ def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     value["service"] = service
     value["site"] = site_id
 
-    if transactions.check_transaction():
+    if transactions.check_transaction(request):
         try:
             vs = _vs_annotation()
             value = vs.from_html_vars("_editanno")
@@ -360,7 +360,7 @@ def handle_delete_annotations() -> None:
 
 def _handle_edit_annotations(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     # Avoid reshowing edit form after edit and reload
-    if transactions.is_transaction() and not transactions.transaction_valid():
+    if request.has_var("_transid") and not transactions.transaction_valid(request):
         return False
     if request.var("anno_host") and not request.var("_delete_annotation"):
         finished = _edit_annotation(breadcrumb, debug=debug)

@@ -234,7 +234,7 @@ class ModeDiagnostics(WatoMode[object]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         if request.has_var("_do_select"):

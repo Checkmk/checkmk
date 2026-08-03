@@ -1222,7 +1222,7 @@ class ModeEditRuleset(WatoMode):
             service=mk_repr(self._service).decode(),
         )
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(back_url)
 
         folder = mandatory_parameter("folder", request.var("folder"))
@@ -2424,7 +2424,7 @@ class ABCEditRuleMode(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self._back_url())
 
         self._do_validate_on_render = True

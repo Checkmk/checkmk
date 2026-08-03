@@ -388,7 +388,7 @@ class ModeEditConfigurationBundles(WatoMode):
     @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
         bundle_id = BundleId(request.get_ascii_input_mandatory(self.VAR_BUNDLE_ID))
@@ -975,7 +975,7 @@ class ModeConfigurationBundle(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
         if not self._existing_bundle:

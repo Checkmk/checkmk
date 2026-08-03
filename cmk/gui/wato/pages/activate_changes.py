@@ -214,7 +214,7 @@ class ModeRevertChanges(WatoMode):
         if request.var("_action") != "discard":
             return None
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         activation_site_ids = list(activation_sites(config.sites))

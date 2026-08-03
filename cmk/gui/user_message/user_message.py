@@ -92,7 +92,7 @@ class PageUserMessage(Page):
 
 
 def _handle_ack_all() -> None:
-    if not transactions.check_transaction():
+    if not transactions.check_transaction(request):
         return
 
     if request.var("_ack_all"):

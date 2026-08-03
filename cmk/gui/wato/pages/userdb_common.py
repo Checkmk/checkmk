@@ -315,7 +315,7 @@ def connection_actions(
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> ActionResult:
-    if not transactions.check_transaction():
+    if not transactions.check_transaction(request):
         return redirect(config_mode_url)
 
     if request.has_var("_delete"):

@@ -1088,7 +1088,7 @@ class ListPage[T: Overridable](Page):
 
         # Deletion
         delname = request.var("_delete")
-        if delname and transactions.check_transaction():
+        if delname and transactions.check_transaction(request):
             owner = request.get_validated_type_input_mandatory(UserId, "_owner", user.id)
             pagetype_title = self._type.phrase("title")
 
@@ -1115,7 +1115,7 @@ class ListPage[T: Overridable](Page):
             except MKUserError as e:
                 html.user_error(e)
 
-        elif request.var("_bulk_delete") and transactions.check_transaction():
+        elif request.var("_bulk_delete") and transactions.check_transaction(request):
             self._bulk_delete_after_confirm(instances, user_permissions)
 
         my_instances, foreign_instances, builtin_instances = self._partition_instances(
@@ -1383,7 +1383,9 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
         )
 
         varprefix = ""
-        if request.get_ascii_input("filled_in") == "edit" and transactions.check_transaction():
+        if request.get_ascii_input("filled_in") == "edit" and transactions.check_transaction(
+            request
+        ):
             try:
                 new_page_dict = vs.from_html_vars(varprefix)
                 vs.validate_value(new_page_dict, varprefix)

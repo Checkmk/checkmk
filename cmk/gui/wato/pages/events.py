@@ -368,7 +368,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
             save_rules(edit_rules)
 
         elif request.has_var("_move"):
-            if transactions.check_transaction():
+            if transactions.check_transaction(request):
                 from_pos = request.get_integer_input_mandatory("_move")
                 to_pos = request.get_integer_input_mandatory("_index")
                 rule = edit_rules[from_pos]

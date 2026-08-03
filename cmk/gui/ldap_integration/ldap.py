@@ -846,11 +846,11 @@ class ModeEditLDAPConnection(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         _all_connections = {
-            c["id"]: c for c in load_connection_config(lock=transactions.is_transaction())
+            c["id"]: c for c in load_connection_config(lock=request.has_var("_transid"))
         }
 
         vs = self._valuespec()

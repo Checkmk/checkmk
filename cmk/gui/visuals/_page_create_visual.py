@@ -78,7 +78,7 @@ def page_create_visual(
     )
     html.close_p()
 
-    if request.var("_save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction(request):
         try:
             single_infos = vs_infos.from_html_vars("single_infos")
             vs_infos.validate_value(single_infos, "single_infos")

@@ -301,7 +301,7 @@ def page_message(ctx: PageContext) -> None:
     flat_catalog = create_flat_catalog_from_dictionary(_message_spec(recipients))
 
     catalog_field_id = "_message_id"
-    if transactions.check_transaction():
+    if transactions.check_transaction(ctx.request):
         try:
             msg = parse_data_from_field_id(flat_catalog, catalog_field_id)
             assert isinstance(msg, dict)

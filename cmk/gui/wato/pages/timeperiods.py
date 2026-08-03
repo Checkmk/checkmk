@@ -285,7 +285,7 @@ class ModeTimeperiods(WatoMode):
         if not delname:
             return redirect(mode_url("timeperiods"))
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("timeperiods"))
 
         try:
@@ -789,7 +789,7 @@ class ModeEditTimeperiod(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         vs = self._valuespec()  # returns a Dictionary object

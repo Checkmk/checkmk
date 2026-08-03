@@ -423,7 +423,7 @@ class ModeEditSite(WatoMode):
         use_git: bool,
         liveproxyd_enabled: bool,
     ) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("sites"))
 
         # Take over all unknown elements from existing site specs, like for
@@ -931,7 +931,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("sites"))
 
         flat_catalog = self._flat_catalog(config)
@@ -1134,7 +1134,7 @@ class ModeDistributedMonitoring(WatoMode):
         check_csrf_token()
 
         delete_id = request.get_ascii_input("_delete")
-        if delete_id and transactions.check_transaction():
+        if delete_id and transactions.check_transaction(request):
             return self._action_delete(
                 make_folder_tree(config),
                 SiteId(delete_id),
@@ -1150,7 +1150,7 @@ class ModeDistributedMonitoring(WatoMode):
             )
 
         delete_folders_id = request.get_ascii_input("_delete_folders")
-        if delete_folders_id and transactions.check_transaction():
+        if delete_folders_id and transactions.check_transaction(request):
             return self._action_delete_folders(
                 make_folder_tree(config),
                 SiteId(delete_folders_id),
@@ -1163,7 +1163,7 @@ class ModeDistributedMonitoring(WatoMode):
             )
 
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
-        if delete_connection_id and transactions.check_transaction():
+        if delete_connection_id and transactions.check_transaction(request):
             return self._action_delete_broker_connection(
                 ConnectionId(delete_connection_id),
                 pprint_value=config.wato_pprint_config,
@@ -1400,7 +1400,7 @@ class ModeDistributedMonitoring(WatoMode):
         if request.get_ascii_input("_cancel"):
             return redirect(mode_url("sites"))
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         site = configured_sites[login_id]
@@ -2013,7 +2013,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         config_variable = config_variable_registry[varname]
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         if varname in self._current_settings:
@@ -2238,7 +2238,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         action = request.get_ascii_input_mandatory("_action")

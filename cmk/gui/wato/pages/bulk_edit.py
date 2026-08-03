@@ -99,7 +99,7 @@ class ModeBulkEdit(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         user.need_permission("wato.edit_hosts")
@@ -235,7 +235,7 @@ class ModeBulkCleanup(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         user.need_permission("wato.edit_hosts")

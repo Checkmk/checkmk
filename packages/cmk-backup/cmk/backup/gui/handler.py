@@ -541,7 +541,7 @@ class ModeBackup(WatoMode[object]):
 
         action = request.var("_action")
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         if action == "delete":
@@ -1033,7 +1033,7 @@ class ModeEditBackupJob(WatoMode[object]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         backup_config = BackupConfig.load()
@@ -1859,7 +1859,7 @@ class ModeBackupTargets(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         if not (ident := request.var("target")):
@@ -2001,7 +2001,7 @@ class ModeEditBackupTarget(WatoMode[object]):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         backup_config = BackupConfig.load()
@@ -2343,7 +2343,7 @@ class ModeBackupRestore(WatoMode[object]):
         if action is None:
             return None  # Only choosen the target
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
         if action == "delete":
@@ -2433,7 +2433,7 @@ class ModeBackupRestore(WatoMode[object]):
                     except (PEMDecodingError, ValueError):
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
-                    transactions.check_transaction()  # invalidate transid
+                    transactions.check_transaction(request)  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
                     flash(_("The restore has been started."))
                     return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))

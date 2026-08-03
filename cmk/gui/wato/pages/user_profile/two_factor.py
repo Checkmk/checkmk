@@ -626,7 +626,7 @@ class UserTwoFactorOverview(Page):
             user_role_ids=user.role_ids,
         )
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(ctx.request):
             try:
                 self._action(ctx.request, ctx.config)
             except MKUserError as e:
@@ -829,7 +829,7 @@ class UserTwoFactorEnforce(Page):
             user_role_ids=user.role_ids,
         )
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(ctx.request):
             try:
                 self._action()
             except MKUserError as e:
@@ -1011,7 +1011,7 @@ class RegisterTotpSecret(Page):
             user_role_ids=user.role_ids,
         )
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(ctx.request):
             try:
                 self._action(ctx.request, ctx.config)
             except MKUserError as e:
@@ -1139,7 +1139,7 @@ class EditCredentialAlias(Page):
             user_role_ids=user.role_ids,
         )
 
-        if transactions.check_transaction():
+        if transactions.check_transaction(ctx.request):
             try:
                 self._action(ctx.request, ctx.config)
             except MKUserError as e:

@@ -137,7 +137,7 @@ class OAuthAuthorizePage(Page):
         # received authorization form OK
         if request.request_method == "POST":
             check_csrf_token()
-            if transactions.check_transaction():
+            if transactions.check_transaction(request):
                 if request.var("_deny") is not None:
                     self._error_redirect(ctx, redirect_uri, "access_denied")
                     return None

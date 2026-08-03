@@ -212,7 +212,7 @@ class ModeTags(ABCTagMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(makeuri(request, []))
 
         pending_changes = _pending_changes(
@@ -826,7 +826,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("tags"))
 
         vs = self._valuespec()
@@ -930,7 +930,7 @@ class ModeEditTagGroup(ABCEditTagMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(mode_url("tags"))
 
         vs = self._valuespec()

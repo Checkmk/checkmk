@@ -116,7 +116,7 @@ class ModeAnalyzeConfig(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         test_id = request.get_str_input_mandatory("_test_id")

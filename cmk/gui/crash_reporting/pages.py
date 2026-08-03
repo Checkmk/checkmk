@@ -168,7 +168,7 @@ class PageCrash(Page):
             html.footer()
             return
 
-        if ctx.request.has_var("_report") and transactions.check_transaction():
+        if ctx.request.has_var("_report") and transactions.check_transaction(request):
             details = self._handle_report_form(
                 ctx.request, ctx.config.crash_report_target, ctx.config.crash_report_url, report.row
             )

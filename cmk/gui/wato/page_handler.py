@@ -16,7 +16,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.flashed_messages import get_flashed_messages_with_categories
-from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.activate_changes import update_config_generation
@@ -83,7 +82,7 @@ def page_handler(edition: Edition, ctx: PageContext) -> None:
         html.add_body_css_class("inline")
 
     # If we do an action, we acquire an exclusive lock on the complete Setup.
-    if transactions.is_transaction():
+    if request.has_var("_transid"):
         with store.lock_checkmk_configuration(configuration_lockfile):
             _wato_page_handler(ctx.config, current_mode, mode_instance)
     else:
@@ -92,7 +91,7 @@ def page_handler(edition: Edition, ctx: PageContext) -> None:
 
 def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]) -> None:
     # Do actions (might switch mode)
-    if transactions.is_transaction():
+    if request.has_var("_transid"):
         try:
             if read_only.blocks_changes(config.wato_read_only):
                 raise MKUserError(None, read_only.message(config.wato_read_only))
@@ -133,7 +132,7 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]
     )
 
     if read_only.is_enabled(config.wato_read_only) and (
-        not transactions.is_transaction() or read_only.may_override(config.wato_read_only)
+        not request.has_var("_transid") or read_only.may_override(config.wato_read_only)
     ):
         html.show_warning(read_only.message(config.wato_read_only))
 

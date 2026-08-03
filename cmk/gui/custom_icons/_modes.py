@@ -94,7 +94,7 @@ class ModeIcons(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         if request.has_var("_delete"):

@@ -176,7 +176,7 @@ class ModeDiagHost(WatoMode):
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         if request.var("_save"):
@@ -543,7 +543,7 @@ class PageAjaxDiagHost(AjaxPage):
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             raise MKAuthException(_("Invalid transaction"))
 
         api_request = ctx.request.get_request()

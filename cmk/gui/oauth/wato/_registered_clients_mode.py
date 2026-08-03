@@ -91,7 +91,7 @@ class ModeRegisteredOAuthClients(WatoMode):
     @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         if delete_client := request.get_ascii_input("_delete"):

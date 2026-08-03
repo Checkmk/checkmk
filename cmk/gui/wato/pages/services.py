@@ -556,7 +556,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         use_git: bool,
         pending_changes: PendingChanges,
     ) -> DiscoveryResult:
-        if action == DiscoveryAction.NONE or not transactions.check_transaction():
+        if action == DiscoveryAction.NONE or not transactions.check_transaction(request):
             return initial_discovery_result(
                 action,
                 host,

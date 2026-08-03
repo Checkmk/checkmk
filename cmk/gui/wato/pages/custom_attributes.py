@@ -99,7 +99,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=request.has_var("_transid"))
 
         if not self._new:
             matching_attrs = [a for a in self._attrs if a["name"] == self._name]
@@ -173,7 +173,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             return None
 
         title = request.get_str_input_mandatory("title").strip()
@@ -526,7 +526,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=request.has_var("_transid"))
 
     @property
     @abc.abstractmethod
@@ -596,7 +596,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction():
+        if not transactions.check_transaction(request):
             request.del_var("_transid")
             return redirect(makeuri(request=request, addvars=list(request.itervars())))
 

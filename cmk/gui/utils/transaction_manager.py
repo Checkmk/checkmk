@@ -13,8 +13,8 @@ from typing import Literal, Protocol
 
 from cmk.ccc.user import UserId
 from cmk.gui.ctx_stack import session_attr
-from cmk.gui.http import request
 from cmk.utils.security_event import log_security_event, SecurityEvent
+from cmk.web.context import RequestProtocol
 
 
 class _TransactionIdInvalid(ValueError):
@@ -125,8 +125,8 @@ class TransactionManager:
 
         return True
 
-    def transaction_valid(self) -> bool:
-        """Checks if the current transaction is valid
+    def transaction_valid(self, request: RequestProtocol) -> bool:
+        """Checks if the given transaction is valid
 
         i.e. in case of browser reload a browser reload, the form submit should
         not be handled  a second time.. The HTML variable _transid must be
@@ -154,12 +154,7 @@ class TransactionManager:
             )
             return False
 
-    def is_transaction(self) -> bool:
-        """Checks, if the current page is a transation, i.e. something that is secured by
-        a transid (such as a submitted form)"""
-        return request.has_var("_transid")
-
-    def check_transaction(self) -> bool:
+    def check_transaction(self, request: RequestProtocol) -> bool:
         """called by page functions in order to check, if this was a reload or the original form submission.
 
         Increases the transid of the user, if the latter was the case.
@@ -170,7 +165,7 @@ class TransactionManager:
         False: -> not yet confirmed, question is being shown
         None:  -> a browser reload or a negative confirmation
         """
-        if self.transaction_valid():
+        if self.transaction_valid(request):
             transid = request.var("_transid")
             if transid and transid != "-1":
                 self._invalidate(transid)

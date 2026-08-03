@@ -155,7 +155,7 @@ class GUIViewRenderer(ABCViewRenderer):
     ) -> None:
         view_spec = self.view.spec
 
-        if transactions.transaction_valid() and html.do_actions():
+        if transactions.transaction_valid(request) and html.do_actions():
             html.browser_reload = 0.0
 
         command_form = should_show_command_form(self.view.datasource)
@@ -226,8 +226,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                 )
 
-            if (
-                html.do_actions() and transactions.transaction_valid()
+            if html.do_actions() and transactions.transaction_valid(
+                request
             ):  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
@@ -248,7 +248,7 @@ class GUIViewRenderer(ABCViewRenderer):
             row_count > 0
             and user.may("general.act")
             and html.do_actions()
-            and transactions.transaction_valid()
+            and transactions.transaction_valid(request)
         ):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions

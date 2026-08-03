@@ -141,7 +141,7 @@ class ModeBulkDiscovery(WatoMode):
         user.need_permission("wato.services")
 
         try:
-            transactions.check_transaction()
+            transactions.check_transaction(request)
             if (
                 result := start_bulk_discovery(
                     self._job,

@@ -282,17 +282,16 @@ test-system-update-community:
 	$(PYTEST) --cmk-edition community $(realpath system/update)/community $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-system-update-pro:
-	$(PYTEST) --cmk-edition pro $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition pro $(realpath system/update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-system-update-ultimate:
-	$(PYTEST) --cmk-edition ultimate $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
+	$(PYTEST) --cmk-edition ultimate $(realpath system/update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
 
 test-system-update-ultimatemt:
-	$(PYTEST) --cmk-edition ultimatemt $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
+	$(PYTEST) --cmk-edition ultimatemt $(realpath system/update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
 
 test-system-update-cloud:
-	$(PYTEST) --cmk-edition cloud $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
-	--session-timeout 5400
+	$(PYTEST) --cmk-edition cloud $(realpath system/update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 
 test-system-update-cross-edition-pro-to-ultimate: # from pro to ultimate
 	$(PYTEST) --cmk-edition pro $(realpath system/update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \

@@ -547,6 +547,11 @@ class SiteManagement:
             title=Title("Authentication"),
             add_element_label=Label("Add connection"),
             editable_order=False,
+            custom_validate=[
+                not_empty(
+                    Message("Please add at least one connection or choose a different option.")
+                )
+            ],
         )
 
     @classmethod

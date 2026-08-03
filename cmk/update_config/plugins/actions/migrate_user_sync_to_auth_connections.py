@@ -134,7 +134,10 @@ def _derive_new_values(
         # "all", a remote like "disabled".
         return (all_value, "all") if is_central_site else ("disabled", "disabled")
     if isinstance(user_sync, tuple) and user_sync[0] == "list":
-        conn_ids: list[str] = list(user_sync[1])
+        if not (conn_ids := list(user_sync[1])):
+            # An empty explicit list is semantically "disabled", and the site editor
+            # now rejects an empty list.
+            return "disabled", "disabled"
         auth_entries: list[AuthenticationConnectionEntry] = [
             ("ldap", conn_id) for conn_id in conn_ids
         ]

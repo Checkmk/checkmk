@@ -69,6 +69,12 @@ def test_legacy_list_migrates_to_plain_lists() -> None:
     assert attr == ["ldap_a", "ldap_b"]
 
 
+def test_legacy_empty_list_disables_both_fields() -> None:
+    auth, attr = _derive_new_values(("list", []), is_central_site=True, saml_supported=True)
+    assert auth == "disabled"
+    assert attr == "disabled"
+
+
 def test_legacy_none_on_central_disables_both_fields() -> None:
     """Explicit ``user_sync = None`` was the legacy "Disable automatic user
     synchronization" choice; both new fields mirror it as explicitly

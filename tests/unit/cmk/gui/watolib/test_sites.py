@@ -23,6 +23,7 @@ from typing import Any
 import pytest
 
 from cmk.ccc.site import omd_site, SiteId
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -368,3 +369,21 @@ def test_editable_connections_form_spec_omits_saml_when_not_supported() -> None:
     """Without distributed SAML support the nested "list" widget offers only the LDAP pick."""
     elements = _editable_connection_elements(saml_supported=False)
     assert [element.name for element in elements] == ["ldap"]
+
+
+def test_editable_connections_form_spec_rejects_empty_list(request_context: None) -> None:
+    """Choosing "Use the following" requires at least one connection entry —
+    an empty list would be semantically "disabled" behind a misleading label."""
+    visitor = get_visitor(
+        SiteManagement._editable_connections_form_spec(
+            ldap_choices=[("ldap_a", "LDAP A")], saml_choices=None
+        ),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    )
+
+    validation_messages = visitor.validate(RawDiskData([]))
+    assert [message.message for message in validation_messages] == [
+        "Please add at least one connection or choose a different option."
+    ]
+
+    assert visitor.validate(RawDiskData([("ldap", "ldap_a")])) == []

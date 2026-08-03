@@ -63,6 +63,7 @@ from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import (
     GraphDisplayConfigHTML,
+    HTML_SIZE_PER_EX,
 )
 from ._graph_metric_expressions import GraphConsolidationFunction, GraphMetricExpression
 from ._graph_specification import (
@@ -284,7 +285,7 @@ def compute_html_graph_ranges(
 ) -> GraphRanges:
     return GraphRanges(
         time_range=(start, end),
-        step=factor * int((end - start) / (height_in_ex * _HTML_SIZE_PER_EX * 4)),
+        step=factor * int((end - start) / (height_in_ex * HTML_SIZE_PER_EX * 4)),
     )
 
 
@@ -346,10 +347,6 @@ class UserGraphRangesStore:
 # Graph Overview
 # Custom graph
 
-# TODO: This is not acurate! Rendering of the graphs is wrong especially when the font size is changed
-# this does not lead to correct results. We should find a way to fix this. Otherwise the font size
-# chaning of the graph rendering options won't work as expected.
-_HTML_SIZE_PER_EX = 11.0
 _MIN_RESIZE_WIDTH = 50
 _MIN_RESIZE_HEIGHT = 6
 
@@ -388,8 +385,8 @@ def _collect_graph_html(
     with output_funnel.plugged():
         display_config = render_state.display_config
         is_inline = display_config.show_title == "inline"
-        graph_width: float = render_state.interaction.size_x * _HTML_SIZE_PER_EX
-        graph_height: float = render_state.interaction.size_y * _HTML_SIZE_PER_EX
+        graph_width: float = render_state.interaction.size_x * HTML_SIZE_PER_EX
+        graph_height: float = render_state.interaction.size_y * HTML_SIZE_PER_EX
 
         html.open_div(
             class_=["graph"]
@@ -848,8 +845,6 @@ def host_service_graph_popup_cmk(
             show_graph_time=False,
             show_consolidation=False,
             show_legend=False,
-            figure_width=int(popup_size[0] * _HTML_SIZE_PER_EX),
-            figure_height=int(popup_size[1] * _HTML_SIZE_PER_EX),
             debug=env.debug,
         )
     )
@@ -934,7 +929,7 @@ def _compute_graph_legend_styles(
     display_config: GraphDisplayConfigHTML, size_x: float
 ) -> Iterator[str]:
     """Render legend that describe the metrics"""
-    graph_width = size_x * _HTML_SIZE_PER_EX
+    graph_width = size_x * HTML_SIZE_PER_EX
 
     if display_config.show_vertical_axis or display_config.show_controls:
         legend_margin_left = 49
@@ -1187,10 +1182,10 @@ def _graph_margin_ex(
 ) -> Bounds:
     return (
         Bounds(
-            top=int(round(top / _HTML_SIZE_PER_EX)),
-            right=int(round(right / _HTML_SIZE_PER_EX)),
-            bottom=int(round(bottom / _HTML_SIZE_PER_EX)),
-            left=int(round(left / _HTML_SIZE_PER_EX)),
+            top=int(round(top / HTML_SIZE_PER_EX)),
+            right=int(round(right / HTML_SIZE_PER_EX)),
+            bottom=int(round(bottom / HTML_SIZE_PER_EX)),
+            left=int(round(left / HTML_SIZE_PER_EX)),
         )
         if show_margin
         else Bounds(
@@ -1246,11 +1241,9 @@ def render_graph_html(
     resize_y_var = request.var("resize_y")
 
     if resize_x_var is not None and resize_y_var is not None:
-        size_x = max(
-            _MIN_RESIZE_WIDTH, float(resize_x_var) / _HTML_SIZE_PER_EX + interaction.size_x
-        )
+        size_x = max(_MIN_RESIZE_WIDTH, float(resize_x_var) / HTML_SIZE_PER_EX + interaction.size_x)
         size_y = max(
-            _MIN_RESIZE_HEIGHT, float(resize_y_var) / _HTML_SIZE_PER_EX + interaction.size_y
+            _MIN_RESIZE_HEIGHT, float(resize_y_var) / HTML_SIZE_PER_EX + interaction.size_y
         )
         user.save_file("graph_size", (size_x, size_y))
     else:
@@ -1416,8 +1409,8 @@ def _render_deferred_graph_html(
     # this does calculate the size of the canvas area and does not take e.g. the legend
     # into account. We would need the artwork to calculate that, but this is something
     # we don't have in this early stage.
-    graph_width = render_state.interaction.size_x * _HTML_SIZE_PER_EX
-    graph_height = render_state.interaction.size_y * _HTML_SIZE_PER_EX
+    graph_width = render_state.interaction.size_x * HTML_SIZE_PER_EX
+    graph_height = render_state.interaction.size_y * HTML_SIZE_PER_EX
 
     content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
         "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
@@ -1669,7 +1662,7 @@ def _legend_height_ex(usable_height_ex: float, curve_count: int, horizontal_rule
             _("Either increase the widget height or disable the graph legend.")
         )
 
-    # Rough estimate; inaccurate because _HTML_SIZE_PER_EX is hard coded, not font-derived.
+    # Rough estimate; inaccurate because HTML_SIZE_PER_EX is hard coded, not font-derived.
     estimated_legend_height_ex = int(3.0 + (curve_count + horizontal_rule_count) * 1.5)
     budget_ex = min(usable_height_ex // 3, max(usable_height_ex - _MIN_WIDGET_HEIGHT_EX, 0))
     legend_height_ex = min(estimated_legend_height_ex, budget_ex)
@@ -1694,10 +1687,10 @@ def host_service_graph_dashlet_cmk(
     time_range: TimerangeValue = None,
 ) -> HTML:
     width_var = request.get_float_input_mandatory("width", 0.0)
-    width = width_var / _HTML_SIZE_PER_EX
+    width = width_var / HTML_SIZE_PER_EX
 
     height_var = request.get_float_input_mandatory("height", 0.0)
-    height = height_var / _HTML_SIZE_PER_EX
+    height = height_var / HTML_SIZE_PER_EX
 
     bounds = _graph_margin_ex(display_config.show_margin)
     if display_config.show_title not in [False, "inline"]:

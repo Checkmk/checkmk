@@ -16,6 +16,7 @@ from . import _engine_plugins as engine_plugins
 from ._engine_rrd import EngineRRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._frontend import _DEFAULT_INTERACTION, to_cmk_time_series_graph
+from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_templates import TemplateGraphSpecification
 
 
@@ -31,8 +32,6 @@ def render_engine_graph_group(
     show_consolidation: bool = True,
     show_legend: bool = True,
     interaction: Interaction = _DEFAULT_INTERACTION,
-    figure_width: int = 800,
-    figure_height: int | None = None,
 ) -> HTML:
     """Render the graph-engine (Vue) 'cmk-graph-group' for a host/service's template graphs.
 
@@ -62,14 +61,14 @@ def render_engine_graph_group(
         )
         for built in engine_graphs
     ]
+    # The Size is in ex units; the group's figure is laid out in CSS pixels.
     data: dict[str, object] = {
         "initial_time_range_start": time_range[0],
         "initial_time_range_end": time_range[1],
-        "figure_width": figure_width,
+        "figure_width": int(size.width * HTML_SIZE_PER_EX),
+        "figure_height": int(size.height * HTML_SIZE_PER_EX),
         "graphs": vue_graphs,
         "show_consolidation": show_consolidation,
         "show_legend": show_legend,
     }
-    if figure_height is not None:
-        data["figure_height"] = figure_height
     return HTMLWriter.render_vue_component("cmk-graph-group", data)

@@ -16,6 +16,14 @@ from cmk.gui.type_defs import (
     SizePT,
 )
 
+# Pixels per "ex" graph-size unit: graph sizes are configured/stored in ex, this scales them to the
+# CSS pixel dimensions used by both the legacy HTML renderer and the engine (Vue) graph group.
+#
+# TODO: This is not acurate! Rendering of the graphs is wrong especially when the font size is changed
+# this does not lead to correct results. We should find a way to fix this. Otherwise the font size
+# chaning of the graph rendering options won't work as expected.
+HTML_SIZE_PER_EX = 11.0
+
 
 class GraphTitleFormat(BaseModel):
     plain: bool

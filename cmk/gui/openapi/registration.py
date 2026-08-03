@@ -39,6 +39,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from .api_endpoints import agent_download, icon, pagetype_topic, site_management
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
+from .api_endpoints import notification_rule as api_notification_rule
 from .api_endpoints.graph import registration as api_graph
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
@@ -48,6 +49,7 @@ from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.agent import AGENTS_FAMILY
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
+from .shared_endpoint_families.notification_rules import NOTIFICATION_RULES_FAMILY
 
 
 def register(
@@ -64,6 +66,9 @@ def register(
         HOST_CONFIG_FAMILY, ignore_duplicates=ignore_duplicate_endpoints
     )
     endpoint_family_registry.register(AGENTS_FAMILY, ignore_duplicates=ignore_duplicate_endpoints)
+    endpoint_family_registry.register(
+        NOTIFICATION_RULES_FAMILY, ignore_duplicates=ignore_duplicate_endpoints
+    )
 
     acknowledgement.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     activate_changes.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
@@ -101,6 +106,9 @@ def register(
         versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
     )
     api_host_config_internal.register(
+        versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
+    )
+    api_notification_rule.register(
         versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
     )
     api_user_role.register(

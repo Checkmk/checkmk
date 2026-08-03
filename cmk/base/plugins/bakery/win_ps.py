@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
+from collections.abc import Mapping
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
-def get_win_ps_windows_config(conf: dict[str, Any]) -> WindowsConfigGenerator:
+def get_win_ps_windows_config(conf: Mapping[str, bool]) -> WindowsConfigGenerator:
     use_wmi = conf.get("use_wmi", False)
     yield WindowsConfigEntry(path=["ps", "use_wmi"], content=use_wmi is True)
 

@@ -6,11 +6,11 @@
 from pathlib import Path
 
 from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mk_scaleio import get_mk_scaleio_files
+from cmk.base.plugins.bakery.mk_scaleio import get_mk_scaleio_files, ScaleioConfig
 
 
 def test_mk_scaleio_files_default_interval() -> None:
-    conf = {"user": "admin", "password": ("password", "secret123")}
+    conf = ScaleioConfig(user="admin", password=("password", "secret123"))
     result = sorted(get_mk_scaleio_files(conf), key=repr)
     expected = sorted(
         [
@@ -29,14 +29,14 @@ def test_mk_scaleio_files_default_interval() -> None:
 
 def test_mk_scaleio_files_interval_below_60() -> None:
     """Interval <= 60 is reset to 0."""
-    conf = {"user": "admin", "password": ("password", "secret"), "interval": 30}
+    conf = ScaleioConfig(user="admin", password=("password", "secret"), interval=30)
     result = sorted(get_mk_scaleio_files(conf), key=repr)
     plugin = [r for r in result if isinstance(r, Plugin)][0]
     assert plugin.interval == 0
 
 
 def test_mk_scaleio_files_interval_above_60() -> None:
-    conf = {"user": "admin", "password": ("password", "secret"), "interval": 120}
+    conf = ScaleioConfig(user="admin", password=("password", "secret"), interval=120)
     result = sorted(get_mk_scaleio_files(conf), key=repr)
     plugin = [r for r in result if isinstance(r, Plugin)][0]
     assert plugin.interval == 120
@@ -44,7 +44,7 @@ def test_mk_scaleio_files_interval_above_60() -> None:
 
 def test_mk_scaleio_files_interval_exact_60() -> None:
     """Interval exactly 60 is still reset to 0."""
-    conf = {"user": "admin", "password": ("password", "secret"), "interval": 60}
+    conf = ScaleioConfig(user="admin", password=("password", "secret"), interval=60)
     result = sorted(get_mk_scaleio_files(conf), key=repr)
     plugin = [r for r in result if isinstance(r, Plugin)][0]
     assert plugin.interval == 0

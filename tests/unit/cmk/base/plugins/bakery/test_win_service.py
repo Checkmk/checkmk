@@ -30,8 +30,7 @@ def test_win_service_partial_keys() -> None:
 
 
 def test_win_service_empty_config() -> None:
-    conf: dict[str, object] = {}
-    result = list(get_win_service_windows_config(conf))
+    result = list(get_win_service_windows_config({}))
     assert result == []
 
 

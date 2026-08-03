@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.bakery.v1 import WindowsConfigEntry
 from cmk.base.plugins.bakery.win_ps import get_win_ps_windows_config
 
 
 def test_win_ps_no_wmi() -> None:
-    conf: dict[str, object] = {}
+    conf: Mapping[str, bool] = {}
     result = list(get_win_ps_windows_config(conf))
     assert result == [
         WindowsConfigEntry(path=["ps", "use_wmi"], content=False),

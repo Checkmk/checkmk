@@ -3,18 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
+from typing import NotRequired, ReadOnly, TypedDict
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
+
+
+class WinControllerConfig(TypedDict):
+    check_controller_access: ReadOnly[bool]
+    force_legacy: ReadOnly[bool]
+    agent_channel: NotRequired[ReadOnly[tuple[str, int | None]]]
 
 
 def _path_to(entry: str) -> list[str]:
     return ["system", "controller", entry]
 
 
-def get_win_controller_windows_config(conf: dict[str, Any]) -> WindowsConfigGenerator:
+def get_win_controller_windows_config(conf: WinControllerConfig) -> WindowsConfigGenerator:
     yield WindowsConfigEntry(
         path=_path_to("check"), content=conf.get("check_controller_access", True)
     )

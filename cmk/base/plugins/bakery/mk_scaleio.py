@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from pathlib import Path
-from typing import Any
+from typing import NotRequired, ReadOnly, TypedDict
 
 from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
 
 
-def get_mk_scaleio_files(conf: dict[str, Any]) -> FileGenerator:
+class ScaleioConfig(TypedDict):
+    user: ReadOnly[str]
+    password: ReadOnly[password_store.PasswordId]
+    interval: NotRequired[ReadOnly[int]]
+
+
+def get_mk_scaleio_files(conf: ScaleioConfig) -> FileGenerator:
     interval = conf.get("interval", 0)
     if interval <= 60:
         interval = 0
@@ -25,7 +29,7 @@ def get_mk_scaleio_files(conf: dict[str, Any]) -> FileGenerator:
     )
 
 
-def _get_mk_scaleio_config(conf: dict[str, Any]) -> list[str]:
+def _get_mk_scaleio_config(conf: ScaleioConfig) -> list[str]:
     return [
         "SIO_USER=%s" % conf["user"],
         "SIO_PASSWORD=%s" % password_store.extract(conf["password"]),

@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
+from collections.abc import Sequence
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
-def get_winperf_windows_config(conf: Any) -> WindowsConfigGenerator:
+def get_winperf_windows_config(conf: Sequence[tuple[str, str]]) -> WindowsConfigGenerator:
     counters = [{counterspec: section} for (section, counterspec) in conf]
     if counters:
         yield WindowsConfigEntry(path=["winperf", "counters"], content=counters)

@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
+from collections.abc import Mapping
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
 # will be called during generation of the final yml
-def get_agent_install_python_config(conf: Any) -> WindowsConfigGenerator:
-    if not conf:
+def get_agent_install_python_config(conf: object) -> WindowsConfigGenerator:
+    if not isinstance(conf, Mapping) or not conf:
         return  # TODO: For some obscure reason, we sometimes get False for conf...
 
     # ...expected yml...

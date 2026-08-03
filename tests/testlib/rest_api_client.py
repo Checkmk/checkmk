@@ -2696,6 +2696,25 @@ class RuleNotificationClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def move(
+        self,
+        rule_id: str,
+        position: Literal[
+            "top_of_list", "bottom_of_list", "before_specific_rule", "after_specific_rule"
+        ],
+        dest_rule_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"position": position}
+        if dest_rule_id is not None:
+            body["rule_id"] = dest_rule_id
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{rule_id}/actions/move/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
 
 class EventConsoleClient(RestApiClient):
     domain: DomainType = "event_console"

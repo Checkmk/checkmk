@@ -173,6 +173,26 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
         )
         self.save(rules, pprint_value=pprint_value)
 
+    def rule_moved(
+        self,
+        rules: list[EventRule],
+        rule_number: str,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
+    ) -> None:
+        """Move a notification rule to another position."""
+        pending_changes.add(
+            Change(
+                action_name="notification-move-rule",
+                text=_("Changed position of notification rule #%(rule_number)s")
+                % {"rule_number": rule_number},
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
+        )
+        self.save(rules, pprint_value=pprint_value)
+
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(NotificationRuleConfigFile())

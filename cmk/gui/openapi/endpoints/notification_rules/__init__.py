@@ -7,7 +7,7 @@
 
 """Notification Rules
 
-The notification rules endpoints give you the flexibility to create, edit, delete and show
+The notification rules endpoints give you the flexibility to create, edit, delete, move and show
 all notification rules configured.
 
 * POST for creating new notification rules.
@@ -15,6 +15,7 @@ all notification rules configured.
 * LIST for listing all current notification rules.
 * GET for getting a single notification rule.
 * DELETE for deleting a single notification rule.
+* MOVE for changing the position of a notification rule within the rule chain.
 
 """
 
@@ -29,6 +30,10 @@ from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.api_endpoints.notification_rule.utils import (
+    RO_PERMISSIONS,
+    RW_PERMISSIONS,
+)
 from cmk.gui.openapi.endpoints.notification_rules.request_schemas import NotificationRuleRequest
 from cmk.gui.openapi.endpoints.notification_rules.response_schemas import (
     NotificationRuleResponse,
@@ -38,9 +43,9 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import domain_object
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.openapi.shared_endpoint_families.notification_rules import NOTIFICATION_RULES_FAMILY
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.notifications import (
     BulkNotAllowedException,
@@ -53,16 +58,6 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
-
-RO_PERMISSIONS = permissions.Perm("general.edit_notifications")
-RW_PERMISSIONS = permissions.AllPerm(
-    [
-        permissions.Perm("wato.edit"),
-        permissions.Perm("wato.see_all_folders"),
-        RO_PERMISSIONS,
-    ]
-)
-
 
 RULE_ID = {
     "rule_id": fields.String(
@@ -81,16 +76,17 @@ RULE_ID = {
     path_params=[RULE_ID],
     response_schema=NotificationRuleResponse,
     permissions_required=RO_PERMISSIONS,
+    family_name=NOTIFICATION_RULES_FAMILY.name,
 )
 def show_rule(params: Mapping[str, Any]) -> Response:
     """Show a notification rule"""
     user.need_permission("general.edit_notifications")
 
     notification_rules: list[EventRule] = NotificationRuleConfigFile().load_for_reading()
-    for rule in notification_rules:
+    for index, rule in enumerate(notification_rules):
         if rule["rule_id"] == params["rule_id"]:
             return serve_json(
-                _serialize_notification_rule(NotificationRule.from_mk_file_format(rule))
+                _serialize_notification_rule(NotificationRule.from_mk_file_format(rule), index)
             )
     raise ProblemException(
         status=404,
@@ -106,19 +102,21 @@ def show_rule(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=NotificationRuleResponseCollection,
     permissions_required=RO_PERMISSIONS,
+    family_name=NOTIFICATION_RULES_FAMILY.name,
 )
 def show_rules(params: Mapping[str, Any]) -> Response:
-    """Show all notification rules"""
+    """Show all notification rules
+
+    The rules are returned in the order in which they are evaluated. Each rule exposes its
+    current position in the chain as the `rule_index` extension.
+    """
     user.need_permission("general.edit_notifications")
     return serve_json(
         constructors.collection_object(
             domain_type="notification_rule",
             value=[
-                _serialize_notification_rule(rule)
-                for rule in [
-                    NotificationRule.from_mk_file_format(config)
-                    for config in NotificationRuleConfigFile().load_for_reading()
-                ]
+                _serialize_notification_rule(NotificationRule.from_mk_file_format(config), index)
+                for index, config in enumerate(NotificationRuleConfigFile().load_for_reading())
             ],
         )
     )
@@ -132,9 +130,14 @@ def show_rules(params: Mapping[str, Any]) -> Response:
     request_schema=NotificationRuleRequest,
     response_schema=NotificationRuleResponse,
     permissions_required=RW_PERMISSIONS,
+    family_name=NOTIFICATION_RULES_FAMILY.name,
 )
 def post_rule(params: Mapping[str, Any]) -> Response:
-    """Create a notification rule"""
+    """Create a notification rule
+
+    The new rule is appended to the end of the rule chain. Use the move endpoint to change its
+    position afterwards.
+    """
     user.need_permission("wato.edit")
     user.need_permission("wato.see_all_folders")
     user.need_permission("general.edit_notifications")
@@ -165,7 +168,9 @@ def post_rule(params: Mapping[str, Any]) -> Response:
         ),
     )
 
-    return serve_json(data=_serialize_notification_rule(rule_from_request))
+    return serve_json(
+        data=_serialize_notification_rule(rule_from_request, len(notification_rules) - 1)
+    )
 
 
 @Endpoint(
@@ -177,9 +182,13 @@ def post_rule(params: Mapping[str, Any]) -> Response:
     request_schema=NotificationRuleRequest,
     response_schema=NotificationRuleResponse,
     permissions_required=RW_PERMISSIONS,
+    family_name=NOTIFICATION_RULES_FAMILY.name,
 )
 def put_rule(params: Mapping[str, Any]) -> Response:
-    """Update a notification rule"""
+    """Update a notification rule
+
+    The position of the rule within the rule chain is not changed. Use the move endpoint for that.
+    """
     user.need_permission("wato.edit")
     user.need_permission("wato.see_all_folders")
     user.need_permission("general.edit_notifications")
@@ -215,7 +224,7 @@ def put_rule(params: Mapping[str, Any]) -> Response:
                 ),
             )
 
-            return serve_json(data=_serialize_notification_rule(rule_from_request))
+            return serve_json(data=_serialize_notification_rule(rule_from_request, n))
 
     raise ProblemException(
         status=404,
@@ -232,6 +241,7 @@ def put_rule(params: Mapping[str, Any]) -> Response:
     path_params=[RULE_ID],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    family_name=NOTIFICATION_RULES_FAMILY.name,
 )
 def delete_rule(params: Mapping[str, Any]) -> Response:
     """Delete a notification rule"""
@@ -263,12 +273,12 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def _serialize_notification_rule(rule: NotificationRule) -> DomainObject:
+def _serialize_notification_rule(rule: NotificationRule, rule_index: int) -> DomainObject:
     return domain_object(
         domain_type="notification_rule",
         identifier=str(rule.rule_id),
         title=rule.rule_properties.description,
-        extensions={"rule_config": rule.api_response()},
+        extensions={"rule_config": rule.api_response(), "rule_index": rule_index},
         editable=True,
         deletable=True,
     )

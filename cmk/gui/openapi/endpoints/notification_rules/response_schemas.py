@@ -1245,6 +1245,13 @@ class NotificationRuleAttributes(BaseSchema):
 
 class NotificationRuleConfig(BaseSchema):
     rule_config = fields.Nested(NotificationRuleAttributes)
+    rule_index = fields.Integer(
+        description=(
+            "The position of this rule within the notification rule chain. Notification rules "
+            "are evaluated from the lowest to the highest index."
+        ),
+        example=0,
+    )
 
 
 class NotificationRuleResponse(DomainObject):
@@ -1255,7 +1262,7 @@ class NotificationRuleResponse(DomainObject):
     extensions = fields.Nested(
         NotificationRuleConfig,
         description="The configuration attributes of a notification rule.",
-        example={"rule_config": notification_rule_request_example()},
+        example={"rule_config": notification_rule_request_example(), "rule_index": 0},
     )
 
 
@@ -1274,7 +1281,10 @@ class NotificationRuleResponseCollection(DomainObjectCollection):
                 "id": "1",
                 "title": "Rule Description",
                 "members": {},
-                "extensions": {"rule_config": notification_rule_request_example()},
+                "extensions": {
+                    "rule_config": notification_rule_request_example(),
+                    "rule_index": 0,
+                },
             }
         ],
     )

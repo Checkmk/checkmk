@@ -46,6 +46,7 @@ from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import host_group_config as api_host_group_config
 from .api_endpoints import master_control as api_master_control
+from .api_endpoints import notification_rule as api_notification_rule
 from .api_endpoints import quick_setup as api_quick_setup
 from .api_endpoints import service_discovery as api_service_discovery
 from .api_endpoints import user_config as api_user_config
@@ -55,6 +56,7 @@ from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.agent import AGENTS_FAMILY
+from .shared_endpoint_families.notification_rules import NOTIFICATION_RULES_FAMILY
 
 
 def register(
@@ -65,6 +67,7 @@ def register(
     # TODO: once all legacy endpoints have been migrated the family registry should happen inside
     #  respective endpoint module
     endpoint_family_registry.register(AGENTS_FAMILY)
+    endpoint_family_registry.register(NOTIFICATION_RULES_FAMILY)
 
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
@@ -110,6 +113,7 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_host_config_internal.register(versioned_endpoint_registry)
+    api_notification_rule.register(versioned_endpoint_registry)
     api_host_group_config.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,

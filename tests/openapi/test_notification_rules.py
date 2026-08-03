@@ -86,7 +86,7 @@ def test_get_notification_rule(clients: ClientRegistry) -> None:
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(config)
     r2 = clients.RuleNotification.get(rule_id=r1.json["id"])
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 def test_get_notification_rules(clients: ClientRegistry) -> None:
@@ -99,10 +99,107 @@ def test_get_notification_rules(clients: ClientRegistry) -> None:
     assert rules[1]["id"] == r2.json["id"]
 
 
+def _create_rules(clients: ClientRegistry, count: int) -> list[str]:
+    config = notification_rule_request_example()
+    return [clients.RuleNotification.create(config).json["id"] for _ in range(count)]
+
+
+def _rule_order(clients: ClientRegistry) -> list[str]:
+    return [rule["id"] for rule in clients.RuleNotification.get_all().json["value"]]
+
+
+def test_notification_rule_index_is_exposed(clients: ClientRegistry) -> None:
+    rule_ids = _create_rules(clients, 3)
+    assert [
+        rule["extensions"]["rule_index"]
+        for rule in clients.RuleNotification.get_all().json["value"]
+    ] == [0, 1, 2]
+    assert clients.RuleNotification.get(rule_id=rule_ids[2]).json["extensions"]["rule_index"] == 2
+
+
+@pytest.mark.parametrize(
+    "position, source, destination, expected_order",
+    [
+        pytest.param("top_of_list", 2, None, [2, 0, 1, 3], id="top_of_list"),
+        pytest.param("bottom_of_list", 1, None, [0, 2, 3, 1], id="bottom_of_list"),
+        pytest.param("before_specific_rule", 3, 1, [0, 3, 1, 2], id="before_specific_rule"),
+        pytest.param("after_specific_rule", 0, 2, [1, 2, 0, 3], id="after_specific_rule"),
+        pytest.param("before_specific_rule", 0, 1, [0, 1, 2, 3], id="before_direct_successor"),
+        pytest.param("after_specific_rule", 1, 0, [0, 1, 2, 3], id="after_direct_predecessor"),
+    ],
+)
+def test_move_notification_rule(
+    clients: ClientRegistry,
+    position: Literal[
+        "top_of_list", "bottom_of_list", "before_specific_rule", "after_specific_rule"
+    ],
+    source: int,
+    destination: int | None,
+    expected_order: list[int],
+) -> None:
+    rule_ids = _create_rules(clients, 4)
+    clients.RuleNotification.move(
+        rule_id=rule_ids[source],
+        position=position,
+        dest_rule_id=None if destination is None else rule_ids[destination],
+    )
+    assert _rule_order(clients) == [rule_ids[i] for i in expected_order]
+
+
+def test_move_notification_rule_updates_the_index(clients: ClientRegistry) -> None:
+    rule_ids = _create_rules(clients, 3)
+    clients.RuleNotification.move(rule_id=rule_ids[2], position="top_of_list")
+    assert clients.RuleNotification.get(rule_id=rule_ids[2]).json["extensions"]["rule_index"] == 0
+
+
+def test_move_unknown_notification_rule(clients: ClientRegistry) -> None:
+    _create_rules(clients, 1)
+    resp = clients.RuleNotification.move(
+        rule_id="5425d554-5741-4bbf-b907-1a391dfab5bb",
+        position="top_of_list",
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+
+
+def test_move_notification_rule_before_unknown_rule(clients: ClientRegistry) -> None:
+    rule_ids = _create_rules(clients, 2)
+    resp = clients.RuleNotification.move(
+        rule_id=rule_ids[0],
+        position="before_specific_rule",
+        dest_rule_id="5425d554-5741-4bbf-b907-1a391dfab5bb",
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+    assert _rule_order(clients) == rule_ids
+
+
+def test_move_notification_rule_relative_to_itself(clients: ClientRegistry) -> None:
+    rule_ids = _create_rules(clients, 2)
+    resp = clients.RuleNotification.move(
+        rule_id=rule_ids[1],
+        position="after_specific_rule",
+        dest_rule_id=rule_ids[1],
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert _rule_order(clients) == rule_ids
+
+
+def test_move_notification_rule_without_destination(clients: ClientRegistry) -> None:
+    rule_ids = _create_rules(clients, 1)
+    resp = clients.RuleNotification.move(
+        rule_id=rule_ids[0],
+        position="before_specific_rule",
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+
 def test_create_notification_rule(clients: ClientRegistry) -> None:
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(config)
-    assert r1.json["extensions"] == {"rule_config": config}
+    assert r1.json["extensions"]["rule_config"] == config
 
 
 def test_update_rule_with_full_contact_selection_data(clients: ClientRegistry) -> None:
@@ -131,7 +228,7 @@ def test_update_rule_with_full_contact_selection_data(clients: ClientRegistry) -
     }
 
     r2 = clients.RuleNotification.edit(r1.json["id"], config)
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 def test_create_rule_delete_rule(clients: ClientRegistry) -> None:
@@ -424,7 +521,7 @@ def test_create_and_update_rule_with_conditions_data_200(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 def invalid_conditions() -> Iterator:
@@ -473,7 +570,7 @@ def test_create_and_update_rule_with_properties_data(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 contact_selection_testdata: list[APIContactSelection] = [
@@ -521,7 +618,7 @@ def test_create_and_update_rule_with_contact_selection_data(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 bulking_method_test_data: list[NotificationBulkingAPIAttrs] = [
@@ -585,7 +682,7 @@ def test_create_and_update_rule_with_bulking_method_data(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 plugin_test_data: list[PluginType] = [
@@ -1419,7 +1516,7 @@ def test_update_notification_method_cancel_previous(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 @pytest.mark.parametrize("plugin_data", plugin_test_data)
@@ -1452,7 +1549,7 @@ def test_update_notification_method(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"] == {"rule_config": config}
+    assert r2.json["extensions"]["rule_config"] == config
 
 
 invalid_pushover_keys = [
@@ -1628,7 +1725,7 @@ def test_service_now_management_incident_types_200(
         "plugin_params": service_now,
     }
     r1 = clients.RuleNotification.create(rule_config=config)
-    assert r1.json["extensions"] == {"rule_config": config}
+    assert r1.json["extensions"]["rule_config"] == config
 
 
 service_now_case: MgmtTypeCaseAPI = {
@@ -1690,7 +1787,7 @@ def test_service_now_management_case_types_200(
         "plugin_params": service_now,
     }
     r1 = clients.RuleNotification.create(rule_config=config)
-    assert r1.json["extensions"] == {"rule_config": config}
+    assert r1.json["extensions"]["rule_config"] == config
 
 
 def config_with_bulk(plugin: PluginType) -> APINotificationRule:
@@ -2180,7 +2277,7 @@ def test_create_rules_with_basic_and_token_auth(
         "plugin_params": plugin,
     }
     r1 = clients.RuleNotification.create(rule_config=config)
-    assert r1.json["extensions"] == {"rule_config": config}
+    assert r1.json["extensions"]["rule_config"] == config
 
 
 def test_forbid_explicit_email_addresses_in_a_create_notification_request_in_cloud(

@@ -41,8 +41,8 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
+from cmk.gui.graphing._engine_codec import graph_codec, QuantitySpec
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.gui.graphing._engine_serialization import graph_codec, QuantitySpec
 
 _METRIC = RRDMetric(
     host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")

@@ -13,13 +13,13 @@ from typing import Protocol
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import ConsolidationFunction, EvaluatedGraph, Graph, TimeRange
 
-from ._engine_rrd import FetchDiagnostics
-from ._engine_serialization import (
+from ._engine_codec import (
     consolidation_function_of,
     ensure_type,
     GraphCodec,
     time_range_of,
 )
+from ._engine_rrd import FetchDiagnostics
 from ._graph_specification import GraphSpecification
 
 

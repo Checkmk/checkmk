@@ -27,8 +27,8 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
+from cmk.gui.graphing._engine_codec import graph_codec
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.gui.graphing._engine_serialization import graph_codec
 from cmk.gui.graphing._frontend import (
     global_time_picker_props,
     resolve_default_time_range_seconds,

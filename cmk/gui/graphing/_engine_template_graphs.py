@@ -26,6 +26,9 @@ from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
 
+from ._engine_codec import (
+    graph_codec,
+)
 from ._engine_dispatch import (
     BuiltGraph,
     CommonGraphOptions,
@@ -34,9 +37,6 @@ from ._engine_dispatch import (
 )
 from ._engine_plugins import registered_translations
 from ._engine_rrd import EngineRRDFetchData
-from ._engine_serialization import (
-    graph_codec,
-)
 from ._from_api import GraphFromAPI
 
 

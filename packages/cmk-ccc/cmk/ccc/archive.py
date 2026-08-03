@@ -52,11 +52,6 @@ class UnpackedArchiveTooLargeError(ValueError): ...
 class SecurityViolation(ValueError): ...
 
 
-class ZipArchiveTooLarge(ValueError):
-    def __init__(self, size_in_bytes: int):
-        self.size_in_bytes: Final = size_in_bytes
-
-
 TarFilterCallable = Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None]
 FilterType = Literal["fully_trusted", "tar", "data"] | TarFilterCallable
 

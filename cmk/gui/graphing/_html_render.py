@@ -41,6 +41,7 @@ from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Timerange, TimerangeValue
 from cmk.livestatus_client import MKLivestatusNotFoundError
+from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
@@ -57,11 +58,11 @@ from ._artwork import (
     LayoutedCurve,
     Scalars,
 )
+from ._engine_graph_group import render_engine_graph_group
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import (
     GraphDisplayConfigHTML,
-    GraphRenderOptions,
 )
 from ._graph_metric_expressions import GraphConsolidationFunction, GraphMetricExpression
 from ._graph_specification import (
@@ -807,6 +808,17 @@ def render_graphs_html(
     return output
 
 
+# The hover graphs (on hovering a service graph icon) are all static - no interaction.
+_HOVER_INTERACTION = Interaction(
+    burger="disabled",
+    zoom="disabled",
+    panning="disabled",
+    hover="disabled",
+    brush="disabled",
+    pin="disabled",
+)
+
+
 @tracer.instrument("graphing.host_service_graph_popup_cmk")
 def host_service_graph_popup_cmk(
     site: SiteId | None,
@@ -819,37 +831,29 @@ def host_service_graph_popup_cmk(
     end_time = int(time.time())
     start_time = end_time - 8 * 3600
     popup_size = (30.0, 10.0)
-    display_config = GraphDisplayConfigHTML.from_user_context_and_options(
-        user,
-        theme.get(),
-        GraphRenderOptions(
-            font_size=SizePT(6.0),
-            resizable=False,
-            show_controls=False,
-            show_legend=False,
-            interaction=False,
-            show_time_range_previews=False,
-        ),
-    )
+
+    html.open_div(class_="cmk_graph_hover")
     html.write_html(
-        render_graphs_html(
+        render_engine_graph_group(
             get_template_graph_specification(
                 site_id=site,
                 host_name=host_name,
                 service_name=service_description,
             ),
-            compute_html_graph_ranges(
-                start=start_time,
-                end=end_time,
-                factor=1,
-                height_in_ex=popup_size[1],
-            ),
-            display_config,
-            env,
-            size=popup_size,
-            graph_timeranges=graph_timeranges,
+            host_name=host_name,
+            service_name=service_description,
+            size=Size(width=popup_size[0], height=popup_size[1], mode="fixed"),
+            time_range=(start_time, end_time),
+            interaction=_HOVER_INTERACTION,
+            show_graph_time=False,
+            show_consolidation=False,
+            show_legend=False,
+            figure_width=int(popup_size[0] * _HTML_SIZE_PER_EX),
+            figure_height=int(popup_size[1] * _HTML_SIZE_PER_EX),
+            debug=env.debug,
         )
     )
+    html.close_div()
 
 
 def _show_pin_time(artwork: GraphArtwork, config: GraphDisplayConfigHTML) -> bool:

@@ -20,6 +20,14 @@ div#hover_menu div.graph {
   border: none;
 }
 
+/* The engine-rendered (Vue) hover graph is transparent; give it the graph surface
+   background the legacy popup carried on div.graph. */
+/* stylelint-disable-next-line selector-id-pattern */
+div#hover_menu div.cmk_graph_hover {
+  background-color: $bg-color-secondary;
+  border: 1px solid $ux-theme-5;
+}
+
 div.graph_container {
   --graph-bg: #{$bg-color-secondary};
 }

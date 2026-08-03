@@ -40,8 +40,16 @@ const props = withDefaults(
     // Outer figure width in CSS pixels (plot area + axis margins); the RRD step
     // resolution is derived from the resulting plot width.
     figure_width?: number
+    figure_height?: number
+    show_consolidation?: boolean
+    show_legend?: boolean
   }>(),
-  { combination_mode: null, figure_width: 800 }
+  {
+    combination_mode: null,
+    figure_width: 800,
+    show_consolidation: true,
+    show_legend: true
+  }
 )
 
 // Seeded from the backend-provided initial range, then follows the page's global time picker;
@@ -145,12 +153,13 @@ const definitionCount = computed(() => props.graphs.length)
           :title="graph.title"
           :show-title="true"
           :show-timestamp="true"
-          :show-consolidation="true"
-          :show-legend="true"
+          :show-consolidation="show_consolidation"
+          :show-legend="show_legend"
           :interaction="props.graphs[i]!.interaction"
           :overview="overviews[i]"
           :horizontal-lines="graph.horizontalLines"
           :figure-width="figure_width"
+          :figure-height="figure_height"
           :add-to="graph?.addTo"
           @update:requested-time-range="onPanelTimeRange"
           @update:consolidation-fn="consolidationFn = $event"

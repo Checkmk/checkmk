@@ -7,6 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import Config
 from cmk.gui.graphing import MKGraphWidgetTooSmallError
 from cmk.gui.graphing._artwork import (
     ActualTimeRange,
@@ -23,6 +25,7 @@ from cmk.gui.graphing._artwork import (
     Scalars,
 )
 from cmk.gui.graphing._graph_display_config import GraphDisplayConfigHTML
+from cmk.gui.graphing._graph_specification import GraphEnvironment
 from cmk.gui.graphing._html_render import (
     _legend_height_ex,
     _MIN_LEGEND_HEIGHT_EX,
@@ -30,8 +33,13 @@ from cmk.gui.graphing._html_render import (
     _order_graph_curves_for_legend_and_mouse_hover,
     _show_graph_legend,
     ExpandableLegendAppearance,
+    host_service_graph_popup_cmk,
 )
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.utils.servicename import ServiceName
 
 
 def _curve_annotation() -> CurveAnnotations:
@@ -356,3 +364,73 @@ def test__legend_height_ex_never_exceeds_a_third_or_the_graph() -> None:
     legend = _legend_height_ex(height, curve_count=50, horizontal_rule_count=0)
     assert legend <= height // 3
     assert legend < height - legend  # legend never larger than the graph
+
+
+# The engine resolves the metric names during the render with a single services query; the legacy
+# renderer (render_graphs_html) would instead fetch through fetch_graph_row and emit a div.graph.
+_POPUP_SERVICE_ROW = {
+    "host_name": "h",
+    "description": "svc",
+    "perf_data": "x=5",
+    "metrics": ["x"],
+    "check_command": "check_mk-foo",
+}
+_POPUP_ENGINE_QUERY = (
+    "GET services\nColumns: host_name description perf_data metrics check_command\n"
+    "Filter: host_name = h\nFilter: description = svc\nAnd: 2\n"
+)
+
+
+def _graph_environment() -> GraphEnvironment:
+    # The popup reads only `debug` off the environment; the engine plugins provide the rest.
+    return GraphEnvironment(
+        registered_metrics={},
+        registered_graphs={},
+        user_permissions=UserPermissions({}, {}, {}, []),
+        temperature_unit=TemperatureUnit.CELSIUS,
+        backend_time_series_fetcher=None,
+    )
+
+
+def _render_popup(mock_livestatus: MockLiveStatusConnection) -> str:
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table("services", [_POPUP_SERVICE_ROW])
+    mock_livestatus.expect_query(_POPUP_ENGINE_QUERY)
+    with mock_livestatus(), output_funnel.plugged():
+        host_service_graph_popup_cmk(
+            None,
+            HostName("h"),
+            ServiceName("svc"),
+            _graph_environment(),
+            graph_timeranges=[],
+        )
+        return output_funnel.drain()
+
+
+def test_host_service_graph_popup_renders_the_new_engine_component(
+    load_config: Config, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    output = _render_popup(mock_livestatus)
+
+    # The hover preview renders the service graph through the engine's Vue component ...
+    assert "cmk-graph-group" in output
+    # ... on the hover graph surface (the wrapper carries the background the component omits) ...
+    assert 'class="cmk_graph_hover"' in output
+    # ... at the compact legacy popup size (30x10 ex * _HTML_SIZE_PER_EX = 330x110 px), not the
+    # group's 800px in-view default.
+    assert "figure_width" in output
+    assert "330" in output
+    assert "figure_height" in output
+    assert "110" in output
+
+
+def test_host_service_graph_popup_does_not_call_the_legacy_renderer(
+    load_config: Config, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The strict livestatus mock expects only the engine's metric-name query. The legacy
+    # render_graphs_html path would issue an extra fetch_graph_row query (which would fail the
+    # strict mock) and emit a div.graph container, so its absence proves it is no longer used.
+    output = _render_popup(mock_livestatus)
+
+    assert 'class="graph"' not in output
+    assert "graph_ajax" not in output

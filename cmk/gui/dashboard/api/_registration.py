@@ -12,6 +12,7 @@ from .compute_widget_titles import ENDPOINT_COMPUTE_WIDGET_TITLES
 from .create_relative_grid_dashboard import ENDPOINT_CREATE_RELATIVE_GRID_DASHBOARD
 from .delete_dashboard import ENDPOINT_DELETE_DASHBOARD
 from .edit_relative_grid_dashboard import ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD
+from .fetch_widget_graph_data import ENDPOINT_FETCH_WIDGET_GRAPH_DATA
 from .list_dashboard_metadata import ENDPOINT_LIST_DASHBOARD_METADATA
 from .show_dashboard_constraints import ENDPOINT_SHOW_DASHBOARD_CONSTANTS
 from .show_dashboard_metadata import ENDPOINT_SHOW_DASHBOARD_METADATA
@@ -35,6 +36,7 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_SHOW_RELATIVE_GRID_DASHBOARD)
     versioned_endpoint_registry.register(ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES)
     versioned_endpoint_registry.register(ENDPOINT_COMPUTE_WIDGET_TITLES)
+    versioned_endpoint_registry.register(ENDPOINT_FETCH_WIDGET_GRAPH_DATA)
     versioned_endpoint_registry.register(ENDPOINT_LIST_DASHBOARD_METADATA)
     versioned_endpoint_registry.register(ENDPOINT_CLONE_AS_RELATIVE_GRID_DASHBOARD)
     versioned_endpoint_registry.register(ENDPOINT_CREATE_DASHBOARD_TOKEN)

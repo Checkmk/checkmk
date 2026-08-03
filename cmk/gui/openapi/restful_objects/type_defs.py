@@ -170,6 +170,7 @@ CmkEndpointName = Literal[
     "cmk/edit_dashboard_token",
     "cmk/fetch",
     "cmk/fetch_custom_graph_data",
+    "cmk/fetch_dashboard_widget_graph_data",
     "cmk/fetch_phase_one",
     "cmk/list",
     "cmk/list_widget_inventory",

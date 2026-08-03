@@ -247,12 +247,7 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
         Redirection should then show the user a message that the token has been disabled.
         """
-        with get_token_store().read_locked() as store:
-            if (edit_token := store.get(token.token_id)) and isinstance(
-                edit_token.details, DashboardToken
-            ):
-                edit_token.details.disabled = True
-
+        disable_dashboard_token_by_id(token.token_id)
         return self._redirect_to_shared_dashboard_page(token)
 
     def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:
@@ -440,6 +435,21 @@ def impersonate_dashboard_token_issuer(
             yield issuer
         finally:
             issuer.invalidate()
+
+
+def disable_dashboard_token_by_id(token_id: TokenId) -> None:
+    """Stop a dashboard token from working, addressing it by its own id.
+
+    An `InvalidWidgetError` with `disable_token` set means the token now resolves to something
+    other than what it was issued for - the dashboard is no longer permitted to its issuer, or a
+    widget type has gone. Rather than keep serving it, the token is retired.
+
+    Distinct from `disable_dashboard_token`, which retires whatever token a *dashboard* currently
+    has and is what editing a dashboard calls.
+    """
+    with get_token_store().read_locked() as store:
+        if (edit_token := store.get(token_id)) and isinstance(edit_token.details, DashboardToken):
+            edit_token.details.disabled = True
 
 
 def get_dashboard_widget_by_id(dashboard_config: DashboardConfig, widget_id: str) -> DashletConfig:

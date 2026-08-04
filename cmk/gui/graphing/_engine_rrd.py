@@ -261,15 +261,48 @@ def _deprecated_originals(
             yield _RRDOriginal(metric_name=column, scale=scale)
 
 
-def _originals_for_metric_name(
+@dataclass(frozen=True, kw_only=True)
+class _TranslatedColumn:
+    original: _RRDOriginal
+    raw_value: RawPerformanceValue
+
+
+def _translated_columns(
+    specs: Mapping[str, _TranslationSpec],
+    raw_values: Mapping[MetricName, RawPerformanceValue],
+) -> Mapping[MetricName, Sequence[_TranslatedColumn]]:
+    columns: dict[MetricName, list[_TranslatedColumn]] = {}
+    for original_name, raw_value in raw_values.items():
+        prefix, bare_name = _split_predict_prefix(original_name)
+        name, scale = _find_name_and_scale(MetricName(bare_name), specs)
+        columns.setdefault(MetricName(f"{prefix}{name}"), []).append(
+            _TranslatedColumn(
+                original=_RRDOriginal(metric_name=original_name, scale=scale),
+                raw_value=raw_value,
+            )
+        )
+    return columns
+
+
+def _rrd_originals(
     metric_name: MetricName,
-    check_command: str,
+    raw_performance_data: RawPerformanceData,
     registered_translations: Sequence[translations_v1.Translation],
 ) -> Sequence[_RRDOriginal]:
-    specs = _specs_for_command(check_command, registered_translations)
+    # The columns a metric's performance data was translated from, each with that translation's
+    # factor: a translation that only scales thereby reaches the series just like it reaches the
+    # values and the thresholds. A metric without performance data falls back to its own column -
+    # no translation applies to a column the perf data never carried, so it is unscaled.
+    specs = _specs_for_command(raw_performance_data.check_command, registered_translations)
+    columns = _translated_columns(specs, raw_performance_data.values).get(metric_name)
+    present = (
+        [column.original for column in columns]
+        if columns
+        else [_RRDOriginal(metric_name=metric_name, scale=1.0)]
+    )
     return [
-        _RRDOriginal(metric_name=metric_name, scale=1.0),
-        *_deprecated_originals(metric_name, specs, {metric_name}),
+        *present,
+        *_deprecated_originals(metric_name, specs, {original.metric_name for original in present}),
     ]
 
 
@@ -291,28 +324,29 @@ def _scaled(value: float | None, scale: float) -> float | None:
     return None if value is None else value * scale
 
 
+def _performance_data(column: _TranslatedColumn) -> PerformanceData:
+    raw_value = column.raw_value
+    scale = column.original.scale
+    return PerformanceData(
+        value=_scaled(raw_value.value, scale),
+        lower_warning=_scaled(raw_value.lower_warning, scale),
+        lower_critical=_scaled(raw_value.lower_critical, scale),
+        warning=_scaled(raw_value.warning, scale),
+        critical=_scaled(raw_value.critical, scale),
+        minimum=_scaled(raw_value.minimum, scale),
+        maximum=_scaled(raw_value.maximum, scale),
+    )
+
+
 def _translate_performance_data(
     check_command: str,
     raw_values: Mapping[MetricName, RawPerformanceValue],
     registered_translations: Sequence[translations_v1.Translation],
 ) -> Mapping[MetricName, PerformanceData]:
     specs = _specs_for_command(check_command, registered_translations)
-    scaled_by_name: dict[MetricName, tuple[RawPerformanceValue, float]] = {}
-    for original_name, raw_value in raw_values.items():
-        prefix, bare_name = _split_predict_prefix(original_name)
-        name, scale = _find_name_and_scale(MetricName(bare_name), specs)
-        scaled_by_name[MetricName(f"{prefix}{name}")] = (raw_value, scale)
     return {
-        name: PerformanceData(
-            value=_scaled(raw_value.value, scale),
-            lower_warning=_scaled(raw_value.lower_warning, scale),
-            lower_critical=_scaled(raw_value.lower_critical, scale),
-            warning=_scaled(raw_value.warning, scale),
-            critical=_scaled(raw_value.critical, scale),
-            minimum=_scaled(raw_value.minimum, scale),
-            maximum=_scaled(raw_value.maximum, scale),
-        )
-        for name, (raw_value, scale) in scaled_by_name.items()
+        name: _performance_data(columns[-1])
+        for name, columns in _translated_columns(specs, raw_values).items()
     }
 
 
@@ -822,8 +856,8 @@ class EngineRRDFetchData:
                         ),
                         original.scale,
                     )
-                    for original in _originals_for_metric_name(
-                        metric.metric_name, raw.check_command, self.registered_translations
+                    for original in _rrd_originals(
+                        metric.metric_name, raw, self.registered_translations
                     )
                 ],
             )

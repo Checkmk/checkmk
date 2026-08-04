@@ -12,7 +12,7 @@ from ._quantities import (
     EvaluationContext,
     first_value,
     Metric,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     ScalarKind,
     ScalarOf,
@@ -43,7 +43,7 @@ def _unique_service(metrics: Iterable[Metric]) -> Service | None:
     return next(iter(services)) if len(services) == 1 else None
 
 
-def _title_quantity(raw: str, service: Service) -> Quantity | None:
+def _title_quantity(raw: str, service: Service) -> QuantityProtocol | None:
     expression: Mapping[str, str] = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
     metric = RRDMetric(
         site_id=service.site_id,

@@ -26,7 +26,7 @@ from cmk.graphing_engine import (
     MetricName,
     MinimalRange,
     Product,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -227,7 +227,7 @@ _ROUND_TRIP_DISPLAY = CurveAttributes(
 # One sample per quantity kind the engine codec registers, with EVERY field set to a non-default
 # value: a field dropped from either direction of the codec comes back as its default and fails the
 # equality assertion. test_every_engine_quantity_kind_is_covered keeps this in step with the codec.
-_ENGINE_QUANTITY_SAMPLES: Mapping[str, Quantity] = {
+_ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
     "rrd_metric": _ROUND_TRIP_METRIC,
     "constant": Constant(23.5, _ROUND_TRIP_DISPLAY),
     "scalar_of": ScalarOf(

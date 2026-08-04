@@ -20,7 +20,7 @@ from cmk.graphing_engine import (
     Metric,
     MetricName,
     PerformanceData,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     ServiceName,
     TimeRange,
@@ -44,11 +44,11 @@ def _rrd(name: str) -> RRDMetric:
     )
 
 
-def _curve(quantity: Quantity) -> Curve:
+def _curve(quantity: QuantityProtocol) -> Curve:
     return Curve(quantity=quantity, attributes=CurveAttributes(title="t", unit=_UNIT, color="#000"))
 
 
-def _line(quantity: Quantity, *, inverse: bool = False) -> Line:
+def _line(quantity: QuantityProtocol, *, inverse: bool = False) -> Line:
     return Line(curve=_curve(quantity), inverse=inverse)
 
 

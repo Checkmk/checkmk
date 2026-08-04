@@ -24,7 +24,7 @@ from cmk.graphing_engine import (
     MinimalRange,
     parse_graph_from_api,
     Product,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -80,11 +80,11 @@ def _rrd(name: str) -> RRDMetric:
 # --- Graph helpers (curves carry resolved attributes) -----------------------------------
 
 
-def _curve(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Curve:
+def _curve(quantity: QuantityProtocol, attributes: CurveAttributes = _METRIC_ATTRS) -> Curve:
     return Curve(quantity=quantity, attributes=attributes)
 
 
-def _line(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Line:
+def _line(quantity: QuantityProtocol, attributes: CurveAttributes = _METRIC_ATTRS) -> Line:
     return Line(curve=_curve(quantity, attributes), inverse=False)
 
 
@@ -92,22 +92,22 @@ def _stack(*curves: Curve) -> Stack:
     return Stack(members=list(curves), inverse=False)
 
 
-def _rule(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Rule:
+def _rule(quantity: QuantityProtocol, attributes: CurveAttributes = _METRIC_ATTRS) -> Rule:
     return Rule(curve=_curve(quantity, attributes), inverse=False)
 
 
-def _attrs_of(quantity: Quantity) -> CurveAttributes:
+def _attrs_of(quantity: QuantityProtocol) -> CurveAttributes:
     # The display a quantity resolves to here: its own intrinsic display (constants / operations) or the
     # uniform registered-metric attributes.
     display = getattr(quantity, "display", None)
     return display if isinstance(display, CurveAttributes) else _METRIC_ATTRS
 
 
-def _dline(quantity: Quantity) -> Line:
+def _dline(quantity: QuantityProtocol) -> Line:
     return Line(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
 
 
-def _drule(quantity: Quantity) -> Rule:
+def _drule(quantity: QuantityProtocol) -> Rule:
     return Rule(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
 
 

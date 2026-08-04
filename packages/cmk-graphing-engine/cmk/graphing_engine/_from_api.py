@@ -25,7 +25,7 @@ from ._quantities import (
     Difference,
     Fraction,
     Product,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     ScalarKind,
     ScalarOf,
@@ -50,10 +50,10 @@ type _ApiQuantity = (
 
 
 class QuantityBuilderProtocol(Protocol):
-    def __call__(self, metrics: Sequence[RRDMetric]) -> Quantity: ...
+    def __call__(self, metrics: Sequence[RRDMetric]) -> QuantityProtocol: ...
 
 
-def build_single_quantity(metrics: Sequence[RRDMetric]) -> Quantity:
+def build_single_quantity(metrics: Sequence[RRDMetric]) -> QuantityProtocol:
     (metric,) = metrics
     return metric
 
@@ -62,7 +62,7 @@ def drawn_quantity(
     metric_name: str,
     services: Sequence[Service],
     quantity_builder: QuantityBuilderProtocol,
-) -> Quantity:
+) -> QuantityProtocol:
     return quantity_builder(
         [
             RRDMetric(
@@ -83,7 +83,7 @@ class _ParseContext:
     localizer: Callable[[str], str]
     registered_metrics: Mapping[str, metrics_v1.Metric]
 
-    def drawn(self, metric_name: str) -> Quantity:
+    def drawn(self, metric_name: str) -> QuantityProtocol:
         return drawn_quantity(metric_name, self.services, self.quantity_builder)
 
     def scalar(self, metric_name: str) -> RRDMetric:
@@ -148,7 +148,7 @@ def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttri
             assert_never(quantity)
 
 
-def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
+def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> QuantityProtocol:
     match quantity:
         case str():
             return context.drawn(quantity)
@@ -345,7 +345,7 @@ def _bidirectional_range(
 
 
 def build_curve(
-    quantity: Quantity,
+    quantity: QuantityProtocol,
     localizer: Callable[[str], str],
     registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> Curve:

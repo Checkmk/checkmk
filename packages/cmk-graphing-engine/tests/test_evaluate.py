@@ -44,7 +44,7 @@ from cmk.graphing_engine import (
 )
 from cmk.graphing_engine._evaluate import _evaluate_graph, _resolve_series_title, EvaluatedRule
 from cmk.graphing_engine._perfdata import PerformanceData
-from cmk.graphing_engine._quantities import EvaluatedQuantity, EvaluationContext, Quantity
+from cmk.graphing_engine._quantities import EvaluatedQuantity, EvaluationContext, QuantityProtocol
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
@@ -64,7 +64,7 @@ def _attrs(title: str, *, color: str = "#28a2f3") -> CurveAttributes:
     return CurveAttributes(title=title, unit=_UNIT, color=color)
 
 
-def _curve(quantity: Quantity, title: str, *, color: str = "#28a2f3") -> Curve:
+def _curve(quantity: QuantityProtocol, title: str, *, color: str = "#28a2f3") -> Curve:
     return Curve(quantity=quantity, attributes=_attrs(title, color=color))
 
 
@@ -96,7 +96,7 @@ def _context(
 
 
 def _evaluate_value(
-    quantity: Quantity,
+    quantity: QuantityProtocol,
     metric_data: Mapping[RRDMetric, PerformanceData],
 ) -> float | None:
     evaluated = quantity.evaluate(
@@ -106,7 +106,7 @@ def _evaluate_value(
 
 
 def _evaluate_time_series(
-    quantity: Quantity,
+    quantity: QuantityProtocol,
     metric_data: Mapping[RRDMetric, PerformanceData],
     time_series: Mapping[RRDMetric, TimeSeries],
     time_range: TimeRange,
@@ -567,7 +567,7 @@ def test_evaluate_graph_preserves_ids_across_recalculation() -> None:
 
 
 @dataclass(frozen=True)
-class _FannedQuantity(Quantity):
+class _FannedQuantity(QuantityProtocol):
     """A fan-out leaf expanding into one curve per (label, value) pair."""
 
     series: Sequence[tuple[str, float]]

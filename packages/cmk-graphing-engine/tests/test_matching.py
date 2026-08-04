@@ -24,7 +24,7 @@ from cmk.graphing_engine import (
     MetricName,
     parse_graph_from_api,
     PerformanceData,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -75,11 +75,11 @@ def _rrd(name: MetricName) -> RRDMetric:
     )
 
 
-def _dstack(*quantities: Quantity) -> Stack:
+def _dstack(*quantities: QuantityProtocol) -> Stack:
     return Stack(members=[build_curve(q, _id, _METRICS) for q in quantities], inverse=False)
 
 
-def _dline(quantity: Quantity) -> Line:
+def _dline(quantity: QuantityProtocol) -> Line:
     return Line(curve=build_curve(quantity, _id, _METRICS), inverse=False)
 
 
@@ -645,7 +645,7 @@ def _rrd_on(service: Service, name: MetricName) -> RRDMetric:
 class _SumQuantityBuilder:
     # Stand-in for a real aggregating QuantityBuilderProtocol (e.g. the pro _Aggregation): wraps the per-service
     # RRDMetrics of one drawn metric in the engine's own Sum.
-    def __call__(self, metrics: Sequence[RRDMetric]) -> Quantity:
+    def __call__(self, metrics: Sequence[RRDMetric]) -> QuantityProtocol:
         return Sum(summands=list(metrics))
 
 

@@ -13,7 +13,7 @@ from typing import assert_never
 from ._graph import Bound, Curve, FixedRange, Graph, MinimalRange, Rule, VerticalRange
 from ._options import ConsolidationFunction, TimeRange
 from ._perfdata import MACRO_SERIES_ID, TimeSeries
-from ._quantities import EvaluationContext, first_value, Quantity
+from ._quantities import EvaluationContext, first_value, QuantityProtocol
 from ._source import fetch_evaluation_context, RRDFetchDataProtocol
 from ._title import evaluate_title
 from ._units import CurveAttributes
@@ -99,7 +99,7 @@ def _evaluate_vertical_range(
     )
 
 
-def _create_id(quantity: Quantity, *, inverse: bool, seen: Counter[str]) -> str:
+def _create_id(quantity: QuantityProtocol, *, inverse: bool, seen: Counter[str]) -> str:
     base = ("-" if inverse else "") + quantity.ident()
     seen[base] += 1
     return base if seen[base] == 1 else f"{base}#{seen[base]}"

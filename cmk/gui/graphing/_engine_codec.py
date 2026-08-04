@@ -27,7 +27,7 @@ from cmk.graphing_engine import (
     MetricName,
     MinimalRange,
     Product,
-    Quantity,
+    QuantityProtocol,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -69,7 +69,7 @@ def _as_number(value: object) -> int | float:
     return value
 
 
-# Quantity is an open protocol spanning packages, and the engine must stay serialization-free, so the
+# QuantityProtocol is an open protocol spanning packages, and the engine must stay serialization-free, so the
 # codec is an external registry keyed by kind: it dispatches on each quantity's own kind() forward and
 # on the serialized kind reverse. The engine layer registers its own quantities below; the pro layer
 # composes its aggregation quantities on top.
@@ -78,8 +78,8 @@ def _as_number(value: object) -> int | float:
 @dataclass(frozen=True)
 class QuantitySpec:
     kind: str
-    to_dict: Callable[[Quantity, QuantityCodec], Mapping[str, object]]
-    from_dict: Callable[[Mapping[str, object], QuantityCodec], Quantity]
+    to_dict: Callable[[QuantityProtocol, QuantityCodec], Mapping[str, object]]
+    from_dict: Callable[[Mapping[str, object], QuantityCodec], QuantityProtocol]
 
 
 class QuantityCodec:
@@ -95,11 +95,11 @@ class QuantityCodec:
     def kinds(self) -> Sequence[str]:
         return tuple(self._by_kind)
 
-    def serialize(self, quantity: Quantity) -> Mapping[str, object]:
+    def serialize(self, quantity: QuantityProtocol) -> Mapping[str, object]:
         kind = quantity.kind()
         return {"kind": kind, **self._by_kind[kind].to_dict(quantity, self)}
 
-    def deserialize(self, data: object) -> Quantity:
+    def deserialize(self, data: object) -> QuantityProtocol:
         data = _as_mapping(data)
         return self._by_kind[ensure_type(data["kind"], str)].from_dict(data, self)
 
@@ -165,7 +165,7 @@ def _display_from_json(data: object) -> CurveAttributes | None:
     return None if data is None else _attributes_from_json(data)
 
 
-def _rrd_metric_to_json(quantity: Quantity, _codec: QuantityCodec) -> Mapping[str, object]:
+def _rrd_metric_to_json(quantity: QuantityProtocol, _codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, RRDMetric)
     return {
         "site_id": quantity.site_id,
@@ -196,7 +196,7 @@ def _rrd_metric_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> 
     )
 
 
-def _constant_to_json(quantity: Quantity, _codec: QuantityCodec) -> Mapping[str, object]:
+def _constant_to_json(quantity: QuantityProtocol, _codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Constant)
     return {"value": quantity.value, "display": _display_to_json(quantity.display)}
 
@@ -205,7 +205,7 @@ def _constant_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> Co
     return Constant(_as_number(data["value"]), _display_from_json(data["display"]))
 
 
-def _scalar_of_to_json(quantity: Quantity, codec: QuantityCodec) -> Mapping[str, object]:
+def _scalar_of_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, ScalarOf)
     return {
         "metric": codec.serialize(quantity.metric),
@@ -226,16 +226,16 @@ def _scalar_of_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Sc
 
 
 def _operands_to_json(
-    operands: Sequence[Quantity], codec: QuantityCodec
+    operands: Sequence[QuantityProtocol], codec: QuantityCodec
 ) -> Sequence[Mapping[str, object]]:
     return [codec.serialize(operand) for operand in operands]
 
 
-def _operands_from_json(data: object, codec: QuantityCodec) -> Sequence[Quantity]:
+def _operands_from_json(data: object, codec: QuantityCodec) -> Sequence[QuantityProtocol]:
     return [codec.deserialize(operand) for operand in _as_list(data)]
 
 
-def _sum_to_json(quantity: Quantity, codec: QuantityCodec) -> Mapping[str, object]:
+def _sum_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Sum)
     return {
         "summands": _operands_to_json(quantity.summands, codec),
@@ -247,7 +247,7 @@ def _sum_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Sum:
     return Sum(_operands_from_json(data["summands"], codec), _display_from_json(data["display"]))
 
 
-def _product_to_json(quantity: Quantity, codec: QuantityCodec) -> Mapping[str, object]:
+def _product_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Product)
     return {
         "factors": _operands_to_json(quantity.factors, codec),
@@ -259,7 +259,7 @@ def _product_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Prod
     return Product(_operands_from_json(data["factors"], codec), _display_from_json(data["display"]))
 
 
-def _difference_to_json(quantity: Quantity, codec: QuantityCodec) -> Mapping[str, object]:
+def _difference_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Difference)
     return {
         "minuend": codec.serialize(quantity.minuend),
@@ -276,7 +276,7 @@ def _difference_from_json(data: Mapping[str, object], codec: QuantityCodec) -> D
     )
 
 
-def _fraction_to_json(quantity: Quantity, codec: QuantityCodec) -> Mapping[str, object]:
+def _fraction_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Fraction)
     return {
         "dividend": codec.serialize(quantity.dividend),
@@ -303,18 +303,18 @@ class GraphCodec:
         # catches it. Tests use this to assert every registered kind has such a test.
         return self._quantities.kinds()
 
-    def serialize_quantity(self, quantity: Quantity) -> Mapping[str, object]:
+    def serialize_quantity(self, quantity: QuantityProtocol) -> Mapping[str, object]:
         return self._quantities.serialize(quantity)
 
-    def deserialize_quantity(self, data: object) -> Quantity:
+    def deserialize_quantity(self, data: object) -> QuantityProtocol:
         return self._quantities.deserialize(data)
 
-    def _bound_to_json(self, bound: int | float | Quantity) -> Mapping[str, object]:
+    def _bound_to_json(self, bound: int | float | QuantityProtocol) -> Mapping[str, object]:
         if isinstance(bound, int | float):
             return {"kind": "number", "value": bound}
         return {"kind": "quantity", "quantity": self._quantities.serialize(bound)}
 
-    def _bound_from_json(self, data: object) -> int | float | Quantity:
+    def _bound_from_json(self, data: object) -> int | float | QuantityProtocol:
         data = _as_mapping(data)
         if data["kind"] == "number":
             return _as_number(data["value"])

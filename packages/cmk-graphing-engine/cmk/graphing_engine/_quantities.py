@@ -30,8 +30,8 @@ from ._units import CurveAttributes
 
 
 # The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
-# Quantity.metrics() yields. A metric is identified by its metric_name - that is what sets it apart
-# from a plain Quantity (an expression node) - and tagged by kind() like any serialized quantity.
+# QuantityProtocol.metrics() yields. A metric is identified by its metric_name - that is what sets it apart
+# from a plain QuantityProtocol (an expression node) - and tagged by kind() like any serialized quantity.
 # It must be hashable: the evaluation context keys its fetched data by the metric leaf.
 class Metric(Hashable, Protocol):
     def kind(self) -> str: ...
@@ -76,7 +76,7 @@ def first_value(results: Sequence[EvaluatedQuantity]) -> float | None:
     return results[0].value if results else None
 
 
-class Quantity(Protocol):
+class QuantityProtocol(Protocol):
     def kind(self) -> str: ...
 
     def ident(self) -> str: ...
@@ -343,7 +343,7 @@ class ScalarOf:
 
 @dataclass(frozen=True)
 class Sum:
-    summands: Sequence[Quantity]
+    summands: Sequence[QuantityProtocol]
     display: CurveAttributes | None = None
 
     def kind(self) -> str:
@@ -372,7 +372,7 @@ class Sum:
 
 @dataclass(frozen=True)
 class Product:
-    factors: Sequence[Quantity]
+    factors: Sequence[QuantityProtocol]
     display: CurveAttributes | None = None
 
     def kind(self) -> str:
@@ -401,8 +401,8 @@ class Product:
 
 @dataclass(frozen=True, kw_only=True)
 class Difference:
-    minuend: Quantity
-    subtrahend: Quantity
+    minuend: QuantityProtocol
+    subtrahend: QuantityProtocol
     display: CurveAttributes | None = None
 
     def kind(self) -> str:
@@ -433,8 +433,8 @@ class Difference:
 
 @dataclass(frozen=True, kw_only=True)
 class Fraction:
-    dividend: Quantity
-    divisor: Quantity
+    dividend: QuantityProtocol
+    divisor: QuantityProtocol
     display: CurveAttributes | None = None
 
     def kind(self) -> str:

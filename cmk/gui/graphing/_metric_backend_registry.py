@@ -9,7 +9,7 @@ from typing import Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.resulttype import Result
-from cmk.graphing_engine import Quantity
+from cmk.graphing_engine import QuantityProtocol
 
 from ._graph_metric_expressions import (
     ConsolidationFunction,
@@ -41,7 +41,7 @@ class BackendQueryBuilderProtocol(Protocol):
         metric_name: str,
         attribute_filter: Mapping[str, object],
         consolidation_function: ConsolidationFunction,
-    ) -> Quantity: ...
+    ) -> QuantityProtocol: ...
 
 
 @dataclass(frozen=True, kw_only=True)

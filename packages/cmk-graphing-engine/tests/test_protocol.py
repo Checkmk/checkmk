@@ -33,7 +33,7 @@ from cmk.graphing_engine import (
 )
 from cmk.graphing_engine._evaluate import _evaluate_graph
 from cmk.graphing_engine._perfdata import PerformanceData
-from cmk.graphing_engine._quantities import EvaluationContext, Metric, Quantity
+from cmk.graphing_engine._quantities import EvaluationContext, Metric, QuantityProtocol
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
@@ -53,7 +53,7 @@ def _data(*, value: float | None) -> PerformanceData:
 class Negated:
     """A custom quantity, unknown to the engine, that flips the sign of another quantity."""
 
-    operand: Quantity
+    operand: QuantityProtocol
 
     def kind(self) -> str:
         return "negated"
@@ -161,9 +161,9 @@ def test_engine_rejects_a_fan_out_quantity_as_an_operation_operand() -> None:
 
 
 def test_custom_quantity_is_accepted_as_a_quantity() -> None:
-    # Static structural conformance: a Negated is usable wherever a Quantity is expected.
+    # Static structural conformance: a Negated is usable wherever a QuantityProtocol is expected.
     a = _metric("a")
-    quantity: Quantity = Negated(operand=a)
+    quantity: QuantityProtocol = Negated(operand=a)
     assert list(quantity.metrics()) == [a]
 
 

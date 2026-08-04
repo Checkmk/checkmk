@@ -9,11 +9,11 @@ import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from ._quantities import Metric, Quantity
+from ._quantities import Metric, QuantityProtocol
 from ._title import title_metrics
 from ._units import CurveAttributes
 
-type Bound = int | float | Quantity
+type Bound = int | float | QuantityProtocol
 
 
 @dataclass(frozen=True)
@@ -33,7 +33,7 @@ type VerticalRange = MinimalRange | FixedRange
 
 @dataclass(frozen=True, kw_only=True)
 class Curve:
-    quantity: Quantity
+    quantity: QuantityProtocol
     attributes: CurveAttributes
     source_id: str | None = None
 
@@ -67,7 +67,7 @@ class Graph:
     lines: Sequence[Line] = ()
     rules: Sequence[Rule] = ()
 
-    def _bound_quantities(self) -> Iterator[Quantity]:
+    def _bound_quantities(self) -> Iterator[QuantityProtocol]:
         if self.vertical_range is None:
             return
         for bound in (self.vertical_range.lower, self.vertical_range.upper):

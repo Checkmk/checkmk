@@ -104,9 +104,6 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     instances.extend(_convert_login_exceptions(login_exceptions, warnings))
 
-    if auth is None and instances and instances[0].auth is not None:
-        auth = instances[0].auth.model_copy()
-
     if auth is None or auth.auth_type is None:
         auth = (auth or GuiAuthConf[RawSecret]()).model_copy(
             update={"auth_type": (OracleAuthType.WALLET.value, None)}

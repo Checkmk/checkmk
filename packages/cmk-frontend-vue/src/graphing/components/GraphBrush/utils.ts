@@ -28,6 +28,23 @@ export function formatOverviewExtent(
   return `${fmtDate(start, timeZone)} — ${fmtDate(end, timeZone)}`
 }
 
+export interface WindowPreview {
+  date: string
+  time: string
+}
+
+export function formatWindowPreview(
+  window: { start: number; end: number },
+  timeZone: string = getLocalTimeZone()
+): WindowPreview {
+  const startDate = fmtDate(window.start, timeZone)
+  const endDate = fmtDate(window.end, timeZone)
+  return {
+    date: startDate === endDate ? startDate : `${startDate} — ${endDate}`,
+    time: `${fmtTime(window.start, timeZone)}–${fmtTime(window.end, timeZone)}`
+  }
+}
+
 export interface SparklineBand {
   lower: number[]
   upper: number[]

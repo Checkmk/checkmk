@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import useId from 'cmk-ui-library/lib/useId'
 import { area } from 'd3-shape'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
@@ -20,7 +21,7 @@ import {
   resizeRight,
   timeToPx
 } from './geometry'
-import { computeSparklineBands, formatOverviewExtent } from './utils'
+import { computeSparklineBands, formatOverviewExtent, formatWindowPreview } from './utils'
 
 const props = defineProps<{
   metrics: Metric[] // coarse overview series
@@ -96,13 +97,22 @@ const winLeftPx = computed(() => toPx(winRange.value.start))
 const winRightPx = computed(() => toPx(winRange.value.end))
 
 const edgeHandles = computed(() =>
-  [winLeftPx.value, winRightPx.value].map((x) => ({
-    x,
-    grips: HANDLE_GRIP_DX.map((dx) => x + dx)
+  [
+    { edgeX: winLeftPx.value, rectX: winLeftPx.value - HANDLE_W },
+    { edgeX: winRightPx.value, rectX: winRightPx.value }
+  ].map(({ edgeX, rectX }) => ({
+    edgeX,
+    rectX,
+    grips: HANDLE_GRIP_DX.map((dx) => rectX + HANDLE_W / 2 + dx)
   }))
 )
 
 const rangeLabel = computed(() => formatOverviewExtent(props.domain))
+
+const windowClipId = `brush-window-clip-${useId()}`
+
+const windowPreview = computed(() => formatWindowPreview(winRange.value))
+const windowLabelX = computed(() => (winLeftPx.value + winRightPx.value) / 2)
 
 let mode: BrushMode = 'move'
 let grabOffset = 0 // seconds between cursor and window.start (move)
@@ -195,108 +205,167 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <svg
-    ref="svgRef"
+  <div
     class="graphing-graph-brush"
     :class="{ 'graphing-graph-brush--dragging': dragging }"
-    :width="width"
-    :height="HEIGHT"
-    @mousedown="onMouseDown"
+    :style="{ width: `${width}px`, height: `${HEIGHT}px` }"
   >
-    <!-- Outer track encloses the waveform strip and the move-bar below it. -->
-    <rect
-      class="graphing-graph-brush__track"
-      :x="plotLeft"
-      :y="TRACK_TOP"
-      :width="plotWidth"
-      :height="TRACK_H"
-    />
-    <!-- Coarse cumulative-area sparkline (the overview waveform). -->
-    <path
-      v-for="(p, i) in sparklinePaths"
-      :key="`area-${i}`"
-      class="graphing-graph-brush__area"
-      :d="p.d"
-      :fill="p.color"
-    />
-    <!-- Dim the waveform outside the selection window. -->
-    <rect
-      class="graphing-graph-brush__mask"
-      :x="plotLeft"
-      :y="STRIP_TOP"
-      :width="Math.max(0, winLeftPx - plotLeft)"
-      :height="STRIP_H"
-    />
-    <rect
-      class="graphing-graph-brush__mask"
-      :x="winRightPx"
-      :y="STRIP_TOP"
-      :width="Math.max(0, plotLeft + plotWidth - winRightPx)"
-      :height="STRIP_H"
-    />
-    <!-- Selection window over the waveform. -->
-    <rect
-      class="graphing-graph-brush__window"
-      :x="winLeftPx"
-      :y="STRIP_TOP"
-      :width="Math.max(0, winRightPx - winLeftPx)"
-      :height="STRIP_H"
-    />
-    <!-- Teal move-bar (drag to pan), below the waveform. -->
-    <rect
-      class="graphing-graph-brush__bar"
-      :x="winLeftPx"
-      :y="BAR_Y"
-      :width="Math.max(0, winRightPx - winLeftPx)"
-      :height="BAR_H"
-      rx="6"
-    />
-    <!-- Each window edge: a full-height border line with a small centred resize handle. -->
-    <g v-for="(handle, i) in edgeHandles" :key="`handle-${i}`">
-      <line
-        class="graphing-graph-brush__edge"
-        :x1="handle.x"
-        :x2="handle.x"
-        :y1="EDGE_TOP"
-        :y2="EDGE_BOTTOM"
-      />
+    <svg
+      ref="svgRef"
+      class="graphing-graph-brush__track-svg"
+      :width="width"
+      :height="HEIGHT"
+      @mousedown="onMouseDown"
+    >
+      <!-- Outer track encloses the waveform strip and the move-bar below it. -->
       <rect
-        class="graphing-graph-brush__handle"
-        :x="handle.x - HANDLE_W / 2"
-        :y="HANDLE_TOP"
-        :width="HANDLE_W"
-        :height="HANDLE_H"
-        rx="2"
+        class="graphing-graph-brush__track"
+        :x="plotLeft"
+        :y="TRACK_TOP"
+        :width="plotWidth"
+        :height="TRACK_H"
       />
-      <line
-        v-for="(gx, k) in handle.grips"
-        :key="`grip-${i}-${k}`"
-        class="graphing-graph-brush__grip"
-        :x1="gx"
-        :x2="gx"
-        :y1="HANDLE_GRIP_Y1"
-        :y2="HANDLE_GRIP_Y2"
+      <defs>
+        <clipPath :id="windowClipId">
+          <rect
+            :x="winLeftPx"
+            :y="STRIP_TOP"
+            :width="Math.max(0, winRightPx - winLeftPx)"
+            :height="STRIP_H"
+          />
+        </clipPath>
+      </defs>
+      <!-- Coarse cumulative-area sparkline (the overview waveform), painted twice: dimmed
+         across the strip, then at full strength clipped to the selection window. -->
+      <g class="graphing-graph-brush__waveform--dimmed">
+        <path
+          v-for="(p, i) in sparklinePaths"
+          :key="`area-dim-${i}`"
+          class="graphing-graph-brush__area"
+          :d="p.d"
+          :fill="p.color"
+        />
+      </g>
+      <g :clip-path="`url(#${windowClipId})`">
+        <path
+          v-for="(p, i) in sparklinePaths"
+          :key="`area-${i}`"
+          class="graphing-graph-brush__area"
+          :d="p.d"
+          :fill="p.color"
+        />
+      </g>
+      <!-- Invisible, but it is what makes a click anywhere on the strip recentre the window. -->
+      <rect
+        class="graphing-graph-brush__hit-area"
+        :x="plotLeft"
+        :y="STRIP_TOP"
+        :width="plotWidth"
+        :height="STRIP_H"
       />
-    </g>
+      <!-- Selection window over the waveform. -->
+      <rect
+        class="graphing-graph-brush__window"
+        :x="winLeftPx"
+        :y="STRIP_TOP"
+        :width="Math.max(0, winRightPx - winLeftPx)"
+        :height="STRIP_H"
+      />
+      <!-- Teal move-bar (drag to pan), below the waveform. -->
+      <rect
+        class="graphing-graph-brush__bar"
+        :x="winLeftPx"
+        :y="BAR_Y"
+        :width="Math.max(0, winRightPx - winLeftPx)"
+        :height="BAR_H"
+        rx="6"
+      />
+      <!-- Each window edge: a full-height border line with a small centred resize handle. -->
+      <g v-for="(handle, i) in edgeHandles" :key="`handle-${i}`">
+        <line
+          class="graphing-graph-brush__edge"
+          :x1="handle.edgeX"
+          :x2="handle.edgeX"
+          :y1="EDGE_TOP"
+          :y2="EDGE_BOTTOM"
+        />
+        <rect
+          class="graphing-graph-brush__handle"
+          :x="handle.rectX"
+          :y="HANDLE_TOP"
+          :width="HANDLE_W"
+          :height="HANDLE_H"
+          rx="2"
+        />
+        <line
+          v-for="(gx, k) in handle.grips"
+          :key="`grip-${i}-${k}`"
+          class="graphing-graph-brush__grip"
+          :x1="gx"
+          :x2="gx"
+          :y1="HANDLE_GRIP_Y1"
+          :y2="HANDLE_GRIP_Y2"
+        />
+      </g>
 
-    <!-- Overview extent (the time range the strip covers), bottom-left. -->
-    <text class="graphing-graph-brush__range" :x="plotLeft + 2" :y="LABEL_Y">{{ rangeLabel }}</text>
-  </svg>
+      <!-- Overview extent (the time range the strip covers), bottom-left. Stood down while
+           dragging, where the preview below occupies the same row. -->
+      <text v-if="!dragging" class="graphing-graph-brush__range" :x="plotLeft + 2" :y="LABEL_Y">
+        {{ rangeLabel }}
+      </text>
+    </svg>
+
+    <div
+      v-if="dragging"
+      class="graphing-graph-brush__preview"
+      :style="{ left: `${windowLabelX}px` }"
+    >
+      <b>{{ windowPreview.date }}</b>
+      <span class="graphing-graph-brush__preview-divider" aria-hidden="true">|</span>
+      <span>{{ windowPreview.time }}</span>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 .graphing-graph-brush {
+  position: relative;
   display: block;
   user-select: none;
+}
+
+.graphing-graph-brush__track-svg {
+  display: block;
 }
 
 .graphing-graph-brush--dragging {
   cursor: grabbing;
 }
 
+.graphing-graph-brush__preview {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
+  padding: var(--dimension-2) var(--dimension-4);
+  background: var(--ux-theme-1);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-normal);
+  color: var(--font-color);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.graphing-graph-brush__preview-divider {
+  color: var(--font-color-dimmed);
+}
+
 .graphing-graph-brush__track {
-  fill: transparent;
-  stroke: var(--ux-theme-6, #e0e0e0);
+  fill: var(--ux-theme-1);
+  stroke: var(--graphing-brush-track-stroke);
   shape-rendering: crispedges;
   cursor: grab;
 }
@@ -306,8 +375,12 @@ onBeforeUnmount(() => {
   stroke: none;
 }
 
-.graphing-graph-brush__mask {
-  fill: rgb(0 0 0 / 35%);
+.graphing-graph-brush__waveform--dimmed {
+  opacity: 0.4;
+}
+
+.graphing-graph-brush__hit-area {
+  fill: transparent;
   cursor: pointer;
   pointer-events: all;
 }
@@ -321,19 +394,24 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__bar {
-  fill: var(--color-corporate-green-50, #15d1a0);
+  fill: var(--color-corporate-green-50);
+  stroke: var(--graphing-brush-bar-stroke);
   cursor: grab;
 }
 
+.graphing-graph-brush__bar:hover {
+  fill: color-mix(in srgb, var(--color-corporate-green-50) 70%, var(--white));
+}
+
 .graphing-graph-brush--dragging .graphing-graph-brush__track,
-.graphing-graph-brush--dragging .graphing-graph-brush__mask,
+.graphing-graph-brush--dragging .graphing-graph-brush__hit-area,
 .graphing-graph-brush--dragging .graphing-graph-brush__window,
 .graphing-graph-brush--dragging .graphing-graph-brush__bar {
   cursor: grabbing;
 }
 
 .graphing-graph-brush__edge {
-  stroke: var(--color-mid-grey-60, #677883);
+  stroke: var(--toggle-button-group-border-color);
   stroke-width: 1;
   stroke-opacity: 0.5;
   shape-rendering: crispedges;
@@ -341,23 +419,35 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__handle {
-  fill: var(--color-midnight-grey-100, #0f1215);
-  stroke: var(--color-mid-grey-60, #677883);
+  fill: var(--toggle-button-group-inactive-bg-color);
+  stroke: var(--toggle-button-group-border-color);
   cursor: ew-resize;
 }
 
 .graphing-graph-brush__handle:hover {
-  fill: var(--color-midnight-grey-80, #2b3138);
+  fill: color-mix(in srgb, var(--toggle-button-group-inactive-bg-color) 70%, var(--white));
 }
 
 .graphing-graph-brush__grip {
-  stroke: rgb(255 255 255 / 80%);
+  stroke: var(--font-color);
+  stroke-opacity: 0.8;
   pointer-events: none;
 }
 
 .graphing-graph-brush__range {
-  fill: var(--font-color-dimmed, #73848d);
-  font-size: 11px;
+  fill: var(--font-color);
+  font-size: var(--font-size-normal);
+  opacity: 0.7;
   pointer-events: none;
+}
+
+body[data-theme='facelift'] .graphing-graph-brush {
+  --graphing-brush-track-stroke: var(--color-mid-grey-10);
+  --graphing-brush-bar-stroke: var(--color-corporate-green-70);
+}
+
+body[data-theme='modern-dark'] .graphing-graph-brush {
+  --graphing-brush-track-stroke: var(--color-mid-grey-90);
+  --graphing-brush-bar-stroke: var(--color-corporate-green-50);
 }
 </style>

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
+import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
@@ -46,6 +47,11 @@ const emit = defineEmits<{
 const consolidationFn = computed<ConsolidationFn>(() => props.consolidationFunction ?? 'avg')
 
 const MARGIN = { top: 5, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
+const X_AXIS_BAND_HEIGHT = 20
+// The strip's top edge doubles as the plot's baseline rule, so anything laid over the strip
+// starts below it rather than covering it.
+const X_AXIS_TOP_RULE_HEIGHT = 1
+const PAN_STEP_SIZE = X_AXIS_BAND_HEIGHT - X_AXIS_TOP_RULE_HEIGHT
 const PIN_HANDLE_HEADROOM = 24
 // Bucket count for the M4 cache built on receive (4000 is the default, consider changing
 // if necessary).
@@ -146,17 +152,25 @@ const {
   onZoom: (payload) => emit('zoom', payload)
 })
 
-const { panActive, panDx, panRulerTicks, panClipId, panCursor, panTickX, onPanMouseDown } =
-  usePanGesture({
-    panEnabled: () => props.panEnabled,
-    timeRange: () => props.time_range,
-    measureLabel,
-    plotWidth,
-    xScale,
-    plotCoords,
-    onStart: clearHover,
-    onCommit: (timeRange) => emit('pan', { timeRange })
-  })
+const {
+  panActive,
+  panDx,
+  panRulerTicks,
+  panClipId,
+  panCursor,
+  panTickX,
+  onPanMouseDown,
+  panBySteps
+} = usePanGesture({
+  panEnabled: () => props.panEnabled,
+  timeRange: () => props.time_range,
+  measureLabel,
+  plotWidth,
+  xScale,
+  plotCoords,
+  onStart: clearHover,
+  onCommit: (timeRange) => emit('pan', { timeRange })
+})
 
 // Rebuilt lazily inside draw() (rather than via its own watch(props.metrics, ...)) so it can
 // never run stale relative to the time_range draw() is about to use: two independent
@@ -310,6 +324,11 @@ function onPinActionClick(): void {
 
 const { _t } = usei18n()
 const resetLabel = _t('Reset zoom')
+const panHovered = ref(false)
+const PAN_STEPS = [
+  { direction: -1, side: 'back', label: _t('Step back in time') },
+  { direction: 1, side: 'forward', label: _t('Step forward in time') }
+] as const
 const fallbackPlotLabel = _t('Time series graph')
 // Accessible name for the plot canvas
 const plotAriaLabel = computed<string>(() => {
@@ -410,17 +429,25 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         :width="plotWidth"
         :height="plotHeight"
       />
+      <rect
+        class="graphing-time-series-graph__axis-band"
+        :x="marginLeft"
+        :y="plotTop + plotHeight"
+        :width="plotWidth"
+        :height="X_AXIS_BAND_HEIGHT"
+      />
+      <rect
+        v-if="panEnabled && (panHovered || panActive)"
+        class="graphing-time-series-graph__axis-highlight"
+        :x="marginLeft"
+        :y="plotTop + plotHeight"
+        :width="plotWidth"
+        :height="X_AXIS_BAND_HEIGHT"
+      />
       <g ref="axesContainer" :transform="`translate(${marginLeft},${plotTop})`" />
-      <!-- Ruler-scrub overlay (pan preview): a shaded band plus ticks/labels that slide
-           with the cursor, clipped to the plot width. Only mounted while dragging. -->
+      <!-- Ruler-scrub overlay (pan preview): ticks/labels that slide with the cursor, clipped
+           to the plot width. Only mounted while dragging. -->
       <g v-if="panActive" :clip-path="`url(#${panClipId})`">
-        <rect
-          class="graphing-time-series-graph__pan-band"
-          :x="marginLeft"
-          :y="plotTop + plotHeight + 1"
-          :width="plotWidth"
-          :height="MARGIN.bottom - 1"
-        />
         <g :transform="`translate(${marginLeft + panDx},${plotTop})`">
           <template v-for="(tick, index) in panRulerTicks" :key="index">
             <line
@@ -486,7 +513,30 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         cursor: panCursor
       }"
       @mousedown="onPanMouseDown"
+      @mouseenter="panHovered = true"
+      @mouseleave="panHovered = false"
     />
+    <template v-if="panEnabled">
+      <CmkButton
+        v-for="step in PAN_STEPS"
+        :key="step.direction"
+        variant="secondary"
+        size="iconOnly"
+        class="graphing-time-series-graph__pan-step"
+        :class="`graphing-time-series-graph__pan-step--${step.side}`"
+        :style="{
+          left: `${step.direction === -1 ? marginLeft : marginLeft + plotWidth - PAN_STEP_SIZE}px`,
+          top: `${plotTop + plotHeight + X_AXIS_TOP_RULE_HEIGHT}px`,
+          width: `${PAN_STEP_SIZE}px`,
+          height: `${PAN_STEP_SIZE}px`
+        }"
+        :title="step.label"
+        :aria-label="step.label"
+        @click="panBySteps(step.direction)"
+      >
+        <ArrowDown class="graphing-time-series-graph__pan-caret" aria-hidden="true" />
+      </CmkButton>
+    </template>
     <CmkButton
       v-if="inspecting"
       variant="secondary"
@@ -539,6 +589,14 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     fill: var(--ux-theme-1);
   }
 
+  .graphing-time-series-graph__axis-band {
+    fill: var(--ux-theme-5);
+  }
+
+  .graphing-time-series-graph__axis-highlight {
+    fill: var(--graphing-interactive-wash);
+  }
+
   .graphing-time-series-graph__zoom-band {
     position: absolute;
     z-index: 1;
@@ -558,6 +616,71 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     position: absolute;
     z-index: 2;
     gap: var(--dimension-3);
+  }
+
+  /* Above the pan zone, which would otherwise swallow the clicks. */
+  .graphing-time-series-graph__pan-step {
+    position: absolute;
+    z-index: 3;
+    background-color: var(--ux-theme-0);
+    border-color: var(--toggle-button-group-border-color);
+
+    &:hover {
+      background-image: linear-gradient(
+        var(--graphing-interactive-wash),
+        var(--graphing-interactive-wash)
+      );
+    }
+
+    /* Fades out the tick labels running up to the button, so none collides with it. */
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: var(--dimension-8);
+      pointer-events: none;
+    }
+  }
+
+  .graphing-time-series-graph__pan-caret {
+    flex-shrink: 0;
+    width: var(--dimension-4);
+  }
+
+  /* Offset past the border: a bare `100%` resolves to the padding box and hides it. */
+  .graphing-time-series-graph__pan-step--back {
+    .graphing-time-series-graph__pan-caret {
+      transform: rotate(90deg);
+    }
+
+    &::after {
+      left: calc(100% + var(--border-width-1));
+      background: linear-gradient(to right, var(--ux-theme-5), transparent);
+    }
+  }
+
+  .graphing-time-series-graph__pan-step--forward {
+    .graphing-time-series-graph__pan-caret {
+      transform: rotate(-90deg);
+    }
+
+    &::after {
+      right: calc(100% + var(--border-width-1));
+      background: linear-gradient(to left, var(--ux-theme-5), transparent);
+    }
+  }
+}
+
+body[data-theme='facelift'] {
+  .graphing-time-series-graph {
+    --graphing-interactive-wash: var(--color-conference-grey-10);
+  }
+}
+
+body[data-theme='modern-dark'] {
+  .graphing-time-series-graph {
+    --graphing-interactive-wash: var(--color-white-10);
   }
 }
 
@@ -608,11 +731,6 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
 
 .graphing-time-series-graph--panning-x :deep(.graphing-time-series-graph__x-labels) {
   opacity: 0;
-}
-
-:deep(.graphing-time-series-graph__pan-band) {
-  fill: rgb(0 0 0 / 4%);
-  shape-rendering: crispedges;
 }
 
 :deep(.graphing-time-series-graph__pan-tick) {

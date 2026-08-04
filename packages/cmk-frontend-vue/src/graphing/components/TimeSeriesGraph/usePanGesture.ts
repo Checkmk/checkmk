@@ -22,6 +22,8 @@ const DRAG_THRESHOLD_PX = 4
 // The ruler extends one span either side of the visible window so labels slide in during a drag.
 const PAN_RULER_SPANS = 3
 
+const STEP_FRACTION_OF_SPAN = 0.25
+
 export interface PanGestureOptions {
   panEnabled: () => boolean
   timeRange: () => TimeRange
@@ -105,10 +107,37 @@ export function usePanGesture(options: PanGestureOptions) {
     )
   }
 
+  function panBySteps(direction: -1 | 1): void {
+    if (!options.panEnabled()) {
+      return
+    }
+    const range = options.timeRange()
+    const shiftSeconds = direction * (range.end - range.start) * STEP_FRACTION_OF_SPAN
+    options.onCommit(
+      withinNavigableTime(
+        {
+          start: range.start + shiftSeconds,
+          end: range.end + shiftSeconds,
+          step: range.step
+        },
+        endOfCurrentDaySeconds()
+      )
+    )
+  }
+
   onBeforeUnmount(() => {
     window.removeEventListener('mousemove', onPanDragMove)
     window.removeEventListener('mouseup', onPanDragEnd)
   })
 
-  return { panActive, panDx, panRulerTicks, panClipId, panCursor, panTickX, onPanMouseDown }
+  return {
+    panActive,
+    panDx,
+    panRulerTicks,
+    panClipId,
+    panCursor,
+    panTickX,
+    onPanMouseDown,
+    panBySteps
+  }
 }

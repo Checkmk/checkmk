@@ -20,8 +20,8 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     Line,
-    Metric,
     MetricName,
+    MetricProtocol,
     parse_graph_from_api,
     PerformanceData,
     QuantityProtocol,
@@ -160,12 +160,12 @@ class _FakeRRDFetchData:
 
     def __call__(
         self,
-        metrics: Sequence[Metric],
+        metrics: Sequence[MetricProtocol],
         *,
         consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,  # noqa: ARG002
-    ) -> Mapping[Metric, Sequence[FetchedData]]:
-        result: dict[Metric, Sequence[FetchedData]] = {}
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+        result: dict[MetricProtocol, Sequence[FetchedData]] = {}
         for metric in metrics:
             if not isinstance(metric, RRDMetric):
                 continue

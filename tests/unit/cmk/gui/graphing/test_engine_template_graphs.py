@@ -18,8 +18,8 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     FetchedData,
     HostName,
-    Metric,
     MetricName,
+    MetricProtocol,
     PerformanceData,
     RRDMetric,
     ScalarKind,
@@ -63,13 +63,13 @@ class _FakeRRDFetchData:
 
     def __call__(
         self,
-        metrics: Sequence[Metric],
+        metrics: Sequence[MetricProtocol],
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
-    ) -> Mapping[Metric, Sequence[FetchedData]]:
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         self.requested_ranges.append(time_range)
-        result: dict[Metric, Sequence[FetchedData]] = {}
+        result: dict[MetricProtocol, Sequence[FetchedData]] = {}
         for metric in metrics:
             if not isinstance(metric, RRDMetric):
                 continue

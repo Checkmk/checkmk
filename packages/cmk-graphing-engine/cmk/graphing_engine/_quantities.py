@@ -33,7 +33,7 @@ from ._units import CurveAttributes
 # QuantityProtocol.metrics() yields. A metric is identified by its metric_name - that is what sets it apart
 # from a plain QuantityProtocol (an expression node) - and tagged by kind() like any serialized quantity.
 # It must be hashable: the evaluation context keys its fetched data by the metric leaf.
-class Metric(Hashable, Protocol):
+class MetricProtocol(Hashable, Protocol):
     def kind(self) -> str: ...
 
     @property
@@ -43,19 +43,19 @@ class Metric(Hashable, Protocol):
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
     time_range: TimeRange
-    fetched: Mapping[Metric, Sequence[FetchedData]] = field(default_factory=dict)
+    fetched: Mapping[MetricProtocol, Sequence[FetchedData]] = field(default_factory=dict)
 
-    def fetched_of(self, metric: Metric) -> Sequence[FetchedData]:
+    def fetched_of(self, metric: MetricProtocol) -> Sequence[FetchedData]:
         return self.fetched.get(metric, ())
 
-    def data_of(self, metric: Metric) -> PerformanceData | None:
+    def data_of(self, metric: MetricProtocol) -> PerformanceData | None:
         performance_data: PerformanceData | None = None
         for data in self.fetched_of(metric):
             if data.performance_data is not None:
                 performance_data = data.performance_data
         return performance_data
 
-    def time_series_of(self, metric: Metric) -> TimeSeries | None:
+    def time_series_of(self, metric: MetricProtocol) -> TimeSeries | None:
         time_series: TimeSeries | None = None
         for data in self.fetched_of(metric):
             if data.time_series is not None:
@@ -81,7 +81,7 @@ class QuantityProtocol(Protocol):
 
     def ident(self) -> str: ...
 
-    def metrics(self) -> Iterable[Metric]: ...
+    def metrics(self) -> Iterable[MetricProtocol]: ...
 
     # A quantity evaluates to a sequence of curves: empty when absent, one for an ordinary quantity,
     # and several when a fan-out leaf (e.g. a query matching many services) expands into one curve
@@ -201,7 +201,7 @@ class Constant:
     def ident(self) -> str:
         return f"{self.kind()}({self.value})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         return ()
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
@@ -236,7 +236,7 @@ class RRDMetric:
         location = "" if self.site_id is None else f"{self.site_id}/"
         return f"{self.kind()}({location}{self.host_name}/{self.service_name}/{self.metric_name})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         yield self
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
@@ -284,7 +284,7 @@ class ScalarOf:
     def ident(self) -> str:
         return f"{self.kind()}({self.scalar_kind},{self.metric.ident()})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         yield self.metric
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
@@ -352,7 +352,7 @@ class Sum:
     def ident(self) -> str:
         return f"{self.kind()}({','.join(summand.ident() for summand in self.summands)})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         for summand in self.summands:
             yield from summand.metrics()
 
@@ -381,7 +381,7 @@ class Product:
     def ident(self) -> str:
         return f"{self.kind()}({','.join(factor.ident() for factor in self.factors)})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         for factor in self.factors:
             yield from factor.metrics()
 
@@ -411,7 +411,7 @@ class Difference:
     def ident(self) -> str:
         return f"{self.kind()}({self.minuend.ident()},{self.subtrahend.ident()})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         yield from self.minuend.metrics()
         yield from self.subtrahend.metrics()
 
@@ -443,7 +443,7 @@ class Fraction:
     def ident(self) -> str:
         return f"{self.kind()}({self.dividend.ident()},{self.divisor.ident()})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         yield from self.dividend.metrics()
         yield from self.divisor.metrics()
 

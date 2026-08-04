@@ -11,7 +11,7 @@ from ._perfdata import MetricName, Service
 from ._quantities import (
     EvaluationContext,
     first_value,
-    Metric,
+    MetricProtocol,
     QuantityProtocol,
     RRDMetric,
     ScalarKind,
@@ -30,7 +30,7 @@ _TITLE_SCALAR_KINDS: Mapping[str, ScalarKind] = {
 }
 
 
-def _unique_service(metrics: Iterable[Metric]) -> Service | None:
+def _unique_service(metrics: Iterable[MetricProtocol]) -> Service | None:
     services = {
         Service(
             site_id=metric.site_id,
@@ -58,7 +58,7 @@ def _title_quantity(raw: str, service: Service) -> QuantityProtocol | None:
     return ScalarOf(metric=metric, scalar_kind=scalar_kind)
 
 
-def title_metrics(title: str, drawn_metrics: Iterable[Metric]) -> Iterator[Metric]:
+def title_metrics(title: str, drawn_metrics: Iterable[MetricProtocol]) -> Iterator[MetricProtocol]:
     if (service := _unique_service(drawn_metrics)) is None:
         return
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
@@ -72,7 +72,7 @@ def _fallback_title(title: str) -> str:
 
 def evaluate_title(
     title: str,
-    drawn_metrics: Iterable[Metric],
+    drawn_metrics: Iterable[MetricProtocol],
     context: EvaluationContext,
 ) -> str:
     service = _unique_service(drawn_metrics)

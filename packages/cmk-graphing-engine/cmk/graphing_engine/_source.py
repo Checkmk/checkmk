@@ -13,7 +13,7 @@ from ._perfdata import (
     MetricName,
     Service,
 )
-from ._quantities import EvaluationContext, Metric
+from ._quantities import EvaluationContext, MetricProtocol
 
 
 class RRDFetchMetricNamesProtocol(Protocol):
@@ -23,11 +23,11 @@ class RRDFetchMetricNamesProtocol(Protocol):
 class RRDFetchDataProtocol(Protocol):
     def __call__(
         self,
-        metrics: Sequence[Metric],
+        metrics: Sequence[MetricProtocol],
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
-    ) -> Mapping[Metric, Sequence[FetchedData]]: ...
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]: ...
 
 
 def fetch_evaluation_context(

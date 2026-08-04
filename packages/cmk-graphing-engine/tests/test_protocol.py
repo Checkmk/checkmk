@@ -33,7 +33,7 @@ from cmk.graphing_engine import (
 )
 from cmk.graphing_engine._evaluate import _evaluate_graph
 from cmk.graphing_engine._perfdata import PerformanceData
-from cmk.graphing_engine._quantities import EvaluationContext, Metric, QuantityProtocol
+from cmk.graphing_engine._quantities import EvaluationContext, MetricProtocol, QuantityProtocol
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
@@ -61,7 +61,7 @@ class Negated:
     def ident(self) -> str:
         return f"negated({self.operand.ident()})"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         yield from self.operand.metrics()
 
     def attributes(
@@ -97,7 +97,7 @@ class _FanOut:
     def ident(self) -> str:
         return "fan_out"
 
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         return ()
 
     def attributes(

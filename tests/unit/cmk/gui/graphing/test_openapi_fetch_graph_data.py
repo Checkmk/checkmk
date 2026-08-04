@@ -21,8 +21,8 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     Line,
-    Metric,
     MetricName,
+    MetricProtocol,
     PerformanceData,
     RRDMetric,
     Rule,
@@ -246,11 +246,11 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     time_range = TimeRange(start=0, end=30, step=10)
 
     def _fetch_data(
-        metrics: Sequence[Metric],
+        metrics: Sequence[MetricProtocol],
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
-    ) -> Mapping[Metric, Sequence[FetchedData]]:
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         return {
             rrd_metric: [
                 FetchedData(

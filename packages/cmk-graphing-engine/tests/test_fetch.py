@@ -17,8 +17,8 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     Line,
-    Metric,
     MetricName,
+    MetricProtocol,
     PerformanceData,
     QuantityProtocol,
     RRDMetric,
@@ -65,17 +65,19 @@ def _fetched(value: float | None, series: TimeSeries | None) -> Sequence[Fetched
 
 
 class _FakeRRDFetchData:
-    # The source already delivers translated, per-Metric FetchedData; the engine only orchestrates.
-    def __init__(self, fetched: Mapping[Metric, Sequence[FetchedData]] | None = None) -> None:
+    # The source already delivers translated, per-metric FetchedData; the engine only orchestrates.
+    def __init__(
+        self, fetched: Mapping[MetricProtocol, Sequence[FetchedData]] | None = None
+    ) -> None:
         self._fetched = fetched or {}
 
     def __call__(
         self,
-        metrics: Sequence[Metric],
+        metrics: Sequence[MetricProtocol],
         *,
         consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,  # noqa: ARG002
-    ) -> Mapping[Metric, Sequence[FetchedData]]:
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         return {metric: self._fetched[metric] for metric in metrics if metric in self._fetched}
 
 

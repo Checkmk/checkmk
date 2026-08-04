@@ -9,7 +9,7 @@ import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from ._quantities import Metric, QuantityProtocol
+from ._quantities import MetricProtocol, QuantityProtocol
 from ._title import title_metrics
 from ._units import CurveAttributes
 
@@ -74,7 +74,7 @@ class Graph:
             if bound is not None and not isinstance(bound, int | float):
                 yield bound
 
-    def metrics(self) -> Sequence[Metric]:
+    def metrics(self) -> Sequence[MetricProtocol]:
         drawn = list(
             dict.fromkeys(
                 metric

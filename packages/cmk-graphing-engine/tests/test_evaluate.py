@@ -26,8 +26,8 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     Line,
-    Metric,
     MetricName,
+    MetricProtocol,
     MinimalRange,
     Product,
     RRDMetric,
@@ -75,8 +75,8 @@ def _time_series(*values: float | None) -> TimeSeries:
 def _fetched(
     performance_data: Mapping[RRDMetric, PerformanceData],
     time_series: Mapping[RRDMetric, TimeSeries],
-) -> Mapping[Metric, Sequence[FetchedData]]:
-    fetched: dict[Metric, Sequence[FetchedData]] = {}
+) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+    fetched: dict[MetricProtocol, Sequence[FetchedData]] = {}
     for metric in {*performance_data, *time_series}:
         fetched[metric] = [
             FetchedData(
@@ -581,7 +581,7 @@ class _FannedQuantity(QuantityProtocol):
         return f"{self.kind()}(test)"
 
     @override
-    def metrics(self) -> Iterable[Metric]:
+    def metrics(self) -> Iterable[MetricProtocol]:
         return ()
 
     @override

@@ -20,8 +20,8 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     FetchedData,
     HostName,
-    Metric,
     MetricName,
+    MetricProtocol,
     PerformanceData,
     RRDMetric,
     Service,
@@ -740,10 +740,10 @@ def assemble_fetched_data(
     rrd_metrics: Sequence[RRDMetric],
     performance_data: Mapping[RRDMetric, PerformanceData],
     time_series: Mapping[RRDMetric, EngineTimeSeries],
-) -> Mapping[Metric, Sequence[FetchedData]]:
+) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
     # A metric the fetch resolved neither performance data nor a series for is left out altogether,
     # so the quantity evaluates as absent rather than as an empty curve.
-    assembled: dict[Metric, Sequence[FetchedData]] = {}
+    assembled: dict[MetricProtocol, Sequence[FetchedData]] = {}
     for metric in rrd_metrics:
         data = performance_data.get(metric)
         series = time_series.get(metric)
@@ -784,11 +784,11 @@ class EngineRRDFetchData:
 
     def __call__(
         self,
-        metrics: Sequence[Metric],
+        metrics: Sequence[MetricProtocol],
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
-    ) -> Mapping[Metric, Sequence[FetchedData]]:
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         rrd_metrics = [metric for metric in metrics if isinstance(metric, RRDMetric)]
         raw_performance_data, site_of_service = self._fetch_performance_data(rrd_metrics)
         performance_data = self._translated_performance_data(rrd_metrics, raw_performance_data)

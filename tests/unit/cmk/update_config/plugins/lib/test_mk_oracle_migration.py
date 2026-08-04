@@ -296,6 +296,25 @@ def test_instance_created_when_login_exceptions_present() -> None:
     ]
 
 
+def test_sid_specific_credentials_are_not_promoted_to_the_default_login() -> None:
+    new_rule = convert(
+        {
+            "login_exceptions": [
+                ("proddb", {"auth": ("explicit", ("sys", ("password", "oracle"))), "as": "sysdba"}),
+                ("testdb", {"auth": ("explicit", ("checkmk", ("password", "checkmk")))}),
+            ]
+        }
+    )
+    dumped = dump(new_rule.rule)
+
+    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert [instance["oracle_id"] for instance in dumped["instances"]] == [
+        ("sid", {"sid": "proddb"}),
+        ("sid", {"sid": "testdb"}),
+    ]
+    assert "No auth defined in legacy rule. Defaulting to Oracle wallet." in new_rule.warnings
+
+
 def test_remote_instance_maps_connection_and_piggyback() -> None:
     new_rule = convert(
         {

@@ -530,7 +530,23 @@ netapp_volumes_metrics: dict[str, CheckMetricEntry] = {
 }
 
 check_metrics["check_mk-netapp_api_volumes"] = netapp_volumes_metrics
-check_metrics["check_mk-netapp_ontap_volumes"] = netapp_volumes_metrics
+
+MICRO = 0.000001
+
+netapp_ontap_volumes_metrics: dict[str, CheckMetricEntry] = {
+    **netapp_volumes_metrics,
+    # single_volume_metrics() emits the latency of the SAN protocols unconverted: in
+    # milliseconds for the 7-Mode API above, in microseconds for the ONTAP REST API. The
+    # difference is corrected here rather than in the check plugin on purpose. A translation
+    # is applied when the RRD is read, so it also corrects the values recorded before this
+    # fix and the graphs stay continuous instead of dropping by a factor of 1000.
+    "fcp_read_latency": {"scale": MICRO},
+    "fcp_write_latency": {"scale": MICRO},
+    "iscsi_read_latency": {"scale": MICRO},
+    "iscsi_write_latency": {"scale": MICRO},
+}
+
+check_metrics["check_mk-netapp_ontap_volumes"] = netapp_ontap_volumes_metrics
 
 disk_utilization_translation: dict[str, CheckMetricEntry] = {
     "disk_utilization": {"scale": 100.0},

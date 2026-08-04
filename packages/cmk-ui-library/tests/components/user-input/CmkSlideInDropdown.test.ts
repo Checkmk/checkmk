@@ -29,6 +29,7 @@ function renderComponent(
     validation?: Array<string>
     label?: string
     inputHint?: string
+    loading?: boolean
     slideIn?: SlideInSlot
   } = {}
 ) {
@@ -57,6 +58,14 @@ test('shows no-elements text when no choices available', async () => {
 test('uses inputHint as dropdown placeholder', async () => {
   renderComponent({ inputHint: 'Pick a parameter...' })
   await screen.findByLabelText('Pick a parameter...')
+})
+
+test('while loading, opens empty with a loading hint and shows choices arriving late', async () => {
+  const { rerender } = renderComponent({ choices: [], loading: true })
+  await fireEvent.click(screen.getByRole('combobox', { name: 'Select entity' }))
+  await screen.findByText('Loading…')
+  await rerender({ choices, loading: false })
+  await screen.findByRole('option', { name: 'Entity One' })
 })
 
 test('always shows create button', async () => {

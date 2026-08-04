@@ -19,7 +19,10 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.shared_typing.monitoring.host_services import MonitoringHostServicesApp
+from cmk.shared_typing.monitoring.host_services import (
+    MonitoringHostServicesApp,
+    MonitoringPageLinkButton,
+)
 
 
 class MonitorHostServicesPage(Page):
@@ -56,6 +59,14 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     host=hostname,
                     site=site_id,
+                    legacy_view_button=MonitoringPageLinkButton(
+                        url=makeuri_contextless(
+                            ctx.request,
+                            [("view_name", "host"), ("host", hostname), ("site", site_id)],
+                            filename="view.py",
+                        ),
+                        title=_("Return to classic view"),
+                    ),
                 )
             ),
         )

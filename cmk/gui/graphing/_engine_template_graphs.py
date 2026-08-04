@@ -18,7 +18,7 @@ from cmk.graphing_engine import (
     evaluate_graphs,
     EvaluatedGraph,
     Graph,
-    RRDFetchData,
+    RRDFetchDataProtocol,
     RRDFetchMetricNamesProtocol,
     RRDMetric,
 )
@@ -109,7 +109,7 @@ def evaluate_template_graphs(
     *,
     graphs: Sequence[Graph],
     options: CommonGraphOptions,
-    fetch_data: RRDFetchData,
+    fetch_data: RRDFetchDataProtocol,
 ) -> Sequence[EvaluatedGraph]:
     return evaluate_graphs(
         consolidation_function=options.consolidation_function,

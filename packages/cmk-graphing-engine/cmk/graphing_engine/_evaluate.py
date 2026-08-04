@@ -14,7 +14,7 @@ from ._graph import Bound, Curve, FixedRange, Graph, MinimalRange, Rule, Vertica
 from ._options import ConsolidationFunction, TimeRange
 from ._perfdata import MACRO_SERIES_ID, TimeSeries
 from ._quantities import EvaluationContext, first_value, Quantity
-from ._source import fetch_evaluation_context, RRDFetchData
+from ._source import fetch_evaluation_context, RRDFetchDataProtocol
 from ._title import evaluate_title
 from ._units import CurveAttributes
 
@@ -222,7 +222,7 @@ def evaluate_graphs(
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     graphs: Sequence[Graph],
-    fetch_data: RRDFetchData,
+    fetch_data: RRDFetchDataProtocol,
 ) -> Sequence[EvaluatedGraph]:
     context = fetch_evaluation_context(
         consolidation_function=consolidation_function,

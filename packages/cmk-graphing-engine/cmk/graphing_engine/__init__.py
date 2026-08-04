@@ -60,7 +60,7 @@ from ._quantities import (
     Sum,
 )
 from ._source import (
-    RRDFetchData,
+    RRDFetchDataProtocol,
     RRDFetchMetricNamesProtocol,
 )
 from ._units import (
@@ -114,7 +114,7 @@ __all__ = [
     "QuantityBuilderProtocol",
     "RRDMetric",
     "PerformanceData",
-    "RRDFetchData",
+    "RRDFetchDataProtocol",
     "Rule",
     "EngineeringScientificNotation",
     "SINotation",

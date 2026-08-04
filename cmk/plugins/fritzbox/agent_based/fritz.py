@@ -209,7 +209,7 @@ def check_fritz_uptime(
 check_plugin_fritz_uptime = CheckPlugin(
     name="fritz_uptime",
     sections=["fritz"],
-    service_name="Uptime",
+    service_name="Uptime WAN connection",
     discovery_function=discover_fritz_uptime,
     check_function=check_fritz_uptime,
     check_default_parameters={},

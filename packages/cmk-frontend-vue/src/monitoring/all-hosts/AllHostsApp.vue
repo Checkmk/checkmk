@@ -172,6 +172,10 @@ const selectedHosts = computed<HostRef[]>(() =>
     .map((host) => ({ site_id: host.site_id, name: host.name }))
 )
 
+const isNarrowed = computed(
+  () => hostService.filters.activeFilterCount > 0 || hostService.committedSearchQuery.value !== ''
+)
+
 onMounted(() => {
   hostService.onFocusSearch(() => searchInput.value?.focus())
 })
@@ -360,7 +364,11 @@ function onRightPaneCollapse(collapsed: boolean): void {
     >
       <template #left>
         <div class="monitoring-all-hosts-app__left-pane">
-          <MonitoringResultsCount class="monitoring-all-hosts-app__results-count" />
+          <MonitoringResultsCount
+            class="monitoring-all-hosts-app__results-count"
+            :matched="hostService.matched.value"
+            :narrowed="isNarrowed"
+          />
           <ActionFeedback
             v-if="feedback"
             v-model:open="feedbackOpen"
@@ -376,7 +384,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
               @action="onBulkAction"
             />
             <div class="monitoring-all-hosts-app__table-toolbar-end">
-              <MonitoringTotalCount />
+              <MonitoringTotalCount :total="hostService.total.value" />
               <MonitoringLimitSelector />
               <ColumnPicker />
             </div>

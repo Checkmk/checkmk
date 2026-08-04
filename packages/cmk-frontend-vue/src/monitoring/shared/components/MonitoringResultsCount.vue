@@ -5,25 +5,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, inject } from 'vue'
-
-import { MONITORING_SERVICE } from './MonitoringTableContext'
+import { computed } from 'vue'
 
 const { _t } = usei18n()
 
-const monitoringService = inject(MONITORING_SERVICE)
-
-const narrowed = computed(
-  () =>
-    (monitoringService?.filters.activeFilterCount ?? 0) > 0 ||
-    (monitoringService?.committedSearchQuery.value ?? '') !== ''
+const props = withDefaults(
+  defineProps<{
+    matched?: number
+    narrowed?: boolean
+  }>(),
+  { matched: 0, narrowed: false }
 )
 
-const matched = computed(() => monitoringService?.matched.value ?? 0)
+const visible = computed(() => props.narrowed && props.matched > 0)
 
-const visible = computed(() => narrowed.value && matched.value > 0)
-
-const label = computed(() => _t('Rows matching your criteria: %{count}', { count: matched.value }))
+const label = computed(() => _t('Rows matching your criteria: %{count}', { count: props.matched }))
 </script>
 
 <template>

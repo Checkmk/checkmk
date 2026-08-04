@@ -4,54 +4,42 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import { ref } from 'vue'
 
 import MonitoringResultsCount from '@/monitoring/shared/components/MonitoringResultsCount.vue'
-import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
-function makeServiceStub(matched = 0, committedSearchQuery = '', activeFilterCount = 0) {
-  return {
-    matched: ref(matched),
-    committedSearchQuery: ref(committedSearchQuery),
-    filters: { activeFilterCount }
-  }
-}
-
-function renderCount(stub: ReturnType<typeof makeServiceStub>) {
-  return render(MonitoringResultsCount, {
-    global: {
-      provide: { [MONITORING_SERVICE as symbol]: stub as unknown as MonitoringService<unknown> }
-    }
-  })
-}
-
-test('shows the matched row count when a search is active', () => {
-  renderCount(makeServiceStub(3, 'web'))
+test('shows the matched row count when the results are narrowed', () => {
+  render(MonitoringResultsCount, { props: { matched: 3, narrowed: true } })
 
   expect(screen.getByText('Rows matching your criteria: 3')).toBeInTheDocument()
 })
 
-test('shows the matched row count when a filter is active', () => {
-  renderCount(makeServiceStub(3, '', 1))
-
-  expect(screen.getByText('Rows matching your criteria: 3')).toBeInTheDocument()
-})
-
-test('shows no criteria text when neither a search nor a filter narrows the results', () => {
-  renderCount(makeServiceStub(42))
+test('shows no criteria text when nothing narrows the results', () => {
+  render(MonitoringResultsCount, { props: { matched: 42, narrowed: false } })
 
   expect(screen.queryByText(/Rows matching your criteria/)).not.toBeInTheDocument()
 })
 
 test('keeps the line in the layout so the table does not jump', () => {
-  const { container } = renderCount(makeServiceStub(42))
+  const { container } = render(MonitoringResultsCount, {
+    props: { matched: 42, narrowed: false }
+  })
 
   expect(container.querySelector('.monitoring-results-count')).toBeInTheDocument()
 })
 
 test('shows no count when the criteria match no rows', () => {
-  renderCount(makeServiceStub(0, 'nope'))
+  render(MonitoringResultsCount, { props: { matched: 0, narrowed: true } })
 
   expect(screen.queryByText(/Rows matching your criteria/)).not.toBeInTheDocument()
+})
+
+test('updates the count as the matched number changes', async () => {
+  const { rerender } = render(MonitoringResultsCount, {
+    props: { matched: 3, narrowed: true }
+  })
+
+  expect(screen.getByText('Rows matching your criteria: 3')).toBeInTheDocument()
+
+  await rerender({ matched: 7, narrowed: true })
+  expect(screen.getByText('Rows matching your criteria: 7')).toBeInTheDocument()
 })

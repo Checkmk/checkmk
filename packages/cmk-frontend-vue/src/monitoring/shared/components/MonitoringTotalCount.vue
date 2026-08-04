@@ -5,17 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, inject } from 'vue'
-
-import { MONITORING_SERVICE } from './MonitoringTableContext'
+import { computed } from 'vue'
 
 const { _t } = usei18n()
 
-const monitoringService = inject(MONITORING_SERVICE)
+const props = withDefaults(defineProps<{ total?: number }>(), { total: 0 })
 
-const total = computed(() => monitoringService?.total.value ?? 0)
-
-const label = computed(() => _t('Total rows: %{total}', { total: total.value }))
+const label = computed(() => _t('Total rows: %{total}', { total: props.total }))
 </script>
 
 <template>

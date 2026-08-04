@@ -54,7 +54,7 @@ class EvaluatedGraphs:
     diagnostics: FetchDiagnostics
 
 
-class DispatchedEvaluate(Protocol):
+class DispatchedEvaluateProtocol(Protocol):
     # A graph type's evaluation of one graph. The request options it runs under are its own fields,
     # deserialized when it was made for those options, so it is handed nothing but the graph.
     def __call__(self, graph: Graph) -> EvaluatedGraphs: ...
@@ -66,7 +66,7 @@ class EngineGraphDispatcher:
     codec: GraphCodec
     # How to make this graph type's evaluation for the options of a request: that is where it
     # deserializes the common options and whatever else it alone needs from them.
-    make_evaluate: Callable[[Mapping[str, object]], DispatchedEvaluate]
+    make_evaluate: Callable[[Mapping[str, object]], DispatchedEvaluateProtocol]
 
     def serialize(self, graph: Graph) -> Mapping[str, object]:
         return self.codec.serialize_graph(graph)

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-03 14:00+0000\n"
+"PO-Revision-Date: 2026-08-04 02:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -1499,8 +1499,8 @@ msgid ""
 "records are not included in this view. Sort order may not be correct."
 msgstr ""
 "<b>表示上限に達しました：</b> このテーブルには %s 件のみが表示されます。追加"
-"レコードはこのビューに含まれていません。ソート順序が正しくない場合があります"
-"。"
+"レコードはこのビューに含まれていません。ソート順序が正しくない場合がありま"
+"す。"
 
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
@@ -1875,14 +1875,14 @@ msgid ""
 msgstr ""
 "<p>コンテナのピギーバックホスト名の付け方を選択します。以下の選択肢から選べま"
 "す：</p><ul><li><tt>コンテナ名を使用：mycontainername</tt></li><li><tt>ホスト"
-"名とコンテナ名を組み合わせる（デフォルト）"
-"：\"mypodmanhost_mycontainername\"という形式の名前が生成されます。ホスト名が"
-"利用できない場合は、コンテナユーザーの名前が使用されます。これは、名前付けの"
-"競合を防ぐために推奨されます。例えば、異なるPodmanホスト上に「mycontainer」と"
-"いう名前のコンテナが複数存在する場合などです。</tt></li><li><tt>コンテナ名と"
-"IDを組み合わせる：\"mycontainername_containerID\"。コンテナIDが変更される場合"
-"があることにご注意ください。そのため、このオプションを選択すると、"
-"ピギーバックホスト名が変更される可能性があります。</tt></li></ul>"
+"名とコンテナ名を組み合わせる（デフォルト）："
+"\"mypodmanhost_mycontainername\"という形式の名前が生成されます。ホスト名が利"
+"用できない場合は、コンテナユーザーの名前が使用されます。これは、名前付けの競"
+"合を防ぐために推奨されます。例えば、異なるPodmanホスト上に「mycontainer」とい"
+"う名前のコンテナが複数存在する場合などです。</tt></li><li><tt>コンテナ名とID"
+"を組み合わせる：\"mycontainername_containerID\"。コンテナIDが変更される場合が"
+"あることにご注意ください。そのため、このオプションを選択すると、ピギーバック"
+"ホスト名が変更される可能性があります。</tt></li></ul>"
 
 msgid ""
 "<p>The Apache has a number of maximum processes it may start in case of high "
@@ -2271,9 +2271,9 @@ msgid ""
 "properly configured <tt>tnsnames.ora</tt> file accessible via the TNS_ADMIN "
 "directory path."
 msgstr ""
-"<tt>tnsnames.ora</tt>ファイルで定義されたTNSエイリアス。TNS_ADMIN"
-"ディレクトリパス経由でアクセス可能な、適切に構成された<tt>tnsnames.ora</tt>"
-"ファイルが必要です。"
+"<tt>tnsnames.ora</tt>ファイルで定義されたTNSエイリアス。TNS_ADMINディレクトリ"
+"パス経由でアクセス可能な、適切に構成された<tt>tnsnames.ora</tt>ファイルが必要"
+"です。"
 
 msgid ""
 "A cache age limit on plug-ins and local checks. If set, the output of plug-"
@@ -2944,8 +2944,8 @@ msgid ""
 "JSM Operations and copy the value shown there."
 msgstr ""
 "アラートを受信するJSM Operations連携のAPIキー。JSM OperationsでAPI連携（また"
-"は専用のCheckmk連携）を作成または開き、そこに表示される値をコピーしてください"
-"。"
+"は専用のCheckmk連携）を作成または開き、そこに表示される値をコピーしてくださ"
+"い。"
 
 #, fuzzy
 msgid ""
@@ -3117,7 +3117,7 @@ msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2の制限"
 
 msgid "AWS/ElastiCache CPU Utilization"
-msgstr "AWS/ElastiCache CPU使用率"
+msgstr "AWS/ElastiCache CPU利用率"
 
 msgid "AWS/ElastiCache Connections"
 msgstr "AWS/ElastiCache 接続数"
@@ -3214,8 +3214,8 @@ msgid ""
 "Aborting because the number of hosts (%d) exceeds the configured maximum "
 "number of hosts (%d). You can adjust this limit in the connector settings."
 msgstr ""
-"ホストの数 (%d) が設定された最大ホスト数 (%d) を超えたため、処理を中止します"
-"。この制限はコネクタ設定で調整できます。"
+"ホストの数 (%d) が設定された最大ホスト数 (%d) を超えたため、処理を中止しま"
+"す。この制限はコネクタ設定で調整できます。"
 
 msgid "Aborting change."
 msgstr "変更を中止します。"
@@ -3514,14 +3514,14 @@ msgid ""
 msgstr ""
 "ウェルカムページへのアクセスは複数の権限によって制御されます。必要な権限を持"
 "たないユーザーはメインダッシュボードにリダイレクトされます。必要な権限は以下"
-"の通りです：<br><br>- 設定の有効化<br>- ホストの追加と削除<br>- "
-"ダッシュボードのカスタマイズと使用<br>- ホストとサービスグループ<br>- ホスト"
-"管理<br>- 変更の実行とアクションの実施<br>- 組込みダッシュボードの変更<br>- "
-"通知設定<br>- ホスト登録と監視エージェントのダウンロード<br>- パッケージ済"
-"ダッシュボードの閲覧<br>- ユーザーダッシュボードの閲覧<br>- サービス検出: 無"
-"効化されたサービス<br>- サービス検出: 監視対象サービスへの移動<br>- サービス"
-"検出: 未決定サービスへの移動<br>- サービス検出: サービスの削除<br>- "
-"タイムピリオド(期間)設定<br>- WATOの使用"
+"の通りです：<br><br>- 設定の有効化<br>- ホストの追加と削除<br>- ダッシュボー"
+"ドのカスタマイズと使用<br>- ホストとサービスグループ<br>- ホスト管理<br>- 変"
+"更の実行とアクションの実施<br>- 組込みダッシュボードの変更<br>- 通知設定"
+"<br>- ホスト登録と監視エージェントのダウンロード<br>- パッケージ済ダッシュ"
+"ボードの閲覧<br>- ユーザーダッシュボードの閲覧<br>- サービス検出: 無効化され"
+"たサービス<br>- サービス検出: 監視対象サービスへの移動<br>- サービス検出: 未"
+"決定サービスへの移動<br>- サービス検出: サービスの削除<br>- タイムピリオド(期"
+"間)設定<br>- WATOの使用"
 
 msgid ""
 "Access to the historic audit log. The currently pending changes can be seen "
@@ -4747,8 +4747,8 @@ msgid ""
 "Add the tags you want to use to filter the subscriptions. Only subscriptions "
 "with every tags matching, will be monitored."
 msgstr ""
-"サブスクリプションをフィルタリングするために使用したいタグを追加してください"
-"。すべてのタグが一致するサブスクリプションのみが監視対象となります。"
+"サブスクリプションをフィルタリングするために使用したいタグを追加してくださ"
+"い。すべてのタグが一致するサブスクリプションのみが監視対象となります。"
 
 msgid "Add these contact groups to the host"
 msgstr "これらの連絡先グループをホストに追加します"
@@ -4920,10 +4920,10 @@ msgstr ""
 "使用されるServiceNowの検索クエリ (<tt>sysparm_query</tt>) に、追加のフィルタ"
 "が適用されます。大規模なServiceNowインスタンスでは、フィルタを適用しない検索"
 "ではタイムアウトが発生する可能性があります。そのため、条件で検索を制限するこ"
-"とで、Checkmkが管理する範囲に検索を絞り込むことができます。（例：<tt>"
-"company</tt> や <tt>assignment_group</tt>）すべてのフィルターは、既存の問題ID"
-"の検索条件とAND演算で結合されます。問題の（<i>カスタムフィールド</i>を介して"
-"）作成時に設定されたフィールドおよび値のみが一致します。"
+"とで、Checkmkが管理する範囲に検索を絞り込むことができます。（例："
+"<tt>company</tt> や <tt>assignment_group</tt>）すべてのフィルターは、既存の問"
+"題IDの検索条件とAND演算で結合されます。問題の（<i>カスタムフィールド</i>を介"
+"して）作成時に設定されたフィールドおよび値のみが一致します。"
 
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
@@ -5800,10 +5800,10 @@ msgid "Alert on connection loss"
 msgstr "接続損失時のアラート"
 
 msgid "Alert on excessive CPU utilization"
-msgstr "CPU過剰使用に対するアラート"
+msgstr "CPU過剰利用率に対するアラート"
 
 msgid "Alert on too high CPU utilization"
-msgstr "CPU使用率が高すぎる場合のアラート"
+msgstr "CPU利用率が高すぎる場合のアラート"
 
 msgid "Alert on too high FPGA utilization"
 msgstr "FPGA使用率が高すぎる場合のアラート"
@@ -6472,8 +6472,8 @@ msgid ""
 "dollar signs, spaces, at signs, dots, plus signs, and hyphens. Must start "
 "and end with a word character or dollar sign."
 msgstr ""
-"使用可能な文字は、単語構成文字（英語、数字、アンダースコア）、ドル記号、"
-"スペース、アットマーク、ピリオド、プラス記号、およびハイフンです。先頭と末尾"
+"使用可能な文字は、単語構成文字（英語、数字、アンダースコア）、ドル記号、ス"
+"ペース、アットマーク、ピリオド、プラス記号、およびハイフンです。先頭と末尾"
 "は、単語構成文字またはドル記号でなければなりません。"
 
 msgid "Allowed duration since last NTPMessage"
@@ -6537,6 +6537,9 @@ msgid ""
 "Graph Editor, and graphs containing metric-backend queries cannot be "
 "displayed."
 msgstr ""
+"カスタムグラフエディタからメトリクスバックエンド（OpenTelemetry）へのクエリを"
+"実行できるようにします。無効にしている場合、カスタムグラフエディタではRRDベー"
+"スのメトリクスバックエンドへのクエリを含むグラフは表示できません。"
 
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
@@ -6621,7 +6624,7 @@ msgstr ""
 "を許可します。注意:MKPには実行可能コードが含まれています。"
 
 msgid "Allows to use the 'Explain with AI' button."
-msgstr ""
+msgstr "「AIで説明」ボタンを使用できるようにします。"
 
 #, python-format
 msgid "Allows to view and edit %s created by other users."
@@ -6738,7 +6741,7 @@ msgid "Always compute the rate (excluding histograms)"
 msgstr "常にレートを計算する（ヒストグラムを除く）"
 
 msgid "Always fetch data from Meraki API."
-msgstr ""
+msgstr "常にMeraki APIからデータを取得してください。"
 
 msgid "Always install Python with agent"
 msgstr "常にエージェントと一緒にPythonをインストールする"
@@ -6762,6 +6765,8 @@ msgstr "常にピギーバックデータを使用し、期待する"
 
 msgid "Always use host client (ignore agent-local client)"
 msgstr ""
+"常にホストクライアントを使用する（エージェントローカルクライアントは無視す"
+"る）"
 
 msgid "Always use service level from rule"
 msgstr "常にルールのサービスレベルを使用する"
@@ -7052,7 +7057,7 @@ msgid "Another session is active"
 msgstr "別のセッションがアクティブです"
 
 msgid "Answer seizure ratio"
-msgstr ""
+msgstr "通話成功率"
 
 msgid "AntiVirus last update age"
 msgstr "アンチウイルスの最終更新期間"
@@ -7425,7 +7430,7 @@ msgid "Architecture"
 msgstr "アーキテクチャ"
 
 msgid "Architecture of the systems where the agent will be deployed"
-msgstr ""
+msgstr "エージェントがデプロイされるシステムのアーキテクチャ"
 
 msgid "Archive"
 msgstr "アーカイブ"
@@ -7462,7 +7467,7 @@ msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
 msgid "Archive exceeds total size limit"
-msgstr ""
+msgstr "アーカイブの合計サイズが制限を超えています"
 
 msgid "Archive log"
 msgstr "アーカイブログ"
@@ -7578,7 +7583,7 @@ msgid "Ascending"
 msgstr "上昇"
 
 msgid "Ask (in the quick activation slideout)"
-msgstr ""
+msgstr "質問する（クイックアクティベーションスライドアウトで）"
 
 msgid "Ask Checkmk AI"
 msgstr "Checkmk AIに聞く"
@@ -7742,6 +7747,8 @@ msgid ""
 "At least one Hyper-V monitoring component must be selected. Please choose "
 "from the available monitoring options."
 msgstr ""
+"Hyper-V監視コンポーネントを少なくとも１つ選択する必要があります。利用可能な監"
+"視オプションから選択してください。"
 
 #, fuzzy
 msgid "At least one custom query is required."
@@ -7884,7 +7891,7 @@ msgid "Attributes to remove from hosts"
 msgstr "ホストから削除する属性"
 
 msgid "AudioCodes SBC Calls"
-msgstr ""
+msgstr "AudioCodes SBC コール"
 
 #, fuzzy
 msgid "AudioCodes system events"
@@ -8063,6 +8070,8 @@ msgid ""
 "Autocompletion is only available on sites with a configured metric backend. "
 "The metric backend can be enabled in the Global Settings."
 msgstr ""
+"オートコンプリートは、設定済のメトリックバックエンドを持つサイトでのみ利用可"
+"能です。メトリックバックエンドはグローバル設定で有効化できます。"
 
 msgid "Autodetect instances"
 msgstr "インスタンスの自動検出"
@@ -8147,6 +8156,8 @@ msgid ""
 "Automatic space management in Informix allows storage space to grow. Use "
 "this rule to monitor the growth."
 msgstr ""
+"Informixの自動スペース管理機能により、ストレージスペースが自動的に拡張されま"
+"す。このルールを使用してその増加状況を監視してください。"
 
 msgid "Automatic takeover"
 msgstr "自動テイクオーバー"
@@ -8236,6 +8247,8 @@ msgstr "マシンアカウントの自動化の秘密"
 msgid ""
 "Automation user %s has stored secret with %d dangerous permission(s): %s"
 msgstr ""
+"オートメーションユーザーの%sが、%dという危険な権限を持つシークレットを保存し"
+"ています。: %s"
 
 msgid "Automation user authentication via HTTP parameters"
 msgstr "HTTPパラメータによるユーザー認証の自動化"
@@ -8490,7 +8503,7 @@ msgid "Average message count upper levels"
 msgstr "平均メッセージ数上位レベル"
 
 msgid "Average metric value over a period of time"
-msgstr ""
+msgstr "一定期間におけるメトリックの平均値"
 
 msgid "Average number of messages"
 msgstr "メッセージの平均数"
@@ -8553,16 +8566,18 @@ msgstr "バックアップの平均速度"
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
 "applied."
-msgstr "レベルが適用される前に、指定された期間のCPU使用率を平均します。"
+msgstr "レベルが適用される前に、指定された期間のCPU利用率を平均します。"
 
 msgid "Average the instantaneous value over the specified number of minutes."
-msgstr ""
+msgstr "指定された分の間、瞬間値を平均化します。"
 
 msgid ""
 "Average the instantaneous value over the specified number of minutes. Note: "
 "This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
+"指定した分の間、瞬間値を平均化します。注意：「長期間にわたるレベル」には影響"
+"しません。「長期間にわたるレベル」では、常に瞬間値がチェックされます。"
 
 msgid "Average time messages stay on queue"
 msgstr "メッセージがキューにとどまる平均時間"
@@ -8994,7 +9009,7 @@ msgid "Averaging for single cores"
 msgstr "シングルコアの平均化"
 
 msgid "Averaging for total CPU utilization"
-msgstr "総CPU使用率の平均"
+msgstr "総CPU利用率の平均"
 
 msgid "Avg. rate of allowed requests"
 msgstr "平均 許可されたリクエストの割合"
@@ -9041,7 +9056,7 @@ msgid "Azure Cosmos DB Availability"
 msgstr "BI の可用性"
 
 msgid "Azure Cosmos DB Database Container Requests"
-msgstr ""
+msgstr "Azure Cosmos DBデータベースコンテナリクエスト"
 
 #, fuzzy
 msgid "Azure Cosmos DB Database Container Throughput"
@@ -9133,12 +9148,11 @@ msgstr "サービスの可用性を見る"
 msgid "Azure Network IO"
 msgstr "ネットワークIO"
 
-#, fuzzy
 msgid "Azure Redis CPU utilization"
-msgstr "GCP/Redis CPU使用率"
+msgstr "Azure Redis CPU 利用率"
 
 msgid "Azure Redis Cache effectiveness"
-msgstr ""
+msgstr "Azure Redisキャッシュ有効性"
 
 #, fuzzy
 msgid "Azure Redis Connections"
@@ -9205,14 +9219,14 @@ msgid "Azure Storage Data Flow"
 msgstr "Azureストレージ"
 
 msgid "Azure Storage Data Flow (deprecated)"
-msgstr ""
+msgstr "Azureストレージ データフロー（非推奨）"
 
 #, fuzzy
 msgid "Azure Storage Performance"
 msgstr "Azureストレージ"
 
 msgid "Azure Storage Performance (deprecated)"
-msgstr ""
+msgstr "Azureストレージ パフォーマンス（非推奨）"
 
 #, fuzzy
 msgid "Azure Storage Usage"
@@ -9612,6 +9626,8 @@ msgstr "バックアップ暗号化キー"
 
 msgid "Backup in progress. Refresh to see the final status."
 msgstr ""
+"バックアップ処理中です。最終的なステータスを確認するには、ページを更新してく"
+"ださい。"
 
 msgid "Backup job"
 msgstr "バックアップジョブ"
@@ -9756,7 +9772,7 @@ msgstr "Docker APIエンジンのベースURL"
 
 msgid ""
 "Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-msgstr ""
+msgstr "ExtremeCloud IQ APIのベースURL（例：https://api.extremecloudiq.com）"
 
 #, fuzzy
 msgid "Base directory"
@@ -10385,7 +10401,7 @@ msgid ""
 "will automatically be applied on the averaged value. This helps to mask out "
 "short peaks. "
 msgstr ""
-"平均化を有効にすると、Checkmkは、総CPU使用率の指数移動平均を計算します。ア"
+"平均化を有効にすると、Checkmkは、総CPU利用率の指数移動平均を計算します。ア"
 "ラートレベルを定義した場合は、平均値に自動的に適用されます。これは、短いピー"
 "クをマスクするのに役立ちます。 "
 
@@ -10473,7 +10489,7 @@ msgid ""
 "By activating this option you can set levels on the total CPU utilization "
 "for all included processes."
 msgstr ""
-"このオプションを有効にすると、含まれるすべてのプロセスの合計CPU使用率のレベル"
+"このオプションを有効にすると、含まれるすべてのプロセスの合計CPU利用率のレベル"
 "を設定することができます。"
 
 msgid ""
@@ -10805,6 +10821,14 @@ msgid ""
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
 msgstr ""
+"デフォルトでは、BIアグリゲーション機能を満たすのに十分な数のコンポーネントに"
+"定期メンテナンスウィンドウが設定されると、BIアグリゲーションは直ちに「ダウン"
+"タイム中」とマークされます。これはアグリゲーションを単一のサービス単位として"
+"扱う場合にやくだちます。つまり、主要なコンポーネントがメンテナンス中の場合、"
+"そのブランチ全体が意図的にスケジュールダウンタイム中とみなされます。代わり"
+"に、現在障害が発生しているすべてのコンポーネントを対象としたい場合は、このオ"
+"プションを有効にしてください。これにより、部分的なメンテナンスウィンドウの陰"
+"で、アクティブな予期せぬ障害が見逃されることを防ぐことができます。"
 
 #, python-brace-format
 msgid ""
@@ -10814,6 +10838,11 @@ msgid ""
 "match against the Azure tag keys. You can also disable the importing of tags "
 "altogether."
 msgstr ""
+"デフォルトでは、サブスクリプション、リソースグループ、およびリソースのすべて"
+"のAzureタグは、次の形式のホストラベルとしてインポートされます：cmk/azure/tag/"
+"{key}:{value} <br>このオプションを使用すると、Azureタグのキーに一致するパター"
+"ンを指定して、インポートするタグをフィルタリングできます。また、タグのイン"
+"ポートを完全に無効にすることも可能です。"
 
 msgid ""
 "By default, all mailboxes are checked with these parameters. If you specify "
@@ -11101,6 +11130,9 @@ msgid ""
 "requests sent to the Meraki API instance. If not changed, the predefined "
 "default time to live (TTL) cache interval will be used."
 msgstr ""
+"特定のリソースに対してより高い値を設定することで、Meraki APIインスタンスに送"
+"信されるリクエストの数を減らすことができます。変更しない場合は、事前に定義さ"
+"れたデフォルトのTTL（Time To Live）キャッシュ間隔が使用されます。"
 
 #, fuzzy
 msgid ""
@@ -11309,7 +11341,7 @@ msgid "CDP cache"
 msgstr "キャッシュされた"
 
 msgid "CDP neighbors"
-msgstr ""
+msgstr "CDP ネイバー"
 
 msgid "CIFS"
 msgstr "CIFS"
@@ -11366,7 +11398,7 @@ msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCOデジタルオプティカルモニタリング(DOM)"
 
 msgid "CLI (podman command)"
-msgstr ""
+msgstr "CLI（podman コマンド）"
 
 msgid "CLOSED"
 msgstr "閉まっている"
@@ -11401,6 +11433,7 @@ msgstr "CPU"
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
+"CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 
 msgid "CPU Load via WMI"
 msgstr "WMIを介したCPU負荷"
@@ -11415,11 +11448,10 @@ msgid "CPU Time"
 msgstr "CPU時間"
 
 msgid "CPU Utilization"
-msgstr "CPU使用率"
+msgstr "CPU利用率"
 
-#, fuzzy
 msgid "CPU Utilization levels"
-msgstr "CPU使用率"
+msgstr "CPU利用率レベル"
 
 #, fuzzy
 msgid "CPU allocation ratio"
@@ -11551,102 +11583,89 @@ msgid "CPU used"
 msgstr "CPU使用率"
 
 msgid "CPU utilization"
-msgstr "CPU使用率"
+msgstr "CPU 利用率"
 
-#, fuzzy
 msgid "CPU utilization %"
-msgstr "CPU使用率"
+msgstr "CPU利用率%"
 
 msgid "CPU utilization & Kernel performance"
-msgstr "CPU使用率とカーネルパフォーマンス"
+msgstr "CPU利用率とカーネルパフォーマンス"
 
 msgid "CPU utilization (50th percentile)"
-msgstr "CPU使用率(50パーセンタイル)"
+msgstr "CPU利用率(50パーセンタイル)"
 
 msgid "CPU utilization (95th percentile)"
-msgstr "CPU使用率(95パーセンタイル)"
+msgstr "CPU利用率(95パーセンタイル)"
 
 msgid "CPU utilization (99th percentile)"
-msgstr "CPU使用率(99パーセンタイル)"
+msgstr "CPU利用率(99パーセンタイル)"
 
-#, fuzzy
 msgid "CPU utilization (Average)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(平均)"
 
-#, fuzzy
 msgid "CPU utilization (Caching engine)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(キャッシュエンジン)"
 
-#, fuzzy
 msgid "CPU utilization (Last minutes)"
-msgstr "直前のCPU使用率"
+msgstr "CPU利用率（直近数分間）"
 
-#, fuzzy
 msgid "CPU utilization (Percentiles)"
-msgstr "CPU使用率(50パーセンタイル)"
+msgstr "CPU利用率(パーセンタイル)"
 
-#, fuzzy
 msgid "CPU utilization (User, system)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(ユーザー、システム)"
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait & levels)"
-msgstr "過去5分間のCPU使用率"
+msgstr "CPU利用率(ユーザー、システム、I/O待機およびレベル)"
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(ユーザー、システム、I/O待機)"
 
 msgid "CPU utilization (User, system, IO wait, guest & levels)"
-msgstr ""
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、ゲスト及びレベル）"
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait, guest)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率 (ユーザー、システム、I/O待機、ゲスト)"
 
 msgid "CPU utilization (User, system, IO wait, guest, steal & levels)"
-msgstr ""
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、ゲスト、steal &レベル）"
 
 msgid "CPU utilization (User, system, IO wait, guest, steal)"
-msgstr ""
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、ゲスト、steal）"
 
 msgid "CPU utilization (User, system, IO wait, steal & levels)"
-msgstr ""
+msgstr "CPU 利用率（ユーザー、システム、I/O 待機、steal 、およびレベル）"
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait, steal)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、steal）"
 
-#, fuzzy
 msgid "CPU utilization (User, system, idle, IO wait)"
-msgstr "CPU使用率(50パーセンタイル)"
+msgstr "CPU 利用率（ユーザー、システム、アイドル、I/O待機）"
 
-#, fuzzy
 msgid "CPU utilization (User, system, idle, nice)"
-msgstr "単純なデバイスのCPU使用率"
+msgstr "CPU 利用率（ユーザー、システム、アイドル、nice）"
 
-#, fuzzy
 msgid "CPU utilization (User, system, interrupt)"
-msgstr "直前のCPU使用率"
+msgstr "CPU 利用率（ユーザー、システム、割り込み）"
 
 msgid "CPU utilization (Windows)"
-msgstr "CPU使用率(Windows)"
+msgstr "CPU利用率(Windows)"
 
-#, fuzzy
 msgid ""
 "CPU utilization (_EXPRESSION:{\"metric\":\"util_numcpu_as_max\",\"scalar\":"
 "\"max\"} CPU Threads)"
-msgstr "CPU使用率 (%(util_numcpu_as_max:max@count) CPUスレッド)"
+msgstr ""
+"CPU利用率 (_EXPRESSION:{\"metric\":\"util_numcpu_as_max\",\"scalar\":"
+"\"max\"} CPU Threads)"
 
 msgid "CPU utilization (average)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(平均)"
 
-#, fuzzy
 msgid "CPU utilization (single value)"
-msgstr "直前のCPU使用率"
+msgstr "CPU 利用率（単一値）"
 
 msgid "CPU utilization for simple devices"
-msgstr "単純なデバイスのCPU使用率"
+msgstr "単純なデバイスのCPU 利用率"
 
 #, no-python-format
 msgid ""
@@ -11656,39 +11675,37 @@ msgid ""
 "can be rescaled down, making 100% the maximum and thinking in terms of total "
 "CPU utilization."
 msgstr ""
-"CPU使用率は、オペレーティングシステムによってCPUコア単位で提供されます。した"
+"CPU利用率は、オペレーティングシステムによってCPUコア単位で提供されます。した"
 "がって、各コアはフル稼働時に100%で動作し、N*100%（N=コアの数）の最大負荷を生"
 "成します。簡単にするために、この最大値を縮小して、100%を最大値とし、総CPU使用"
 "率で考えることができます。"
 
 msgid "CPU utilization last 15 minutes"
-msgstr "過去15分間のCPU使用率"
+msgstr "過去15分間のCPU利用率"
 
 msgid "CPU utilization last 5 minutes"
-msgstr "過去5分間のCPU使用率"
+msgstr "過去5分間のCPU利用率"
 
 msgid "CPU utilization last five seconds"
-msgstr "過去5秒間のCPU使用率"
+msgstr "過去5秒間のCPU利用率"
 
 msgid "CPU utilization last minute"
-msgstr "直前のCPU使用率"
+msgstr "直近1分間のCPU 利用率"
 
 msgid "CPU utilization last second"
-msgstr "最後の1秒のCPU使用率"
+msgstr "最後の1秒のCPU利用率"
 
-#, fuzzy
 msgid "CPU utilization of clusters"
-msgstr "クラスターのCPU使用率"
+msgstr "クラスターのCPU利用率"
 
-#, fuzzy
 msgid "CPU utilization of devices with modules"
-msgstr "モジュールを備えたデバイスのCPU使用率"
+msgstr "モジュールを備えたデバイスのCPU利用率"
 
 msgid "CPU utilization on Linux/Unix"
-msgstr "Linux/UNIXでのCPU使用率"
+msgstr "Linux/UNIXでのCPU利用率"
 
 msgid "CPU utilization: Cluster"
-msgstr "CPU utilitzation: クラスター"
+msgstr "CPU 利用率: クラスター"
 
 msgid "CPUs"
 msgstr "CPU"
@@ -71830,9 +71847,9 @@ msgid ""
 "configuration.<br>To access further parts of the OpenTelemetry "
 "configuration, go to the related OpenTelemetry configuration."
 msgstr ""
-"このOpenTelemetryコレクターは、{config_name}OpenTelemetry設定の一部です。<br>"
-"OpenTelemetry 設定のその他の部分にアクセスするには、関連するOpenTelemetry 設"
-"定に移動してください。"
+"このOpenTelemetryコレクターは、{config_name}OpenTelemetry設定の一部です。"
+"<br>OpenTelemetry 設定のその他の部分にアクセスするには、関連する"
+"OpenTelemetry 設定に移動してください。"
 
 #, fuzzy
 msgid "This OpenTelemetry configuration does not exist."
@@ -71848,9 +71865,9 @@ msgid ""
 "configuration.<br>To access further parts of the Prometheus configuration, "
 "go to the related Prometheus configuration."
 msgstr ""
-"このPrometheusスクレイパーは、{config_name}Prometheus設定の一部です。<br>"
-"Prometheus 設定のその他の部分にアクセスするには、関連するPrometheus 設定に移"
-"動してください。"
+"このPrometheusスクレイパーは、{config_name}Prometheus設定の一部です。"
+"<br>Prometheus 設定のその他の部分にアクセスするには、関連するPrometheus 設定"
+"に移動してください。"
 
 msgid "This SLA has no computation plug-ins configured"
 msgstr "このSLAには計算プラグインは設定されていない"
@@ -86526,10 +86543,9 @@ msgid ""
 msgstr ""
 "<b>OpenTelemetry データ - メトリックバックエンド</b>コネクタタイプを使用する"
 "と、<b>OpenTelemetry Collector</b> または <b>Prometheus scraper</b>から収集さ"
-"れたデータに基づいて、ホストが動的に作成されます。また<a "
-"href='wato.py?folder=&mode=edit_configvar&site=&varname=metric_backend'>"
-"グローバル設定＞サイト管理</a>で、メトリックバックエンドを有効にする必要があ"
-"ります"
+"れたデータに基づいて、ホストが動的に作成されます。また<a href='wato.py?"
+"folder=&mode=edit_configvar&site=&varname=metric_backend'>グローバル設定＞サ"
+"イト管理</a>で、メトリックバックエンドを有効にする必要があります"
 
 #, fuzzy
 msgid ""
@@ -94954,7 +94970,8 @@ msgid "No passwords available"
 msgstr "利用可能なユーザーはいません"
 
 msgid "Creating a new password is not available for your account. "
-msgstr "お客様のアカウントでは、新しいパスワードの設定はご利用いただけません。 "
+msgstr ""
+"お客様のアカウントでは、新しいパスワードの設定はご利用いただけません。 "
 
 msgid "Send log messages to event console"
 msgstr "ログメッセージをイベントコンソールに送信"

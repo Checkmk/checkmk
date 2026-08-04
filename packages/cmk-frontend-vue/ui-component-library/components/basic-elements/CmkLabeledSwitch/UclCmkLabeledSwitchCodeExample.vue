@@ -11,5 +11,11 @@ const peakZoomActive = ref(false)
 </script>
 
 <template>
-  <CmkLabeledSwitch v-model="peakZoomActive" off-label="Time zoom" on-label="Peak zoom" />
+  <CmkLabeledSwitch
+    v-model="peakZoomActive"
+    off-label="Time zoom"
+    on-label="Peak zoom"
+    off-help="Drag to zoom into a time range."
+    on-help="Drag to zoom into a value range."
+  />
 </template>

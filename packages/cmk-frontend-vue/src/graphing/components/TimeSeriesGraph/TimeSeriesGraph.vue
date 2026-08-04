@@ -601,9 +601,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     position: absolute;
     z-index: 1;
     pointer-events: none;
-    background: color-mix(in srgb, var(--color-light-blue-50) 15%, transparent);
-    border: var(--border-width-1) solid
-      color-mix(in srgb, var(--color-light-blue-50) 60%, transparent);
+    background: color-mix(in srgb, var(--color-corporate-green-50) 20%, transparent);
   }
 
   .graphing-time-series-graph__pan-zone {

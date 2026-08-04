@@ -253,7 +253,7 @@ test('a do-action from the header runs the callback with the graph the backends 
     }
   })
 
-  await fireEvent.click(screen.getByRole('button'))
+  await fireEvent.click(screen.getByRole('button', { name: 'Action menu' }))
   await fireEvent.click(await screen.findByRole('button', { name: 'Export as JSON' }))
 
   // Most add-to actions replay the specification, a custom graph takes the built graph itself, and

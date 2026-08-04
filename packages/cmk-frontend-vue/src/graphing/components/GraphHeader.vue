@@ -116,6 +116,8 @@ const resolutionLabel = computed(() =>
         v-model="peakZoomActive"
         :off-label="_t('Time zoom')"
         :on-label="_t('Peak zoom')"
+        :off-help="_t('Drag to zoom into a time range.')"
+        :on-help="_t('Drag to zoom into a value range.')"
       />
       <GraphBurgerMenu
         v-if="showBurgerMenu"

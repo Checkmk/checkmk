@@ -36,7 +36,12 @@ export interface ZoomGestureOptions {
 export function useZoomGesture(options: ZoomGestureOptions) {
   // Drag rectangle in plot-relative pixels; null = no drag in progress.
   const selection = ref<SelectionPoints | null>(null)
-  const plotCursor = computed(() => (options.zoomMode() === 'value' ? 'ns-resize' : 'ew-resize'))
+  const plotCursor = computed(() => {
+    if (selection.value !== null) {
+      return 'zoom-in'
+    }
+    return options.zoomMode() === 'value' ? 'ns-resize' : 'ew-resize'
+  })
   const selectionBand = computed(() =>
     selection.value
       ? selectionRect(options.zoomMode(), selection.value, {

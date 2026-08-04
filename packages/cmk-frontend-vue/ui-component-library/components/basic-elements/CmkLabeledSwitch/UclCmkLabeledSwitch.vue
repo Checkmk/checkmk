@@ -43,10 +43,23 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'On Label',
     initialState: 'Peak zoom'
+  },
+  offHelp: {
+    type: 'string' as const,
+    title: 'Off Help',
+    initialState: 'Drag to zoom into a time range.'
+  },
+  onHelp: {
+    type: 'string' as const,
+    title: 'On Help',
+    initialState: 'Drag to zoom into a value range.'
   }
-  // `onLabel` is a real prop, but Vue's typing treats an `on`-prefixed name as an
-  // event handler, so PanelConfigFor can't see it — declare its knob type explicitly.
-} satisfies PanelConfigFor<typeof CmkLabeledSwitch> & { onLabel: StringPropDef }
+  // `onLabel` and `onHelp` are real props, but Vue's typing treats an `on`-prefixed name as
+  // an event handler, so PanelConfigFor can't see them — declare their knob types explicitly.
+} satisfies PanelConfigFor<typeof CmkLabeledSwitch> & {
+  onLabel: StringPropDef
+  onHelp: StringPropDef
+}
 </script>
 
 <script setup lang="ts">
@@ -75,6 +88,8 @@ const propState = new PanelStateCreator<typeof CmkLabeledSwitch>().createRef(pan
         v-model="propState.modelValue"
         :off-label="propState.offLabel"
         :on-label="propState.onLabel"
+        :off-help="propState.offHelp"
+        :on-help="propState.onHelp"
       />
 
       <template #properties>

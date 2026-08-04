@@ -26,6 +26,7 @@ class HostServicesRepository(Protocol):
         hostname: str,
         *,
         limit: int | None,
+        query: str,
         sorters: Sequence[ServiceSort],
     ) -> Sequence[Service]:
         """Fetch services of a host."""
@@ -33,4 +34,8 @@ class HostServicesRepository(Protocol):
 
     def count_total(self, hostname: str) -> int:
         """Count the total services of a host in your environment."""
+        ...
+
+    def count_matched(self, hostname: str, *, query: str) -> int:
+        """Count the services of a host matching the given criteria."""
         ...

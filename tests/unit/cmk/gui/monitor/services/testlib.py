@@ -31,11 +31,16 @@ def get_fake_host_services_repository(*, n_services: int) -> HostServicesReposit
             hostname: str,
             *,
             limit: int | None,
+            query: str,
             sorters: Sequence[ServiceSort],
         ) -> Sequence[Service]:
-            return sorted(self._services, key=service_sorter(sorters))[:limit]
+            matches = [s for s in self._services if query.lower() in s.name.lower()]
+            return sorted(matches, key=service_sorter(sorters))[:limit]
 
         def count_total(self, hostname: str) -> int:
             return len(self._services)
+
+        def count_matched(self, hostname: str, *, query: str) -> int:
+            return len([s for s in self._services if query.lower() in s.name.lower()])
 
     return HostServicesFakeRepository()

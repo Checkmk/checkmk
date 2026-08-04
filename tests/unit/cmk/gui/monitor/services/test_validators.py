@@ -5,8 +5,35 @@
 
 import pytest
 
-from cmk.gui.monitor.services._api._validators import parse_service_sort_options
+from cmk.gui.monitor.services._api._validators import (
+    parse_service_search_query,
+    parse_service_sort_options,
+)
 from cmk.gui.monitor.services._models import ServiceSort, ServiceSortColumn, ServiceSortDirection
+
+
+class TestServiceSearchQuery:
+    def test_plain_value_is_kept(self) -> None:
+        assert parse_service_search_query("CPU") == "CPU"
+
+    def test_surrounding_whitespace_is_stripped(self) -> None:
+        assert parse_service_search_query("  CPU  ") == "CPU"
+
+    def test_inner_whitespace_is_kept(self) -> None:
+        assert parse_service_search_query("  CPU load  ") == "CPU load"
+
+    def test_newline_characters_are_removed(self) -> None:
+        assert parse_service_search_query("CPU\nload\r\n") == "CPUload"
+
+    def test_empty_value_is_no_filter(self) -> None:
+        assert parse_service_search_query("") == ""
+
+    def test_whitespace_only_value_is_no_filter(self) -> None:
+        assert parse_service_search_query("   ") == ""
+
+    def test_invalid_value_type(self) -> None:
+        with pytest.raises(ValueError, match="Expected a search string"):
+            parse_service_search_query(123)
 
 
 class TestServiceSort:

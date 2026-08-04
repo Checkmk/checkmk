@@ -39,7 +39,7 @@ from .._models import (
 )
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
-from ._validators import parse_service_sort_options
+from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
 # never affect the legacy views.
@@ -83,7 +83,7 @@ class HostServicesPageMeta:
     hostname: str = api_field(description="Host name", example="web-server-01")
     site_id: str = api_field(description="Site ID", example="local")
     limit: int | None = api_field(description="Applied row limit.", example=1000)
-    matched: int = api_field(description="Total matched services", example=1234)
+    matched: int = api_field(description="Total matched services", example=42)
     total: int = api_field(description="Total number of services", example=1234)
 
 
@@ -120,6 +120,14 @@ class ServicesRequestBody:
         example="name:asc",
         default_factory=ApiOmitted,
     )
+    q: Annotated[
+        str | ApiOmitted,
+        PlainValidator(func=parse_service_search_query, json_schema_input_type=str),
+    ] = api_field(
+        description="Filter services by name. Omit or pass empty string to return all services.",
+        example="CPU",
+        default_factory=ApiOmitted,
+    )
 
 
 def list_services(
@@ -154,6 +162,7 @@ def list_services(
             hostname=hostname,
             site_id=site_id,
             limit=limit,
+            query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         )
 
@@ -164,6 +173,7 @@ def _handle_list_services(
     hostname: str,
     site_id: str,
     limit: int | None = _DEFAULT_LIMIT,
+    query: str = "",
     sorters: Sequence[ServiceSort] = _DEFAULT_SORT,
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
@@ -173,8 +183,14 @@ def _handle_list_services(
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None
 
-    services = host_services_repo.fetch(hostname, limit=limit, sorters=sorters)
+    services = host_services_repo.fetch(hostname, limit=limit, query=query, sorters=sorters)
     total_service_count = host_services_repo.count_total(hostname)
+    if limit is None:
+        matched_service_count = len(services)
+    elif query:
+        matched_service_count = host_services_repo.count_matched(hostname, query=query)
+    else:
+        matched_service_count = total_service_count
 
     return HostServicesResponse(
         services=[HostServiceEntry.from_domain(service) for service in services],
@@ -182,7 +198,7 @@ def _handle_list_services(
             hostname=hostname,
             site_id=site_id,
             limit=limit,
-            matched=total_service_count,
+            matched=matched_service_count,
             total=total_service_count,
         ),
     )

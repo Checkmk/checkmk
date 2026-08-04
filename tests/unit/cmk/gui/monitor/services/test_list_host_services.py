@@ -71,6 +71,27 @@ def test_handle_list_services_forwards_requested_sort() -> None:
     )
 
 
+def test_handle_list_services_filters_by_search_query() -> None:
+    services_repo = get_fake_host_services_repository(n_services=10)
+    known_name = services_repo.fetch(KNOWN_HOSTNAME, limit=1, query="", sorters=[])[0].name
+
+    response = _handle_list_services(
+        services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID, query=known_name
+    )
+
+    assert response.meta.matched == len(response.services)
+    assert response.meta.matched >= 1
+    assert all(known_name.lower() in service.name.lower() for service in response.services)
+
+
+def test_handle_list_services_empty_query_matches_all() -> None:
+    services_repo = get_fake_host_services_repository(n_services=10)
+    response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
+
+    assert response.meta.matched == 10
+    assert response.meta.total == 10
+
+
 def test_handle_list_services_host_not_found() -> None:
     services_repo = get_fake_host_services_repository(n_services=10)
     with pytest.raises(ProblemException, match="404"):

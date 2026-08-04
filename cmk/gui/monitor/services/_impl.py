@@ -14,6 +14,7 @@ import datetime as dt
 from collections.abc import Mapping, Sequence
 
 from cmk.livestatus_client import MultiSiteConnection
+from cmk.livestatus_client.expressions import And, NothingExpression, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
 
@@ -34,6 +35,7 @@ class LiveStatusHostServicesRepository:
         hostname: str,
         *,
         limit: int | None,
+        query: str,
         sorters: Sequence[ServiceSort],
     ) -> Sequence[Service]:
         extra_headers = [_build_primary_sort(sorters)]
@@ -50,7 +52,7 @@ class LiveStatusHostServicesRepository:
                 Services.last_check,
                 Services.last_state_change,
             ],
-            filter_expr=Services.host_name == hostname,
+            filter_expr=_build_host_services_filter(hostname, _sanitize_query(query)),
             extra_headers=extra_headers,
         )
 
@@ -72,15 +74,23 @@ class LiveStatusHostServicesRepository:
             )
 
     def count_total(self, hostname: str) -> int:
-        filter_expr = Services.host_name == hostname
-        query = "\n".join(
+        return self._count_services(hostname)
+
+    def count_matched(self, hostname: str, *, query: str) -> int:
+        # A filtered total can't be read from the ``status`` table, so the matches are counted
+        # server-side via ``Stats`` instead of transferring and counting every matching row.
+        return self._count_services(hostname, query=query)
+
+    def _count_services(self, hostname: str, *, query: str = "") -> int:
+        filter_expr = _build_host_services_filter(hostname, _sanitize_query(query))
+        stats_query = "\n".join(
             [
                 f"GET {Services.__tablename__}",
                 "Stats: state >= 0",
                 *(": ".join(line) for line in filter_expr.render()),
             ]
         )
-        return sum(int(row[-1]) for row in self._connection.query(query))
+        return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
 
 # The domain names the columns after what the table shows, which for some of them differs from the
@@ -100,3 +110,20 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     natural_sort_flag = " natural" if primary.column.natural_sort else ""
 
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"
+
+
+def _sanitize_query(q: str) -> str:
+    # TODO: decide on how we want to handle invalid regex? This will likely require coordinating
+    # with frontend implementation to pass down errors to the response.
+    return q.replace("*", ".*")
+
+
+def _build_query_filter(query: str) -> QueryExpression:
+    if not query:
+        return NothingExpression()
+
+    return Services.description.contains(query, ignore_case=True)
+
+
+def _build_host_services_filter(hostname: str, query: str) -> QueryExpression:
+    return And(Services.host_name == hostname, _build_query_filter(query))

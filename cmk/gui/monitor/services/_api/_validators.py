@@ -8,6 +8,13 @@ from collections import Counter
 from .._models import ServiceSort, ServiceSortColumn, ServiceSortDirection
 
 
+def parse_service_search_query(value: object) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"Expected a search string, got {type(value).__name__!r}.")
+
+    return value.replace("\n", "").replace("\r", "").strip()
+
+
 def parse_service_sort_options(value: object) -> list[ServiceSort]:
     if not isinstance(value, list):
         raise ValueError(f"Expected a list of sort values, got {type(value).__name__!r}.")

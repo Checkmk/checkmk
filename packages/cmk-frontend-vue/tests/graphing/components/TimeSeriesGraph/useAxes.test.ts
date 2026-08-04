@@ -58,6 +58,23 @@ describe('prepareValueDomain', () => {
     expect(domainMin).toBeGreaterThan(0)
     expect(domainMax).toBeGreaterThanOrEqual(58)
   })
+
+  test('puts the zero line of positive-only data on the plot bottom, where the x-axis is', () => {
+    const { axes, yScale } = setup()
+
+    axes.prepareValueDomain(0, 5)
+
+    expect(yScale.domain()[0]).toBe(0)
+    expect(yScale(0)).toBe(PLOT_HEIGHT)
+  })
+
+  test('leaves headroom above the domain maximum', () => {
+    const { axes, yScale } = setup()
+
+    axes.prepareValueDomain(0, 5)
+
+    expect(yScale(yScale.domain()[1]!)).toBeGreaterThan(0)
+  })
 })
 
 describe('drawTimeAxis', () => {

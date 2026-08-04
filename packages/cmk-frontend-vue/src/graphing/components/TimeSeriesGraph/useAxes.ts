@@ -26,6 +26,10 @@ const VALUE_DOMAIN_ALIGNMENT_PX = 50
 // Vertical offset of an x-axis label's baseline below the plot bottom edge.
 const TIME_LABEL_BASELINE_OFFSET_PX = 14
 
+// Headroom above the domain maximum so a curve touching it is not clipped. The bottom gets none:
+// the domain minimum has to land on the x-axis, or an area filled down to zero floats above it.
+const VALUE_AXIS_TOP_PADDING_PX = 4
+
 export const AXIS_CLASSES = {
   valueGrid: 'graphing-time-series-graph__grid-y',
   valueAxis: 'graphing-time-series-graph__y-axis',
@@ -65,6 +69,7 @@ export function useAxes(
     const increments = stepIncrements(yStepping.value)
     const [alignedMin, alignedMax, step] = alignedDomain([rawYMin, rawYMax], tickCount, increments)
     yScale.domain([alignedMin, alignedMax])
+    yScale.range([plotHeight.value, VALUE_AXIS_TOP_PADDING_PX])
     yStep.value = step
   }
 

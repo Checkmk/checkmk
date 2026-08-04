@@ -45,8 +45,6 @@ const consolidationFn = computed<ConsolidationFn>(() => props.consolidationFunct
 
 const MARGIN = { top: 5, right: CANVAS_MARGIN_RIGHT, bottom: 24, left: CANVAS_MARGIN_LEFT } as const
 const PIN_HANDLE_HEADROOM = 24
-// Top/bottom canvas padding so lines at the domain min/max are not clipped.
-const CANVAS_Y_PADDING = 4
 // Bucket count for the M4 cache built on receive (4000 is the default, consider changing
 // if necessary).
 const M4_BUCKETS = 4000
@@ -226,7 +224,6 @@ function draw(): void {
     ? [props.valueRange.min, props.valueRange.max]
     : [autoYMin, autoYMax]
   prepareValueDomain(rawYMin, rawYMax)
-  yScale.range([plotHeight.value - CANVAS_Y_PADDING, CANVAS_Y_PADDING])
 
   // Setting width/height resets the 2d context state; setTransform must follow.
   const dpr = window.devicePixelRatio || 1

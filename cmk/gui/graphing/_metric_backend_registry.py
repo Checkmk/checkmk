@@ -32,7 +32,7 @@ class FetchTimeSeries(Protocol):
     ) -> Iterator[Result[QueryData, QueryDataError]]: ...
 
 
-class BackendQueryBuilder(Protocol):
+class BackendQueryBuilderProtocol(Protocol):
     """Builds the graph-engine quantity for a metric-backend V2 data source."""
 
     def __call__(
@@ -53,7 +53,7 @@ class MetricBackend:
     def get_time_series_fetcher(self) -> FetchTimeSeries | None:
         return None
 
-    def get_backend_query_builder(self) -> BackendQueryBuilder | None:
+    def get_backend_query_builder(self) -> BackendQueryBuilderProtocol | None:
         return None
 
 

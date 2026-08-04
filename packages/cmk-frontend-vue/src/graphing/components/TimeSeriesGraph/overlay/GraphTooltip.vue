@@ -98,8 +98,6 @@ const positionStyle = computed(() => {
   z-index: var(--z-index-tooltip-offset);
   min-width: 280px;
   max-width: 420px;
-  max-height: 360px;
-  overflow-y: auto;
   padding: var(--spacing);
   background: var(--default-tooltip-background-color);
   border: 1px solid var(--default-tooltip-text-color);

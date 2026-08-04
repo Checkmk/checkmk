@@ -5,38 +5,39 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, inject } from 'vue'
-
-import { MONITORING_SERVICE } from './MonitoringTableContext'
+import { computed } from 'vue'
 
 const { _t } = usei18n()
 
-const monitoringService = inject(MONITORING_SERVICE)
-
-const hasSearchQuery = computed(() => (monitoringService?.searchQuery.value ?? '') !== '')
-const hasActiveFilter = computed(() => (monitoringService?.filters.activeFilterCount ?? 0) > 0)
+const props = withDefaults(
+  defineProps<{
+    hasSearchQuery?: boolean
+    hasActiveFilter?: boolean
+  }>(),
+  { hasSearchQuery: false, hasActiveFilter: false }
+)
 
 const title = computed(() => {
-  if (hasActiveFilter.value && hasSearchQuery.value) {
+  if (props.hasActiveFilter && props.hasSearchQuery) {
     return _t('No results for your combination of search and filter settings.')
   }
-  if (hasActiveFilter.value) {
+  if (props.hasActiveFilter) {
     return _t('No results found for your active filters.')
   }
-  if (hasSearchQuery.value) {
+  if (props.hasSearchQuery) {
     return _t('No results found for your search.')
   }
   return _t('No results found.')
 })
 
 const hint = computed(() => {
-  if (hasActiveFilter.value && hasSearchQuery.value) {
+  if (props.hasActiveFilter && props.hasSearchQuery) {
     return _t('Adjust or clear search and filters to start fresh.')
   }
-  if (hasSearchQuery.value) {
+  if (props.hasSearchQuery) {
     return _t('Check for typing errors, try using wildcards or a broader term.')
   }
-  if (hasActiveFilter.value) {
+  if (props.hasActiveFilter) {
     return _t('Remove one or more filters to widen the result.')
   }
   return null

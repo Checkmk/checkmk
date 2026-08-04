@@ -4,26 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import { ref } from 'vue'
 
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
-import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
-
-function makeServiceStub(searchQuery = '', activeFilterCount = 0) {
-  return { searchQuery: ref(searchQuery), filters: { activeFilterCount } }
-}
-
-function renderEmptyState(stub: ReturnType<typeof makeServiceStub>) {
-  return render(MonitoringEmptyState, {
-    global: {
-      provide: { [MONITORING_SERVICE as symbol]: stub as unknown as MonitoringService<unknown> }
-    }
-  })
-}
 
 test('shows the default message when there is no search query or active filter', () => {
-  renderEmptyState(makeServiceStub(''))
+  render(MonitoringEmptyState)
 
   expect(screen.getByText('No results found.')).toBeInTheDocument()
   expect(
@@ -32,7 +17,7 @@ test('shows the default message when there is no search query or active filter',
 })
 
 test('shows the search-specific message and hint when a search query is set', () => {
-  renderEmptyState(makeServiceStub('nonexistent-host'))
+  render(MonitoringEmptyState, { props: { hasSearchQuery: true } })
 
   expect(screen.getByText('No results found for your search.')).toBeInTheDocument()
   expect(
@@ -41,14 +26,14 @@ test('shows the search-specific message and hint when a search query is set', ()
 })
 
 test('shows the filter-specific message and hint when only a filter is active', () => {
-  renderEmptyState(makeServiceStub('', 1))
+  render(MonitoringEmptyState, { props: { hasActiveFilter: true } })
 
   expect(screen.getByText('No results found for your active filters.')).toBeInTheDocument()
   expect(screen.getByText('Remove one or more filters to widen the result.')).toBeInTheDocument()
 })
 
 test('shows the combined message and hint when both a filter and a search are active', () => {
-  renderEmptyState(makeServiceStub('nonexistent-host', 1))
+  render(MonitoringEmptyState, { props: { hasSearchQuery: true, hasActiveFilter: true } })
 
   expect(
     screen.getByText('No results for your combination of search and filter settings.')
@@ -56,12 +41,11 @@ test('shows the combined message and hint when both a filter and a search are ac
   expect(screen.getByText('Adjust or clear search and filters to start fresh.')).toBeInTheDocument()
 })
 
-test('reacts to the search query changing', async () => {
-  const stub = makeServiceStub('')
-  renderEmptyState(stub)
+test('reacts to the search query becoming set', async () => {
+  const { rerender } = render(MonitoringEmptyState, { props: { hasSearchQuery: false } })
 
   expect(screen.getByText('No results found.')).toBeInTheDocument()
 
-  stub.searchQuery.value = 'web'
-  await screen.findByText('No results found for your search.')
+  await rerender({ hasSearchQuery: true })
+  expect(screen.getByText('No results found for your search.')).toBeInTheDocument()
 })

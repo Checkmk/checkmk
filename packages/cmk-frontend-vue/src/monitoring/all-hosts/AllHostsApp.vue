@@ -403,7 +403,10 @@ function onRightPaneCollapse(collapsed: boolean): void {
               />
             </template>
             <template #empty-state>
-              <MonitoringEmptyState />
+              <MonitoringEmptyState
+                :has-search-query="hostService.searchQuery.value !== ''"
+                :has-active-filter="hostService.filters.activeFilterCount > 0"
+              />
             </template>
           </MonitoringTable>
         </div>

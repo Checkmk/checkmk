@@ -61,6 +61,23 @@ describe('isComplete', () => {
     expect(isComplete({ ...draft, metric_name: 'span.latency' })).toBe(true)
   })
 
+  test('a blank metric name counts as incomplete', () => {
+    expect(isComplete({ ...newMetricBackendDraft('A'), metric_name: '  ' })).toBe(false)
+    expect(isComplete({ ...newRrdQueryDraft('B'), metric_name: '' })).toBe(false)
+    expect(isComplete({ ...rrdMetricItem('C'), metric_name: '  ' })).toBe(false)
+    expect(isComplete({ ...scalarItem('D'), metric_name: '' })).toBe(false)
+  })
+
+  test('a blank title counts as incomplete, whatever the row type', () => {
+    for (const item of [rrdMetricItem('A'), metricBackendItem('B'), constantItem('C')]) {
+      expect(isComplete({ ...item, title: '   ' })).toBe(false)
+    }
+  })
+
+  test('a blank title also disqualifies a formula, whose fields are otherwise always set', () => {
+    expect(isComplete({ ...formulaItem('A'), title: '' })).toBe(false)
+  })
+
   test('wire items are always complete', () => {
     for (const item of [
       rrdMetricItem('A'),
@@ -83,6 +100,15 @@ describe('toApiDataSources', () => {
       constantItem('C')
     ]
     expect(toApiDataSources(items).map((source) => source.id)).toEqual(['A', 'C'])
+  })
+
+  test('drops a row whose title was blanked, and formulas reaching it', () => {
+    const items: DesignerItem[] = [
+      { ...rrdMetricItem('A'), title: '' },
+      formulaItem('B', { ast: { op: 'ref', id: 'A' } }),
+      constantItem('C')
+    ]
+    expect(toApiDataSources(items).map((source) => source.id)).toEqual(['C'])
   })
 
   test('drops formulas whose refs reach an incomplete row, transitively', () => {

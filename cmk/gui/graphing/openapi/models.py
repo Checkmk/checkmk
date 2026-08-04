@@ -9,6 +9,7 @@ import json
 from collections.abc import Mapping
 from typing import Annotated, Literal, Self
 
+from annotated_types import Interval
 from pydantic import Json
 
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -30,7 +31,9 @@ class ApiPrecision:
     type: Literal["auto", "strict"] = api_field(
         description="The precision rounding mode.", example="auto"
     )
-    digits: int = api_field(description="The number of digits.", example=2)
+    digits: Annotated[int, Interval(ge=0)] = api_field(
+        description="The number of digits.", example=2
+    )
 
 
 @api_model

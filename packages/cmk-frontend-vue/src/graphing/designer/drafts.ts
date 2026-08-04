@@ -40,17 +40,24 @@ export type DesignerItem =
   | DraftScalarItem
   | FormulaItem
 
+function isFilled(value: string | null): boolean {
+  return value !== null && value.trim() !== ''
+}
+
 /** Narrows a designer row to the API-complete shape. */
 export function isComplete(item: DesignerItem): item is GraphItem {
+  if (!isFilled(item.title)) {
+    return false
+  }
   switch (item.type) {
     case 'rrd_metric':
     case 'scalar':
-      return item.host_name !== null && item.service_name !== null && item.metric_name !== null
+      return isFilled(item.host_name) && isFilled(item.service_name) && isFilled(item.metric_name)
     case 'constant':
       return item.value !== null
     case 'rrd_query':
     case 'metric_backend':
-      return item.metric_name !== null
+      return isFilled(item.metric_name)
     case 'rrd_formula':
       return true
   }

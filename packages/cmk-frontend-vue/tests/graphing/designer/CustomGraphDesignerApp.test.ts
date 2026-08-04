@@ -382,6 +382,18 @@ test('an incomplete row blocks saving with an inline error', async () => {
   expect(putSpy).not.toHaveBeenCalled()
 })
 
+test('blanking a row title blocks saving with an inline error', async () => {
+  await renderApp()
+  await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
+  await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+
+  await userEvent.clear(await screen.findByRole('textbox', { name: 'Title' }))
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+  expect(await screen.findByText(/incomplete.*A/)).toBeInTheDocument()
+  expect(putSpy).not.toHaveBeenCalled()
+})
+
 test('a preferred refresh time is preselected and used by the auto-started refresh', async () => {
   await renderApp({ time_picker: { ...PROPS.time_picker, default_refresh_time: 90 } })
 

@@ -5,6 +5,7 @@
 
 import time
 
+import pytest
 import time_machine
 
 from cmk.ccc.user import UserId
@@ -58,6 +59,22 @@ class TestMonitorHostServicesQueryParamValidation:
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id="no-such-site", limit=_LIMIT, expect_ok=False
+        )
+        assert resp.status_code == 400
+
+    @pytest.mark.parametrize(
+        "sort",
+        [
+            pytest.param(["nameasc"], id="missing colon separator"),
+            pytest.param(["invalid:asc"], id="invalid column"),
+            pytest.param(["name:invalid"], id="invalid direction"),
+            pytest.param(["address:asc"], id="host-only column"),
+            pytest.param(["name:asc", "name:desc"], id="duplicated column"),
+        ],
+    )
+    def test_invalid_sort_params(self, clients: ClientRegistry, sort: list[str]) -> None:
+        resp = clients.MonitorHosts.list_host_services(
+            hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, sort=sort, expect_ok=False
         )
         assert resp.status_code == 400
 
@@ -120,6 +137,7 @@ class TestMonitorHostServices:
                 "GET services",
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
+                _DEFAULT_ORDER_BY,
                 f"Limit: {_LIMIT}",
             ],
             sites=[_SITE_ID],
@@ -157,6 +175,69 @@ class TestMonitorHostServices:
             },
         }
 
+    @pytest.mark.parametrize(
+        "sort, expected_order_by",
+        [
+            pytest.param(["state:desc"], "OrderBy: state desc", id="state descending"),
+            pytest.param(
+                ["summary:asc"], "OrderBy: plugin_output asc natural", id="summary ascending"
+            ),
+            pytest.param(
+                ["last_state_change:desc"],
+                "OrderBy: last_state_change desc",
+                id="last state change descending",
+            ),
+            pytest.param(
+                ["state:desc", "name:asc"],
+                "OrderBy: state desc",
+                id="livestatus orders by the primary sorter only",
+            ),
+        ],
+    )
+    def test_requested_sort_reaches_livestatus(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        sort: list[str],
+        expected_order_by: str,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table("services", [])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                f"Filter: name = {_HOSTNAME}",
+                "Limit: 1",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICES_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                expected_order_by,
+                f"Limit: {_LIMIT}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                "Stats: state >= 0",
+                f"Filter: host_name = {_HOSTNAME}",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, sort=sort
+            )
+
+        assert resp.json["services"] == []
+
     def test_services_without_limit(
         self,
         clients: ClientRegistry,
@@ -190,6 +271,7 @@ class TestMonitorHostServices:
                 "GET services",
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
+                _DEFAULT_ORDER_BY,
             ],
             sites=[_SITE_ID],
         )
@@ -251,6 +333,7 @@ class TestMonitorHostServicessLimitPermissions:
                 "GET services",
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
+                _DEFAULT_ORDER_BY,
                 f"Limit: {_MAX_HOST_SVC_LIMIT}",
             ],
             sites=[_SITE_ID],
@@ -309,6 +392,7 @@ class TestMonitorHostServicessLimitPermissions:
                 "GET services",
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
+                _DEFAULT_ORDER_BY,
             ],
             sites=[_SITE_ID],
             match_type="loose",
@@ -333,3 +417,4 @@ _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"
+_DEFAULT_ORDER_BY = "OrderBy: description asc natural"

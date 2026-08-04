@@ -47,3 +47,47 @@ class Service:
                 return "UNKN"
             case _:
                 assert_never(self.state)
+
+
+class ServiceSortColumn(enum.StrEnum):
+    NAME = "name"
+    STATE = "state"
+    SUMMARY = "summary"
+    LAST_CHECK = "last_check"
+    LAST_STATE_CHANGE = "last_state_change"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
+
+    @property
+    def natural_sort(self) -> bool:
+        return self in _NATURAL_SORT_COLUMNS
+
+
+_NATURAL_SORT_COLUMNS = frozenset(
+    {
+        ServiceSortColumn.NAME,
+        ServiceSortColumn.SUMMARY,
+    }
+)
+
+
+class ServiceSortDirection(enum.StrEnum):
+    ASC = "asc"
+    DESC = "desc"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
+
+
+@dataclasses.dataclass(frozen=True)
+class ServiceSort:
+    """A single-column sort requested for a service query."""
+
+    column: ServiceSortColumn
+    direction: ServiceSortDirection
+
+    def __str__(self) -> str:
+        return f"{self.column.value}:{self.direction.value}"

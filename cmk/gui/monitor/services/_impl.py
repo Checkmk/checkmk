@@ -11,13 +11,14 @@ when instantiated.
 """
 
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from cmk.livestatus_client import MultiSiteConnection
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
 
-from ._models import Service, ServiceState
+from ._models import Service, ServiceSort, ServiceSortColumn, ServiceState
+from ._sorting import service_sorter
 
 
 class LiveStatusHostServicesRepository:
@@ -33,8 +34,9 @@ class LiveStatusHostServicesRepository:
         hostname: str,
         *,
         limit: int | None,
+        sorters: Sequence[ServiceSort],
     ) -> Sequence[Service]:
-        extra_headers = []
+        extra_headers = [_build_primary_sort(sorters)]
 
         if limit is not None:
             extra_headers.append(f"Limit: {limit}")
@@ -53,18 +55,21 @@ class LiveStatusHostServicesRepository:
         )
 
         with detailed_connection(self._connection) as conn:
-            return [
-                Service(
-                    name=row["description"],
-                    state=ServiceState(row["state"]),
-                    summary=row["plugin_output"],
-                    last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
-                    last_state_change=dt.datetime.fromtimestamp(
-                        row["last_state_change"], tz=dt.UTC
-                    ),
-                )
-                for row in q.iterate(conn)
-            ]
+            return sorted(
+                [
+                    Service(
+                        name=row["description"],
+                        state=ServiceState(row["state"]),
+                        summary=row["plugin_output"],
+                        last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
+                        last_state_change=dt.datetime.fromtimestamp(
+                            row["last_state_change"], tz=dt.UTC
+                        ),
+                    )
+                    for row in q.iterate(conn)
+                ],
+                key=service_sorter(sorters),
+            )
 
     def count_total(self, hostname: str) -> int:
         filter_expr = Services.host_name == hostname
@@ -76,3 +81,22 @@ class LiveStatusHostServicesRepository:
             ]
         )
         return sum(int(row[-1]) for row in self._connection.query(query))
+
+
+# The domain names the columns after what the table shows, which for some of them differs from the
+# livestatus column they are read from.
+_LIVESTATUS_COLUMN_OVERRIDES: Mapping[ServiceSortColumn, str] = {
+    ServiceSortColumn.NAME: "description",
+    ServiceSortColumn.SUMMARY: "plugin_output",
+}
+
+
+def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
+    if not sorters:
+        return "OrderBy: description asc"
+
+    primary = sorters[0]
+    column = _LIVESTATUS_COLUMN_OVERRIDES.get(primary.column, primary.column.value)
+    natural_sort_flag = " natural" if primary.column.natural_sort else ""
+
+    return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"

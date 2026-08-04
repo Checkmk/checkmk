@@ -4848,13 +4848,16 @@ class MonitorHostsClient(RestApiClient):
         hostname: str,
         site_id: str,
         limit: int | None,
+        sort: list[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
+        # ``limit`` is always sent (including an explicit ``None``), not routed through
+        # ``_only_set_keys`` which would drop the ``None``.
         return self.request(
             "post",
             url=f"/monitor/hosts/{hostname}/services",
             query_params={"site_id": site_id},
-            body={"limit": limit},
+            body={"limit": limit, **_only_set_keys({"sort": sort})},
             expect_ok=expect_ok,
         )
 

@@ -7,8 +7,9 @@ from collections.abc import Sequence
 
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.monitor.services._models import Service
+from cmk.gui.monitor.services._models import Service, ServiceSort
 from cmk.gui.monitor.services._repositories import HostServicesRepository
+from cmk.gui.monitor.services._sorting import service_sorter
 
 KNOWN_HOSTNAME = "web-server-01"
 
@@ -25,8 +26,14 @@ def get_fake_host_services_repository(*, n_services: int) -> HostServicesReposit
         def host_exists(self, hostname: str) -> bool:
             return hostname == KNOWN_HOSTNAME
 
-        def fetch(self, hostname: str, *, limit: int | None) -> Sequence[Service]:
-            return self._services[:limit]
+        def fetch(
+            self,
+            hostname: str,
+            *,
+            limit: int | None,
+            sorters: Sequence[ServiceSort],
+        ) -> Sequence[Service]:
+            return sorted(self._services, key=service_sorter(sorters))[:limit]
 
         def count_total(self, hostname: str) -> int:
             return len(self._services)

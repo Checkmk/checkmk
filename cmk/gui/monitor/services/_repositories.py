@@ -13,7 +13,7 @@ they will return. This allows us to pass stubs when testing our applications.
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import Service
+from ._models import Service, ServiceSort
 
 
 class HostServicesRepository(Protocol):
@@ -26,6 +26,7 @@ class HostServicesRepository(Protocol):
         hostname: str,
         *,
         limit: int | None,
+        sorters: Sequence[ServiceSort],
     ) -> Sequence[Service]:
         """Fetch services of a host."""
         ...

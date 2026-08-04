@@ -187,7 +187,9 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
                 password_title = user_data["password"]["value"]
                 if password_title in passwords_by_title:
                     self.add_new_password(receiver_type, passwords_by_title[password_title])
-                self.click_on_last_locator(self.password_dropdown(receiver_type))
+                password_dropdown = self.password_dropdown(receiver_type).last
+                expect(password_dropdown).not_to_have_class(re.compile(r"\bno_choices\b"))
+                password_dropdown.click()
                 self.dropdown_option(receiver_type, password_title, exact=True).click()
         if endpoint.get("event_console"):
             self.send_logs_to_event_console_checkbox(receiver_type).check()

@@ -243,6 +243,11 @@ STAGES:
       TEXT_ON_SKIP: "No mk-oracle files changed"
       RESULT_CHECK_FILE_PATTERN: "mk-oracle.txt"
 
+    - NAME: "Build mk-oracle on AIX and Solaris"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES
+      COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
+      TEXT_ON_SKIP: "No mk-oracle files changed"
+
     - NAME: "Format repository"
       COMMAND: "bazel run //:format.check &> ${RESULTS}/format.txt"
       TEXT_ON_SKIP: "unconditional"

@@ -327,6 +327,12 @@ $LONGSERVICEOUTPUT$
 
 
 def _initialize_logging(logging_level: int) -> None:
+    # Replacing the logger's handlers here is intentional and separate from the
+    # generic `--log-file` option of the `cmk` CLI: `--notify` is also the
+    # monitoring core's notification command (invoked for every notification,
+    # not just from cron), so it must always log to its dedicated
+    # var/log/notify.log at the `notification_logging` level, regardless of how
+    # it was called.
     log.logger.setLevel(logging_level)
     log.setup_watched_file_logging_handler(notification_log)
 

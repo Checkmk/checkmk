@@ -15,6 +15,7 @@ import getopt
 import logging
 import os
 import sys
+from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import Self
 
@@ -37,6 +38,7 @@ from cmk.base.modes.check_mk import general_options
 from cmk.base.modes.modes import (
     discover_modes,
     Modes,
+    Option,
 )
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -86,7 +88,7 @@ class CrashReport(ABCCrashReport[BaseDetails]):
     def render(self) -> str:
         return (
             f"{self.crash_info['exc_type']}: {self.crash_info['exc_value']} "
-            f"- please submit a crash report! (Crash-ID: {self.ident_to_text()})\n"
+            f"- please submit a crash report! (Crash-ID: {self.ident_to_text()})"
         )
 
 
@@ -105,6 +107,7 @@ def main() -> int:
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
     root_logger.addHandler(handler)
+    logger = root_logger.getChild("base")
 
     cmk.base.utils.register_sigint_handler()
 
@@ -123,7 +126,29 @@ def main() -> int:
         ),
     )
 
-    modes = Modes(plugins=discover_modes(), general_options=general_options())
+    def _enable_file_logging(path: str) -> None:
+        """Log to a timestamped file instead of stderr (used e.g. by cron jobs)."""
+        _path = Path(path)
+        _path.parent.mkdir(parents=True, exist_ok=True)
+        handler = WatchedFileHandler(_path)
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s")
+        )
+        del root_logger.handlers[:]  # Remove the default stream handler.
+        root_logger.addHandler(handler)
+
+    _log_file_option = Option(
+        long_option="log-file",
+        short_help="Log to the given file (with timestamps) instead of stderr",
+        handler_function=_enable_file_logging,
+        argument=True,
+        argument_descr="PATH",
+    )
+
+    modes = Modes(
+        plugins=discover_modes(),
+        general_options=[*general_options(), _log_file_option],
+    )
 
     try:
         opts, args = getopt.getopt(
@@ -168,11 +193,11 @@ def main() -> int:
         return exit_status
 
     except MKTerminate:
-        sys.stderr.write("<Interrupted>\n")
+        logger.error("<Interrupted>")  # noqa: TRY400
         return 1
 
     except (MKGeneralException, MKBailOut) as e:
-        sys.stderr.write(f"{e}\n")
+        logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if cmk.ccc.debug.enabled():
             raise
         return 3
@@ -183,7 +208,7 @@ def main() -> int:
             return 4
         crash = _generate_crash_report()
         crash.save()
-        sys.stderr.write(crash.render())
+        logger.error(crash.render())  # noqa: TRY400
         if cmk.ccc.debug.enabled():
             raise
         return 1
@@ -191,7 +216,7 @@ def main() -> int:
     except Exception:
         crash = _generate_crash_report()
         crash.save()
-        sys.stderr.write(crash.render())
+        logger.error(crash.render())  # noqa: TRY400
         if cmk.ccc.debug.enabled():
             raise
         return 1

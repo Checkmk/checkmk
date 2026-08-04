@@ -8,6 +8,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import { computed } from 'vue'
 
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
+import HostModeIcons from '@/monitoring/shared/components/HostModeIcons.vue'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
 import ActionButtons, {
   type CellAction
@@ -36,6 +37,7 @@ function onSelect(action: CellAction): void {
 <template>
   <div class="monitoring-host-slide-in-header">
     <HostStateDisplay :state="host.state" />
+    <HostModeIcons v-if="host.modes?.length" :modes="host.modes" />
     <CmkHeading type="h2" class="monitoring-host-slide-in-header__name">
       {{ host.name }}
     </CmkHeading>

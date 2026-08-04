@@ -58,6 +58,28 @@ test('renders the host state badge and name', () => {
   expect(screen.getByText('web-1')).toBeInTheDocument()
 })
 
+test('renders the mode icons ahead of the host name', () => {
+  render(HostSlideInHeader, {
+    props: {
+      host: makeHost({
+        modes: [
+          {
+            icon_name: 'downtime',
+            link: 'view.py?view_name=downtimes_of_host&host=web-1',
+            title: 'In scheduled downtime'
+          }
+        ]
+      })
+    }
+  })
+
+  const downtime = screen.getByRole('link', { name: 'In scheduled downtime' })
+  expect(downtime).toHaveAttribute('href', 'view.py?view_name=downtimes_of_host&host=web-1')
+  expect(downtime.compareDocumentPosition(screen.getByText('web-1'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
+
 test('renders the inline actions as links with their host-specific tooltips', () => {
   render(HostSlideInHeader, { props: { host: makeHost(), actions: INLINE_ACTIONS } })
 

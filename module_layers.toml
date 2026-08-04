@@ -147,8 +147,6 @@ allows = [
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version",
-  # decoding of the rot47-obfuscated licensing usage reports
-  "cmk.licensing.usage",
 ]
 
 # These plugins are tightly coupled to Checkmk.
@@ -193,6 +191,12 @@ allows = ["cmk.profiling.backend"]
 
 [plugin_families.violations.inventory]
 allows = ["cmk.ccc.hostaddress", "cmk.inventory"]
+
+[plugin_families.violations.licensing]
+allows = [
+  # decoding of the rot47-obfuscated licensing usage reports
+  "cmk.licensing.usage",
+]
 
 [plugin_families.violations.otel_collector]
 allows = [

@@ -199,10 +199,7 @@ class SafeIndexedTarFile:
         return list(self._members)
 
     def extract(
-        self,
-        member: tarfile.TarInfo | str,
-        path: str | Path = ".",
-        tar_filter: FilterType = "data",
+        self, member: tarfile.TarInfo, path: str | Path = ".", tar_filter: FilterType = "data"
     ) -> None:
         """
         Safely extract a single member to the desired path
@@ -306,24 +303,25 @@ class _SafeExtractor:
     """Owns a TarFile and enforces the security checks while extracting from it.
 
     Knows nothing about tar modes: it only ever touches the members it is handed, which is what
-    makes it usable while streaming.
+    makes it usable while streaming. Resolving a member by name is deliberately not offered, since
+    tarfile would answer that by reading the whole archive index, bypassing the validation the
+    surrounding wrapper performs.
     """
 
     def __init__(self, tar: tarfile.TarFile) -> None:
         self._tar = tar
 
-    def extract(self, member: tarfile.TarInfo | str, dest: Path, tar_filter: FilterType) -> None:
+    def extract(self, member: tarfile.TarInfo, dest: Path, tar_filter: FilterType) -> None:
         dest = dest.resolve()
-        member_name = member.name if isinstance(member, tarfile.TarInfo) else member
-        if not (dest / member_name).resolve().is_relative_to(dest):
-            raise SecurityViolation(f"Path traversal attempt: {member_name}")
+        if not (dest / member.name).resolve().is_relative_to(dest):
+            raise SecurityViolation(f"Path traversal attempt: {member.name}")
         self._tar.extract(member, path=dest, filter=tar_filter)
 
     def extract_all(self, members: Iterable[tarfile.TarInfo], dest: Path) -> None:
         for member in members:
             self.extract(member, dest, "data")
 
-    def extract_in_memory(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
+    def extract_in_memory(self, member: tarfile.TarInfo) -> IO[bytes] | None:
         return self._tar.extractfile(member)
 
     def extract_in_memory_by_name(

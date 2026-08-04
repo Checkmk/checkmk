@@ -61,8 +61,8 @@ from cmk.utils.log import console, section
 
 # TODO(3.1): delete together with the legacy wire sections below.
 DiagnosticsCLParameters = Sequence[str]
-DiagnosticsModesParameters = dict[str, Any]
-DiagnosticsOptionalParameters = dict[str, Any]
+DiagnosticsModesParameters = dict[str, Any]  # type: ignore[explicit-any]
+DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 
 SUFFIX = ".tar.gz"
 

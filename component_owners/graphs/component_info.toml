@@ -1,0 +1,26 @@
+type = "Component"
+display_name = "Graphs"
+has_support_component = true
+members_required = 3
+product_managers = ["mathieu.sobrero@checkmk.com"]
+description = """
+The browser-side graphing experience and the REST API behind it: how time series
+graphs are drawn, explored and assembled by users.
+
+Belongs here:
+- Graphs not rendering, staying empty or not refreshing
+- The graph designer: building and editing custom graphs
+- Interacting with a graph: zoom and brush, time range picking, legends,
+  tooltips, pinning
+- Graph titles, layout, grouping and the graph burger menu
+- The REST API endpoints that serve graphs to the frontend: fetching graph data,
+  graph discovery, context menus, export, pinning and time ranges
+
+Goes elsewhere:
+- The plotted values, units or colors are wrong, i.e. the metric data itself is
+  off → Performance Data & Metrics
+- Graph images in PDF reports → Performance Data & Metrics
+- Everything behind the REST API: graph engines, time series retrieval and the
+  persistence of graph types → Performance Data & Metrics
+- The graph is broken only inside a dashboard → Dashboards
+"""

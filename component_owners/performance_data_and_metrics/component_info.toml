@@ -1,0 +1,29 @@
+type = "Component"
+display_name = "Performance Data & Metrics"
+previous_name = "Graphing & Metrics"
+has_support_component = true
+members_required = 2
+product_managers = ["mathieu.sobrero@checkmk.com"]
+description = """
+Where metric values come from and what they mean: performance data emitted by
+checks, the definitions that give it meaning, and the time series behind every
+graph.
+
+Belongs here:
+- Metric definitions: names, titles, units, colors, scaling and notations
+- Perf-O-Meters and graph templates
+- Parsing performance data from checks, metric expressions and their evaluation
+- Retrieving time series from RRD and from metric backends
+- The integration of the cmk.graphing.v1 plugin API for metrics, graphs and
+  perfometers
+- Rendering graph images (PNG/PDF) for reports and legacy views
+- Persistence of graph types: storing and migrating custom graph definitions
+- The backend objects behind the graph pages and similar
+
+Goes elsewhere:
+- A graph does not render, stays empty or does not refresh in the browser
+  → Graphs
+- The REST API endpoints that serve graphs to the frontend → Graphs
+- The stored metric data itself and the ClickHouse metric store → Metric Backend
+- Checkmk itself is slow or does not scale → Performance
+"""

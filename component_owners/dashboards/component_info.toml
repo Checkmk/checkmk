@@ -19,6 +19,7 @@ Belongs here:
 
 Goes elsewhere:
 - The displayed metric data itself is wrong, i.e. the same graph is also wrong on
-  the service's own graph page → Graphing & Metrics
+  the service's own graph page → Performance Data & Metrics
+- The graph does not render or refresh outside a dashboard either → Graphs
 - The same view/table is also broken outside a dashboard → UI - Monitoring
 """

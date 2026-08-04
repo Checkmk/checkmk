@@ -65,8 +65,8 @@ _DECIMAL = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _METRIC_ATTRS = CurveAttributes(title="Metric", unit=_DECIMAL, color="#28a2f3")
 _WARN_COLOR = "#ffd000"
 _CRIT_COLOR = "#ff3232"
-_WARN_ATTRS = CurveAttributes(title="Warning", unit=_DECIMAL, color=_WARN_COLOR)
-_CRIT_ATTRS = CurveAttributes(title="Critical", unit=_DECIMAL, color=_CRIT_COLOR)
+_WARN_ATTRS = CurveAttributes(title="Warning of Metric", unit=_DECIMAL, color=_WARN_COLOR)
+_CRIT_ATTRS = CurveAttributes(title="Critical of Metric", unit=_DECIMAL, color=_CRIT_COLOR)
 
 
 def _rrd(name: str) -> RRDMetric:
@@ -460,19 +460,19 @@ def test_parse_resolves_resolves_threshold_rules_from_the_scalar_type() -> None:
     assert concrete.rules == [
         _rule(
             ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.WARNING),
-            CurveAttributes(title="Warning", unit=_DECIMAL, color=_WARN_COLOR),
+            CurveAttributes(title="Warning of Metric", unit=_DECIMAL, color=_WARN_COLOR),
         ),
         _rule(
             ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.CRITICAL),
-            CurveAttributes(title="Critical", unit=_DECIMAL, color=_CRIT_COLOR),
+            CurveAttributes(title="Critical of Metric", unit=_DECIMAL, color=_CRIT_COLOR),
         ),
         _rule(
             ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MINIMUM, color="#15d1a0"),
-            CurveAttributes(title="Minimum", unit=_DECIMAL, color="#15d1a0"),
+            CurveAttributes(title="Minimum of Metric", unit=_DECIMAL, color="#15d1a0"),
         ),
         _rule(
             ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MAXIMUM, color="#ed3b3b"),
-            CurveAttributes(title="Maximum", unit=_DECIMAL, color="#ed3b3b"),
+            CurveAttributes(title="Maximum of Metric", unit=_DECIMAL, color="#ed3b3b"),
         ),
     ]
 
@@ -485,7 +485,7 @@ def test_parse_resolves_localizes_rule_labels() -> None:
         _METRICS,
         kind=_KIND,
     )
-    assert [rule.curve.attributes.title for rule in graphs.rules] == ["<Warning>"]
+    assert [rule.curve.attributes.title for rule in graphs.rules] == ["<Warning of <Metric>>"]
 
 
 def test_parse_resolves_uses_the_fallback_colour_for_an_undefined_metric() -> None:
@@ -501,7 +501,7 @@ def test_parse_resolves_uses_the_fallback_colour_for_an_undefined_metric() -> No
     assert concrete.rules == [
         _rule(
             ScalarOf(metric=_rrd("u"), scalar_kind=ScalarKind.WARNING),
-            CurveAttributes(title="Warning", unit=_DECIMAL, color=_WARN_COLOR),
+            CurveAttributes(title="Warning of u", unit=_DECIMAL, color=_WARN_COLOR),
         )
     ]
 

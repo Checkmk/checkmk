@@ -315,25 +315,28 @@ class ScalarOf:
         registered_metrics: Mapping[str, metrics_v1.Metric],
     ) -> CurveAttributes:
         attributes = self.metric.attributes(localizer, registered_metrics)
+        # A threshold names the metric it is a threshold of: several of them can be drawn in one
+        # graph, and "Warning" alone would not say which curve it belongs to (as the legacy titles
+        # spell it out too).
         label: str
         type_color: str | None
         match self.scalar_kind:
             case ScalarKind.WARNING:
-                label, type_color = "Warning", "#ffd000"
+                label, type_color = "Warning of %(title)s", "#ffd000"
             case ScalarKind.CRITICAL:
-                label, type_color = "Critical", "#ff3232"
+                label, type_color = "Critical of %(title)s", "#ff3232"
             case ScalarKind.LOWER_WARNING:
-                label, type_color = "Warning (lower)", "#ffd000"
+                label, type_color = "Warning (lower) of %(title)s", "#ffd000"
             case ScalarKind.LOWER_CRITICAL:
-                label, type_color = "Critical (lower)", "#ff3232"
+                label, type_color = "Critical (lower) of %(title)s", "#ff3232"
             case ScalarKind.MINIMUM:
-                label, type_color = "Minimum", None
+                label, type_color = "Minimum of %(title)s", None
             case ScalarKind.MAXIMUM:
-                label, type_color = "Maximum", None
+                label, type_color = "Maximum of %(title)s", None
             case _:
                 assert_never(self.scalar_kind)
         return CurveAttributes(
-            title=localizer(label),
+            title=localizer(label) % {"title": attributes.title},
             unit=attributes.unit,
             color=self.color or type_color or attributes.color,
         )

@@ -148,8 +148,13 @@ test('a hidden metric keeps its entry, with its toggle showing it is off', () =>
   expect(screen.getByRole('button', { name: 'Memory' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('horizontal lines render with their name and value', () => {
-  const line: HorizontalLine = { name: 'Warning', value: 80, color: '#ffaa00' }
+test('horizontal lines render with their title and value', () => {
+  const line: HorizontalLine = {
+    name: 'scalar_of(warning,rrd_metric(h/svc/util))',
+    title: 'Warning',
+    value: 80,
+    color: '#ffaa00'
+  }
   render(GraphLegend, { props: { metrics: [CPU], horizontalLines: [line] } })
   expect(screen.getByText('Warning')).toBeInTheDocument()
   const warningRow = screen.getByText('Warning').closest('tr')!
@@ -157,19 +162,35 @@ test('horizontal lines render with their name and value', () => {
 })
 
 test('clicking a horizontal line eye emits update:hiddenLineNames with that name added', async () => {
-  const line: HorizontalLine = { name: 'Warning', value: 80, color: '#ffaa00' }
+  const line: HorizontalLine = {
+    name: 'scalar_of(warning,rrd_metric(h/svc/util))',
+    title: 'Warning',
+    value: 80,
+    color: '#ffaa00'
+  }
   const { emitted } = render(GraphLegend, {
     props: { metrics: [CPU], horizontalLines: [line], hiddenLineNames: [] }
   })
   const warningRow = screen.getByText('Warning').closest('tr')!
   await fireEvent.click(warningRow.querySelector('button')!)
-  expect(emitted()['update:hiddenLineNames']).toEqual([[['Warning']]])
+  expect(emitted()['update:hiddenLineNames']).toEqual([
+    [['scalar_of(warning,rrd_metric(h/svc/util))']]
+  ])
 })
 
 test('clicking a hidden horizontal line eye emits update:hiddenLineNames with that name removed', async () => {
-  const line: HorizontalLine = { name: 'Warning', value: 80, color: '#ffaa00' }
+  const line: HorizontalLine = {
+    name: 'scalar_of(warning,rrd_metric(h/svc/util))',
+    title: 'Warning',
+    value: 80,
+    color: '#ffaa00'
+  }
   const { emitted } = render(GraphLegend, {
-    props: { metrics: [CPU], horizontalLines: [line], hiddenLineNames: ['Warning'] }
+    props: {
+      metrics: [CPU],
+      horizontalLines: [line],
+      hiddenLineNames: ['scalar_of(warning,rrd_metric(h/svc/util))']
+    }
   })
   const warningRow = screen.getByText('Warning').closest('tr')!
   await fireEvent.click(warningRow.querySelector('button')!)
@@ -229,7 +250,12 @@ test('clicking "show all" when every metric is already hidden emits update:hidde
 })
 
 test('marks header and horizontal-line rows as padded once the metrics table overflows its scroll container', async () => {
-  const line: HorizontalLine = { name: 'Warning', value: 80, color: '#ffaa00' }
+  const line: HorizontalLine = {
+    name: 'scalar_of(warning,rrd_metric(h/svc/util))',
+    title: 'Warning',
+    value: 80,
+    color: '#ffaa00'
+  }
   const { container } = render(GraphLegend, {
     props: { metrics: [CPU, MEM], horizontalLines: [line] }
   })

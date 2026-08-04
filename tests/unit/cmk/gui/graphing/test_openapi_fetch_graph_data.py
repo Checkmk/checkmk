@@ -280,4 +280,7 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     assert line.metadata.color == "#0000ff"
     assert line.data_points == [1.0, None, 3.0]
     [horizontal_line] = response.horizontal_lines
+    # The legend labels a threshold line with this title; its name is the structural id the
+    # show/hide toggle keys on, which is no label a user should read.
+    assert horizontal_line.title == "Warning"
     assert (horizontal_line.value, horizontal_line.color) == (80.0, "#ffcc00")

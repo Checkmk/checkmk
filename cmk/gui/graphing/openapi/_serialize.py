@@ -96,6 +96,7 @@ def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine
     return [
         ApiHorizontalLine(
             name=rule.id,
+            title=rule.attributes.title,
             value=-rule.value if rule.inverse else rule.value,
             color=rule.attributes.color,
         )

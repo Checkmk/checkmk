@@ -95,7 +95,7 @@ const items = computed((): CompactLegendItem[] => [
   ...props.horizontalLines.map((line) =>
     withTruncationLayout({
       key: `line:${line.name}`,
-      title: line.name,
+      title: line.title,
       color: line.color,
       hidden: props.hiddenLineNames.includes(line.name),
       metricName: null,

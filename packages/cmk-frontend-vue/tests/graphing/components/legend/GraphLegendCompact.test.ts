@@ -33,7 +33,12 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
 
 const CPU = makeMetric('cpu', 'CPU')
 const MEM = makeMetric('mem', 'Memory')
-const WARN_LINE: HorizontalLine = { name: 'Warn', value: 80, color: '#ffaa00' }
+const WARN_LINE: HorizontalLine = {
+  name: 'scalar_of(warning,rrd_metric(h/svc/util))',
+  title: 'Warn',
+  value: 80,
+  color: '#ffaa00'
+}
 
 test('renders one item per metric and per horizontal line', () => {
   render(GraphLegendCompact, { props: { metrics: [CPU, MEM], horizontalLines: [WARN_LINE] } })
@@ -139,5 +144,7 @@ test('clicking a horizontal line eye emits update:hiddenLineNames with that name
 
   await fireEvent.click(screen.getByRole('button', { name: 'Warn' }))
 
-  expect(emitted()['update:hiddenLineNames']).toEqual([[['Warn']]])
+  expect(emitted()['update:hiddenLineNames']).toEqual([
+    [['scalar_of(warning,rrd_metric(h/svc/util))']]
+  ])
 })

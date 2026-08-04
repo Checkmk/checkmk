@@ -92,6 +92,10 @@ class ApiHorizontalLine:
         description="The stable structural identifier of the horizontal line.",
         example="<implementation detail>",
     )
+    title: str = api_field(
+        description="The localized line title, for the legend.",
+        example="Warning",
+    )
     value: float = api_field(description="The horizontal line value.", example=80.0)
     color: str = api_field(description="The horizontal line color.", example="#ffcc00")
 

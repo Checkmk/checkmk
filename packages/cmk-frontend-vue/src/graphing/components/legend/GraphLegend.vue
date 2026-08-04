@@ -266,14 +266,14 @@ watch(
           <td class="graphing-graph-legend__cell--eye">
             <GraphLegendEyeButton
               :hidden="hiddenLineNames.includes(line.name)"
-              :aria-label="line.name"
+              :aria-label="line.title"
               @toggle="toggleLine(line.name)"
             />
           </td>
           <td class="graphing-graph-legend__cell--swatch">
             <span class="graphing-graph-legend__swatch" :style="{ background: line.color }" />
           </td>
-          <td class="graphing-graph-legend__name">{{ line.name }}</td>
+          <td class="graphing-graph-legend__name">{{ line.title }}</td>
           <td></td>
           <td></td>
           <td></td>

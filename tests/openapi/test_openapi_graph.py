@@ -153,7 +153,14 @@ def test_fetch_graph_data_comprehensive_graph(
             },
         ],
         "horizontal_lines": [
-            {"name": "-scalar_of(maximum,rrd_metric(h/s/m))", "value": -100.0, "color": "#FFFFFF"}
+            {
+                "name": "-scalar_of(maximum,rrd_metric(h/s/m))",
+                # This graph gives every curve explicit attributes, so the line is titled by them
+                # rather than by what the scalar would resolve to.
+                "title": "m",
+                "value": -100.0,
+                "color": "#FFFFFF",
+            }
         ],
         "warnings": [],
         "errors": [],

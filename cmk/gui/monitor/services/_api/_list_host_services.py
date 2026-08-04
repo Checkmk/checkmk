@@ -132,7 +132,7 @@ def list_services(
         QueryParam(description="An existing site id", example="local"),
     ],
     api_context: ApiContext,
-    body: ServicesRequestBody,
+    body: ServicesRequestBody = ServicesRequestBody(),
 ) -> HostServicesResponse:
     """List services of a host to be consumed by the host services monitoring page."""
     with sites.only_sites(site_id):

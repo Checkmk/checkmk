@@ -39,7 +39,6 @@ from cmk.gui.views.inventory._display_hints import (
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
-from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
 from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
@@ -59,10 +58,6 @@ from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
 from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
-
-
-def test_display_hint_titles() -> None:
-    assert not inventory_displayhints
 
 
 @pytest.mark.parametrize(

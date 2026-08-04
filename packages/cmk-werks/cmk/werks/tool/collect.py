@@ -35,6 +35,7 @@ class Config:
     # only branches matching this regex will be considered for searching for
     # werk files.
     branch_regex: str
+    defines_make: str = "defines.make"
 
     def cleanup_branch_name(self, branch_name: str) -> str:
         # in previous releases of cmk there were branches called 1.2.7i3
@@ -106,9 +107,12 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
         tree = r.tree(ref)
 
         try:
-            defines_make = tree["defines.make"]
+            defines_make = tree[config.defines_make]
         except KeyError:
-            logger.warning("no defines.make file in branch %(branch)s", {"branch": branch_name})
+            logger.warning(
+                "no %(defines_make)s file in branch %(branch)s",
+                {"branch": branch_name, "defines_make": config.defines_make},
+            )
             continue
         if (
             version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)

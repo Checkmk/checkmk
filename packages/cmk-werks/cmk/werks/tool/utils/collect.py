@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class CmaConfig(Config):
     branch_regex = r"^(master$|\d+\.\d+$)"
+    defines_make = "cma-defines"
 
 
 class CloudmkConfig(Config):

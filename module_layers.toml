@@ -117,14 +117,6 @@ clean = [
 
 # Plugin families that refuse to play by the rules.
 
-[plugin_families.violations.azure_deprecated]
-allows = [
-  "cmk.plugins.azure_deprecated_extended",
-  # FormSpec validation
-  "cmk.ccc.hostaddress",
-  "cmk.utils.http_proxy_config",
-]
-
 [plugin_families.violations.azure_v2_extended]
 allows = [
   # reuse of the free azure_v2 plugin library (agent_based + rulesets helpers)

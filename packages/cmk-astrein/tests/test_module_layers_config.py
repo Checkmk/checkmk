@@ -399,7 +399,6 @@ def test_real_config_has_plugin_families_smoke_test(real_config: ModuleLayersCon
     assert "cmk.plugins.aws" in comp_names
     assert "cmk.plugins.azure" in comp_names
     # Some known violation families
-    assert "cmk.plugins.azure_deprecated" in comp_names
     assert "cmk.plugins.datadog" in comp_names
 
 

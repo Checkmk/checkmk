@@ -9,15 +9,20 @@ import type { ZonedDateTime } from '@internationalized/date'
 
 export interface AcknowledgeValues {
   comment: string
+  expireOnEnabled: boolean
   expireOn: ZonedDateTime | null
   sticky: boolean
   persistent: boolean
   notify: boolean
 }
+
+export function isAcknowledgeValid(values: AcknowledgeValues): boolean {
+  const expiryValid = !values.expireOnEnabled || values.expireOn !== null
+  return values.comment.trim() !== '' && expiryValid
+}
 </script>
 
 <script setup lang="ts">
-import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -33,11 +38,10 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-watch(
-  () => model.value.comment,
-  (comment) => emit('update:valid', comment.trim() !== ''),
-  { immediate: true }
-)
+watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
+  immediate: true,
+  deep: true
+})
 </script>
 
 <template>
@@ -57,18 +61,18 @@ watch(
 
     <div class="monitoring-acknowledge-form__section">
       <div class="monitoring-acknowledge-form__field">
-        <span class="monitoring-acknowledge-form__label">
-          {{ _t('Expire on') }}
-          <CmkHelpText
-            :help="
-              _t(
-                'Optionally let the acknowledgement expire automatically. Leave empty to keep it ' +
-                  'until the host recovers or it is removed manually.'
-              )
-            "
-          />
-        </span>
+        <CmkCheckbox
+          v-model="model.expireOnEnabled"
+          :label="_t('Expire on')"
+          :help="
+            _t(
+              'Let the acknowledgement expire automatically. Leave this off to keep it until the ' +
+                'host recovers or it is removed manually.'
+            )
+          "
+        />
         <CmkDateTimePicker
+          v-if="model.expireOnEnabled"
           v-model="model.expireOn"
           :nullable="true"
           :label="_t('Choose an expiry date & time')"

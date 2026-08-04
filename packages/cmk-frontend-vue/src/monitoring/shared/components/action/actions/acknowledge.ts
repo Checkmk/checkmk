@@ -21,10 +21,10 @@ export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
     id: ACK_ACTION_ID,
     title: _t('Acknowledge problems'),
     submitLabel: _t('Acknowledge'),
-    subtitle: (count) => _tn('%{count} selected host', '%{count} selected hosts', count, { count }),
     form: AcknowledgeForm,
     defaultValues: () => ({
       comment: '',
+      expireOnEnabled: false,
       expireOn: null,
       sticky: false,
       persistent: false,
@@ -39,14 +39,14 @@ export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
             sticky: values.sticky,
             persistent: values.persistent,
             notify: values.notify,
-            expireOn: values.expireOn?.toDate().toISOString()
+            expireOn: values.expireOnEnabled ? values.expireOn?.toDate().toISOString() : undefined
           }
         )
         return {
           variant: 'success',
           message: _tn(
             'Acknowledged the problem for %{count} host',
-            'Acknowledged the problems for %{count} hosts',
+            'Acknowledged the problem for %{count} hosts',
             targets.length,
             { count: targets.length }
           )

@@ -259,10 +259,23 @@ function closeSlideIn(): void {
   slideInActionId.value = null
 }
 
-function openSlideInAction(actionId: string): void {
-  if (actionId in actionRegistry) {
-    slideInActionId.value = actionId
+async function openSlideInAction(actionId: string): Promise<void> {
+  if (!(actionId in actionRegistry)) {
+    return
   }
+  if (actionId === RESCHEDULE_ACTION_ID) {
+    await runSlideInActionImmediately(actionId)
+    return
+  }
+  slideInActionId.value = actionId
+}
+
+async function runSlideInActionImmediately(actionId: string): Promise<void> {
+  const action = actionRegistry[actionId]
+  if (!action || slideInTargets.value.length === 0) {
+    return
+  }
+  onSlideInActionFeedback(await action.perform(slideInTargets.value, action.defaultValues()))
 }
 
 function closeSlideInAction(): void {
@@ -285,8 +298,13 @@ function onBulkActionFeedback(result: ActionFeedbackResult): void {
   }
 }
 
-function onBulkAction(action: CellAction): void {
-  if (selectedHosts.value.length === 0 || !(action.id in actionRegistry)) {
+async function onBulkAction(action: CellAction): Promise<void> {
+  const registered = actionRegistry[action.id]
+  if (!registered || selectedHosts.value.length === 0) {
+    return
+  }
+  if (action.id === RESCHEDULE_ACTION_ID && selectedHosts.value.length === 1) {
+    onBulkActionFeedback(await registered.perform(selectedHosts.value, registered.defaultValues()))
     return
   }
   openAction(action.id)

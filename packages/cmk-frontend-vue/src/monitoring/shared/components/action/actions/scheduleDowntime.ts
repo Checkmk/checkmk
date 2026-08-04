@@ -25,7 +25,10 @@ export function useScheduleDowntimeAction(): MonitoringAction<ScheduleDowntimeFo
     id: SCHEDULE_DOWNTIME_ACTION_ID,
     title: _t('Schedule downtimes'),
     submitLabel: _t('Schedule host downtime'),
-    subtitle: (count) => _tn('%{count} selected host', '%{count} selected hosts', count, { count }),
+    description: [
+      _t('Scheduled downtimes set the hosts in planned maintenance.'),
+      _t('Downtimes reduce false alarms and avoid skewed availability statistics.')
+    ],
     form: ScheduleDowntimeForm,
     defaultValues: defaultScheduleDowntimeValues,
     perform: async (targets: HostRef[], values: ScheduleDowntimeFormValues) => {
@@ -54,8 +57,8 @@ export function useScheduleDowntimeAction(): MonitoringAction<ScheduleDowntimeFo
         return {
           variant: 'success',
           message: _tn(
-            'Successfully scheduled a downtime for %{count} host',
-            'Successfully scheduled a downtime for %{count} hosts',
+            'Scheduled a downtime for %{count} host',
+            'Scheduled a downtime for %{count} hosts',
             count,
             { count }
           )

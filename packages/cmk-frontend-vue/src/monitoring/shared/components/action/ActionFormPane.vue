@@ -14,6 +14,7 @@ import { type Component, ref } from 'vue'
 const props = defineProps<{
   title: TranslatedString
   subtitle?: TranslatedString | undefined
+  description?: readonly TranslatedString[] | undefined
   submitLabel?: TranslatedString | undefined
   form?: Component | undefined
   initialValues?: unknown
@@ -51,6 +52,10 @@ function cancel(): void {
         </div>
         <p v-if="subtitle" class="monitoring-action-form-pane__subtitle">{{ subtitle }}</p>
       </header>
+
+      <div v-if="description?.length" class="monitoring-action-form-pane__description">
+        <p v-for="line in description" :key="line">{{ line }}</p>
+      </div>
 
       <div class="monitoring-action-form-pane__actions">
         <CmkButton variant="primary" size="medium" :disabled="!isValid" @click="submit">
@@ -99,6 +104,18 @@ function cancel(): void {
 .monitoring-action-form-pane__subtitle {
   margin: var(--dimension-2) 0 0;
   color: var(--font-color-dimmed);
+}
+
+.monitoring-action-form-pane__description {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--dimension-2);
+  color: var(--font-color-dimmed);
+}
+
+.monitoring-action-form-pane__description > p {
+  margin: 0;
 }
 
 .monitoring-action-form-pane__body {

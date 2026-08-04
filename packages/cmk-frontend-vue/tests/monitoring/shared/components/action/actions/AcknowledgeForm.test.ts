@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone, now } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 
@@ -13,6 +14,7 @@ import AcknowledgeForm, {
 function mountForm(overrides: Partial<AcknowledgeValues> = {}) {
   const modelValue: AcknowledgeValues = {
     comment: '',
+    expireOnEnabled: false,
     expireOn: null,
     sticky: false,
     persistent: false,
@@ -46,4 +48,34 @@ test('notify is on by default and the option checkboxes are rendered', () => {
     screen.getByRole('checkbox', { name: 'Ignore status changes until the host recovers (OK/UP)' })
   ).not.toBeChecked()
   expect(screen.getByRole('checkbox', { name: 'Persistent comment' })).not.toBeChecked()
+})
+
+test('the expiry picker appears only once its checkbox is ticked', async () => {
+  mountForm()
+
+  const expireOn = screen.getByRole('checkbox', { name: 'Expire on' })
+  expect(expireOn).not.toBeChecked()
+  expect(screen.queryByLabelText('Date')).not.toBeInTheDocument()
+
+  await userEvent.click(expireOn)
+  expect(screen.getByLabelText('Date')).toBeInTheDocument()
+})
+
+test('ticking the expiry checkbox without a date turns the form invalid', async () => {
+  const { emitted } = mountForm({ comment: 'on it' })
+
+  expect(emitted('update:valid')?.at(-1)).toEqual([true])
+
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Expire on' }))
+  expect(emitted('update:valid')?.at(-1)).toEqual([false])
+})
+
+test('an expiry date makes the form valid again', async () => {
+  const { emitted } = mountForm({
+    comment: 'on it',
+    expireOnEnabled: true,
+    expireOn: now(getLocalTimeZone())
+  })
+
+  expect(emitted('update:valid')?.at(-1)).toEqual([true])
 })

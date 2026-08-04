@@ -19,7 +19,6 @@ export function useCommentAction(): MonitoringAction<CommentValues> {
     id: COMMENT_ACTION_ID,
     title: _t('Add comment'),
     submitLabel: _t('Add comment'),
-    subtitle: (count) => _tn('%{count} selected host', '%{count} selected hosts', count, { count }),
     form: CommentForm,
     defaultValues: () => ({ comment: '' }),
     perform: async (targets: HostRef[]) => ({

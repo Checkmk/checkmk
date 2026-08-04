@@ -23,7 +23,9 @@ export function useRescheduleAction(): MonitoringAction<RescheduleValues> {
     id: RESCHEDULE_ACTION_ID,
     title: _t('Reschedule active checks'),
     submitLabel: _t('Reschedule checks'),
-    subtitle: (count) => _tn('%{count} selected host', '%{count} selected hosts', count, { count }),
+    description: [
+      _t('Execution will be spread across custom time period to avoid network overload.')
+    ],
     form: RescheduleForm,
     defaultValues: () => ({ spreadMinutes: DEFAULT_SPREAD_MINUTES }),
     perform: async (targets: HostRef[], values: RescheduleValues) => {
@@ -31,12 +33,9 @@ export function useRescheduleAction(): MonitoringAction<RescheduleValues> {
         const count = await api.rescheduleHosts(targets, values.spreadMinutes ?? 0)
         return {
           variant: 'success',
-          message: _tn(
-            'Successfully rescheduled the check for %{count} host',
-            'Successfully rescheduled the checks for %{count} hosts',
-            count,
-            { count }
-          )
+          message: _tn('Rescheduled %{count} check', 'Rescheduled %{count} checks', count, {
+            count
+          })
         }
       } catch {
         return {

@@ -4,14 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import { computed } from 'vue'
 
 import RescheduleForm, {
   type RescheduleValues
 } from '@/monitoring/shared/components/action/actions/RescheduleForm.vue'
+import { ACTION_TARGET_COUNT } from '@/monitoring/shared/components/action/types'
 
-function mountForm(overrides: Partial<RescheduleValues> = {}) {
+function mountForm(overrides: Partial<RescheduleValues> = {}, targetCount = 1) {
   const modelValue: RescheduleValues = { spreadMinutes: 5, ...overrides }
-  return render(RescheduleForm, { props: { modelValue } })
+  return render(RescheduleForm, {
+    props: { modelValue },
+    global: { provide: { [ACTION_TARGET_COUNT as symbol]: computed(() => targetCount) } }
+  })
 }
 
 test('reports valid for a non-negative spread', () => {
@@ -30,4 +35,13 @@ test('renders the spread-over input', () => {
   mountForm()
 
   expect(screen.getByText('Spread over')).toBeInTheDocument()
+})
+
+test('warns about the load only when more than one check is rescheduled', () => {
+  const { unmount } = mountForm({}, 1)
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  unmount()
+
+  mountForm({}, 7)
+  expect(screen.getByRole('alert')).toHaveTextContent('Rescheduling 7 checks at once')
 })

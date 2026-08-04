@@ -5,10 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script lang="ts">
-import { getLocalTimeZone, now } from '@internationalized/date'
+import { type ZonedDateTime, getLocalTimeZone, now } from '@internationalized/date'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types'
 
-export type DurationSelection = 'custom' | 'adhoc' | '4h' | '24h' | '10d'
+export type DurationPreset = '4h' | '24h' | '10d'
+
+/** Presets that run until the end of a calendar period rather than for a fixed duration. */
+export type UntilPreset = 'today' | 'week' | 'month' | 'year'
+
+export type DurationSelection = 'custom' | 'adhoc' | DurationPreset | UntilPreset
 
 /** Raw form state. The action turns this into the downtime request body at submit time. */
 export interface ScheduleDowntimeFormValues {
@@ -21,10 +26,36 @@ export interface ScheduleDowntimeFormValues {
   includeChildHosts: boolean
 }
 
-const PRESET_MINUTES: Record<'4h' | '24h' | '10d', number> = {
+const PRESET_MINUTES: Record<DurationPreset, number> = {
   '4h': 4 * 60,
   '24h': 24 * 60,
   '10d': 10 * 24 * 60
+}
+
+const MIDNIGHT = { hour: 0, minute: 0, second: 0, millisecond: 0 } as const
+
+const UNTIL_PRESETS: readonly DurationSelection[] = ['today', 'week', 'month', 'year']
+
+export function isUntilPreset(selection: DurationSelection): selection is UntilPreset {
+  return UNTIL_PRESETS.includes(selection)
+}
+
+/**
+ * The end of the calendar period the preset covers, matching the legacy
+ * `time_interval_end`: the start of the next day, of the day after the coming
+ * Sunday, of the next month, or of the next year.
+ */
+export function untilPresetEnd(preset: UntilPreset, start: ZonedDateTime): ZonedDateTime {
+  switch (preset) {
+    case 'today':
+      return start.add({ days: 1 }).set(MIDNIGHT)
+    case 'week':
+      return start.add({ days: 7 - ((start.toDate().getDay() + 6) % 7) }).set(MIDNIGHT)
+    case 'month':
+      return start.add({ months: 1 }).set({ day: 1, ...MIDNIGHT })
+    case 'year':
+      return start.add({ years: 1 }).set({ month: 1, day: 1, ...MIDNIGHT })
+  }
 }
 
 export function defaultScheduleDowntimeValues(): ScheduleDowntimeFormValues {
@@ -57,6 +88,13 @@ export function downtimeWindow(
     return {
       start: values.customRange.from.toDate().toISOString(),
       end: values.customRange.to.toDate().toISOString()
+    }
+  }
+  if (isUntilPreset(values.selection)) {
+    const start = now(getLocalTimeZone())
+    return {
+      start: start.toDate().toISOString(),
+      end: untilPresetEnd(values.selection, start).toDate().toISOString()
     }
   }
   const minutes =
@@ -100,12 +138,20 @@ const durationOpen = ref(true)
 const advancedOpen = ref(false)
 const repeat = ref<string | null>('fixed')
 
-const durationChips: { id: DurationSelection; label: TranslatedString }[] = [
+const durationChips: {
+  id: DurationSelection
+  label: TranslatedString
+  duration?: TranslatedString
+}[] = [
   { id: 'custom', label: _t('Custom time range') },
   { id: 'adhoc', label: _t('Ad hoc') },
-  { id: '4h', label: _t('4 h') },
-  { id: '24h', label: _t('24 h') },
-  { id: '10d', label: _t('10 d') }
+  { id: '4h', label: _t('4 h'), duration: _t('4 hours') },
+  { id: '24h', label: _t('24 h'), duration: _t('24 hours') },
+  { id: '10d', label: _t('10 d'), duration: _t('10 days') },
+  { id: 'today', label: _t('Today') },
+  { id: 'week', label: _t('This week') },
+  { id: 'month', label: _t('This month') },
+  { id: 'year', label: _t('This year') }
 ]
 
 const repeatOptions = {
@@ -113,9 +159,21 @@ const repeatOptions = {
   suggestions: [{ name: 'fixed', title: _t('never') }]
 }
 
-const presetLabel = computed(
-  () => durationChips.find((chip) => chip.id === model.value.selection)?.label ?? ''
+const presetDuration = computed(
+  () => durationChips.find((chip) => chip.id === model.value.selection)?.duration ?? ''
 )
+
+const untilEndDate = computed(() => {
+  const selection = model.value.selection
+  if (!isUntilPreset(selection)) {
+    return null
+  }
+  return untilPresetEnd(selection, now(timeZone)).toDate().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+})
 
 watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values)), {
   immediate: true,
@@ -132,11 +190,6 @@ function selectDuration(id: DurationSelection): void {
 
 <template>
   <div class="monitoring-schedule-downtime-form">
-    <p class="monitoring-schedule-downtime-form__intro">
-      {{ _t('Scheduled downtimes set the hosts in planned maintenance.') }}<br />
-      {{ _t('Alerts and notifications will be paused.') }}
-    </p>
-
     <div class="monitoring-schedule-downtime-form__section">
       <label class="monitoring-schedule-downtime-form__field">
         <span class="monitoring-schedule-downtime-form__label">
@@ -198,10 +251,17 @@ function selectDuration(id: DurationSelection): void {
               :unit="_t('minutes')"
             />
           </div>
+          <p v-else-if="untilEndDate" class="monitoring-schedule-downtime-form__preset-hint">
+            {{
+              _t('Scheduled downtime, starting now and ending on %{date}.', {
+                date: untilEndDate
+              })
+            }}
+          </p>
           <p v-else class="monitoring-schedule-downtime-form__preset-hint">
             {{
-              _t('Scheduled downtime has a duration of %{duration} starting now.', {
-                duration: presetLabel
+              _t('Scheduled downtime, starting now with a duration of %{duration}.', {
+                duration: presetDuration
               })
             }}
           </p>
@@ -230,7 +290,7 @@ function selectDuration(id: DurationSelection): void {
             v-model="model.flexible"
             :label="
               _t(
-                'Only start downtime if the host goes DOWN/UNREACHABLE during the defined start ' +
+                'Only start downtime if host/service goes DOWN/UNREACH within the defined start ' +
                   'and end time (flexible).'
               )
             "
@@ -246,11 +306,6 @@ function selectDuration(id: DurationSelection): void {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
-}
-
-.monitoring-schedule-downtime-form__intro {
-  margin: 0;
-  color: var(--font-color-dimmed);
 }
 
 .monitoring-schedule-downtime-form__field {

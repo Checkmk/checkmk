@@ -11,11 +11,14 @@ export interface RescheduleValues {
 </script>
 
 <script setup lang="ts">
+import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { watch } from 'vue'
+import { computed, inject, watch } from 'vue'
+
+import { ACTION_TARGET_COUNT } from '../types'
 
 const model = defineModel<RescheduleValues>({ required: true })
 
@@ -24,6 +27,11 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+const targetCount = inject(
+  ACTION_TARGET_COUNT,
+  computed(() => 1)
+)
 
 watch(
   () => model.value.spreadMinutes,
@@ -34,22 +42,22 @@ watch(
 
 <template>
   <div class="monitoring-reschedule-form">
-    <p class="monitoring-reschedule-form__intro">
-      {{ _t('Execution will be spread across a custom time period.') }}
-    </p>
+    <CmkAlertBox v-if="targetCount > 1" variant="warning" size="small">
+      {{
+        _t(
+          'Rescheduling %{count} checks at once puts extra load on the monitoring server and the ' +
+            'monitored hosts. Spread the execution over a longer period to soften the peak.',
+          { count: targetCount }
+        )
+      }}
+    </CmkAlertBox>
 
     <div class="monitoring-reschedule-form__section">
       <label class="monitoring-reschedule-form__field">
         <span class="monitoring-reschedule-form__label">
           {{ _t('Spread over') }}<CmkLabelRequired :show="true" space="before" />
           <CmkHelpText
-            :help="
-              _t(
-                'Distributes the rescheduled checks across the specified number of minutes, ' +
-                  'preventing a load spike on your monitoring server. Enter the number of minutes ' +
-                  'over which the checks should be spread.'
-              )
-            "
+            :help="_t('Enter the number of minutes over which the checks should be spread.')"
           />
         </span>
         <CmkInput
@@ -68,11 +76,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
-}
-
-.monitoring-reschedule-form__intro {
-  margin: 0;
-  color: var(--font-color-dimmed);
 }
 
 .monitoring-reschedule-form__section {

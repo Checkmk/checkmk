@@ -5,13 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, inject, provide } from 'vue'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
 import type { ActionFeedback } from './ActionFeedback.vue'
 import ActionFormPane from './ActionFormPane.vue'
 import type { MonitoringActionRegistry } from './registry'
+import { ACTION_TARGET_COUNT } from './types'
 
 const props = withDefaults(
   defineProps<{
@@ -29,8 +32,27 @@ const emit = defineEmits<{
   (event: 'cancel'): void
 }>()
 
+const { _tn } = usei18n()
+
+const monitoringService = inject(MONITORING_SERVICE, undefined)
+
+provide(
+  ACTION_TARGET_COUNT,
+  computed(() => props.targets.length)
+)
+
 const action = computed(() => props.actions[props.actionId])
 const initialValues = computed(() => action.value?.defaultValues())
+
+const subtitle = computed(() => {
+  const selected = props.targets.length
+  return _tn(
+    'Selected host: %{selected} | Total hosts: %{total}',
+    'Selected hosts: %{selected} | Total hosts: %{total}',
+    selected,
+    { selected, total: monitoringService?.total.value ?? 0 }
+  )
+})
 
 async function onSubmit(values: unknown): Promise<void> {
   const current = action.value
@@ -46,7 +68,8 @@ async function onSubmit(values: unknown): Promise<void> {
     v-if="action"
     :key="actionId"
     :title="action.title"
-    :subtitle="showCount ? action.subtitle(targets.length) : undefined"
+    :subtitle="showCount ? subtitle : undefined"
+    :description="action.description"
     :submit-label="action.submitLabel"
     :form="action.form"
     :initial-values="initialValues"

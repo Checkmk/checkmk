@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import pagetypes, visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
@@ -11,7 +13,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import append_site_from_request, makeuri_contextless
 from cmk.gui.view import View
@@ -35,11 +36,12 @@ def view_breadcrumb(view: View) -> Breadcrumb:
 
     # View without special hierarchy
     if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
-        request_vars: HTTPVariables = [("view_name", view.name)]
-        request_vars += list(
-            visuals.get_singlecontext_vars(view.context, view.spec["single_infos"]).items()
+        request_vars: Sequence[tuple[str, int | str | None]] = append_site_from_request(
+            [
+                ("view_name", view.name),
+                *visuals.get_singlecontext_vars(view.context, view.spec["single_infos"]).items(),
+            ]
         )
-        request_vars = append_site_from_request(request_vars)
 
         breadcrumb = make_topic_breadcrumb(
             main_menu_registry.menu_monitoring(),

@@ -19,7 +19,6 @@ from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
 from cmk.web.utils.urls import is_allowed_url as is_allowed_url
 
@@ -62,7 +61,7 @@ def _quote_pair(varname: str, value: None | int | str) -> str:
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
-def urlencode_vars(vars_: HTTPVariables) -> str:
+def urlencode_vars(vars_: Sequence[tuple[str, int | str | None]]) -> str:
     """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string"""
     return "&".join([_quote_pair(var, val) for var, val in sorted(vars_)])
 
@@ -231,29 +230,31 @@ def requested_file_with_query(request: Request) -> str:
     return f"{file_name}.py?{query}"
 
 
-def append_site_from_request(url_vars: HTTPVariables) -> HTTPVariables:
+def append_site_from_request(
+    url_vars: Sequence[tuple[str, int | str | None]],
+) -> Sequence[tuple[str, int | str | None]]:
     """Append the current request's site parameter to URL variables if present."""
     if site := _request.var("site"):
-        return url_vars + [("site", site)]
+        return [*url_vars, ("site", site)]
     return url_vars
 
 
 def makeuri(
     request: Request,
-    addvars: HTTPVariables,
+    addvars: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
     remove_prefix: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
     new_vars = [nv[0] for nv in addvars]
-    vars_: HTTPVariables = [
+    vars_: Sequence[tuple[str, int | str | None]] = [
         (v, val)
         for v, val in request.itervars()
         if v[0] != "_" and v not in new_vars and not (delvars and v in delvars)
     ]
     if remove_prefix is not None:
         vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
-    vars_ = vars_ + addvars
+    vars_ = [*vars_, *addvars]
     if filename is None:
         filename = urlencode(requested_file_name(request)) + ".py"
     if vars_:
@@ -263,7 +264,7 @@ def makeuri(
 
 def makeuri_contextless(
     request: Request,
-    vars_: HTTPVariables,
+    vars_: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
 ) -> str:
     if not filename:
@@ -276,28 +277,28 @@ def makeuri_contextless(
 def makeactionuri(
     request: Request,
     transid: str,
-    addvars: HTTPVariables,
+    addvars: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
     delvars: Sequence[str] | None = None,
 ) -> str:
-    session_vars: HTTPVariables = [("_transid", transid)]
+    session_vars: list[tuple[str, int | str | None]] = [("_transid", transid)]
     if session and hasattr(session, "session_info"):
         session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
-    return makeuri(request, addvars + session_vars, filename=filename, delvars=delvars)
+    return makeuri(request, [*addvars, *session_vars], filename=filename, delvars=delvars)
 
 
 def makeactionuri_contextless(
     request: Request,
     transid: str,
-    addvars: HTTPVariables,
+    addvars: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
 ) -> str:
-    session_vars: HTTPVariables = [("_transid", transid)]
+    session_vars: list[tuple[str, int | str | None]] = [("_transid", transid)]
     if session and hasattr(session, "session_info"):
         session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
-    return makeuri_contextless(request, addvars + session_vars, filename=filename)
+    return makeuri_contextless(request, [*addvars, *session_vars], filename=filename)
 
 
 def makeuri_contextless_rulespec_group(

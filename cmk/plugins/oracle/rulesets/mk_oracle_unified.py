@@ -7,7 +7,7 @@
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -160,6 +160,10 @@ SECTIONS: Sequence[SectionOptions] = (
         mode="asynchronous",
     ),
 )
+
+# These sections report the instance state, which must never be cached or switched off:
+# stale data would hide an instance that has just gone down.
+SYNC_ONLY_SECTIONS: Final = ("instance", "asm_instance")
 
 
 def _auth_roles() -> list[SingleChoiceElement]:
@@ -465,16 +469,16 @@ def _connection_options() -> Dictionary:
     )
 
 
-def _section_options(title: Title, help_text: Help | None, mode: str) -> SingleChoice:
-    return SingleChoice(
-        title=title,
-        help_text=help_text,
-        prefill=DefaultValue(mode),
-        elements=[
-            SingleChoiceElement(
-                name="synchronous",
-                title=Title("Run synchronously"),
-            ),
+def _section_options(section: SectionOptions) -> SingleChoice:
+    sync_only = section.section in SYNC_ONLY_SECTIONS
+    elements = [
+        SingleChoiceElement(
+            name="synchronous",
+            title=Title("Run synchronously"),
+        ),
+    ]
+    if not sync_only:
+        elements += [
             SingleChoiceElement(
                 name="asynchronous",
                 title=Title("Run asynchronously and cached"),
@@ -483,7 +487,12 @@ def _section_options(title: Title, help_text: Help | None, mode: str) -> SingleC
                 name="disabled",
                 title=Title("Disable this section"),
             ),
-        ],
+        ]
+    return SingleChoice(
+        title=section.title,
+        help_text=section.help_text,
+        prefill=DefaultValue("synchronous" if sync_only else section.mode),
+        elements=elements,
     )
 
 
@@ -493,11 +502,7 @@ def _sections() -> Dictionary:
         help_text=Help("Select which data(sections) should be collected from the Oracle database."),
         elements={
             section.section: DictElement(
-                parameter_form=_section_options(
-                    title=section.title,
-                    help_text=section.help_text,
-                    mode=section.mode,
-                ),
+                parameter_form=_section_options(section),
                 required=True,
             )
             for section in SECTIONS

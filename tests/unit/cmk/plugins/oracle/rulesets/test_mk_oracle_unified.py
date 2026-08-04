@@ -11,7 +11,7 @@ from cmk.plugins.oracle.rulesets.mk_oracle_unified import (
     _agent_config_mk_oracle,
     USE_HOST_CLIENT_PATH_RE,
 )
-from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.rulesets.v1.form_specs import Dictionary, SingleChoice
 
 
 def test_options_is_top_level() -> None:
@@ -21,6 +21,33 @@ def test_options_is_top_level() -> None:
     main_form = form.elements["main"].parameter_form
     assert isinstance(main_form, Dictionary)
     assert "options" not in main_form.elements, "`options` must not be nested under `main`"
+
+
+@pytest.mark.parametrize("section", ["instance", "asm_instance"])
+def test_instance_sections_offer_synchronous_only(section: str) -> None:
+    main = _agent_config_mk_oracle().elements["main"].parameter_form
+    assert isinstance(main, Dictionary)
+    sections = main.elements["sections"].parameter_form
+    assert isinstance(sections, Dictionary)
+    modes = sections.elements[section].parameter_form
+    assert isinstance(modes, SingleChoice)
+
+    assert [element.name for element in modes.elements] == ["synchronous"]
+
+
+def test_other_sections_offer_all_modes() -> None:
+    main = _agent_config_mk_oracle().elements["main"].parameter_form
+    assert isinstance(main, Dictionary)
+    sections = main.elements["sections"].parameter_form
+    assert isinstance(sections, Dictionary)
+    modes = sections.elements["tablespaces"].parameter_form
+    assert isinstance(modes, SingleChoice)
+
+    assert [element.name for element in modes.elements] == [
+        "synchronous",
+        "asynchronous",
+        "disabled",
+    ]
 
 
 @pytest.mark.parametrize(

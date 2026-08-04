@@ -72,6 +72,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   apply: ['confirm', 'save', 'checkmark', 'activate'],
   'ar-simulate': ['augmented reality', 'simulation', 'test'],
   'archive-event': ['store event', 'box', 'save'],
+  'arrows-swap': ['exchange', 'reverse', 'reset', 'opposite arrows'],
   assign: ['allocate', 'attach', 'designate'],
   'assume-0': ['override state', 'force ok', 'green'],
   'assume-1': ['override state', 'force warn', 'yellow'],

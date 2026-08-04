@@ -77,6 +77,7 @@ import lightIconAppMonitoringTopicSvg from '~cmk-frontend/themes/facelift/images
 import lightIconApplyPng from '~cmk-frontend/themes/facelift/images/icon_apply.png?url&no-inline'
 import lightIconArSimulatePng from '~cmk-frontend/themes/facelift/images/icon_ar_simulate.png?url&no-inline'
 import lightIconArchiveEventPng from '~cmk-frontend/themes/facelift/images/icon_archive_event.png?url&no-inline'
+import lightIconArrowsSwapSvg from '~cmk-frontend/themes/facelift/images/icon_arrows_swap.svg?url&no-inline'
 import lightIconAssignSvg from '~cmk-frontend/themes/facelift/images/icon_assign.svg?url&no-inline'
 import lightIconAssume0Png from '~cmk-frontend/themes/facelift/images/icon_assume_0.png?url&no-inline'
 import lightIconAssume1Png from '~cmk-frontend/themes/facelift/images/icon_assume_1.png?url&no-inline'
@@ -902,6 +903,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   apply: lightIconApplyPng,
   'ar-simulate': lightIconArSimulatePng,
   'archive-event': lightIconArchiveEventPng,
+  'arrows-swap': lightIconArrowsSwapSvg,
   'assume-0': lightIconAssume0Png,
   'assume-1': lightIconAssume1Png,
   'assume-2': lightIconAssume2Png,

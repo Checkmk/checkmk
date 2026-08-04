@@ -26,7 +26,8 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       'inspecting',
       'highlightedMetricName',
       'pinEnabled',
-      'pinTime'
+      'pinTime',
+      'atMinTimeZoom'
     ],
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
@@ -36,6 +37,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="highlighted">{{ highlightedMetricName }}</span>
       <span data-testid="show-pin">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
+      <span data-testid="at-min-time-zoom">{{ atMinTimeZoom }}</span>
       <span data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
       <span data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
       <span
@@ -192,6 +194,37 @@ test('does not render the context view when showBrush is not set', () => {
     }
   })
   expect(document.querySelector('.graphing-graph-brush')).not.toBeInTheDocument()
+})
+
+// The renderer refuses a zoom drag on this flag, and it has to be read off the requested
+// window: the served window is snapped to the data step, so it stays wider than the floor even
+// at maximum zoom and would leave the limit unreachable.
+test('reports time zoom at its floor once the requested window is the narrowest servable one', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      interaction: INTERACTION_NONE,
+      // A minute apart: exactly MIN_ZOOM_TIME_RANGE_SECONDS.
+      requestedTimeRange: { start: 1_781_524_800, end: 1_781_524_860 },
+      // Served a step wider, as the backend does.
+      dataTimeRange: { start: 1_781_524_800, end: 1_781_524_920, step: 60 }
+    }
+  })
+
+  expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('true')
+})
+
+test('does not report time zoom at its floor while the requested window is still wider', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      interaction: INTERACTION_NONE,
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED
+    }
+  })
+
+  expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
 })
 
 test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {

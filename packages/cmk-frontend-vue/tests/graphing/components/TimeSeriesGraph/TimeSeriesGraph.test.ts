@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -128,6 +128,26 @@ describe('TimeSeriesGraph', () => {
     expect(
       container.querySelector('svg g.graphing-time-series-graph__y-axis path.domain')
     ).toBeInTheDocument()
+  })
+
+  test('says nothing about the zoom floor until a drag is actually refused', () => {
+    renderComponent({ zoomEnabled: true, minTimeRange: 60, atMinTimeZoom: true })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  // The hint answers a gesture, not a hover, so it has to appear on the press alone with no
+  // pointer resting anywhere for it to attach to.
+  test('states the reason when a zoom is refused at the time floor', async () => {
+    renderComponent({ zoomEnabled: true, minTimeRange: 60, atMinTimeZoom: true })
+
+    await fireEvent.mouseDown(screen.getByRole('img', { name: 'CPU utilization' }), {
+      button: 0,
+      clientX: 100,
+      clientY: 50
+    })
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
   })
 
   test('labels the y-axis on both sides of zero for a mirrored metric', async () => {

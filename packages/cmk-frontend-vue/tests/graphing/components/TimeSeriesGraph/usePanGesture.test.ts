@@ -85,6 +85,8 @@ function mountBothGestures() {
         timeRange: () => TIME_RANGE,
         minTimeRange: () => null,
         minValueRange: () => null,
+        valueRange: () => null,
+        atTimeFloor: () => false,
         plotWidth: ref(PLOT_WIDTH),
         plotHeight: ref(PLOT_HEIGHT),
         xScale,

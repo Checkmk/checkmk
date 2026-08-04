@@ -6,7 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkTooltip, {
+  CmkTooltipContent,
+  CmkTooltipProvider,
+  CmkTooltipTrigger
+} from 'cmk-ui-library/components/CmkTooltip'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
@@ -45,6 +50,22 @@ const emit = defineEmits<{
 }>()
 
 const consolidationFn = computed<ConsolidationFn>(() => props.consolidationFunction ?? 'avg')
+
+const MAX_ZOOM_HINT_DURATION_MS = 1200
+const MAX_ZOOM_HINT_CURSOR_OFFSET = 12
+const maxZoomHintAt = ref<{ x: number; y: number } | null>(null)
+let maxZoomHintTimer: ReturnType<typeof setTimeout> | null = null
+
+function showMaxZoomHint(point: { x: number; y: number }): void {
+  maxZoomHintAt.value = point
+  if (maxZoomHintTimer !== null) {
+    clearTimeout(maxZoomHintTimer)
+  }
+  maxZoomHintTimer = setTimeout(() => {
+    maxZoomHintAt.value = null
+    maxZoomHintTimer = null
+  }, MAX_ZOOM_HINT_DURATION_MS)
+}
 
 const MARGIN = { top: 5, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
 const X_AXIS_BAND_HEIGHT = 20
@@ -91,6 +112,22 @@ const pinX = computed<number | null>(() => {
 })
 const pinHandleX = computed<number | null>(() =>
   pinX.value === null ? null : pinLineCentreX(pinX.value)
+)
+
+const maxZoomHintStyle = computed(() => {
+  const point = maxZoomHintAt.value
+  if (point === null) {
+    return {}
+  }
+  return {
+    top: `${plotTop.value + point.y + MAX_ZOOM_HINT_CURSOR_OFFSET}px`,
+    left: `${marginLeft.value + point.x}px`
+  }
+})
+
+// Laid out to the cursor's left in the right half of the plot, so a wide hint stays inside.
+const maxZoomHintSide = computed(() =>
+  maxZoomHintAt.value !== null && maxZoomHintAt.value.x > plotWidth.value / 2 ? 'left' : 'right'
 )
 
 // 'iec' notation is 1024-based so its ticks step in binary; every other notation is decimal.
@@ -144,12 +181,15 @@ const {
   timeRange: () => props.time_range,
   minTimeRange: () => props.minTimeRange,
   minValueRange: () => props.minValueRange,
+  valueRange: () => props.valueRange,
+  atTimeFloor: () => props.atMinTimeZoom === true,
   plotWidth,
   plotHeight,
   xScale,
   yScale,
   plotCoords,
-  onZoom: (payload) => emit('zoom', payload)
+  onZoom: (payload) => emit('zoom', payload),
+  onZoomRefused: showMaxZoomHint
 })
 
 const {
@@ -324,6 +364,7 @@ function onPinActionClick(): void {
 
 const { _t } = usei18n()
 const resetLabel = _t('Reset zoom')
+const maxZoomLabel = _t('Maximum zoom reached')
 const panHovered = ref(false)
 const PAN_STEPS = [
   { direction: -1, side: 'back', label: _t('Step back in time') },
@@ -374,6 +415,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   dprMedia?.removeEventListener('change', onDPRChange)
   dprMedia = null
+  if (maxZoomHintTimer !== null) {
+    clearTimeout(maxZoomHintTimer)
+    maxZoomHintTimer = null
+  }
 })
 
 watch(
@@ -547,9 +592,35 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
       :aria-label="resetLabel"
       @click="onResetClick"
     >
-      <CmkIcon name="reload" size="small" />
+      <CmkIcon
+        name="arrows-swap"
+        class="graphing-time-series-graph__reset-icon"
+        aria-hidden="true"
+      />
       <span>{{ resetLabel }}</span>
     </CmkButton>
+    <!-- A zero-size anchor at the cursor; the tooltip lays the hint out beside it. -->
+    <div
+      v-if="maxZoomHintAt"
+      class="graphing-time-series-graph__max-zoom-hint"
+      :style="maxZoomHintStyle"
+    >
+      <CmkTooltipProvider>
+        <CmkTooltip :open="true">
+          <CmkTooltipTrigger as="span" />
+          <CmkTooltipContent
+            :side="maxZoomHintSide"
+            :side-offset="MAX_ZOOM_HINT_CURSOR_OFFSET"
+            align="start"
+            :avoid-collisions="false"
+          >
+            <div class="graphing-time-series-graph__max-zoom-hint-body" role="status">
+              {{ maxZoomLabel }}
+            </div>
+          </CmkTooltipContent>
+        </CmkTooltip>
+      </CmkTooltipProvider>
+    </div>
     <PinHandle
       v-if="pinHandleX !== null"
       variant="remove"
@@ -613,7 +684,14 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
   .graphing-time-series-graph__reset {
     position: absolute;
     z-index: 2;
+    height: var(--dimension-8);
     gap: var(--dimension-3);
+  }
+
+  .graphing-time-series-graph__reset-icon {
+    flex-shrink: 0;
+    width: var(--dimension-6);
+    height: var(--dimension-6);
   }
 
   /* Above the pan zone, which would otherwise swallow the clicks. */
@@ -667,6 +745,24 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
       right: calc(100% + var(--border-width-1));
       background: linear-gradient(to left, var(--ux-theme-5), transparent);
     }
+  }
+
+  .graphing-time-series-graph__max-zoom-hint {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .graphing-time-series-graph__max-zoom-hint-body {
+    box-sizing: border-box;
+    max-width: 260px;
+    padding: var(--dimension-4);
+    background: var(--default-tooltip-background-color);
+    border: var(--border-width-1) solid var(--default-tooltip-text-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-normal);
+    line-height: normal;
+    color: var(--default-tooltip-text-color);
   }
 }
 

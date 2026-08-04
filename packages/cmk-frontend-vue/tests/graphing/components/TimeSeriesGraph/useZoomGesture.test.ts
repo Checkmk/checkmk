@@ -19,7 +19,10 @@ const DIAGONAL_DRAG_TO: [number, number] = [120, 75]
 
 interface GestureOptions {
   minTimeRange?: number
+  minValueRange?: number
   timeRange?: TimeRange
+  valueRange?: { min: number; max: number }
+  atTimeFloor?: boolean
 }
 
 // A 200×100px plot: x maps to the given time range (1000..2000s by default, so 1px is 5s),
@@ -27,6 +30,7 @@ interface GestureOptions {
 function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
   const timeRange = options.timeRange ?? DEFAULT_TIME_RANGE
   const onZoom = vi.fn()
+  const onZoomRefused = vi.fn()
   const xScale = scaleTime()
     .domain([new Date(timeRange.start * 1000), new Date(timeRange.end * 1000)])
     .range([0, 200])
@@ -38,19 +42,22 @@ function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
         zoomMode: () => mode,
         timeRange: () => timeRange,
         minTimeRange: () => options.minTimeRange ?? null,
-        minValueRange: () => null,
+        minValueRange: () => options.minValueRange ?? null,
+        valueRange: () => options.valueRange ?? null,
+        atTimeFloor: () => options.atTimeFloor ?? false,
         plotWidth: ref(200),
         plotHeight: ref(100),
         xScale,
         yScale,
         plotCoords: (ev: MouseEvent) => ({ x: ev.clientX, y: ev.clientY }),
-        onZoom
+        onZoom,
+        onZoomRefused
       })
       return () => h('div')
     }
   })
   render(harness)
-  return { api, onZoom }
+  return { api, onZoom, onZoomRefused }
 }
 
 function drag(
@@ -66,6 +73,93 @@ function drag(
 }
 
 describe('useZoomGesture', () => {
+  test('a refused zoom reports where the press happened, so the reason can be shown there', () => {
+    const { api, onZoomRefused } = mountGesture('time', { atTimeFloor: true })
+
+    drag(api, [40, 25], [90, 70])
+
+    expect(onZoomRefused).toHaveBeenCalledWith({ x: 40, y: 25 })
+  })
+
+  test('a refusal never draws a selection band, so no zoom area can be dragged out', () => {
+    const { api } = mountGesture('time', { atTimeFloor: true })
+
+    api.onPlotMouseDown(new MouseEvent('mousedown', { button: 0, clientX: 40, clientY: 25 }))
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 120, clientY: 60 }))
+
+    expect(api.selectionBand.value).toBeNull()
+
+    window.dispatchEvent(new MouseEvent('mouseup'))
+  })
+
+  test('a refusal is reported once on press, not again on release', () => {
+    const { api, onZoomRefused } = mountGesture('time', { atTimeFloor: true })
+
+    drag(api, [40, 25], [90, 70])
+
+    expect(onZoomRefused).toHaveBeenCalledTimes(1)
+  })
+
+  test('a view wider than the minimum time range still zooms', () => {
+    const { api, onZoom, onZoomRefused } = mountGesture('time', { minTimeRange: 60 })
+
+    drag(api, [0, 25], [200, 25])
+
+    expect(onZoomRefused).not.toHaveBeenCalled()
+    expect(onZoom).toHaveBeenCalledTimes(1)
+  })
+
+  test('a drag narrower than the floor still zooms, clamped up to it', () => {
+    // 1px is 5s, so a 50px drag asks for 250s against a 300s floor: clamped, not refused.
+    const { api, onZoom, onZoomRefused } = mountGesture('time', { minTimeRange: 300 })
+
+    drag(api, [40, 25], [90, 25])
+
+    expect(onZoomRefused).not.toHaveBeenCalled()
+    const { timeRange } = onZoom.mock.calls[0]![0]
+    expect(timeRange.end - timeRange.start).toBeCloseTo(300)
+  })
+
+  test('no floor configured never refuses a zoom', () => {
+    const { api, onZoomRefused } = mountGesture('time')
+
+    drag(api, [40, 25], [50, 25])
+
+    expect(onZoomRefused).not.toHaveBeenCalled()
+  })
+
+  test('an auto-scaled value axis has no floor to be at, so peak zoom is never refused', () => {
+    const { api, onZoom, onZoomRefused } = mountGesture('value', { minValueRange: 10 })
+
+    drag(api, [40, 20], [40, 80])
+
+    expect(onZoomRefused).not.toHaveBeenCalled()
+    expect(onZoom).toHaveBeenCalledTimes(1)
+  })
+
+  test('a value axis already at its minimum span refuses the zoom', () => {
+    const { api, onZoom, onZoomRefused } = mountGesture('value', {
+      minValueRange: 10,
+      valueRange: { min: 40, max: 50 }
+    })
+
+    drag(api, [40, 20], [40, 80])
+
+    expect(onZoom).not.toHaveBeenCalled()
+    expect(onZoomRefused).toHaveBeenCalledTimes(1)
+  })
+
+  test('the cursor names the zoom while a drag is under way', () => {
+    const { api } = mountGesture('time')
+
+    api.onPlotMouseDown(new MouseEvent('mousedown', { button: 0, clientX: 40, clientY: 25 }))
+
+    expect(api.plotCursor.value).toBe('zoom-in')
+
+    window.dispatchEvent(new MouseEvent('mouseup'))
+    expect(api.plotCursor.value).toBe('ew-resize')
+  })
+
   test('the plot cursor hints the armed axis', () => {
     expect(mountGesture('time').api.plotCursor.value).toBe('ew-resize')
     expect(mountGesture('value').api.plotCursor.value).toBe('ns-resize')
@@ -194,12 +288,28 @@ describe('useZoomGesture — minimum span', () => {
     expect(onZoom).toHaveBeenCalledWith({ timeRange: { start: 1495, end: 1555, step: 60 } })
   })
 
-  test('a further zoom inside an already-floored window leaves it unchanged', () => {
-    const flooredWindow: TimeRange = { start: 1000, end: 1060, step: 60 }
-    const { api, onZoom } = mountGesture('time', { minTimeRange: 60, timeRange: flooredWindow })
+  test('a further zoom is refused once time zoom is at its floor, not re-applied', () => {
+    const { api, onZoom, onZoomRefused } = mountGesture('time', { atTimeFloor: true })
 
     drag(api, [80, 30], [120, 30])
 
-    expect(onZoom).toHaveBeenCalledWith({ timeRange: flooredWindow })
+    expect(onZoom).not.toHaveBeenCalled()
+    expect(onZoomRefused).toHaveBeenCalledTimes(1)
+  })
+
+  // The served window is snapped to the data step, so it stays wider than the floor even at
+  // maximum zoom. Reading the limit off it would leave the refusal unreachable.
+  test('a window wider than the floor still zooms while the floor is not reported reached', () => {
+    const flooredWindow: TimeRange = { start: 1000, end: 1060, step: 60 }
+    const { api, onZoom, onZoomRefused } = mountGesture('time', {
+      minTimeRange: 60,
+      timeRange: flooredWindow,
+      atTimeFloor: false
+    })
+
+    drag(api, [80, 30], [120, 30])
+
+    expect(onZoomRefused).not.toHaveBeenCalled()
+    expect(onZoom).toHaveBeenCalledTimes(1)
   })
 })

@@ -17,11 +17,19 @@ import type { TimeRange, ZoomMode, ZoomPayload } from './types'
 // A drag shorter than this on the active axis is treated as a click, not a zoom.
 const DRAG_THRESHOLD_PX = 4
 
+function atFloor(span: number, floor: number | null): boolean {
+  return floor !== null && span <= floor
+}
+
 export interface ZoomGestureOptions {
   zoomMode: () => ZoomMode
   timeRange: () => TimeRange
   minTimeRange: () => number | null
   minValueRange: () => number | null
+  valueRange: () => { min: number; max: number } | null
+  // Whether time zoom has nothing left to give. Supplied rather than derived: the drawn window
+  // is snapped to the data step, so it never reaches minTimeRange however far the user zooms.
+  atTimeFloor: () => boolean
   // Plot dimensions in CSS px.
   plotWidth: Ref<number>
   plotHeight: Ref<number>
@@ -31,11 +39,28 @@ export interface ZoomGestureOptions {
   // Shared with the pan gesture, so the owning component (the canvas-ref owner) supplies it.
   plotCoords: (ev: MouseEvent) => { x: number; y: number } | null
   onZoom: (payload: ZoomPayload) => void
+  // Fired instead of arming a drag when the view is already at the floor. Carries where the
+  // press happened, in plot-relative pixels.
+  onZoomRefused?: (point: { x: number; y: number }) => void
 }
 
 export function useZoomGesture(options: ZoomGestureOptions) {
   // Drag rectangle in plot-relative pixels; null = no drag in progress.
   const selection = ref<SelectionPoints | null>(null)
+
+  // Infinity while auto-scaling: with no fixed window there is no floor to be at.
+  function valueSpan(): number {
+    const range = options.valueRange()
+    return range === null ? Number.POSITIVE_INFINITY : range.max - range.min
+  }
+
+  function atFloorForMode(): boolean {
+    if (options.zoomMode() === 'value') {
+      return atFloor(valueSpan(), options.minValueRange())
+    }
+    return options.atTimeFloor()
+  }
+
   const plotCursor = computed(() => {
     if (selection.value !== null) {
       return 'zoom-in'
@@ -59,6 +84,11 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     }
     const point = options.plotCoords(ev)
     if (!point) {
+      return
+    }
+    // Refused before the drag is armed, so no band is ever drawn at the floor.
+    if (atFloorForMode()) {
+      options.onZoomRefused?.(point)
       return
     }
     selection.value = { x0: point.x, y0: point.y, x1: point.x, y1: point.y }

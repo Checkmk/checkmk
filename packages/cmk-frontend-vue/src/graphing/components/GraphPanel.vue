@@ -105,6 +105,12 @@ function updateConsolidationFunction(val: ConsolidationFn) {
 const legendMetrics = computed(() => props.metrics.filter((metric) => !metric.render.hidden))
 const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !metric.render.hidden))
 
+// Time zoom clamps the *requested* window at the floor, so that is the range which reaches it;
+// the served window stays a step wider and would never compare equal.
+const atMinTimeZoom = computed(
+  () => props.requestedTimeRange.end - props.requestedTimeRange.start <= MIN_ZOOM_TIME_RANGE_SECONDS
+)
+
 const yAxis = computed(() => deriveYAxis(props.metrics))
 
 // The add-to target is what the burger menu exists for, so it carries everything the actions
@@ -201,6 +207,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
             :zoom-mode="zoomMode"
             :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
             :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
+            :at-min-time-zoom="atMinTimeZoom"
             :min-value-range="null"
             :inspecting="inspectionActive"
             :pan-enabled="interaction.panning === 'enabled'"

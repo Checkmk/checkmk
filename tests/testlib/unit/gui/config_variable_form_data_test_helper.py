@@ -23,10 +23,12 @@ from typing import Any, ClassVar
 import pytest
 
 import cmk.base.default_config
+import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui import valuespec
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs import (
     DEFAULT_VALUE,
@@ -58,6 +60,7 @@ from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, SingleChoic
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from tests.testlib.common.repo import repo_path
 from tests.testlib.fake_site import edition as edition_from_env
 from tests.testlib.gui.common_fixtures import perform_load_plugins
 
@@ -69,7 +72,7 @@ def make_global_settings_context(edition: Edition) -> GlobalSettingsContext:
         site_neutral_log_dir=Path("/tmp"),
         site_neutral_var_dir=Path("/tmp"),
         configured_sites=SiteConfigurations({}),
-        configured_graph_timeranges=[],
+        configured_graph_timeranges=Config().graph_timeranges,
     )
 
 
@@ -599,7 +602,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[add].action.script": {"script": ""},
     },
     "adhoc_downtime": {
-        "[enable]": {"comment": "", "duration": 60},
+        "[enable]": {"comment": NoSaveableDefault(), "duration": 60},
     },
     "agent_bakery_logging": {
         "[choice 0]": None,
@@ -637,7 +640,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": "",
     },
     "builtin_icon_visibility": {
-        "[add]": ("parent_child_topology", {}),
+        "[add]": (NoSaveableDefault(), {}),
         "[add].1.sort_index": 0,
         "[add].1.toplevel": True,
     },
@@ -649,13 +652,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "update_changed_service_parameters": False,
             "update_host_labels": False,
         },
-        "mode.update_everything": {
-            "add_new_services": True,
-            "remove_vanished_services": True,
-            "update_changed_service_labels": True,
-            "update_changed_service_parameters": True,
-            "update_host_labels": True,
-        },
+        "mode.update_everything": True,
     },
     "cmc_config_multiprocessing": {
         "limit_workers": 1,
@@ -674,7 +671,11 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable].tarpit": 0,
     },
     "custom_service_attributes": {
-        "[add]": {"ident": "", "title": "", "type": "TextAscii"},
+        "[add]": {
+            "ident": NoSaveableDefault(),
+            "title": NoSaveableDefault(),
+            "type": "TextAscii",
+        },
     },
     "default_user_profile": {},
     "diskspace_cleanup": {
@@ -683,7 +684,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "min_free_bytes": (0, 2592000),
     },
     "graph_timeranges": {
-        "[add]": {"duration": 0, "title": ""},
+        "[add]": {"duration": NoSaveableDefault(), "title": NoSaveableDefault()},
     },
     "hostname_translation": {
         "case": None,
@@ -735,9 +736,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "login_screen": {
         "footer_links": [],
-        "footer_links[add]": ("", "", "_blank"),
+        "footer_links[add]": (NoSaveableDefault(), NoSaveableDefault(), "_blank"),
         "hide_version": True,
-        "login_message": "",
+        "login_message": NoSaveableDefault(),
     },
     "metric_backend": {
         "disabled": None,
@@ -908,7 +909,11 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "time": UnstableDefault(),
     },
     "service_view_grouping": {
-        "[add]": {"min_items": 2, "pattern": "", "title": ""},
+        "[add]": {
+            "min_items": 2,
+            "pattern": NoSaveableDefault(),
+            "title": NoSaveableDefault(),
+        },
     },
     "session_mgmt": {
         "max_duration": {"enforce_reauth": 86400},
@@ -969,24 +974,37 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "trusted_cas[add].[choice 2]": None,
     },
     "user_downtime_timeranges": {
-        "[add]": {"end": 86400, "title": ""},
-        "[add].end.[choice 0]": 86400,
-        "[add].end.[choice 1]": "next_day",
+        "[add]": {"end": 86400, "title": NoSaveableDefault()},
+        "[add].end.duration": 86400,
+        "[add].end.until": "next_day",
     },
     "user_icons_and_actions": {
-        "[add]": ("", {"icon": None}),
+        "[add]": (NoSaveableDefault(), {"icon": None}),
         "[add].1.sort_index": 15,
-        "[add].1.title": "",
+        "[add].1.title": NoSaveableDefault(),
         "[add].1.toplevel": True,
-        "[add].1.url": ("", "_blank"),
+        "[add].1.url": (NoSaveableDefault(), "_blank"),
     },
     "user_localizations": {
-        "[add]": ("", {}),
-        "[add].1.en": "",
+        "[add]": (NoSaveableDefault(), {}),
+        "[add].1.de": NoSaveableDefault(),
+        "[add].1.en": NoSaveableDefault(),
+        "[add].1.es": NoSaveableDefault(),
+        "[add].1.fr": NoSaveableDefault(),
+        "[add].1.it": NoSaveableDefault(),
+        "[add].1.ja": NoSaveableDefault(),
+        "[add].1.nl": NoSaveableDefault(),
+        "[add].1.pt_PT": NoSaveableDefault(),
+        "[add].1.ro": NoSaveableDefault(),
     },
     "virtual_host_trees": {
-        "[add]": {"exclude_empty_tag_choices": False, "id": "", "title": "", "tree_spec": []},
-        "[add].tree_spec[add]": "agent",
+        "[add]": {
+            "exclude_empty_tag_choices": False,
+            "id": NoSaveableDefault(),
+            "title": NoSaveableDefault(),
+            "tree_spec": [],
+        },
+        "[add].tree_spec[add]": NoSaveableDefault(),
     },
     "wato_icon_categories": {
         "[add]": ("", ""),
@@ -1059,7 +1077,14 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "by_rule": {"limit": 1000, "action": "stop_overflow_notify"},
         "overall": {"limit": 10000, "action": "stop_overflow_notify"},
     },
-    "graph_timeranges": [],
+    "graph_timeranges": [
+        {"title": "Last 1 h", "duration": 3600},
+        {"title": "Last 4 h", "duration": 14400},
+        {"title": "Last 25 h", "duration": 90000},
+        {"title": "Last 8 d", "duration": 691200},
+        {"title": "Last 35 d", "duration": 3024000},
+        {"title": "Last 400 d", "duration": 34560000},
+    ],
     "hostname_translation": {},
     "http_proxies": {},
     "inventory_check_interval": None,
@@ -1428,7 +1453,7 @@ CASES: Mapping[str, list[Case]] = {
     "builtin_icon_visibility": [
         CasePass("configured", {"reschedule": {"toplevel": True, "sort_index": 10}}),
         CaseFail("unknown-icon", {"no_such_icon": {"toplevel": True}}),
-        CaseFail("not-a-dict-crashes-transform", "reschedule", AttributeError),
+        CaseFail("not-a-dict", "reschedule"),
     ],
     "bulk_discovery_default_settings": [
         CasePass(
@@ -1582,7 +1607,7 @@ CASES: Mapping[str, list[Case]] = {
                 "ENV2": {"ident": "ENV2", "title": "Environment", "type": "TextAscii"},
             },
         ),
-        CaseFail("not-a-dict-crashes-transform", "ENV", AttributeError),
+        CaseFail("not-a-dict", "ENV"),
     ],
     "dcd_activate_changes_timeout": [
         CasePass("configured", 300),
@@ -2422,11 +2447,11 @@ CASES: Mapping[str, list[Case]] = {
             MKUserError,
         ),
         CaseFail("missing-icon", {"jira": {"title": "No icon"}}),
-        CaseFail("not-a-dict-crashes-transform", ["jira"], AttributeError),
+        CaseFail("not-a-dict", ["jira"]),
     ],
     "user_localizations": [
         CasePass("configured", {"Business critical": {"en": "Important"}}),
-        CaseFail("not-a-dict-crashes-transform", "Business critical", AttributeError),
+        CaseFail("not-a-dict", "Business critical"),
     ],
     "user_security_notification_duration": [
         CasePass("configured", {"max_duration": 172800, "update_existing_duration": True}),
@@ -2511,6 +2536,11 @@ class ConfigVariableSuite:
     attribute pytest_generate_tests."""
 
     EDITION: ClassVar[Edition] = edition_from_env()
+
+    @pytest.fixture(autouse=True)
+    def fixture_shipped_locales(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # standard test environment only knows about en, we make all available:
+        monkeypatch.setattr(cmk.utils.paths, "locale_dir", repo_path() / "locale")
 
     @pytest.fixture(name="global_settings_context")
     def fixture_global_settings_context(self) -> GlobalSettingsContext:

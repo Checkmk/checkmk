@@ -10,14 +10,15 @@ from livestatus import SiteConfigurations
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.theme.choices import theme_choices
-from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.wato._check_mk_configuration import ConfigVariableUseNewDescriptionsFor
 from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalSettingsContext
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.gui.watolib.utils import site_neutral_path
+from cmk.rulesets.internal.form_specs import SingleChoiceExtended
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.utils.paths import log_dir, omd_root, var_dir
 
@@ -27,7 +28,7 @@ def test_ui_theme_registration() -> None:
     assert isinstance(var.primary_domain(), ConfigDomainGUI)
     assert var.group() == ConfigVariableGroupUserInterface
 
-    valuespec = var.valuespec(
+    form_spec = var.value_model(
         GlobalSettingsContext(
             target_site_id=omd_site(),
             edition_of_local_site=edition(omd_root),
@@ -37,8 +38,12 @@ def test_ui_theme_registration() -> None:
             configured_graph_timeranges=[],
         )
     )
-    assert isinstance(valuespec, DropdownChoice)
-    assert valuespec.choices() == theme_choices()
+    assert isinstance(form_spec, SingleChoiceExtended)
+    assert not callable(form_spec.elements)
+    assert [
+        (element.name, element.title.localize(translate_to_current_language))
+        for element in form_spec.elements
+    ] == theme_choices()
 
 
 def test_ui_theme_default_value() -> None:
@@ -51,19 +56,23 @@ def test_ui_theme_default_value() -> None:
         "cmk.gui.wato._check_mk_configuration.theme_choices",
         return_value=[("modern-dark", "Dark")],
     ):
-        assert (
-            var.valuespec(
-                GlobalSettingsContext(
-                    target_site_id=omd_site(),
-                    edition_of_local_site=edition(omd_root),
-                    site_neutral_log_dir=site_neutral_path(log_dir),
-                    site_neutral_var_dir=site_neutral_path(var_dir),
-                    configured_sites=SiteConfigurations({}),
-                    configured_graph_timeranges=[],
-                )
-            ).value_to_html(default_setting)
-            == "Dark"
+        form_spec = var.value_model(
+            GlobalSettingsContext(
+                target_site_id=omd_site(),
+                edition_of_local_site=edition(omd_root),
+                site_neutral_log_dir=site_neutral_path(log_dir),
+                site_neutral_var_dir=site_neutral_path(var_dir),
+                configured_sites=SiteConfigurations({}),
+                configured_graph_timeranges=[],
+            )
         )
+        assert isinstance(form_spec, SingleChoiceExtended)
+        assert not callable(form_spec.elements)
+        assert [
+            element.title.localize(translate_to_current_language)
+            for element in form_spec.elements
+            if element.name == default_setting
+        ] == ["Dark"]
 
 
 # TODO: Was in the sample config, but not available for selection in the UI

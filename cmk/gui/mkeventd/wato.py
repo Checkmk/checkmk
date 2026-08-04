@@ -208,6 +208,7 @@ from cmk.rulesets.internal.form_specs import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
+from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -4931,16 +4932,15 @@ ConfigVariableEventConsoleConnectTimeout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_connect_timeout",
-    valuespec=lambda context: Integer(
-        title=_("Connect timeout to status socket of Event Console"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Connect timeout to status socket of Event Console"),
+        help_text=Help(
             "When the graphical user interface (GUI) connects the socket of the event daemon "
             "in order to retrieve information about current and historic events, "
             "then this timeout will be applied."
         ),
-        minvalue=1,
-        maxvalue=120,
-        unit="sec",
+        custom_validate=[fs.validators.NumberInRange(min_value=1, max_value=120)],
+        unit_symbol="sec",
     ),
 )
 

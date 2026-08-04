@@ -35,6 +35,10 @@ from cmk.gui.background_job.job import (
     JobTarget,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
@@ -79,6 +83,8 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Label, Title
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
@@ -213,6 +219,152 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
             ),
         ],
         optional_keys=[],
+    )
+
+
+_UPDATE_EVERYTHING_FLAGS = DiscoverySettingFlags(
+    add_new_services=True,
+    remove_vanished_services=True,
+    update_host_labels=True,
+    update_changed_service_labels=True,
+    update_changed_service_parameters=True,
+)
+
+
+def _fs_bulk_discovery_mode() -> TransformDataForLegacyFormatOrRecomposeFunction:
+    """The stored format is (ident, flags) for both idents, but the
+    "update_everything" flags are not editable, so the form only carries the
+    ident there and the flags are restored on the way back to disk."""
+
+    def from_disk(value: object) -> tuple[str, object]:
+        ident, flags = _migrate_automatic_rediscover_parameters(value)  # type: ignore[arg-type]
+        return (ident, True) if ident == "update_everything" else (ident, flags)
+
+    def to_disk(value: object) -> tuple[str, DiscoverySettingFlags]:
+        assert isinstance(value, tuple)
+        ident, flags = value
+        if ident == "update_everything":
+            return ident, _UPDATE_EVERYTHING_FLAGS
+        return ident, flags
+
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=fs.CascadingSingleChoice(
+            title=Title("Parameters"),
+            prefill=fs.DefaultValue("update_everything"),
+            elements=[
+                fs.CascadingSingleChoiceElement(
+                    name="update_everything",
+                    title=Title("Refresh all services and host labels (tabula rasa)"),
+                    parameter_form=fs.FixedValue(value=True, label=Label("")),
+                ),
+                fs.CascadingSingleChoiceElement(
+                    name="custom",
+                    title=Title("Custom service configuration update"),
+                    parameter_form=fs.Dictionary(
+                        elements={
+                            "add_new_services": fs.DictElement(
+                                required=True,
+                                parameter_form=fs.BooleanChoice(
+                                    label=Label("Monitor undecided services"),
+                                    prefill=fs.DefaultValue(False),
+                                ),
+                            ),
+                            "remove_vanished_services": fs.DictElement(
+                                required=True,
+                                parameter_form=fs.BooleanChoice(
+                                    label=Label("Remove vanished services"),
+                                    prefill=fs.DefaultValue(False),
+                                ),
+                            ),
+                            "update_changed_service_labels": fs.DictElement(
+                                required=True,
+                                parameter_form=fs.BooleanChoice(
+                                    label=Label("Update service labels"),
+                                    prefill=fs.DefaultValue(False),
+                                ),
+                            ),
+                            "update_changed_service_parameters": fs.DictElement(
+                                required=True,
+                                parameter_form=fs.BooleanChoice(
+                                    label=Label("Update service parameters"),
+                                    prefill=fs.DefaultValue(False),
+                                ),
+                            ),
+                            "update_host_labels": fs.DictElement(
+                                required=True,
+                                parameter_form=fs.BooleanChoice(
+                                    label=Label("Update host labels"),
+                                    prefill=fs.DefaultValue(False),
+                                ),
+                            ),
+                        },
+                    ),
+                ),
+            ],
+        ),
+        from_disk=from_disk,
+        to_disk=to_disk,
+    )
+
+
+def fs_bulk_discovery() -> fs.Dictionary:
+    """FormSpec counterpart of vs_bulk_discovery() for the global setting.
+
+    The bulk discovery page still uses the valuespec, so both have to produce
+    the same stored format."""
+    return fs.Dictionary(
+        title=Title("Bulk discovery"),
+        elements={
+            "mode": fs.DictElement(required=True, parameter_form=_fs_bulk_discovery_mode()),
+            "selection": fs.DictElement(
+                required=True,
+                parameter_form=FSTuple(
+                    title=Title("Selection"),
+                    elements=[
+                        fs.BooleanChoice(
+                            label=Label("Include all subfolders"),
+                            prefill=fs.DefaultValue(True),
+                        ),
+                        fs.BooleanChoice(
+                            label=Label("Only include hosts that failed on previous discovery"),
+                            prefill=fs.DefaultValue(False),
+                        ),
+                        fs.BooleanChoice(
+                            label=Label("Only include hosts with a failed discovery check"),
+                            prefill=fs.DefaultValue(False),
+                        ),
+                        fs.BooleanChoice(
+                            label=Label("Exclude hosts where the agent is unreachable"),
+                            prefill=fs.DefaultValue(False),
+                        ),
+                    ],
+                ),
+            ),
+            "performance": fs.DictElement(
+                required=True,
+                parameter_form=FSTuple(
+                    title=Title("Performance options"),
+                    elements=[
+                        fs.BooleanChoice(
+                            label=Label("Do a full service scan"),
+                            prefill=fs.DefaultValue(True),
+                        ),
+                        fs.Integer(
+                            label=Label("Number of hosts to handle at once"),
+                            prefill=fs.DefaultValue(10),
+                        ),
+                    ],
+                ),
+            ),
+            "error_handling": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title("Error handling"),
+                    label=Label("Ignore errors in single check plug-ins"),
+                    prefill=fs.DefaultValue(True),
+                ),
+            ),
+        },
     )
 
 

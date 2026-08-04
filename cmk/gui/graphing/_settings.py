@@ -4,40 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput
+from collections.abc import Mapping
+
+from cmk.gui.form_specs.generators.age import Age
 from cmk.gui.watolib.config_domain_name import ConfigVariable, GlobalSettingsContext
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
+from cmk.rulesets.internal.form_specs import ListExtended
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Message, Title
 
 
-def _valuespec(context: GlobalSettingsContext) -> ListOf[dict[str, object]]:
-    return ListOf(
-        valuespec=Dictionary(
-            optional_keys=[],
-            elements=[
-                (
-                    "title",
-                    TextInput(
-                        title=_("Title"),
-                        allow_empty=False,
+def _form_spec(context: GlobalSettingsContext) -> ListExtended[Mapping[str, object]]:
+    return ListExtended(
+        element_template=fs.Dictionary(
+            elements={
+                "title": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.String(
+                        title=Title("Title"),
+                        custom_validate=[fs.validators.LengthInRange(min_value=1)],
                     ),
                 ),
-                (
-                    "duration",
-                    Age(
-                        title=_("Duration"),
-                    ),
+                "duration": fs.DictElement(
+                    required=True,
+                    parameter_form=Age(title=Title("Duration")),
                 ),
-            ],
+            },
         ),
-        title=_("Custom graph time ranges"),
-        movable=True,
-        # astrein: disable=localization-named-placeholder
-        totext=_("%d time ranges"),
-        default_value=[dict(graph_range) for graph_range in context.configured_graph_timeranges],
-        allow_empty=False,
-        empty_text=_("Please specify at least one graph time range."),
+        title=Title("Custom graph time ranges"),
+        prefill=fs.DefaultValue(
+            [dict(graph_range) for graph_range in context.configured_graph_timeranges]
+        ),
+        custom_validate=[
+            fs.validators.LengthInRange(
+                min_value=1,
+                error_msg=Message("Please specify at least one graph time range."),
+            )
+        ],
     )
 
 
@@ -45,5 +49,5 @@ ConfigVariableGraphTimeranges = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="graph_timeranges",
-    valuespec=_valuespec,
+    form_spec=_form_spec,
 )

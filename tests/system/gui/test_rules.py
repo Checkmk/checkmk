@@ -175,9 +175,7 @@ def test_create_rules(
             ),
             navigate=True,
         )
-        dashboard_page.main_area.locator().get_by_role(
-            role="button", name="Add new element"
-        ).click()
+        dashboard_page.main_area.locator().get_by_role(role="button", name="Add new entry").click()
 
         # Locator corresponding to (added) elements for 'current settings'.
         current_setting = (

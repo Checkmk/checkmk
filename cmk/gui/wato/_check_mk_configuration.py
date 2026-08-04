@@ -11,9 +11,11 @@
 
 import logging
 import re
-from collections.abc import Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal, override
 
+import cmk.ccc.regex
+import cmk.utils.log
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex, REGEX_ID
@@ -21,20 +23,23 @@ from cmk.ccc.version import Edition
 from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
+from cmk.gui.form_specs._utils import create_validation_error_for_mk_user_error
 from cmk.gui.form_specs.generators.age import Age as FSAge
-from cmk.gui.form_specs.unstable import OptionalChoice
-from cmk.gui.form_specs.unstable.legacy_converter.transform import (
+from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
+from cmk.gui.form_specs.unstable import LegacyValueSpec, OptionalChoice
+from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.groups import GroupName
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l, get_languages
+from cmk.gui.i18n import _, _l, get_languages, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils import html
-from cmk.gui.utils.temperate_unit import temperature_unit_choices
+from cmk.gui.utils.temperate_unit import temperature_unit_choices, TemperatureUnit
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Age,
@@ -60,7 +65,6 @@ from cmk.gui.valuespec import (
     ListOfCAs,
     ListOfStrings,
     ListOfTimeRanges,
-    LogLevelChoice,
     Migrate,
     MonitoringState,
     NetworkPort,
@@ -75,7 +79,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
-from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
+from cmk.gui.watolib.bulk_discovery import fs_bulk_discovery
 from cmk.gui.watolib.check_mk_automations import get_section_information_cached
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
@@ -136,7 +140,12 @@ from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
-from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    DictionaryExtended,
+    ListExtended,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Message, Title
 
@@ -354,14 +363,46 @@ def register(
 #   '----------------------------------------------------------------------'
 
 
+def _fs_id_validators() -> list[Callable[[str], object]]:
+    """Port of the ID() valuespec: a non-empty internal identifier."""
+    return [
+        fs.validators.LengthInRange(min_value=1),
+        fs.validators.MatchRegex(
+            regex=cmk.ccc.regex.regex(cmk.ccc.regex.REGEX_ID, re.ASCII),
+            error_msg=Message(
+                "An identifier must only consist of letters, digits, dash and "
+                "underscore and it must start with a letter or underscore."
+            ),
+        ),
+    ]
+
+
+def _fs_single_choice_elements[T](
+    choices: Iterable[tuple[T, str]],
+) -> list[SingleChoiceElementExtended[T]]:
+    """Port of the choices of a DropdownChoice over a legacy (value, title) list.
+
+    SingleChoiceElementExtended instead of SingleChoiceElement because the
+    stored values are not restricted to Python identifiers (and are not even
+    all strings)."""
+    return [
+        SingleChoiceElementExtended(
+            name=name,
+            title=Title(choice_title),  # astrein: disable=localization-checker
+        )
+        for name, choice_title in choices
+    ]
+
+
 ConfigVariableUITheme = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="ui_theme",
-    valuespec=lambda context: DropdownChoice(
-        title=_("User interface theme"),
-        help=_("Change the default user interface theme of your Checkmk installation"),
-        choices=theme_choices(),
+    form_spec=lambda context: SingleChoiceExtended(
+        title=Title("User interface theme"),
+        help_text=Help("Change the default user interface theme of your Checkmk installation"),
+        elements=_fs_single_choice_elements(theme_choices()),
+        prefill=fs.DefaultValue("modern-dark"),
     ),
 )
 
@@ -369,7 +410,11 @@ ConfigVariableDefaultLanguage = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="default_language",
-    valuespec=lambda context: DropdownChoice(title=_("Default language"), choices=get_languages()),
+    form_spec=lambda context: SingleChoiceExtended(
+        title=Title("Default language"),
+        elements=_fs_single_choice_elements(get_languages()),
+        prefill=fs.DefaultValue("en"),
+    ),
     in_global_settings=False,
 )
 
@@ -377,9 +422,9 @@ ConfigVariableShowMoreMode = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="show_mode",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Show more / Show less"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended(
+        title=Title("Show more / Show less"),
+        help_text=Help(
             "In some places like e.g. the main menu Checkmk divides "
             "features, filters, input fields etc. in two categories, showing "
             "more or less entries. With this option you can set a default "
@@ -387,7 +432,8 @@ ConfigVariableShowMoreMode = ConfigVariable(
             "show more, so that the round button with the three dots is not "
             "shown at all."
         ),
-        choices=show_mode_choices(),
+        elements=_fs_single_choice_elements(show_mode_choices()),
+        prefill=fs.DefaultValue("default_show_less"),
     ),
 )
 
@@ -395,12 +441,12 @@ ConfigVariableBulkDiscoveryDefaultSettings = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="bulk_discovery_default_settings",
-    valuespec=lambda context: vs_bulk_discovery(),
+    form_spec=lambda context: fs_bulk_discovery(),
 )
 
 
-def _slow_view_logging_help() -> str:
-    return _(
+def _slow_view_logging_help() -> Help:
+    return Help(
         "Some built-in or own views may take longer time than expected. In order to"
         " detect slow views you have to set"
         "<ul>"
@@ -421,18 +467,25 @@ def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
     return params
 
 
-def _valuespec_log_levels(edition: Edition, context: GlobalSettingsContext) -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            title=_("Logging"),
-            help=_(
-                "This setting decides which types of messages to log into the web log <tt>%(log_file)s</tt>."
-            )
-            % {"log_file": context.site_neutral_log_dir / "web.log"},
-            elements=_web_log_level_elements(edition),
-            optional_keys=[],
+def _form_spec_log_levels(edition: Edition, context: GlobalSettingsContext) -> DictionaryExtended:
+    # DictionaryExtended instead of fs.Dictionary because the logger names are
+    # not valid Python identifiers ("cmk.web.auth").
+    elements = _web_log_level_elements(edition)
+    return DictionaryExtended(
+        title=Title("Logging"),
+        help_text=Help(
+            "This setting decides which types of messages to log into the web log <tt>%(log_file)s</tt>."
+        )
+        % {"log_file": str(context.site_neutral_log_dir / "web.log")},
+        elements=elements,
+        # default value of log_levels defines all keys indepentend of edition,
+        # but also think of edition up/down grades!
+        ignored_elements=tuple(
+            level_id
+            for level_id in _web_log_level_elements(edition, include_other_editions=True)
+            if level_id not in elements
         ),
-        migrate=_add_job_scheduler_log_level,
+        migrate=_add_job_scheduler_log_level,  # type: ignore[arg-type]
     )
 
 
@@ -441,30 +494,49 @@ def ConfigVariableLogLevels(edition: Edition) -> ConfigVariable:
         group=ConfigVariableGroupUserInterface,
         primary_domain=ConfigDomainGUI,
         ident="log_levels",
-        valuespec=lambda context: _valuespec_log_levels(edition, context),
+        form_spec=lambda context: _form_spec_log_levels(edition, context),
     )
 
 
-def _web_log_level_elements(edition: Edition) -> list[tuple[str, DropdownChoice]]:
-    loggers = [
+def _log_level_choice(title: Title, help_text: Help) -> SingleChoiceExtended[int]:
+    """Port of the LogLevelChoice() valuespec."""
+    return SingleChoiceExtended[int](
+        title=title,
+        help_text=help_text,
+        elements=[
+            SingleChoiceElementExtended(name=logging.CRITICAL, title=Title("Critical")),
+            SingleChoiceElementExtended(name=logging.ERROR, title=Title("Error")),
+            SingleChoiceElementExtended(name=logging.WARNING, title=Title("Warning")),
+            SingleChoiceElementExtended(name=logging.INFO, title=Title("Informational")),
+            SingleChoiceElementExtended(name=cmk.utils.log.VERBOSE, title=Title("Verbose")),
+            SingleChoiceElementExtended(name=logging.DEBUG, title=Title("Debug")),
+        ],
+        prefill=fs.DefaultValue(logging.WARNING),
+    )
+
+
+def _web_log_level_elements(
+    edition: Edition, *, include_other_editions: bool = False
+) -> dict[str, fs.DictElement[int]]:
+    loggers: list[tuple[str, Title, Help]] = [
         (
             "cmk.web",
-            _("Web"),
-            _(
+            Title("Web"),
+            Help(
                 "The log level for all log entries not assigned to the other "
                 "log categories on this page."
             ),
         ),
         (
             "cmk.web.auth",
-            _("Authentication"),
-            _("The log level for user authentication related log entries."),
+            Title("Authentication"),
+            Help("The log level for user authentication related log entries."),
         ),
-        ("cmk.web.ldap", _("LDAP"), _("The log level for LDAP related log entries.")),
+        ("cmk.web.ldap", Title("LDAP"), Help("The log level for LDAP related log entries.")),
         (
             "cmk.web.bi.compilation",
-            _("BI compilation"),
-            _(
+            Title("BI compilation"),
+            Help(
                 "If this option is enabled, Checkmk BI will create a log with details "
                 "about compiling BI aggregations. This includes statistics and "
                 "details for each executed compilation."
@@ -472,29 +544,31 @@ def _web_log_level_elements(edition: Edition) -> list[tuple[str, DropdownChoice]
         ),
         (
             "cmk.automations",
-            _("Automation calls"),
-            _(
+            Title("Automation calls"),
+            Help(
                 "Communication between different components of Checkmk (e.g. GUI and check engine) "
                 "will be logged in this log level."
             ),
         ),
         (
             "cmk.web.ui-job-scheduler",
-            _("Job scheduler"),
-            _(
+            Title("Job scheduler"),
+            Help(
                 "The job scheduler manages regularly running tasks and the execution of "
                 "background jobs. Log entries of this component are written to <tt>%(log_file)s</tt>."
             )
             % {
-                "log_file": site_neutral_path(
-                    cmk.utils.paths.log_dir / "ui-job-scheduler/ui-job-scheduler.log"
+                "log_file": str(
+                    site_neutral_path(
+                        cmk.utils.paths.log_dir / "ui-job-scheduler/ui-job-scheduler.log"
+                    )
                 )
             },
         ),
         (
             "cmk.web.background-job",
-            _("Background jobs"),
-            _(
+            Title("Background jobs"),
+            Help(
                 "Some long running tasks are executed as executed in so called background jobs. You "
                 "can use this log level to individually enable more detailed logging for the "
                 "background jobs."
@@ -502,62 +576,53 @@ def _web_log_level_elements(edition: Edition) -> list[tuple[str, DropdownChoice]
         ),
         (
             "cmk.web.slow-views",
-            _("Slow views"),
+            Title("Slow views"),
             _slow_view_logging_help(),
         ),
         (
             "cmk.web.automatic_host_removal",
-            _("Automatic host removal"),
-            _("Log the automatic host removal process."),
+            Title("Automatic host removal"),
+            Help("Log the automatic host removal process."),
         ),
     ]
 
-    if edition is not Edition.COMMUNITY:
+    if include_other_editions or edition is not Edition.COMMUNITY:
         loggers.extend(
             [
                 (
                     "cmk.web.agent_registration",
-                    _("Agent registration"),
-                    _(
+                    Title("Agent registration"),
+                    Help(
                         "Log the agent registration process of incoming requests"
                         " by the Checkmk Agent Controller registration command."
                     ),
                 ),
                 (
                     "cmk.web.saml2",
-                    _("SAML"),
-                    _("The log level for SAML 2.0 related log entries."),
+                    Title("SAML"),
+                    Help("The log level for SAML 2.0 related log entries."),
                 ),
             ]
         )
 
-    elements = []
-    for level_id, title, help_text in loggers:
-        elements.append(
-            (
-                level_id,
-                LogLevelChoice(
-                    title=title,
-                    help=help_text,
-                    default_value=logging.WARNING,
-                ),
-            )
+    return {
+        level_id: fs.DictElement(
+            required=True,
+            parameter_form=_log_level_choice(title, help_text),
         )
-
-    return elements
+        for level_id, title, help_text in loggers
+    }
 
 
 ConfigVariableSlowViewsDurationThreshold = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="slow_views_duration_threshold",
-    valuespec=lambda context: Integer(
-        title=_("Threshold for slow views"),
+    form_spec=lambda context: fs.Integer(
+        title=Title("Threshold for slow views"),
         # title=_("Create a log entry for all view calls taking longer than"),
-        default_value=60,
-        unit=_("Seconds"),
-        size=3,
-        help=_slow_view_logging_help(),
+        unit_symbol="Seconds",
+        help_text=_slow_view_logging_help(),
     ),
 )
 
@@ -565,10 +630,10 @@ ConfigVariableDebug = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="debug",
-    valuespec=lambda context: Checkbox(
-        title=_("Debug mode"),
-        label=_("enable debug mode"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Debug mode"),
+        label=Label("enable debug mode"),
+        help_text=Help(
             "When the graphical user interface (GUI) is running in debug mode, internal Python error messages "
             "are being displayed and various debug information in other places is "
             "also available."
@@ -577,10 +642,10 @@ ConfigVariableDebug = ConfigVariable(
 )
 
 
-def _valuespec_profile(context: GlobalSettingsContext) -> DropdownChoice:
-    return DropdownChoice(
-        title=_("Profile requests"),
-        help=_(
+def _form_spec_profile(context: GlobalSettingsContext) -> SingleChoiceExtended[bool | str]:
+    return SingleChoiceExtended[bool | str](
+        title=Title("Profile requests"),
+        help_text=Help(
             "It is possible to profile the rendering process of graphical user interface (GUI) pages. This "
             "is done using the Python module cProfile. When profiling is performed, "
             "each request's cProfile output is stored as a <tt>.profile</tt> file plus a "
@@ -597,14 +662,19 @@ def _valuespec_profile(context: GlobalSettingsContext) -> DropdownChoice:
             "variable <tt>_profile</tt> in the query parameters."
         )
         % {
-            "profiles_dir": context.site_neutral_var_dir / "profiles",
-            "var_dir": context.site_neutral_var_dir,
+            "profiles_dir": str(context.site_neutral_var_dir / "profiles"),
+            "var_dir": str(context.site_neutral_var_dir),
         },
-        choices=[
-            (False, _("Disable profiling")),
-            ("enable_by_var", _("Enable profiling by request")),
-            (True, _("Enable profiling for all requests")),
+        elements=[
+            SingleChoiceElementExtended(name=False, title=Title("Disable profiling")),
+            SingleChoiceElementExtended(
+                name="enable_by_var", title=Title("Enable profiling by request")
+            ),
+            SingleChoiceElementExtended(
+                name=True, title=Title("Enable profiling for all requests")
+            ),
         ],
+        prefill=fs.DefaultValue(False),
     )
 
 
@@ -612,17 +682,17 @@ ConfigVariableGUIProfile = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="profile",
-    valuespec=_valuespec_profile,
+    form_spec=_form_spec_profile,
 )
 
 ConfigVariableDebugLivestatusQueries = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="debug_livestatus_queries",
-    valuespec=lambda context: Checkbox(
-        title=_("Debug Livestatus queries"),
-        label=_("enable debug of Livestatus queries"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Debug Livestatus queries"),
+        label=Label("enable debug of Livestatus queries"),
+        help_text=Help(
             "With this option turned on all Livestatus queries made by "
             "the GUI in order to render views are being displayed."
         ),
@@ -633,15 +703,15 @@ ConfigVariableSelectionLivetime = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="selection_livetime",
-    valuespec=lambda context: Integer(
-        title=_("Checkbox selection livetime"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Checkbox selection livetime"),
+        help_text=Help(
             "This option defines the maximum age of unmodified checkbox selections stored for users. "
             "If a user modifies the selection in a view, these selections are persisted for the currently "
             "open view. When a view is re-opened a new selection is used. The old one remains on the "
             "server until the livetime is exceeded."
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -649,10 +719,10 @@ ConfigVariableShowLivestatusErrors = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="show_livestatus_errors",
-    valuespec=lambda context: Checkbox(
-        title=_("Show MK Livestatus error messages"),
-        label=_("show errors"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Show MK Livestatus error messages"),
+        label=Label("show errors"),
+        help_text=Help(
             "This option controls whether error messages from unreachable sites are shown in the output of "
             "views. Those error messages shall alert you that not all data from all sites has been shown. "
             "Other people - however - find those messages distracting. "
@@ -664,10 +734,10 @@ ConfigVariableEnableSounds = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="enable_sounds",
-    valuespec=lambda context: Checkbox(
-        title=_("Sounds in views"),
-        label=_("Sounds"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Sounds in views"),
+        label=Label("Sounds"),
+        help_text=Help(
             "If sounds are enabled, then the user will be alarmed by problems shown "
             "in a graphical user interface (GUI) status view if that view has been configured for sounds. "
             "From the views shipped with the GUI all problem views have sounds "
@@ -680,14 +750,14 @@ ConfigVariableSoftQueryLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="soft_query_limit",
-    valuespec=lambda context: Integer(
-        title=_("Soft query limit"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Soft query limit"),
+        help_text=Help(
             "Whenever the number of returned datasets of a view would exceed this "
             "limit, a warning is being displayed and no further data is being shown. "
             "A normal user can override this limit with one mouse click."
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -695,15 +765,15 @@ ConfigVariableHardQueryLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="hard_query_limit",
-    valuespec=lambda context: Integer(
-        title=_("Hard query limit"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Hard query limit"),
+        help_text=Help(
             "Whenever the number of returned datasets of a view would exceed this "
             "limit, an error message is shown. The normal user cannot override "
             "the hard limit. The purpose of the hard limit is to secure the server "
             "against useless queries with huge result sets."
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -711,15 +781,15 @@ ConfigVariableQuicksearchDropdownLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="quicksearch_dropdown_limit",
-    valuespec=lambda context: Integer(
-        title=_("Number of elements to show in quick search"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Number of elements to show in quick search"),
+        help_text=Help(
             "When typing a texts in the quick search snap-in, a drop-down will "
             "appear listing all matching host names containing that text. "
             "That list is limited in size so that the drop-down will not get "
             "too large when you have a huge number of lists. "
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -727,41 +797,50 @@ ConfigVariableQuicksearchSearchOrder = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="quicksearch_search_order",
-    valuespec=lambda context: ListOf(
-        valuespec=Tuple(
+    form_spec=lambda context: ListExtended(
+        element_template=FSTuple(
             elements=[
-                DropdownChoice(
-                    title=_("Search filter"),
-                    choices=[
-                        ("menu", _("Monitor menu entries")),
-                        ("h", _("Host name")),
-                        ("al", _("Host alias")),
-                        ("ad", _("Host address")),
-                        ("tg", _("Host tag")),
-                        ("hg", _("Host group")),
-                        ("sg", _("Service group")),
-                        ("s", _("Service name")),
-                        ("st", _("Service state")),
+                SingleChoiceExtended(
+                    title=Title("Search filter"),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="menu", title=Title("Monitor menu entries")
+                        ),
+                        SingleChoiceElementExtended(name="h", title=Title("Host name")),
+                        SingleChoiceElementExtended(name="al", title=Title("Host alias")),
+                        SingleChoiceElementExtended(name="ad", title=Title("Host address")),
+                        SingleChoiceElementExtended(name="tg", title=Title("Host tag")),
+                        SingleChoiceElementExtended(name="hg", title=Title("Host group")),
+                        SingleChoiceElementExtended(name="sg", title=Title("Service group")),
+                        SingleChoiceElementExtended(name="s", title=Title("Service name")),
+                        SingleChoiceElementExtended(name="st", title=Title("Service state")),
                     ],
+                    prefill=fs.DefaultValue("menu"),
                 ),
-                DropdownChoice(
-                    title=_("Match behavior"),
-                    choices=[
-                        ("continue", _("Continue search")),
-                        (
-                            "finished",
-                            _("Search finished: Also show all results of previous filters"),
+                SingleChoiceExtended(
+                    title=Title("Match behavior"),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="continue", title=Title("Continue search")
                         ),
-                        (
-                            "finished_distinct",
-                            _("Search finished: Only show results of this filter"),
+                        SingleChoiceElementExtended(
+                            name="finished",
+                            title=Title(
+                                "Search finished: Also show all results of previous filters"
+                            ),
+                        ),
+                        SingleChoiceElementExtended(
+                            name="finished_distinct",
+                            title=Title("Search finished: Only show results of this filter"),
                         ),
                     ],
+                    prefill=fs.DefaultValue("continue"),
                 ),
             ],
         ),
-        title=_("Quick search search order"),
-        add_label=_("Add search filter"),
+        title=Title("Quick search search order"),
+        add_element_label=Label("Add search filter"),
+        prefill=fs.DefaultValue([]),
     ),
 )
 
@@ -897,16 +976,17 @@ ConfigVariableStartURL = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="start_url",
-    valuespec=lambda context: TextInput(
-        title=_("Start URL to display in main frame"),
-        help=_(
+    form_spec=lambda context: fs.String(
+        title=Title("Start URL to display in main frame"),
+        help_text=Help(
             "When you point your browser to the Checkmk GUI, usually the dashboard "
             "is shown in the main (right) frame. You can replace this with any other "
             "URL you like here."
         ),
-        size=80,
-        allow_empty=False,
-        validate=validate_start_url,
+        field_size=fs.FieldSize.LARGE,
+        custom_validate=[
+            create_validation_error_for_mk_user_error(lambda value: validate_start_url(value, "")),
+        ],
     ),
 )
 
@@ -914,14 +994,14 @@ ConfigVariablePageHeading = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="page_heading",
-    valuespec=lambda context: TextInput(
-        title=_("Page title"),
+    form_spec=lambda context: fs.String(
+        title=Title("Page title"),
         # astrein: disable=localization-named-placeholder
-        help=_(
+        help_text=Help(
             "This title will be displayed in your browser's title bar or tab. You can use "
             "a <tt>%s</tt> to insert the alias of your monitoring site to the title."
         ),
-        size=80,
+        field_size=fs.FieldSize.LARGE,
     ),
 )
 
@@ -929,60 +1009,64 @@ ConfigVariableBIDefaultLayout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="default_bi_layout",
-    valuespec=lambda context: Dictionary(
-        title=_("Default BI visualization settings"),
-        elements=[
-            (
-                "node_style",
-                DropdownChoice(
-                    title=_("Default layout"),
-                    help=_(
+    form_spec=lambda context: fs.Dictionary(
+        title=Title("Default BI visualization settings"),
+        elements={
+            "node_style": fs.DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Default layout"),
+                    help_text=Help(
                         "Specifies the default layout to be used when an aggregation "
                         "has no explicit layout assigned"
                     ),
-                    choices=_get_layout_style_choices(),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="builtin_force", title=Title("Force layout")
+                        ),
+                        SingleChoiceElementExtended(
+                            name="builtin_hierarchy", title=Title("Hierarchical layout")
+                        ),
+                        SingleChoiceElementExtended(
+                            name="builtin_radial", title=Title("Radial layout")
+                        ),
+                    ],
+                    prefill=fs.DefaultValue("builtin_force"),
                 ),
             ),
-            (
-                "line_style",
-                DropdownChoice(
-                    title=_("Default line style"),
-                    help=_("Specifies the default line style"),
-                    choices=_get_line_style_choices(),
+            "line_style": fs.DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Default line style"),
+                    help_text=Help("Specifies the default line style"),
+                    elements=[
+                        SingleChoiceElementExtended(name="round", title=Title("Round")),
+                        SingleChoiceElementExtended(name="straight", title=Title("Straight")),
+                        SingleChoiceElementExtended(name="elbow", title=Title("Elbow")),
+                    ],
+                    prefill=fs.DefaultValue("round"),
                 ),
             ),
-        ],
-        optional_keys=[],
+        },
     ),
 )
-
-
-def _get_layout_style_choices() -> list[tuple[str, str]]:
-    return [
-        ("builtin_force", _("Force layout")),
-        ("builtin_hierarchy", _("Hierarchical layout")),
-        ("builtin_radial", _("Radial layout")),
-    ]
-
-
-def _get_line_style_choices() -> list[tuple[str, str]]:
-    return [("round", _("Round")), ("straight", _("Straight")), ("elbow", _("Elbow"))]
 
 
 ConfigVariablePagetitleDateFormat = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="pagetitle_date_format",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Date format for page titles"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[str | None](
+        title=Title("Date format for page titles"),
+        help_text=Help(
             "When enabled, the headline of each page also displays the date in addition the time."
         ),
-        choices=[
-            (None, _("Do not display a date")),
-            ("yyyy-mm-dd", _("YYYY-MM-DD")),
-            ("dd.mm.yyyy", _("DD.MM.YYYY")),
+        elements=[
+            SingleChoiceElementExtended(name=None, title=Title("Do not display a date")),
+            SingleChoiceElementExtended(name="yyyy-mm-dd", title=Title("YYYY-MM-DD")),
+            SingleChoiceElementExtended(name="dd.mm.yyyy", title=Title("DD.MM.YYYY")),
         ],
+        prefill=fs.DefaultValue(None),
     ),
 )
 
@@ -990,23 +1074,23 @@ ConfigVariableEscapePluginOutput = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="escape_plugin_output",
-    valuespec=lambda context: Checkbox(
-        title=_("Escape HTML in service output (dangerous to deactivate - read help)"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Escape HTML in service output (dangerous to deactivate - read help)"),
+        help_text=Help(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
             "If you are really sure what you are doing and need to have HTML codes, like "
             "links rendered, disable this option. Be aware, you might open the way "
             "for several injection attacks. "
         )
-        + _(
+        + Help(
             "Instead of disabling this option globally, it is highly recommended to "
             "disable the escaping selectively for individual hosts and services with "
             'the rule sets "Escape HTML in host output" and "Escape HTML in '
             'service output". The rule sets have the additional advantage that the '
             "configured value is accessible in the notification context."
         ),
-        label=_("Prevent loading HTML from service output or log messages"),
+        label=Label("Prevent loading HTML from service output or log messages"),
     ),
 )
 
@@ -1014,10 +1098,10 @@ ConfigVariableDrawRuleIcon = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="multisite_draw_ruleicon",
-    valuespec=lambda context: Checkbox(
-        title=_("Show icon linking to Setup parameter editor for services"),
-        label=_("Show Setup icon"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Show icon linking to Setup parameter editor for services"),
+        label=Label("Show Setup icon"),
+        help_text=Help(
             "When enabled, a rule editor icon is displayed for each "
             "service in the graphical user interface (GUI) views. It is only displayed if the user "
             "does have the permission to edit rules."
@@ -1029,53 +1113,63 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="virtual_host_trees",
-    valuespec=lambda context: ListOf(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "id",
-                    ID(
-                        title=_("ID"),
-                        allow_empty=False,
+    form_spec=lambda context: fs.List(
+        element_template=fs.Dictionary(
+            elements={
+                "id": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.String(
+                        title=Title("ID"),
+                        custom_validate=_fs_id_validators(),
                     ),
                 ),
-                (
-                    "title",
-                    TextInput(
-                        title=_("Title of the tree"),
-                        allow_empty=False,
+                "title": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.String(
+                        title=Title("Title of the tree"),
+                        custom_validate=[fs.validators.LengthInRange(min_value=1)],
                     ),
                 ),
-                (
-                    "exclude_empty_tag_choices",
-                    Checkbox(
-                        title=_("Exclude empty tag choices"),
-                        default_value=False,
+                "exclude_empty_tag_choices": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.BooleanChoice(
+                        title=Title("Exclude empty tag choices"),
+                        prefill=fs.DefaultValue(False),
                     ),
                 ),
-                (
-                    "tree_spec",
-                    ListOf(
-                        valuespec=DropdownChoice(
-                            choices=_virtual_host_tree_choices,
+                "tree_spec": fs.DictElement(
+                    required=True,
+                    parameter_form=ListExtended(
+                        element_template=SingleChoiceExtended[str](
+                            elements=lambda: [
+                                SingleChoiceElementExtended(
+                                    name=name,
+                                    # astrein: disable=localization-checker
+                                    title=Title(choice_title),
+                                )
+                                for name, choice_title in _virtual_host_tree_choices()
+                            ],
                         ),
-                        title=_("Tree levels"),
-                        allow_empty=False,
-                        magic="#!#",
+                        title=Title("Tree levels"),
+                        custom_validate=[fs.validators.LengthInRange(min_value=1)],
+                        prefill=fs.DefaultValue([]),
                     ),
                 ),
-            ],
-            optional_keys=[],
+            },
         ),
-        add_label=_("Create new virtual host tree configuration"),
-        title=_("Virtual host trees"),
-        help=_(
+        add_element_label=Label("Create new virtual host tree configuration"),
+        title=Title("Virtual host trees"),
+        help_text=Help(
             "Here, you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
             "These trees organize your hosts based on their values in certain host tag groups. "
             "Each host tag group you select will create one level in the tree."
         ),
-        validate=_validate_virtual_host_trees,
-        movable=False,
+        custom_validate=[
+            create_validation_error_for_mk_user_error(
+                lambda value: _validate_virtual_host_trees(value, "")
+            ),
+        ],
+        editable_order=False,
     ),
 )
 
@@ -1144,17 +1238,16 @@ ConfigVariableRescheduleTimeout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="reschedule_timeout",
-    valuespec=lambda context: Float(
-        title=_("Timeout for rescheduling checks in graphical user interface (GUI)"),
-        help=_(
+    form_spec=lambda context: fs.Float(
+        title=Title("Timeout for rescheduling checks in graphical user interface (GUI)"),
+        help_text=Help(
             'When you reschedule a check by clicking on the "arrow"-icon '
             "then the graphical user interface (GUI) will use this number of seconds as a timeout. If the "
             "monitoring core has not executed the check within this time, an error "
             "will be displayed and the page will not be reloaded."
         ),
-        minvalue=1.0,
-        unit="sec",
-        display_format="%.1f",
+        custom_validate=[fs.validators.NumberInRange(min_value=1.0)],
+        unit_symbol="sec",
     ),
 )
 
@@ -1162,17 +1255,16 @@ ConfigVariableSidebarUpdateInterval = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="sidebar_update_interval",
-    valuespec=lambda context: Float(
-        title=_("Interval of sidebar status updates"),
-        help=_(
+    form_spec=lambda context: fs.Float(
+        title=Title("Interval of sidebar status updates"),
+        help_text=Help(
             "The information provided by the sidebar snap-ins is refreshed in a regular "
             "interval. You can change the refresh interval to fit your needs here. This "
             "value means that all snap-ins which request a regular refresh are updated "
             "in this interval."
         ),
-        minvalue=10.0,
-        unit="sec",
-        display_format="%.1f",
+        custom_validate=[fs.validators.NumberInRange(min_value=10.0)],
+        unit_symbol="sec",
     ),
 )
 
@@ -1180,18 +1272,18 @@ ConfigVariableSidebarNotifyInterval = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="sidebar_notify_interval",
-    valuespec=lambda context: Optional(
-        valuespec=Float(
-            minvalue=10.0,
-            unit="sec",
-            display_format="%.1f",
+    form_spec=lambda context: OptionalChoice(
+        parameter_form=fs.Float(
+            custom_validate=[fs.validators.NumberInRange(min_value=10.0)],
+            unit_symbol="sec",
+            prefill=fs.DefaultValue(10.0),
         ),
-        title=_("Interval of sidebar pop-up notification updates"),
-        help=_(
+        title=Title("Interval of sidebar pop-up notification updates"),
+        help_text=Help(
             "The sidebar can be configured to regularly check for pending pop-up notifications. "
             "This is disabled by default."
         ),
-        none_label=_("(disabled)"),
+        none_label=Label("(disabled)"),
     ),
 )
 
@@ -1199,34 +1291,35 @@ ConfigVariableiAdHocDowntime = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="adhoc_downtime",
-    valuespec=lambda context: Optional(
-        valuespec=Dictionary(
-            optional_keys=False,
-            elements=[
-                (
-                    "duration",
-                    Integer(
-                        title=_("Duration"),
-                        help=_("The duration in minutes of the ad hoc downtime."),
-                        minvalue=1,
-                        unit=_("minutes"),
-                        default_value=60,
+    form_spec=lambda context: OptionalChoice(
+        parameter_form=fs.Dictionary(
+            elements={
+                "duration": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.Integer(
+                        title=Title("Duration"),
+                        help_text=Help("The duration in minutes of the ad hoc downtime."),
+                        custom_validate=[fs.validators.NumberInRange(min_value=1)],
+                        unit_symbol="minutes",
+                        prefill=fs.DefaultValue(60),
                     ),
                 ),
-                (
-                    "comment",
-                    TextInput(
-                        title=_("Ad hoc comment"),
-                        help=_("The comment which is automatically sent with an ad hoc downtime"),
-                        size=80,
-                        allow_empty=False,
+                "comment": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.String(
+                        title=Title("Ad hoc comment"),
+                        help_text=Help(
+                            "The comment which is automatically sent with an ad hoc downtime"
+                        ),
+                        field_size=fs.FieldSize.LARGE,
+                        custom_validate=[fs.validators.LengthInRange(min_value=1)],
                     ),
                 ),
-            ],
+            },
         ),
-        title=_("Ad hoc downtime"),
-        label=_("Enable ad hoc downtime"),
-        help=_(
+        title=Title("Ad hoc downtime"),
+        label=Label("Enable ad hoc downtime"),
+        help_text=Help(
             "This setting allows to set an ad hoc downtime comment and its duration. "
             "When enabled a new button <i>Ad hoc downtime for __ minutes</i> will "
             "be available in the command form."
@@ -1238,38 +1331,39 @@ ConfigVariableAuthByHTTPHeader = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="auth_by_http_header",
-    valuespec=lambda context: Migrate(
-        Optional(
-            valuespec=TextInput(
-                label=_("HTTP request header variable"),
-                help=_(
-                    "Configure the name of the HTTP request header variable to read "
-                    "from the incoming HTTP requests"
+    form_spec=lambda context: OptionalChoice(
+        parameter_form=fs.String(
+            label=Label("HTTP request header variable"),
+            help_text=Help(
+                "Configure the name of the HTTP request header variable to read "
+                "from the incoming HTTP requests"
+            ),
+            prefill=fs.DefaultValue("X-Remote-User"),
+            custom_validate=[
+                fs.validators.MatchRegex(
+                    regex="^[A-Za-z0-9-]+$",
+                    error_msg=Message("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
                 ),
-                default_value="X-Remote-User",
-                regex=re.compile("^[A-Za-z0-9-]+$"),
-                regex_error=_("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
-            ),
-            title=_("Authenticate users by incoming HTTP requests"),
-            label=_(
-                "Activate HTTP header authentication (Warning: only activate "
-                "in trusted environments, see help for details)"
-            ),
-            help=_(
-                "If this option is enabled, the GUI reads the configured HTTP header "
-                "variable from the incoming HTTP request and simply takes the string "
-                "in this variable as name of the authenticated user. "
-                "Be warned: Only allow access from trusted IP addresses "
-                "(Apache <tt>Allow from</tt>), like proxy "
-                "servers, to this web page. A user with access to this page could simply fake "
-                "the authentication information. This option can be useful to "
-                "realize authentication in reverse proxy environments. As of version 1.6 and "
-                "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
-                "to be used for the variable name."
-            ),
-            none_label=_("Don't use HTTP header authentication"),
-            indent=False,
+            ],
         ),
+        title=Title("Authenticate users by incoming HTTP requests"),
+        label=Label(
+            "Activate HTTP header authentication (Warning: only activate "
+            "in trusted environments, see help for details)"
+        ),
+        help_text=Help(
+            "If this option is enabled, the GUI reads the configured HTTP header "
+            "variable from the incoming HTTP request and simply takes the string "
+            "in this variable as name of the authenticated user. "
+            "Be warned: Only allow access from trusted IP addresses "
+            "(Apache <tt>Allow from</tt>), like proxy "
+            "servers, to this web page. A user with access to this page could simply fake "
+            "the authentication information. This option can be useful to "
+            "realize authentication in reverse proxy environments. As of version 1.6 and "
+            "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
+            "to be used for the variable name."
+        ),
+        none_label=Label("Don't use HTTP header authentication"),
         # We accidentally used False instead of None in the past.
         migrate=lambda x: None if x is False else x,
     ),
@@ -1279,9 +1373,9 @@ EnableLoginViaGet = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="enable_login_via_get",
-    valuespec=lambda context: Checkbox(
-        title=_("Login via GET requests"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Login via GET requests"),
+        help_text=Help(
             "Using the GET method to authenticate against login.py "
             "leaks user credentials in the Apache logs (see more details "
             "in our Werk 14261). We disable logging in via this method "
@@ -1295,100 +1389,145 @@ ConfigVariableStalenessThreshold = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="staleness_threshold",
-    valuespec=lambda context: Float(
-        title=_("Staleness value to mark hosts / services stale"),
-        help=_(
+    form_spec=lambda context: fs.Float(
+        title=Title("Staleness value to mark hosts / services stale"),
+        help_text=Help(
             "The staleness value of a host / service is calculated by measuring the "
             "configured check intervals a check result is old. A value of 1.5 means the "
             "current check result has been gathered one and a half check intervals of an object. "
             "This would mean 90 seconds in case of a check which is checked each 60 seconds."
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
+
+
+def _fs_fixed_true(
+    title: Title, label: Label, help_text: Help | None = None
+) -> TransformDataForLegacyFormatOrRecomposeFunction:
+    """Port of FixedValue(value=True).
+
+    The FixedValue visitor ignores the incoming value, so a stored value other
+    than True would silently be accepted. The wrapping transform restores the
+    valuespec behaviour of rejecting it."""
+
+    def from_disk(value: object) -> bool:
+        if value is not True:
+            raise ValueError(f"Expected True, got {value!r}")
+        return value
+
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=fs.FixedValue(value=True, title=title, label=label, help_text=help_text),
+        from_disk=from_disk,
+        to_disk=lambda value: value,
+    )
+
 
 ConfigVariableLoginScreen = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="login_screen",
-    valuespec=lambda context: Dictionary(
-        title=_("Customize login screen"),
-        elements=[
-            (
-                "hide_version",
-                FixedValue(
-                    value=True,
-                    title=_("Hide Checkmk version"),
-                    totext=_("Hide the Checkmk version from the login box"),
+    form_spec=lambda context: DictionaryExtended(
+        title=Title("Customize login screen"),
+        elements={
+            "hide_version": fs.DictElement(
+                parameter_form=_fs_fixed_true(
+                    title=Title("Hide Checkmk version"),
+                    label=Label("Hide the Checkmk version from the login box"),
                 ),
             ),
-            (
-                "login_message",
-                TextInput(
-                    title=_("Show a login message"),
-                    help=_(
+            "login_message": fs.DictElement(
+                parameter_form=fs.String(
+                    title=Title("Show a login message"),
+                    help_text=Help(
                         "You may use this option to give your users an informational text before logging in."
                     ),
-                    size=80,
+                    field_size=fs.FieldSize.LARGE,
                 ),
             ),
-            (
-                "footer_links",
-                ListOf(
-                    valuespec=Tuple(
+            "footer_links": fs.DictElement(
+                parameter_form=fs.List(
+                    element_template=FSTuple(
+                        layout="horizontal",
                         elements=[
-                            TextInput(
-                                title=_("Title"),
-                            ),
-                            TextInput(
-                                title=_("URL"),
-                                size=80,
-                            ),
-                            DropdownChoice(
-                                title=_("Open in"),
-                                choices=[
-                                    ("_blank", _("Load in a new window / tab")),
-                                    ("_top", _("Load in current window / tab")),
+                            fs.String(title=Title("Title")),
+                            fs.String(title=Title("URL"), field_size=fs.FieldSize.LARGE),
+                            SingleChoiceExtended(
+                                title=Title("Open in"),
+                                elements=[
+                                    SingleChoiceElementExtended(
+                                        name="_blank", title=Title("Load in a new window / tab")
+                                    ),
+                                    SingleChoiceElementExtended(
+                                        name="_top", title=Title("Load in current window / tab")
+                                    ),
                                 ],
+                                prefill=fs.DefaultValue("_blank"),
                             ),
                         ],
-                        orientation="horizontal",
                     ),
-                    # astrein: disable=localization-named-placeholder
-                    totext=_("%d links"),
-                    title=_("Custom footer links"),
+                    title=Title("Custom footer links"),
                 ),
             ),
-        ],
-        required_keys=[],
+        },
     ),
 )
+
+
+def _fs_keyed_by_first_tuple_element(
+    wrapped_form_spec: fs.List[tuple[object, ...]],
+) -> TransformDataForLegacyFormatOrRecomposeFunction:
+    """Port of Transform(to_valuespec=sorted(d.items()), from_valuespec=dict).
+
+    The stored value is a mapping, the form works on a sorted list of
+    (key, value) tuples. A stored value that is not a mapping is rejected,
+    the form then shows the invalid value instead of the converted one."""
+
+    def from_disk(value: object) -> list[tuple[object, ...]]:
+        if not isinstance(value, dict):
+            raise ValueError(f"Expected a mapping, got {value!r}")
+        return sorted(value.items())
+
+    def to_disk(value: object) -> dict[object, object]:
+        if not isinstance(value, list):
+            raise ValueError(f"Expected a list, got {value!r}")
+        return dict(value)
+
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=wrapped_form_spec,
+        from_disk=from_disk,
+        to_disk=to_disk,
+    )
+
 
 ConfigVariableUserLocalizations = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_localizations",
-    valuespec=lambda context: Transform(
-        valuespec=ListOf(
-            valuespec=Tuple(
+    form_spec=lambda context: _fs_keyed_by_first_tuple_element(
+        fs.List[tuple[object, ...]](
+            element_template=FSTuple(
                 elements=[
-                    TextInput(title=_("Original Text"), size=40),
-                    Dictionary(
-                        title=_("Translations"),
-                        elements=lambda: [
-                            (l, TextInput(title=a, size=32)) for (l, a) in get_languages()
-                        ],
-                        columns=2,
+                    fs.String(title=Title("Original Text")),
+                    # DictionaryExtended because language codes are not
+                    # guaranteed to be valid Python identifiers.
+                    DictionaryExtended(
+                        title=Title("Translations"),
+                        elements={
+                            language: fs.DictElement(
+                                parameter_form=fs.String(
+                                    # astrein: disable=localization-checker
+                                    title=Title(alias),
+                                ),
+                            )
+                            for language, alias in get_languages()
+                        },
                     ),
                 ],
             ),
-            title=_("Custom localizations"),
-            movable=False,
-            # astrein: disable=localization-named-placeholder
-            totext=_("%d translations"),
+            title=Title("Custom localizations"),
+            editable_order=False,
         ),
-        to_valuespec=lambda d: sorted(d.items()),
-        from_valuespec=dict,
     ),
 )
 
@@ -1396,38 +1535,33 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_icons_and_actions",
-    valuespec=lambda context: Transform(
-        valuespec=ListOf(
-            valuespec=Tuple(
+    form_spec=lambda context: _fs_keyed_by_first_tuple_element(
+        fs.List[tuple[object, ...]](
+            element_template=FSTuple(
                 elements=[
-                    ID(
-                        title=_("ID"),
-                        allow_empty=False,
-                    ),
-                    Dictionary(
-                        elements=[
-                            (
-                                "icon",
-                                IconSelector(
-                                    title=_("Icon"),
-                                    allow_empty=False,
-                                    with_emblem=False,
+                    fs.String(title=Title("ID"), custom_validate=_fs_id_validators()),
+                    fs.Dictionary(
+                        elements={
+                            "icon": fs.DictElement(
+                                required=True,
+                                parameter_form=LegacyValueSpec.wrap(
+                                    IconSelector(
+                                        title=_("Icon"),
+                                        allow_empty=False,
+                                        with_emblem=False,
+                                    )
                                 ),
                             ),
-                            (
-                                "title",
-                                TextInput(
-                                    title=_("Title"),
-                                ),
+                            "title": fs.DictElement(
+                                parameter_form=fs.String(title=Title("Title")),
                             ),
-                            (
-                                "url",
-                                Tuple(
-                                    title=_("Action"),
+                            "url": fs.DictElement(
+                                parameter_form=FSTuple(
+                                    title=Title("Action"),
                                     elements=[
-                                        TextInput(
-                                            title=_("URL"),
-                                            help=_(
+                                        fs.String(
+                                            title=Title("URL"),
+                                            help_text=Help(
                                                 "This URL is opened when clicking on the action / icon. You "
                                                 "can use some macros within the URL which are dynamically "
                                                 "replaced for each object. These are:<br>"
@@ -1442,44 +1576,45 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
                                                 "<li>$USER_ID$: The user ID of the currently active user</li>"
                                                 "</ul>"
                                             ),
-                                            size=80,
+                                            field_size=fs.FieldSize.LARGE,
                                         ),
-                                        DropdownChoice(
-                                            title=_("Open in"),
-                                            choices=[
-                                                ("_blank", _("Load in a new window / tab")),
-                                                (
-                                                    "_self",
-                                                    _(
+                                        SingleChoiceExtended(
+                                            title=Title("Open in"),
+                                            elements=[
+                                                SingleChoiceElementExtended(
+                                                    name="_blank",
+                                                    title=Title("Load in a new window / tab"),
+                                                ),
+                                                SingleChoiceElementExtended(
+                                                    name="_self",
+                                                    title=Title(
                                                         "Load in current content area (keep sidebar)"
                                                     ),
                                                 ),
-                                                (
-                                                    "_top",
-                                                    _("Load as new page (hide sidebar)"),
+                                                SingleChoiceElementExtended(
+                                                    name="_top",
+                                                    title=Title("Load as new page (hide sidebar)"),
                                                 ),
                                             ],
+                                            prefill=fs.DefaultValue("_blank"),
                                         ),
                                     ],
                                 ),
                             ),
-                            (
-                                "toplevel",
-                                FixedValue(
-                                    value=True,
-                                    title=_("Show in column"),
-                                    totext=_("Directly show the action icon in the column"),
-                                    help=_(
+                            "toplevel": fs.DictElement(
+                                parameter_form=_fs_fixed_true(
+                                    title=Title("Show in column"),
+                                    label=Label("Directly show the action icon in the column"),
+                                    help_text=Help(
                                         "Makes the icon appear in the column instead "
                                         "of the drop-down menu."
                                     ),
                                 ),
                             ),
-                            (
-                                "sort_index",
-                                Integer(
-                                    title=_("Sort index"),
-                                    help=_(
+                            "sort_index": fs.DictElement(
+                                parameter_form=fs.Integer(
+                                    title=Title("Sort index"),
+                                    help_text=Help(
                                         "You can use the sort index to control the order of the "
                                         "elements in the column and the menu. The elements are sorted "
                                         "from smaller to higher numbers. The action menu icon "
@@ -1487,38 +1622,47 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
                                         "of <tt>20</tt>. All other default icons have a sort index of "
                                         "<tt>30</tt> configured."
                                     ),
-                                    minvalue=0,
-                                    default_value=15,
+                                    custom_validate=[fs.validators.NumberInRange(min_value=0)],
+                                    prefill=fs.DefaultValue(15),
                                 ),
                             ),
-                        ],
-                        optional_keys=["title", "url", "toplevel", "sort_index"],
+                        },
                     ),
                 ],
             ),
-            title=_("Custom icons and actions"),
-            movable=False,
-            # astrein: disable=localization-named-placeholder
-            totext=_("%d icons and actions"),
+            title=Title("Custom icons and actions"),
+            editable_order=False,
         ),
-        to_valuespec=lambda d: sorted(d.items()),
-        from_valuespec=dict,
     ),
 )
+
+
+def _custom_service_attributes_from_disk(value: object) -> list[object]:
+    """The attributes are stored as a mapping keyed by the ID, the form works on a list."""
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a mapping, got {value!r}")
+    return list(value.values())
+
+
+def _custom_service_attributes_to_disk(value: object) -> dict[object, object]:
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list, got {value!r}")
+    return {entry["ident"]: entry for entry in value}
+
 
 ConfigVariableCustomServiceAttributes = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="custom_service_attributes",
-    valuespec=lambda context: Transform(
-        valuespec=ListOf(
-            valuespec=Dictionary(
-                elements=[
-                    (
-                        "ident",
-                        TextInput(
-                            title=_("ID"),
-                            help=_(
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=fs.List(
+            element_template=fs.Dictionary(
+                elements={
+                    "ident": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(
+                            title=Title("ID"),
+                            help_text=Help(
                                 "The ID will be used as internal identifier and the custom "
                                 "service attribute will be computed based on the ID. The "
                                 "custom service attribute will be named <tt>_[ID]</tt> in "
@@ -1528,53 +1672,60 @@ ConfigVariableCustomServiceAttributes = ConfigVariable(
                                 "to notification scripts as environment variable named "
                                 "<tt>SERVICE_[ID]</tt>."
                             ),
-                            validate=_validate_id,
-                            regex=re.compile("^[A-Z_][-A-Z0-9_]*$"),
-                            regex_error=_(
-                                "An identifier must only consist of letters, digits, dash and "
-                                "underscore and it must start with a letter or underscore."
-                            )
-                            + " "
-                            + _("Only upper case letters are allowed"),
-                        ),
-                    ),
-                    (
-                        "title",
-                        TextInput(
-                            title=_("Title"),
-                        ),
-                    ),
-                    (
-                        "type",
-                        DropdownChoice(
-                            title=_("Data type"),
-                            choices=[
-                                ("TextAscii", _("Simple Text")),
+                            custom_validate=[
+                                fs.validators.MatchRegex(
+                                    regex="^[A-Z_][-A-Z0-9_]*$",
+                                    error_msg=Message(
+                                        "An identifier must only consist of letters, digits, dash and "
+                                        "underscore and it must start with a letter or underscore."
+                                    )
+                                    + Message(" ")
+                                    + Message("Only upper case letters are allowed"),
+                                ),
+                                create_validation_error_for_mk_user_error(
+                                    lambda value: _validate_id(value, "")
+                                ),
                             ],
                         ),
                     ),
-                ],
-                optional_keys=[],
+                    "title": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(title=Title("Title")),
+                    ),
+                    "type": fs.DictElement(
+                        required=True,
+                        parameter_form=SingleChoiceExtended(
+                            title=Title("Data type"),
+                            elements=[
+                                SingleChoiceElementExtended(
+                                    name="TextAscii", title=Title("Simple Text")
+                                )
+                            ],
+                            prefill=fs.DefaultValue("TextAscii"),
+                        ),
+                    ),
+                },
             ),
-            title=_("Custom service attributes"),
-            help=_(
+            title=Title("Custom service attributes"),
+            help_text=Help(
                 'These custom service attributes can be assigned to services using the rule set <a href="%(url)s">%(label)s</a>.'
             )
             % {
                 "url": "wato.py?mode=edit_ruleset&varname=custom_service_attributes",
                 "label": _("Custom service attributes"),
             },
-            movable=False,
-            # astrein: disable=localization-named-placeholder
-            totext=_("%d custom service attributes"),
-            allow_empty=False,
-            # Unique IDs are ensured by the transform below. The Transform is executed
-            # before the validation function has the chance to validate it and print a
-            # custom error message.
-            validate=_validate_unique_entries,
+            editable_order=False,
+            # Unique IDs are ensured by the transform below, which is executed
+            # before the validation function has the chance to validate it and
+            # print a custom error message.
+            custom_validate=[
+                create_validation_error_for_mk_user_error(
+                    lambda value: _validate_unique_entries(value, "")
+                ),
+            ],
         ),
-        to_valuespec=lambda v: list(v.values()),
-        from_valuespec=lambda v: {p["ident"]: p for p in v},
+        from_disk=_custom_service_attributes_from_disk,
+        to_disk=_custom_service_attributes_to_disk,
     ),
 )
 
@@ -1658,45 +1809,67 @@ ConfigVariableUserDowntimeTimeranges = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_downtime_timeranges",
-    valuespec=lambda context: ListOf(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "title",
-                    TextInput(
-                        title=_("Title"),
+    form_spec=lambda context: ListExtended(
+        element_template=fs.Dictionary(
+            elements={
+                "title": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.String(title=Title("Title")),
+                ),
+                "end": fs.DictElement(
+                    required=True,
+                    parameter_form=enable_deprecated_alternative(
+                        fs.CascadingSingleChoice(
+                            title=Title("To"),
+                            prefill=fs.DefaultValue("duration"),
+                            elements=[
+                                fs.CascadingSingleChoiceElement(
+                                    name="duration",
+                                    title=Title("Duration"),
+                                    parameter_form=FSAge(
+                                        title=Title("Duration"),
+                                        displayed_magnitudes=[
+                                            fs.TimeMagnitude.DAY,
+                                            fs.TimeMagnitude.HOUR,
+                                            fs.TimeMagnitude.MINUTE,
+                                        ],
+                                        prefill=fs.DefaultValue(24.0 * 60 * 60),
+                                    ),
+                                ),
+                                fs.CascadingSingleChoiceElement(
+                                    name="until",
+                                    title=Title("Until"),
+                                    parameter_form=SingleChoiceExtended(
+                                        title=Title("Until"),
+                                        elements=[
+                                            SingleChoiceElementExtended(
+                                                name="next_day",
+                                                title=Title("Start of next day"),
+                                            ),
+                                            SingleChoiceElementExtended(
+                                                name="next_week",
+                                                title=Title("Start of next week"),
+                                            ),
+                                            SingleChoiceElementExtended(
+                                                name="next_month",
+                                                title=Title("Start of next month"),
+                                            ),
+                                            SingleChoiceElementExtended(
+                                                name="next_year",
+                                                title=Title("Start of next year"),
+                                            ),
+                                        ],
+                                        prefill=fs.DefaultValue("next_day"),
+                                    ),
+                                ),
+                            ],
+                        ),
                     ),
                 ),
-                (
-                    "end",
-                    Alternative(
-                        title=_("To"),
-                        elements=[
-                            Age(
-                                title=_("Duration"),
-                                display=["minutes", "hours", "days"],
-                            ),
-                            DropdownChoice(
-                                title=_("Until"),
-                                choices=[
-                                    ("next_day", _("Start of next day")),
-                                    ("next_week", _("Start of next week")),
-                                    ("next_month", _("Start of next month")),
-                                    ("next_year", _("Start of next year")),
-                                ],
-                                default_value="next_day",
-                            ),
-                        ],
-                        default_value=24 * 60 * 60,
-                    ),
-                ),
-            ],
-            optional_keys=[],
+            },
         ),
-        title=_("Downtime duration presets"),
-        movable=True,
-        # astrein: disable=localization-named-placeholder
-        totext=_("%d time ranges"),
+        title=Title("Downtime duration presets"),
+        prefill=fs.DefaultValue([]),
     ),
 )
 
@@ -1704,34 +1877,43 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="builtin_icon_visibility",
-    valuespec=lambda context: Transform(
-        valuespec=ListOf(
-            valuespec=Tuple(
+    form_spec=lambda context: _fs_keyed_by_first_tuple_element(
+        fs.List[tuple[object, ...]](
+            element_template=FSTuple(
                 elements=[
-                    DropdownChoice(
-                        title=_("Icon"),
-                        choices=_get_builtin_icons,
-                        sorted=True,
-                    ),
-                    Dictionary(
-                        elements=[
+                    SingleChoiceExtended[str](
+                        title=Title("Icon"),
+                        elements=lambda: sorted(
                             (
-                                "toplevel",
-                                Checkbox(
-                                    title=_("Show in column"),
-                                    label=_("Directly show the action icon in the column"),
-                                    help=_(
+                                SingleChoiceElementExtended(
+                                    name=id_,
+                                    # astrein: disable=localization-checker
+                                    title=Title(class_.title),
+                                )
+                                for id_, class_ in icon_and_action_registry.items()
+                            ),
+                            key=lambda element: element.title.localize(
+                                translate_to_current_language
+                            ),
+                        ),
+                    ),
+                    fs.Dictionary(
+                        elements={
+                            "toplevel": fs.DictElement(
+                                parameter_form=fs.BooleanChoice(
+                                    title=Title("Show in column"),
+                                    label=Label("Directly show the action icon in the column"),
+                                    help_text=Help(
                                         "Makes the icon appear in the column instead "
                                         "of the drop-down menu."
                                     ),
-                                    default_value=True,
+                                    prefill=fs.DefaultValue(True),
                                 ),
                             ),
-                            (
-                                "sort_index",
-                                Integer(
-                                    title=_("Sort index"),
-                                    help=_(
+                            "sort_index": fs.DictElement(
+                                parameter_form=fs.Integer(
+                                    title=Title("Sort index"),
+                                    help_text=Help(
                                         "You can use the sort index to control the order of the "
                                         "elements in the column and the menu. The elements are sorted "
                                         "from smaller to higher numbers. The action menu icon "
@@ -1739,53 +1921,42 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
                                         "of <tt>20</tt>. All other default icons have a sort index of "
                                         "<tt>30</tt> configured."
                                     ),
-                                    minvalue=0,
+                                    custom_validate=[fs.validators.NumberInRange(min_value=0)],
+                                    prefill=fs.DefaultValue(0),
                                 ),
                             ),
-                        ],
-                        optional_keys=["toplevel", "sort_index"],
+                        },
                     ),
                 ],
             ),
-            title=_("Built-in icon visibility"),
-            movable=False,
-            # astrein: disable=localization-named-placeholder
-            totext=_("%d icons customized"),
-            help=_(
+            title=Title("Built-in icon visibility"),
+            editable_order=False,
+            help_text=Help(
                 "You can use this option to change the default visibility "
                 "options of the built-in icons. You can change whether or not "
                 "the icons are shown in the pop-up menu or on top level and "
                 "change the sorting of the icons."
             ),
         ),
-        to_valuespec=lambda d: sorted(d.items()),
-        from_valuespec=dict,
     ),
 )
-
-
-def _get_builtin_icons() -> list[tuple[str, str]]:
-    return [(id_, class_.title) for id_, class_ in icon_and_action_registry.items()]
-
 
 ConfigVariableServiceViewGrouping = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="service_view_grouping",
-    valuespec=lambda context: ListOf(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "title",
-                    TextInput(
-                        title=_("Title to show for the group"),
-                    ),
+    form_spec=lambda context: fs.List(
+        element_template=fs.Dictionary(
+            elements={
+                "title": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.String(title=Title("Title to show for the group")),
                 ),
-                (
-                    "pattern",
-                    RegExp(
-                        title=_("Grouping expression"),
-                        help=_(
+                "pattern": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.RegularExpression(
+                        title=Title("Grouping expression"),
+                        help_text=Help(
                             "This regular expression is used to match the services to be put "
                             "into this group. You can use prefix match "
                             "regular expressions here. In the regular "
@@ -1793,32 +1964,31 @@ ConfigVariableServiceViewGrouping = ConfigVariable(
                             "services with the same match groups will be put "
                             "in the same group."
                         ),
-                        mode=RegExp.prefix,
+                        predefined_help_text=fs.MatchingScope.PREFIX,
                     ),
                 ),
-                (
-                    "min_items",
-                    Integer(
-                        title=_("Minimum number of items to create a group"),
-                        help=_(
+                "min_items": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.Integer(
+                        title=Title("Minimum number of items to create a group"),
+                        help_text=Help(
                             "When less than these items are found for a group, the services "
                             "are not shown grouped together."
                         ),
-                        minvalue=2,
-                        default_value=2,
+                        custom_validate=[fs.validators.NumberInRange(min_value=2)],
+                        prefill=fs.DefaultValue(2),
                     ),
                 ),
-            ],
-            optional_keys=[],
+            },
         ),
-        title=_("Grouping of services in table views"),
-        help=_(
+        title=Title("Grouping of services in table views"),
+        help_text=Help(
             "You can use this option to make the service table views fold services matching "
             "the given patterns into groups. Only services in state <i>OK</i> will be folded "
             "together. Groups of only one service will not be rendered. If multiple patterns "
             "match a service, the service will be added to the first matching group."
         ),
-        add_label=_("Add new grouping definition"),
+        add_element_label=Label("Add new grouping definition"),
     ),
 )
 
@@ -1826,46 +1996,51 @@ ConfigVariableAcknowledgeProblems = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="acknowledge_problems",
-    valuespec=lambda context: Dictionary(
-        title=_("Acknowledge problems"),
-        elements=[
-            (
-                "ack_sticky",
-                Checkbox(
-                    title=_("Ignore status changes until services/hosts are OK/UP again (sticky)"),
-                    label=_("Enable"),
-                    default_value=False,
+    form_spec=lambda context: fs.Dictionary(
+        title=Title("Acknowledge problems"),
+        elements={
+            "ack_sticky": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title(
+                        "Ignore status changes until services/hosts are OK/UP again (sticky)"
+                    ),
+                    label=Label("Enable"),
+                    prefill=fs.DefaultValue(False),
                 ),
             ),
-            (
-                "ack_persistent",
-                Checkbox(
-                    title=_("Keep comment after acknowledgment expires (persistent comment)"),
-                    label=_("Enable"),
-                    default_value=False,
+            "ack_persistent": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title("Keep comment after acknowledgment expires (persistent comment)"),
+                    label=Label("Enable"),
+                    prefill=fs.DefaultValue(False),
                 ),
             ),
-            (
-                "ack_notify",
-                Checkbox(
-                    title=_(
+            "ack_notify": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title(
                         "Notify affected users if notification rules are in place (send notifications)"
                     ),
-                    label=_("Enable"),
-                    default_value=True,
+                    label=Label("Enable"),
+                    prefill=fs.DefaultValue(True),
                 ),
             ),
-            (
-                "ack_expire",
-                Age(
-                    title=_("Default expiration time (relative)"),
-                    display=["days", "hours", "minutes"],
-                    default_value=3600,
-                    minvalue=60,
+            "ack_expire": fs.DictElement(
+                required=True,
+                parameter_form=FSAge(
+                    title=Title("Default expiration time (relative)"),
+                    displayed_magnitudes=[
+                        fs.TimeMagnitude.DAY,
+                        fs.TimeMagnitude.HOUR,
+                        fs.TimeMagnitude.MINUTE,
+                    ],
+                    custom_validate=[fs.validators.NumberInRange(min_value=60)],
+                    prefill=fs.DefaultValue(3600.0),
                 ),
             ),
-        ],
-        optional_keys=[],
+        },
     ),
 )
 
@@ -1873,13 +2048,14 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="default_temperature_unit",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Default temperature unit"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended(
+        title=Title("Default temperature unit"),
+        help_text=Help(
             "Set the default temperature unit used for graphs and Perf-O-Meters. The option can "
             "be configured individually for each user in the user settings."
         ),
-        choices=temperature_unit_choices(),
+        elements=_fs_single_choice_elements(temperature_unit_choices()),
+        prefill=fs.DefaultValue(TemperatureUnit.CELSIUS.value),
     ),
 )
 

@@ -5659,15 +5659,13 @@ def _help_snmp_backend() -> str:
 
 
 def _transform_snmp_backend_hosts_to_valuespec(backend: object) -> SNMPBackendEnum:
-    # During 2.0.0 Beta you could configure inline_legacy backend that's why
-    # we need to accept this as value as well.
-    if backend in [False, "inline", "inline_legacy"]:
-        return SNMPBackendEnum.INLINE
-    if backend in [True, "classic", "pysnmp"]:
-        # We dropped pysnmp during the 2.1 beta because it is currently slow
-        # and unreliable.
-        return SNMPBackendEnum.CLASSIC
-    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
+    match backend:
+        case "inline":
+            return SNMPBackendEnum.INLINE
+        case "classic":
+            return SNMPBackendEnum.CLASSIC
+        case other:
+            raise MKConfigError(f"SNMPBackendEnum {other!r} not implemented")
 
 
 def _valuespec_snmp_backend() -> Transform:

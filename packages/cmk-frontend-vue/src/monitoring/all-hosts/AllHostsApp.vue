@@ -9,7 +9,6 @@ import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitor
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
-import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
@@ -26,8 +25,10 @@ import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/c
 
 import ColumnPicker from '../shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
+import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringLimitSelector from '../shared/components/MonitoringLimitSelector.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
+import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import MonitoringTotalCount from '../shared/components/MonitoringTotalCount.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
@@ -302,31 +303,15 @@ function onRightPaneCollapse(collapsed: boolean): void {
     closeAction()
   }
 }
-
-function navigateToLegacy() {
-  if (props.legacy_view_button) {
-    window.location.href = props.legacy_view_button.url
-  }
-}
 </script>
 
 <template>
-  <Teleport defer to=".titlebar">
-    <CmkLink
-      href="https://survey.checkmk.com/index.php/815511?lang=en"
-      target="_blank"
-      class="monitoring-all-hosts-app__survey-link"
-    >
-      <CmkIcon name="comment" class="monitoring-all-hosts-app__legacy-view-button-icon" />
-      {{ _t('Give feedback on the new view') }}
-    </CmkLink>
-  </Teleport>
-  <Teleport v-if="legacy_view_button" defer to=".titlebar">
-    <CmkButton class="monitoring-all-hosts-app__legacy-view-button" @click="navigateToLegacy">
-      <CmkIcon name="back" class="monitoring-all-hosts-app__legacy-view-button-icon" />
-      {{ legacy_view_button.title }}
-    </CmkButton>
-  </Teleport>
+  <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/815511?lang=en" />
+  <MonitoringLegacyViewButton
+    v-if="legacy_view_button"
+    :title="legacy_view_button.title"
+    :url="legacy_view_button.url"
+  />
   <div class="monitoring-all-hosts-app">
     <div class="monitoring-all-hosts-app__header">
       <div class="monitoring-all-hosts-app__toolbar">
@@ -486,22 +471,6 @@ function navigateToLegacy() {
   min-height: 0;
   padding-bottom: var(--spacing);
   padding-right: var(--spacing);
-}
-
-.monitoring-all-hosts-app__survey-link {
-  margin-right: var(--dimension-6);
-  place-content: center flex-end;
-  align-items: center;
-}
-
-.monitoring-all-hosts-app__legacy-view-button {
-  right: var(--dimension-4);
-  white-space: nowrap;
-  align-self: center;
-}
-
-.monitoring-all-hosts-app__legacy-view-button-icon {
-  margin-right: var(--dimension-3);
 }
 
 .monitoring-all-hosts-app__header {

@@ -872,6 +872,7 @@ oracle:
         );
         let db = MiniOra {
             instance_rows: vec![instance_row("ORCL", "19.1.0.0", "NO")],
+            version_rows: vec![vec!["19.1.0.0".to_string()]],
             pdb_rows: vec![],
             default_rows: vec![
                 vec!["details:price=5; still ok".to_string()],
@@ -879,6 +880,7 @@ oracle:
                 vec!["long:extended detail".to_string()],
                 vec!["exit:0".to_string()],
             ],
+            ..Default::default()
         };
 
         let out = emit(
@@ -963,12 +965,14 @@ oracle:
         );
         let db = MiniOra {
             instance_rows: vec![instance_row("ORCL", "19.1.0.0", "YES")],
+            version_rows: vec![vec!["19.1.0.0".to_string()]],
             pdb_rows: vec![
                 vec!["CDB$ROOT".to_string()],
                 vec!["PDB$SEED".to_string()],
                 vec!["PDB1".to_string()],
             ],
             default_rows: vec![vec!["details:ok".to_string()]],
+            ..Default::default()
         };
 
         let out = emit(

@@ -75,39 +75,75 @@ impl WorkInstances {
     }
 }
 
-fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_InstanceEntries> {
-    let (new_sql, old_sql) = if spot.target().is_asm() {
-        (
-            sqls::query::internal::ASM_INSTANCE_INFO_SQL_TEXT_NEW,
-            sqls::query::internal::ASM_INSTANCE_INFO_SQL_TEXT_OLD,
-        )
-    } else {
-        (
-            sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW,
-            sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
-        )
-    };
-    if let Ok(result) = spot
-        .query_table(&SqlQuery::new(custom_query.unwrap_or(new_sql), &Vec::new()))
-        .0
-    {
-        Ok(_to_instance_entries(result))
-    } else {
-        let mut result = spot.query_table(&SqlQuery::new(old_sql, &Vec::new())).0?;
-        let result_with_version = spot
-            .query_table(&SqlQuery::new(
-                sqls::query::internal::INSTANCE_APPROXIMATE_VERSION,
-                &Vec::new(),
-            ))
-            .format("")?;
-        if let Some(version) = _extract_version(result_with_version) {
-            log::info!("Extracted version: {version}");
-            for r in result.iter_mut() {
-                r[2] = version.clone(); // Update the version column
-            }
+/// The only error that means "this release lacks the column"; anything else is
+/// a real failure and must not be retried away.
+fn is_unknown_column_error(e: &anyhow::Error) -> bool {
+    e.to_string().contains("ORA-00904")
+}
+
+/// Oracle changed the versioning information with release 18c, introducing
+/// `VERSION_FULL`. Where that is unavailable, `VERSION` carries the full
+/// versioning information instead.
+#[derive(Debug)]
+enum DetectedVersion {
+    Since18c(InstanceVersion),
+    Before18c(InstanceVersion),
+}
+
+impl DetectedVersion {
+    fn version(&self) -> &InstanceVersion {
+        match self {
+            Self::Since18c(v) | Self::Before18c(v) => v,
         }
-        Ok(_to_instance_entries(result))
     }
+}
+
+fn _detect_version(spot: &OpenedSpot) -> Result<DetectedVersion> {
+    let ask = |sql: &str| -> Result<InstanceVersion> {
+        let rows = spot.query_table(&SqlQuery::new(sql, &Vec::new())).0?;
+        _extract_version(rows.into_iter().map(|row| row.join("")).collect())
+            .map(InstanceVersion::from)
+            .ok_or_else(|| anyhow::anyhow!("No usable version in v$instance"))
+    };
+    match ask(sqls::query::internal::INSTANCE_VERSION_FULL) {
+        Ok(version) => Ok(DetectedVersion::Since18c(version)),
+        Err(e) if is_unknown_column_error(&e) => {
+            log::info!("No VERSION_FULL in v$instance ({e}), asking for VERSION instead");
+            ask(sqls::query::internal::INSTANCE_VERSION).map(DetectedVersion::Before18c)
+        }
+        Err(e) => Err(e),
+    }
+}
+
+fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_InstanceEntries> {
+    if let Some(query) = custom_query {
+        // Replaces the probe entirely; the caller owns the column set.
+        return Ok(_to_instance_entries(
+            spot.query_table(&SqlQuery::new(query, &Vec::new())).0?,
+        ));
+    }
+
+    let detected = _detect_version(spot)?;
+    log::info!("Instance reports {detected:?}");
+
+    let sql = match (spot.target().is_asm(), &detected) {
+        (true, DetectedVersion::Since18c(_)) => {
+            sqls::query::internal::ASM_INSTANCE_INFO_SQL_TEXT_NEW
+        }
+        (true, DetectedVersion::Before18c(_)) => {
+            sqls::query::internal::ASM_INSTANCE_INFO_SQL_TEXT_OLD
+        }
+        (false, DetectedVersion::Since18c(_)) => sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW,
+        (false, DetectedVersion::Before18c(_)) => sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
+    };
+
+    let mut result = spot.query_table(&SqlQuery::new(sql, &Vec::new())).0?;
+    for r in result.iter_mut() {
+        if let Some(version_column) = r.get_mut(2) {
+            *version_column = detected.version().clone().into();
+        }
+    }
+    Ok(_to_instance_entries(result))
 }
 
 fn _extract_version(result: Vec<String>) -> Option<String> {
@@ -115,9 +151,11 @@ fn _extract_version(result: Vec<String>) -> Option<String> {
         log::warn!("No version information found in v$instance");
         return None;
     }
-    result[0].split(' ').next_back().and_then(|s| {
-        convert_to_num_version(&InstanceVersion::from(s.to_owned())).map(|_| s.to_string())
-    })
+    result
+        .iter()
+        .flat_map(|line| line.split_whitespace())
+        .find(|token| convert_to_num_version(&InstanceVersion::from((*token).to_owned())).is_some())
+        .map(str::to_string)
 }
 
 fn _to_instance_entries(result: Vec<Vec<String>>) -> _InstanceEntries {
@@ -160,17 +198,114 @@ pub fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVe
 mod tests {
     use super::*;
     use crate::config::ora_sql::Endpoint;
-    use crate::ora_sql::backend::test_support::{instance_row, MiniOra};
+    use crate::ora_sql::backend::test_support::MiniOra;
     use crate::ora_sql::backend::SpotBuilder;
+
+    /// Returns the derived (version, tenant) plus every query the run issued.
+    fn discover_at(version: &str, cdb: &str) -> (InstanceNumVersion, Tenant, Vec<String>) {
+        let db = MiniOra::at_version("ORCL", version, cdb);
+        let asked = std::sync::Arc::clone(&db.asked);
+        let spot = SpotBuilder::new()
+            .endpoint_target(&Endpoint::default())
+            .custom_engine(Box::new(db))
+            .build()
+            .unwrap()
+            .connect(None)
+            .unwrap();
+        let works = WorkInstances::new(&spot, None).expect("instance must be discovered");
+        let (v, t) = works
+            .get_info(&InstanceName::from("ORCL"))
+            .expect("ORCL must be present");
+        let queries = asked.lock().unwrap().clone();
+        (v, t, queries)
+    }
+
+    #[test]
+    fn test_18c_and_later_use_the_precise_version_and_ask_for_cdb() {
+        let (version, tenant, asked) = discover_at("19.28.0.0.0", "YES");
+        assert_eq!(version, InstanceNumVersion::from(19_28_00_00));
+        assert_eq!(tenant, Tenant::Cdb);
+        assert!(
+            asked.iter().any(|q| q.contains("VERSION_FULL")),
+            "{asked:?}"
+        );
+        assert!(asked.iter().any(|q| q.contains("d.cdb")), "{asked:?}");
+    }
+
+    #[test]
+    fn test_12c_falls_back_to_version_but_still_asks_for_cdb() {
+        // No VERSION_FULL, but CON_ID and CDB are there: the probe degrades
+        // while the instance query still reads the real tenancy.
+        let (version, tenant, asked) = discover_at("12.2.0.1.0", "YES");
+        assert_eq!(version, InstanceNumVersion::from(12_02_00_01));
+        assert_eq!(tenant, Tenant::Cdb);
+        assert!(
+            asked
+                .iter()
+                .any(|q| q.trim() == "SELECT VERSION FROM v$instance"),
+            "the probe must fall back to VERSION: {asked:?}"
+        );
+        assert!(asked.iter().any(|q| q.contains("d.cdb")), "{asked:?}");
+    }
+
+    /// The supported floor is 12.1.0.2, so a release without `V$DATABASE.CDB`
+    /// fails rather than being accommodated. Its version reaches the log first,
+    /// which is what tells an operator why.
+    #[test]
+    fn test_before_12c_fails_on_the_absent_cdb_column() {
+        let db = MiniOra::at_version("ORCL", "11.2.0.4.0", "irrelevant");
+        let spot = SpotBuilder::new()
+            .endpoint_target(&Endpoint::default())
+            .custom_engine(Box::new(db))
+            .build()
+            .unwrap()
+            .connect(None)
+            .unwrap();
+        let err = WorkInstances::new(&spot, None).expect_err("must not be accommodated");
+        assert!(err.to_string().contains("ORA-00904"), "{err}");
+    }
+
+    #[test]
+    fn test_a_real_error_is_not_treated_as_a_missing_column() {
+        // Anything but ORA-00904 must surface, or a permissions problem reads
+        // as an ancient Oracle.
+        let spot = SpotBuilder::new()
+            .endpoint_target(&Endpoint::default())
+            .custom_engine(Box::new(MiniOra {
+                absent_columns: vec!["v$instance".to_string()],
+                ..Default::default()
+            }))
+            .build()
+            .unwrap()
+            .connect(None)
+            .unwrap();
+        let err = WorkInstances::new(&spot, None).expect_err("must not be swallowed");
+        assert!(err.to_string().contains("ORA-00904"), "{err}");
+    }
+
+    #[test]
+    fn test_extract_version_is_not_positional() {
+        assert_eq!(
+            _extract_version(vec!["23.26.0.24.03".to_string()]).as_deref(),
+            Some("23.26.0.24.03")
+        );
+        assert_eq!(
+            _extract_version(vec![
+                "Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production"
+                    .to_string()
+            ])
+            .as_deref(),
+            Some("12.1.0.2.0")
+        );
+        assert_eq!(_extract_version(vec![]), None);
+        assert_eq!(_extract_version(vec!["no version here".to_string()]), None);
+    }
 
     #[test]
     fn test_get_version() {
         let simulated_spot = SpotBuilder::new()
             .endpoint_target(&Endpoint::default())
-            .custom_engine(Box::new(MiniOra {
-                instance_rows: vec![instance_row("free", "22.1.1.6.0", "YES")],
-                ..Default::default()
-            }))
+            .custom_engine(Box::new(MiniOra::at_version("free", "22.1.1.6.0", "YES")))
             .build()
             .unwrap();
         let conn = simulated_spot.connect(None).unwrap();

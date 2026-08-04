@@ -275,6 +275,8 @@ SELECT
     FROM v$instance i
     join v$database d
         on i.con_id = d.con_id";
+        pub const INSTANCE_VERSION_FULL: &str = r"SELECT VERSION_FULL FROM v$instance";
+        pub const INSTANCE_VERSION: &str = r"SELECT VERSION FROM v$instance";
         /// ASM instances have no mounted `v$database`.
         pub const ASM_INSTANCE_INFO_SQL_TEXT_NEW: &str = r"
 SELECT
@@ -292,8 +294,6 @@ SELECT
     INSTANCE_NAME,
     'NO'
     FROM v$instance";
-        pub const INSTANCE_APPROXIMATE_VERSION: &str =
-            r"SELECT BANNER_FULL FROM v$version WHERE banner LIKE 'Oracle%'";
         /// Lists PDBs of the connected CDB. The root container (CDB$ROOT) is
         /// not in V$PDBS, but we exclude it defensively. PDB$SEED is the
         /// read-only template and must always be filtered out.

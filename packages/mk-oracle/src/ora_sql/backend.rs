@@ -479,7 +479,11 @@ pub fn obtain_config_credentials(auth: &Authentication) -> Option<Credentials> {
 pub(crate) mod test_support {
     //! Fake [`OraDbEngine`] and helpers for tests.
     use super::*;
-    use crate::ora_sql::sqls::query::internal::{INSTANCE_INFO_SQL_TEXT_NEW, PDB_DISCOVERY_SQL};
+    use crate::ora_sql::sqls::query::internal::{
+        INSTANCE_INFO_SQL_TEXT_NEW, INSTANCE_INFO_SQL_TEXT_OLD, INSTANCE_VERSION,
+        INSTANCE_VERSION_FULL, PDB_DISCOVERY_SQL,
+    };
+    use std::sync::{Arc, Mutex};
 
     /// A `v$instance` row; parsing reads only columns 0 (name), 2 (version), 4 (cdb).
     pub fn instance_row(name: &str, version: &str, cdb: &str) -> Vec<String> {
@@ -498,6 +502,21 @@ pub(crate) mod test_support {
         pub instance_rows: Vec<Vec<String>>,
         pub pdb_rows: Vec<Vec<String>>,
         pub default_rows: Vec<Vec<String>>,
+        /// A query naming any of these is answered with ORA-00904.
+        pub absent_columns: Vec<String>,
+        /// Shared with every clone from `clone_box`, so one run collects here.
+        pub asked: Arc<Mutex<Vec<String>>>,
+        pub version_rows: Vec<Vec<String>>,
+    }
+
+    impl MiniOra {
+        fn missing_column_in(&self, query: &str) -> Option<&str> {
+            let upper = query.to_uppercase();
+            self.absent_columns
+                .iter()
+                .find(|c| upper.contains(&c.to_uppercase()))
+                .map(String::as_str)
+        }
     }
 
     impl OraDbEngine for MiniOra {
@@ -511,8 +530,15 @@ pub(crate) mod test_support {
             Ok(())
         }
         fn query_table(&self, query: &SqlQuery) -> QueryResult {
+            self.asked.lock().unwrap().push(query.as_str().to_owned());
+            if let Some(column) = self.missing_column_in(query.as_str()) {
+                return QueryResult(Err(anyhow::anyhow!(
+                    "ORA-00904: \"{column}\": invalid identifier"
+                )));
+            }
             let rows = match query.as_str() {
-                INSTANCE_INFO_SQL_TEXT_NEW => &self.instance_rows,
+                INSTANCE_INFO_SQL_TEXT_NEW | INSTANCE_INFO_SQL_TEXT_OLD => &self.instance_rows,
+                INSTANCE_VERSION_FULL | INSTANCE_VERSION => &self.version_rows,
                 PDB_DISCOVERY_SQL => &self.pdb_rows,
                 _ => &self.default_rows,
             };
@@ -523,6 +549,9 @@ pub(crate) mod test_support {
                 instance_rows: self.instance_rows.clone(),
                 pdb_rows: self.pdb_rows.clone(),
                 default_rows: self.default_rows.clone(),
+                absent_columns: self.absent_columns.clone(),
+                asked: Arc::clone(&self.asked),
+                version_rows: self.version_rows.clone(),
             })
         }
     }
@@ -530,9 +559,30 @@ pub(crate) mod test_support {
     impl MiniOra {
         /// One non-CDB instance `name`; custom queries return `details:ok`.
         pub fn single(name: &str) -> Self {
+            Self::at_version(name, "19.1.0.0", "NO")
+        }
+
+        /// Derives `absent_columns` from `version`.
+        pub fn at_version(name: &str, version: &str, cdb: &str) -> Self {
+            let numeric: Vec<u32> = version
+                .split('.')
+                .filter_map(|p| p.parse::<u32>().ok())
+                .collect();
+            let major = numeric.first().copied().unwrap_or(0);
+            let minor = numeric.get(1).copied().unwrap_or(0);
+            let mut absent_columns = Vec::new();
+            if major < 18 {
+                absent_columns.push("VERSION_FULL".to_string());
+            }
+            if major < 12 || (major == 12 && minor < 1) {
+                absent_columns.push("CON_ID".to_string());
+                absent_columns.push("d.cdb".to_string());
+            }
             Self {
-                instance_rows: vec![instance_row(name, "19.1.0.0", "NO")],
+                instance_rows: vec![instance_row(name, version, cdb)],
                 default_rows: vec![vec!["details:ok".to_string()]],
+                version_rows: vec![vec![version.to_string()]],
+                absent_columns,
                 ..Default::default()
             }
         }

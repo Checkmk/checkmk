@@ -37,8 +37,9 @@ const props = withDefaults(
     // How a combined graph folds the same metric across its matched services;
     // null for graph types without a combination (e.g. template graphs).
     combination_mode?: GraphCombinationMode | null
-    // Outer figure width in CSS pixels (plot area + axis margins); the RRD step
-    // resolution is derived from the resulting plot width.
+    // Outer figure dimensions in CSS pixels (plot area + axis margins); the RRD step
+    // resolution is derived from the resulting plot width. Defaulted so they are always
+    // concrete numbers when forwarded to the panel.
     figure_width?: number
     figure_height?: number
     show_consolidation?: boolean
@@ -47,6 +48,7 @@ const props = withDefaults(
   {
     combination_mode: null,
     figure_width: 800,
+    figure_height: 300,
     show_consolidation: true,
     show_legend: true
   }

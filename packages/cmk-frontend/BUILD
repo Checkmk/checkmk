@@ -137,9 +137,9 @@ css_library(
 
 py_test(
     name = "scss_content",
-    srcs = ["scripts/test_scss_content.py"],
+    srcs = ["tests/test_scss_content.py"],
     data = [":themes_css"],
-    main = "test_scss_content.py",
+    main = "tests/test_scss_content.py",
 )
 
 ts_project(

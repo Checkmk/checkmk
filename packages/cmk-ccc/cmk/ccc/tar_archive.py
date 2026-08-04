@@ -150,7 +150,7 @@ class SafeStreamedTarFile:
     def extractfile_by_name(self, target_file: str) -> IO[bytes] | None:
         """
         Safely extract a single file from the archive in memory. Returns None if the archive holds
-        no such file, or if the file has no content, e.g. because it is a directory.
+        no such file, or if the member has no payload, e.g. because it is a directory or a link.
 
         Searching advances the cursor, so only members ahead of it can be found and the result has
         to be read before iteration continues.
@@ -322,7 +322,10 @@ class _SafeExtractor:
             self.extract(member, dest, "data")
 
     def extract_in_memory(self, member: tarfile.TarInfo) -> IO[bytes] | None:
-        return self._tar.extractfile(member)
+        # Only regular files carry a payload of their own, and the streaming mode cannot even hand
+        # out anything else: tarfile raises a StreamError for a (sym)link because resolving it
+        # would mean seeking to the target.
+        return self._tar.extractfile(member) if member.isfile() else None
 
     def extract_in_memory_by_name(
         self, members: Iterable[tarfile.TarInfo], target_file: str

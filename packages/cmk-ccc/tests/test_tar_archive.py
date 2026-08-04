@@ -64,6 +64,30 @@ def make_member(name: str, member_type: bytes) -> tarfile.TarInfo:
     return member
 
 
+LINK_TARGET_CONTENT = b"target content"
+
+
+def make_tarfile_bytes_with_links() -> bytes:
+    """Build an archive holding every kind of link next to a directory and the link target."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        target = tarfile.TarInfo("target.txt")
+        target.size = len(LINK_TARGET_CONTENT)
+        tar.addfile(target, io.BytesIO(LINK_TARGET_CONTENT))
+
+        for name, member_type, linkname in [
+            ("symlink.txt", tarfile.SYMTYPE, "target.txt"),
+            ("hardlink.txt", tarfile.LNKTYPE, "target.txt"),
+            ("dangling.txt", tarfile.SYMTYPE, "nowhere.txt"),
+        ]:
+            member = make_member(name, member_type)
+            member.linkname = linkname
+            tar.addfile(member)
+
+        tar.addfile(make_member("subdir", tarfile.DIRTYPE))
+    return buf.getvalue()
+
+
 def test_safe_extractall_streaming_bytes(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     raw = make_tarfile_bytes(files)
@@ -371,6 +395,24 @@ def test_extractfile_by_name_returns_none_for_a_directory() -> None:
 
     with open_bytes_streaming(raw) as safe_tar:
         assert safe_tar.extractfile_by_name("subdir") is None
+
+
+@pytest.mark.parametrize(
+    "member_name, expected_payload",
+    [
+        ("target.txt", LINK_TARGET_CONTENT),
+        ("symlink.txt", None),
+        ("hardlink.txt", None),
+        ("dangling.txt", None),
+        ("subdir", None),
+    ],
+    ids=["link target", "symlink", "hardlink", "dangling symlink", "directory"],
+)
+def test_extractfile_by_name_payload(member_name: str, expected_payload: bytes | None) -> None:
+    """Only a regular file has a payload; reaching a link does not raise a StreamError."""
+    with open_bytes_streaming(make_tarfile_bytes_with_links()) as safe_tar:
+        obj = safe_tar.extractfile_by_name(member_name)
+        assert (None if obj is None else obj.read()) == expected_payload
 
 
 def test_indexed_extract_single_member(tmp_path: Path) -> None:

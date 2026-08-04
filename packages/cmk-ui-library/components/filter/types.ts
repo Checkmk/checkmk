@@ -33,10 +33,13 @@ export type SliderConfig = components['schemas']['SliderComponentModel']
 export type StaticTextConfig = components['schemas']['StaticTextComponentModel']
 export type TagFilterConfig = components['schemas']['TagFilterComponentModel']
 export type TextInputConfig = components['schemas']['TextInputComponentModel']
+export type MultiselectWithFreeTextConfig =
+  components['schemas']['MultiselectWithFreeTextComponentModel']
 
 export type ComponentConfig =
   | RadioButtonConfig
   | TextInputConfig
+  | MultiselectWithFreeTextConfig
   | HiddenConfig
   | CheckboxConfig
   | CheckboxGroupConfig

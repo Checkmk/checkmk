@@ -17,6 +17,7 @@ import HiddenComponent from './HiddenComponent.vue'
 import LabelQueryBuilder from './LabelGroups/LabelQueryBuilder.vue'
 import type { QueryItem } from './LabelGroups/types.ts'
 import { convertFromFilterStructure, convertToFilterStructure } from './LabelGroups/utils.ts'
+import MultiselectWithFreeTextComponent from './MultiselectWithFreeTextComponent.vue'
 import RadioButtonComponent from './RadioButtonComponent.vue'
 import SliderComponent from './SliderComponent.vue'
 import TagMatchComponent from './TagMatchComponent/TagMatchComponent.vue'
@@ -92,6 +93,14 @@ const onTagComponentUpdate = (values: TagMatchItem[]): void => {
     <!-- Text Input Component -->
     <TextInputComponent
       v-else-if="component.component_type === 'text_input'"
+      :component="component"
+      :configured-values="configuredFilterValues"
+      @update-component-values="handleUpdate"
+    />
+
+    <!-- Multi-select that also accepts a typed value -->
+    <MultiselectWithFreeTextComponent
+      v-else-if="component.component_type === 'multiselect_with_free_text'"
       :component="component"
       :configured-values="configuredFilterValues"
       @update-component-values="handleUpdate"

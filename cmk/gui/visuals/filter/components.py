@@ -159,6 +159,39 @@ class TextInput(BaseComponent):
 
 
 @dataclass(kw_only=True, slots=True)
+class MultiselectWithFreeText(BaseComponent):
+    """A multi-select whose values may also be typed rather than picked.
+
+    One input offers what the autocompleter knows and accepts anything else as
+    typed, so a filter can suggest the values worth picking without refusing a
+    value it cannot know about - a range, or a host that stopped reporting.
+    Chosen values accumulate into the one htmlvar, joined by the separator, and
+    match as alternatives.
+
+    The legacy HTML rendering falls back to a plain text field; the picker
+    exists only in the Vue filter UI.
+    """
+
+    component_type: Literal["multiselect_with_free_text"] = "multiselect_with_free_text"
+    id: str
+    autocompleter: AutocompleterConfig
+    label: str | None = None
+    separator: str = ","
+    """Separator joining the picked and typed values within the one htmlvar."""
+    pick_hint: str | None = None
+    """Placeholder for the input, e.g. "Select an application…"."""
+
+    def __post_init__(self) -> None:
+        if not self.separator:
+            raise ValueError("Separator must not be empty")
+
+    def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
+        if self.label:
+            html.write_text_permissive(self.label)
+        html.text_input(self.id, default_value=current_values.get(self.id, ""))
+
+
+@dataclass(kw_only=True, slots=True)
 class RadioButton(BaseComponent):
     component_type: Literal["radio_button"] = "radio_button"
     id: str
@@ -378,6 +411,7 @@ type FilterComponent = (
     | Checkbox
     | CheckboxGroup
     | TextInput
+    | MultiselectWithFreeText
     | RadioButton
     | Slider
     | StaticText

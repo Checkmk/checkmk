@@ -21,6 +21,7 @@ from ..components import (
     Hidden,
     HorizontalGroup,
     LabelGroupFilterComponent,
+    MultiselectWithFreeText,
     RadioButton,
     Slider,
     StaticText,
@@ -124,6 +125,28 @@ class TextInputComponentModel:
 
 
 @dataclass(kw_only=True, slots=True)
+class MultiselectWithFreeTextComponentModel:
+    component_type: Literal["multiselect_with_free_text"] = api_field(
+        description="A multi-select whose values may also be typed rather than picked."
+    )
+    id: str = api_field(description="The identifier for the component.")
+    autocompleter: AutocompleterConfigModel = api_field(
+        description="Configuration for the autocompleter backing the picker."
+    )
+    separator: str = api_field(
+        description="Separator joining the picked and typed values within the one variable."
+    )
+    label: str | ApiOmitted = api_field(
+        description="The label for the text input.",
+        default_factory=ApiOmitted,
+    )
+    pick_hint: str | ApiOmitted = api_field(
+        description="Placeholder shown in the input.",
+        default_factory=ApiOmitted,
+    )
+
+
+@dataclass(kw_only=True, slots=True)
 class RadioButtonComponentModel:
     component_type: Literal["radio_button"] = api_field(description="A radio button component.")
     id: str = api_field(description="The identifier for the radio button component.")
@@ -200,6 +223,7 @@ type FilterComponentModel = Annotated[
     | CheckboxComponentModel
     | CheckboxGroupComponentModel
     | TextInputComponentModel
+    | MultiselectWithFreeTextComponentModel
     | RadioButtonComponentModel
     | SliderComponentModel
     | StaticTextComponentModel
@@ -251,6 +275,15 @@ def filter_component_from_internal(component: FilterComponent) -> FilterComponen
             id=component.id,
             label=ApiOmitted.from_optional(component.label),
             suffix=ApiOmitted.from_optional(component.suffix),
+        )
+    if isinstance(component, MultiselectWithFreeText):
+        return MultiselectWithFreeTextComponentModel(
+            component_type=component.component_type,
+            id=component.id,
+            autocompleter=AutocompleterConfigModel.from_autocompleter(component.autocompleter),
+            separator=component.separator,
+            label=ApiOmitted.from_optional(component.label),
+            pick_hint=ApiOmitted.from_optional(component.pick_hint),
         )
     if isinstance(component, RadioButton):
         return RadioButtonComponentModel(

@@ -92,6 +92,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
+from cmk.gui.utils.confirm_links import make_confirm_delete_link, make_confirm_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -99,8 +100,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
-    make_confirm_delete_link,
-    make_confirm_link,
     makeactionuri,
     makeactionuri_contextless,
     makeuri_contextless,

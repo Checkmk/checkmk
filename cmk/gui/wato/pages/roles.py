@@ -53,16 +53,12 @@ from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserRole
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import builtin_role_id_from_str
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    DocReference,
-    make_confirm_delete_link,
-    makeactionuri,
-    makeuri_contextless,
-)
+from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri_contextless
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import CORE

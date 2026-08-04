@@ -37,9 +37,10 @@ from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, urlencode_vars
+from cmk.gui.utils.urls import makeactionuri, makeuri, urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Checkbox,

@@ -95,18 +95,14 @@ from cmk.gui.type_defs import (
     VisualPublic,
 )
 from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    make_confirm_delete_link,
-    makeactionuri,
-    makeuri,
-    makeuri_contextless,
-)
+from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (

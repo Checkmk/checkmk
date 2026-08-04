@@ -44,12 +44,13 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import IconNames, StaticIcon
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,

@@ -82,17 +82,13 @@ from cmk.gui.type_defs import (
     StaticIcon,
 )
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    DocReference,
-    make_confirm_delete_link,
-    makeuri_contextless,
-    makeuri_contextless_rulespec_group,
-)
+from cmk.gui.utils.urls import DocReference, makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
     Age,
     Alternative,

@@ -31,9 +31,10 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 
 
 def register(

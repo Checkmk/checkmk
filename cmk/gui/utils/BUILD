@@ -26,6 +26,7 @@ py_library(
 py_library(
     name = "middle",
     srcs = [
+        "confirm_links.py",
         "dataclasses.py",
         "escaping.py",
         "flashed_messages.py",

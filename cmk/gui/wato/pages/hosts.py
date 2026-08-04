@@ -60,14 +60,11 @@ from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    make_confirm_delete_link,
-    makeactionuri,
-    makeuri_contextless,
-)
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,

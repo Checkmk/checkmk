@@ -61,6 +61,7 @@ from cmk.gui.type_defs import (
     StaticIcon,
 )
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
@@ -75,7 +76,6 @@ from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
-    make_confirm_delete_link,
     makeactionuri,
     makeuri,
     makeuri_contextless,

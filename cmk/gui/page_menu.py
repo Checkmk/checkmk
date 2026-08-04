@@ -33,6 +33,7 @@ from cmk.gui.type_defs import (
     StaticIcon,
 )
 from cmk.gui.utils import escaping
+from cmk.gui.utils.confirm_links import get_confirm_link_title
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
@@ -45,7 +46,6 @@ from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
     DocReferenceUtm,
-    get_confirm_link_title,
     makeuri,
     requested_file_name,
     urlencode,

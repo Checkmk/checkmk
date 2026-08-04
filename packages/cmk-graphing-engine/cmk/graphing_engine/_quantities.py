@@ -29,17 +29,6 @@ from ._perfdata import (
 from ._units import CurveAttributes
 
 
-# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
-# QuantityProtocol.metrics() yields. A metric is identified by its metric_name - that is what sets it apart
-# from a plain QuantityProtocol (an expression node) - and tagged by kind() like any serialized quantity.
-# It must be hashable: the evaluation context keys its fetched data by the metric leaf.
-class MetricProtocol(Hashable, Protocol):
-    def kind(self) -> str: ...
-
-    @property
-    def metric_name(self) -> MetricName: ...
-
-
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
     time_range: TimeRange
@@ -94,6 +83,15 @@ class QuantityProtocol(Protocol):
         registered_metrics: Mapping[str, metrics_v1.Metric],
         /,
     ) -> CurveAttributes | None: ...
+
+
+# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
+# QuantityProtocol.metrics() yields. A metric is a quantity that draws itself, identified by its
+# metric_name - that is what sets it apart from an expression node. It must be hashable: the
+# evaluation context keys its fetched data by the metric leaf.
+class MetricProtocol(QuantityProtocol, Hashable, Protocol):
+    @property
+    def metric_name(self) -> MetricName: ...
 
 
 type _Operator = Callable[[Sequence[float | None]], float | None]

@@ -198,3 +198,17 @@ def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
         value=-3.0,
         time_series=TimeSeries(time_range=_TR, values=[-1.0, None, -3.0]),
     )
+
+
+def test_a_metric_leaf_is_a_quantity() -> None:
+    # A metric is the leaf the fetch resolves data for *and* the quantity that draws it, so anything
+    # a graph can ask to fetch can also be evaluated - which is what the codec relies on when it
+    # serializes the metric of a threshold.
+    def _as_quantity(quantity: QuantityProtocol) -> QuantityProtocol:
+        return quantity
+
+    def _as_metric(metric: MetricProtocol) -> MetricProtocol:
+        return metric
+
+    metric = _metric("a")
+    assert _as_quantity(_as_metric(metric)) is metric

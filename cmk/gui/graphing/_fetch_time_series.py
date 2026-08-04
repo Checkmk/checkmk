@@ -29,7 +29,7 @@ from ._graph_specification import (
     GraphRanges,
     GraphRecipe,
 )
-from ._metric_backend_registry import FetchTimeSeries
+from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._rrd import fetch_time_series_rrd
 from ._unit import user_specific_unit
 
@@ -44,7 +44,7 @@ def fetch_augmented_time_series(
     *,
     consolidation_function: GraphConsolidationFunction | None,
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
 ) -> Iterator[Result[AugmentedTimeSeriesOfGraphMetric, QueryDataError]]:
     conversion = user_specific_unit(recipe.unit_spec, temperature_unit).conversion
     start_time = ranges.time_range[0]

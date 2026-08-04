@@ -78,7 +78,7 @@ from ._graph_templates import (
 )
 from ._graph_title import iter_graph_title_elements
 from ._metric_backend_registry import (
-    FetchTimeSeries,
+    FetchTimeSeriesProtocol,
     METRIC_BACKEND_KEY,
     metric_backend_registry,
 )
@@ -525,7 +525,7 @@ def _render_time_range_selection(
     *,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> HTML:
     now = int(time.time())
@@ -610,7 +610,7 @@ def _render_graph_content_html(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     expandable_legend_appearance: ExpandableLegendAppearance,
     show_limits_if_reached: bool,
     additional_html: AdditionalGraphHTML | None = None,
@@ -1217,7 +1217,7 @@ def render_graph_html(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     show_titles_if_limit_reached: bool,
     converter: Callable[[GraphMetricExpression], JsonSerializable] | None,
     additional_html: AdditionalGraphHTML | None = None,
@@ -1546,7 +1546,7 @@ def render_graph_values_at_time(
     consolidation_function: GraphConsolidationFunction | None,
     hover_time: int,
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
 ) -> GraphValuesAtTime:
     """Return the graph hover data for a pre-built recipe and data range."""
     curves = compute_curves_at_timestamp(
@@ -1685,7 +1685,7 @@ def host_service_graph_dashlet_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:

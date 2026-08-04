@@ -51,7 +51,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._metric_backend_registry import FetchTimeSeries
+from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._time_series import TimeSeries
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import Linear, SizeEx
@@ -329,7 +329,7 @@ def compute_graph_artwork(
     *,
     consolidation_function: GraphConsolidationFunction | None,
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     pin_time: int | None = None,
     mark_requested_end_time: bool = False,
 ) -> GraphArtworkOrErrors:

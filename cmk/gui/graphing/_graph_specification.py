@@ -36,7 +36,7 @@ from ._graph_metric_expressions import (
     LineType,
     parse_graph_metric_expression,
 )
-from ._metric_backend_registry import FetchTimeSeries
+from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._rrd import HostGraphRow, ServiceGraphRow
 from ._translated_metrics import TranslatedMetric
 from ._unit import (
@@ -54,7 +54,7 @@ class GraphEnvironment:
     registered_graphs: Mapping[str, GraphFromAPI]
     user_permissions: UserPermissions
     temperature_unit: TemperatureUnit
-    backend_time_series_fetcher: FetchTimeSeries | None
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None
     debug: bool = False
     show_graph_ids: bool = False
 

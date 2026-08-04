@@ -79,7 +79,11 @@ from ._html_render import (
     render_graphs_html,
 )
 from ._legacy import check_metrics, CheckMetricEntry
-from ._metric_backend_registry import FetchTimeSeries, METRIC_BACKEND_KEY, metric_backend_registry
+from ._metric_backend_registry import (
+    FetchTimeSeriesProtocol,
+    METRIC_BACKEND_KEY,
+    metric_backend_registry,
+)
 from ._metrics import (
     get_metric_spec,
     MetricSpec,
@@ -130,7 +134,7 @@ __all__ = [
     "ConvertibleUnitSpecification",
     "DecimalNotation",
     "ExplicitGraphSpecification",
-    "FetchTimeSeries",
+    "FetchTimeSeriesProtocol",
     "GraphArtwork",
     "GraphArtworkAnnotations",
     "GraphConsolidationFunction",

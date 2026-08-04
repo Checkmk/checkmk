@@ -16,7 +16,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     compute_html_graph_ranges,
-    FetchTimeSeries,
+    FetchTimeSeriesProtocol,
     get_temperature_unit,
     get_template_graph_specification,
     GraphDisplayConfigHTML,
@@ -193,7 +193,7 @@ def _paint_time_graph_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     user: LoggedInUser,
     request: Request,
     response: Response,

@@ -21,7 +21,7 @@ from ._graph_metric_expressions import (
 METRIC_BACKEND_KEY = "metric_backend"
 
 
-class FetchTimeSeries(Protocol):
+class FetchTimeSeriesProtocol(Protocol):
     def __call__(
         self,
         keys: Sequence[QueryDataKey],
@@ -50,7 +50,7 @@ class MetricBackend:
     def feature_available(self) -> bool:
         return False
 
-    def get_time_series_fetcher(self) -> FetchTimeSeries | None:
+    def get_time_series_fetcher(self) -> FetchTimeSeriesProtocol | None:
         return None
 
     def get_backend_query_builder(self) -> BackendQueryBuilderProtocol | None:

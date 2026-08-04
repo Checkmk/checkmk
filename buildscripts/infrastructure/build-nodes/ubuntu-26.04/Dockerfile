@@ -12,6 +12,9 @@ ENV \
     LANG=C.UTF-8 \
     PATH="/opt/bin:${PATH}"
 
+# Fix for CMK-23806, using our internal apt mirror
+RUN sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list.d/ubuntu.sources
+
 RUN apt-get update
 
 RUN apt-get install -y \

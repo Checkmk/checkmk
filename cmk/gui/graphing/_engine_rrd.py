@@ -12,7 +12,7 @@ import time
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from statistics import fmean
-from typing import assert_never, Final
+from typing import assert_never, Final, Protocol
 
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import translations as translations_v1
@@ -569,6 +569,123 @@ def _chop_last_empty_step(
 
 
 @dataclass(frozen=True, kw_only=True)
+class PerformanceDataRow:
+    service: Service
+    site_id: SiteID
+    perf_data: str
+    check_command: str
+
+
+class _RRDFetchPerformanceDataProtocol(Protocol):
+    def __call__(
+        self, services: Sequence[Service], *, only_site: SiteID | None
+    ) -> Sequence[PerformanceDataRow]: ...
+
+
+class _RRDFetchTimeSeriesProtocol(Protocol):
+    def __call__(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        *,
+        consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
+        only_site: SiteID | None,
+    ) -> Mapping[RRDMetric, EngineTimeSeries]: ...
+
+
+@dataclass(frozen=True)
+class RRDFetchPerformanceData:
+    def __call__(
+        self, services: Sequence[Service], *, only_site: SiteID | None
+    ) -> Sequence[PerformanceDataRow]:
+        # prepend_site reveals which site each row came from (as in the legacy fetch_graph_row): a
+        # metric whose site is unknown up front is thereby scoped to the site its data lives on for
+        # the time-series fetch.
+        rows: list[PerformanceDataRow] = []
+        for query in _object_queries(services, ["perf_data", "check_command"]):
+            with sites.only_sites(_only_sites(only_site)), sites.prepend_site():
+                for row_site, *row in sites.live().query(query.lql):
+                    service, values = query.parse_row(row)
+                    perf_data, check_command = values
+                    rows.append(
+                        PerformanceDataRow(
+                            service=service,
+                            site_id=SiteID(str(row_site)),
+                            perf_data=str(perf_data),
+                            check_command=str(check_command),
+                        )
+                    )
+        return rows
+
+
+@dataclass(frozen=True)
+class RRDFetchTimeSeries:
+    # An optional RRDtool cap on the number of data points a time-series query returns, appended to
+    # the rrddata range (as the legacy forecast fetch does). None leaves the point count uncapped.
+    max_data_points: int | None = None
+
+    def __call__(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        *,
+        consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
+        only_site: SiteID | None,
+    ) -> Mapping[RRDMetric, EngineTimeSeries]:
+        metrics_by_service: dict[Service, list[RRDMetric]] = {}
+        for metric in rrd_metrics:
+            ref = Service(host_name=metric.host_name, service_name=metric.service_name)
+            metrics_by_service.setdefault(ref, []).append(metric)
+
+        services_by_metric_names: dict[tuple[str, ...], list[Service]] = {}
+        for ref, metrics in metrics_by_service.items():
+            names = tuple(sorted(str(metric.metric_name) for metric in metrics))
+            services_by_metric_names.setdefault(names, []).append(ref)
+
+        result: dict[RRDMetric, EngineTimeSeries] = {}
+        for metric_names, refs in services_by_metric_names.items():
+            column_of = {name: index for index, name in enumerate(metric_names)}
+            columns = [
+                self._column(
+                    MetricName(name),
+                    consolidation_function=consolidation_function,
+                    time_range=time_range,
+                )
+                for name in metric_names
+            ]
+            for query in _object_queries(refs, columns):
+                with (
+                    sites.only_sites(_only_sites(only_site)),
+                    contextlib.suppress(MKLivestatusNotFoundError),
+                ):
+                    for row in sites.live().query(query.lql):
+                        service, values = query.parse_row(row)
+                        for metric in metrics_by_service.get(service, []):
+                            column = values[column_of[str(metric.metric_name)]]
+                            if not column:
+                                continue
+                            result[metric] = EngineTimeSeries(
+                                time_range=TimeRange(
+                                    start=int(column[0]), end=int(column[1]), step=int(column[2])
+                                ),
+                                values=column[3:],
+                            )
+        return result
+
+    def _column(
+        self,
+        metric_name: MetricName,
+        *,
+        consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
+    ) -> str:
+        data_range = f"{time_range.start}:{time_range.end}:{max(1, time_range.step)}"
+        if self.max_data_points is not None:
+            data_range += f":{self.max_data_points}"
+        return f"rrddata:{metric_name}:{metric_name}.{consolidation_function}:{data_range}"
+
+
+@dataclass(frozen=True, kw_only=True)
 class QueryLimitReached:
     # A fan-out query hit its backend series cap, so its result is truncated.
     metric_name: str
@@ -623,9 +740,11 @@ def _only_sites(site: SiteID | None) -> SiteId | None:
 class EngineRRDFetchData:
     debug: bool
     registered_translations: Sequence[translations_v1.Translation] = ()
-    # An optional RRDtool cap on the number of data points a time-series query returns, appended to
-    # the rrddata range (as the legacy forecast fetch does). None leaves the point count uncapped.
-    max_data_points: int | None = None
+    # Where the two reads this fetch is built on come from. The defaults are the monitoring core;
+    # what the fetch does with the data - translate it, resolve the columns a metric is drawn from,
+    # scale and merge the series - sits above them and is independent of it.
+    performance_data_source: _RRDFetchPerformanceDataProtocol = RRDFetchPerformanceData()
+    time_series_source: _RRDFetchTimeSeriesProtocol = RRDFetchTimeSeries()
     # Accumulated while fetching; read by the dispatcher into the evaluated result.
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics, compare=False)
 
@@ -767,19 +886,13 @@ class EngineRRDFetchData:
             )
             if not site_services:
                 continue
-            # prepend_site reveals which site each row came from (as in the legacy fetch_graph_row):
-            # a metric whose site is unknown up front is thereby scoped to the site its data lives on
-            # for the time-series fetch. The performance data is keyed by the metric's own site, so a
-            # same host/service matched on two sites keeps a distinct entry per site.
-            for query in _object_queries(site_services, ["perf_data", "check_command"]):
-                with sites.only_sites(_only_sites(group_site)), sites.prepend_site():
-                    for row_site, *row in sites.live().query(query.lql):
-                        service, values = query.parse_row(row)
-                        perf_data_string, check_command = values
-                        result[(group_site, service)] = parse_performance_data(
-                            perf_data_string, check_command, debug=self.debug
-                        )
-                        site_of_service[service] = SiteID(str(row_site))
+            # The performance data is keyed by the metric's own site, so a same host/service matched
+            # on two sites keeps a distinct entry per site.
+            for row in self.performance_data_source(site_services, only_site=group_site):
+                result[(group_site, row.service)] = parse_performance_data(
+                    row.perf_data, row.check_command, debug=self.debug
+                )
+                site_of_service[row.service] = row.site_id
         return result, site_of_service
 
     def _fetch_time_series(
@@ -792,55 +905,11 @@ class EngineRRDFetchData:
         result: dict[RRDMetric, EngineTimeSeries] = {}
         for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
             result.update(
-                self._fetch_time_series_of_site(
+                self.time_series_source(
                     site_metrics,
-                    _only_sites(group_site),
-                    time_range=time_range,
                     consolidation_function=consolidation_function,
+                    time_range=time_range,
+                    only_site=group_site,
                 )
             )
-        return result
-
-    def _fetch_time_series_of_site(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        site_id: SiteId | None,
-        *,
-        time_range: TimeRange,
-        consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDMetric, EngineTimeSeries]:
-        metrics_by_service: dict[Service, list[RRDMetric]] = {}
-        for metric in rrd_metrics:
-            ref = Service(host_name=metric.host_name, service_name=metric.service_name)
-            metrics_by_service.setdefault(ref, []).append(metric)
-
-        services_by_metric_names: dict[tuple[str, ...], list[Service]] = {}
-        for ref, metrics in metrics_by_service.items():
-            names = tuple(sorted(str(metric.metric_name) for metric in metrics))
-            services_by_metric_names.setdefault(names, []).append(ref)
-
-        result: dict[RRDMetric, EngineTimeSeries] = {}
-        for metric_names, refs in services_by_metric_names.items():
-            column_of = {name: index for index, name in enumerate(metric_names)}
-            data_range = f"{time_range.start}:{time_range.end}:{max(1, time_range.step)}"
-            if self.max_data_points is not None:
-                data_range += f":{self.max_data_points}"
-            columns = [
-                f"rrddata:{name}:{name}.{consolidation_function}:{data_range}"
-                for name in metric_names
-            ]
-            for query in _object_queries(refs, columns):
-                with sites.only_sites(site_id), contextlib.suppress(MKLivestatusNotFoundError):
-                    for row in sites.live().query(query.lql):
-                        service, values = query.parse_row(row)
-                        for metric in metrics_by_service.get(service, []):
-                            column = values[column_of[str(metric.metric_name)]]
-                            if not column:
-                                continue
-                            result[metric] = EngineTimeSeries(
-                                time_range=TimeRange(
-                                    start=int(column[0]), end=int(column[1]), step=int(column[2])
-                                ),
-                                values=column[3:],
-                            )
         return result

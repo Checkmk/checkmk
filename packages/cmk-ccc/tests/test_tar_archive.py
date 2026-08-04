@@ -100,38 +100,41 @@ def test_safe_extractall_streaming_path(tmp_path: Path) -> None:
         assert (dest / f).read_bytes() == content
 
 
-def test_safe_extractall_indexed_bytes(tmp_path: Path) -> None:
+def test_safe_extract_indexed_bytes(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     raw = make_tarfile_bytes(files)
     dest = tmp_path / "dest"
 
     with open_bytes_indexed(raw) as safe_tar:
         assert [m.name for m in safe_tar.getmembers()] == ["a.txt", "b.txt"]
-        safe_tar.extractall(dest)
+        for member in safe_tar.getmembers():
+            safe_tar.extract(member, dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
-def test_safe_extractall_indexed_buffer(tmp_path: Path) -> None:
+def test_safe_extract_indexed_buffer(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     buf = make_tarfile_io(files)
     dest = tmp_path / "dest"
 
     with open_buffer_indexed(buf) as safe_tar:
-        safe_tar.extractall(dest)
+        for member in safe_tar.getmembers():
+            safe_tar.extract(member, dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
 
 
-def test_safe_extractall_indexed_path(tmp_path: Path) -> None:
+def test_safe_extract_indexed_path(tmp_path: Path) -> None:
     files = [("a.txt", b"hello"), ("b.txt", b"world")]
     path = make_tarfile_path(files, tmp_path)
     dest = tmp_path / "dest"
 
     with open_path_indexed(path) as safe_tar:
-        safe_tar.extractall(dest)
+        for member in safe_tar.getmembers():
+            safe_tar.extract(member, dest)
 
     for f, content in files:
         assert (dest / f).read_bytes() == content
@@ -363,11 +366,11 @@ def test_extractfile_by_name_without_a_name_keeps_the_cursor() -> None:
         assert [m.name for m in safe_tar] == ["a.txt"]
 
 
-def test_streaming_extractmember_returns_none_for_a_directory() -> None:
+def test_extractfile_by_name_returns_none_for_a_directory() -> None:
     raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
 
     with open_bytes_streaming(raw) as safe_tar:
-        assert safe_tar.extractmember(next(safe_tar)) is None
+        assert safe_tar.extractfile_by_name("subdir") is None
 
 
 def test_indexed_extract_single_member(tmp_path: Path) -> None:
@@ -382,27 +385,14 @@ def test_indexed_extract_single_member(tmp_path: Path) -> None:
     assert not (dest / "a.txt").exists()
 
 
-def test_indexed_extractmember() -> None:
-    files = {"a.txt": b"hello", "b.txt": b"world"}
+def test_indexed_extract_in_reverse_archive_order(tmp_path: Path) -> None:
+    """Members stay accessible in any order, in contrast to streaming mode."""
+    files = [("a.txt", b"hello"), ("b.txt", b"world")]
+    dest = tmp_path / "dest"
 
-    with open_bytes_indexed(make_tarfile_bytes(files.items())) as safe_tar:
-        members = safe_tar.getmembers()
-        # random access, in an order the archive does not have
-        for member in reversed(members):
-            obj = safe_tar.extractmember(member)
-            assert obj is not None
-            assert obj.read() == files[member.name]
+    with open_bytes_indexed(make_tarfile_bytes(files)) as safe_tar:
+        for member in reversed(safe_tar.getmembers()):
+            safe_tar.extract(member, dest)
 
-
-def test_indexed_extractmember_returns_none_for_a_directory() -> None:
-    raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
-
-    with open_bytes_indexed(raw) as safe_tar:
-        assert safe_tar.extractmember(safe_tar.getmembers()[0]) is None
-
-
-def test_indexed_extractfile_by_name_returns_none_for_a_directory() -> None:
-    raw = make_tarfile_bytes_from_members(make_member("subdir", tarfile.DIRTYPE))
-
-    with open_bytes_indexed(raw) as safe_tar:
-        assert safe_tar.extractfile_by_name("subdir") is None
+    for f, content in files:
+        assert (dest / f).read_bytes() == content

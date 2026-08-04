@@ -111,8 +111,9 @@ DEFAULT_ARCHIVE_LIMITS: Final = ArchiveLimits()
 class SafeStreamedTarFile:
     """Safe wrapper around TarFile in streaming mode (r|gz).
 
-    Validates incrementally during iteration. There is a cursor: seeking backwards is not possible
-    and once it reaches EOF the archive has to be reopened for a second pass.
+    Validates incrementally during iteration, which is therefore the only way to reach a member:
+    seeking backwards is impossible, so members become available in archive order only and the
+    archive has to be reopened for a second pass.
     """
 
     def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None) -> None:
@@ -146,17 +147,13 @@ class SafeStreamedTarFile:
         """
         self._extractor.extract_all(self, Path(dest))
 
-    def extractmember(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
-        """
-        Safely extract a single member in memory. Returns None if the member has no content,
-        e.g. because it is a directory.
-        """
-        return self._extractor.extract_in_memory(member)
-
     def extractfile_by_name(self, target_file: str) -> IO[bytes] | None:
         """
         Safely extract a single file from the archive in memory. Returns None if the archive holds
         no such file, or if the file has no content, e.g. because it is a directory.
+
+        Searching advances the cursor, so only members ahead of it can be found and the result has
+        to be read before iteration continues.
         """
         return self._extractor.extract_in_memory_by_name(self, target_file) if target_file else None
 
@@ -211,30 +208,6 @@ class SafeIndexedTarFile:
         Safely extract a single member to the desired path
         """
         self._extractor.extract(member, Path(path), tar_filter)
-
-    def extractall(self, dest: Path | str) -> None:
-        """
-        Safely extract a whole archive to the disk
-        """
-        self._extractor.extract_all(self._members, Path(dest))
-
-    def extractmember(self, member: tarfile.TarInfo | str) -> IO[bytes] | None:
-        """
-        Safely extract a single member in memory. Returns None if the member has no content,
-        e.g. because it is a directory.
-        """
-        return self._extractor.extract_in_memory(member)
-
-    def extractfile_by_name(self, target_file: str) -> IO[bytes] | None:
-        """
-        Safely extract a single file from the archive in memory. Returns None if the archive holds
-        no such file, or if the file has no content, e.g. because it is a directory.
-        """
-        return (
-            self._extractor.extract_in_memory_by_name(self._members, target_file)
-            if target_file
-            else None
-        )
 
     def __enter__(self) -> "SafeIndexedTarFile":
         return self

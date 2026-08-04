@@ -6,7 +6,7 @@
 import io
 import math
 import tarfile
-from collections.abc import Callable, Generator, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -117,7 +117,7 @@ class SafeStreamedTarFile:
     """
 
     def __init__(self, tar: tarfile.TarFile, limits: ArchiveLimits, name: str | None) -> None:
-        self._extractor = _SafeExtractor(tar)
+        self._tar = tar
         self._limits = limits
         self._name = name
         self._member_iter = iter(tar)
@@ -145,7 +145,8 @@ class SafeStreamedTarFile:
         """
         Safely extract the remaining members of the archive to the disk
         """
-        self._extractor.extract_all(self, Path(dest))
+        for member in self:
+            _extract_to_disk(self._tar, member, Path(dest), "data")
 
     def extractfile_by_name(self, target_file: str) -> IO[bytes] | None:
         """
@@ -155,7 +156,12 @@ class SafeStreamedTarFile:
         Searching advances the cursor, so only members ahead of it can be found and the result has
         to be read before iteration continues.
         """
-        return self._extractor.extract_in_memory_by_name(self, target_file) if target_file else None
+        if not target_file:
+            return None
+        for member in self:
+            if member.name == target_file:
+                return _payload(self._tar, member)
+        return None
 
     def __enter__(self) -> "SafeStreamedTarFile":
         return self
@@ -166,7 +172,7 @@ class SafeStreamedTarFile:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        self._extractor.close()
+        self._tar.close()
 
 
 class SafeIndexedTarFile:
@@ -183,7 +189,7 @@ class SafeIndexedTarFile:
         for member in members:
             limits.validate_member(member)
 
-        self._extractor = _SafeExtractor(tar)
+        self._tar = tar
         self._name = name
         self._members: Final = members
 
@@ -204,7 +210,7 @@ class SafeIndexedTarFile:
         """
         Safely extract a single member to the desired path
         """
-        self._extractor.extract(member, Path(path), tar_filter)
+        _extract_to_disk(self._tar, member, Path(path), tar_filter)
 
     def __enter__(self) -> "SafeIndexedTarFile":
         return self
@@ -215,7 +221,7 @@ class SafeIndexedTarFile:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        self._extractor.close()
+        self._tar.close()
 
 
 @contextmanager
@@ -299,44 +305,29 @@ def validate_bytes(
             ...
 
 
-class _SafeExtractor:
-    """Owns a TarFile and enforces the security checks while extracting from it.
+def _extract_to_disk(
+    tar: tarfile.TarFile, member: tarfile.TarInfo, dest: Path, tar_filter: FilterType
+) -> None:
+    """Write a single member below dest, refusing to escape it.
 
-    Knows nothing about tar modes: it only ever touches the members it is handed, which is what
-    makes it usable while streaming. Resolving a member by name is deliberately not offered, since
-    tarfile would answer that by reading the whole archive index, bypassing the validation the
-    surrounding wrapper performs.
+    Every write to disk goes through here. The member has to be one the calling wrapper obtained
+    itself: resolving one by name is deliberately not offered, since tarfile would answer that by
+    reading the whole archive index, bypassing the wrapper's validation.
     """
+    dest = dest.resolve()
+    if not (dest / member.name).resolve().is_relative_to(dest):
+        raise SecurityViolation(f"Path traversal attempt: {member.name}")
+    tar.extract(member, path=dest, filter=tar_filter)
 
-    def __init__(self, tar: tarfile.TarFile) -> None:
-        self._tar = tar
 
-    def extract(self, member: tarfile.TarInfo, dest: Path, tar_filter: FilterType) -> None:
-        dest = dest.resolve()
-        if not (dest / member.name).resolve().is_relative_to(dest):
-            raise SecurityViolation(f"Path traversal attempt: {member.name}")
-        self._tar.extract(member, path=dest, filter=tar_filter)
+def _payload(tar: tarfile.TarFile, member: tarfile.TarInfo) -> IO[bytes] | None:
+    """Read a member in memory, or None if it has no payload of its own.
 
-    def extract_all(self, members: Iterable[tarfile.TarInfo], dest: Path) -> None:
-        for member in members:
-            self.extract(member, dest, "data")
-
-    def extract_in_memory(self, member: tarfile.TarInfo) -> IO[bytes] | None:
-        # Only regular files carry a payload of their own, and the streaming mode cannot even hand
-        # out anything else: tarfile raises a StreamError for a (sym)link because resolving it
-        # would mean seeking to the target.
-        return self._tar.extractfile(member) if member.isfile() else None
-
-    def extract_in_memory_by_name(
-        self, members: Iterable[tarfile.TarInfo], target_file: str
-    ) -> IO[bytes] | None:
-        for member in members:
-            if member.name == target_file:
-                return self.extract_in_memory(member)
-        return None
-
-    def close(self) -> None:
-        self._tar.close()
+    Only regular files carry one, and the streaming mode cannot even hand out anything else:
+    tarfile raises a StreamError for a (sym)link because resolving it would mean seeking to the
+    target.
+    """
+    return tar.extractfile(member) if member.isfile() else None
 
 
 @contextmanager

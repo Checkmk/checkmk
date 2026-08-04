@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -19,6 +18,11 @@ interface HostAction {
   label: TranslatedString
   icon: SimpleIcons
 }
+
+defineProps<{
+  /** The action performing right away, pulsing until it settles. */
+  runningActionId?: string | null
+}>()
 
 const emit = defineEmits<{
   (event: 'select', actionId: string): void
@@ -41,10 +45,10 @@ const actions: HostAction[] = [
       size="medium"
       variant="optional"
       :title="action.label"
-      class="monitoring-host-slide-in-actions__button"
+      :icon="{ name: action.icon, size: 'small' }"
+      :running="runningActionId === action.id"
       @click="emit('select', action.id)"
     >
-      <CmkIcon :name="action.icon" size="small" />
       {{ action.label }}
     </CmkButton>
   </div>
@@ -54,10 +58,6 @@ const actions: HostAction[] = [
 .monitoring-host-slide-in-actions {
   display: flex;
   flex-flow: row wrap;
-  gap: var(--dimension-4);
-}
-
-.monitoring-host-slide-in-actions__button {
   gap: var(--dimension-4);
 }
 </style>

@@ -7,15 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type RowSelectionState } from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
-import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, markRaw, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -50,10 +48,7 @@ import { HostActionMenuApi } from './api/actionMenu'
 import { HostApi } from './api/hosts'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
-import HostOverviewSkeleton from './components/slide-in/HostOverviewSkeleton.vue'
-import HostOverviewTab from './components/slide-in/HostOverviewTab.vue'
-import HostSlideInActions from './components/slide-in/HostSlideInActions.vue'
-import HostSlideInHeader from './components/slide-in/HostSlideInHeader.vue'
+import HostSlideIn from './components/HostSlideIn.vue'
 import { HostService } from './services/HostService'
 
 const { _t } = usei18n()
@@ -198,66 +193,11 @@ function rowKey(row: HostEntry): string {
 }
 
 const slideInHost = ref<HostEntry | null>(null)
-const slideInOpen = computed(() => slideInHost.value !== null)
-const slideInActionId = ref<string | null>(null)
-const slideInFeedback = ref<ActionFeedbackResult | null>(null)
-const slideInFeedbackOpen = ref(false)
-
-const slideInTargets = computed<HostRef[]>(() =>
-  slideInHost.value ? [{ site_id: slideInHost.value.site_id, name: slideInHost.value.name }] : []
-)
-
-const slideInInlineActions = computed<CellAction[]>(() => {
-  const host = slideInHost.value
-  if (!host) {
-    return []
-  }
-  const name = host.name
-  const statusAction: CellAction = {
-    id: 'show_status',
-    label: _t('Show status of host %{name}', { name }),
-    icon: 'folder',
-    url: host.legacy_host_status_link
-  }
-  const resolved = rowActionButtons.map((action) => ({
-    ...action,
-    label: action.id === 'edit' ? _t('Edit host %{name}', { name }) : action.label,
-    url: action.url?.replace('{host}', encodeURIComponent(name))
-  }))
-  return [statusAction, ...resolved]
-})
-
-const slideInLoadActionMenu = computed<(() => Promise<CellAction[]>) | undefined>(() => {
-  const host = slideInHost.value
-  if (!host) {
-    return undefined
-  }
-  const hostRef: HostRef = { site_id: host.site_id, name: host.name }
-  return () => loadActionMenu(hostRef)
-})
-
-const slideInTabs = computed<SlideInTab[]>(() => {
-  const host = slideInHost.value
-  if (!host) {
-    return []
-  }
-  return [
-    {
-      id: 'overview',
-      title: _t('Overview'),
-      component: markRaw(HostOverviewTab),
-      skeleton: markRaw(HostOverviewSkeleton),
-      load: () => hostApi.fetchHostOverview({ site_id: host.site_id, name: host.name })
-    }
-  ]
-})
 
 function openSlideIn(host: HostEntry): void {
   if (slideInHost.value === null) {
     hostService.beginAutoPause()
   }
-  slideInActionId.value = null
-  slideInFeedback.value = null
   slideInHost.value = host
 }
 
@@ -266,38 +206,9 @@ function closeSlideIn(): void {
     hostService.endAutoPause()
   }
   slideInHost.value = null
-  slideInActionId.value = null
-  slideInFeedback.value = null
-}
-
-async function openSlideInAction(actionId: string): Promise<void> {
-  if (!(actionId in actionRegistry)) {
-    return
-  }
-  if (actionId === RESCHEDULE_ACTION_ID) {
-    await runSlideInActionImmediately(actionId)
-    return
-  }
-  slideInFeedback.value = null
-  slideInActionId.value = actionId
-}
-
-async function runSlideInActionImmediately(actionId: string): Promise<void> {
-  const action = actionRegistry[actionId]
-  if (!action || slideInTargets.value.length === 0) {
-    return
-  }
-  onSlideInActionFeedback(await action.perform(slideInTargets.value, action.defaultValues()))
-}
-
-function closeSlideInAction(): void {
-  slideInActionId.value = null
 }
 
 function onSlideInActionFeedback(result: ActionFeedbackResult): void {
-  slideInFeedback.value = result
-  slideInFeedbackOpen.value = true
-  slideInActionId.value = null
   if (result.variant === 'success') {
     hostService.refresh(ACTION_REFRESH_DELAY_MS)
   }
@@ -330,14 +241,6 @@ async function onRowCommand(payload: { id: string; host: HostRef }): Promise<voi
   applyFeedback(await action.perform([payload.host], action.defaultValues()), {
     clearSelection: false
   })
-}
-
-async function onSlideInRowCommand(payload: { id: string; host: HostRef }): Promise<void> {
-  const action = actionRegistry[payload.id]
-  if (!action) {
-    return
-  }
-  onSlideInActionFeedback(await action.perform([payload.host], action.defaultValues()))
 }
 
 function onRightPaneCollapse(collapsed: boolean): void {
@@ -468,52 +371,14 @@ function onRightPaneCollapse(collapsed: boolean): void {
         />
       </template>
     </CmkSplitPane>
-    <CmkSlideInTabbed
-      :open="slideInOpen"
-      :tabs="slideInTabs"
-      :override-active="slideInActionId !== null"
-      :header="{ title: _t('Host details'), closeButton: true }"
+    <HostSlideIn
+      :host="slideInHost"
+      :actions="actionRegistry"
+      :row-actions="rowActionButtons"
+      :load-action-menu="loadActionMenu"
       @close="closeSlideIn"
-    >
-      <template #above-tabs>
-        <HostSlideInHeader
-          v-if="slideInHost"
-          :host="slideInHost"
-          :actions="slideInInlineActions"
-          :load-action-menu="slideInLoadActionMenu"
-          @command="onSlideInRowCommand"
-        />
-      </template>
-      <template #actions>
-        <HostSlideInActions @select="openSlideInAction" />
-        <ActionFeedback
-          v-if="slideInFeedback"
-          v-model:open="slideInFeedbackOpen"
-          class="monitoring-all-hosts-app__slide-in-feedback"
-          :feedback="slideInFeedback"
-        />
-      </template>
-      <template #override>
-        <CmkButton
-          variant="optional"
-          class="monitoring-all-hosts-app__slide-in-back"
-          @click="closeSlideInAction"
-        >
-          <CmkIcon name="back" size="small" />
-          {{ _t('Back to host detail view') }}
-        </CmkButton>
-        <MonitoringActionPane
-          v-if="slideInActionId"
-          :action-id="slideInActionId"
-          :actions="actionRegistry"
-          :targets="slideInTargets"
-          indent
-          :show-count="false"
-          @cancel="closeSlideInAction"
-          @feedback="onSlideInActionFeedback"
-        />
-      </template>
-    </CmkSlideInTabbed>
+      @performed="onSlideInActionFeedback"
+    />
   </div>
 </template>
 
@@ -604,14 +469,5 @@ function onRightPaneCollapse(collapsed: boolean): void {
 .monitoring-all-hosts-app__table-toolbar-end > :not(:first-child) {
   border-left: 1px solid var(--font-color-dimmed);
   padding-left: var(--spacing);
-}
-
-.monitoring-all-hosts-app__slide-in-feedback {
-  margin-top: var(--spacing);
-}
-
-.monitoring-all-hosts-app__slide-in-back {
-  gap: var(--dimension-3);
-  margin-bottom: var(--spacing);
 }
 </style>

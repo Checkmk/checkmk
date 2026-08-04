@@ -298,29 +298,6 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
 
 pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
 
-#[cfg(unix)]
-pub const CLIENT_LIB_NAME: &str = "libclntsh.so";
-#[cfg(windows)]
-pub const CLIENT_LIB_NAME: &str = "oci.dll";
-
-/// The directory contains an Oracle client library: libclntsh.so* on Unix
-/// (installations may ship only the versioned file without the unversioned
-/// symlink), oci.dll on Windows.
-pub fn contains_oracle_client_lib(dir: &Path) -> bool {
-    #[cfg(unix)]
-    {
-        std::fs::read_dir(dir).is_ok_and(|entries| {
-            entries
-                .flatten()
-                .any(|e| e.file_name().to_string_lossy().starts_with(CLIENT_LIB_NAME))
-        })
-    }
-    #[cfg(windows)]
-    {
-        dir.join(CLIENT_LIB_NAME).is_file()
-    }
-}
-
 /// Detects Oracle runtime path using local Oracle instances or environment variables
 /// Do not obligated to validate permissions
 pub fn detect_host_runtime() -> Option<PathBuf> {
@@ -345,24 +322,11 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
                 );
                 // shared libraries live in lib on Unix, DLLs in bin on Windows
                 let candidate = local.home.join(if cfg!(windows) { "bin" } else { "lib" });
-                if !candidate.is_dir() {
-                    log::warn!(
-                        "Oracle home {:?} is not suitable: {:?} is not a directory",
-                        local.home,
-                        candidate
-                    );
-                    continue;
+                if candidate.is_dir() {
+                    return Some(candidate);
+                } else {
+                    log::warn!("Oracle home {:?} is not suitable", local.home);
                 }
-                if !contains_oracle_client_lib(&candidate) {
-                    log::warn!(
-                        "Oracle home {:?} is not suitable: {:?} has no {}",
-                        local.home,
-                        candidate,
-                        CLIENT_LIB_NAME
-                    );
-                    continue;
-                }
-                return Some(candidate);
             }
             None
         }
@@ -373,20 +337,16 @@ fn find_std_env_var_runtime() -> Option<PathBuf> {
     const CLIENT_ENV_VAR: &str = "ORACLE_INSTANT_CLIENT";
     if let Ok(env_var) = std::env::var(CLIENT_ENV_VAR) {
         let candidate = PathBuf::from(env_var);
-        if !candidate.is_dir() {
-            log::warn!("{} path {:?} is not a directory", CLIENT_ENV_VAR, candidate);
-            return None;
-        }
-        if !contains_oracle_client_lib(&candidate) {
+        return if candidate.is_dir() {
+            Some(candidate)
+        } else {
             log::warn!(
-                "{} path {:?} has no {}",
+                "{} path {:?} is not a directory or has wrong permissions",
                 CLIENT_ENV_VAR,
-                candidate,
-                CLIENT_LIB_NAME
+                candidate
             );
-            return None;
-        }
-        return Some(candidate);
+            None
+        };
     };
 
     const ENV_VAR: &str = "ORACLE_HOME";
@@ -411,21 +371,12 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
 
     if !candidate.is_dir() {
         log::warn!("{} path {:?} is not a directory", env_var, candidate);
-        return None;
+        None
+    } else {
+        log::info!("Using {} {:?} for runtime", env_var, candidate);
+        Some(candidate)
     }
-    if !contains_oracle_client_lib(&candidate) {
-        log::warn!(
-            "{} path {:?} has no {}",
-            env_var,
-            candidate,
-            CLIENT_LIB_NAME
-        );
-        return None;
-    }
-    log::info!("Using {} {:?} for runtime", env_var, candidate);
-    Some(candidate)
 }
-
 /// Finds runtime dir using MK_LIBDIR or custom env var
 /// usually at: MK_LIBDIR/plugins/packages/mk-oracle
 /// Returns None if env var is not set or path is not a directory
@@ -449,23 +400,16 @@ pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
     } else {
         runtime_path
     };
-    if !runtime_path.is_dir() {
+    if runtime_path.is_dir() {
+        Some(runtime_path)
+    } else {
         log::error!(
             "{:?} is set but {:?} is not a directory",
             &env_var,
             runtime_path
         );
-        return None;
+        None
     }
-    if !contains_oracle_client_lib(&runtime_path) {
-        log::warn!(
-            "{:?} exists but has no {}: not a valid runtime",
-            runtime_path,
-            CLIENT_LIB_NAME
-        );
-        return None;
-    }
-    Some(runtime_path)
 }
 
 /// Detects Oracle runtime path using local Oracle instances or environment variables
@@ -482,10 +426,6 @@ pub fn detect_runtime(use_host_client: &UseHostClient, env_var: Option<String>) 
     .and_then(|p| {
         if !p.is_dir() {
             log::error!("Runtime path {:?} is not a directory or missing", p);
-            return None;
-        }
-        if !contains_oracle_client_lib(&p) {
-            log::error!("Runtime path {:?} has no {}", p, CLIENT_LIB_NAME);
             return None;
         }
         log::info!("Runtime detected at {:?}", p);

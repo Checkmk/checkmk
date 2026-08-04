@@ -17,7 +17,6 @@
 use assert_cmd::Command;
 use mk_oracle::config::merge::{merge_configs, MergedConfig};
 use mk_oracle::config::OracleConfig;
-use mk_oracle::setup::CLIENT_LIB_NAME;
 use mk_oracle::version::VERSION;
 use std::ffi::OsString;
 use std::fs;
@@ -216,13 +215,6 @@ fn test_find_runtime_reports_environment() {
     let lib_dir = tempfile::tempdir().unwrap();
     let package_dir = lib_dir.path().join("plugins/packages/mk-oracle");
     fs::create_dir_all(package_dir.join("runtime")).unwrap();
-    let expected_dir = if cfg!(windows) {
-        package_dir.join("runtime")
-    } else {
-        package_dir
-    };
-    // runtime detection requires the client library to be present
-    fs::File::create(expected_dir.join(CLIENT_LIB_NAME)).unwrap();
 
     let output = run_bin()
         .env("MK_LIBDIR", lib_dir.path())
@@ -233,6 +225,11 @@ fn test_find_runtime_reports_environment() {
         .unwrap();
     assert!(output.status.success(), "--find-runtime must succeed");
     let stdout = String::from_utf8(output.stdout).unwrap();
+    let expected_dir = if cfg!(windows) {
+        package_dir.join("runtime")
+    } else {
+        package_dir
+    };
     let path_var = if cfg!(windows) {
         "PATH"
     } else {

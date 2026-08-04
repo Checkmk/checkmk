@@ -22,25 +22,15 @@
 use mk_oracle::config::connection::setup_wallet_environment;
 use mk_oracle::config::OracleConfig;
 use mk_oracle::platform::get_local_instances;
-use mk_oracle::setup::{
-    contains_oracle_client_lib, create_plugin, detect_factory_runtime, detect_host_runtime,
-    detect_runtime, CLIENT_LIB_NAME,
-};
+use mk_oracle::setup::{create_plugin, detect_host_runtime, detect_runtime};
 use mk_oracle::types::{EnvVarName, UseHostClient};
 
-/// An Oracle client is installed on this machine: an `ORACLE_HOME` or an
-/// oratab/registry entry whose home contains the Oracle client library.
+/// An Oracle client is installed on this machine: an `ORACLE_HOME` with a
+/// `lib` directory, or an oratab/registry entry.
 fn local_oracle_client_present() -> bool {
-    fn home_has_client(home: &std::path::Path) -> bool {
-        let candidate = home.join(if cfg!(windows) { "bin" } else { "lib" });
-        candidate.is_dir() && contains_oracle_client_lib(&candidate)
-    }
     std::env::var("ORACLE_HOME")
-        .is_ok_and(|v| !v.is_empty() && home_has_client(std::path::Path::new(&v)))
-        || get_local_instances()
-            .unwrap_or_default()
-            .iter()
-            .any(|local| home_has_client(&local.home))
+        .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
+        || !get_local_instances().unwrap_or_default().is_empty()
 }
 
 #[test]
@@ -53,38 +43,6 @@ fn test_detect_host_runtime() {
     }
 }
 
-#[test]
-fn test_contains_oracle_client_lib() {
-    let dir = tempfile::tempdir().unwrap();
-    assert!(!contains_oracle_client_lib(dir.path()));
-    #[cfg(unix)]
-    // versioned library without the unversioned symlink
-    let lib_name = format!("{CLIENT_LIB_NAME}.21.1");
-    #[cfg(windows)]
-    let lib_name = CLIENT_LIB_NAME.to_string();
-    std::fs::File::create(dir.path().join(lib_name)).unwrap();
-    assert!(contains_oracle_client_lib(dir.path()));
-}
-
-#[test]
-fn test_detect_factory_runtime_without_client_lib() {
-    let lib_dir = tempfile::tempdir().unwrap();
-    let runtime = lib_dir.path().join("plugins/packages/mk-oracle");
-    std::fs::create_dir_all(&runtime).unwrap();
-    const LIBDIR_VAR: &str = "MK_LIBDIR_NO_CLIENT_LIB";
-    unsafe {
-        std::env::set_var(LIBDIR_VAR, lib_dir.path());
-    }
-    // the directory exists but has no client library -> rejected
-    assert!(detect_factory_runtime(Some(LIBDIR_VAR.to_string())).is_none());
-
-    std::fs::File::create(runtime.join(CLIENT_LIB_NAME)).unwrap();
-    assert_eq!(
-        detect_factory_runtime(Some(LIBDIR_VAR.to_string())),
-        Some(runtime)
-    );
-}
-
 fn base_dir() -> std::path::PathBuf {
     std::path::PathBuf::from(std::env::var("MK_CONFDIR").unwrap_or_else(|_| {
         std::env::current_dir()
@@ -93,17 +51,6 @@ fn base_dir() -> std::path::PathBuf {
             .into_string()
             .unwrap()
     }))
-}
-
-/// Directory inside the test fixture tree that contains the Oracle client
-/// library (populated by the run script / run.ps1).
-fn client_runtime_dir() -> std::path::PathBuf {
-    let dir = base_dir().join("runtimes/plugins/packages/mk-oracle");
-    if cfg!(windows) {
-        dir.join("runtime")
-    } else {
-        dir
-    }
 }
 
 #[test]
@@ -145,22 +92,18 @@ fn test_detect_runtime_with_runtime() {
     assert!(path.contains("mk-oracle")); // detected factory
 
     // Path:
-    // path with a client library -> expected correct path
-    let correct_path = client_runtime_dir().into_os_string().into_string().unwrap();
+    // path is correct -> expected correct path
+    let correct_path = base_dir()
+        .join("runtimes")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     let path = to_string(detect_runtime(
         &UseHostClient::Path(correct_path.clone()),
         lib_dir_var.clone(),
     ))
     .unwrap();
     assert_eq!(path, correct_path);
-
-    // existing dir without a client library -> expected nothing
-    let lib_less_path = base_dir()
-        .join("runtimes")
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    assert!(detect_runtime(&UseHostClient::Path(lib_less_path), lib_dir_var.clone()).is_none());
 
     // path is wrong -> expected nothing
     let wrong_path = correct_path + "something-missing";
@@ -205,8 +148,12 @@ fn test_detect_runtime_without_runtime() {
     }
 
     // Path:
-    // path with a client library -> expected correct path
-    let correct_path = client_runtime_dir().into_os_string().into_string().unwrap();
+    // path is correct -> expected correct path
+    let correct_path = base_dir()
+        .join("runtimes")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     let path = to_string(detect_runtime(
         &UseHostClient::Path(correct_path.clone()),
         lib_dir_var.clone(),
@@ -327,12 +274,13 @@ fn test_add_runtime_to_path() {
         local_db_exists
     );
 
-    // SOME PATH with a client library
-    let some_path = client_runtime_dir().into_os_string().into_string().unwrap();
+    // SOME PATH
+    let some_path = base_dir().into_os_string().into_string().unwrap();
     let cfg = OracleConfig::load_str(&make_config_with_use_host(some_path.as_str())).unwrap();
     unsafe {
         std::env::remove_var(&mk_lib_dir_env_var);
     }
+    // depends on local SQL endpoint, if exist -> found otherwise not
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
@@ -341,17 +289,10 @@ fn test_add_runtime_to_path() {
         std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
     }
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    // depends on local SQL endpoint, if exist -> found otherwise not
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(some_path.as_str()));
-
-    // SOME PATH without a client library is rejected
-    let lib_less_path = base_dir().into_os_string().into_string().unwrap();
-    let cfg = OracleConfig::load_str(&make_config_with_use_host(lib_less_path.as_str())).unwrap();
-    assert!(exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_none());
-    assert!(std::env::var(mut_env_var.to_str())
-        .unwrap()
-        .starts_with("xxx"));
 }
 
 #[cfg(unix)]
@@ -455,15 +396,10 @@ fn test_find_current_instance_runtime() {
     assert!(find_env_var_lib_runtime(temp_var).is_none());
     let lib_path = db_location.path().join("lib");
     std::fs::create_dir_all(&lib_path).unwrap();
-    // a lib dir without a client library is rejected
-    assert!(find_env_var_lib_runtime(temp_var).is_none());
-    let lib_file = if cfg!(windows) {
-        "oci.dll"
-    } else {
-        "libclntsh.so.21.1"
-    };
-    std::fs::File::create(lib_path.join(lib_file)).unwrap();
-    assert_eq!(find_env_var_lib_runtime(temp_var).unwrap(), lib_path);
+    assert_eq!(
+        find_env_var_lib_runtime(temp_var).unwrap(),
+        db_location.path().join("lib")
+    );
 }
 
 #[test]

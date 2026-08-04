@@ -143,14 +143,8 @@ build_test(
 
 genrule(
     name = "test-runtime-dir",
-    outs = [
-        "runtimes/plugins/packages/mk-oracle/.marker",
-        # fake client libraries: runtime detection accepts a directory only
-        # if it contains one
-        "runtimes/plugins/packages/mk-oracle/libclntsh.so",
-        "runtimes/plugins/packages/mk-oracle/oci.dll",
-    ],
-    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/packages/mk-oracle && touch $(OUTS)",
+    outs = ["runtimes/plugins/packages/mk-oracle/.marker"],
+    cmd = "mkdir -p $$(dirname $@) && touch $@",
 )
 
 rust_test(

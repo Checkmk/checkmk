@@ -12,6 +12,7 @@ import pytest
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
+from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 
@@ -51,11 +52,10 @@ def test_factory_snmp_backend_inline_unavailable(
 
     monkeypatch.setattr(
         snmp_backend_module,
-        "_BACKENDS",
-        {
-            k: v
-            for k, v in snmp_backend_module._BACKENDS.items()  # noqa: SLF001
-            if k is not SNMPBackendEnum.INLINE
+        "discover_backends",
+        lambda: {
+            SNMPBackendEnum.CLASSIC: ClassicSNMPBackend,
+            SNMPBackendEnum.STORED_WALK: StoredWalkSNMPBackend,
         },
     )
     snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
@@ -67,9 +67,3 @@ def test_factory_snmp_backend_inline_unavailable(
         record.levelno == logging.ERROR and "Unknown SNMP backend" in record.getMessage()
         for record in caplog.records
     )
-
-
-def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
-    with pytest.raises(AssertionError, match="Unknown SNMP backend"):
-        snmp_config = dataclasses.replace(snmp_config, snmp_backend="bla")  # type: ignore[arg-type]
-        make_backend(snmp_config)

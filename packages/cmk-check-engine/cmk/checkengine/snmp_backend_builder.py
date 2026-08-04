@@ -26,24 +26,19 @@ def discover_backends() -> Mapping[SNMPBackendEnum, type[SNMPBackend]]:
     return discover(cmk.checkengine.snmp_backends, SNMPBackend, lambda backend: backend.get_type())
 
 
-# TODO: Remove global variable so that BackendError can be moved into this file
-_BACKENDS: Mapping[SNMPBackendEnum, type[SNMPBackend]] = discover_backends()
-
-
 def make_backend(
     snmp_config: SNMPHostConfig,
     *,
     use_cache: bool = False,
 ) -> SNMPBackend:
-    # Apparently, this could be a thing.
-    assert isinstance(snmp_config.snmp_backend, SNMPBackendEnum), "Unknown SNMP backend"
     backend_type = SNMPBackendEnum.STORED_WALK if use_cache else snmp_config.snmp_backend
+    backends = discover_backends()
     try:
-        backend_cls = _BACKENDS[backend_type]
+        backend_cls = backends[backend_type]
     except KeyError:
         logger.exception(
             "Unknown SNMP backend: %(backend_type)s. Using CLASSIC backend as fallback",
             {"backend_type": backend_type},
         )
-        backend_cls = _BACKENDS[SNMPBackendEnum.CLASSIC]
+        backend_cls = backends[SNMPBackendEnum.CLASSIC]
     return backend_cls(snmp_config)

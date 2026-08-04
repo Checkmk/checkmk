@@ -11,7 +11,7 @@ from pydantic import PlainValidator
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework._types import PathParam, QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
@@ -130,6 +130,7 @@ def list_services(
         Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
         QueryParam(description="An existing site id", example="local"),
     ],
+    api_context: ApiContext,
     body: ServicesRequestBody,
 ) -> HostServicesResponse:
     """List services of a host to be consumed by the host services monitoring page."""
@@ -140,7 +141,7 @@ def list_services(
         # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are
         # already bounded to the ceiling by the request schema, so they pass through unchanged.
         match body.limit:
-            case None if user.may("general.ignore_hard_limit"):
+            case None if api_context.user.may("general.ignore_hard_limit"):
                 limit = None
             case None:
                 limit = _MAX_HOST_SVC_LIMIT

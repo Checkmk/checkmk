@@ -9,7 +9,7 @@ from typing import Annotated
 from annotated_types import Ge
 
 from cmk.gui import sites
-from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -56,10 +56,10 @@ class RescheduleResponse:
     )
 
 
-def reschedule_checks(body: RescheduleRequestBody) -> RescheduleResponse:
+def reschedule_checks(api_context: ApiContext, body: RescheduleRequestBody) -> RescheduleResponse:
     """Reschedule active checks for the given hosts."""
-    user.need_permission("general.act")
-    user.need_permission("action.reschedule")
+    api_context.user.need_permission("general.act")
+    api_context.user.need_permission("action.reschedule")
 
     host_actions = LiveStatusHostActions(connection=sites.live())
 

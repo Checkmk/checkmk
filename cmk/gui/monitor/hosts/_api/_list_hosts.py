@@ -10,7 +10,7 @@ from annotated_types import Interval
 from pydantic import PlainValidator
 
 from cmk.gui import sites
-from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -239,7 +239,10 @@ class HostsRequestBody:
     )
 
 
-def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
+def list_hosts(
+    api_context: ApiContext,
+    body: HostsRequestBody = HostsRequestBody(),
+) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
@@ -247,7 +250,7 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
     # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are already
     # bounded to the ceiling by the request schema, so they pass through unchanged.
     match body.limit:
-        case None if user.may("general.ignore_hard_limit"):
+        case None if api_context.user.may("general.ignore_hard_limit"):
             limit = None
         case None:
             limit = _MAX_NUMBER_OF_HOSTS

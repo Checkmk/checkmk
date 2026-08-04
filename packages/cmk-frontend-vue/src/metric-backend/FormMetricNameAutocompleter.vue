@@ -99,10 +99,11 @@ const dropdownOptions = { type: 'callback-filtered' as const, querySuggestions }
 
 const dropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('dropdownRef')
 
-// Clearing unmounts the clear button, so refocus the dropdown to keep focus.
+// Clearing unmounts the clear button, so reopen the dropdown: focus returns to the
+// input and its suggestions expand so a new metric can be picked right away.
 function clearMetricName(): void {
   metricName.value = null
-  void nextTick(() => dropdownRef.value?.focus())
+  void nextTick(() => dropdownRef.value?.open())
 }
 </script>
 

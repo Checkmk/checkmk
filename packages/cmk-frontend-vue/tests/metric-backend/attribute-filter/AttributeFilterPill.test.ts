@@ -128,9 +128,9 @@ test('selecting an existence operator hides the value segment, switching back re
 })
 
 test.each([
-  { segment: 'key', expected: { key: '' } },
-  { segment: 'value', expected: { value: '' } }
-])('the clear button empties the $segment segment', async ({ segment, expected }) => {
+  { segment: 'key', expected: { key: '' }, combobox: 'Attribute key' },
+  { segment: 'value', expected: { value: '' }, combobox: 'Attribute value' }
+])('the clear button empties the $segment segment', async ({ segment, expected, combobox }) => {
   const { condition, container } = renderClearablePill()
   const segmentElement = container.querySelector<HTMLElement>(
     `.metric-backend-attribute-filter-pill__segment--${segment}`
@@ -139,4 +139,13 @@ test.each([
   await userEvent.click(within(segmentElement).getByLabelText('Clear selection'))
 
   expect(condition.value).toMatchObject(expected)
+  // Clearing reopens the dropdown and lands focus in its filter input so a new
+  // value can be picked right away.
+  await waitFor(() => {
+    expect(screen.getByRole('combobox', { name: combobox })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    )
+    expect(screen.getByRole('textbox', { name: 'filter' })).toHaveFocus()
+  })
 })

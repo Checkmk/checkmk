@@ -134,4 +134,21 @@ describe('FormMetricNameAutocompleter', () => {
     expect(metricTypes.value).toEqual([])
     expect(screen.queryByLabelText('Clear selection')).toBeNull()
   })
+
+  test('clearing reopens the dropdown so a new metric can be picked right away', async () => {
+    mockNamesWithTypes([{ name: 'cpu', types: ['gauge'] }])
+    const user = userEvent.setup()
+    renderFormMetricNameAutocompleter('cpu')
+
+    await user.click(screen.getByLabelText('Clear selection'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox', { name: 'Metric name' })).toHaveAttribute(
+        'aria-expanded',
+        'true'
+      )
+      // Focus lands in the dropdown's filter input, ready for the next metric.
+      expect(screen.getByRole('textbox', { name: 'filter' })).toHaveFocus()
+    })
+  })
 })

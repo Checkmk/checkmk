@@ -153,15 +153,16 @@ const attributeKindInput = computed<string | null>({
   }
 })
 
-// Clearing unmounts the clear button, so refocus the dropdown to keep focus in the pill.
+// Clearing unmounts the clear button, so reopen the dropdown: focus returns to the
+// field and its suggestions expand so a new value can be picked right away.
 function clearKey(): void {
   onKeyUpdate(null)
-  void nextTick(() => keyDropdownRef.value?.focus())
+  void nextTick(() => keyDropdownRef.value?.open())
 }
 
 function clearValue(): void {
   onValueUpdate(null)
-  void nextTick(() => valueDropdownRef.value?.focus())
+  void nextTick(() => valueDropdownRef.value?.open())
 }
 
 watch(

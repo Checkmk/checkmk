@@ -37,7 +37,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager, ExitStack, suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from html import unescape
@@ -1537,8 +1537,14 @@ def default_rabbitmq_definitions(
 def _debug_log_message(msg: str) -> Iterator[None]:
     logger.debug(msg)
     start = time.time()
-    yield
-    logger.debug(f"{msg} ... done (%ss)", round(time.time() - start, 2))
+    try:
+        yield
+    except BaseException:
+        logger.debug(
+            "%(msg)s ... failed (%(sec)ss)", {"msg": msg, "sec": round(time.time() - start, 2)}
+        )
+        raise
+    logger.debug("%(msg)s ... done (%(sec)ss)", {"msg": msg, "sec": round(time.time() - start, 2)})
 
 
 def _activate_central_steps(
@@ -3026,20 +3032,19 @@ def _need_to_update_config_after_sync() -> bool:
 def _execute_update_mkps(
     path_config: mkp_tool.PathConfig,
 ) -> tuple[Sequence[mkp_tool.Manifest], Sequence[mkp_tool.Manifest]]:
-    logger.debug("Updating active packages")
-
-    uninstalled, installed = mkp_tool.update_active_packages(
-        mkp_tool.Installer(paths.installed_packages_dir),
-        path_config,
-        mkp_tool.PackageStore(
-            enabled_dir=paths.local_enabled_packages_dir,
-            local_dir=paths.local_optional_packages_dir,
-            shipped_dir=paths.optional_packages_dir,
-        ),
-        ec.mkp_callbacks(paths.omd_root),
-        version.__version__,
-        parse_version=version.parse_check_mk_version,
-    )
+    with _debug_log_message("Updating active packages"):
+        uninstalled, installed = mkp_tool.update_active_packages(
+            mkp_tool.Installer(paths.installed_packages_dir),
+            path_config,
+            mkp_tool.PackageStore(
+                enabled_dir=paths.local_enabled_packages_dir,
+                local_dir=paths.local_optional_packages_dir,
+                shipped_dir=paths.optional_packages_dir,
+            ),
+            ec.mkp_callbacks(paths.omd_root),
+            version.__version__,
+            parse_version=version.parse_check_mk_version,
+        )
     return uninstalled, installed
 
 
@@ -3076,9 +3081,12 @@ def _execute_changed_local_files_actions() -> None:
     # I'm not changing this for fear of repercussions, but
     # NOTE: Users might be deploying a fix to a check function via MKP (for example).
     # In that case, we'd have to re*start* the core.
-    mkp_tool.reload_services_affected_by_mkp_changes()
-    invalidate_visuals_cache()
-    setup_search_index.request_index_rebuild()
+    with _debug_log_message("Reloading services affected by MKP changes"):
+        mkp_tool.reload_services_affected_by_mkp_changes()
+    with _debug_log_message("Invalidating visuals cache"):
+        invalidate_visuals_cache()
+    with _debug_log_message("Requesting search index rebuild"):
+        setup_search_index.request_index_rebuild()
 
 
 def _execute_cmk_update_config() -> None:
@@ -3136,28 +3144,31 @@ def _execute_post_config_sync_actions(
             mkps_changed = False
 
         if local_files_changed or mkps_changed:
-            _execute_changed_local_files_actions()
+            with _debug_log_message("Executing changed local files actions"):
+                _execute_changed_local_files_actions()
 
         if _need_to_update_config_after_sync():
-            logger.debug("Executing cmk-update-config")
-            _execute_cmk_update_config()
+            with _debug_log_message("Executing cmk-update-config"):
+                _execute_cmk_update_config()
         elif installed:
             cmd = ["cmk-migrate-extension-rulesets", *(m.name for m in installed)]
-            logger.debug("Executing `%s`", " ".join(cmd))
-            try:
-                for line in subprocess.check_output(cmd, text=True).splitlines():
-                    logger.debug("  %s", line.strip())
-            except subprocess.CalledProcessError as e:
-                logger.warning("Error while running migration script: %s", e)
+            with _debug_log_message(f"Executing `{' '.join(cmd)}`"):
+                try:
+                    for line in subprocess.check_output(cmd, text=True).splitlines():
+                        logger.debug("  %(line)s", {"line": line.strip()})
+                except subprocess.CalledProcessError as e:
+                    logger.warning("Error while running migration script: %(error)s", {"error": e})
 
-        _execute_update_passwords()
+        with _debug_log_message("Updating passwords"):
+            _execute_update_passwords()
 
         # The local configuration has just been replaced. The pending changes are not
         # relevant anymore. Confirm all of them to cleanup the inconsistency.
-        logger.debug("Confirming pending changes")
-        ActivateChanges.confirm_site_changes(omd_site())
+        with _debug_log_message("Confirming pending changes"):
+            ActivateChanges.confirm_site_changes(omd_site())
 
-        hooks.call("snapshot-pushed")
+        with _debug_log_message("Calling snapshot-pushed hooks"):
+            hooks.call("snapshot-pushed")
     except Exception:
         raise MKGeneralException(
             _(
@@ -3611,7 +3622,12 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         )
 
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
-        with store.lock_checkmk_configuration(configuration_lockfile):
+        with ExitStack() as stack:
+            # Enter the lock via the stack, so that the timing of the (potentially long
+            # lasting) lock acquisition is reported on its own.
+            with _debug_log_message("Acquiring configuration lock"):
+                stack.enter_context(store.lock_checkmk_configuration(configuration_lockfile))
+
             if api_request.config_generation != _get_current_config_generation():
                 raise MKGeneralException(
                     _(
@@ -3621,23 +3637,26 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
                     )
                 )
 
-            logger.debug("Updating configuration from sync snapshot")
-            self._update_config_on_remote_site(
-                api_request.sync_archive,
-                api_request.to_delete,
-                api_request.site_id,
-                api_request.site_config,
-                api_request.user_attributes,
-            )
+            with _debug_log_message("Updating configuration from sync snapshot"):
+                self._update_config_on_remote_site(
+                    api_request.sync_archive,
+                    api_request.to_delete,
+                    api_request.site_id,
+                    api_request.site_config,
+                    api_request.user_attributes,
+                )
 
-            logger.debug("Executing post sync actions")
-            _execute_post_config_sync_actions(
-                api_request.site_id,
-                local_files_changed=_has_local_file_changes(
+            with _debug_log_message("Checking for local file changes"):
+                local_files_changed = _has_local_file_changes(
                     api_request.sync_archive, api_request.to_delete
-                ),
-                use_git=api_request.use_git,
-            )
+                )
+
+            with _debug_log_message("Executing post sync actions"):
+                _execute_post_config_sync_actions(
+                    api_request.site_id,
+                    local_files_changed=local_files_changed,
+                    use_git=api_request.use_git,
+                )
 
             logger.debug("Done")
             return True
@@ -3660,35 +3679,39 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         active_connectors = []
         if isinstance(default_sync_config, tuple) and default_sync_config[0] == "list":
             keep_local_users = True
-            current_users = load_users()
+            with _debug_log_message("Loading local users"):
+                current_users = load_users()
             active_connectors = default_sync_config[1]
 
         try:
-            # to_delete should not include any files mentioned in the sync_archive
-            for site_path in to_delete:
-                site_file = base_dir.joinpath(site_path)
-                try:
-                    site_file.unlink()
-                except FileNotFoundError:
-                    # errno.ENOENT - File already removed. Fine
-                    pass
-                except NotADirectoryError:
-                    # errno.ENOTDIR - dir with files was replaced by e.g. symlink
-                    pass
+            with _debug_log_message(f"Deleting {len(to_delete)} obsolete files"):
+                # to_delete should not include any files mentioned in the sync_archive
+                for site_path in to_delete:
+                    site_file = base_dir.joinpath(site_path)
+                    try:
+                        site_file.unlink()
+                    except FileNotFoundError:
+                        # errno.ENOENT - File already removed. Fine
+                        pass
+                    except NotADirectoryError:
+                        # errno.ENOTDIR - dir with files was replaced by e.g. symlink
+                        pass
 
-                finally:
-                    # Delete folder if empty
-                    parent = os.path.dirname(site_file)
-                    if (
-                        parent.startswith(base_folder_path)  # It's below the base folder
-                        and parent != base_folder_path  # It's not the base folder
-                        and not os.listdir(parent)  # It's empty
-                    ):
-                        os.rmdir(parent)
-            _unpack_sync_archive(sync_archive, base_dir)
+                    finally:
+                        # Delete folder if empty
+                        parent = os.path.dirname(site_file)
+                        if (
+                            parent.startswith(base_folder_path)  # It's below the base folder
+                            and parent != base_folder_path  # It's not the base folder
+                            and not os.listdir(parent)  # It's empty
+                        ):
+                            os.rmdir(parent)
+            with _debug_log_message("Unpacking sync archive"):
+                _unpack_sync_archive(sync_archive, base_dir)
         finally:
             if keep_local_users:
-                _reintegrate_site_local_users(current_users, active_connectors, user_attributes)
+                with _debug_log_message("Reintegrating site local users"):
+                    _reintegrate_site_local_users(current_users, active_connectors, user_attributes)
 
 
 def _reintegrate_site_local_users(

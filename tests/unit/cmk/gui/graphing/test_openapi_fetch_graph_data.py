@@ -273,6 +273,8 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
         evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
     )
 
+    # The header reads this title, so the fetch is what substitutes a plug-in's title expression.
+    assert response.title == "My Graph"
     [line] = response.metrics
     assert line.metadata.title == "Line"
     assert line.metadata.color == "#0000ff"

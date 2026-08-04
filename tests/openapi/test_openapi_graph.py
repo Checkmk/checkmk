@@ -132,6 +132,8 @@ def test_fetch_graph_data_comprehensive_graph(
         return {"name": name, "title": "m", "unit": unit, "color": "#FFFFFF"}
 
     assert resp.json == {
+        # The header reads the evaluated title, so the fetch is what carries it.
+        "title": "Title %(x)s",
         "time_range": {"start": 0, "end": 60, "step": 10},
         "metrics": [
             {

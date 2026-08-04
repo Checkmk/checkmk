@@ -20,6 +20,7 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
 }
 
 const FETCHED = {
+  title: 'CPU load - 8 CPU cores',
   metrics: [
     {
       metadata: { name: 'cpu', title: 'CPU', unit: UNIT, color: '#ff0000' },
@@ -67,6 +68,42 @@ async function requestedTimeRange(): Promise<{ start: number; end: number; step:
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
   return postSpy.mock.calls[0][1].body.requested_time_range
 }
+
+test('a resolved graph takes its title from the fetched data, not from the definition', async () => {
+  // A plug-in's title expression is only substituted once there is data, so the definition's title
+  // still carries the raw marker at render time. The header must not read that one.
+  const titles: string[] = []
+  const harness = defineComponent({
+    setup() {
+      const { graphs } = useGraphData(
+        () => [
+          {
+            internal: '{"graphs": []}',
+            add_to: null,
+            options: {
+              header: {
+                title: 'CPU load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU cores',
+                show_graph_time: true
+              },
+              name: 'cpu_load'
+            }
+          } as never
+        ],
+        () => ({ start: 0, end: 3_600 }),
+        () => 800,
+        () => 'max'
+      )
+      return () => {
+        titles.splice(0, titles.length, ...graphs.value.map((graph) => graph.title))
+        return h('div')
+      }
+    }
+  })
+
+  render(harness)
+
+  await waitFor(() => expect(titles).toEqual(['CPU load - 8 CPU cores']))
+})
 
 // The backend cannot serve a step finer than 60s, and asking for one only buys query load
 // and holes in the series.

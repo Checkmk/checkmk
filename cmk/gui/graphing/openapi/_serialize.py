@@ -139,6 +139,7 @@ def evaluated_to_response(
         evaluated, curve_to_api_metric, fallback_time_range=fallback_time_range
     )
     return GraphFetchResponse(
+        title=evaluated.title,
         time_range=time_range,
         metrics=metrics,
         horizontal_lines=horizontal_lines_to_api(evaluated),

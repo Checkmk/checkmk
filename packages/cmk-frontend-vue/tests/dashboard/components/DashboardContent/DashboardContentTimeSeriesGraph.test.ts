@@ -198,6 +198,7 @@ describe('createSharedGraphFetcher', () => {
   test('fetches by widget ID with the dashboard token, never by graph definition', async () => {
     postSpy.mockResolvedValue({
       data: {
+        title: 'CPU utilization',
         metrics: [],
         time_range: { start: 1_000, end: 2_000, step: 60 },
         horizontal_lines: [],

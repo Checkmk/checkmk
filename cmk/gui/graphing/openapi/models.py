@@ -184,6 +184,14 @@ class GraphFetchRequest:
 
 @api_model
 class GraphFetchResponse:
+    title: str = api_field(
+        description=(
+            "The localized graph title, for the graph header. Any title expression a plug-in wrote "
+            "(e.g. the number of CPU cores) is substituted from the fetched data, which is why the "
+            "header takes its title from here rather than from the definition."
+        ),
+        example="CPU load - 8 CPU cores",
+    )
     time_range: ApiTimeRange = api_field(
         description="The actual time range the returned data covers (may differ from the request).",
     )

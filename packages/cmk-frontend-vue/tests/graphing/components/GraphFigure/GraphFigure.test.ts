@@ -42,6 +42,7 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
 }
 
 const FETCHED = {
+  title: 'CPU utilization',
   metrics: [
     {
       metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000' },
@@ -142,6 +143,7 @@ test('forwards the combination mode to fetch_data', async () => {
 
 test('a provided fetchGraph replaces the default fetch', async () => {
   const fetchGraph = vi.fn().mockResolvedValue({
+    title: FETCHED.title,
     metrics: FETCHED.metrics,
     timeRange: FETCHED.time_range,
     horizontalLines: []

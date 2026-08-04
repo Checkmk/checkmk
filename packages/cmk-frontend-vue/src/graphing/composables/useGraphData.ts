@@ -41,6 +41,9 @@ export interface GraphFetchParams {
 }
 
 export interface FetchedGraph {
+  // The evaluated title: a plug-in's title expression (e.g. the number of CPU cores) is only
+  // substituted once there is data, so the header takes it from here, not from the definition.
+  title: string
   metrics: Metric[]
   timeRange: TimeRange
   horizontalLines: HorizontalLine[]
@@ -69,6 +72,7 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
     })
   )
   return {
+    title: fetched.title,
     metrics: fetched.metrics,
     timeRange: fetched.time_range,
     horizontalLines: fetched.horizontal_lines
@@ -125,7 +129,7 @@ export function useGraphData(
             combinationMode
           })
           return {
-            title: definition.options?.header.title ?? '',
+            title: fetched.title || (definition.options?.header.title ?? ''),
             metrics: fetched.metrics,
             timeRange: fetched.timeRange,
             horizontalLines: fetched.horizontalLines,

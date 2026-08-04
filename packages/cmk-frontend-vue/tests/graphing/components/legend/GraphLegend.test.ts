@@ -88,6 +88,20 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
 
 const CPU = makeMetric('cpu', 'CPU', [10, 20, 30])
 const MEM = makeMetric('mem', 'Memory', [100, 200, 300])
+const WARN_LINE: HorizontalLine = {
+  name: 'scalar_of(warning,rrd_metric(h/svc/util))',
+  title: 'Warning',
+  value: 80,
+  unit: LINE_UNIT,
+  color: '#ffaa00'
+}
+const CRIT_LINE: HorizontalLine = {
+  name: 'scalar_of(critical,rrd_metric(h/svc/util))',
+  title: 'Critical',
+  value: 90,
+  unit: LINE_UNIT,
+  color: '#ff0000'
+}
 
 test('renders one row per metric', () => {
   render(GraphLegend, { props: { metrics: [CPU, MEM] } })
@@ -109,6 +123,15 @@ test('clicking the metric count with everything hidden shows every metric', asyn
   })
   await fireEvent.click(screen.getByRole('button', { name: /2 metrics/ }))
   expect(emitted()['update:hiddenMetricNames']).toEqual([[[]]])
+})
+
+test('the count states how many of the metrics are currently visible', () => {
+  const metrics = Array.from({ length: 26 }, (_, i) => makeMetric(`m${i}`, `Metric ${i}`, [i]))
+  render(GraphLegend, {
+    props: { metrics, hiddenMetricNames: metrics.slice(3).map((m) => m.metadata.name) }
+  })
+
+  expect(screen.getByText('3 of 26 metrics are visible')).toBeInTheDocument()
 })
 
 test('clicking a visible metric eye emits update:hiddenMetricNames with that name added', async () => {
@@ -305,11 +328,41 @@ test('observes both the metrics table and its scroll container for resizes', asy
   expect(observedTargets).toContain(metricsTable.parentElement)
 })
 
-test('caps the metric rows at 500px by default', () => {
+function metricRowsMaxHeightPx(container: Element): number {
+  const scroller = container.querySelector<HTMLElement>('.graphing-graph-legend__rows-scroll')
+  return Number.parseInt(scroller!.style.maxHeight, 10)
+}
+
+test('caps the metric rows at seven rows by default', () => {
   const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
   expect(container.querySelector('.graphing-graph-legend--fill')).not.toBeInTheDocument()
-  const scroll = container.querySelector<HTMLElement>('.graphing-graph-legend__rows-scroll')!
-  expect(scroll.style.maxHeight).toBe('500px')
+  expect(metricRowsMaxHeightPx(container)).toBe(7 * 24)
+})
+
+test('the row height the cap is derived from reaches the stylesheet', () => {
+  const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
+
+  // The rows take their height from the same constant the cap multiplies. Were the two to
+  // drift apart, the cap would stop landing on a row boundary.
+  const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
+  expect(root.style.getPropertyValue('--legend-row-height')).toBe('24px')
+})
+
+test('threshold lines eat into the same seven-item budget', () => {
+  const { container } = render(GraphLegend, {
+    props: { metrics: [CPU, MEM], horizontalLines: [WARN_LINE, CRIT_LINE] }
+  })
+
+  expect(metricRowsMaxHeightPx(container)).toBe(5 * 24)
+})
+
+test('the metric rows keep room for one row even when thresholds outnumber the budget', () => {
+  const manyLines = Array.from({ length: 9 }, (_, i) => ({ ...WARN_LINE, name: `Line ${i}` }))
+  const { container } = render(GraphLegend, {
+    props: { metrics: [CPU, MEM], horizontalLines: manyLines }
+  })
+
+  expect(metricRowsMaxHeightPx(container)).toBe(24)
 })
 
 test('fillHeight applies the fill modifier and lifts the metric-rows height cap', () => {

@@ -54,10 +54,28 @@ const emit = defineEmits<{
   hoverMetric: [metricName: string | null]
 }>()
 
-const metricsString = computed(() =>
-  _tn('%{n} metric', '%{n} metrics', props.metrics.length, { n: props.metrics.length })
+const visibleCount = computed(() => props.metrics.length - props.hiddenMetricNames.length)
+const visibilityLabel = computed(() =>
+  _tn(
+    '%{visible} of %{total} metric is visible',
+    '%{visible} of %{total} metrics are visible',
+    props.metrics.length,
+    { visible: visibleCount.value, total: props.metrics.length }
+  )
 )
-const selectedCount = computed(() => props.metrics.length - props.hiddenMetricNames.length)
+
+// Counts threshold lines too: 5 metrics plus 2 thresholds scrolls where 7 metrics would.
+const VISIBLE_ITEM_BUDGET = 7
+const ROW_HEIGHT_PX = 24
+const rowHeight = `${ROW_HEIGHT_PX}px`
+
+const metricsMaxHeight = computed(() => {
+  if (props.fillHeight) {
+    return 'none'
+  }
+  const rowsForMetrics = Math.max(1, VISIBLE_ITEM_BUDGET - props.horizontalLines.length)
+  return `${rowsForMetrics * ROW_HEIGHT_PX}px`
+})
 
 const displayMetrics = computed(() => metricsInGraphTopToBottomOrder(props.metrics))
 const allHidden = computed(
@@ -121,7 +139,11 @@ watch(
 </script>
 
 <template>
-  <div class="graphing-graph-legend" :class="{ 'graphing-graph-legend--fill': fillHeight }">
+  <div
+    class="graphing-graph-legend"
+    :class="{ 'graphing-graph-legend--fill': fillHeight }"
+    :style="{ '--legend-row-height': rowHeight }"
+  >
     <!-- Table 1: fixed header row -->
     <table class="graphing-graph-legend__table">
       <colgroup>
@@ -138,7 +160,7 @@ watch(
           class="graphing-graph-legend__header-row"
           :class="{ 'graphing-graph-legend__padded-row': metricsScrollable }"
         >
-          <th>
+          <th class="graphing-graph-legend__header--eye">
             <GraphLegendEyeButton
               :hidden="allHidden"
               :title="allHidden ? _t('Show all') : _t('Hide all')"
@@ -152,11 +174,8 @@ watch(
                 :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
                 @click="toggleAll"
               >
-                {{ metricsString }}
+                {{ visibilityLabel }}
               </button>
-              <span class="graphing-graph-legend__selected-count">{{
-                _tn('%{n} selected', '%{n} selected', selectedCount, { n: selectedCount })
-              }}</span>
             </div>
           </th>
           <th
@@ -176,7 +195,7 @@ watch(
     <!-- Table 2: metric rows — scrollable -->
     <CmkScrollContainer
       class="graphing-graph-legend__rows-scroll"
-      :max-height="fillHeight ? 'none' : '500px'"
+      :max-height="metricsMaxHeight"
       height="auto"
       :style="{ overflowX: 'hidden' }"
     >
@@ -286,7 +305,13 @@ watch(
 
 <style scoped lang="scss">
 .graphing-graph-legend {
-  font-size: var(--font-size-small);
+  --swatch-gap: var(--dimension-4);
+  --swatch-width: 4px;
+
+  box-sizing: border-box;
+  padding: var(--dimension-5);
+  background: var(--ux-theme-2);
+  font-size: var(--font-size-normal);
   color: var(--font-color);
   width: 100%;
 }
@@ -333,18 +358,18 @@ watch(
   width: 20px;
 }
 .graphing-graph-legend__col--swatch {
-  width: 10px;
+  width: calc(var(--swatch-gap) + var(--swatch-width));
 }
 .graphing-graph-legend__col--stat {
   width: 64px;
 }
 
 .graphing-graph-legend__header-row {
-  border-bottom: 1px solid var(--ux-theme-6, #e0e0e0);
+  border-bottom: 1px solid var(--ux-theme-6);
 
   th {
-    padding-top: 4px;
-    padding-bottom: 6px;
+    padding-top: var(--dimension-3);
+    padding-bottom: var(--dimension-5);
     text-align: right;
     font-weight: normal;
   }
@@ -371,35 +396,38 @@ watch(
   }
 }
 
-.graphing-graph-legend__selected-count {
-  opacity: 0.55;
-}
-
-.graphing-graph-legend__last-header {
-  opacity: 0.6;
-}
-
 .graphing-graph-legend__lines-table {
-  border-top: 1px solid var(--ux-theme-6, #e0e0e0);
+  border-top: 1px solid var(--ux-theme-6);
   padding-top: 8px;
+  background: var(--ux-theme-3);
 }
 
 .graphing-graph-legend__row {
+  height: var(--legend-row-height);
+
   &:hover {
-    background: rgb(0 0 0 / 4%);
+    background: var(--graphing-legend-row-hover);
   }
 
-  &--hidden {
-    opacity: 0.45;
+  &--hidden .graphing-graph-legend__name,
+  &--hidden .graphing-graph-legend__stat {
+    color: var(--graphing-legend-hidden-color);
   }
 }
 
-.graphing-graph-legend__cell--eye {
+/* The eye button fills its column exactly, so with no cell padding the swatch cell's own
+   padding is the gap between the two. The element qualifier beats the table's blanket rule. */
+.graphing-graph-legend th.graphing-graph-legend__header--eye,
+.graphing-graph-legend td.graphing-graph-legend__cell--eye {
+  padding-left: 0;
+  padding-right: 0;
   text-align: center;
 }
 
-.graphing-graph-legend__cell--swatch {
-  text-align: center;
+.graphing-graph-legend td.graphing-graph-legend__cell--swatch {
+  padding-left: var(--swatch-gap);
+  padding-right: 0;
+  text-align: left;
 }
 
 .graphing-graph-legend :deep(.graphing-graph-legend-eye-button) {
@@ -408,12 +436,13 @@ watch(
 
 .graphing-graph-legend__swatch {
   display: inline-block;
-  width: 4px;
-  height: 10px;
-  border-radius: 2px;
+  width: var(--swatch-width);
+  height: 16px;
+  border-radius: var(--border-radius-half);
 }
 
 .graphing-graph-legend__name {
+  padding-left: var(--dimension-4);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -422,6 +451,15 @@ watch(
 .graphing-graph-legend td.graphing-graph-legend__stat {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  opacity: 0.8;
+}
+
+body[data-theme='facelift'] .graphing-graph-legend {
+  --graphing-legend-hidden-color: var(--color-conference-grey-70);
+  --graphing-legend-row-hover: var(--ux-theme-4);
+}
+
+body[data-theme='modern-dark'] .graphing-graph-legend {
+  --graphing-legend-hidden-color: var(--color-white-70);
+  --graphing-legend-row-hover: var(--color-white-10);
 }
 </style>

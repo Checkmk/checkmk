@@ -11,6 +11,7 @@ import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
+import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import { HostServicesApi, type ServiceEntry } from './api/services'
 import { useHostServicesColumns } from './columns'
@@ -41,6 +42,7 @@ function rowKey(row: ServiceEntry): string {
 </script>
 
 <template>
+  <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/852195?lang=en" />
   <MonitoringLegacyViewButton
     v-if="legacy_view_button"
     :title="legacy_view_button.title"

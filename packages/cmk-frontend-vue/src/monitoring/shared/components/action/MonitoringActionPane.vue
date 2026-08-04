@@ -4,11 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 
-<script setup lang="ts">
+<script setup lang="ts" generic="Target">
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject, provide } from 'vue'
 
-import type { HostRef } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
 import type { ActionFeedback } from './ActionFeedback.vue'
@@ -19,8 +18,8 @@ import { ACTION_TARGET_COUNT } from './types'
 const props = withDefaults(
   defineProps<{
     actionId: string
-    actions: MonitoringActionRegistry
-    targets: HostRef[]
+    actions: MonitoringActionRegistry<Target>
+    targets: Target[]
     indent?: boolean | undefined
     showCount?: boolean | undefined
   }>(),

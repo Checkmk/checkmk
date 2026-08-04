@@ -6,8 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -15,21 +14,19 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 const props = defineProps<{
   selectedCount: number
   actions: CellAction[]
+  /** How the rows the actions act on are named, e.g. "3 hosts selected". */
+  selectionLabel: TranslatedString
+  /** Names the toolbar for screen readers, e.g. "Actions for selected hosts". */
+  label: TranslatedString
+  /** The action performing right away, pulsing until it settles. */
+  runningActionId?: string | null
 }>()
 
 const emit = defineEmits<{
   (event: 'action', action: CellAction): void
 }>()
 
-const { _t, _tn } = usei18n()
-
 const disabled = computed(() => props.selectedCount === 0)
-
-const selectionLabel = computed(() =>
-  _tn('%{count} host selected', '%{count} hosts selected', props.selectedCount, {
-    count: props.selectedCount
-  })
-)
 
 function select(action: CellAction): void {
   if (disabled.value || action.disabled) {
@@ -44,7 +41,7 @@ function select(action: CellAction): void {
     class="monitoring-action-bar"
     :class="{ 'monitoring-action-bar--disabled': disabled }"
     role="toolbar"
-    :aria-label="_t('Actions for selected hosts')"
+    :aria-label="label"
     :aria-disabled="disabled"
   >
     <span class="monitoring-action-bar__selection" aria-live="polite">{{ selectionLabel }}</span>
@@ -56,10 +53,10 @@ function select(action: CellAction): void {
         variant="optional"
         :disabled="disabled || action.disabled"
         :title="action.label"
-        class="monitoring-action-bar__button"
+        :icon="{ name: action.icon, size: 'small' }"
+        :running="runningActionId === action.id"
         @click="select(action)"
       >
-        <CmkIcon :name="action.icon" size="small" />
         {{ action.label }}
       </CmkButton>
     </div>
@@ -90,10 +87,6 @@ function select(action: CellAction): void {
   display: flex;
   flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: var(--dimension-4);
-}
-
-.monitoring-action-bar__button {
   gap: var(--dimension-4);
 }
 </style>

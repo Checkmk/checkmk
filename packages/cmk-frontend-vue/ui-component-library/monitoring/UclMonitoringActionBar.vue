@@ -26,7 +26,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import MonitoringActionBar from '@/monitoring/shared/components/action/MonitoringActionBar.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -49,6 +49,10 @@ const actions: CellAction[] = [
 
 const lastAction = ref<string | null>(null)
 
+const selectionLabel = computed(
+  () => `${propState.value.selectedCount} hosts selected` as TranslatedString
+)
+
 function onAction(action: CellAction): void {
   lastAction.value = action.id
 }
@@ -63,6 +67,8 @@ function onAction(action: CellAction): void {
         <MonitoringActionBar
           :selected-count="propState.selectedCount"
           :actions="actions"
+          :selection-label="selectionLabel"
+          :label="'Actions for selected hosts' as TranslatedString"
           @action="onAction"
         />
 

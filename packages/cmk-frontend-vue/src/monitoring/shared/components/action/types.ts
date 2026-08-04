@@ -15,7 +15,7 @@ export const ACTION_TARGET_COUNT: InjectionKey<ComputedRef<number>> = Symbol(
   'monitoringActionTargetCount'
 )
 
-export interface MonitoringAction<Values = unknown> {
+export interface MonitoringAction<Values = unknown, Target = HostRef> {
   id: string
   title: TranslatedString
   submitLabel: TranslatedString
@@ -23,5 +23,5 @@ export interface MonitoringAction<Values = unknown> {
   description?: readonly TranslatedString[]
   form?: Component
   defaultValues(): Values
-  perform(targets: HostRef[], values: Values): Promise<ActionFeedback>
+  perform(targets: Target[], values: Values): Promise<ActionFeedback>
 }

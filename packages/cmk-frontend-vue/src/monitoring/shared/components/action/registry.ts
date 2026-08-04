@@ -3,10 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { HostRef } from '@/monitoring/shared/api/types'
+
 import type { MonitoringAction } from './types'
 
-export type MonitoringActionRegistry = Record<string, MonitoringAction>
+export type MonitoringActionRegistry<Target = HostRef> = Record<
+  string,
+  MonitoringAction<unknown, Target>
+>
 
-export function createActionRegistry(actions: MonitoringAction[]): MonitoringActionRegistry {
+export function createActionRegistry<Target = HostRef>(
+  actions: MonitoringAction<unknown, Target>[]
+): MonitoringActionRegistry<Target> {
   return Object.fromEntries(actions.map((action) => [action.id, action]))
 }

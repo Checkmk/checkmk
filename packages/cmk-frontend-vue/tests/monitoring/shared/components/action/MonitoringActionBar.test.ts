@@ -15,16 +15,46 @@ const ACTIONS: CellAction[] = [
   { id: 'acknowledge', label: 'Acknowledge' as TranslatedString, icon: 'acknowledge-test' }
 ]
 
-function mountBar(props: { selectedCount: number; actions?: CellAction[] }) {
+function mountBar(props: {
+  selectedCount: number
+  actions?: CellAction[]
+  runningActionId?: string | null
+}) {
   return render(MonitoringActionBar, {
-    props: { actions: ACTIONS, ...props }
+    props: {
+      actions: ACTIONS,
+      selectionLabel: `${props.selectedCount} hosts selected` as TranslatedString,
+      label: 'Actions for selected hosts' as TranslatedString,
+      ...props
+    }
   })
 }
 
-test('shows the selected-host count', () => {
+const RUNNING_CLASS = 'cmk-button--running'
+
+test('the action performing right away pulses, the others do not', () => {
+  mountBar({ selectedCount: 1, runningActionId: 'reschedule' })
+
+  expect(screen.getByRole('button', { name: 'Reschedule check' })).toHaveClass(RUNNING_CLASS)
+  expect(screen.getByRole('button', { name: 'Acknowledge' })).not.toHaveClass(RUNNING_CLASS)
+})
+
+test('no button pulses while nothing is running', () => {
+  mountBar({ selectedCount: 1 })
+
+  expect(screen.getByRole('button', { name: 'Reschedule check' })).not.toHaveClass(RUNNING_CLASS)
+})
+
+test('shows the selection label it was given', () => {
   mountBar({ selectedCount: 3 })
 
   expect(screen.getByText('3 hosts selected')).toBeInTheDocument()
+})
+
+test('names the toolbar with the label it was given', () => {
+  mountBar({ selectedCount: 3 })
+
+  expect(screen.getByRole('toolbar', { name: 'Actions for selected hosts' })).toBeInTheDocument()
 })
 
 test('is enabled and its actions clickable when hosts are selected', async () => {

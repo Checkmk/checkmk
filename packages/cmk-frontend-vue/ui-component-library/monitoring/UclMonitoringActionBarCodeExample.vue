@@ -17,5 +17,11 @@ const actions: CellAction[] = [
 </script>
 
 <template>
-  <MonitoringActionBar :selected-count="2" :actions="actions" @action="() => {}" />
+  <MonitoringActionBar
+    :selected-count="2"
+    :actions="actions"
+    :selection-label="'2 hosts selected' as TranslatedString"
+    :label="'Actions for selected hosts' as TranslatedString"
+    @action="() => {}"
+  />
 </template>

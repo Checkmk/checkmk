@@ -32,7 +32,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (event: 'open', host: HostEntry): void
-  (event: 'command', payload: { id: string; host: HostRef }): void
+  (event: 'command', payload: { id: string; target: HostRef }): void
 }>()
 
 const { _t } = usei18n()
@@ -49,7 +49,7 @@ const actionButtons = computed<CellAction[]>(() =>
 )
 
 function onActionSelect(action: CellAction): void {
-  emit('command', { id: action.id, host: hostRef.value })
+  emit('command', { id: action.id, target: hostRef.value })
 }
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)

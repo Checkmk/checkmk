@@ -4,16 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type RowSelectionState } from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
-import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -21,20 +19,11 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import { ACTION_REFRESH_DELAY_MS, HOST_LIMIT_TIERS } from '@/monitoring/shared/constants'
 
-import ColumnPicker from '../shared/components/ColumnPicker.vue'
-import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
-import MonitoringLimitSelector from '../shared/components/MonitoringLimitSelector.vue'
-import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
+import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
-import MonitoringTable from '../shared/components/MonitoringTable.vue'
-import MonitoringTotalCount from '../shared/components/MonitoringTotalCount.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
-import ActionFeedback, {
-  type ActionFeedback as ActionFeedbackResult
-} from '../shared/components/action/ActionFeedback.vue'
-import MonitoringActionBar from '../shared/components/action/MonitoringActionBar.vue'
-import MonitoringActionPane from '../shared/components/action/MonitoringActionPane.vue'
+import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { useAcknowledgeAction } from '../shared/components/action/actions/acknowledge'
 import {
   RESCHEDULE_ACTION_ID,
@@ -43,7 +32,6 @@ import {
 import { useScheduleDowntimeAction } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
-import { useMonitoringActions } from '../shared/services/useMonitoringActions'
 import { HostActionMenuApi } from './api/actionMenu'
 import { HostApi } from './api/hosts'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
@@ -51,7 +39,7 @@ import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
 import { HostService } from './services/HostService'
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 const props = defineProps<MonitoringAllHostsApp>()
 
@@ -151,32 +139,11 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
-const rowSelection = ref<RowSelectionState>({})
-
 const actionRegistry = createActionRegistry([
   useAcknowledgeAction(),
   useRescheduleAction(),
   useScheduleDowntimeAction()
 ])
-const {
-  activeAction,
-  selectedCount,
-  feedback,
-  feedbackOpen,
-  openAction,
-  closeAction,
-  applyFeedback
-} = useMonitoringActions(rowSelection)
-
-const selectedHosts = computed<HostRef[]>(() =>
-  hostService.items.value
-    .filter((host) => rowSelection.value[rowKey(host)])
-    .map((host) => ({ site_id: host.site_id, name: host.name }))
-)
-
-const isNarrowed = computed(
-  () => hostService.filters.activeFilterCount > 0 || hostService.committedSearchQuery.value !== ''
-)
 
 onMounted(() => {
   hostService.onFocusSearch(() => searchInput.value?.focus())
@@ -190,6 +157,14 @@ provide(MONITORING_SERVICE, hostService)
 
 function rowKey(row: HostEntry): string {
   return `${row.site_id}/${row.name}`
+}
+
+function hostRef(row: HostEntry): HostRef {
+  return { site_id: row.site_id, name: row.name }
+}
+
+function hostSelectionLabel(count: number): TranslatedString {
+  return _tn('%{count} host selected', '%{count} hosts selected', count, { count })
 }
 
 const slideInHost = ref<HostEntry | null>(null)
@@ -208,44 +183,9 @@ function closeSlideIn(): void {
   slideInHost.value = null
 }
 
-function onSlideInActionFeedback(result: ActionFeedbackResult): void {
+function onActionPerformed(result: ActionFeedbackResult): void {
   if (result.variant === 'success') {
     hostService.refresh(ACTION_REFRESH_DELAY_MS)
-  }
-}
-
-function onBulkActionFeedback(result: ActionFeedbackResult): void {
-  applyFeedback(result)
-  if (result.variant === 'success') {
-    hostService.refresh(ACTION_REFRESH_DELAY_MS)
-  }
-}
-
-async function onBulkAction(action: CellAction): Promise<void> {
-  const registered = actionRegistry[action.id]
-  if (!registered || selectedHosts.value.length === 0) {
-    return
-  }
-  if (action.id === RESCHEDULE_ACTION_ID && selectedHosts.value.length === 1) {
-    onBulkActionFeedback(await registered.perform(selectedHosts.value, registered.defaultValues()))
-    return
-  }
-  openAction(action.id)
-}
-
-async function onRowCommand(payload: { id: string; host: HostRef }): Promise<void> {
-  const action = actionRegistry[payload.id]
-  if (!action) {
-    return
-  }
-  applyFeedback(await action.perform([payload.host], action.defaultValues()), {
-    clearSelection: false
-  })
-}
-
-function onRightPaneCollapse(collapsed: boolean): void {
-  if (collapsed) {
-    closeAction()
   }
 }
 </script>
@@ -295,89 +235,37 @@ function onRightPaneCollapse(collapsed: boolean): void {
         />
       </div>
     </div>
-    <CmkSplitPane
-      :collapsed="!activeAction"
-      :right-min-size="30"
-      :right-max-size="50"
-      :collapsible-on-resize="false"
-      class="monitoring-all-hosts-app__split"
-      @update:collapsed="onRightPaneCollapse($event as boolean)"
+    <MonitoringSplitPane
+      :service="hostService"
+      :actions="actionRegistry"
+      :bulk-actions="hostActions"
+      :columns="columns"
+      :column-pinning="columnPinning"
+      :get-row-key="rowKey"
+      :get-action-target="hostRef"
+      :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
+      :selection-label="hostSelectionLabel"
+      :actions-label="_t('Actions for selected hosts')"
+      @performed="onActionPerformed"
     >
-      <template #left>
-        <div class="monitoring-all-hosts-app__left-pane">
-          <MonitoringResultsCount
-            class="monitoring-all-hosts-app__results-count"
-            :matched="hostService.matched.value"
-            :narrowed="isNarrowed"
-          />
-          <ActionFeedback
-            v-if="feedback"
-            v-model:open="feedbackOpen"
-            class="monitoring-all-hosts-app__feedback"
-            :feedback="feedback"
-          />
-          <div class="monitoring-all-hosts-app__table-toolbar">
-            <MonitoringActionBar
-              v-if="hostActions.length > 0"
-              class="monitoring-all-hosts-app__action-bar"
-              :selected-count="selectedCount"
-              :actions="hostActions"
-              @action="onBulkAction"
-            />
-            <div class="monitoring-all-hosts-app__table-toolbar-end">
-              <MonitoringTotalCount :total="hostService.total.value" />
-              <MonitoringLimitSelector />
-              <ColumnPicker />
-            </div>
-          </div>
-          <MonitoringTable
-            v-model:row-selection="rowSelection"
-            :rows="hostService.items.value"
-            :fetch-state="hostService.fetchState.value"
-            :has-loaded="hostService.hasLoaded.value"
-            :columns="columns"
-            :filter-state="hostService.tableColumnFilters.value"
-            :column-pinning="columnPinning"
-            :get-row-key="rowKey"
-            @update:filter-state="hostService.onColumnFiltersUpdate($event)"
-          >
-            <template #row="{ row, tableRow }">
-              <HostRow
-                :row="row"
-                :table-row="tableRow"
-                :row-actions="rowActionButtons"
-                :load-action-menu="loadActionMenu"
-                @open="openSlideIn"
-                @command="onRowCommand"
-              />
-            </template>
-            <template #empty-state>
-              <MonitoringEmptyState
-                :has-search-query="hostService.searchQuery.value !== ''"
-                :has-active-filter="hostService.filters.activeFilterCount > 0"
-              />
-            </template>
-          </MonitoringTable>
-        </div>
-      </template>
-      <template #right>
-        <MonitoringActionPane
-          v-if="activeAction"
-          :action-id="activeAction"
-          :actions="actionRegistry"
-          :targets="selectedHosts"
-          @feedback="onBulkActionFeedback"
-          @cancel="closeAction"
+      <template #row="{ row, tableRow, onCommand }">
+        <HostRow
+          :row="row"
+          :table-row="tableRow"
+          :row-actions="rowActionButtons"
+          :load-action-menu="loadActionMenu"
+          @open="openSlideIn"
+          @command="onCommand"
         />
       </template>
-    </CmkSplitPane>
+    </MonitoringSplitPane>
     <HostSlideIn
       :host="slideInHost"
       :actions="actionRegistry"
       :row-actions="rowActionButtons"
       :load-action-menu="loadActionMenu"
       @close="closeSlideIn"
-      @performed="onSlideInActionFeedback"
+      @performed="onActionPerformed"
     />
   </div>
 </template>
@@ -422,52 +310,5 @@ function onRightPaneCollapse(collapsed: boolean): void {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-4);
-}
-
-.monitoring-all-hosts-app__split {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.monitoring-all-hosts-app__left-pane {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-
-.monitoring-all-hosts-app__results-count {
-  flex: 0 0 auto;
-  margin: var(--spacing-half) 0 var(--spacing);
-}
-
-.monitoring-all-hosts-app__feedback {
-  flex: 0 0 auto;
-  margin: 0 0 var(--spacing);
-}
-
-.monitoring-all-hosts-app__table-toolbar {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--spacing);
-  margin-bottom: var(--spacing);
-}
-
-.monitoring-all-hosts-app__action-bar {
-  flex: 0 1 auto;
-}
-
-.monitoring-all-hosts-app__table-toolbar-end {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--spacing);
-  margin-left: auto;
-}
-
-.monitoring-all-hosts-app__table-toolbar-end > :not(:first-child) {
-  border-left: 1px solid var(--font-color-dimmed);
-  padding-left: var(--spacing);
 }
 </style>

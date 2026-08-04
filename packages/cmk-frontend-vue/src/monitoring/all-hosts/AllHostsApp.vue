@@ -193,6 +193,8 @@ function rowKey(row: HostEntry): string {
 const slideInHost = ref<HostEntry | null>(null)
 const slideInOpen = computed(() => slideInHost.value !== null)
 const slideInActionId = ref<string | null>(null)
+const slideInFeedback = ref<ActionFeedbackResult | null>(null)
+const slideInFeedbackOpen = ref(false)
 
 const slideInTargets = computed<HostRef[]>(() =>
   slideInHost.value ? [{ site_id: slideInHost.value.site_id, name: slideInHost.value.name }] : []
@@ -248,6 +250,7 @@ function openSlideIn(host: HostEntry): void {
     hostService.beginAutoPause()
   }
   slideInActionId.value = null
+  slideInFeedback.value = null
   slideInHost.value = host
 }
 
@@ -257,6 +260,7 @@ function closeSlideIn(): void {
   }
   slideInHost.value = null
   slideInActionId.value = null
+  slideInFeedback.value = null
 }
 
 async function openSlideInAction(actionId: string): Promise<void> {
@@ -267,6 +271,7 @@ async function openSlideInAction(actionId: string): Promise<void> {
     await runSlideInActionImmediately(actionId)
     return
   }
+  slideInFeedback.value = null
   slideInActionId.value = actionId
 }
 
@@ -283,8 +288,8 @@ function closeSlideInAction(): void {
 }
 
 function onSlideInActionFeedback(result: ActionFeedbackResult): void {
-  feedback.value = result
-  feedbackOpen.value = true
+  slideInFeedback.value = result
+  slideInFeedbackOpen.value = true
   slideInActionId.value = null
   if (result.variant === 'success') {
     hostService.refresh(ACTION_REFRESH_DELAY_MS)
@@ -318,6 +323,14 @@ async function onRowCommand(payload: { id: string; host: HostRef }): Promise<voi
   applyFeedback(await action.perform([payload.host], action.defaultValues()), {
     clearSelection: false
   })
+}
+
+async function onSlideInRowCommand(payload: { id: string; host: HostRef }): Promise<void> {
+  const action = actionRegistry[payload.id]
+  if (!action) {
+    return
+  }
+  onSlideInActionFeedback(await action.perform([payload.host], action.defaultValues()))
 }
 
 function onRightPaneCollapse(collapsed: boolean): void {
@@ -461,11 +474,17 @@ function onRightPaneCollapse(collapsed: boolean): void {
           :host="slideInHost"
           :actions="slideInInlineActions"
           :load-action-menu="slideInLoadActionMenu"
-          @command="onRowCommand"
+          @command="onSlideInRowCommand"
         />
       </template>
       <template #actions>
         <HostSlideInActions @select="openSlideInAction" />
+        <ActionFeedback
+          v-if="slideInFeedback"
+          v-model:open="slideInFeedbackOpen"
+          class="monitoring-all-hosts-app__slide-in-feedback"
+          :feedback="slideInFeedback"
+        />
       </template>
       <template #override>
         <CmkButton
@@ -578,6 +597,10 @@ function onRightPaneCollapse(collapsed: boolean): void {
 .monitoring-all-hosts-app__table-toolbar-end > :not(:first-child) {
   border-left: 1px solid var(--font-color-dimmed);
   padding-left: var(--spacing);
+}
+
+.monitoring-all-hosts-app__slide-in-feedback {
+  margin-top: var(--spacing);
 }
 
 .monitoring-all-hosts-app__slide-in-back {

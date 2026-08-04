@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     startswith,
     State,
-    StringTable,
+    StringByteTable,
 )
 from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.lib.humidity import check_humidity
@@ -34,7 +34,7 @@ _TABLES = ["1", "2", "3", "4"]
 Section = dict[str, Any]
 
 
-def parse_emka_modules(string_table: Sequence[StringTable]) -> Section | None:
+def parse_emka_modules(string_table: Sequence[StringByteTable]) -> Section | None:
     if not any(string_table):
         return None
 
@@ -66,6 +66,13 @@ def parse_emka_modules(string_table: Sequence[StringTable]) -> Section | None:
 
     parsed: dict[str, Any] = {"basic_components": {}}
     for oidend, status, ty, mod_info, remark in string_table[0]:
+        oidend, status, ty, mod_info, remark = (
+            str(oidend),
+            str(status),
+            str(ty),
+            str(mod_info),
+            str(remark),
+        )
         mo_index, co_index = oidend.split(".")
         if mo_index == "0":
             itemname = f"Master {mod_info.split(',')[0]}"
@@ -91,6 +98,7 @@ def parse_emka_modules(string_table: Sequence[StringTable]) -> Section | None:
 
     for table_idx, block in zip(_TABLES, string_table[1:5]):
         for module_link, value, mode in block:
+            module_link, value, mode = str(module_link), str(value), str(mode)
             table = map_component_types[table_idx]
             location = ".".join(module_link.split(".")[-2:])
             for entry, attrs in list(parsed.get(table, {}).items()):
@@ -103,6 +111,7 @@ def parse_emka_modules(string_table: Sequence[StringTable]) -> Section | None:
                     attrs["mode"] = mode
 
     for oidend, threshold in string_table[5]:
+        oidend, threshold = str(oidend), str(threshold)
         location, threshold_ty = oidend.split(".")
         ty = "levels_lower" if threshold_ty == "1" else "levels"
 
@@ -123,8 +132,10 @@ def parse_emka_modules(string_table: Sequence[StringTable]) -> Section | None:
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
     for row in string_table[6]:
-        oidend = row[0]
-        equation_bin: Sequence[int] = row[1]  # type: ignore[assignment]  # OIDBytes returns list[int]
+        oidend = str(row[0])
+        equation_bin = row[1]
+        if isinstance(equation_bin, str):
+            continue
         equation: list[str] = []
         part: list[int] = []
         for byte in equation_bin:

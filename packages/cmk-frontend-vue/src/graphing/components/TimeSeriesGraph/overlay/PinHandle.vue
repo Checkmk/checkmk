@@ -59,6 +59,7 @@ function onClick(): void {
 
   position: absolute;
   z-index: 3;
+  margin: 0;
   padding: 0;
   border: none;
   background: none;

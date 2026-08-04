@@ -15,8 +15,16 @@ const FOCUS_DOT_RADIUS = 4
 const FOCUS_HALO_RADIUS = 8
 const FOCUS_HALO_STROKE_WIDTH = 8
 
+export function crosshairCentreX(snapX: number): number {
+  return Math.round(snapX) + 0.5
+}
+
+export function pinLineCentreX(pinX: number): number {
+  return Math.round(pinX)
+}
+
 export function drawCrosshair(ctx: CanvasRenderingContext2D, snapX: number, height: number): void {
-  const pixelAlignedX = Math.round(snapX) + 0.5
+  const pixelAlignedX = crosshairCentreX(snapX)
   ctx.beginPath()
   ctx.setLineDash([3, 3])
   ctx.strokeStyle = CROSSHAIR_GREY
@@ -28,7 +36,7 @@ export function drawCrosshair(ctx: CanvasRenderingContext2D, snapX: number, heig
 }
 
 export function drawPinLine(ctx: CanvasRenderingContext2D, x: number, height: number): void {
-  const centerX = Math.round(x)
+  const centerX = pinLineCentreX(x)
   ctx.beginPath()
   ctx.moveTo(centerX - PIN_LINE_TOP_HALF_WIDTH, 0)
   ctx.lineTo(centerX + PIN_LINE_TOP_HALF_WIDTH, 0)

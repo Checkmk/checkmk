@@ -21,6 +21,7 @@ import { downsampleToColumns, m4 } from './decimation/decimate'
 import type { M4Cache } from './decimation/types'
 import OverlayLayer from './overlay/OverlayLayer.vue'
 import PinHandle from './overlay/PinHandle.vue'
+import { crosshairCentreX, pinLineCentreX } from './overlay/crosshair'
 import { drawData } from './render'
 import { invertBucket } from './render/bucket'
 import { drawHorizontalLines } from './render/horizontalLines'
@@ -79,6 +80,9 @@ const pinX = computed<number | null>(() => {
   }
   return ((props.pinTime - props.time_range.start) / span) * plotWidth.value
 })
+const pinHandleX = computed<number | null>(() =>
+  pinX.value === null ? null : pinLineCentreX(pinX.value)
+)
 
 // 'iec' notation is 1024-based so its ticks step in binary; every other notation is decimal.
 const yStepping = computed((): 'binary' | 'decimal' =>
@@ -471,15 +475,18 @@ watch(
       <span>{{ resetLabel }}</span>
     </CmkButton>
     <PinHandle
-      v-if="pinX !== null"
+      v-if="pinHandleX !== null"
       variant="remove"
-      :style="{ left: `${MARGIN.left + pinX}px`, top: `${plotTop}px` }"
+      :style="{ left: `${MARGIN.left + pinHandleX}px`, top: `${plotTop}px` }"
       @action="onPinActionClick"
     />
     <PinHandle
       v-if="pinEnabled && hoverState"
       variant="add"
-      :style="{ left: `${MARGIN.left + hoverState.snapX}px`, top: `${plotTop}px` }"
+      :style="{
+        left: `${MARGIN.left + crosshairCentreX(hoverState.snapX)}px`,
+        top: `${plotTop}px`
+      }"
       @action="onPinAddClick"
       @mouseenter="cancelPendingHoverClear"
       @mouseleave="clearHoverAfterDelay"

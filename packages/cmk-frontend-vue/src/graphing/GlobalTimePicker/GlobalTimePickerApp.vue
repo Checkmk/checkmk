@@ -40,7 +40,14 @@ const range = computed<DateTimeRange>({
     :first-day-of-week="props.first_day_of_week"
   >
     <template #aside>
-      <GlobalRefreshControl />
+      <GlobalRefreshControl class="graphing-global-time-picker-app__refresh" />
     </template>
   </GlobalTimePicker>
 </template>
+
+<style scoped>
+/* Keeps the pill off the page's right edge; the picker itself has no say in that. */
+.graphing-global-time-picker-app__refresh {
+  margin-right: var(--dimension-7);
+}
+</style>

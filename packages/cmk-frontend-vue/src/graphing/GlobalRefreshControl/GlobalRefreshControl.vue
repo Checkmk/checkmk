@@ -107,16 +107,23 @@ const lastRefreshLabel = computed(() => {
 
 <style scoped lang="scss">
 .graphing-global-refresh-control {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: var(--dimension-3);
   font-size: var(--font-size-normal);
   color: var(--font-color);
 }
 
+/* Out of flow: in flow this makes the control taller when the refresh is off, and the host
+   centres it in a fixed-height row, so the pill would slide out of line with the picker. */
 .graphing-global-refresh-control__last-refresh {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  margin-bottom: var(--dimension-3);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .graphing-global-refresh-control__pill {
@@ -125,8 +132,7 @@ const lastRefreshLabel = computed(() => {
   gap: var(--dimension-3);
   padding: var(--dimension-3) var(--dimension-4);
   border-radius: var(--border-radius);
-  background: var(--color-corporate-green-100);
-  color: var(--color-white-100);
+  background: var(--graphing-refresh-live-bg);
 
   > :deep(.cmk-dropdown) {
     align-self: center;
@@ -134,19 +140,42 @@ const lastRefreshLabel = computed(() => {
 }
 
 .graphing-global-refresh-control__pill--paused {
-  background: var(--color-yellow-100);
+  background: var(--graphing-refresh-off-bg);
 }
 
 .graphing-global-refresh-control__dot {
+  box-sizing: border-box;
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
+  border: var(--border-width-1) solid var(--graphing-refresh-live-dot-stroke);
   border-radius: 50%;
   background: var(--color-corporate-green-50);
 }
 
 .graphing-global-refresh-control__pill--paused .graphing-global-refresh-control__dot {
+  border-color: var(--graphing-refresh-off-dot-stroke);
   background: var(--color-yellow-50);
+}
+
+body[data-theme='facelift'] {
+  .graphing-global-refresh-control {
+    --graphing-refresh-live-bg: var(--color-corporate-green-0);
+    --graphing-refresh-off-bg: var(--color-yellow-0);
+    --graphing-refresh-live-dot-stroke: var(--color-corporate-green-70);
+    --graphing-refresh-off-dot-stroke: var(--color-yellow-70);
+  }
+}
+
+body[data-theme='modern-dark'] {
+  .graphing-global-refresh-control {
+    --graphing-refresh-live-bg: var(--color-corporate-green-100);
+    --graphing-refresh-off-bg: var(--color-yellow-100);
+
+    /* Same colour as the fill: dark mode shows no ring, but the border keeps the dot 8x8. */
+    --graphing-refresh-live-dot-stroke: var(--color-corporate-green-50);
+    --graphing-refresh-off-dot-stroke: var(--color-yellow-50);
+  }
 }
 
 .graphing-global-refresh-control__title {

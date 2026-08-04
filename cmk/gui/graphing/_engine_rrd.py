@@ -585,6 +585,40 @@ class FetchDiagnostics:
     errors: list[str] = field(default_factory=list)
 
 
+def assemble_fetched_data(
+    rrd_metrics: Sequence[RRDMetric],
+    performance_data: Mapping[RRDMetric, PerformanceData],
+    time_series: Mapping[RRDMetric, EngineTimeSeries],
+) -> Mapping[Metric, Sequence[FetchedData]]:
+    # A metric the fetch resolved neither performance data nor a series for is left out altogether,
+    # so the quantity evaluates as absent rather than as an empty curve.
+    assembled: dict[Metric, Sequence[FetchedData]] = {}
+    for metric in rrd_metrics:
+        data = performance_data.get(metric)
+        series = time_series.get(metric)
+        if data is None and series is None:
+            continue
+        assembled[metric] = [FetchedData(performance_data=data, time_series=series)]
+    return assembled
+
+
+def _grouped_by_site(
+    rrd_metrics: Sequence[RRDMetric],
+) -> Mapping[SiteID | None, Sequence[RRDMetric]]:
+    # Group by the metric's own site (None when unknown). A same host/service on two sites is thereby
+    # kept apart - both as distinct fetch groups and as distinct performance-data keys.
+    groups: dict[SiteID | None, list[RRDMetric]] = {}
+    for metric in rrd_metrics:
+        groups.setdefault(metric.site_id, []).append(metric)
+    return groups
+
+
+def _only_sites(site: SiteID | None) -> SiteId | None:
+    # Scope a livestatus query to the metric's site when known (None = all sites, resolved by the
+    # prepending fetch).
+    return SiteId(site) if site is not None else None
+
+
 @dataclass(frozen=True)
 class EngineRRDFetchData:
     debug: bool
@@ -612,24 +646,7 @@ class EngineRRDFetchData:
             consolidation_function=consolidation_function,
             time_range=time_range,
         )
-        return self._assemble(rrd_metrics, performance_data, time_series)
-
-    def _assemble(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        performance_data: Mapping[RRDMetric, PerformanceData],
-        time_series: Mapping[RRDMetric, EngineTimeSeries],
-    ) -> Mapping[Metric, Sequence[FetchedData]]:
-        # A metric the fetch resolved neither performance data nor a series for is left out
-        # altogether, so the quantity evaluates as absent rather than as an empty curve.
-        assembled: dict[Metric, Sequence[FetchedData]] = {}
-        for metric in rrd_metrics:
-            data = performance_data.get(metric)
-            series = time_series.get(metric)
-            if data is None and series is None:
-                continue
-            assembled[metric] = [FetchedData(performance_data=data, time_series=series)]
-        return assembled
+        return assemble_fetched_data(rrd_metrics, performance_data, time_series)
 
     def _translated_performance_data(
         self,
@@ -734,21 +751,6 @@ class EngineRRDFetchData:
                 time_series[metric] = _merge_series(scaled, reference)
         return _chop_last_empty_step(time_series, reference.end)
 
-    def _group_by_site(
-        self, rrd_metrics: Sequence[RRDMetric]
-    ) -> Mapping[SiteID | None, Sequence[RRDMetric]]:
-        # Group by the metric's own site (None when unknown). A same host/service on two sites is
-        # thereby kept apart - both as distinct fetch groups and as distinct performance-data keys.
-        groups: dict[SiteID | None, list[RRDMetric]] = {}
-        for metric in rrd_metrics:
-            groups.setdefault(metric.site_id, []).append(metric)
-        return groups
-
-    def _only_sites(self, site: SiteID | None) -> SiteId | None:
-        # Scope a livestatus query to the metric's site when known (None = all sites, resolved by the
-        # prepending fetch below).
-        return SiteId(site) if site is not None else None
-
     def _fetch_performance_data(
         self, rrd_metrics: Sequence[RRDMetric]
     ) -> tuple[
@@ -756,7 +758,7 @@ class EngineRRDFetchData:
     ]:
         result: dict[tuple[SiteID | None, Service], RawPerformanceData] = {}
         site_of_service: dict[Service, SiteID] = {}
-        for group_site, site_metrics in self._group_by_site(rrd_metrics).items():
+        for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
             site_services = tuple(
                 dict.fromkeys(
                     Service(host_name=metric.host_name, service_name=metric.service_name)
@@ -770,7 +772,7 @@ class EngineRRDFetchData:
             # for the time-series fetch. The performance data is keyed by the metric's own site, so a
             # same host/service matched on two sites keeps a distinct entry per site.
             for query in _object_queries(site_services, ["perf_data", "check_command"]):
-                with sites.only_sites(self._only_sites(group_site)), sites.prepend_site():
+                with sites.only_sites(_only_sites(group_site)), sites.prepend_site():
                     for row_site, *row in sites.live().query(query.lql):
                         service, values = query.parse_row(row)
                         perf_data_string, check_command = values
@@ -788,11 +790,11 @@ class EngineRRDFetchData:
         consolidation_function: ConsolidationFunction,
     ) -> Mapping[RRDMetric, EngineTimeSeries]:
         result: dict[RRDMetric, EngineTimeSeries] = {}
-        for group_site, site_metrics in self._group_by_site(rrd_metrics).items():
+        for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
             result.update(
                 self._fetch_time_series_of_site(
                     site_metrics,
-                    self._only_sites(group_site),
+                    _only_sites(group_site),
                     time_range=time_range,
                     consolidation_function=consolidation_function,
                 )

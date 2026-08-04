@@ -136,7 +136,7 @@ def value_store_fixture(monkeypatch):
             ),
         ),
     ],
-    ids=["mounted", "unformated", "patterns", "with sizes"],
+    ids=["mounted", "unformatted", "patterns", "with sizes"],
 )
 def test_check_hitachi_hnas_volume(
     item: str,

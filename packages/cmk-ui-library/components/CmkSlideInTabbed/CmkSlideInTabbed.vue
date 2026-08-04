@@ -152,11 +152,11 @@ watch(activeTab, (id) => {
 
 <style scoped>
 .cmk-slide-in-tabbed__above-tabs {
-  margin-bottom: var(--spacing);
+  margin: var(--spacing-double) 0;
 }
 
 .cmk-slide-in-tabbed__actions {
-  margin-bottom: var(--spacing-double);
+  margin: var(--spacing-double) 0;
 }
 
 .cmk-slide-in-tabbed__above-tabs:empty {

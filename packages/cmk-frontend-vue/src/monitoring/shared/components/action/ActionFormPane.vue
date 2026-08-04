@@ -96,7 +96,7 @@ function cancel(): void {
 }
 
 .monitoring-action-form-pane__title {
-  margin: 0;
+  margin: 0 0 var(--spacing-double) 0;
   font-size: var(--font-size-large);
   font-weight: var(--font-weight-bold);
 }
@@ -142,5 +142,6 @@ function cancel(): void {
   flex: 0 0 auto;
   gap: var(--dimension-4);
   align-items: center;
+  margin: var(--spacing-double) 0;
 }
 </style>

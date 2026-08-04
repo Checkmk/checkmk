@@ -37,10 +37,11 @@ def view_breadcrumb(view: View) -> Breadcrumb:
     # View without special hierarchy
     if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
         request_vars: Sequence[tuple[str, int | str | None]] = append_site_from_request(
+            request,
             [
                 ("view_name", view.name),
                 *visuals.get_singlecontext_vars(view.context, view.spec["single_infos"]).items(),
-            ]
+            ],
         )
 
         breadcrumb = make_topic_breadcrumb(
@@ -92,10 +93,11 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
                 url=makeuri_contextless(
                     request,
                     append_site_from_request(
+                        request,
                         [
                             ("view_name", view.name),
                             ("host", str(host_name)),
-                        ]
+                        ],
                     ),
                 ),
                 id=f"view_{view.name}",
@@ -118,11 +120,12 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
             url=makeuri_contextless(
                 request,
                 append_site_from_request(
+                    request,
                     [
                         ("view_name", view.name),
                         ("host", str(host_name)),
                         ("service", view.context["service"]["service"]),
-                    ]
+                    ],
                 ),
             ),
             id=f"view_{view.name}",
@@ -148,11 +151,12 @@ def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Bread
             url=makeuri_contextless(
                 request,
                 append_site_from_request(
+                    request,
                     [
                         ("view_name", "service"),
                         ("host", host_name),
                         ("service", service_name),
-                    ]
+                    ],
                 ),
                 filename="view.py",
             ),
@@ -191,7 +195,9 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
             title=host_name,
             url=makeuri_contextless(
                 request,
-                append_site_from_request([("view_name", "hoststatus"), ("host", host_name)]),
+                append_site_from_request(
+                    request, [("view_name", "hoststatus"), ("host", host_name)]
+                ),
                 filename="view.py",
             ),
             id=None,
@@ -205,7 +211,7 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
             title=view_title(host_view_spec, context={}),
             url=makeuri_contextless(
                 request,
-                append_site_from_request([("view_name", "host"), ("host", host_name)]),
+                append_site_from_request(request, [("view_name", "host"), ("host", host_name)]),
                 filename="view.py",
             ),
             id=None,

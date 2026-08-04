@@ -17,7 +17,6 @@ import cmk.utils.paths
 from cmk.ccc.version import __version__, Edition, edition, Version
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
-from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.utils.escaping import escape_text
 from cmk.web.utils.urls import is_allowed_url as is_allowed_url
@@ -231,10 +230,11 @@ def requested_file_with_query(request: Request) -> str:
 
 
 def append_site_from_request(
+    request: Request,
     url_vars: Sequence[tuple[str, int | str | None]],
 ) -> Sequence[tuple[str, int | str | None]]:
-    """Append the current request's site parameter to URL variables if present."""
-    if site := _request.var("site"):
+    """Append the given request's site parameter to URL variables if present."""
+    if site := request.var("site"):
         return [*url_vars, ("site", site)]
     return url_vars
 

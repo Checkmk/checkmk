@@ -6,27 +6,28 @@ import logging
 import re
 from typing import override
 
-from playwright.sync_api import expect, Locator
-
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
+from tests.system.gui.testlib.playwright.pom.setup.otel.custom_services import CustomServices
 
 logger = logging.getLogger(__name__)
 
 
-class CustomServices(CmkPage):
-    """Represent the page `Setup -> Telemetry -> Custom Services`."""
+class AddCustomService(CmkPage):
+    """Represent the page `Setup -> Telemetry -> Custom Services -> Add custom service`.
 
-    page_title = "Custom Services"
-    main_menu_name = "Custom Services"
-    empty_state_text = "No custom services yet"
+    Empty for now (CMK-36035) — only the navigation into the creation flow exists.
+    """
+
+    page_title = "Add custom service"
 
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
+        custom_services_page = CustomServices(self.page)
         self.click_and_wait_for_navigation(
-            self.main_menu.setup_menu(self.main_menu_name, exact=True),
-            frame_url=re.compile("mode=otel_custom_services"),
+            custom_services_page.add_custom_service_button,
+            frame_url=re.compile("mode=create_otel_custom_service"),
         )
         self.validate_page()
 
@@ -34,16 +35,7 @@ class CustomServices(CmkPage):
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(self.add_custom_service_button).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
-
-    @property
-    def empty_state(self) -> Locator:
-        return self.main_area.locator("div.no-config-bundles")
-
-    @property
-    def add_custom_service_button(self) -> Locator:
-        return self.main_area.get_suggestion("Add custom service")

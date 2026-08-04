@@ -219,13 +219,6 @@ def requested_file_name(
     return _file_name_from_path(request.path, on_error=on_error, default=default)
 
 
-def requested_file_with_query(request: Request) -> str:
-    """Returns a string containing the requested file name and query to be used in hyperlinks"""
-    file_name = requested_file_name(request)
-    query = request.query_string.decode("utf-8")
-    return f"{file_name}.py?{query}"
-
-
 def append_site_from_request(
     request: Request,
     url_vars: Sequence[tuple[str, int | str | None]],

@@ -559,12 +559,7 @@ fn test_add_oracle_home_to_env() {
 
     // use_host_client "never" -> gated out, no home detected
     let env_var = "_MK_TEST_ORACLE_HOME_GATED";
-    let result = detect_oracle_home(
-        &config_never,
-        Some(oratab.clone()),
-        make_env_var(env_var),
-        None,
-    );
+    let result = detect_oracle_home(&config_never, Some(oratab.clone()), make_env_var(env_var));
     assert!(result.is_none());
     assert!(std::env::var(env_var).is_err());
 
@@ -573,12 +568,7 @@ fn test_add_oracle_home_to_env() {
     unsafe {
         std::env::set_var(env_var, "/already/set");
     }
-    let result = detect_oracle_home(
-        &config_auto,
-        Some(oratab.clone()),
-        make_env_var(env_var),
-        None,
-    );
+    let result = detect_oracle_home(&config_auto, Some(oratab.clone()), make_env_var(env_var));
     assert_eq!(
         result,
         Some(OracleHome::Inherited(std::path::PathBuf::from(
@@ -600,7 +590,7 @@ fn test_add_oracle_home_to_env() {
     // "auto" -> the first suitable home is derived: BAD doesn't exist,
     // XE wins; only apply exports it
     let env_var = "_MK_TEST_ORACLE_HOME_SET";
-    let result = detect_oracle_home(&config_auto, Some(oratab), make_env_var(env_var), None);
+    let result = detect_oracle_home(&config_auto, Some(oratab), make_env_var(env_var));
     assert_eq!(result, Some(OracleHome::Derived(home.clone())));
     assert!(std::env::var(env_var).is_err());
     let runtime_env = RuntimeEnv {
@@ -623,105 +613,7 @@ fn test_add_oracle_home_to_env() {
         &config_auto,
         Some(bad_oratab_path.to_str().unwrap().to_string()),
         make_env_var(env_var),
-        None,
     );
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
-}
-
-#[cfg(unix)]
-#[test]
-fn test_derive_oracle_home_from_client_path() {
-    use mk_oracle::setup::{apply_runtime_env, detect_oracle_home, OracleHome, RuntimeEnv};
-    use mk_oracle::types::EnvVarName;
-
-    let make_env_var = |name: &str| Some(EnvVarName::from(name.to_string()));
-
-    let tmp_dir = tempfile::tempdir().expect("create temp dir");
-
-    // full home: <home>/lib with the client library and <home>/oracore next to it
-    let home = tmp_dir.path().join("dbhome_1");
-    let home_lib = home.join("lib");
-    std::fs::create_dir_all(&home_lib).expect("create home/lib");
-    std::fs::write(home_lib.join("libclntsh.so.19.1"), "").expect("create client lib");
-    std::fs::create_dir_all(home.join("oracore").join("mesg")).expect("create oracore/mesg");
-
-    let config_home_lib =
-        OracleConfig::load_str(&make_config_with_use_host(home_lib.to_str().unwrap())).unwrap();
-
-    // explicit path to a full home's lib dir -> the home is derived from its
-    // parent; only apply exports it
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_DERIVED";
-    let result = detect_oracle_home(
-        &config_home_lib,
-        None,
-        make_env_var(env_var),
-        Some(&home_lib),
-    );
-    assert_eq!(result, Some(OracleHome::Derived(home.clone())));
-    assert!(std::env::var(env_var).is_err());
-    let runtime_env = RuntimeEnv {
-        runtime_dir: Some(home_lib.clone()),
-        oracle_home: result,
-    };
-    apply_runtime_env(
-        &runtime_env,
-        make_env_var("_MK_TEST_RUNTIME_PATH_PATH_DERIVED"),
-        make_env_var(env_var),
-    )
-    .expect("apply with a runtime dir");
-    assert_eq!(std::env::var(env_var).unwrap(), home.to_str().unwrap());
-
-    // variable already set -> reported as inherited, no derivation
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_PRESET";
-    unsafe {
-        std::env::set_var(env_var, "/already/set");
-    }
-    let result = detect_oracle_home(
-        &config_home_lib,
-        None,
-        make_env_var(env_var),
-        Some(&home_lib),
-    );
-    assert_eq!(
-        result,
-        Some(OracleHome::Inherited(std::path::PathBuf::from(
-            "/already/set"
-        )))
-    );
-
-    // Instant Client: the client library sits in the directory itself, not in
-    // a lib subdir -> nothing derived
-    let instant_client = tmp_dir.path().join("instantclient_19_19");
-    std::fs::create_dir_all(&instant_client).expect("create instant client dir");
-    std::fs::write(instant_client.join("libclntsh.so.19.1"), "").expect("create client lib");
-    let config_instant_client =
-        OracleConfig::load_str(&make_config_with_use_host(instant_client.to_str().unwrap()))
-            .unwrap();
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_IC";
-    let result = detect_oracle_home(
-        &config_instant_client,
-        None,
-        make_env_var(env_var),
-        Some(&instant_client),
-    );
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
-
-    // RPM Instant Client: a lib dir, but no oracore next to it -> nothing derived
-    let rpm_lib = tmp_dir.path().join("client64").join("lib");
-    std::fs::create_dir_all(&rpm_lib).expect("create client64/lib");
-    std::fs::write(rpm_lib.join("libclntsh.so.19.1"), "").expect("create client lib");
-    let config_rpm =
-        OracleConfig::load_str(&make_config_with_use_host(rpm_lib.to_str().unwrap())).unwrap();
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_RPM";
-    let result = detect_oracle_home(&config_rpm, None, make_env_var(env_var), Some(&rpm_lib));
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
-
-    // runtime detection failed -> nothing derived
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_NO_RUNTIME";
-    let result = detect_oracle_home(&config_home_lib, None, make_env_var(env_var), None);
     assert!(result.is_none());
     assert!(std::env::var(env_var).is_err());
 }

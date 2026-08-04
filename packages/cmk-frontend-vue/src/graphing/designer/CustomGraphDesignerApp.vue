@@ -264,6 +264,10 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
   flex-direction: column;
   flex: 0 1 auto;
   min-height: 0;
-  padding: var(--dimension-6);
+  overflow: auto;
+}
+
+.graphing-custom-graph-designer-app__content > * {
+  margin: var(--dimension-6);
 }
 </style>

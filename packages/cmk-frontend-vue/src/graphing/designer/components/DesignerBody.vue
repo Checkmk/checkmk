@@ -242,6 +242,7 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
       show-title
       show-timestamp
       :figure-width="figureWidth"
+      :figure-height="200"
       :show-legend="false"
       :interaction="{
         brush: mode === 'view' ? 'enabled' : 'disabled',
@@ -342,6 +343,8 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
   padding: var(--dimension-6);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
+
+  --graphing-designer-body-table-overflow: auto;
 }
 
 .graphing-designer-body__preview {
@@ -377,5 +380,13 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
 .graphing-designer-body__tab-check {
   display: flex;
   line-height: 0;
+}
+
+@media (height < 945px) {
+  .graphing-designer-body {
+    flex-shrink: 0;
+
+    --graphing-designer-body-table-overflow: visible;
+  }
 }
 </style>

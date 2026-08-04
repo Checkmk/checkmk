@@ -185,7 +185,12 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
       </CmkButton>
     </div>
 
-    <CmkScrollContainer height="auto" max-height="none" class="graphing-metrics-table__scroll">
+    <CmkScrollContainer
+      height="auto"
+      max-height="none"
+      class="graphing-metrics-table__scroll"
+      :style="{ overflow: 'var(--graphing-designer-body-table-overflow, auto)' }"
+    >
       <EditableTable
         v-model:row-selection="rowSelection"
         :rows="[...store.items.value]"

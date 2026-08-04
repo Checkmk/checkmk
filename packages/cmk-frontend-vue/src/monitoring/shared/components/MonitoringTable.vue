@@ -54,7 +54,7 @@ const emit = defineEmits<{
   (event: 'update:filterState', value: ColumnFiltersState): void
 }>()
 
-const monitoringService = inject(MONITORING_SERVICE)
+const monitoringService = inject(MONITORING_SERVICE, null)
 const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
 const showEmptyState = computed(() => props.hasLoaded && props.rows.length === 0)
 

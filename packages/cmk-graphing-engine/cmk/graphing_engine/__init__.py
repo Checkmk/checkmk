@@ -14,7 +14,7 @@ from ._evaluate import (
     EvaluatedVerticalRange,
     VerticalRangeKind,
 )
-from ._from_api import build_curve, parse_graph_from_api, QuantityBuilder
+from ._from_api import build_curve, parse_graph_from_api, QuantityBuilderProtocol
 from ._graph import (
     Bound,
     Curve,
@@ -111,7 +111,7 @@ __all__ = [
     "Precision",
     "Product",
     "Quantity",
-    "QuantityBuilder",
+    "QuantityBuilderProtocol",
     "RRDMetric",
     "PerformanceData",
     "RRDFetchData",

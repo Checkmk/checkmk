@@ -15,7 +15,7 @@ from ._from_api import (
     drawn_metric_names_of_graph,
     drawn_quantity,
     parse_graph_from_api,
-    QuantityBuilder,
+    QuantityBuilderProtocol,
 )
 from ._graph import Graph, Line, Rule, Stack
 from ._perfdata import MetricName, Service
@@ -144,7 +144,7 @@ def build_matched_graphs(
     kind: str,
     registered_graphs: Sequence[_GraphPlugin],
     registered_metrics: Mapping[str, metrics_v1.Metric],
-    quantity_builder: QuantityBuilder = build_single_quantity,
+    quantity_builder: QuantityBuilderProtocol = build_single_quantity,
     graph_name: str | None = None,
 ) -> Sequence[Graph]:
     names_by_service = fetch_metric_names()

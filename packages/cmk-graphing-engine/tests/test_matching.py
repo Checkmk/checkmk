@@ -643,7 +643,7 @@ def _rrd_on(service: Service, name: MetricName) -> RRDMetric:
 
 
 class _SumQuantityBuilder:
-    # Stand-in for a real aggregating QuantityBuilder (e.g. the pro _Aggregation): wraps the per-service
+    # Stand-in for a real aggregating QuantityBuilderProtocol (e.g. the pro _Aggregation): wraps the per-service
     # RRDMetrics of one drawn metric in the engine's own Sum.
     def __call__(self, metrics: Sequence[RRDMetric]) -> Quantity:
         return Sum(summands=list(metrics))

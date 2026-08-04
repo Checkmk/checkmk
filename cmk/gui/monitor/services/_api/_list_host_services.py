@@ -11,20 +11,21 @@ from pydantic import PlainValidator
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.openapi.framework import ApiContext
-from cmk.gui.openapi.framework._types import PathParam, QueryParam
-from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
-from cmk.gui.openapi.framework.versioned_endpoint import (
+from cmk.gui.openapi.framework import (
+    ApiContext,
+    APIVersion,
     EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
     EndpointPermissions,
+    PathParam,
+    QueryParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
+from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
 

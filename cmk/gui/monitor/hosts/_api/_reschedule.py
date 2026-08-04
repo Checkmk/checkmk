@@ -9,10 +9,9 @@ from typing import Annotated
 from annotated_types import Ge
 
 from cmk.gui import sites
-from cmk.gui.openapi.framework import ApiContext
-from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.versioned_endpoint import (
+from cmk.gui.openapi.framework import (
+    ApiContext,
+    APIVersion,
     EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
@@ -20,6 +19,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.utils import permission_verification as permissions
 
 from .._commands import HostRescheduler

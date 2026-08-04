@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { ColumnFiltersState } from '@tanstack/vue-table'
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import { onMounted, ref } from 'vue'
 
@@ -24,6 +25,7 @@ const api = new HostServicesApi()
 const services = ref<ServiceEntry[]>([])
 const fetchState = ref<FetchState>('foreground')
 const hasLoaded = ref(false)
+const columnFilters = ref<ColumnFiltersState>([])
 
 const columns = useHostServicesColumns()
 
@@ -54,14 +56,15 @@ function rowKey(row: ServiceEntry): string {
       :fetch-state="fetchState"
       :has-loaded="hasLoaded"
       :columns="columns"
-      :filter-state="[]"
+      :filter-state="columnFilters"
       :get-row-key="rowKey"
+      @update:filter-state="columnFilters = $event"
     >
       <template #row="{ row }">
         <HostServicesRow :row="row" />
       </template>
       <template #empty-state>
-        <MonitoringEmptyState />
+        <MonitoringEmptyState :has-active-filter="columnFilters.length > 0" />
       </template>
     </MonitoringTable>
   </div>

@@ -511,29 +511,23 @@ SELECT
                 .connect(None)
                 .expect("Connect failed, check environment variables");
 
-            // get instances using two different scripts, one of them simulates call to the old instance
-            // which doesn't report VERSION_FULL
-            let instances_new = system::WorkInstances::new(&conn, None);
-            let instances_old =
-                system::WorkInstances::new(&conn, Some(INSTANCE_INFO_SQL_TEXT_FAIL));
-            let r_new = instances_new
+            let version = system::WorkInstances::new(&conn, None)
                 .unwrap()
-                .get_full_version(&InstanceName::from(get_sid(endpoint)));
-            let r_old = instances_old
-                .unwrap()
-                .get_full_version(&InstanceName::from(get_sid(endpoint)));
-            let version_ok = r_new.unwrap();
-            let version_old = r_old.unwrap();
-            //check that both methods return the same values
-            assert_eq!(version_ok, version_old);
+                .get_full_version(&InstanceName::from(get_sid(endpoint)))
+                .expect("instance must be discovered");
             assert!(
-                system::convert_to_num_version(&version_ok).is_some(),
-                "not a well-formed version: {version_ok}"
+                system::convert_to_num_version(&version).is_some(),
+                "not a well-formed version: {version}"
             );
 
-            // check missing db again
-            let instances_new = system::WorkInstances::new(&conn, None);
-            assert!(instances_new
+            // A custom instance query owns its column set, so an absent column
+            // surfaces instead of falling back to the builtin query.
+            assert!(
+                system::WorkInstances::new(&conn, Some(INSTANCE_INFO_SQL_TEXT_FAIL)).is_err(),
+                "a custom query naming an absent column must not be swallowed"
+            );
+
+            assert!(system::WorkInstances::new(&conn, None)
                 .unwrap()
                 .get_full_version(&InstanceName::from("no-such-db"))
                 .is_none());

@@ -403,6 +403,13 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
           />
         </clipPath>
       </defs>
+      <rect
+        class="graphing-time-series-graph__plot-background"
+        :x="marginLeft"
+        :y="plotTop"
+        :width="plotWidth"
+        :height="plotHeight"
+      />
       <g ref="axesContainer" :transform="`translate(${marginLeft},${plotTop})`" />
       <!-- Ruler-scrub overlay (pan preview): a shaded band plus ticks/labels that slide
            with the cursor, clipped to the plot width. Only mounted while dragging. -->
@@ -526,6 +533,10 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
 
   .graphing-time-series-graph__svg {
     pointer-events: none;
+  }
+
+  .graphing-time-series-graph__plot-background {
+    fill: var(--ux-theme-1);
   }
 
   .graphing-time-series-graph__zoom-band {

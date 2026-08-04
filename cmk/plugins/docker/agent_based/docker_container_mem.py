@@ -2,12 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.docker import lib as docker
-from cmk.plugins.lib import memory
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="unreachable"
+
+from cmk.agent_based.v2 import AgentSection, StringTable
+from cmk.plugins.docker import lib as docker
+from cmk.plugins.lib import memory
 
 
 def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.MemorySection:

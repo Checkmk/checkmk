@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Collection, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from re import Pattern

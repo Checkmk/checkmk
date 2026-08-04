@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-def"
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -13,8 +16,6 @@ from cmk.rulesets.v1.form_specs import (
     SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
-
-# mypy: disable-error-code="no-untyped-def"
 
 
 def _parameter_rulespec_proxmox_ve_disk_percentage_levels():

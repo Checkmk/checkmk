@@ -15,7 +15,7 @@ import enum
 import json
 import os
 import sys
-from typing import Final
+from typing import Final, override
 
 import boto3
 from azure.core.polling import LROPoller
@@ -140,6 +140,7 @@ class AWSPublisher(CloudPublisher):
     class ChangeTypes(enum.StrEnum):
         ADD_DELIVERY_OPTIONS = "AddDeliveryOptions"  # for updating the version
 
+    @override
     async def publish(self) -> None:
         image_id = self.get_ami_image_id()
         update_details = {
@@ -347,6 +348,7 @@ class AzurePublisher(CloudPublisher):
             ),
         )
 
+    @override
     async def publish(self):
         """
         Azure's update process has 2 steps:

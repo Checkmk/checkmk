@@ -2,11 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Modes for creating and editing hosts"""
 
 # mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
+
+"""Modes for creating and editing hosts"""
 
 import abc
 from collections.abc import Collection, Iterator, Sequence

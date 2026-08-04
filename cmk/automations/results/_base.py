@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 """Base classes and registry for automation results.
 
 Provides the abstract result type, the serialization wrapper, and the global

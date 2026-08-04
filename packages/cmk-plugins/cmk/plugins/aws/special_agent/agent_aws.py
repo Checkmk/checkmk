@@ -6,6 +6,7 @@
 # mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="explicit-override"
 
 """Common module for stuff every special agent should use
 Current responsibilities include:

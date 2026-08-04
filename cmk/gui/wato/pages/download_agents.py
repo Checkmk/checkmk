@@ -2,9 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Simple download page for the built-in agents and plugins"""
 
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
+
+"""Simple download page for the built-in agents and plugins"""
 
 import abc
 import fnmatch

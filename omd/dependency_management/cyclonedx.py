@@ -9,7 +9,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import Annotated, Literal, NewType, Self
+from typing import Annotated, Literal, NewType, override, Self
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlparse, urlunparse
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, PlainValidator, RootModel
@@ -255,6 +255,8 @@ class Vulnerability:
 class ComponentList(RootModel[list[Component]]):
     root: list[Component]
 
+    # TODO: LSP violation below!!!
+    @override
     def __iter__(self) -> Iterator[Component]:  # type: ignore[override]
         return iter(self.root)
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 """Synchronize discovered host labels from remote site to central site"""

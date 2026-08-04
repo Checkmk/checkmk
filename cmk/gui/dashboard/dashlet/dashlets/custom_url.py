@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet, RelativeLayoutConstraints, WidgetSize
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.i18n import _

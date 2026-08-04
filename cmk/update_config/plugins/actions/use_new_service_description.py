@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 from logging import Logger
 
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings

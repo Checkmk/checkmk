@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable_error_code="explicit-any"
+# mypy: disable-error-code="explicit-override"
+# mypy: disable-error-code="explicit-any"
 
 import json
 import logging

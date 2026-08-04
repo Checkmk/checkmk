@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="typeddict-unknown-key"
 
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.

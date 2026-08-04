@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 

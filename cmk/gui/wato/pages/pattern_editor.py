@@ -2,9 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Mode for trying out the logwatch patterns"""
 
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
+
+"""Mode for trying out the logwatch patterns"""
 
 import re
 from collections.abc import Collection, Iterable, Mapping, Sequence

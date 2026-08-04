@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-override"
+
 """Resolve Docker images required by tests, preserving origin in the tag.
 
 Lookup order for a given version ``X`` (see :py:meth:`ABCImageManager.get`):

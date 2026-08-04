@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 # <<<splunk_jobs>>>
 # 2019-05-16T11:17:00.000+00:00, splunk-system-user, app, DONE, True
 # 2019-05-16T10:13:00.000+00:00, admin, app, FAILED, True

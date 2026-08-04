@@ -2,12 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-override"
+# mypy: disable-error-code="type-arg"
+
 """
 This module handles tree structures for HW/SW Inventory system and
 structured monitoring data of Check_MK.
 """
-
-# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

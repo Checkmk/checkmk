@@ -361,7 +361,7 @@ class _LocalConnectionPool(HTTPConnectionPool):
         super().__init__("localhost")
         self._connection = _LocalConnection(socket_path)
 
-    # TODO: Why does `@override` not work here?
+    @override
     def _new_conn(self) -> _LocalConnection:
         return self._connection
 

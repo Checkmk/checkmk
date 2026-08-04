@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 """Domain types and loader for module layer architecture rules.
 
 The architectural rules (components, allowed imports, etc.) are defined

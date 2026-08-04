@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 # netapp_ontap switched to a lazy loading scheme via apipkg which hides all useful
 # information from mypy. :-/ See
 # https://library.netapp.com/ecmdocs/ECMLP3364865/html/index.html#9181-library-updates

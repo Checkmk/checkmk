@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -11,8 +13,6 @@ from cmk.rulesets.v1.form_specs import (
     ServiceState,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
-
-# mypy: disable-error-code="no-untyped-def"
 
 
 def _parameter_valuespec_proxmox_ve_ha_manager_status():

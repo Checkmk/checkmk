@@ -263,7 +263,7 @@ class MKDockerClient(docker.DockerClient):
 
         self._df_caller = ParallelDfCall(call=super().df)
 
-    def df(self):
+    def df(self):  # type: ignore[explicit-override]
         return self._df_caller()
 
     def device_map(self):

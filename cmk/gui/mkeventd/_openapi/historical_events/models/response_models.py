@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="mutable-override"
+
 import datetime as dt
 from typing import Annotated, Literal, Self
 
@@ -22,8 +24,6 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.livestatus_client.queries import ResultRow
-
-# mypy: disable-error-code="mutable-override"
 
 
 @api_model

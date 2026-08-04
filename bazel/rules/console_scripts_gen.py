@@ -18,6 +18,7 @@ import sys
 import zipfile
 from collections.abc import Sequence
 from pathlib import Path
+from typing import override
 
 _WRAPPER_TEMPLATE = """\
 #!/usr/bin/env python3
@@ -50,6 +51,7 @@ class _EntryPointsParser(configparser.ConfigParser):
         # No interpolation: a "%" in any entry-point group must not be special.
         super().__init__(delimiters=("=",), interpolation=None)
 
+    @override
     def optionxform(self, optionstr: str) -> str:
         """Entry-point names are case-sensitive; keep them verbatim."""
         return optionstr

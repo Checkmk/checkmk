@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="explicit-any"
 
 # ruff: noqa: ARG001
 # ruff: noqa: ARG005
+
 import re
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path

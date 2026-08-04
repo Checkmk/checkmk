@@ -2,13 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-override"
+# mypy: disable-error-code="import-untyped"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+
 """agent_smb_share
 
 Checkmk special agent for SMB shares
 """
-# mypy: disable-error-code="import-untyped"
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 import argparse
 import logging

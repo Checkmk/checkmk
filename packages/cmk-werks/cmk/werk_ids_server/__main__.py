@@ -6,6 +6,7 @@
 import argparse
 import logging
 from pathlib import Path
+from typing import override
 
 from flask import Flask
 from gunicorn.app.base import BaseApplication
@@ -19,14 +20,17 @@ _START = 22_003
 
 
 class _Server(BaseApplication):
+    @override
     def load_config(self) -> None:
         assert self.cfg is not None
         self.cfg.set("control_socket_disable", True)
         self.cfg.set("accesslog", "-")  # enable the access log on stdout; off by default
 
+    @override
     def load(self) -> Flask:
         return app
 
+    @override
     def run(self) -> None:
         super().run()  # type: ignore[no-untyped-call]
 

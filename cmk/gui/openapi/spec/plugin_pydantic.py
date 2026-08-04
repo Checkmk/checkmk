@@ -12,7 +12,7 @@ import contextlib
 import warnings
 from collections.abc import Iterator, Sequence
 from dataclasses import is_dataclass
-from typing import Any, is_typeddict, Literal
+from typing import Any, is_typeddict, Literal, override
 
 import apispec
 import pydantic_core
@@ -132,6 +132,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
 
     ignored_warning_kinds = set()  # we don't want to ignore any warnings
 
+    @override
     def handle_invalid_for_json_schema(
         self, schema: _CoreSchemaOrField, error_info: str
     ) -> JsonSchemaValue:
@@ -153,6 +154,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
 
         return False
 
+    @override
     def field_is_required(
         self,
         field: core_schema.ModelField | core_schema.DataclassField | core_schema.TypedDictField,
@@ -168,6 +170,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
 
         return super().field_is_required(field, total)
 
+    @override
     def default_schema(self, schema: core_schema.WithDefaultSchema) -> JsonSchemaValue:
         """Generates a JSON schema that matches a schema with a default value.
 
@@ -224,6 +227,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
         json_schema["default"] = encoded_default
         return json_schema
 
+    @override
     def encode_default(self, dft: Any) -> Any:
         # NOTE: this might cause problems with containers like `list[SomeCustomType]` where the
         #       custom type has a serializer, as `type()` will just return the outer type.
@@ -246,6 +250,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
             bytes_mode=config.ser_json_bytes,
         )
 
+    @override
     def _named_required_fields_schema(
         self, named_required_fields: Sequence[tuple[str, bool, _CoreSchemaField]]
     ) -> JsonSchemaValue:
@@ -286,14 +291,17 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
         yield
         self._path = old_path
 
+    @override
     def typed_dict_schema(self, schema: core_schema.TypedDictSchema) -> JsonSchemaValue:
         with self._replace_path(schema):
             return super().typed_dict_schema(schema)
 
+    @override
     def model_schema(self, schema: core_schema.ModelSchema) -> JsonSchemaValue:
         with self._replace_path(schema):
             return super().model_schema(schema)
 
+    @override
     def dataclass_schema(self, schema: core_schema.DataclassSchema) -> JsonSchemaValue:
         with self._replace_path(schema):
             return super().dataclass_schema(schema)
@@ -486,6 +494,7 @@ class CheckmkPydanticPlugin(apispec.BasePlugin):
         self.spec = None
         self.resolver = None
 
+    @override
     def init_spec(self, spec: apispec.APISpec) -> None:
         """Initialize plugin with APISpec object
 
@@ -496,6 +505,7 @@ class CheckmkPydanticPlugin(apispec.BasePlugin):
         self.spec = spec
         self.resolver = CheckmkPydanticResolver(spec=self.spec)
 
+    @override
     def operation_helper(
         self,
         path: str | None = None,

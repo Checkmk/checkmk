@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-override"
+# mypy: disable-error-code="type-arg"
+
 """Manage roles and permissions
 
 In order to make getting started easier - Checkmk Multisite comes with three
@@ -12,8 +16,6 @@ permissions of the existing roles. Users can be assigned to built-in and custom
 roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
 """
-
-# mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 """Plain GUI pages that want an entry in a main menu.
 
 Views, dashboards and pagetypes reach a main menu through their own stores. A

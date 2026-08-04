@@ -2,11 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="type-arg"
+
 r"""
 Send notification messages to Cisco Webex Teams
 ===============================================
-
-# mypy: disable-error-code="type-arg"
 
 Use a Cisco Webex Teams webhook to send notification messages
 """

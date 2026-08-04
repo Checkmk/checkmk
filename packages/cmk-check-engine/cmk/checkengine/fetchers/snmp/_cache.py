@@ -2,6 +2,11 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="explicit-override"
+# mypy: disable-error-code="no-any-return"
+
 import contextlib
 import json
 import logging
@@ -11,9 +16,6 @@ from pathlib import Path
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTimeout
 from cmk.checkengine.snmplib import SNMPRawDataElem, SNMPRowInfo, SNMPSectionMarker, SNMPSectionName
-
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
 
 logger = logging.getLogger(__name__)
 

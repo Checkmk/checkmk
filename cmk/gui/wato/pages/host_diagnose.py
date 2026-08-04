@@ -2,10 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Verify or find out a hosts agent related configuration"""
 
 # mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
+
+"""Verify or find out a hosts agent related configuration"""
 
 import json
 from collections.abc import Collection

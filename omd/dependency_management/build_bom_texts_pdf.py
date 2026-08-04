@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-any"
 
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
-
-# mypy: disable-error-code="explicit-any"
 
 import argparse
 import csv
@@ -16,7 +15,7 @@ import re
 from dataclasses import dataclass
 from hashlib import sha1
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle as PS
@@ -118,6 +117,7 @@ class MyDocTemplate(SimpleDocTemplate):
         template = PageTemplate("normal", [Frame(2.5 * cm, 2.5 * cm, 15 * cm, 25 * cm, id="F1")])
         self.addPageTemplates(template)
 
+    @override
     def afterFlowable(self, flowable: Any) -> None:
         # Registers TOC entries
         if flowable.__class__.__name__ == "Paragraph":

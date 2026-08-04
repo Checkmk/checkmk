@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, override
 
 import yaml
 from cyclonedx import (
@@ -43,6 +43,8 @@ class VulnInfo(BaseModel):
 class ResearchedVulnInfo(RootModel[dict[PUrl, dict[VulnId, VulnInfo]]]):
     root: dict[Annotated[PUrl, PlainValidator(PUrl.from_str)], dict[VulnId, VulnInfo]]
 
+    # TODO: LSP violation below!!!
+    @override
     def __iter__(self) -> Iterator[PUrl]:  # type: ignore[override]
         return iter(self.root)
 

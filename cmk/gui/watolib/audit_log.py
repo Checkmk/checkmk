@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 

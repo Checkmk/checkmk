@@ -15,6 +15,7 @@ from collections.abc import Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from types import ModuleType
+from typing import override
 
 import pytest
 
@@ -384,6 +385,7 @@ class LockTestThread(threading.Thread):
 
         self._jobs: queue.Queue[LockTestJob] = queue.Queue()
 
+    @override
     def run(self) -> None:
         while True:
             try:

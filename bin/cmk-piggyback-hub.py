@@ -5,7 +5,7 @@
 
 import sys
 import traceback
-from typing import Literal
+from typing import Literal, override
 
 from cmk.ccc.hostaddress import (
     HostNameValidationError,
@@ -25,6 +25,7 @@ from cmk.utils.security_event import (
 
 
 class PiggybackHubCrashReport(ABCCrashReport[None]):
+    @override
     @classmethod
     def type(cls) -> Literal["piggyback-hub"]:
         return "piggyback-hub"

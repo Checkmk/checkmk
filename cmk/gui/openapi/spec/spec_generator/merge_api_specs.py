@@ -8,6 +8,7 @@ import json
 import sys
 from collections.abc import Mapping, Sequence, Set
 from pathlib import Path
+from typing import override
 
 import yaml
 
@@ -78,6 +79,7 @@ class MergeConflictError(Exception):
 
 
 class _Missing:
+    @override
     def __str__(self) -> str:
         return "<missing>"
 

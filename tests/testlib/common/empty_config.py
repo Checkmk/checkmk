@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="explicit-override"
+
 import cmk.utils.paths
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.nagios._create_config import NagiosCoreConfig

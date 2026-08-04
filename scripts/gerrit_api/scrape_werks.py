@@ -11,7 +11,7 @@ from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from dataclasses import dataclass, field, fields
 from functools import cache
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from scripts.gerrit_api.client import GerritClient, PROJECT_NAME, TChangeStatus
 from scripts.gerrit_api.helper import change_has_tests, get_jira_ticket_in_change
@@ -51,6 +51,7 @@ class CSVEntry:
     def csv_header(cls) -> str:
         return CSV_DELIMITER.join(data_field.metadata[HEADER] for data_field in fields(cls))
 
+    @override
     def __str__(self) -> str:
         return CSV_DELIMITER.join(
             str(getattr(self, data_field.name)) for data_field in fields(self)

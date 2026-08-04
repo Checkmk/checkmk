@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-03 13:00+0000\n"
+"PO-Revision-Date: 2026-08-04 02:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -3233,7 +3233,7 @@ msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2の制限"
 
 msgid "AWS/ElastiCache CPU utilization"
-msgstr "AWS/ElastiCache CPU使用率"
+msgstr "AWS/ElastiCache CPU利用率"
 
 #, fuzzy
 msgid "AWS/ElastiCache Memory"
@@ -5946,10 +5946,10 @@ msgid "Alert on connection loss"
 msgstr "接続損失時のアラート"
 
 msgid "Alert on excessive CPU utilization"
-msgstr "CPU過剰使用に対するアラート"
+msgstr "CPU過剰利用率に対するアラート"
 
 msgid "Alert on too high CPU utilization"
-msgstr "CPU使用率が高すぎる場合のアラート"
+msgstr "CPU利用率が高すぎる場合のアラート"
 
 msgid "Alert on too high FPGA utilization"
 msgstr "FPGA使用率が高すぎる場合のアラート"
@@ -7022,7 +7022,7 @@ msgid "An alias or description of this group."
 msgstr "このグループのエイリアスまたは説明。"
 
 msgid "An application is requesting access to this Checkmk site."
-msgstr ""
+msgstr "あるアプリケーションが、このCheckmkサイトへのアクセスを要求しています。"
 
 msgid "An empty value is not allowed here"
 msgstr "ここでは空の値は許可されていません"
@@ -7229,7 +7229,7 @@ msgid "Another session is active"
 msgstr "別のセッションがアクティブです"
 
 msgid "Answer seizure ratio"
-msgstr "応答成功率"
+msgstr "通話成功率"
 
 msgid "AntiVirus last update age"
 msgstr "アンチウイルスの最終更新期間"
@@ -7576,7 +7576,7 @@ msgid "Architecture"
 msgstr "アーキテクチャ"
 
 msgid "Architecture of the systems where the agent will be deployed"
-msgstr "エージェントが展開されるシステムのアーキテクチャ"
+msgstr "エージェントがデプロイされるシステムのアーキテクチャ"
 
 msgid "Archive"
 msgstr "アーカイブ"
@@ -7610,7 +7610,7 @@ msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
 msgid "Archive exceeds total size limit"
-msgstr "アーカイブが総容量制限を超えています"
+msgstr "アーカイブの合計サイズが制限を超えています"
 
 msgid "Archive log"
 msgstr "アーカイブログ"
@@ -7866,6 +7866,8 @@ msgid ""
 "Assuming your Proxmox username is 'checkmk', it needs to be configured as "
 "'checkmk@pve' here"
 msgstr ""
+"Proxmoxのユーザー名が「checkmk」の場合、ここでは「checkmk@pve」として設定する"
+"必要があります"
 
 msgid "Asynchronous"
 msgstr "非同期"
@@ -7898,8 +7900,8 @@ msgid ""
 "At least one Hyper-V monitoring component must be selected. Please choose "
 "from the available monitoring options."
 msgstr ""
-"Hyper-V 監視コンポーネントを少なくとも 1 つ選択する必要があります。利用可能な"
-"監視オプションから選択してください。"
+"Hyper-V監視コンポーネントを少なくとも１つ選択する必要があります。利用可能な監"
+"視オプションから選択してください。"
 
 #, fuzzy
 msgid "At least one contact group must be selected"
@@ -8325,8 +8327,8 @@ msgid ""
 "Automatic space management in Informix allows storage space to grow. Use "
 "this rule to monitor the growth."
 msgstr ""
-"Informixの自動スペース管理では、ストレージスペースが増大する。このルールを使"
-"用して増加を監視する。"
+"Informixの自動スペース管理機能により、ストレージスペースが自動的に拡張されま"
+"す。このルールを使用してその増加状況を監視してください。"
 
 msgid "Automatic takeover"
 msgstr "自動テイクオーバー"
@@ -8655,7 +8657,7 @@ msgid "Average message count upper levels"
 msgstr "平均メッセージ数上位レベル"
 
 msgid "Average metric value over a period of time"
-msgstr "一定期間における平均メトリック"
+msgstr "一定期間におけるメトリックの平均値"
 
 msgid "Average number of messages"
 msgstr "メッセージの平均数"
@@ -8714,18 +8716,18 @@ msgstr "バックアップの平均速度"
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
 "applied."
-msgstr "レベルが適用される前に、指定された期間のCPU使用率を平均します。"
+msgstr "レベルが適用される前に、指定された期間のCPU利用率を平均します。"
 
 msgid "Average the instantaneous value over the specified number of minutes."
-msgstr "指定された分の間、瞬間値を平均化する。"
+msgstr "指定された分の間、瞬間値を平均化します。"
 
 msgid ""
 "Average the instantaneous value over the specified number of minutes. Note: "
 "This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
-"指定した分の間、瞬間値を平均化します。注：「長期間にわたるレベル」には影響し"
-"ません。これは常に瞬間値をチェックします。"
+"指定した分の間、瞬間値を平均化します。注意：「長期間にわたるレベル」には影響"
+"しません。「長期間にわたるレベル」では、常に瞬間値がチェックされます。"
 
 msgid "Average time messages stay on queue"
 msgstr "メッセージがキューにとどまる平均時間"
@@ -9157,7 +9159,7 @@ msgid "Averaging for single cores"
 msgstr "シングルコアの平均化"
 
 msgid "Averaging for total CPU utilization"
-msgstr "総CPU使用率の平均"
+msgstr "総CPU利用率の平均"
 
 #, fuzzy
 msgid "Avg throughput"
@@ -9200,7 +9202,7 @@ msgid "Azure Cosmos DB Availability"
 msgstr "Azure Cosmos DB の可用性"
 
 msgid "Azure Cosmos DB Database Container Requests"
-msgstr "Azure Cosmos DB データベース コンテナ リクエスト"
+msgstr "Azure Cosmos DBデータベースコンテナリクエスト"
 
 msgid "Azure Cosmos DB Database Container Throughput"
 msgstr "Azure Cosmos DB データベース コンテナ スループット"
@@ -9273,10 +9275,10 @@ msgid "Azure NAT Gateways datapath availability"
 msgstr "Azure NAT ゲートウェイのデータパス可用性"
 
 msgid "Azure Redis CPU utilization"
-msgstr "Azure Redis CPU使用率"
+msgstr "Azure Redis CPU 利用率"
 
 msgid "Azure Redis Cache effectiveness"
-msgstr "Azure Redis キャッシュ効率性"
+msgstr "Azure Redisキャッシュ有効性"
 
 msgid "Azure Redis Connections"
 msgstr "Azure Redis 接続"
@@ -9737,7 +9739,8 @@ msgstr "バックアップ暗号化キー"
 
 msgid "Backup in progress. Refresh to see the final status."
 msgstr ""
-"バックアップ処理中です。最終状態を確認するにはページを更新してください。"
+"バックアップ処理中です。最終的なステータスを確認するには、ページを更新してく"
+"ださい。"
 
 msgid "Backup job"
 msgstr "バックアップジョブ"
@@ -9875,7 +9878,7 @@ msgstr "Docker APIエンジンのベースURL"
 
 msgid ""
 "Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com"
-msgstr ""
+msgstr "ExtremeCloud IQ APIのベースURL（例：https://api.extremecloudiq.com）"
 
 msgid "Base directory"
 msgstr "ベースディレクトリ"
@@ -10246,7 +10249,7 @@ msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr "すべてのチェックプラグインのカタログを参照し、静的チェックを作成します"
 
 msgid "Browser locale"
-msgstr ""
+msgstr "ブラウザロケール"
 
 msgid "Bucket"
 msgstr "バケット"
@@ -10516,9 +10519,9 @@ msgid ""
 "will automatically be applied on the averaged value. This helps to mask out "
 "short peaks. "
 msgstr ""
-"平均化を有効にすると、Checkmkは、総CPU使用率の指数移動平均を計算します。ア"
-"ラートレベルを定義した場合は、平均値に自動的に適用されます。これは、短いピー"
-"クをマスクするのに役立ちます。 "
+"平均化を有効にすると、Checkmkは、総CPU利用率の指数移動平均を計算します。"
+"アラートレベルを定義した場合は、平均値に自動的に適用されます。これは、短い"
+"ピークをマスクするのに役立ちます。 "
 
 msgid ""
 "By activating averaging, Checkmk will compute an exponential moving average "
@@ -10604,7 +10607,7 @@ msgid ""
 "By activating this option you can set levels on the total CPU utilization "
 "for all included processes."
 msgstr ""
-"このオプションを有効にすると、含まれるすべてのプロセスの合計CPU使用率のレベル"
+"このオプションを有効にすると、含まれるすべてのプロセスの合計CPU利用率のレベル"
 "を設定することができます。"
 
 msgid ""
@@ -10829,6 +10832,14 @@ msgid ""
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
 msgstr ""
+"デフォルトでは、BIアグリゲーション機能を満たすのに十分な数のコンポーネントに"
+"定期メンテナンスウィンドウが設定されると、BIアグリゲーションは直ちに「"
+"ダウンタイム中」とマークされます。これはアグリゲーションを単一のサービス単位"
+"として扱う場合にやくだちます。つまり、主要なコンポーネントがメンテナンス中の"
+"場合、そのブランチ全体が意図的にスケジュールダウンタイム中とみなされます。代"
+"わりに、現在障害が発生しているすべてのコンポーネントを対象としたい場合は、こ"
+"のオプションを有効にしてください。これにより、部分的なメンテナンスウィンドウ"
+"の陰で、アクティブな予期せぬ障害が見逃されることを防ぐことができます。"
 
 #, python-brace-format
 msgid ""
@@ -10839,8 +10850,8 @@ msgid ""
 "altogether."
 msgstr ""
 "デフォルトでは、サブスクリプション、リソースグループ、およびリソースのすべて"
-"の Azure タグは、次の形式のホストラベルとしてインポートされます：cmk/azure/"
-"tag/{key}:{value}。<br>このオプションを使用すると、Azure タグのキーに一致する"
+"のAzureタグは、次の形式のホストラベルとしてインポートされます：cmk/azure/tag/"
+"{key}:{value} <br>このオプションを使用すると、Azureタグのキーに一致する"
 "パターンを指定して、インポートするタグをフィルタリングできます。また、タグの"
 "インポートを完全に無効にすることも可能です。"
 
@@ -11205,9 +11216,9 @@ msgid ""
 "requests sent to the Meraki API instance. If not changed, the predefined "
 "default time to live (TTL) cache interval will be used."
 msgstr ""
-"特定のリソースに対してより高い値を設定することで、Meraki APIインスタンスへの"
-"リクエスト数を削減できます。変更しない場合、事前定義されたデフォルトの"
-"TTL(Time To Live)キャッシュ間隔が使用されます。"
+"特定のリソースに対してより高い値を設定することで、Meraki APIインスタンスに送"
+"信されるリクエストの数を減らすことができます。変更しない場合は、事前に定義さ"
+"れたデフォルトのTTL（Time To Live）キャッシュ間隔が使用されます。"
 
 msgid ""
 "By setting a higher value, you reduce the amount of requests sent to your "
@@ -11406,7 +11417,7 @@ msgid "CDP cache"
 msgstr "CDPキャッシュ"
 
 msgid "CDP neighbors"
-msgstr "CDP隣接"
+msgstr "CDP ネイバー"
 
 msgid "CIFS"
 msgstr "CIFS"
@@ -11644,106 +11655,94 @@ msgid "CPU used"
 msgstr "CPU使用率"
 
 msgid "CPU utilization"
-msgstr "CPU使用率"
+msgstr "CPU 利用率"
 
 msgid "CPU utilization %"
-msgstr "CPU使用率%"
+msgstr "CPU利用率%"
 
 msgid "CPU utilization & Kernel performance"
-msgstr "CPU使用率とカーネルパフォーマンス"
+msgstr "CPU利用率とカーネルパフォーマンス"
 
-#, fuzzy
 msgid "CPU utilization (5 min avg)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(5分平均)"
 
-#, fuzzy
 msgid "CPU utilization (5 sec avg)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(5秒平均)"
 
 msgid "CPU utilization (50th percentile)"
-msgstr "CPU使用率(50パーセンタイル)"
+msgstr "CPU利用率(50パーセンタイル)"
 
 msgid "CPU utilization (95th percentile)"
-msgstr "CPU使用率(95パーセンタイル)"
+msgstr "CPU利用率(95パーセンタイル)"
 
 msgid "CPU utilization (99th percentile)"
-msgstr "CPU使用率(99パーセンタイル)"
+msgstr "CPU利用率(99パーセンタイル)"
 
 msgid "CPU utilization (Windows)"
-msgstr "CPU使用率(Windows)"
+msgstr "CPU利用率(Windows)"
 
 msgid ""
 "CPU utilization (_EXPRESSION:{\"metric\":\"util_numcpu_as_max\",\"scalar\":"
 "\"max\"} CPU threads)"
 msgstr ""
-"CPU使用率 (_EXPRESSION:{\"metric\":\"util_numcpu_as_max\",\"scalar\":"
-"\"max\"} CPU Threads)"
+"CPU利用率 (_EXPRESSION:"
+"{\"metric\":\"util_numcpu_as_max\",\"scalar\":\"max\"} CPU threads)"
 
 msgid "CPU utilization (average)"
-msgstr "CPU使用率(平均)"
+msgstr "CPU利用率(平均)"
 
 msgid "CPU utilization (caching engine)"
-msgstr "CPU使用率(キャッシュエンジン)"
+msgstr "CPU利用率(キャッシュエンジン)"
 
 msgid "CPU utilization (last minutes)"
-msgstr "CPU使用率(直近数分間)"
+msgstr "CPU利用率（直近数分間）"
 
 msgid "CPU utilization (percentiles)"
-msgstr "CPU使用率(パーセンタイル)"
+msgstr "CPU利用率(パーセンタイル)"
 
-#, fuzzy
 msgid "CPU utilization (single value)"
-msgstr "CPU使用率(直近数分間)"
+msgstr "CPU 利用率（単一値）"
 
 msgid "CPU utilization (user, system)"
-msgstr "CPU使用率(ユーザー、システム)"
+msgstr "CPU利用率(ユーザー、システム)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait & levels)"
-msgstr "CPU使用率(ユーザー、システム、I/O待機およびレベル)"
+msgstr "CPU 利用率（ユーザー、システム、I/O 待機、およびレベル）"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait)"
-msgstr "CPU使用率(ユーザー、システム、I/O待機)"
+msgstr "CPU 利用率（ユーザー、システム、I/O 待機）"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest & levels)"
-msgstr "CPU 使用率（ユーザー、システム、I/O待機、ゲスト及びレベル）"
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、ゲスト及びレベル）"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest)"
-msgstr "CPU使用率 (ユーザー、システム、I/O待機、ゲスト)"
+msgstr "CPU利用率 (ユーザー、システム、I/O待機、ゲスト)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest, steal & levels)"
-msgstr "CPU 使用率（ユーザー、システム、I/O待機、ゲスト、スティール&レベル）"
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、ゲスト、steal &レベル）"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, guest, steal)"
-msgstr "CPU 使用率（ユーザー、システム、I/O待機、ゲスト、スティール）"
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、ゲスト、steal）"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, steal & levels)"
-msgstr "CPU 使用率（ユーザー、システム、I/O待機、スティール&レベル）"
+msgstr "CPU 利用率（ユーザー、システム、I/O待機、steal &レベル）"
 
-#, fuzzy
 msgid "CPU utilization (user, system, I/O wait, steal)"
-msgstr "CPU使用率 (ユーザー、システム、IO待機、スティール)"
+msgstr "CPU利用率 (ユーザー、システム、IO待機、steal)"
 
-#, fuzzy
 msgid "CPU utilization (user, system, idle, I/O wait)"
-msgstr "CPU使用率 (ユーザー, システム, アイドル, I/O待機)"
+msgstr "CPU利用率 (ユーザー, システム, アイドル, I/O待機)"
 
 msgid "CPU utilization (user, system, idle, nice)"
-msgstr "CPU使用率(ユーザー、システム、アイドル、nice)"
+msgstr "CPU利用率(ユーザー、システム、アイドル、nice)"
 
 msgid "CPU utilization (user, system, interrupt)"
-msgstr "CPU使用率(ユーザー、システム、割り込み)"
+msgstr "CPU利用率(ユーザー、システム、割り込み)"
 
 msgid "CPU utilization for simple devices"
-msgstr "単純なデバイスのCPU使用率"
+msgstr "単純なデバイスのCPU 利用率"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "CPU utilization is delivered by the operating system as a per CPU core "
 "basis. Thus each core contributes with 100% at full utilization, producing a "
@@ -11751,38 +11750,37 @@ msgid ""
 "be rescaled down, making 100% the maximum and thinking in terms of total CPU "
 "utilization."
 msgstr ""
-"CPU使用率は、オペレーティングシステムによってCPUコア単位で提供されます。した"
+"CPU利用率は、オペレーティングシステムによってCPUコア単位で提供されます。した"
 "がって、各コアはフル稼働時に100%で動作し、N*100%（N=コアの数）の最大負荷を生"
-"成します。簡単にするために、この最大値を縮小して、100%を最大値とし、総CPU使用"
+"成します。簡単にするために、この最大値を縮小して、100%を最大値とし、総CPU利用"
 "率で考えることができます。"
 
 msgid "CPU utilization last 15 minutes"
-msgstr "過去15分間のCPU使用率"
+msgstr "過去15分間のCPU利用率"
 
 msgid "CPU utilization last 5 minutes"
-msgstr "過去5分間のCPU使用率"
+msgstr "過去5分間のCPU利用率"
 
 msgid "CPU utilization last five seconds"
-msgstr "過去5秒間のCPU使用率"
+msgstr "過去5秒間のCPU利用率"
 
 msgid "CPU utilization last minute"
-msgstr "直前のCPU使用率"
+msgstr "直近1分間のCPU 利用率"
 
 msgid "CPU utilization last second"
-msgstr "最後の1秒のCPU使用率"
+msgstr "最後の1秒のCPU利用率"
 
-#, fuzzy
 msgid "CPU utilization levels"
-msgstr "CPU使用率レベル"
+msgstr "CPU利用率レベル"
 
 msgid "CPU utilization of clusters"
-msgstr "クラスターのCPU使用率"
+msgstr "クラスターのCPU利用率"
 
 msgid "CPU utilization of devices with modules"
-msgstr "モジュール搭載デバイスのCPU使用率"
+msgstr "モジュールを備えたデバイスのCPU利用率"
 
 msgid "CPU utilization on Linux/Unix"
-msgstr "Linux/UNIXでのCPU使用率"
+msgstr "Linux/UNIXでのCPU利用率"
 
 #, fuzzy
 msgid "CPU utilization: cluster"

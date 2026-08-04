@@ -59,3 +59,11 @@ test('renders the description as a second line when given', () => {
   expect(screen.getByText('No metrics added')).toBeInTheDocument()
   expect(screen.getByText('Add a source to visualize your data')).toBeInTheDocument()
 })
+
+test('carries no announcing role when the host announces instead', () => {
+  render(GraphNotice, { props: { variant: 'error', message: 'Broken', retry: true, silent: true } })
+
+  expect(notice()).not.toHaveAttribute('role')
+  // Silenced, not hidden: the retry is still reachable.
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+})

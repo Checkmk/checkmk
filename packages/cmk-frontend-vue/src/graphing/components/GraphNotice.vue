@@ -32,9 +32,19 @@ const props = defineProps<{
   // Secondary detail: the next-step hint for an empty state, the technical cause for a failure.
   description?: string | undefined
   retry?: boolean | undefined
+  // Lets a host repeating one notice over several graphs announce it once itself. Not
+  // `aria-hidden`, which would take the retry inside out of reach.
+  silent?: boolean | undefined
 }>()
 
 defineEmits<{ retry: [] }>()
+
+const role = computed(() => {
+  if (props.silent) {
+    return undefined
+  }
+  return props.variant === 'error' ? 'alert' : 'status'
+})
 
 // `v-else` in the template does not narrow `loading` out of `variant`, so resolve the name here.
 const multitoneIconName = computed<'error' | 'info'>(() =>
@@ -45,11 +55,7 @@ const ICON_COLOR = { custom: 'var(--color-white-100)' }
 </script>
 
 <template>
-  <div
-    class="graphing-graph-notice"
-    :class="`graphing-graph-notice--${variant}`"
-    :role="variant === 'error' ? 'alert' : 'status'"
-  >
+  <div class="graphing-graph-notice" :class="`graphing-graph-notice--${variant}`" :role="role">
     <CmkIcon
       v-if="variant === 'loading'"
       name="load-graph"

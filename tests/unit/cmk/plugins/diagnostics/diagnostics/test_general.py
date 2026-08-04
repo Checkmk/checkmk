@@ -28,6 +28,7 @@ def _make_context(
     return CollectContext(
         omd_root=omd_root,
         omd_config=omd_config or {},
+        site_id="mySite",
         all_parameters={"plugins": ["general_info"], "checkmk_server_host": ""},
         base_config={},
         resolve_checkmk_server_host=lambda: checkmk_server_host,

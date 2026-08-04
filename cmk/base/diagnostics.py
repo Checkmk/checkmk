@@ -324,6 +324,7 @@ def _create_dump(
     context = CollectContext(
         omd_root=omd_root,
         omd_config=omd_config,
+        site_id=omd_site(),
         all_parameters=all_parameters,
         base_config={f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)},
         resolve_checkmk_server_host=_make_host_resolver(checkmk_server_host),

@@ -26,6 +26,7 @@ class CollectContext:
 
     omd_root: Path
     omd_config: Mapping[str, str]
+    site_id: str
     all_parameters: Mapping[str, object]
     """The complete resolved dump parameters (for the 'parameters' plugin)"""
     base_config: Mapping[str, object]

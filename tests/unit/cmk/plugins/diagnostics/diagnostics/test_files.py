@@ -29,6 +29,7 @@ def _make_context(tmp_path: Path) -> CollectContext:
     return CollectContext(
         omd_root=tmp_path,
         omd_config={},
+        site_id="mySite",
         all_parameters={},
         base_config={},
         resolve_checkmk_server_host=lambda: "checkmk_server",

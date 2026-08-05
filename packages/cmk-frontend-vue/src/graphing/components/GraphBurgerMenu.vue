@@ -136,6 +136,11 @@ function doAction(onClick: BurgerMenuCallable) {
     opacity: 1;
     background: rgb(0 0 0 / 6%);
   }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: revert;
+  }
 }
 
 .graphing-graph-burger-menu__trigger_open {

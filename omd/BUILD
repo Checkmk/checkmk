@@ -18,10 +18,9 @@ exports_files([
     "dev-requirements.in",
 ])
 
-py_binary(
+sh_binary(
     name = "strip_binaries",
-    srcs = ["strip_binaries.py"],
-    main = "strip_binaries.py",
+    srcs = ["strip_binaries.sh"],
     visibility = ["//visibility:public"],
 )
 

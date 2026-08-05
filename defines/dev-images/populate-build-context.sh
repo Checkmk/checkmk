@@ -46,5 +46,5 @@ cp \
     "${REPO_ROOT}/package_versions.bzl" \
     "${REPO_ROOT}/.bazelversion" \
     "${REPO_ROOT}/omd/strip_binaries" \
-    "${REPO_ROOT}/omd/strip_binaries.py" \
+    "${REPO_ROOT}/omd/strip_binaries.sh" \
     "${TARGET_DIR}"

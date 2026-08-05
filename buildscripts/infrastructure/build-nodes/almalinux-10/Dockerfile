@@ -183,7 +183,7 @@ RUN /opt/install-gdb.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
-COPY strip_binaries strip_binaries.py /opt/
+COPY strip_binaries strip_binaries.sh /opt/
 RUN /opt/strip_binaries /opt
 
 # Run this AFTER strip_binaries!!

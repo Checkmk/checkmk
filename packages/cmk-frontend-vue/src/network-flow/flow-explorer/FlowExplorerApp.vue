@@ -28,6 +28,7 @@ import { FlowApi, type FlowEntry } from './api/flows'
 import { buildFlowColumnPinning, buildFlowColumns } from './columns'
 import FlowRow from './components/FlowRow.vue'
 import { csvFilename, downloadCsv, flowsToCsv } from './export/flowCsv'
+import { TIME_FILTER_ID, defaultTimeFilter } from './filters/timeRange'
 import { FlowService } from './services/FlowService'
 
 const { _t } = usei18n()
@@ -37,10 +38,20 @@ const props = defineProps<NetworkFlowFlowExplorerApp>()
 const columns = buildFlowColumns()
 const columnPinning = buildFlowColumnPinning()
 
+const defaultTimeRangeSeconds = computed(() => props.default_time_range_seconds ?? 0)
+
+function defaultTimeContext(): ConfiguredFilters {
+  return defaultTimeFilter(defaultTimeRangeSeconds.value)
+}
+
 // Python parses the "Network flow" filters out of the query string and hands
 // them over as the page's context, so a filtered URL is all it takes to open a
-// filtered listing - the controls for editing them come later.
-const initialFilters = (props.filter_context ?? {}) as ConfiguredFilters
+// filtered listing - the controls for editing them come later. A URL naming no
+// time range gets the page's default rather than the endpoint's shorter one.
+function initialContext(): ConfiguredFilters {
+  const fromUrl = structuredClone((props.filter_context ?? {}) as ConfiguredFilters)
+  return fromUrl[TIME_FILTER_ID] === undefined ? { ...defaultTimeContext(), ...fromUrl } : fromUrl
+}
 
 const flowService = new FlowService(new FlowApi(), getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms ?? undefined,
@@ -49,7 +60,7 @@ const flowService = new FlowService(new FlowApi(), getKeyShortcutServiceInstance
   // Handed over at construction rather than on mount: the service fetches once
   // by itself, and setting the context afterwards would abort that request only
   // to repeat it - and aborting the request does not stop the query behind it.
-  context: initialFilters
+  context: initialContext()
 })
 
 provide(MONITORING_SERVICE, flowService)

@@ -17,6 +17,8 @@ import type { Metric } from './types'
 
 const HOVER_CLEAR_DELAY_MS = 150
 
+const CLOSEST_METRIC_REACH_PX = 24
+
 const bucketCentre = (bucket: M4Bucket): number => (bucket.startTime + bucket.endTime) / 2
 
 // Hovering resolves to the point the renderer actually drew, so the focus dots sit on the curve
@@ -120,13 +122,13 @@ export function useHover(options: HoverOptions) {
     })
 
     let closestIdx = -1
-    let closestDistance = Infinity
+    let closestDistance = CLOSEST_METRIC_REACH_PX
     for (let i = 0; i < hitDistances.length; i++) {
       const distance = hitDistances[i]
       if (distance === null || distance === undefined) {
         continue
       }
-      if (distance < closestDistance) {
+      if (distance <= closestDistance) {
         closestDistance = distance
         closestIdx = i
       }

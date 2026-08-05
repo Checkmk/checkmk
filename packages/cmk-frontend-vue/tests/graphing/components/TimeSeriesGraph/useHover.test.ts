@@ -115,7 +115,7 @@ describe('useHover — hit-test', () => {
       makeLineMetric('high', constantPoints(90))
     ])
 
-    hover.moveHoverTo(pointAt(50, 85))
+    hover.moveHoverTo(pointAt(50, 15))
 
     const samples = hover.hoverState.value!.samples
     expect(samples[0]).toMatchObject({
@@ -125,6 +125,31 @@ describe('useHover — hit-test', () => {
       isClosest: false
     })
     expect(samples[1]!.isClosest).toBe(true)
+  })
+
+  test('a cursor out of reach of every curve singles none of them out', () => {
+    const hover = mountHover([
+      makeLineMetric('low', constantPoints(10)),
+      makeLineMetric('high', constantPoints(90))
+    ])
+
+    // Halfway between the two curves, 40px from either.
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const samples = hover.hoverState.value!.samples
+    expect(samples.every((sample) => !sample.isClosest)).toBe(true)
+  })
+
+  test('a cursor out of reach still reports every metric it crosses', () => {
+    const hover = mountHover([
+      makeLineMetric('low', constantPoints(10)),
+      makeLineMetric('high', constantPoints(90))
+    ])
+
+    hover.moveHoverTo(pointAt(50, 50))
+
+    const samples = hover.hoverState.value!.samples
+    expect(samples.map((sample) => sample.formattedValue)).toEqual(['10', '90'])
   })
 
   test('a plot with no metrics yields no hover state', () => {

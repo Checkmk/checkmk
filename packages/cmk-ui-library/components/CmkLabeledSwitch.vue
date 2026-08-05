@@ -77,6 +77,11 @@ function toggle() {
     color 0.2s;
 }
 
+.cmk-labeled-switch__control:hover
+  .cmk-labeled-switch__option:not(.cmk-labeled-switch__option--active) {
+  background-color: var(--color-white-10);
+}
+
 .cmk-labeled-switch__option--active {
   background-color: var(--color-corporate-green-50);
   color: var(--color-conference-grey-100);

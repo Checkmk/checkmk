@@ -398,7 +398,7 @@ class UsersAPI(BaseAPI):
             }
             if store_automation_secret:
                 # This attribute came during 2.4 development. We use this API for older versions as
-                # well in test-update. So we should not set it in all requests!
+                # well in test-system-update. So we should not set it in all requests!
                 auth_option["store_automation_secret"] = True
         else:
             auth_option = {

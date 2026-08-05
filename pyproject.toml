@@ -98,11 +98,11 @@ section-order = [
 [tool.ruff.lint.isort.sections]
 werks = ["werks"]
 cmc_proto = ["cmc_proto"]
-testlib = ["tests.testlib", "tests.gui_e2e.testlib"]
-integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
-compositiontests = ["tests.composition"]
-unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
-uitests = ["tests.gui_crawl", "tests.gui_e2e"]
+testlib = ["tests.testlib", "tests.system.gui.testlib"]
+integrationtests = ["tests.system.mk_oracle", "tests.system.singlesite"]
+compositiontests = ["tests.system.multisite"]
+unittests = ["tests.unit", "tests.system.plugins", "tests.system.update"]
+uitests = ["tests.system.gui_crawl", "tests.system.gui"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_ccc = ["cmk.ccc"]
@@ -300,7 +300,7 @@ module = [
   "cmk.notification_plugins.*",
   "cmk.update_config.*",
   "cmk.utils.livestatus_helpers.*",
-  "tests.gui_e2e.*",
+  "tests.system.gui.*",
   "tests.unit.cmk.ec.*",
   "tests.unit.cmk.update_config.*",
 ]

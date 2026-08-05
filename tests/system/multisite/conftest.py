@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import logging
+import os
+import time
+from collections.abc import Iterator
+from pathlib import Path
+from shutil import which
+from typing import Literal
+
+import pytest
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+from tests.system.multisite.utils import get_cre_agent_path
+
+from tests.testlib.agent import (
+    agent_controller_daemon,
+    bake_agents,
+    download_and_install_agent_package,
+    install_agent_package,
+)
+from tests.testlib.site import (
+    connection,
+    get_site_factory,
+    GlobalSettingsUpdate,
+    Site,
+    tracing_config_from_env,
+)
+from tests.testlib.utils import is_containerized, run
+
+site_factory = get_site_factory(prefix="comp_")
+
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def instrument_requests() -> None:
+    RequestsInstrumentor().instrument()
+
+
+@pytest.fixture(name="central_site", scope="session")
+def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
+    with site_factory.get_test_site_ctx(
+        "central",
+        description=request.node.name,
+        auto_restart_httpd=True,
+        tracing_config=tracing_config_from_env(os.environ),
+        global_settings_updates=[
+            GlobalSettingsUpdate(
+                relative_path=Path("etc") / "check_mk" / "multisite.d" / "wato" / "global.mk",
+                update={
+                    "log_levels": {
+                        "cmk.web": 10,
+                        "cmk.web.agent_registration": 10,
+                        "cmk.web.background-job": 10,
+                    }
+                },
+            ),
+            GlobalSettingsUpdate(
+                relative_path=Path("etc") / "check_mk" / "conf.d" / "wato" / "global.mk",
+                update={"agent_bakery_logging": 10},
+            ),
+        ],
+    ) as central_site:
+        yield central_site
+
+
+@pytest.fixture(name="remote_site", scope="session")
+def _remote_site(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
+    yield from _make_connected_remote_site("remote", central_site, request.node.name)
+
+
+@pytest.fixture(name="remote_site_2", scope="session")
+def _remote_site_2(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
+    yield from _make_connected_remote_site("remote2", central_site, request.node.name)
+
+
+def _make_connected_remote_site(
+    site_name: Literal["remote", "remote2"],  # just to track what we're doing...
+    central_site: Site,
+    site_description: str,
+) -> Iterator[Site]:
+    with site_factory.get_test_site_ctx(
+        site_name,
+        description=site_description,
+        auto_restart_httpd=True,
+        tracing_config=tracing_config_from_env(os.environ),
+    ) as remote_site:
+        with connection(central_site=central_site, remote_site=remote_site):
+            yield remote_site
+
+
+@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
+def _installed_agent_ctl_in_unknown_state(central_site: Site, tmp_path: Path) -> Path:
+    if central_site.version.is_raw_edition():
+        return install_agent_package(get_cre_agent_path(central_site))
+    bake_agents(central_site)
+    return download_and_install_agent_package(central_site, tmp_path)
+
+
+@pytest.fixture(name="agent_ctl", scope="function")
+def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
+        yield installed_agent_ctl_in_unknown_state
+
+
+@pytest.fixture(autouse=True)
+def _verify_central_livestatus_alive(
+    central_site: Site,
+    request: pytest.FixtureRequest,
+) -> Iterator[None]:
+    """Fail fast with diagnostics if the central site's livestatus is dead.
+
+    Mitigation for CMK-34867: under back-to-back activations cmc can die
+    silently mid-reload, leaving Apache up but livestatus refusing connections.
+    Without this guard the symptom only surfaces minutes later as a cascade of
+    unrelated test failures (e.g. activate-changes 409 "site offline"), which
+    masks the actual point of failure. The probe runs both before and after
+    each test so the culprit test (the one whose activation killed the core)
+    is the one that fails.
+    """
+    _assert_central_livestatus_alive(central_site, when=f"before {request.node.name}")
+    yield
+    _assert_central_livestatus_alive(central_site, when=f"after {request.node.name}")
+
+
+def _assert_central_livestatus_alive(site: Site, *, when: str) -> None:
+    last_error: BaseException | None = None
+    for _ in range(3):
+        try:
+            site.live.query_value("GET status\nColumns: program_start\n")
+            return
+        except Exception as exc:
+            last_error = exc
+            time.sleep(1)
+    diagnostics = _collect_central_diagnostics(site)
+    pytest.fail(
+        f"Central site livestatus is unreachable {when} (see CMK-34867).\n"
+        f"Last error: {last_error!r}\n\n{diagnostics}",
+        pytrace=False,
+    )
+
+
+def _collect_central_diagnostics(site: Site) -> str:
+    parts: list[str] = []
+    try:
+        omd_status = site.omd("status")
+        parts.append(f"omd status (rc={omd_status.returncode}):\n{omd_status.stdout}")
+    except Exception as exc:
+        parts.append(f"Could not run 'omd status': {exc!r}")
+    try:
+        cmc_lines = site.read_file("var/log/cmc.log").splitlines()
+        parts.append("Last 30 lines of var/log/cmc.log:\n" + "\n".join(cmc_lines[-30:]))
+    except Exception as exc:
+        parts.append(f"Could not read var/log/cmc.log: {exc!r}")
+    return "\n\n".join(parts)
+
+
+@pytest.fixture(scope="session", name="ensure_cron")
+def _run_cron() -> None:
+    """Run cron for background jobs"""
+    if not is_containerized():
+        return
+
+    logger.info("Ensure system cron is running")
+
+    # cron  - Ubuntu, Debian, ...
+    # crond - RHEL (AlmaLinux)
+    cron_cmd = "crond" if Path("/etc/redhat-release").exists() else "cron"
+
+    if not which(cron_cmd):
+        raise RuntimeError(f"No cron executable found (tried {cron_cmd})")
+
+    if run(["pgrep", cron_cmd], check=False, capture_output=True).returncode == 0:
+        return
+
+    # Start cron daemon. It forks an will keep running in the background
+    run([cron_cmd], check=True, sudo=True)

@@ -84,7 +84,11 @@ def notify_error(error) {
             }
 
             /// Inform QA if something's wrong with those jobs
-            if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
+            if (
+                projectname.contains("test-plugins")
+                || projectname.contains("test-system-plugins")
+                || projectname.contains("test-system-update")
+            ) {
                 notify_emails.addAll(TEAM_QA_MAIL.replaceAll(',', ' ').split(' ').grep());
             }
 

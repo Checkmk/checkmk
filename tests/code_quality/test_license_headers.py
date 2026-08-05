@@ -56,8 +56,8 @@ ignored_files = [
     "notifications/ilert",
     "notifications/signl4",
     "omd/packages/Python/pip",
-    "tests/integration_redfish/mockup-server/redfishMockupServer.py",
-    "tests/integration_redfish/mockup-server/rfSsdpServer.py",
+    "tests/system/redfish/mockup-server/redfishMockupServer.py",
+    "tests/system/redfish/mockup-server/rfSsdpServer.py",
 ]
 
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories

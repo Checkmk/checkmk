@@ -1,0 +1,25 @@
+[
+  {
+    "ruleset": "host_check_commands",
+    "folder": "/",
+    "properties": {
+      "description": "Make all docker container host states base on the \"Docker container status\" service"
+    },
+    "value_raw": "('service', 'Docker container status')",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [
+        {
+          "operator": "and",
+          "label_group": [
+            {
+              "operator": "and",
+              "label": "cmk/docker_object:container"
+            }
+          ]
+        }
+      ],
+      "service_label_groups": []
+    }
+  }
+]

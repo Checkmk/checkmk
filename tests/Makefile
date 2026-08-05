@@ -30,29 +30,29 @@ MAX_CHARS := 1500000
 RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
-    test-integration \
-    test-integration-redfish \
-    test-integration-otel \
-    test-composition \
-    test-update-cre \
-    test-update-cee \
-    test-update-cce \
-    test-update-cme \
-    test-update-cse \
-    test-update-cross-edition-cee-to-cce \
-    test-update-cross-edition-cee-to-cme \
-    test-update-cross-edition-cre-to-cce \
-    test-update-cross-edition-cre-to-cee \
-    test-plugins \
-    test-plugins-piggyback \
-    test-gui-crawl \
-    test-xss-crawl \
-    test-gui-e2e \
-    test-gui-e2e-non-free \
-    test-gui-e2e-cee \
-    test-gui-e2e-cce \
-    test-gui-e2e-cme \
-    test-gui-e2e-cse \
+    test-system-singlesite \
+    test-system-redfish \
+    test-system-otel \
+    test-system-multisite \
+    test-system-update-cre \
+    test-system-update-cee \
+    test-system-update-cce \
+    test-system-update-cme \
+    test-system-update-cse \
+    test-system-update-cross-edition-cee-to-cce \
+    test-system-update-cross-edition-cee-to-cme \
+    test-system-update-cross-edition-cre-to-cce \
+    test-system-update-cross-edition-cre-to-cee \
+    test-system-plugins \
+    test-system-plugins-piggyback \
+    test-system-gui-crawl \
+    test-system-gui-crawl-xss \
+    test-system-gui \
+    test-system-gui-non-free \
+    test-system-gui-cee \
+    test-system-gui-cce \
+    test-system-gui-cme \
+    test-system-gui-cse \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := \
     $(TEST_FILTER) \
@@ -94,7 +94,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
-	test-integration-agent-plugin test-integration-agent-plugin-docker \
+	test-system-mk-oracle test-system-mk-oracle-docker \
 	test-format-python test-format-python-docker \
 	test-format-shell test-format-shell-docker \
 	format-toml test-format-toml test-format-toml-docker \
@@ -131,8 +131,8 @@ help:
 	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
-	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
-	@echo "test-integration-agent-plugin-docker - Run agent plugin integration tests in docker"
+	@echo "test-system-mk-oracle               - Run mk-oracle system tests"
+	@echo "test-system-mk-oracle-docker        - Run mk-oracle system tests in docker"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-unit                           - Run unit tests"
@@ -222,12 +222,12 @@ test-docker:
 	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x $(realpath docker) $(PYTEST_SYSTEM_TEST_ARGS)
 
-test-integration-agent-plugin-docker:
+test-system-mk-oracle-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-	    ../scripts/run-in-docker.sh make --quiet test-integration-agent-plugin
+	    ../scripts/run-in-docker.sh make --quiet test-system-mk-oracle
 
-test-integration-agent-plugin:
-	$(PYTEST) -x $(realpath agent_plugin_integration) \
+test-system-mk-oracle:
+	$(PYTEST) -x $(realpath system/mk_oracle) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
 test-format-python: test-format-python-sort test-format-python-format
@@ -264,92 +264,92 @@ test-performance: prepare-playwright
 test-performance-docker:
 	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
 
-test-gui-crawl: prepare-playwright
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
+test-system-gui-crawl: prepare-playwright
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui_crawl/test_gui_crawl.py)
 
-test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
+test-system-gui-crawl-xss: prepare-playwright
+	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui_crawl/test_gui_crawl.py) --numprocesses=1
 
-test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
+test-system-gui test-system-gui-cee: prepare-playwright # full e2e test is done for cee
 	EDITION=cee $(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui/)  --numprocesses=1
 
-test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
+test-system-gui-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
 	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui/cee)  --numprocesses=1
 
-test-gui-e2e-cce:
-	EDITION=cce $(MAKE) test-gui-e2e-non-free
+test-system-gui-cce:
+	EDITION=cce $(MAKE) test-system-gui-non-free
 
-test-gui-e2e-cme:
-	EDITION=cme $(MAKE) test-gui-e2e-non-free
+test-system-gui-cme:
+	EDITION=cme $(MAKE) test-system-gui-non-free
 
-test-gui-e2e-cse:
-	EDITION=cse $(MAKE) test-gui-e2e-non-free
+test-system-gui-cse:
+	EDITION=cse $(MAKE) test-system-gui-non-free
 
-test-integration:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+test-system-singlesite:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/singlesite) \
 	--session-timeout 5400
 
-test-integration-redfish:
+test-system-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath integration_redfish) --session-timeout 1800
+	$(realpath system/redfish) --session-timeout 1800
 
-test-integration-otel:
+test-system-otel:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath integration/otel) --session-timeout 1800
+	$(realpath system/singlesite/otel) --session-timeout 1800
 
-test-composition:
+test-system-multisite:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
 	    $(PYTEST) --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
-	    $(realpath composition)
+	    $(realpath system/multisite)
 
 test-extension-compatibility:
 	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
-test-update-cre:
-	EDITION=cre $(PYTEST) $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
+test-system-update-cre:
+	EDITION=cre $(PYTEST) $(realpath system/update/cre) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
 	--session-timeout 5400
 
-test-update-cee:
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \
+test-system-update-cee:
+	EDITION=cee $(PYTEST) $(realpath system/update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \
 	--session-timeout 5400
 
-test-update-cce:
-	EDITION=cce $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
+test-system-update-cce:
+	EDITION=cce $(PYTEST) $(realpath system/update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
 	--session-timeout 5400
 
-test-update-cme:
-	EDITION=cme $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cme \
+test-system-update-cme:
+	EDITION=cme $(PYTEST) $(realpath system/update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cme \
 	--session-timeout 5400
 
-test-update-cse:
-	EDITION=cse $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
+test-system-update-cse:
+	EDITION=cse $(PYTEST) $(realpath system/update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
 	--session-timeout 5400
 
-test-update-cross-edition-cee-to-cce: # from CEE to CCE
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+test-system-update-cross-edition-cee-to-cce: # from CEE to CCE
+	EDITION=cee $(PYTEST) $(realpath system/update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cee-to-cme: # from CEE to CME
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+test-system-update-cross-edition-cee-to-cme: # from CEE to CME
+	EDITION=cee $(PYTEST) $(realpath system/update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cre-to-cee: # from CRE to CEE
-	EDITION=cre $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
+test-system-update-cross-edition-cre-to-cee: # from CRE to CEE
+	EDITION=cre $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/update/cre/test_update.py) -m cre \
 	--latest-base-version --target-edition=CEE --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cre-to-cce: # from CRE to CCE
-	EDITION=cre $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
+test-system-update-cross-edition-cre-to-cce: # from CRE to CCE
+	EDITION=cre $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/update/cre/test_update.py) -m cre \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
-test-plugins:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	--ignore=plugins_integration/test_plugin_piggyback.py --session-timeout 7200
+test-system-plugins:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/plugins) \
+	--ignore=system/plugins/test_plugin_piggyback.py --session-timeout 7200
 
-test-plugins-piggyback:
+test-system-plugins-piggyback:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath plugins_integration/test_plugin_piggyback.py) --session-timeout 3600
+	$(realpath system/plugins/test_plugin_piggyback.py) --session-timeout 3600
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

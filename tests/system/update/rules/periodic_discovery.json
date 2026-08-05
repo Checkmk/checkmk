@@ -1,0 +1,15 @@
+[
+  {
+    "ruleset": "periodic_discovery",
+    "folder": "/",
+    "properties": {
+      "description": "Perform every two hours a service discovery"
+    },
+    "value_raw": "{'check_interval': 120.0, 'severity_unmonitored': 1, 'severity_vanished': 0, 'severity_changed_service_labels': 0, 'severity_new_host_label': 1}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

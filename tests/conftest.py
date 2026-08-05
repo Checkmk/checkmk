@@ -54,7 +54,7 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
+pytest_plugins = ("tests.system.gui.testlib.playwright.plugin",)
 
 # This allows exceptions to be handled by IDEs (rather than just printing the results)
 # when pytest based tests are being run from inside the IDE

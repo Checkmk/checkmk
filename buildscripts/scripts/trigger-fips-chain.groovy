@@ -56,7 +56,7 @@ def main() {
     // use smart_stage to capture build result, but continue with next steps
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         /// Resolve the FIPS distro list from editions.yml (or OVERRIDE_DISTROS if supplied).
-        /// test-gui-e2e-fips is a single-distro runner, so DISTRO must be a concrete value.
+        /// test-system-gui-fips is a single-distro runner, so DISTRO must be a concrete value.
         def fips_distros = versioning.get_distros(
             edition: params.EDITION,
             use_case: "fips",
@@ -71,7 +71,7 @@ def main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                relative_job_name: "${branch_base_folder}/fips/test-composition-fips",
+                relative_job_name: "${branch_base_folder}/fips/test-system-multisite-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
                 download: false,
@@ -84,7 +84,7 @@ def main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                relative_job_name: "${branch_base_folder}/fips/test-gui-e2e-fips",
+                relative_job_name: "${branch_base_folder}/fips/test-system-gui-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
                 download: false,
@@ -97,7 +97,7 @@ def main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                relative_job_name: "${branch_base_folder}/fips/test-integration-fips",
+                relative_job_name: "${branch_base_folder}/fips/test-system-singlesite-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
                 download: false,

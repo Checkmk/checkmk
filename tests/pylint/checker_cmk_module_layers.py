@@ -508,12 +508,13 @@ def _allow_default_plus_component_under_test(
 ) -> bool:
     if component.is_below("tests.unit.checks"):
         component_under_test = Component("cmk.plugins")
-    elif (
-        component.is_below("tests.unit")
-        or component.is_below("tests.integration")
-        or component.is_below("tests.integration_redfish")
-    ):
+    elif component.is_below("tests.unit"):
         component_under_test = Component(".".join(component.parts[2:]))
+    elif any(
+        component.is_below(suite) for suite in ("tests.system.singlesite", "tests.system.redfish")
+    ):
+        # one level deeper than the unit tests: tests.system.<suite>.<component under test>
+        component_under_test = Component(".".join(component.parts[3:]))
     else:
         raise ValueError(f"Unhandled component: {component}")
 
@@ -665,16 +666,22 @@ _COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
-    (Component("tests.integration.cmk.post_rename_site"), _allow_default_plus_component_under_test),
-    (Component("tests.integration.cmk.snmplib"), _allow_default_plus_component_under_test),
-    (Component("tests.integration.cmk.gui"), _allow_default_plus_component_under_test),
-    (Component("tests.integration.cmk.cee.liveproxy"), _allow_default_plus_component_under_test),
     (
-        Component("tests.integration.cmk.base"),
+        Component("tests.system.singlesite.cmk.post_rename_site"),
+        _allow_default_plus_component_under_test,
+    ),
+    (Component("tests.system.singlesite.cmk.snmplib"), _allow_default_plus_component_under_test),
+    (Component("tests.system.singlesite.cmk.gui"), _allow_default_plus_component_under_test),
+    (
+        Component("tests.system.singlesite.cmk.cee.liveproxy"),
+        _allow_default_plus_component_under_test,
+    ),
+    (
+        Component("tests.system.singlesite.cmk.base"),
         _allow_default_plus_component_under_test_bakery_checkengine,
     ),
     (
-        Component("tests.integration.cmk.cee.robotmk"),
+        Component("tests.system.singlesite.cmk.cee.robotmk"),
         _allow_default_plus_component_under_test,
     ),
     # Namespaces below cmk.base.api.agent_based are not really components,

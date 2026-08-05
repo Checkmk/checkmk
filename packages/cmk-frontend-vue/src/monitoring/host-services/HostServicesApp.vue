@@ -6,15 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { ColumnFiltersState } from '@tanstack/vue-table'
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
+import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
+import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
-import { HostServicesApi, type ServiceEntry } from './api/services'
+import MonitoringTotalCount from '../shared/components/MonitoringTotalCount.vue'
+import { HostServicesApi } from './api/services'
 import { useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
 
@@ -22,23 +25,30 @@ const props = defineProps<MonitoringHostServicesApp>()
 
 const api = new HostServicesApi()
 
-const services = ref<ServiceEntry[]>([])
+const services = ref<HostServiceEntry[]>([])
+const matched = ref(0)
+const total = ref(0)
 const fetchState = ref<FetchState>('foreground')
 const hasLoaded = ref(false)
 const columnFilters = ref<ColumnFiltersState>([])
 
 const columns = useHostServicesColumns()
 
+const isNarrowed = computed(() => columnFilters.value.length > 0)
+
 onMounted(async () => {
   try {
-    services.value = await api.fetchServices(props.host, props.site)
+    const response = await api.fetchServices(props.host, props.site)
+    services.value = response.services
+    matched.value = response.meta.matched
+    total.value = response.meta.total
   } finally {
     fetchState.value = 'idle'
     hasLoaded.value = true
   }
 })
 
-function rowKey(row: ServiceEntry): string {
+function rowKey(row: HostServiceEntry): string {
   return row.name
 }
 </script>
@@ -51,6 +61,10 @@ function rowKey(row: ServiceEntry): string {
     :url="legacy_view_button.url"
   />
   <div class="monitoring-host-services-app">
+    <div class="monitoring-host-services-app__counts">
+      <MonitoringResultsCount :matched="matched" :narrowed="isNarrowed" />
+      <MonitoringTotalCount :total="total" />
+    </div>
     <MonitoringTable
       :rows="services"
       :fetch-state="fetchState"
@@ -64,7 +78,7 @@ function rowKey(row: ServiceEntry): string {
         <HostServicesRow :row="row" />
       </template>
       <template #empty-state>
-        <MonitoringEmptyState :has-active-filter="columnFilters.length > 0" />
+        <MonitoringEmptyState :has-active-filter="isNarrowed" />
       </template>
     </MonitoringTable>
   </div>
@@ -79,5 +93,12 @@ function rowKey(row: ServiceEntry): string {
   min-height: 0;
   padding-bottom: var(--spacing);
   padding-right: var(--spacing);
+}
+
+.monitoring-host-services-app__counts {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

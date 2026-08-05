@@ -6,12 +6,12 @@
 import { render, screen } from '@testing-library/vue'
 import { defineComponent, h } from 'vue'
 
-import type { ServiceEntry } from '@/monitoring/host-services/api/services'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
+import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 
 const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b)
 
-function makeService(overrides: Partial<ServiceEntry> = {}): ServiceEntry {
+function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
     name: 'CPU load',
     state: 'OK',
@@ -22,7 +22,7 @@ function makeService(overrides: Partial<ServiceEntry> = {}): ServiceEntry {
   }
 }
 
-function mountRow(row: ServiceEntry) {
+function mountRow(row: HostServiceEntry) {
   return render(
     defineComponent({
       components: { HostServicesRow },

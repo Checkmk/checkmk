@@ -13,6 +13,10 @@ export type HostEntry = components['schemas']['HostEntry']
 
 export type HostOptionalField = components['schemas']['HostOptionalField']
 
+export type HostServicesResponse = components['schemas']['HostServicesResponse']
+
+export type HostServiceEntry = components['schemas']['HostServiceEntry']
+
 export type HostOverview = components['schemas']['HostOverviewResponse']
 
 export type HostMode = components['schemas']['ModeInfo']

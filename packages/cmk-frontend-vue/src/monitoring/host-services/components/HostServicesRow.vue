@@ -6,14 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 
+import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
-import type { ServiceEntry } from '../api/services'
-
-const props = defineProps<{ row: ServiceEntry }>()
+const props = defineProps<{ row: HostServiceEntry }>()
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 

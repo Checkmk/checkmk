@@ -6,9 +6,9 @@
 import type { ColumnDef } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { ServiceEntry } from './api/services'
+import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 
-export function useHostServicesColumns(): ColumnDef<ServiceEntry>[] {
+export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
   return [

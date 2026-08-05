@@ -24,21 +24,31 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function mockServices(services: ApiServiceEntry[]): void {
+function mockServices(
+  services: ApiServiceEntry[],
+  counts: { matched: number; total: number } = {
+    matched: services.length,
+    total: services.length
+  }
+): void {
   postSpy.mockResolvedValueOnce({
     data: {
       services,
-      meta: {
-        hostname: 'web-1',
-        site_id: 'local',
-        limit: 1000,
-        matched: services.length,
-        total: services.length
-      }
+      meta: { hostname: 'web-1', site_id: 'local', limit: 1000, ...counts }
     },
     error: undefined,
     response: new Response()
   } as never)
+}
+
+function makeApiEntry(): ApiServiceEntry {
+  return {
+    name: 'CPU load',
+    state: 'OK',
+    summary: 'OK - 15 min load: 0.5',
+    last_check: '2026-07-13T11:38:30Z',
+    last_state_change: '2026-07-13T11:39:00Z'
+  }
 }
 
 function renderApp() {
@@ -57,4 +67,19 @@ test('shows the loading skeleton instead of the empty-state message while loadin
   renderApp()
 
   expect(screen.queryByText('No results found.')).not.toBeInTheDocument()
+})
+
+test('shows the total service count reported by the endpoint', async () => {
+  mockServices([makeApiEntry()], { matched: 42, total: 42 })
+  renderApp()
+
+  expect(await screen.findByText('Total rows: 42')).toBeInTheDocument()
+})
+
+test('shows no matching count while nothing narrows the services', async () => {
+  mockServices([makeApiEntry()], { matched: 42, total: 42 })
+  renderApp()
+
+  expect(await screen.findByText('Total rows: 42')).toBeInTheDocument()
+  expect(screen.queryByText(/Rows matching your criteria/)).not.toBeInTheDocument()
 })

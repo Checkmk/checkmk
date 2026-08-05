@@ -83,32 +83,30 @@ describe('HostServicesApi.fetchServices', () => {
     })
   })
 
-  it('maps each entry to a ServiceEntry view model', async () => {
-    mockSuccess([makeApiEntry({ name: 'CPU load', state: 'OK' })])
+  it('returns the services reported by the endpoint', async () => {
+    const entry = makeApiEntry()
+    mockSuccess([entry])
 
-    const result = await new HostServicesApi().fetchServices('web-1', 'local')
+    const response = await new HostServicesApi().fetchServices('web-1', 'local')
 
-    expect(result).toEqual([
-      {
-        name: 'CPU load',
-        state: 'OK',
-        summary: 'OK - 15 min load: 0.5',
-        last_check: '2026-07-13T11:38:30Z',
-        last_state_change: '2026-07-13T11:39:00Z'
-      }
-    ])
+    expect(response.services).toEqual([entry])
   })
 
-  it.each(['OK', 'WARN', 'CRIT', 'UNKNOWN'] as const)(
-    'carries the %s state label into the view model',
-    async (label) => {
-      mockSuccess([makeApiEntry({ state: label })])
+  it('carries the matched and total counts from the page meta', async () => {
+    postSpy.mockResolvedValueOnce({
+      data: {
+        services: [makeApiEntry()],
+        meta: { hostname: 'web-1', site_id: 'local', limit: 1000, matched: 7, total: 42 }
+      },
+      error: undefined,
+      response: new Response()
+    } as never)
 
-      const [entry] = await new HostServicesApi().fetchServices('web-1', 'local')
+    const response = await new HostServicesApi().fetchServices('web-1', 'local')
 
-      expect(entry!.state).toBe(label)
-    }
-  )
+    expect(response.meta.matched).toBe(7)
+    expect(response.meta.total).toBe(42)
+  })
 
   it('throws when the response is not ok', async () => {
     postSpy.mockResolvedValueOnce({

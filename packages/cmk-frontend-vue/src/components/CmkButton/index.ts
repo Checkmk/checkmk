@@ -4,4 +4,4 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export { default } from './CmkButton.vue'
-export type { ButtonVariants, ButtonProps } from './types'
+export type { ButtonVariants, ButtonProps, ButtonIcon } from './types'

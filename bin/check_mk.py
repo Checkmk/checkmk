@@ -98,101 +98,107 @@ def _generate_crash_report() -> CrashReport:
     )
 
 
-root_logger = logging.getLogger("cmk")
-root_logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stderr)
-handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-root_logger.addHandler(handler)
+def main() -> int:
 
-cmk.base.utils.register_sigint_handler()
+    root_logger = logging.getLogger("cmk")
+    root_logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+    root_logger.addHandler(handler)
 
+    cmk.base.utils.register_sigint_handler()
 
-init_span_processor(
-    trace.init_tracing(
-        service_namespace=trace.service_namespace_from_config(
-            "", omd_config := get_omd_config(OMD_ROOT)
+    init_span_processor(
+        trace.init_tracing(
+            service_namespace=trace.service_namespace_from_config(
+                "", omd_config := get_omd_config(OMD_ROOT)
+            ),
+            service_name="cmk",
+            service_instance_id=omd_site(),
+            extra_resource_attributes=trace.resource_attributes_from_config(OMD_ROOT),
         ),
-        service_name="cmk",
-        service_instance_id=omd_site(),
-        extra_resource_attributes=trace.resource_attributes_from_config(OMD_ROOT),
-    ),
-    exporter_from_config(
-        exporter_log_level=logging.CRITICAL,
-        config=trace.trace_send_config(omd_config),
-    ),
-)
+        exporter_from_config(
+            exporter_log_level=logging.CRITICAL,
+            config=trace.trace_send_config(omd_config),
+        ),
+    )
 
+    modes = Modes(plugins=discover_modes(), general_options=general_options())
 
-modes = Modes(plugins=discover_modes(), general_options=general_options())
+    try:
+        opts, args = getopt.getopt(
+            sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs()
+        )
+    except getopt.GetoptError as err:
+        prog = sys.argv[0].split("/")[-1]
+        sys.stdout.write(f"ERROR: {err} (see `{prog} --help` for valid options)\n")
+        return 1
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
-except getopt.GetoptError as err:
-    prog = sys.argv[0].split("/")[-1]
-    sys.stdout.write(f"ERROR: {err} (see `{prog} --help` for valid options)\n")
-    sys.exit(1)
+    # First load the general modifying options
+    modes.process_general_options(opts)
 
-# First load the general modifying options
-modes.process_general_options(opts)
+    try:
+        # Now find the requested mode and execute it
+        mode_name, mode_args = None, None
+        for o, a in opts:
+            if modes.exists(o := o.lstrip("-")):
+                mode_name, mode_args = o, a
+                break
 
-try:
-    # Now find the requested mode and execute it
-    mode_name, mode_args = None, None
-    for o, a in opts:
-        if modes.exists(o := o.lstrip("-")):
-            mode_name, mode_args = o, a
-            break
-
-    if not opts and not args:
-        sys.stdout.write(modes.help())
-        sys.exit(0)
-
-    app = make_app(cmk_version.edition(OMD_ROOT))
-
-    done, exit_status = False, 0
-    trace_context = trace.extract_context_from_environment(dict(os.environ))
-    if mode_name is not None and mode_args is not None:
-        exit_status = call(app, modes.get(mode_name), mode_args, opts, args, trace_context)
-        done = True
-
-    # When no mode was found, Checkmk is running the "check" mode
-    if not done:
-        if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-            exit_status = call(app, modes.get("check"), None, opts, args, trace_context)
-        else:
+        if not opts and not args:
             sys.stdout.write(modes.help())
-            exit_status = 0
+            return 0
 
-    sys.exit(exit_status)
+        app = make_app(cmk_version.edition(OMD_ROOT))
 
-except MKTerminate:
-    sys.stderr.write("<Interrupted>\n")
-    sys.exit(1)
+        done, exit_status = False, 0
+        trace_context = trace.extract_context_from_environment(dict(os.environ))
+        if mode_name is not None and mode_args is not None:
+            exit_status = call(app, modes.get(mode_name), mode_args, opts, args, trace_context)
+            done = True
 
-except (MKGeneralException, MKBailOut) as e:
-    sys.stderr.write(f"{e}\n")
-    if cmk.ccc.debug.enabled():
-        raise
-    sys.exit(3)
+        # When no mode was found, Checkmk is running the "check" mode
+        if not done:
+            if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
+                exit_status = call(app, modes.get("check"), None, opts, args, trace_context)
+            else:
+                sys.stdout.write(modes.help())
+                exit_status = 0
 
-except OSError as e:
-    if e.errno == errno.EPIPE:
-        # this is not an error, caller closes socket(s) and will kill cmk too
-        sys.exit(4)
-    crash = _generate_crash_report()
-    crash.save()
-    sys.stderr.write(crash.render())
-    if cmk.ccc.debug.enabled():
-        raise
-    sys.exit(1)
+        return exit_status
 
-except Exception:
-    crash = _generate_crash_report()
-    crash.save()
-    sys.stderr.write(crash.render())
-    if cmk.ccc.debug.enabled():
-        raise
-    sys.exit(1)
+    except MKTerminate:
+        sys.stderr.write("<Interrupted>\n")
+        return 1
 
-finally:
-    profiling.output_profile()
+    except (MKGeneralException, MKBailOut) as e:
+        sys.stderr.write(f"{e}\n")
+        if cmk.ccc.debug.enabled():
+            raise
+        return 3
+
+    except OSError as e:
+        if e.errno == errno.EPIPE:
+            # this is not an error, caller closes socket(s) and will kill cmk too
+            return 4
+        crash = _generate_crash_report()
+        crash.save()
+        sys.stderr.write(crash.render())
+        if cmk.ccc.debug.enabled():
+            raise
+        return 1
+
+    except Exception:
+        crash = _generate_crash_report()
+        crash.save()
+        sys.stderr.write(crash.render())
+        if cmk.ccc.debug.enabled():
+            raise
+        return 1
+
+    finally:
+        profiling.output_profile()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

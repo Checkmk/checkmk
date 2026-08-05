@@ -280,6 +280,35 @@ impl Authentication {
     pub fn asm_role(&self) -> Option<&Role> {
         self.asm_role.as_ref().or(self.role.as_ref())
     }
+
+    pub fn db_auth(&self) -> ConnectionAuth {
+        ConnectionAuth {
+            auth_type: self.auth_type.clone(),
+            username: self.username().to_owned(),
+            password: self.password().map(str::to_owned),
+            role: self.role().cloned(),
+        }
+    }
+
+    pub fn asm_auth(&self) -> ConnectionAuth {
+        ConnectionAuth {
+            auth_type: self.asm_auth_type(),
+            username: self.asm_username().to_owned(),
+            password: self.asm_password().map(str::to_owned),
+            role: self.asm_role().cloned(),
+        }
+    }
+}
+
+/// The credentials, role and auth type used to open one connection, resolved
+/// out of an [`Authentication`] by [`Authentication::db_auth`] /
+/// [`Authentication::asm_auth`].
+#[derive(PartialEq, Debug, Clone)]
+pub struct ConnectionAuth {
+    pub auth_type: AuthType,
+    pub username: String,
+    pub password: Option<String>,
+    pub role: Option<Role>,
 }
 
 fn _extract_username_if_env_var<T: AsRef<str> + Sized>(value: T) -> String {
@@ -449,6 +478,16 @@ authentication:
   _password: "bar"
   _type: "system"
 "#;
+        pub const AUTHENTICATION_ASM: &str = r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "standard"
+  role: sysdba
+  asm_username: "asm_user"
+  asm_password: "asm_pass"
+  asm_role: sysasm
+"#;
     }
 
     #[test]
@@ -516,22 +555,67 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml_asm_fields() {
-        let yaml_str = r#"
-authentication:
-  username: "foo"
-  password: "bar"
-  type: "standard"
-  role: sysdba
-  asm_username: "asm_user"
-  asm_password: "asm_pass"
-  asm_role: sysasm
-"#;
-        let a = Authentication::from_yaml(&create_yaml(yaml_str))
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_ASM))
             .unwrap()
             .unwrap();
         assert_eq!(a.asm_username(), "asm_user");
         assert_eq!(a.asm_password(), Some("asm_pass"));
         assert_eq!(a.asm_role(), Some(&Role::SysASM));
+    }
+
+    #[test]
+    fn test_asm_auth_uses_asm_fields() {
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_ASM))
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            a.asm_auth(),
+            ConnectionAuth {
+                auth_type: AuthType::Standard,
+                username: "asm_user".to_owned(),
+                password: Some("asm_pass".to_owned()),
+                role: Some(Role::SysASM),
+            }
+        );
+        // The regular connection is unaffected by the `asm_*` fields.
+        assert_eq!(
+            a.db_auth(),
+            ConnectionAuth {
+                auth_type: AuthType::Standard,
+                username: "foo".to_owned(),
+                password: Some("bar".to_owned()),
+                role: Some(Role::SysDba),
+            }
+        );
+    }
+
+    #[test]
+    fn test_asm_auth_falls_back_to_regular_fields() {
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_NO_ASM))
+            .unwrap()
+            .unwrap();
+        assert_eq!(a.asm_auth(), a.db_auth());
+    }
+
+    #[test]
+    fn test_asm_auth_wallet_with_standard_regular_auth() {
+        let a = Authentication::from_yaml(&create_yaml(
+            r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "standard"
+  role: sysdba
+  asm_username: "/"
+  asm_role: sysasm
+"#,
+        ))
+        .unwrap()
+        .unwrap();
+        // `asm_username: "/"` is external auth: no password is passed on.
+        assert_eq!(a.asm_auth().auth_type, AuthType::Wallet);
+        assert_eq!(a.asm_auth().role, Some(Role::SysASM));
+        assert_eq!(a.db_auth().auth_type, AuthType::Standard);
     }
 
     #[test]

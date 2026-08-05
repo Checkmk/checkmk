@@ -55,6 +55,7 @@ from cmk.gui.wsgi.applications.utils import (
     plain_error,
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
+from cmk.web.exceptions import MKNotFound as WebMKNotFound
 
 tracer = trace.get_tracer()
 
@@ -229,7 +230,10 @@ def _process_request(
 ) -> WSGIResponse:
     resp: Response
     try:
-        file_name = requested_file_name(ctx.request, on_error="raise")
+        try:
+            file_name = requested_file_name(ctx.request, on_error="raise")
+        except WebMKNotFound as exc:
+            raise MKNotFound(str(exc)) from exc
 
         if file_name is None:
             page_handler = _page_not_found

@@ -14,8 +14,8 @@ from flask import session
 
 import cmk.utils.paths
 from cmk.ccc.version import __version__, Edition, edition, Version
-from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
+from cmk.web.exceptions import MKNotFound
 from cmk.web.utils.urls import is_allowed_url as is_allowed_url
 
 QueryVars = Mapping[str, Sequence[str]]
@@ -136,17 +136,17 @@ def _file_name_from_path(
             >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/NO_SITE/check_mk/blubb.py", on_error="raise")
             Traceback (most recent call last):
             ...
-            cmk.gui.exceptions.MKNotFound: Not found
+            cmk.web.exceptions.MKNotFound: Not found
 
             >>> _file_name_from_path("/NO_SITE/check_mk/foo/bar", on_error="raise")
             Traceback (most recent call last):
             ...
-            cmk.gui.exceptions.MKNotFound: Not found
+            cmk.web.exceptions.MKNotFound: Not found
 
             >>> _file_name_from_path("/NO_SITE/check_mk/.py", on_error="raise")
             Traceback (most recent call last):
             ...
-            cmk.gui.exceptions.MKNotFound: Not found
+            cmk.web.exceptions.MKNotFound: Not found
 
         Not so sensible values. Not sure where this would occur, but tests were in place which
         required this.
@@ -154,7 +154,7 @@ def _file_name_from_path(
             >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/", on_error="raise")
             Traceback (most recent call last):
             ...
-            cmk.gui.exceptions.MKNotFound: Not found
+            cmk.web.exceptions.MKNotFound: Not found
 
         `file_name_and_query_vars_from_url` expects relative URLs, so we sadly need to support
         those as well.
@@ -167,7 +167,7 @@ def _file_name_from_path(
             >>> _file_name_from_path(".py", on_error="raise")
             Traceback (most recent call last):
             ...
-            cmk.gui.exceptions.MKNotFound: Not found
+            cmk.web.exceptions.MKNotFound: Not found
     """
     parts = path.split("/")
     if len(parts) in (1, 4) and len(parts[-1]) > 3 and parts[-1].endswith(".py"):
@@ -208,12 +208,12 @@ def requested_file_name(
         >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/"}), on_error="raise")
         Traceback (most recent call last):
         ...
-        cmk.gui.exceptions.MKNotFound: Not found
+        cmk.web.exceptions.MKNotFound: Not found
 
         >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/foo"}), on_error="raise")
         Traceback (most recent call last):
         ...
-        cmk.gui.exceptions.MKNotFound: Not found
+        cmk.web.exceptions.MKNotFound: Not found
 
     """
     return _file_name_from_path(request.path, on_error=on_error, default=default)

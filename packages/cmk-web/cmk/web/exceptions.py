@@ -26,3 +26,10 @@ class MKUserError(Exception):
     @override
     def __str__(self) -> str:
         return self.message
+
+
+class MKNotFound(Exception):
+    """Raised to signal that the requested resource does not exist.
+
+    ``cmk.gui`` renders this as its 404 page.
+    """

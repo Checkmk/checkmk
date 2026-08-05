@@ -55,6 +55,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-profiling:gui",
         "//packages/cmk-trace",
+        "//packages/cmk-web",
         requirement("apispec"),
         requirement("flask"),
         requirement("opentelemetry-api"),

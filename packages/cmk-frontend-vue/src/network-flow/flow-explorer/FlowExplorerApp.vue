@@ -8,10 +8,13 @@ import type { NetworkFlowFlowExplorerApp } from 'cmk-shared-typing/typescript/ne
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
-import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
+import {
+  type ConfiguredFilters,
+  useProvideFilterDefinitions
+} from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
@@ -28,15 +31,29 @@ import { FlowApi, type FlowEntry } from './api/flows'
 import { buildFlowColumnPinning, buildFlowColumns } from './columns'
 import FlowRow from './components/FlowRow.vue'
 import { csvFilename, downloadCsv, flowsToCsv } from './export/flowCsv'
-import { TIME_FILTER_ID, defaultTimeFilter } from './filters/timeRange'
+import { columnFiltersToContext, contextToColumnFilters } from './filters/columnFilters'
+import {
+  TIME_FILTER_ID,
+  defaultTimeFilter,
+  hasNonDefaultTime,
+  withDefaultTime,
+  withoutDefaultTime
+} from './filters/timeRange'
+import { writeFiltersToUrl } from './filters/urlFilters'
 import { FlowService } from './services/FlowService'
 
 const { _t } = usei18n()
 
 const props = defineProps<NetworkFlowFlowExplorerApp>()
 
-const columns = buildFlowColumns()
 const columnPinning = buildFlowColumnPinning()
+
+// Built once each, so the computed below only picks between two stable arrays.
+// Rebuilding them inside the computed would hand the table a fresh column
+// identity on every re-evaluation, which makes it rebuild its whole column model
+// for no reason.
+const columnsWithoutFilters = buildFlowColumns({ withFilters: false })
+const columnsWithFilters = buildFlowColumns({ withFilters: true })
 
 const defaultTimeRangeSeconds = computed(() => props.default_time_range_seconds ?? 0)
 
@@ -44,19 +61,18 @@ function defaultTimeContext(): ConfiguredFilters {
   return defaultTimeFilter(defaultTimeRangeSeconds.value)
 }
 
-// Python parses the "Network flow" filters out of the query string and hands
-// them over as the page's context, so a filtered URL is all it takes to open a
-// filtered listing - the controls for editing them come later. A URL naming no
-// time range gets the page's default rather than the endpoint's shorter one.
+/** The filters the page opened with; a URL naming no time range gets the default. */
 function initialContext(): ConfiguredFilters {
   const fromUrl = structuredClone((props.filter_context ?? {}) as ConfiguredFilters)
-  return fromUrl[TIME_FILTER_ID] === undefined ? { ...defaultTimeContext(), ...fromUrl } : fromUrl
+  return fromUrl['network_flow_time'] === undefined
+    ? { ...defaultTimeContext(), ...fromUrl }
+    : fromUrl
 }
 
 const flowService = new FlowService(new FlowApi(), getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms ?? undefined,
   limitTiers: props.limit_tiers ?? undefined,
-  columns,
+  columns: columnsWithoutFilters,
   // Handed over at construction rather than on mount: the service fetches once
   // by itself, and setting the context afterwards would abort that request only
   // to repeat it - and aborting the request does not stop the query behind it.
@@ -73,6 +89,57 @@ const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 onMounted(() => {
   flowService.onFocusSearch(() => searchInput.value?.focus())
 })
+
+// A header funnel renders whatever its filter declares, so it needs the
+// definitions the REST API serves; the funnels are withheld until they are in.
+const { loadFilterDefinitions } = useProvideFilterDefinitions()
+const filterDefinitionsLoaded = ref(false)
+
+const columns = computed(() =>
+  filterDefinitionsLoaded.value ? columnsWithFilters : columnsWithoutFilters
+)
+
+onMounted(async () => {
+  await loadFilterDefinitions()
+  filterDefinitionsLoaded.value = true
+})
+
+function applyFilters(filters: ConfiguredFilters): void {
+  // The URL carries only what deviates from how the page opens, so clearing the
+  // filters leaves a bare URL instead of one spelling out the default window.
+  writeFiltersToUrl(withoutDefaultTime(filters, defaultTimeRangeSeconds.value))
+  flowService.setContext(filters)
+}
+
+const columnFilters = computed(() => contextToColumnFilters(flowService.context.value))
+
+function onColumnFiltersUpdate(next: typeof columnFilters.value): void {
+  // Clearing the Time funnel means "back to the default window", not "no window
+  // at all" - dropping the bound would silently hand the range to the endpoint.
+  applyFilters(
+    withDefaultTime(
+      columnFiltersToContext(flowService.context.value, next),
+      defaultTimeRangeSeconds.value
+    )
+  )
+}
+
+// The time range is never "no filter" - it always has a window - so it only
+// counts as filtered once it has been moved off the default. Anything else in
+// the context, or a search term, counts on its own.
+const hasActiveFilter = computed(
+  () =>
+    Object.keys(flowService.context.value).some((filterId) => filterId !== TIME_FILTER_ID) ||
+    hasNonDefaultTime(flowService.context.value, defaultTimeRangeSeconds.value)
+)
+
+const hasFilters = computed(() => hasActiveFilter.value || flowService.searchQuery.value !== '')
+
+/** Clears every filter and the search, back to the default time range. */
+function clearAllFilters(): void {
+  flowService.searchQuery.value = ''
+  applyFilters(defaultTimeContext())
+}
 
 onBeforeUnmount(() => {
   flowService.destruct()
@@ -104,6 +171,18 @@ function exportCsv(): void {
           @focusin="flowService.beginAutoPause()"
           @focusout="flowService.endAutoPause()"
         />
+        <CmkButton
+          variant="optional"
+          :disabled="!canExport"
+          :title="_t('Export the flows on this page as a CSV file')"
+          @click="exportCsv"
+        >
+          <CmkIcon name="download-csv" size="small" />
+          {{ _t('Export CSV') }}
+        </CmkButton>
+        <CmkButton v-if="hasFilters" variant="text" size="small" @click="clearAllFilters">
+          {{ _t('Reset all filters') }}
+        </CmkButton>
       </div>
       <div class="network-flow-flow-explorer-app__header-end">
         <RefreshCountdown
@@ -117,17 +196,6 @@ function exportCsv(): void {
       </div>
     </div>
     <div class="network-flow-flow-explorer-app__table-toolbar">
-      <div class="network-flow-flow-explorer-app__actions">
-        <CmkButton
-          variant="optional"
-          :disabled="!canExport"
-          :title="_t('Export the flows on this page as a CSV file')"
-          @click="exportCsv"
-        >
-          <CmkIcon name="download-csv" size="small" />
-          {{ _t('Export CSV') }}
-        </CmkButton>
-      </div>
       <div class="network-flow-flow-explorer-app__table-toolbar-end">
         <MonitoringPagination :unit="_t('flows')" />
         <MonitoringTotalCount />
@@ -140,10 +208,10 @@ function exportCsv(): void {
       :fetch-state="flowService.fetchState.value"
       :has-loaded="flowService.hasLoaded.value"
       :columns="columns"
-      :filter-state="flowService.tableColumnFilters.value"
+      :filter-state="columnFilters"
       :column-pinning="columnPinning"
       :get-row-key="rowKey"
-      @update:filter-state="flowService.onColumnFiltersUpdate($event)"
+      @update:filter-state="onColumnFiltersUpdate"
     >
       <template #row="{ row }">
         <FlowRow :row="row" />
@@ -151,7 +219,10 @@ function exportCsv(): void {
       <template #empty-state>
         <!-- The committed term rather than the live one: an empty listing was
              produced by the search that was sent, not by what is being typed. -->
-        <MonitoringEmptyState :has-search-query="flowService.committedSearchQuery.value !== ''" />
+        <MonitoringEmptyState
+          :has-search-query="flowService.committedSearchQuery.value !== ''"
+          :has-active-filter="hasActiveFilter"
+        />
       </template>
     </MonitoringTable>
     <NetworkFlowSlideIns :slide-ins="slideIns" />
@@ -181,7 +252,7 @@ function exportCsv(): void {
 .network-flow-flow-explorer-app__toolbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--spacing);
 }
 
@@ -198,21 +269,14 @@ function exportCsv(): void {
   margin-left: auto;
 }
 
-/* Actions sit on the left and the counters on the right, the same split the
-   All hosts table toolbar uses. */
+/* Only the counters remain here: the actions moved up next to the search box, so
+   the table starts one row higher. */
 .network-flow-flow-explorer-app__table-toolbar {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   gap: var(--spacing);
   margin-bottom: var(--spacing);
-}
-
-.network-flow-flow-explorer-app__actions {
-  display: flex;
-  flex: 0 1 auto;
-  align-items: center;
-  gap: var(--spacing);
 }
 
 .network-flow-flow-explorer-app__table-toolbar-end {

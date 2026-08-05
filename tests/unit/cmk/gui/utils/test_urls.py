@@ -17,9 +17,11 @@ from cmk.gui.utils.urls import (
     get_docs_base_url,
     is_kiosk_request,
     makeuri_contextless,
+    requested_file_name,
     urlencode,
     urlencode_vars,
 )
+from cmk.web.exceptions import MKNotFound
 
 
 @pytest.mark.parametrize(
@@ -180,3 +182,26 @@ def test_is_kiosk_request(query_string: str, expected: bool) -> None:
 )
 def test_add_kiosk_to_url(url: str, expected: str) -> None:
     assert add_kiosk_to_url(url) == expected
+
+
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        ("/dev/check_mk/foo_bar.py", "foo_bar"),
+        ("/dev/check_mk/", "index"),
+    ],
+)
+def test_requested_file_name_reads_request_path(path: str, expected: str) -> None:
+    assert requested_file_name(Request({"PATH_INFO": path})) == expected
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/dev/check_mk/foo_bar.py/",
+        "/dev/check_mk/foo_bar.py/foo",
+    ],
+)
+def test_requested_file_name_raises_on_unparseable_path(path: str) -> None:
+    with pytest.raises(MKNotFound):
+        requested_file_name(Request({"PATH_INFO": path}), on_error="raise")

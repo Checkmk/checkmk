@@ -2,11 +2,16 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import overload, Protocol
 
 
 class RequestProtocol(Protocol):
+    @property
+    def path(self) -> str: ...
+
+    # Mirrors cmk.gui's Request.var, overloads and parameter names included: a Protocol
+    # only matches when both agree.
     @overload
     def var(self, name: str) -> str | None: ...
 
@@ -17,6 +22,8 @@ class RequestProtocol(Protocol):
     def var(self, name: str, default: str | None) -> str | None: ...
 
     def has_var(self, varname: str) -> bool: ...
+
+    def itervars(self, prefix: str = "") -> Iterator[tuple[str, str]]: ...
 
     def get_integer_input_mandatory(self, varname: str, deflt: int | None = None) -> int: ...
 

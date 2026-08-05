@@ -14,7 +14,7 @@ from flask import session
 
 import cmk.utils.paths
 from cmk.ccc.version import __version__, Edition, edition, Version
-from cmk.gui.http import Request
+from cmk.web.context import RequestProtocol
 from cmk.web.exceptions import MKNotFound
 from cmk.web.utils.urls import is_allowed_url as is_allowed_url
 
@@ -76,7 +76,7 @@ def is_truthy_query_value(value: str | None) -> bool:
     return value is not None and value.strip().lower() in _TRUTHY_QUERY_VALUES
 
 
-def is_kiosk_request(request: Request) -> bool:
+def is_kiosk_request(request: RequestProtocol) -> bool:
     """Whether the request should render in chromeless 'kiosk' mode.
 
     Triggers when:
@@ -189,39 +189,20 @@ def _file_name_from_path(
 
 
 def requested_file_name(
-    request: Request, on_error: Literal["raise", "ignore"] = "ignore", default: str = "index"
+    request: RequestProtocol,
+    on_error: Literal["raise", "ignore"] = "ignore",
+    default: str = "index",
 ) -> str:
-    """Convenience wrapper around _file_name_from_path
+    """Derive the "file name" from the path of the given request.
 
-    Args:
-        request:
-            A Werkzeug or Flask request wrapper.
-
-    Returns:
-        The "file name".
-
-    Examples:
-
-        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py"}))
-        'foo_bar'
-
-        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/"}), on_error="raise")
-        Traceback (most recent call last):
-        ...
-        cmk.web.exceptions.MKNotFound: Not found
-
-        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/foo"}), on_error="raise")
-        Traceback (most recent call last):
-        ...
-        cmk.web.exceptions.MKNotFound: Not found
-
+    See ``_file_name_from_path`` for the path parsing itself, including what
+    ``on_error`` and ``default`` do.
     """
     return _file_name_from_path(request.path, on_error=on_error, default=default)
 
 
 def append_site_from_request(
-    request: Request,
-    url_vars: Sequence[tuple[str, int | str | None]],
+    request: RequestProtocol, url_vars: Sequence[tuple[str, int | str | None]]
 ) -> Sequence[tuple[str, int | str | None]]:
     """Append the given request's site parameter to URL variables if present."""
     if site := request.var("site"):
@@ -230,7 +211,7 @@ def append_site_from_request(
 
 
 def makeuri(
-    request: Request,
+    request: RequestProtocol,
     addvars: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
     remove_prefix: str | None = None,
@@ -253,7 +234,7 @@ def makeuri(
 
 
 def makeuri_contextless(
-    request: Request,
+    request: RequestProtocol,
     vars_: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
 ) -> str:
@@ -265,7 +246,7 @@ def makeuri_contextless(
 
 
 def makeactionuri(
-    request: Request,
+    request: RequestProtocol,
     transid: str,
     addvars: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
@@ -279,7 +260,7 @@ def makeactionuri(
 
 
 def makeactionuri_contextless(
-    request: Request,
+    request: RequestProtocol,
     transid: str,
     addvars: Sequence[tuple[str, int | str | None]],
     filename: str | None = None,
@@ -292,7 +273,7 @@ def makeactionuri_contextless(
 
 
 def makeuri_contextless_rulespec_group(
-    request: Request,
+    request: RequestProtocol,
     group_name: str,
 ) -> str:
     return makeuri_contextless(

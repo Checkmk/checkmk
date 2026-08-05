@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
@@ -25,6 +26,8 @@ import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
 import GraphLegendCompact from '../legend/GraphLegendCompact.vue'
 import { computeEpochTimeRange } from './computeEpochTimeRange'
 import type { GraphFigureProps } from './types.ts'
+
+const { _t } = usei18n()
 
 const MIN_FIGURE_SIZE = 50
 const REFRESH_INTERVAL_MS = 60_000
@@ -196,6 +199,7 @@ onBeforeUnmount(() => {
         <GraphTimestamp v-if="showTimestamp" :time-range="graph.timeRange" />
         <GraphBurgerMenu
           v-if="showBurgerMenu"
+          :aria-label="_t('Action menu')"
           class="graphing-graph-figure__burger-menu"
           :groups="burgerMenuGroups"
         />

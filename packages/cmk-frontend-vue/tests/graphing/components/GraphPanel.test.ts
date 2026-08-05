@@ -203,7 +203,7 @@ test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {
       interaction: INTERACTION_NONE
     }
   })
-  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Action menu' })).not.toBeInTheDocument()
 })
 
 test('does not render GraphBurgerMenu when the burger interaction is disabled', () => {
@@ -216,10 +216,10 @@ test('does not render GraphBurgerMenu when the burger interaction is disabled', 
       interaction: INTERACTION_NONE
     }
   })
-  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Action menu' })).not.toBeInTheDocument()
 })
 
-test('renders GraphBurgerMenu when the burger interaction is enabled', () => {
+test('renders GraphBurgerMenu when the burger interaction is enabled, and is accessible by role="button" and its "Action menu" aria label', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
@@ -229,7 +229,7 @@ test('renders GraphBurgerMenu when the burger interaction is enabled', () => {
       interaction: { ...INTERACTION_NONE, burger: 'enabled' }
     }
   })
-  expect(screen.getByRole('button')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Action menu' })).toBeInTheDocument()
 })
 
 test('a do-action from the header runs the callback with the graph the backends address', async () => {

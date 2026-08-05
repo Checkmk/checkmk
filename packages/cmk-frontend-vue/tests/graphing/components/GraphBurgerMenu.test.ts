@@ -22,51 +22,71 @@ const GROUPS: BurgerMenuGroup[] = [
   }
 ]
 
-test('renders a trigger button', () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS } })
-  expect(screen.getByRole('button')).toBeInTheDocument()
+const ARIA_LABEL = 'Action menu'
+
+test('exposes the trigger button via its ariaLabel', () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  expect(screen.getByRole('button', { name: ARIA_LABEL })).toBeInTheDocument()
 })
 
 test('dropdown is not visible initially', () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS } })
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   expect(screen.queryByText('Add to dashboard')).not.toBeInTheDocument()
 })
 
 test('clicking the trigger shows the dropdown with group headings and actions', async () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS } })
-  await fireEvent.click(screen.getByRole('button'))
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
   expect(screen.getByText('Add to dashboard')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Dashboard One' })).toBeInTheDocument()
   expect(screen.getByText('Export')).toBeInTheDocument()
 })
 
 test('clicking an action emits doAction with its onClick and closes the dropdown', async () => {
-  const { emitted } = render(GraphBurgerMenu, { props: { groups: GROUPS } })
-  await fireEvent.click(screen.getByRole('button'))
+  const { emitted } = render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
   await fireEvent.click(screen.getByRole('button', { name: 'Dashboard One' }))
   expect(emitted().doAction![0]).toEqual([GROUPS[0]!.actions[0]!.onClick])
   expect(screen.queryByText('Dashboard One')).not.toBeInTheDocument()
 })
 
 test('clicking outside the component closes the dropdown', async () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS } })
-  await fireEvent.click(screen.getByRole('button'))
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
   expect(screen.getByText('Add to dashboard')).toBeInTheDocument()
   await fireEvent.click(document.body)
   expect(screen.queryByText('Add to dashboard')).not.toBeInTheDocument()
 })
 
-test.each([true, false])(
-  'reflects the scrollable prop on the dropdown class (scrollable=%s)',
-  async (scrollable) => {
-    render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable } })
-    await fireEvent.click(screen.getByRole('button'))
+test('pressing escape key closes the dropdown', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+  expect(screen.getByText('Add to dashboard')).toBeInTheDocument()
+  await fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' })
+  expect(screen.queryByText('Add to dashboard')).not.toBeInTheDocument()
+})
 
-    const dropdown = screen
-      .getByText('Add to dashboard')
-      .closest('.graphing-graph-burger-menu__dropdown')
-    expect(dropdown?.classList.contains('graphing-graph-burger-menu__dropdown_scrollable')).toBe(
-      scrollable
-    )
-  }
-)
+test('constrains the dropdown height to the remaining viewport space when scrollable', async () => {
+  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(500)
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    bottom: 100
+  } as DOMRect)
+
+  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: true, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dropdown = screen
+    .getByText('Add to dashboard')
+    .closest('.graphing-graph-burger-menu__dropdown')
+  expect(dropdown).toHaveStyle({ maxHeight: '360px' })
+})
+
+test('does not constrain the dropdown height when scrollable is disabled', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: false, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dropdown = screen
+    .getByText('Add to dashboard')
+    .closest('.graphing-graph-burger-menu__dropdown')
+  expect((dropdown as HTMLElement).style.maxHeight).toBe('')
+})

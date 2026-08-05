@@ -119,7 +119,7 @@ test('hides the zoom selector when showControls is false', () => {
   expect(screen.queryByRole('switch')).not.toBeInTheDocument()
 })
 
-test('shows the burger action menu when showBurgerMenu is set', async () => {
+test('shows the burger action menu when showBurgerMenu is set - BP-C01', async () => {
   const groups: BurgerMenuGroup[] = [
     {
       heading: 'Export',
@@ -133,4 +133,40 @@ test('shows the burger action menu when showBurgerMenu is set', async () => {
   await fireEvent.click(screen.getByRole('button'))
 
   expect(screen.getByText('Export')).toBeInTheDocument()
+})
+
+test('exposes the controls as an accessible group', () => {
+  render(GraphHeader, { props: { showBurgerMenu: true, burgerMenuGroups: [] } })
+
+  expect(screen.getByRole('group', { name: 'Graph controls' })).toBeInTheDocument()
+})
+
+test('draws the burger menu at the right-hand end of the header', () => {
+  const groups: BurgerMenuGroup[] = [
+    {
+      heading: 'Export',
+      actions: [{ label: 'Export as JSON', ariaLabel: 'Export as JSON', onClick: vi.fn() }]
+    }
+  ]
+  render(GraphHeader, {
+    props: {
+      showTitle: true,
+      title: 'CPU utilization',
+      showConsolidation: true,
+      showBurgerMenu: true,
+      burgerMenuGroups: groups
+    }
+  })
+
+  const title = screen.getByText('CPU utilization')
+  const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
+  const zoomSwitch = screen.getByRole('switch')
+  const burgerMenuButton = screen.getByRole('button')
+
+  // The header lays its children out left to right, so DOM order matches
+  // visual order. The burger menu must follow every other control to end
+  // up drawn furthest to the right.
+  for (const control of [title, dropdown, zoomSwitch]) {
+    expect(control.compareDocumentPosition(burgerMenuButton)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  }
 })

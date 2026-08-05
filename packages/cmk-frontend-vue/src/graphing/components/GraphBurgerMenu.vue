@@ -7,23 +7,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 import { BOTTOM_SCREEN_MARGIN } from './constants'
 
-withDefaults(defineProps<{ groups?: BurgerMenuGroup[]; scrollable?: boolean }>(), {
-  groups: () => [],
-  scrollable: true
-})
+interface BurgerMenuProps {
+  ariaLabel?: string | undefined
+  groups?: BurgerMenuGroup[]
+  scrollable?: boolean
+}
+
+const { groups = [], ariaLabel, scrollable = true } = defineProps<BurgerMenuProps>()
 
 const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
-
-// Consumed by the <style> block below via v-bind().
-const viewportBottomMargin = `${BOTTOM_SCREEN_MARGIN}px`
+const dropdownMaxHeight = ref<number | null>(null)
 
 function onDocumentClick(e: MouseEvent) {
   if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
@@ -31,9 +32,36 @@ function onDocumentClick(e: MouseEvent) {
   }
 }
 
+function onDocumentKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    isOpen.value = false
+  }
+}
+
+function updateDropdownMaxHeight() {
+  if (!scrollable || !containerRef.value) {
+    dropdownMaxHeight.value = null
+    return
+  }
+  dropdownMaxHeight.value =
+    window.innerHeight - containerRef.value.getBoundingClientRect().bottom - BOTTOM_SCREEN_MARGIN
+}
+
+watch(isOpen, (open) => {
+  if (open) {
+    updateDropdownMaxHeight()
+    window.addEventListener('resize', updateDropdownMaxHeight)
+  } else {
+    window.removeEventListener('resize', updateDropdownMaxHeight)
+  }
+})
+
 document.addEventListener('click', onDocumentClick)
+document.addEventListener('keydown', onDocumentKeydown)
 onUnmounted(() => {
   document.removeEventListener('click', onDocumentClick)
+  document.removeEventListener('keydown', onDocumentKeydown)
+  window.removeEventListener('resize', updateDropdownMaxHeight)
 })
 
 function doAction(onClick: BurgerMenuCallable) {
@@ -48,6 +76,7 @@ function doAction(onClick: BurgerMenuCallable) {
       class="graphing-graph-burger-menu__trigger"
       :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
       :aria-expanded="isOpen"
+      :aria-label="ariaLabel"
       tabindex="0"
       @click="isOpen = !isOpen"
     >
@@ -58,6 +87,11 @@ function doAction(onClick: BurgerMenuCallable) {
       v-if="isOpen"
       class="graphing-graph-burger-menu__dropdown"
       :class="{ 'graphing-graph-burger-menu__dropdown_scrollable': scrollable }"
+      :style="
+        scrollable && dropdownMaxHeight !== null
+          ? { maxHeight: `${dropdownMaxHeight}px` }
+          : undefined
+      "
     >
       <ul
         v-for="group in groups"
@@ -146,27 +180,6 @@ function doAction(onClick: BurgerMenuCallable) {
 
 .graphing-graph-burger-menu__dropdown_scrollable {
   overflow-y: auto;
-}
-
-/* Sized and placed by the layout engine: correct on scroll, resize and zoom, no JS. */
-@supports (anchor-name: --x) and (anchor-scope: all) {
-  .graphing-graph-burger-menu {
-    anchor-name: --graphing-graph-burger-menu-anchor;
-
-    /* Confine the anchor name so each menu tethers to its own trigger, not a single shared one. */
-    anchor-scope: --graphing-graph-burger-menu-anchor;
-  }
-
-  .graphing-graph-burger-menu__dropdown_scrollable {
-    position: fixed;
-    position-anchor: --graphing-graph-burger-menu-anchor;
-    position-area: block-end span-inline-start;
-    inset: auto;
-    block-size: fit-content;
-    /* -1px overlaps the trigger's bottom border, matching the static top offset. */
-    margin-block: -1px v-bind(viewportBottomMargin);
-    margin-inline-end: 10px;
-  }
 }
 
 .graphing-graph-burger-menu__group {

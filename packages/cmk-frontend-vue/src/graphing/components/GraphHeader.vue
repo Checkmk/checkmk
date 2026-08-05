@@ -95,7 +95,7 @@ const resolutionLabel = computed(() =>
 <template>
   <div class="graphing-graph-header" :class="{ 'graphing-graph-header--compact': !!isCompact }">
     <GraphTitle v-if="showTitle" :title="title ?? ''" :is-compact="!!isCompact" />
-    <div class="graphing-graph-header__controls">
+    <div class="graphing-graph-header__controls" role="group" :aria-label="_t('Graph controls')">
       <template v-if="showConsolidation">
         <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
         <CmkDropdown
@@ -120,6 +120,7 @@ const resolutionLabel = computed(() =>
       <GraphBurgerMenu
         v-if="showBurgerMenu"
         :groups="burgerMenuGroups ?? []"
+        :aria-label="_t('Action menu')"
         @do-action="(onClick) => emit('doAction', onClick)"
       />
     </div>

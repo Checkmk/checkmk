@@ -14,6 +14,7 @@ from cmk.gui import gui_background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -174,6 +175,9 @@ class ModeBackgroundJobDetails(WatoMode):
     @override
     def page(self, config: Config) -> None:
         job = BackgroundJob(job_id := request.get_ascii_input_mandatory("job_id"))
+        if not job.is_available():
+            raise MKUserError(None, _("Background job info is not available"))
+
         if job.is_active():
             html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
             html.div("", id_="status_container")
@@ -183,11 +187,9 @@ class ModeBackgroundJobDetails(WatoMode):
             )
         else:
             job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)
-            if job_snapshot is not None and job.exists():
+            if job_snapshot is not None:
                 job_manager = gui_background_job.GUIBackgroundJobManager()
                 job_manager.show_job_details_from_snapshot(job_snapshot)
-            else:
-                html.show_message(_("Background job info is not available"))
 
 
 class ModeAjaxBackgroundJobDetails(AjaxPage):
@@ -212,7 +214,7 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
 
     def _show_details_page(self, job_id: str) -> BackgroundStatusSnapshot | None:
         job = BackgroundJob(job_id)
-        if not job.exists():
+        if not job.is_available():
             html.show_message(_("Background job info is not available"))
             return None
 

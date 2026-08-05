@@ -209,7 +209,12 @@ allows = [
 ]
 
 [plugin_families.violations.custom_query_metric_backend]
-allows = ["cmk.metric_backend", "cmk.utils.macros", "cmk.utils.paths"]
+allows = [
+  "cmk.metric_backend",
+  "cmk.shared_typing.consolidation",
+  "cmk.utils.macros",
+  "cmk.utils.paths",
+]
 
 [plugin_families.violations.datadog]
 allows = [

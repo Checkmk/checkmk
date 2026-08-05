@@ -382,6 +382,7 @@ const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   validators: [],
   metric_name: null,
   aggregation_lookback: 0,
+  consolidation_function: 'gauge_last',
   aggregation_histogram_percentile: 0,
   aggregation_histogram_threshold_for_fraction_below: 0,
   aggregation_histogram_lower_threshold_for_fraction_between: 0,

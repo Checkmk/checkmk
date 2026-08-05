@@ -50,16 +50,9 @@ const role = computed(() => {
 })
 
 // `v-else` in the template does not narrow `loading` out of `variant`, so resolve the name here.
-const multitoneIconName = computed<'error' | 'warning' | 'info'>(() => {
-  switch (props.variant) {
-    case 'info':
-      return 'info'
-    case 'warning':
-      return 'warning'
-    default:
-      return 'error'
-  }
-})
+const multitoneIconName = computed<'error' | 'warning'>(() =>
+  props.variant === 'warning' ? 'warning' : 'error'
+)
 
 // The icon colour CmkAlertBox pairs with the background below. `loading` draws a plain icon
 // instead, so it never reaches this.
@@ -74,6 +67,14 @@ const iconColor = computed(() => ({
       v-if="variant === 'loading'"
       name="load-graph"
       size="medium"
+      class="graphing-graph-notice__icon"
+    />
+    <!-- The empty states carry the graph glyph at its own purple, rather than a status icon
+         tinted to match the text. -->
+    <CmkIcon
+      v-else-if="variant === 'info'"
+      name="graph"
+      size="xxlarge"
       class="graphing-graph-notice__icon"
     />
     <CmkMultitoneIcon

@@ -493,3 +493,14 @@ test('a retry after a failed load still honours an edit deep link', async () => 
   // requested one rather than the default it is still sitting on.
   expect(await screen.findByRole('button', { name: 'Save' })).toBeInTheDocument()
 })
+
+test('opens on the metrics tab, so the first step is the one on screen', async () => {
+  await renderApp({ mode: 'edit' })
+
+  const metrics = await screen.findByRole('tab', { name: 'Metrics selection' })
+  expect(metrics).toHaveAttribute('data-state', 'active')
+  expect(screen.getByRole('tab', { name: 'Graph appearance' })).toHaveAttribute(
+    'data-state',
+    'inactive'
+  )
+})

@@ -74,3 +74,18 @@ test('carries no announcing role when the host announces instead', () => {
   // Silenced, not hidden: the retry is still reachable.
   expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
 })
+
+test('carries the graph glyph for an empty state and the multitone error icon otherwise', () => {
+  const icon = (): Element => notice()!.querySelector('.graphing-graph-notice__icon')!
+
+  const { unmount } = render(GraphNotice, {
+    props: { variant: 'info', message: 'No metrics added' }
+  })
+  // The empty state uses the plain purple graph asset, so it is an <img> with that source.
+  expect(icon().getAttribute('src')).toMatch(/graph/)
+  unmount()
+
+  render(GraphNotice, { props: { variant: 'error', message: 'Broken' } })
+  // A failure keeps the recoloured multitone icon, which renders as an inline svg instead.
+  expect(icon()).toHaveClass('cmk-multitone-icon')
+})

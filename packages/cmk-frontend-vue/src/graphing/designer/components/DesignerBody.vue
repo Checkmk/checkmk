@@ -21,7 +21,7 @@ import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
-import { useGraphNotice } from '../../composables/useGraphNotice'
+import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
 import { type CustomGraphObject, updateCustomGraph } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
@@ -124,12 +124,28 @@ const drawnOverview = computed(() => {
       }
 })
 
-const previewNotice = useGraphNotice({
+const fetchNotice = useGraphNotice({
   error: () => data.error.value,
   isLoading: () => data.isLoading.value,
   partialErrors: () => data.partialErrors.value,
   warnings: () => data.warnings.value
 })
+
+// A graph nobody has added a source to yet: the preview draws an empty frame, and this says what
+// to do with it.
+const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
+  store.items.value.length === 0
+    ? {
+        variant: 'info',
+        message: _t('No metrics added'),
+        description: _t('Add a source to visualize your data')
+      }
+    : null
+)
+
+// A failed fetch outranks the empty state. The two barely overlap - with no rows there is no fetch
+// to fail - but which wins should be stated rather than left to that coincidence.
+const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
 
 const { refreshTick } = useGlobalRefresh()
 watch(refreshTick, () => data.refetch())

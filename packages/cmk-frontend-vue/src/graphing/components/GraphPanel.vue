@@ -17,6 +17,7 @@ import type {
   GraphPanelEmits,
   GraphPanelProps,
   RequestedTimeRange,
+  TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
@@ -41,6 +42,17 @@ const props = withDefaults(defineProps<GraphPanelProps>(), {
 
 const emit = defineEmits<GraphPanelEmits>()
 
+// The step only reaches `timestampAt` in the renderer's decimation, which walks the metrics. A
+// fetch assigns the data range and the metrics together, so this stands in only when there are no
+// curves at all and nothing reads it.
+const NOMINAL_STEP_SECONDS = 60
+
+// The window the frame is drawn over: what the data covers once fetched, and until then what was
+// asked for, so a panel with nothing to plot still draws its axes rather than empty space.
+const frameTimeRange = computed<TimeRange>(
+  () => props.dataTimeRange ?? { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
+)
+
 const {
   viewTimeRange,
   viewValueRange,
@@ -53,7 +65,7 @@ const {
   onPinCreate,
   clearPin
 } = useGraphInteraction(
-  () => props.dataTimeRange, // getBaseline
+  () => frameTimeRange.value, // getBaseline
   () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
   (timeRange, kind) =>
@@ -183,8 +195,10 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
           {{ _t('All metrics are hidden') }}
         </div>
 
+        <!-- No `v-else-if` guard: the frame range always resolves, so a panel with nothing to
+             plot draws its axes rather than leaving the area blank. -->
         <TimeSeriesGraph
-          v-else-if="dataTimeRange"
+          v-else
           :time_range="viewTimeRange"
           :metrics="visibleMetrics"
           :horizontal_lines="visibleHorizontalLines"

@@ -60,6 +60,10 @@ export function useHover(options: HoverOptions) {
   }
 
   function computeHover(point: HoverPoint): HoverState | null {
+    // An empty frame still has axes to hover, but nothing to report over them.
+    if (options.metrics().length === 0) {
+      return null
+    }
     const { x: cursorX, y: cursorY } = point
     if (
       cursorX < 0 ||

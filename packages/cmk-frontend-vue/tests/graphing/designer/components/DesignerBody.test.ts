@@ -55,7 +55,7 @@ function rrdSource(id: string): unknown {
   }
 }
 
-function graphObject(): CustomGraphObject {
+function graphObject(dataSources: unknown[] = [rrdSource('A'), rrdSource('B')]): CustomGraphObject {
   return {
     domainType: 'custom_graph',
     id: 'my_graph',
@@ -78,7 +78,7 @@ function graphObject(): CustomGraphObject {
           explicit_vertical_range: { type: 'auto' },
           omit_zero_metrics: false
         },
-        data_sources: [rrdSource('A'), rrdSource('B')]
+        data_sources: dataSources
       }
     }
   } as unknown as CustomGraphObject
@@ -127,7 +127,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function renderBody(mode: 'view' | 'edit', overrides: { displaySettings?: boolean } = {}) {
+function renderBody(
+  mode: 'view' | 'edit',
+  overrides: { displaySettings?: boolean; graph?: CustomGraphObject } = {}
+) {
   return render(DesignerBody, {
     props: {
       graph: graphObject(),
@@ -274,4 +277,22 @@ test("states the response's own warnings over the preview it drew anyway", async
   const message = await screen.findByText('The query for A matched more than 100 time series.')
   expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+test('states an empty custom graph over a drawn frame', async () => {
+  renderBody('view', { graph: graphObject([]) })
+
+  expect(await screen.findByText('No metrics added')).toBeInTheDocument()
+  expect(screen.getByText('Add a source to visualize your data')).toBeInTheDocument()
+  // The frame is drawn even with nothing to plot, so the notice has a graph to sit over.
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+  // An empty graph is not a failure: nothing to retry.
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+})
+
+test('says nothing about emptiness once a source has been added', async () => {
+  renderBody('view')
+
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+  expect(screen.queryByText('No metrics added')).not.toBeInTheDocument()
 })

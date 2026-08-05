@@ -619,3 +619,34 @@ test('acting on an existing pin removes it', async () => {
 
   expect(screen.getByTestId('pin-time')).toBeEmptyDOMElement()
 })
+
+test('draws its frame from the requested range before any data has arrived', () => {
+  // A distinct window from REQUESTED/TIME_RANGE, which share a start, so the assertion can tell
+  // which range the frame was built from.
+  render(GraphPanel, {
+    props: {
+      metrics: [],
+      requestedTimeRange: { start: 1_700_000_000, end: 1_700_003_600 },
+      interaction: INTERACTION_NONE
+    }
+  })
+
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+  expect(screen.getByTestId('view-start')).toHaveTextContent('1700000000')
+})
+
+test('keeps the all-hidden message when data arrived but nothing is shown', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE,
+      hiddenMetricNames: ['cpu']
+    }
+  })
+
+  // The empty frame must not swallow this case: hidden metrics are not the same as none.
+  expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
+  expect(screen.queryByTestId('time-series-graph')).not.toBeInTheDocument()
+})

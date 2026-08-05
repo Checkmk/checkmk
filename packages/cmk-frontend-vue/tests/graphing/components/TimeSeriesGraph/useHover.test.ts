@@ -127,6 +127,14 @@ describe('useHover — hit-test', () => {
     expect(samples[1]!.isClosest).toBe(true)
   })
 
+  test('a plot with no metrics yields no hover state', () => {
+    const hover = mountHover([])
+
+    hover.moveHoverTo(pointAt(50, 85))
+
+    expect(hover.hoverState.value).toBeNull()
+  })
+
   test('a cursor outside the plot yields no hover state', () => {
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
     hover.moveHoverTo(pointAt(50, 85))

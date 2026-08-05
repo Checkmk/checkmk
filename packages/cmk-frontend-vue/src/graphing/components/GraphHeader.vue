@@ -132,6 +132,9 @@ const resolutionLabel = computed(() =>
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-double);
+  padding: var(--dimension-4) var(--dimension-5);
+  background: var(--ux-theme-3);
+  border-radius: var(--border-radius);
 }
 
 .graphing-graph-header__controls {

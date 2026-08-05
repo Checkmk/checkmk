@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 import FilterDropdown from '@/monitoring/shared/components/filter/FilterDropdown.vue'
@@ -98,4 +98,24 @@ test('a closed edit is gone when the dropdown is reopened', async () => {
   expect(screen.getByRole('checkbox', { name: 'UP' })).toBeChecked()
   expect(screen.getByRole('checkbox', { name: 'DOWN' })).not.toBeChecked()
   expect(model.value).toEqual(upFilter())
+})
+
+test('a click that unmounts its own target does not close the funnel', async () => {
+  const user = userEvent.setup()
+  renderDropdown()
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  const panel = screen.getByRole('group', { name: 'Filter State' })
+
+  // Stands in for content that unmounts as it is activated. It is still in the
+  // panel at pointerdown and detached by the time the document-level click
+  // handler runs, so a containment check made then sees a node inside nothing.
+  const option = document.createElement('button')
+  option.addEventListener('click', () => option.remove())
+  panel.appendChild(option)
+
+  option.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }))
+  option.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  await nextTick()
+
+  expect(screen.queryByRole('group', { name: 'Filter State' })).not.toBeNull()
 })

@@ -65,6 +65,8 @@ const flipUp = ref(false)
 const flipLeft = ref(false)
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
+// Whether the press behind the current click started within the funnel.
+const pressStartedInside = ref(false)
 
 // Staged edits, snapshotted from the committed model on open. Only Apply writes
 // this back to the model; cancelling discards it.
@@ -97,6 +99,8 @@ function open(): void {
     suppressNextClickOutside.value = false
   }, 0)
   registerShortcuts()
+  // Capture, so it still runs when the content stops propagation.
+  document.addEventListener('pointerdown', onPointerDown, true)
   void nextTick(() => {
     positionPanel()
     focusRow(0)
@@ -110,6 +114,8 @@ function close(): void {
   isOpen.value = false
   monitoringService?.endAutoPause()
   removeShortcuts()
+  document.removeEventListener('pointerdown', onPointerDown, true)
+  pressStartedInside.value = false
   trigger.value?.querySelector('button')?.focus()
 }
 
@@ -139,10 +145,23 @@ function clear(): void {
   draftKey.value += 1
 }
 
+// Content inside the panel may unmount on the very click that activates it. The
+// click-outside check runs after that, on a target already detached from the
+// document, so it no longer tests as "inside" and the funnel would close along
+// with it. Pointerdown fires while the target is still mounted, so that is where
+// "inside" is decided.
+function onPointerDown(event: PointerEvent): void {
+  const target = event.target as Node | null
+  pressStartedInside.value =
+    target !== null &&
+    (panel.value?.contains(target) === true || trigger.value?.contains(target) === true)
+}
+
 function onClickOutside(): void {
-  if (!suppressNextClickOutside.value) {
-    close()
+  if (suppressNextClickOutside.value || pressStartedInside.value) {
+    return
   }
+  close()
 }
 
 function positionPanel(): void {
@@ -248,6 +267,7 @@ onBeforeUnmount(() => {
     monitoringService?.endAutoPause()
   }
   removeShortcuts()
+  document.removeEventListener('pointerdown', onPointerDown, true)
 })
 </script>
 

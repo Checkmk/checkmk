@@ -7,7 +7,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, NewType
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -20,36 +20,28 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
-
-def saveint(i: str) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
-    try:
-        return int(i)
-    except (TypeError, ValueError):
-        return 0
+Utilization = NewType("Utilization", int)
 
 
-def discover_innovaphone_cpu(section: StringTable) -> DiscoveryResult:
+def parse_innovaphone_cpu(string_table: StringTable) -> Utilization | None:
+    match string_table:
+        case [[_, str(value)]] if value.isdigit():
+            return Utilization(int(value))
+        case _:
+            return None
+
+
+def discover_innovaphone_cpu(section: Utilization) -> DiscoveryResult:
     yield Service()
 
 
-def check_innovaphone_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult:
-    usage = saveint(section[0][1])
+def check_innovaphone_cpu(params: Mapping[str, Any], section: Utilization) -> CheckResult:
     yield from check_cpu_util(
-        util=usage,
+        util=section,
         params=params,
         value_store=get_value_store(),
         this_time=time.time(),
     )
-
-
-def parse_innovaphone_cpu(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_innovaphone_cpu = AgentSection(

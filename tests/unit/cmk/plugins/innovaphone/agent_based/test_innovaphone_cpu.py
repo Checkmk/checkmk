@@ -17,17 +17,29 @@ from cmk.plugins.innovaphone.agent_based.innovaphone_cpu import (
     check_innovaphone_cpu,
     discover_innovaphone_cpu,
     parse_innovaphone_cpu,
+    Utilization,
 )
 
-_SECTION: StringTable = [["CPU", "55"]]
+
+@pytest.mark.parametrize(
+    "string_table",
+    [
+        pytest.param([], id="empty payload"),
+        pytest.param([[]], id="empty nested payload"),
+        pytest.param([["", "not-a-number"]], id="not a number"),
+    ],
+)
+def test_parse_innovaphone_cpu_empty_data(string_table: StringTable) -> None:
+    assert parse_innovaphone_cpu(string_table) is None
 
 
-def test_parse_innovaphone_cpu_keeps_string_table() -> None:
-    assert parse_innovaphone_cpu(_SECTION) == _SECTION
+def test_parse_innovaphone_cpu_success() -> None:
+    assert parse_innovaphone_cpu([["CPU", "55"]]) == Utilization(55)
 
 
 def test_discover_innovaphone_cpu() -> None:
-    assert list(discover_innovaphone_cpu(_SECTION)) == [Service()]
+    section = Utilization(55)
+    assert list(discover_innovaphone_cpu(section)) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -35,7 +47,7 @@ def test_discover_innovaphone_cpu() -> None:
     [
         pytest.param(
             {"util": (90.0, 95.0)},
-            [["CPU", "55"]],
+            Utilization(55),
             [
                 Result(state=State.OK, summary="Total CPU: 55.00%"),
                 Metric("util", 55.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
@@ -44,7 +56,7 @@ def test_discover_innovaphone_cpu() -> None:
         ),
         pytest.param(
             {"util": (90.0, 95.0)},
-            [["CPU", "93"]],
+            Utilization(93),
             [
                 Result(state=State.WARN, summary="Total CPU: 93.00% (warn/crit at 90.00%/95.00%)"),
                 Metric("util", 93.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
@@ -53,27 +65,18 @@ def test_discover_innovaphone_cpu() -> None:
         ),
         pytest.param(
             {"util": (90.0, 95.0)},
-            [["CPU", "97"]],
+            Utilization(97),
             [
                 Result(state=State.CRIT, summary="Total CPU: 97.00% (warn/crit at 90.00%/95.00%)"),
                 Metric("util", 97.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="crit state",
         ),
-        pytest.param(
-            {"util": (90.0, 95.0)},
-            [["CPU", "not-a-number"]],
-            [
-                Result(state=State.OK, summary="Total CPU: 0%"),
-                Metric("util", 0.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
-            ],
-            id="unparsable_value_falls_back_to_zero",
-        ),
     ],
 )
 def test_check_innovaphone_cpu(
     params: Mapping[str, Any],
-    section: StringTable,
+    section: Utilization,
     expected: list[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

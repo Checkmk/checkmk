@@ -9,8 +9,6 @@ export const CANVAS_MARGIN_LEFT = 50
 export const CANVAS_MARGIN_RIGHT = 10
 export const CANVAS_MARGIN_HORIZONTAL = CANVAS_MARGIN_LEFT + CANVAS_MARGIN_RIGHT
 
-// The backend floors the RRD step at 60s (cmk/gui/graphing/_fetch_time_series.py), so a
-// shorter window would request a resolution that cannot be served.
-export const MIN_ZOOM_TIME_RANGE_SECONDS = 60
+export const MIN_ZOOM_TIME_RANGE_SECONDS = 180
 
 export const BOTTOM_SCREEN_MARGIN = 40

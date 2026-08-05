@@ -60,38 +60,92 @@ fn capture_sid(re: &Regex, param: &str) -> Option<String> {
 
 /// Method is similar to `ps -ef | grep <match_string>`.
 /// Empty on Windows, which has no per-SID processes.
+/// Linux is scanned differently from the other Unixes. The process table of a
+/// Linux host also contains the processes of every container on that host.
 pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<String>> {
     if cfg!(windows) {
         return Ok(HashSet::new());
     }
     let re = Regex::new(match_string.unwrap_or(SID_MASK))?;
-    sids_from_ps(&re)
+    if cfg!(target_os = "linux") {
+        sids_outside_containers(&re)
+    } else {
+        sids_from_process_table(&re)
+    }
 }
 
-fn sids_from_ps(re: &Regex) -> Result<HashSet<String>> {
-    let output = std::process::Command::new("ps")
-        .args(["-A", "-o", "args="])
-        .output()?;
+fn run_ps(args: &[&str]) -> Result<String> {
+    let output = std::process::Command::new("ps").args(args).output()?;
     anyhow::ensure!(
         output.status.success(),
         "ps failed with {}: {}",
         output.status,
         String::from_utf8_lossy(&output.stderr)
     );
-    Ok(sids_from_process_table(
-        &String::from_utf8_lossy(&output.stdout),
-        re,
-    ))
+    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
-/// A PMON process renames argv[0] and takes no arguments, so only the first word
-/// of a command line can be a SID.
-fn sids_from_process_table(process_table: &str, re: &Regex) -> HashSet<String> {
-    process_table
+/// Solaris and AIX. A PMON process renames argv[0] and takes no arguments, so
+/// only the first word of a command line can be a SID.
+fn sids_from_process_table(re: &Regex) -> Result<HashSet<String>> {
+    let process_table = run_ps(&["-A", "-o", "args="])?;
+    Ok(process_table
         .lines()
         .filter_map(|line| line.split_whitespace().next())
         .filter_map(|command| capture_sid(re, command))
-        .collect()
+        .collect())
+}
+
+/// Linux. A PMON process that runs in a container is not an instance of the
+/// host, so the SID of that process is dropped. The `pid=` column supplies the
+/// PID that the cgroup lookup needs.
+fn sids_outside_containers(re: &Regex) -> Result<HashSet<String>> {
+    let process_table = run_ps(&["-A", "-o", "pid=", "-o", "args="])?;
+    let own = cgroup_paths("self");
+    Ok(process_table
+        .lines()
+        .filter_map(|line| {
+            let mut fields = line.split_whitespace();
+            let pid = fields.next()?;
+            let sid = capture_sid(re, fields.next()?)?;
+            if is_foreign(&own, &cgroup_paths(pid)) {
+                log::info!("skipping SID {sid}: PMON process {pid} belongs to a foreign container");
+                None
+            } else {
+                Some(sid)
+            }
+        })
+        .collect())
+}
+
+fn cgroup_paths(pid: &str) -> Vec<String> {
+    std::fs::read_to_string(format!("/proc/{pid}/cgroup"))
+        .map(|content| {
+            content
+                .lines()
+                .filter_map(|line| line.splitn(3, ':').nth(2).map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn names_container(path: &str) -> bool {
+    const MARKERS: &[&str] = &[
+        "docker-",
+        "/docker/",
+        "crio-",
+        "cri-containerd-",
+        "kubepods",
+        "libpod-",
+        "/lxc/",
+        "lxc.payload",
+    ];
+    MARKERS.iter().any(|marker| path.contains(marker))
+}
+
+fn is_foreign(own: &[String], candidate: &[String]) -> bool {
+    let containerized = own.is_empty() || own.iter().any(|p| p == "/" || p.contains("/.."));
+    !containerized && candidate.iter().any(|p| names_container(p))
 }
 
 /// Finds ORACLE_HOME for a given SID using the platform's instance registry.
@@ -206,28 +260,66 @@ mod tests {
             capture_sid(&re, "ora_pmon_Test23"),
             Some("TEST23".to_string())
         );
+        assert_eq!(capture_sid(&re, "asm_pmon_+ASM"), Some("+ASM".to_string()));
     }
 
     #[test]
-    fn test_sids_from_process_table_matches_first_word_only() {
-        let re = Regex::new(SID_MASK).expect("Failed to compile regex");
-        let process_table = "\
-ora_pmon_TEST19
-asm_pmon_+ASM
-vi ora_pmon_TYPO
-/usr/sbin/cron
-";
-        assert_eq!(
-            sids_from_process_table(process_table, &re),
-            HashSet::from(["TEST19".to_string(), "+ASM".to_string()])
-        );
+    fn test_names_container() {
+        assert!(names_container(
+            "/system.slice/docker-cfa02fe92a5ef6a7c2fed620578bed5760ec0aee9368e2e746a023215c972bca.scope"
+        ));
+        assert!(names_container(
+            "/../docker-b397f6fed93bf2921326d2535ebf689e.scope"
+        ));
+        assert!(names_container("/docker/b397f6fed93bf2921326d2535ebf689e"));
+        assert!(names_container(
+            "/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod1234.slice/cri-containerd-abc.scope"
+        ));
+        assert!(names_container("/machine.slice/libpod-abc.scope"));
+
+        // A systemd unit is not a container, however deeply nested.
+        assert!(!names_container(
+            "/system.slice/check-mk-agent@1234-127.0.0.1:6556.service"
+        ));
+        assert!(!names_container("/system.slice/oracle.service"));
+        assert!(!names_container(
+            "/user.slice/user-54321.slice/session-3.scope"
+        ));
+        assert!(!names_container("/"));
     }
 
+    #[test]
+    fn test_is_foreign_per_deployment() {
+        let agent_on_host = [String::from("/system.slice/check-mk-agent@1234.service")];
+        let agent_in_container = [String::from("/")];
+        let db_on_host = [String::from("/system.slice/oracle-XE.service")];
+        let db_in_container_from_host = [String::from(
+            "/system.slice/docker-cfa02fe92a5ef6a7c2fed620578bed57.scope",
+        )];
+        let db_in_sibling_container = [String::from("/../docker-b397f6fed93bf2921326d2535e.scope")];
+
+        assert!(is_foreign(&agent_on_host, &db_in_container_from_host));
+
+        assert!(!is_foreign(&agent_on_host, &db_on_host));
+
+        assert!(!is_foreign(&agent_in_container, &db_in_sibling_container));
+        assert!(!is_foreign(&agent_in_container, &db_on_host));
+
+        assert!(!is_foreign(&agent_in_container, &agent_in_container));
+
+        assert!(!is_foreign(&[], &db_in_container_from_host));
+    }
+
+    /// The last two are the first word of `vi ora_pmon_TYPO` and of a command
+    /// line that starts with a path. Only the first word of a line reaches
+    /// `capture_sid`, so neither of them may yield a SID.
     #[test]
     fn test_capture_sid_no_match() {
         let re = Regex::new(SID_MASK).expect("Failed to compile regex");
         assert_eq!(capture_sid(&re, "pmon_test"), None);
         assert_eq!(capture_sid(&re, "some_other_process"), None);
+        assert_eq!(capture_sid(&re, "vi"), None);
+        assert_eq!(capture_sid(&re, "/usr/sbin/cron"), None);
     }
 
     fn parts(inst: LocalInstance, processes: Option<&HashSet<String>>) -> Vec<String> {

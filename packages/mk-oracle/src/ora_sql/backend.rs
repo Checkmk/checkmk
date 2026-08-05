@@ -63,19 +63,24 @@ impl OraDbEngine for StdEngine {
         let connection_string = target
             .make_connection_string(instance_name, ConnectionStringType::Tns)
             .context("Target is not defined")?;
+        // An ASM instance is reached with the `asm_*` credentials from the config.
+        let auth = target.connection_auth();
         log::info!(
-            "Connection string: {}, auth type {:?}",
+            "Connection string: {}, asm {}, auth type {:?}",
             connection_string,
-            target.auth.auth_type()
+            target.is_asm(),
+            auth.auth_type
         );
 
-        let mut connector = match target.auth.auth_type() {
+        let mut connector = match &auth.auth_type {
             AuthType::Standard => {
                 // Standard authentication with username and password
-                let username = target.auth.username();
-                let password = target.auth.password().unwrap_or("");
-                log::info!("Using standard authentication with user: {}", username);
-                Connector::new(username, password, &connection_string)
+                log::info!("Using standard authentication with user: {}", auth.username);
+                Connector::new(
+                    &auth.username,
+                    auth.password.as_deref().unwrap_or(""),
+                    &connection_string,
+                )
             }
             AuthType::Os | AuthType::Wallet => {
                 // OS/Wallet authentication - use external auth with empty credentials
@@ -86,7 +91,7 @@ impl OraDbEngine for StdEngine {
             }
         };
 
-        if let Some(role) = target.auth.role() {
+        if let Some(role) = &auth.role {
             log::info!("Using role: {}", role);
             connector.privilege(_to_privilege(role));
         }

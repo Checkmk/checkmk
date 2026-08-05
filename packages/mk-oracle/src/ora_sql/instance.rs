@@ -85,16 +85,6 @@ pub async fn generate_data(
         // we need to set TNS_ADMIN for Oracle client for the case alias is used
         add_tns_admin_to_env(ora_sql.conn());
 
-        // Set up wallet environment (creates sqlnet.ora with wallet location)
-        // Only if tns_admin is NOT explicitly set in config
-        let tns_admin_explicitly_set = ora_sql.conn().tns_admin().is_some();
-        if ora_sql.auth().auth_type() == &AuthType::Wallet && !tns_admin_explicitly_set {
-            if let Err(e) = setup_wallet_environment(None) {
-                log::error!("Failed to setup wallet environment: {}", e);
-                return Err(e).context("Failed to setup wallet environment");
-            }
-        }
-
         // TODO: detect instances
         // TODO: apply to config detected instances
         // TODO: customize instances
@@ -102,6 +92,22 @@ pub async fn generate_data(
 
         let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
         let all = filter_spots(all, ora_sql.discovery());
+
+        // Set up wallet environment (creates sqlnet.ora with wallet location)
+        // Only if tns_admin is NOT explicitly set in config.
+        // The auth type is asked per spot: an ASM instance may use wallet auth
+        // (`asm_type`) while the regular credentials are standard, and vice versa.
+        let tns_admin_explicitly_set = ora_sql.conn().tns_admin().is_some();
+        let uses_wallet = ora_sql.auth().auth_type() == &AuthType::Wallet
+            || all
+                .iter()
+                .any(|spot| spot.target().connection_auth().auth_type == AuthType::Wallet);
+        if uses_wallet && !tns_admin_explicitly_set {
+            if let Err(e) = setup_wallet_environment(None) {
+                log::error!("Failed to setup wallet environment: {}", e);
+                return Err(e).context("Failed to setup wallet environment");
+            }
+        }
 
         let sections = ora_sql
             .product()

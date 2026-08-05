@@ -19,7 +19,10 @@ use crate::types::{
     ServiceType, Sid,
 };
 
-use crate::config::{authentication::Authentication, target::TargetId};
+use crate::config::{
+    authentication::{Authentication, ConnectionAuth},
+    target::TargetId,
+};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -88,6 +91,16 @@ impl Target {
                 .and_then(TargetId::raw_sid)
                 .map(|sid| InstanceName::from(sid).is_asm())
                 .unwrap_or(false)
+    }
+
+    /// Credentials to connect to this target with: an ASM instance is reached
+    /// with the `asm_*` credentials, everything else with the regular ones.
+    pub fn connection_auth(&self) -> ConnectionAuth {
+        if self.is_asm() {
+            self.auth.asm_auth()
+        } else {
+            self.auth.db_auth()
+        }
     }
 }
 
@@ -221,7 +234,7 @@ impl Target {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::authentication::Authentication;
+    use crate::config::authentication::{AuthType, Authentication, Role};
     use crate::config::target::TargetIdBuilder;
     use crate::config::yaml::test_tools::create_yaml;
     use crate::types::HostName;
@@ -254,6 +267,67 @@ authentication:
         )
         .is_asm());
         assert!(!target_with_target_id(TargetIdBuilder::new().build()).is_asm());
+    }
+
+    const ASM_AUTH_YAML: &str = r"
+authentication:
+    username: 'user'
+    password: 'pass'
+    type: 'standard'
+    role: 'sysdba'
+    asm_username: 'asm_user'
+    asm_password: 'asm_pass'
+    asm_role: 'sysasm'
+    asm_type: 'standard'";
+
+    fn target_with_asm_auth(sid: &str) -> Target {
+        Target {
+            host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
+            target_id: TargetIdBuilder::new().sid(Some(sid)).build(),
+            port: Port(1521),
+            auth: Authentication::from_yaml(&create_yaml(ASM_AUTH_YAML))
+                .unwrap()
+                .unwrap(),
+        }
+    }
+
+    #[test]
+    fn test_connection_auth_for_asm_instance() {
+        let target = target_with_asm_auth("+ASM");
+        let auth = target.connection_auth();
+        assert_eq!(auth.username, "asm_user");
+        assert_eq!(auth.password.as_deref(), Some("asm_pass"));
+        assert_eq!(auth.role, Some(Role::SysASM));
+        assert_eq!(auth.auth_type, AuthType::Standard);
+    }
+
+    #[test]
+    fn test_connection_auth_for_db_instance_ignores_asm_fields() {
+        let target = target_with_asm_auth("ORCL");
+        let auth = target.connection_auth();
+        assert_eq!(auth.username, "user");
+        assert_eq!(auth.password.as_deref(), Some("pass"));
+        assert_eq!(auth.role, Some(Role::SysDba));
+        assert_eq!(auth.auth_type, AuthType::Standard);
+    }
+
+    #[test]
+    fn test_connection_auth_without_asm_fields_stays_regular() {
+        // No `asm_*` in the config: an ASM instance uses the regular credentials.
+        let target = Target {
+            host: HostName::from("localhost".to_owned()),
+            timeout: Duration::from_secs(0),
+            target_id: TargetIdBuilder::new().sid(Some("+ASM")).build(),
+            port: Port(1521),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
+        };
+        let auth = target.connection_auth();
+        assert_eq!(auth.username, "user");
+        assert_eq!(auth.password.as_deref(), Some("pass"));
+        assert_eq!(auth.auth_type, AuthType::Standard);
     }
 
     #[test]

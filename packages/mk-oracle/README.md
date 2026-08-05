@@ -166,9 +166,53 @@ authentication:
   password: 'secret' # mandatory for standard auth
   role: 'sysdba' # optional, e.g. sysdba, sysasm
   type: 'standard' # optional, default: "standard", values: standard, wallet
+  asm_username: 'asm_user' # optional, only used for ASM instances
+  asm_password: 'asm_pass' # optional, only used for ASM instances
+  asm_role: 'sysasm' # optional, only used for ASM instances
+  asm_type: 'standard' # optional, only used for ASM instances
 ```
 
 Set `type: wallet` to use Oracle Wallet authentication instead of username/password (see [Oracle Wallet Authentication](#oracle-wallet-authentication) below).
+
+#### ASM Authentication
+
+ASM instances (a SID or instance name starting with `+`, e.g. `+ASM`) are usually
+reached with different credentials than a normal database. The `asm_*` fields
+hold those credentials and replace their regular counterparts whenever the plugin
+connects to an ASM instance; normal database connections ignore them. This
+mirrors `ASMUSER` of the legacy `mk_oracle` plugin.
+
+Each field falls back to its regular counterpart when it is not set:
+
+| Field          | Replaces   | Fallback when unset                                                                     |
+| -------------- | ---------- | --------------------------------------------------------------------------------------- |
+| `asm_username` | `username` | `username`                                                                              |
+| `asm_password` | `password` | `password` (only when `asm_username` is unset, so an ASM user never reuses a DB secret) |
+| `asm_role`     | `role`     | `role`                                                                                  |
+| `asm_type`     | `type`     | derived from `asm_username`/`asm_password`, see below                                   |
+
+When `asm_type` is omitted it is derived: `asm_username: '/'` or an
+`asm_username` without `asm_password` means external authentication (`wallet`),
+an ASM user with a password means `standard`, and without any `asm_username` the
+regular `type` applies.
+
+Set `asm_role` (typically `sysasm`, `sysdba` also works) — an ASM instance has no
+data dictionary reachable from an unprivileged session.
+
+```yaml
+oracle:
+  main:
+    authentication:
+      username: 'checkmk'
+      password: 'secret'
+      role: 'sysdba'
+      asm_username: 'asm_user'
+      asm_password: 'asm_pass'
+      asm_role: 'sysasm'
+    instances:
+      - sid: 'ORCL' # connects as checkmk/secret as sysdba
+      - sid: '+ASM' # connects as asm_user/asm_pass as sysasm
+```
 
 ### Connection
 
@@ -926,7 +970,7 @@ The generated file is a single YAML document consisting of:
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | `DBUSER` (required)                        | Top-level `connection:` (hostname, port) and `authentication:`, plus the first `instances:` entry |
 | `DBUSER_<SID>`                             | An `instances:` entry with per-instance `connection:` and `authentication:`                       |
-| `ASMUSER`                                  | `asm_username`, `asm_password`, `asm_role` under `authentication:`                                |
+| `ASMUSER`                                  | `asm_username`, `asm_password`, `asm_role`, `asm_type` under `authentication:`                    |
 | `REMOTE_INSTANCE_<ID>`                     | An `instances:` entry including `piggyback_host:` (Linux/AIX only)                                |
 | `SYNC_SECTIONS` / `ASYNC_SECTIONS`         | `sections:` entries with `is_async: false` / `true`                                               |
 | `SYNC_ASM_SECTIONS` / `ASYNC_ASM_SECTIONS` | `sections:` entries with `affinity: "asm"` (`"all"` if the section is also a normal section)      |

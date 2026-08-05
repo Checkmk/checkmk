@@ -17,7 +17,10 @@ from cmk.mkp_tool import _mkp as mkp
 from cmk.mkp_tool import (
     create,
     edit,
+    format_file_name,
+    get_classified_manifests,
     get_stored_manifests,
+    id_to_mkp,
     Installer,
     Manifest,
     PackageError,
@@ -28,6 +31,9 @@ from cmk.mkp_tool import (
     PackageVersion,
     PathConfig,
     release,
+    VersionMismatch,
+    VersionTooHigh,
+    VersionTooLow,
 )
 from cmk.mkp_tool._unsorted import (
     _install,
@@ -449,3 +455,211 @@ def test_remove(installer: Installer, path_config: PathConfig, package_store: Pa
         pkg_id = PackageID(name=name, version=installed_ver)
         package_store.remove(pkg_id)
         unlink.assert_called_once()
+
+
+def _mkp_bytes(name: str, version: str = "1.0.0") -> bytes:
+    """Build the smallest MKP that extract_manifest accepts."""
+    manifest = mkp.manifest_template(
+        name=PackageName(name),
+        version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
+        version=PackageVersion(version),
+    )
+    content = manifest.file_content().encode()
+    buffer = BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
+        info = tarfile.TarInfo("info")
+        info.size = len(content)
+        tar.addfile(info, BytesIO(content))
+    return buffer.getvalue()
+
+
+def _package_id(name: str, version: str = "1.0.0") -> PackageID:
+    return PackageID(name=PackageName(name), version=PackageVersion(version))
+
+
+def test_format_file_name() -> None:
+    assert format_file_name(_package_id("cool_package", "1.2.3")) == "cool_package-1.2.3.mkp"
+
+
+class TestVersionMismatch:
+    def test_is_a_package_error(self) -> None:
+        assert isinstance(VersionMismatch("2.4.0", "too bad"), PackageError)
+
+    def test_requirement_is_kept(self) -> None:
+        assert VersionMismatch("2.4.0", "too bad").requirement == "2.4.0"
+
+    def test_subclasses_carry_the_requirement(self) -> None:
+        assert VersionTooLow("2.4.0", "too low").requirement == "2.4.0"
+        assert VersionTooHigh("2.6.0", "too high").requirement == "2.6.0"
+
+    def test_subclasses_are_version_mismatches(self) -> None:
+        assert isinstance(VersionTooLow("2.4.0", "too low"), VersionMismatch)
+        assert isinstance(VersionTooHigh("2.6.0", "too high"), VersionMismatch)
+
+    def test_too_low_and_too_high_are_distinguishable(self) -> None:
+        assert not isinstance(VersionTooLow("2.4.0", "too low"), VersionTooHigh)
+
+
+class TestPackageStore:
+    def test_listing_without_directories(self, package_store: PackageStore) -> None:
+        # the directories do not exist yet - that must not raise
+        assert package_store.list_local_packages() == []
+        assert package_store.list_shipped_packages() == []
+        assert package_store.get_enabled_manifests() == {}
+
+    def test_store_writes_a_local_package(self, package_store: PackageStore) -> None:
+        manifest = package_store.store(_mkp_bytes("cool_package"), lambda p, c: p.write_bytes(c))
+
+        assert str(manifest.name) == "cool_package"
+        assert package_store.list_local_packages() == [
+            package_store.local_packages / "cool_package-1.0.0.mkp"
+        ]
+
+    def test_store_twice_is_an_error(self, package_store: PackageStore) -> None:
+        content = _mkp_bytes("cool_package")
+        package_store.store(content, lambda p, c: p.write_bytes(c))
+
+        with pytest.raises(PackageError, match="exists on the site"):
+            package_store.store(content, lambda p, c: p.write_bytes(c))
+
+    def test_store_twice_with_overwrite(self, package_store: PackageStore) -> None:
+        content = _mkp_bytes("cool_package")
+        package_store.store(content, lambda p, c: p.write_bytes(c))
+
+        package_store.store(content, lambda p, c: p.write_bytes(c), overwrite=True)
+
+    def test_store_refuses_to_shadow_a_shipped_package(self, package_store: PackageStore) -> None:
+        package_store.shipped_packages.mkdir(parents=True)
+        (package_store.shipped_packages / "cool_package-1.0.0.mkp").write_bytes(b"shipped")
+
+        # even with overwrite: a shipped package must never be shadowed
+        with pytest.raises(PackageError, match="exists on the site"):
+            package_store.store(
+                _mkp_bytes("cool_package"), lambda p, c: p.write_bytes(c), overwrite=True
+            )
+
+    def test_read_bytes_of_unknown_package(self, package_store: PackageStore) -> None:
+        with pytest.raises(PackageError, match="No such package: cool_package 1.0.0"):
+            _ = package_store.read_bytes(_package_id("cool_package"))
+
+    def test_read_bytes_finds_shipped_package(self, package_store: PackageStore) -> None:
+        package_store.shipped_packages.mkdir(parents=True)
+        (package_store.shipped_packages / "cool_package-1.0.0.mkp").write_bytes(b"shipped")
+
+        assert package_store.read_bytes(_package_id("cool_package")) == b"shipped"
+
+    def test_read_bytes_prefers_enabled_over_shipped(self, package_store: PackageStore) -> None:
+        for directory, content in (
+            (package_store.shipped_packages, b"shipped"),
+            (package_store.enabled_packages, b"enabled"),
+        ):
+            directory.mkdir(parents=True)
+            (directory / "cool_package-1.0.0.mkp").write_bytes(content)
+
+        assert package_store.read_bytes(_package_id("cool_package")) == b"enabled"
+
+    def test_read_bytes_prefers_local_over_everything(self, package_store: PackageStore) -> None:
+        for directory, content in (
+            (package_store.shipped_packages, b"shipped"),
+            (package_store.enabled_packages, b"enabled"),
+            (package_store.local_packages, b"local"),
+        ):
+            directory.mkdir(parents=True)
+            (directory / "cool_package-1.0.0.mkp").write_bytes(content)
+
+        assert package_store.read_bytes(_package_id("cool_package")) == b"local"
+
+    def test_mark_as_enabled(self, package_store: PackageStore) -> None:
+        content = _mkp_bytes("cool_package")
+        package_store.store(content, lambda p, c: p.write_bytes(c))
+
+        package_store.mark_as_enabled(_package_id("cool_package"))
+
+        enabled = package_store.enabled_packages / "cool_package-1.0.0.mkp"
+        assert enabled.read_bytes() == content
+        # the local copy is kept, so it still syncs to remote sites
+        assert (package_store.local_packages / "cool_package-1.0.0.mkp").exists()
+
+    def test_mark_as_enabled_unknown_package(self, package_store: PackageStore) -> None:
+        with pytest.raises(PackageError, match="No such package"):
+            package_store.mark_as_enabled(_package_id("cool_package"))
+
+    def test_remove_enabled_mark(self, package_store: PackageStore) -> None:
+        package_store.store(_mkp_bytes("cool_package"), lambda p, c: p.write_bytes(c))
+        package_store.mark_as_enabled(_package_id("cool_package"))
+
+        package_store.remove_enabled_mark(_package_id("cool_package"))
+
+        assert not (package_store.enabled_packages / "cool_package-1.0.0.mkp").exists()
+
+    def test_remove_enabled_mark_is_forgiving(self, package_store: PackageStore) -> None:
+        # a messed up state must not crash
+        package_store.remove_enabled_mark(_package_id("cool_package"))
+
+    def test_get_enabled_manifests(self, package_store: PackageStore) -> None:
+        for name in ("package_a", "package_b"):
+            package_store.store(_mkp_bytes(name), lambda p, c: p.write_bytes(c))
+            package_store.mark_as_enabled(_package_id(name))
+
+        enabled = package_store.get_enabled_manifests()
+
+        assert {str(pkg_id.name) for pkg_id in enabled} == {"package_a", "package_b"}
+        assert enabled[_package_id("package_a")].name == PackageName("package_a")
+
+    def test_get_enabled_manifests_ignores_broken_files(self, package_store: PackageStore) -> None:
+        package_store.store(_mkp_bytes("cool_package"), lambda p, c: p.write_bytes(c))
+        package_store.mark_as_enabled(_package_id("cool_package"))
+        (package_store.enabled_packages / "garbage.mkp").write_bytes(b"not an MKP")
+
+        assert list(package_store.get_enabled_manifests()) == [_package_id("cool_package")]
+
+
+class TestClassifiedManifests:
+    def test_enabled_is_installed_plus_inactive(
+        self, installer: Installer, package_store: PackageStore, path_config: PathConfig
+    ) -> None:
+        _create_simple_test_package(installer, PackageName("installed"), path_config, package_store)
+        package_store.store(_mkp_bytes("inactive"), lambda p, c: p.write_bytes(c))
+        package_store.mark_as_enabled(_package_id("inactive"))
+
+        classified = get_classified_manifests(package_store, installer)
+
+        assert [str(m.name) for m in classified.installed] == ["installed"]
+        assert [str(m.name) for m in classified.inactive] == ["inactive"]
+        assert [str(m.name) for m in classified.enabled] == ["installed", "inactive"]
+
+    def test_installed_package_is_not_also_inactive(
+        self, installer: Installer, package_store: PackageStore, path_config: PathConfig
+    ) -> None:
+        manifest = _create_simple_test_package(
+            installer, PackageName("installed"), path_config, package_store
+        )
+        package_store.mark_as_enabled(manifest.id)
+
+        classified = get_classified_manifests(package_store, installer)
+
+        assert classified.inactive == []
+        assert [str(m.name) for m in classified.enabled] == ["installed"]
+
+
+class TestIdToMkp:
+    def test_no_files(self, installer: Installer) -> None:
+        assert id_to_mkp(installer, [], PackagePart.EC_RULE_PACKS) == {}
+
+    def test_maps_stem_to_package_name(self, installer: Installer) -> None:
+        installer.add_installed_manifest(
+            mkp.manifest_template(
+                name=PackageName("cool_package"),
+                version_packaged="3.14.0p15",
+                version_required="3.14.0p1",
+                files={PackagePart.EC_RULE_PACKS: [Path("my_rule_pack.mk")]},
+            )
+        )
+
+        assert id_to_mkp(installer, [Path("my_rule_pack.mk")], PackagePart.EC_RULE_PACKS) == {
+            "my_rule_pack": PackageName("cool_package")
+        }
+
+    def test_unpackaged_file_is_omitted(self, installer: Installer) -> None:
+        assert id_to_mkp(installer, [Path("not_in_a_package.mk")], PackagePart.EC_RULE_PACKS) == {}

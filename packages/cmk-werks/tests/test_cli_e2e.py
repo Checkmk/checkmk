@@ -173,6 +173,19 @@ def test_status_reports_a_missing_secret(tmp_path: Path) -> None:
     assert "$HOME/.config/cmk-werks/secret" in output
 
 
+def test_ids_runs_status(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    # invocations from the days of manual reservation, arguments and all, end up in 'status'
+    returncode, output = call_output("ids", "10", "--no-commit", home=home, cwd=repo_path)
+
+    assert returncode == 1
+    assert "WERK IDS" in output
+
+
 def test_status_reports_an_unreachable_server(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()

@@ -137,24 +137,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_grep.set_defaults(func=main_grep)
 
-    # IDS
-    parser_ids = subparsers.add_parser(
-        "ids",
-        help="Show the number of reserved Werk IDs",
-    )
-    parser_ids.add_argument(
-        "count",
-        nargs="?",
-        type=int,
-        help="ignored, kept for backwards compatibility",
-    )
-    parser_ids.add_argument(
-        "-n",
-        "--no-commit",
-        action="store_true",
-        help="ignored, kept for backwards compatibility",
-    )
-    parser_ids.set_defaults(func=main_show_ids)
+    # IDS (removed)
+    parser_ids = subparsers.add_parser("ids", help="[Removed] Please use 'status' instead")
+    # 'count', '--no-commit' and '--json' are only accepted so that invocations from the
+    # days of manual reservation run 'status' instead of failing with an argparse error
+    parser_ids.add_argument("count", nargs="?", type=int, help=argparse.SUPPRESS)
+    parser_ids.add_argument("-n", "--no-commit", action="store_true", help=argparse.SUPPRESS)
+    parser_ids.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
+    parser_ids.set_defaults(func=main_status)
 
     # LIST
     parser_list = subparsers.add_parser("list", help="List Werks")
@@ -1083,13 +1073,6 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             sys.stdout.write("We don't commit yet. Here is the status:\n")
             sys.stdout.write("Please commit with git commit -C '{commit_id}'\n\n")
             subprocess.run(["git", "status"], check=True)
-
-
-def main_show_ids(_args: argparse.Namespace) -> None:
-    # 'count' and '--no-commit' are ignored; they are kept only so that existing
-    # invocations from the days of manual reservation don't fail.
-    stash = load_stash_from_file(make_paths_object(Path.home()))
-    sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
 
 
 def main_preview(args: argparse.Namespace) -> None:

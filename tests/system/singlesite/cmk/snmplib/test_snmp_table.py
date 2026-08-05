@@ -151,6 +151,7 @@ def test_get_simple_snmp_table_fills_cache(
     ]
 
 
+@pytest.mark.medium_test_chain
 def test_get_simple_snmp_table(site: Site, backend_type_dockerized: SNMPBackendEnum) -> None:
     backend_type = backend_type_dockerized
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, default_config(site, backend_type))

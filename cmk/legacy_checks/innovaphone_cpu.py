@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
+import time
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    StringTable,
+)
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
 def saveint(i: str) -> int:
@@ -26,22 +34,32 @@ def saveint(i: str) -> int:
         return 0
 
 
-def discover_innovaphone_cpu(info):
-    yield None, {}
+def discover_innovaphone_cpu(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_innovaphone_cpu(_no_item, params, info):
-    usage = saveint(info[0][1])
-    return check_cpu_util(usage, params)
+def check_innovaphone_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    usage = saveint(section[0][1])
+    yield from check_cpu_util(
+        util=usage,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
 def parse_innovaphone_cpu(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["innovaphone_cpu"] = LegacyCheckDefinition(
+agent_section_innovaphone_cpu = AgentSection(
     name="innovaphone_cpu",
     parse_function=parse_innovaphone_cpu,
+)
+
+
+check_plugin_innovaphone_cpu = CheckPlugin(
+    name="innovaphone_cpu",
     service_name="CPU utilization",
     discovery_function=discover_innovaphone_cpu,
     check_function=check_innovaphone_cpu,

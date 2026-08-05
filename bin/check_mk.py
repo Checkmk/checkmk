@@ -20,14 +20,15 @@ from typing import Self
 
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user.
-if not os.environ.get("OMD_SITE"):
+try:
+    OMD_ROOT = Path(os.environ["OMD_ROOT"])
+except KeyError:
     sys.stderr.write("Checkmk can be used only as site user.\n")
     sys.exit(1)
 
 import cmk.base.utils
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.utils.paths
 from cmk import trace
 from cmk.base import profiling
 from cmk.base.app import make_app
@@ -67,11 +68,11 @@ cmk.base.utils.register_sigint_handler()
 init_span_processor(
     trace.init_tracing(
         service_namespace=trace.service_namespace_from_config(
-            "", omd_config := get_omd_config(cmk.utils.paths.omd_root)
+            "", omd_config := get_omd_config(OMD_ROOT)
         ),
         service_name="cmk",
         service_instance_id=omd_site(),
-        extra_resource_attributes=trace.resource_attributes_from_config(cmk.utils.paths.omd_root),
+        extra_resource_attributes=trace.resource_attributes_from_config(OMD_ROOT),
     ),
     exporter_from_config(
         exporter_log_level=logging.CRITICAL,
@@ -116,8 +117,8 @@ class CrashReport(ABCCrashReport[BaseDetails]):
 def _generate_crash_report() -> CrashReport:
     """Save a crash report and return the message to print instead of a traceback"""
     return CrashReport.from_exception(
-        crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
-        version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        crash_report_base_path=make_crash_report_base_path(OMD_ROOT),
+        version_info=cmk_version.get_general_version_infos(OMD_ROOT),
     )
 
 
@@ -145,7 +146,7 @@ try:
         sys.stdout.write(modes.help())
         sys.exit(0)
 
-    app = make_app(cmk_version.edition(cmk.utils.paths.omd_root))
+    app = make_app(cmk_version.edition(OMD_ROOT))
 
     done, exit_status = False, 0
     trace_context = trace.extract_context_from_environment(dict(os.environ))

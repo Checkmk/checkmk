@@ -30,11 +30,15 @@ def test_special_agent_multiple_command_lines(site: Site) -> None:
     rule_mk = f"etc/check_mk/conf.d/{host_name}.mk"
 
     def _plugin_files() -> Iterable[AbstractContextManager[Path]]:
+        root = Path(__file__).parent
         for file in (
             "server_side_calls/special_agent.py",
-            "rulesets/special_agent.pylibexec/agent_multicalltest",
+            "rulesets/special_agent.py",
+            "libexec/agent_multicalltest",
         ):
-            yield site.copy_file(f"{_PLUGIN_SRC_FAMILY_DIR}/{file}", f"{_PLUGIN_FAMILY_DIR}/{file}")
+            yield site.copy_file(
+                root / _PLUGIN_SRC_FAMILY_DIR / file, f"{_PLUGIN_FAMILY_DIR}/{file}"
+            )
 
     with ExitStack() as sack:
         for file in _plugin_files():

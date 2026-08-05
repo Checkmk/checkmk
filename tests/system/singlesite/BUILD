@@ -16,6 +16,10 @@ py_library(
         ),
         "//:gpl_repo": [],
     }),
+    data = glob(
+        include = ["**/test_plugins/**"],
+        exclude = ["**/*.py"],
+    ),
     imports = ["../../.."],
     deps = [
         requirement("pytest"),

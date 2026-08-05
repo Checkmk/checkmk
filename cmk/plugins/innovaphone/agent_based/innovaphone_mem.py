@@ -3,17 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
+from typing import NewType, TypedDict
 
-from collections.abc import Mapping
-from typing import Any, NewType
-
-from cmk.agent_based.legacy.conversion import (
-    # Temporary compatibility layer until we migrate the corresponding ruleset.
-    check_levels_legacy_compatible as check_levels,
-)
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -21,6 +15,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 MemoryUsedPercent = NewType("MemoryUsedPercent", int)
 
@@ -37,13 +32,17 @@ def discover_innovaphone_mem(section: MemoryUsedPercent) -> DiscoveryResult:
     yield Service()
 
 
-def check_innovaphone_mem(params: Mapping[str, Any], section: MemoryUsedPercent) -> CheckResult:
+class CheckParams(TypedDict):
+    levels: SimpleLevelsConfigModel[float]
+
+
+def check_innovaphone_mem(params: CheckParams, section: MemoryUsedPercent) -> CheckResult:
     yield from check_levels(
         section,
-        "mem_used_percent",
-        params["levels"],
-        human_readable_func=render.percent,
-        infoname="Current",
+        label="Current",
+        metric_name="mem_used_percent",
+        render_func=render.percent,
+        levels_upper=params["levels"],
     )
 
 
@@ -59,7 +58,5 @@ check_plugin_innovaphone_mem = CheckPlugin(
     discovery_function=discover_innovaphone_mem,
     check_function=check_innovaphone_mem,
     check_ruleset_name="innovaphone_mem",
-    check_default_parameters={
-        "levels": (60.0, 70.0),
-    },
+    check_default_parameters=CheckParams(levels=("fixed", (60.0, 70.0))),
 )

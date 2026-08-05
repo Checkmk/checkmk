@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    InputHint,
+    LevelDirection,
+    LevelsType,
+    migrate_to_float_simple_levels,
+    Percentage,
+    SimpleLevels,
+    SimpleLevelsConfigModel,
+)
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
+
+
+def _parameter_form_innovaphone_mem() -> Dictionary:
+    return Dictionary(
+        elements={
+            "levels": DictElement[SimpleLevelsConfigModel[float]](
+                required=True,
+                parameter_form=SimpleLevels(
+                    title=Title("Levels in percentage of total RAM"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Percentage(),
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=InputHint((60.0, 70.0)),
+                    migrate=migrate_to_float_simple_levels,
+                ),
+            ),
+        },
+    )
+
+
+rule_spec_innovaphone_mem = CheckParameters(
+    name="innovaphone_mem",
+    title=Title("Innovaphone memory usage"),
+    topic=Topic.OPERATING_SYSTEM,
+    parameter_form=_parameter_form_innovaphone_mem,
+    condition=HostCondition(),
+)

@@ -4528,7 +4528,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('innovaphone_mem', [])
 
 checkgroup_parameters['innovaphone_mem'] = [
-{'id': 'a3556f10-b3a7-4722-a073-3c510e708820', 'value': {'levels': None}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'a3556f10-b3a7-4722-a073-3c510e708820', 'value': {'levels': ('no_levels', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['innovaphone_mem']
 
 
@@ -11940,7 +11940,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('innovaphone_mem', [])
 
 static_checks['innovaphone_mem'] = [
-{'id': '1dc8dd02-7fbb-4b54-a7be-ccacbbfaa5f2', 'value': ('innovaphone_mem', None, {'levels': None}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '1dc8dd02-7fbb-4b54-a7be-ccacbbfaa5f2', 'value': ('innovaphone_mem', None, {'levels': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['innovaphone_mem']
 
 

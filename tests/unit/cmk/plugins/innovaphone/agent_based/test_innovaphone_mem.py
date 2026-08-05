@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
-
-from collections.abc import Mapping
-from typing import Any
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.innovaphone.agent_based.innovaphone_mem import (
     check_innovaphone_mem,
+    CheckParams,
     discover_innovaphone_mem,
     MemoryUsedPercent,
     parse_innovaphone_mem,
@@ -45,7 +40,7 @@ def test_discover_innovaphone_mem() -> None:
     "params, section, expected",
     [
         pytest.param(
-            {"levels": (60.0, 70.0)},
+            {"levels": ("fixed", (60.0, 70.0))},
             MemoryUsedPercent(55),
             [
                 Result(state=State.OK, summary="Current: 55.00%"),
@@ -54,7 +49,7 @@ def test_discover_innovaphone_mem() -> None:
             id="ok_below_warn_threshold",
         ),
         pytest.param(
-            {"levels": (60.0, 70.0)},
+            {"levels": ("fixed", (60.0, 70.0))},
             MemoryUsedPercent(65),
             [
                 Result(state=State.WARN, summary="Current: 65.00% (warn/crit at 60.00%/70.00%)"),
@@ -63,7 +58,7 @@ def test_discover_innovaphone_mem() -> None:
             id="warn_above_warn_threshold",
         ),
         pytest.param(
-            {"levels": (60.0, 70.0)},
+            {"levels": ("fixed", (60.0, 70.0))},
             MemoryUsedPercent(85),
             [
                 Result(state=State.CRIT, summary="Current: 85.00% (warn/crit at 60.00%/70.00%)"),
@@ -74,7 +69,7 @@ def test_discover_innovaphone_mem() -> None:
     ],
 )
 def test_check_innovaphone_mem(
-    params: Mapping[str, Any],
+    params: CheckParams,
     section: MemoryUsedPercent,
     expected: list[Result | Metric],
 ) -> None:

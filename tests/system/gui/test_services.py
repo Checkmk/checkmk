@@ -77,23 +77,19 @@ def test_reschedule_active_checks(dashboard_page: MainDashboard, created_host: H
     )
 
 
+# Substrings: the engine renders the graph plug-in's own title, which - unlike the legacy
+# combined renderer - carries neither the unique host/service nor the presentation.
 @pytest.mark.parametrize(
     "service_filter, expected_graphs",
     [
         pytest.param(
             "cpu",
-            [
-                "CPU load average of last minute - {host_name} - CPU load",
-                "CPU utilization (User, system, I/O wait & levels) - {host_name} - CPU utilization",
-            ],
+            ["CPU load", "CPU utilization"],
             id="cpu_service_filter",
         ),
         pytest.param(
             "filesystem",
-            [
-                "Used inodes - {host_name} - sum",
-                "Size and used space - {host_name} - sum",
-            ],
+            ["Used inodes", "Size and used space"],
             id="filesystem_service_filter",
         ),
     ],
@@ -120,10 +116,10 @@ def test_filtered_services_combined_graphs(
     combined_graphs_service_search_page = CombinedGraphsServiceSearch(
         service_search_page.page, navigate_to_page=False
     )
+    expect(combined_graphs_service_search_page.global_time_picker).to_be_visible()
     for graph_title in expected_graphs:
-        formatted_graph_title = graph_title.format(host_name=host_name)
-        logger.info("Check that the '%s' graph is displayed correctly", formatted_graph_title)
-        combined_graphs_service_search_page.check_graph_with_timeranges(formatted_graph_title)
+        logger.info("Check that the '%s' graph is displayed correctly", graph_title)
+        combined_graphs_service_search_page.check_graph(graph_title)
 
 
 def test_no_errors_on_combined_graphs_page(

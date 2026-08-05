@@ -10,6 +10,9 @@ from playwright.sync_api import expect, Locator
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -36,54 +39,27 @@ class CombinedGraphsServiceSearch(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
-    def _graph_with_timeranges_container(self, graph_title: str) -> Locator:
-        return self.main_area.locator(
-            "div[class='graph_with_timeranges']:has(div[class='title'])",
-            has_text=graph_title,
-        )
+    @property
+    def panels(self) -> Locator:
+        return GraphAccessor(self).graph_root(GraphContainment.PAGE_DIRECT)
 
-    def graph(self, graph_title: str) -> Locator:
-        container = self._graph_with_timeranges_container(graph_title)
-        expect(container).to_be_attached()
-        return container.locator("div.graph:not(.preview) >> canvas")
+    @property
+    def global_time_picker(self) -> Locator:
+        return self.main_area.locator(".graphing-global-time-picker")
 
-    def timerange_graph(self, graph_title: str, timerange_name: str) -> Locator:
-        return self._graph_with_timeranges_container(graph_title).locator(
-            f"div[class*='graph']:has-text('{timerange_name}') >> canvas"
-        )
+    def panel(self, graph_title: str) -> GraphPanel:
+        return GraphPanel(self.panels.filter(has_text=graph_title), self.page, self.main_area)
 
     @property
     def broken_graph(self) -> Locator:
         return self.main_area.locator("div[class*='brokengraph']")
 
-    def check_graph_with_timeranges(self, graph_title: str) -> None:
-        graph = self.graph(graph_title)
+    def check_graph(self, graph_title: str) -> None:
+        canvas = self.panel(graph_title).graph.canvas
         try:
-            expect(graph).to_be_attached()
-            graph.scroll_into_view_if_needed()
-            expect(graph).to_be_visible()
+            expect(canvas).to_be_attached()
+            canvas.scroll_into_view_if_needed()
+            expect(canvas).to_be_visible()
         except (AssertionError, PWTimeoutError) as exc:
             exc.add_note(f"Could not find graph: '{graph_title}' on page: '{self.page_title}'!")
             raise exc
-
-        timeranges_list = [
-            "Last 1 h",
-            "Last 4 h",
-            "Last 25 h",
-            "Last 8 d",
-            "Last 35 d",
-            "Last 400 d",
-        ]
-        for timerange in timeranges_list:
-            timerange_graph = self.timerange_graph(graph_title, timerange)
-            try:
-                expect(timerange_graph).to_be_attached()
-                timerange_graph.scroll_into_view_if_needed()
-                expect(timerange_graph).to_be_visible()
-            except (AssertionError, PWTimeoutError) as exc:
-                exc.add_note(
-                    f"Could not find option: '{timerange}' "
-                    f"accompanying the graph: '{graph_title}'\n"
-                    f"on page: '{self.page_title}'!"
-                )
-                raise exc

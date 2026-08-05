@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import override
 
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -34,6 +34,7 @@ from cmk.graphing_engine import (
     Rule,
     ScalarKind,
     ScalarOf,
+    SeriesAttributes,
     ServiceName,
     Stack,
     Sum,
@@ -571,6 +572,7 @@ class _FannedQuantity(QuantityProtocol):
     """A fan-out leaf expanding into one curve per (label, value) pair."""
 
     series: Sequence[tuple[str, float]]
+    series_attributes: Mapping[str, SeriesAttributes] = field(default_factory=dict)
 
     @override
     def kind(self) -> str:
@@ -591,6 +593,7 @@ class _FannedQuantity(QuantityProtocol):
                 value=value,
                 time_series=_time_series(value),
                 label_macros={"$SERIES_ID$": label},
+                series_attributes=self.series_attributes.get(label, {}),
             )
             for label, value in self.series
         ]
@@ -709,3 +712,65 @@ def test_evaluate_graph_pads_an_operation_over_operands_of_different_lengths() -
     )
 
     assert [list(line.curve.time_series.values) for line in result.lines] == [[3.0, 1.0, 1.0]]
+
+
+# --- per-series attributes ----------------------------------------------------------------------
+
+
+def test_evaluate_graph_carries_the_attributes_of_every_fanned_series() -> None:
+    fan = _FannedQuantity(
+        series=[("first", 1.0), ("second", 2.0)],
+        series_attributes={
+            "first": {"resource": {"host.name": "h0"}},
+            "second": {"resource": {"host.name": "h1"}, "scope": {"name": "otel"}},
+        },
+    )
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[Line(curve=_curve(fan, "fan"), inverse=False)],
+    )
+
+    result = _evaluate_graph(graph, _context({}, {}))
+
+    assert [line.curve.series_attributes for line in result.lines] == [
+        {"resource": {"host.name": "h0"}},
+        {"resource": {"host.name": "h1"}, "scope": {"name": "otel"}},
+    ]
+
+
+def test_evaluate_graph_carries_the_attributes_of_an_operation_over_one_series() -> None:
+    # The operation over a fan-out leaf is the curve that gets drawn, so the leaf's series attributes
+    # have to reach it.
+    fan = _FannedQuantity(
+        series=[("h0/svc", 4.0)], series_attributes={"h0/svc": {"resource": {"host.name": "h0"}}}
+    )
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[Line(curve=_curve(Sum([fan]), "sum"), inverse=False)],
+    )
+
+    result = _evaluate_graph(graph, _context({}, {}))
+
+    assert [line.curve.series_attributes for line in result.lines] == [
+        {"resource": {"host.name": "h0"}}
+    ]
+
+
+def test_evaluate_graph_leaves_an_rrd_curve_without_attributes() -> None:
+    metric = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[Line(curve=_curve(metric, "a"), inverse=False)],
+    )
+
+    result = _evaluate_graph(
+        graph, _context({metric: _data(value=1.0)}, {metric: _time_series(1.0)})
+    )
+
+    assert [line.curve.series_attributes for line in result.lines] == [{}]

@@ -22,6 +22,7 @@ from ._perfdata import (
     HostName,
     MetricName,
     PerformanceData,
+    SeriesAttributes,
     ServiceName,
     SiteID,
     TimeSeries,
@@ -59,6 +60,8 @@ class EvaluatedQuantity:
     # Per-series title macros carried by a fan-out leaf's results: substituted into the curve title
     # to tell the fanned curves apart. Empty for a single, non-fanned quantity.
     label_macros: Mapping[str, str] = field(default_factory=dict)
+    # The attributes of the series this quantity was evaluated from, passed on to the curve.
+    series_attributes: SeriesAttributes = field(default_factory=dict)
 
 
 def first_value(results: Sequence[EvaluatedQuantity]) -> float | None:
@@ -137,6 +140,16 @@ def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str,
     return macros
 
 
+def _operand_series_attributes(operands: Sequence[EvaluatedQuantity]) -> SeriesAttributes:
+    # Same as the title macros: the operation is the drawn curve, so it carries on the attributes its
+    # operands' series came with.
+    attributes: dict[str, dict[str, str]] = {}
+    for operand in operands:
+        for kind, of_kind in operand.series_attributes.items():
+            attributes.setdefault(kind, {}).update(of_kind)
+    return attributes
+
+
 def _apply_operator(
     operator: _Operator,
     operands: Sequence[EvaluatedQuantity],
@@ -160,6 +173,7 @@ def _apply_operator(
             ],
         ),
         label_macros=_operand_label_macros(operands),
+        series_attributes=_operand_series_attributes(operands),
     )
 
 

@@ -7,12 +7,12 @@ import colorsys
 import enum
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import assert_never
 
 from ._graph import Bound, Curve, FixedRange, Graph, MinimalRange, Rule, VerticalRange
 from ._options import ConsolidationFunction, TimeRange
-from ._perfdata import MACRO_SERIES_ID, TimeSeries
+from ._perfdata import MACRO_SERIES_ID, SeriesAttributes, TimeSeries
 from ._quantities import EvaluationContext, first_value, QuantityProtocol
 from ._source import fetch_evaluation_context, RRDFetchDataProtocol
 from ._title import evaluate_title
@@ -26,6 +26,9 @@ class EvaluatedCurve:
     value: float | None
     time_series: TimeSeries
     source_id: str | None = None
+    # The attributes of the series the curve was evaluated from, e.g. a metric backend's resource,
+    # scope and data point attributes. Empty for a curve fetched from RRDs.
+    series_attributes: SeriesAttributes = field(default_factory=dict)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -126,7 +129,7 @@ def _resolve_series_title(title: str, label_macros: Mapping[str, str], *, fanned
     return title
 
 
-def _series_attributes(
+def _series_curve_attributes(
     attributes: CurveAttributes, *, index: int, fanned: bool, label_macros: Mapping[str, str]
 ) -> CurveAttributes:
     return CurveAttributes(
@@ -144,12 +147,13 @@ def _evaluate_curve(
     return [
         EvaluatedCurve(
             id=_create_id(curve.quantity, inverse=inverse, seen=seen),
-            attributes=_series_attributes(
+            attributes=_series_curve_attributes(
                 curve.attributes, index=index, fanned=fanned, label_macros=evaluated.label_macros
             ),
             value=evaluated.value,
             time_series=evaluated.time_series,
             source_id=curve.source_id,
+            series_attributes=evaluated.series_attributes,
         )
         for index, evaluated in enumerate(results)
     ]

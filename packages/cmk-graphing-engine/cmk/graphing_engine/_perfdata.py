@@ -73,6 +73,10 @@ def constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeri
 # falls back to appending this macro's value so the curves stay distinguishable.
 MACRO_SERIES_ID: Final = "$SERIES_ID$"
 
+# The attributes of a fetched series, kind -> name -> value. The kinds are the fetch layer's to name
+# (e.g. a metric backend's "resource" / "scope" / "data_point").
+type SeriesAttributes = Mapping[str, Mapping[str, str]]
+
 
 @dataclass(frozen=True, kw_only=True)
 class FetchedData:
@@ -82,3 +86,6 @@ class FetchedData:
     # series). The fetch layer names them (e.g. $HOST_NAME$, MACRO_SERIES_ID); the engine only
     # substitutes whatever it is handed into the curve title.
     label_macros: Mapping[str, str] = field(default_factory=dict)
+    # The attributes the fetched series carries, grouped by kind (empty for a series without any).
+    # The engine does not interpret them: it hands them to the curve so a consumer can show them.
+    series_attributes: SeriesAttributes = field(default_factory=dict)

@@ -1119,32 +1119,56 @@ def _finalize_bandwidth_levels(
     )
 
 
-GeneralPacketLevels = dict[str, dict[str, tuple[float, float] | None]]
+@dataclass(frozen=True)
+class PercentualPacketLevels:
+    levels: tuple[float, float]
+    min_traffic: float | None = None
+
+    def evaluate(self, used_bandwidth_perc: float | None) -> tuple[tuple[float, float] | None, str]:
+        if (
+            self.min_traffic is None
+            or used_bandwidth_perc is None
+            or used_bandwidth_perc >= self.min_traffic
+        ):
+            return self.levels, ""
+        rendered_min_traffic = _render_floating_point(self.min_traffic, precision=2, unit="%")
+        return None, f" (levels not applied, used bandwidth below {rendered_min_traffic})"
+
+
+AbsolutePacketLevels = dict[str, dict[str, tuple[float, float] | None]]
+PercentualPacketLevelsByType = dict[str, dict[str, PercentualPacketLevels | None]]
 
 
 def _get_packet_levels(
     params: Mapping[str, Any],
-) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
+) -> tuple[AbsolutePacketLevels, PercentualPacketLevelsByType]:
     DIRECTIONS = ("in", "out")
     PACKET_TYPES = ("errors", "multicast", "broadcast", "nucasts", "unicast", "discards")
 
-    def none_levels() -> dict[str, dict[str, Any | None]]:
-        return {name: dict.fromkeys(DIRECTIONS) for name in PACKET_TYPES}
-
-    levels_per_type = {
-        "perc": none_levels(),
-        "abs": none_levels(),
+    abs_levels: AbsolutePacketLevels = {name: dict.fromkeys(DIRECTIONS) for name in PACKET_TYPES}
+    perc_levels: PercentualPacketLevelsByType = {
+        name: dict.fromkeys(DIRECTIONS) for name in PACKET_TYPES
     }
 
-    # Second iteration: separate by perc and abs for easier further processing
     for name in PACKET_TYPES:
         for direction in DIRECTIONS:
-            levels = params.get(name, {})
-            level = levels.get(direction) or levels.get("both")
-            if level is not None:
-                levels_per_type[level[0]][name][direction] = level[1]
+            configured = params.get(name, {})
+            match configured.get(direction) or configured.get("both"):
+                case None:
+                    continue
+                case ("abs", levels):
+                    abs_levels[name][direction] = levels
+                case ("perc", levels):
+                    perc_levels[name][direction] = PercentualPacketLevels(levels=levels)
+                case ("perc_min_traffic", (warn, crit, min_traffic)):
+                    perc_levels[name][direction] = PercentualPacketLevels(
+                        levels=(warn, crit),
+                        min_traffic=min_traffic,
+                    )
+                case unknown:
+                    raise ValueError(f"Unknown {name} levels: {unknown!r}")
 
-    return levels_per_type["abs"], levels_per_type["perc"]
+    return abs_levels, perc_levels
 
 
 @dataclass(frozen=True)
@@ -1936,6 +1960,8 @@ def check_single_interface(
         abs_packet_levels=abs_packet_levels,
         perc_packet_levels=perc_packet_levels,
         rates=interface.rates_with_averages,
+        speed_b_in=speed_b_in,
+        speed_b_out=speed_b_out,
     )
 
     if interface.get_rate_errors:
@@ -2307,13 +2333,17 @@ def _sum_optional_floats(*vs: float | None) -> float | None:
 
 def _output_packet_rates(
     *,
-    abs_packet_levels: GeneralPacketLevels,
-    perc_packet_levels: GeneralPacketLevels,
+    abs_packet_levels: AbsolutePacketLevels,
+    perc_packet_levels: PercentualPacketLevelsByType,
     rates: RatesWithAverages,
+    speed_b_in: float | None,
+    speed_b_out: float | None,
 ) -> CheckResult:
-    for direction, mrate, brate, urate, nurate, discrate, errorrate in [
+    for direction, traffic, speed, mrate, brate, urate, nurate, discrate, errorrate in [
         (
             "in",
+            rates.in_octets,
+            speed_b_in,
             rates.in_mcast,
             rates.in_bcast,
             rates.in_ucast,
@@ -2323,6 +2353,8 @@ def _output_packet_rates(
         ),
         (
             "out",
+            rates.out_octets,
+            speed_b_out,
             rates.out_mcast,
             rates.out_bcast,
             rates.out_ucast,
@@ -2331,6 +2363,7 @@ def _output_packet_rates(
             rates.out_err,
         ),
     ]:
+        used_bandwidth_perc = _used_bandwidth_perc(traffic, speed)
         all_pacrate = _sum_optional_floats(
             urate.rate if urate else None,
             nurate.rate if nurate else None,
@@ -2408,34 +2441,28 @@ def _output_packet_rates(
                 display_name=display_name,
                 metric_name=metric_name,
                 reference_rate=reference_rate,
+                used_bandwidth_perc=used_bandwidth_perc,
             )
+
+
+def _used_bandwidth_perc(traffic: RateWithAverage | None, speed: float | None) -> float | None:
+    if traffic is None or not speed:
+        return None
+    filtered_traffic = traffic.average.value if traffic.average else traffic.rate
+    return 100.0 * filtered_traffic / speed
 
 
 def _check_single_packet_rate(
     *,
     packets: RateWithAverage,
     direction: str,
-    abs_levels: Any,
-    perc_levels: Any,
+    abs_levels: tuple[float, float] | None,
+    perc_levels: PercentualPacketLevels | None,
     display_name: str,
     metric_name: str,
     reference_rate: float | None,
+    used_bandwidth_perc: float | None,
 ) -> CheckResult:
-    # Calculate the metric with actual levels, no matter if they
-    # come from perc_- or abs_levels
-    if perc_levels is not None:
-        if reference_rate is None:
-            return
-        if reference_rate > 0:
-            merged_levels: tuple[float, float] | None = (
-                perc_levels[0] / 100.0 * reference_rate,
-                perc_levels[1] / 100.0 * reference_rate,
-            )
-        else:
-            merged_levels = None
-    else:
-        merged_levels = abs_levels
-
     # Further calculation now precedes with average value,
     # if requested.
     infotxt = f"{display_name.title()} {direction}"
@@ -2445,21 +2472,7 @@ def _check_single_packet_rate(
     else:
         rate_check = packets.rate
 
-    if perc_levels is not None:
-        if reference_rate is None:
-            return
-        # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
-        # but it yields the best information for the "no packets" case in the check output.
-        perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate
-        (result,) = check_levels_v1(
-            perc_value,
-            levels_upper=perc_levels,
-            render_func=partial(_render_floating_point, precision=3, unit="%"),
-            label=infotxt,
-            notice_only=True,
-        )
-        yield result
-    else:
+    if perc_levels is None:
         (result,) = check_levels_v1(
             rate_check,
             levels_upper=abs_levels,
@@ -2467,7 +2480,31 @@ def _check_single_packet_rate(
             label=infotxt,
             notice_only=True,
         )
-        yield result
+        metric_levels = abs_levels
+    else:
+        if reference_rate is None:
+            return
+        active_levels, note = perc_levels.evaluate(used_bandwidth_perc)
+        # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
+        # but it yields the best information for the "no packets" case in the check output.
+        perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate
+        (result,) = check_levels_v1(
+            perc_value,
+            levels_upper=active_levels,
+            render_func=partial(_render_floating_point, precision=3, unit=f"%{note}"),
+            label=infotxt,
+            notice_only=True,
+        )
+        metric_levels = (
+            (
+                active_levels[0] / 100.0 * reference_rate,
+                active_levels[1] / 100.0 * reference_rate,
+            )
+            if active_levels and reference_rate > 0
+            else None
+        )
+
+    yield result
 
     # output metric after result. this makes it easier to analyze the check output,
     # as this is the "normal" order when yielding from check_levels_fixed.
@@ -2476,7 +2513,7 @@ def _check_single_packet_rate(
     yield Metric(
         f"if_{direction}_{metric_name}",
         packets.rate,
-        levels=merged_levels,
+        levels=metric_levels,
     )
 
 

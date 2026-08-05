@@ -1741,6 +1741,225 @@ def test_check_single_interface_packet_levels() -> None:
     ]
 
 
+def _interface_with_multicast_rates(
+    *,
+    speed: int,
+    in_octets: float,
+    out_octets: float = 0.0,
+) -> interfaces.InterfaceWithRatesAndAverages:
+    return interfaces.InterfaceWithRatesAndAverages(
+        interfaces.Attributes(
+            index="1",
+            descr="lo",
+            alias="lo",
+            type="24",
+            speed=speed,
+            oper_status="1",
+        ),
+        interfaces.RatesWithAverages(
+            in_octets=interfaces.RateWithAverage(in_octets, None),
+            in_ucast=interfaces.RateWithAverage(180, None),
+            in_mcast=interfaces.RateWithAverage(20, None),
+            in_nucast=interfaces.RateWithAverage(20, None),
+            out_octets=interfaces.RateWithAverage(out_octets, None),
+            out_ucast=interfaces.RateWithAverage(180, None),
+            out_mcast=interfaces.RateWithAverage(20, None),
+            out_nucast=interfaces.RateWithAverage(20, None),
+        ),
+        get_rate_errors=[],
+    )
+
+
+def _multicast_entries(output: CheckResults, direction: str) -> CheckResults:
+    return [
+        entry
+        for entry in output
+        if (isinstance(entry, Metric) and entry.name == f"{direction}mcast")
+        or (isinstance(entry, Result) and entry.details.startswith(f"Multicast {direction}"))
+    ]
+
+
+ONE_GBIT = 1000000000
+ONE_GBIT_IN_BYTES_PER_SEC = ONE_GBIT / 8
+
+MULTICAST_PERC_LEVELS = (5.0, 8.0)
+MULTICAST_MIN_TRAFFIC = 5.0
+MULTICAST_IN_CRIT = Result(state=State.CRIT, summary="Multicast in: 10% (warn/crit at 5%/8%)")
+MULTICAST_LEVELS_ON_METRIC = (10.0, 16.0)
+
+
+@pytest.mark.parametrize(
+    "min_traffic, used_bandwidth_perc, expected",
+    [
+        pytest.param(None, None, (MULTICAST_PERC_LEVELS, ""), id="no minimum traffic configured"),
+        pytest.param(None, 2.5, (MULTICAST_PERC_LEVELS, ""), id="no minimum traffic, low traffic"),
+        pytest.param(5.0, 10.0, (MULTICAST_PERC_LEVELS, ""), id="minimum traffic exceeded"),
+        pytest.param(5.0, 5.0, (MULTICAST_PERC_LEVELS, ""), id="minimum traffic exactly reached"),
+        pytest.param(
+            5.0,
+            2.5,
+            (None, " (levels not applied, used bandwidth below 5%)"),
+            id="minimum traffic not reached",
+        ),
+        pytest.param(5.0, None, (MULTICAST_PERC_LEVELS, ""), id="used bandwidth unknown"),
+        pytest.param(0.0, 0.0, (MULTICAST_PERC_LEVELS, ""), id="minimum traffic of zero"),
+    ],
+)
+def test_percentual_packet_levels_evaluate(
+    min_traffic: float | None,
+    used_bandwidth_perc: float | None,
+    expected: tuple[tuple[float, float] | None, str],
+) -> None:
+    levels = interfaces.PercentualPacketLevels(
+        levels=MULTICAST_PERC_LEVELS,
+        min_traffic=min_traffic,
+    )
+    assert levels.evaluate(used_bandwidth_perc) == expected
+
+
+@pytest.mark.parametrize(
+    "configured",
+    [
+        pytest.param(("nonsense", (5.0, 8.0)), id="unknown levels type"),
+        pytest.param((5.0, 8.0), id="levels without a type"),
+        pytest.param(("perc_min_traffic", (5.0, 8.0)), id="minimum traffic missing"),
+    ],
+)
+def test_check_single_interface_rejects_unknown_packet_levels(configured: object) -> None:
+    with pytest.raises(ValueError, match="Unknown multicast levels"):
+        list(
+            interfaces.check_single_interface(
+                "1",
+                {"multicast": {"in": configured}},
+                _interface_with_multicast_rates(speed=ONE_GBIT, in_octets=0.0),
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "speed, in_octets, expected_result, expected_levels",
+    [
+        pytest.param(
+            ONE_GBIT,
+            0.1 * ONE_GBIT_IN_BYTES_PER_SEC,
+            MULTICAST_IN_CRIT,
+            MULTICAST_LEVELS_ON_METRIC,
+            id="minimum traffic exceeded: levels applied",
+        ),
+        pytest.param(
+            ONE_GBIT,
+            0.05 * ONE_GBIT_IN_BYTES_PER_SEC,
+            MULTICAST_IN_CRIT,
+            MULTICAST_LEVELS_ON_METRIC,
+            id="minimum traffic exactly reached: levels applied",
+        ),
+        pytest.param(
+            ONE_GBIT,
+            0.025 * ONE_GBIT_IN_BYTES_PER_SEC,
+            Result(
+                state=State.OK,
+                notice="Multicast in: 10% (levels not applied, used bandwidth below 5%)",
+            ),
+            None,
+            id="minimum traffic not reached: levels not applied",
+        ),
+        pytest.param(
+            0,
+            0.025 * ONE_GBIT_IN_BYTES_PER_SEC,
+            MULTICAST_IN_CRIT,
+            MULTICAST_LEVELS_ON_METRIC,
+            id="unknown operating speed: levels applied",
+        ),
+    ],
+)
+def test_check_single_interface_perc_min_traffic(
+    speed: int,
+    in_octets: float,
+    expected_result: Result,
+    expected_levels: tuple[float, float] | None,
+) -> None:
+    output = list(
+        interfaces.check_single_interface(
+            "1",
+            {
+                "multicast": {
+                    "in": ("perc_min_traffic", (*MULTICAST_PERC_LEVELS, MULTICAST_MIN_TRAFFIC))
+                }
+            },
+            _interface_with_multicast_rates(speed=speed, in_octets=in_octets),
+        )
+    )
+    assert _multicast_entries(output, "in") == [
+        expected_result,
+        Metric("inmcast", 20.0, levels=expected_levels),
+    ]
+
+
+MULTICAST_OUT_SUPPRESSED = Result(
+    state=State.OK,
+    notice="Multicast out: 10% (levels not applied, used bandwidth below 5%)",
+)
+
+
+def _assert_only_out_levels_suppressed(output: CheckResults) -> None:
+    assert _multicast_entries(output, "in") == [
+        MULTICAST_IN_CRIT,
+        Metric("inmcast", 20.0, levels=MULTICAST_LEVELS_ON_METRIC),
+    ]
+    assert _multicast_entries(output, "out") == [
+        MULTICAST_OUT_SUPPRESSED,
+        Metric("outmcast", 20.0, levels=None),
+    ]
+
+
+def test_check_single_interface_perc_min_traffic_per_direction_traffic() -> None:
+    _assert_only_out_levels_suppressed(
+        list(
+            interfaces.check_single_interface(
+                "1",
+                {
+                    "multicast": {
+                        "both": (
+                            "perc_min_traffic",
+                            (*MULTICAST_PERC_LEVELS, MULTICAST_MIN_TRAFFIC),
+                        )
+                    }
+                },
+                _interface_with_multicast_rates(
+                    speed=ONE_GBIT,
+                    in_octets=0.1 * ONE_GBIT_IN_BYTES_PER_SEC,
+                    out_octets=0.025 * ONE_GBIT_IN_BYTES_PER_SEC,
+                ),
+            )
+        )
+    )
+
+
+def test_check_single_interface_perc_min_traffic_per_direction_speed() -> None:
+    _assert_only_out_levels_suppressed(
+        list(
+            interfaces.check_single_interface(
+                "1",
+                {
+                    "assumed_speed_in": ONE_GBIT,
+                    "assumed_speed_out": 4 * ONE_GBIT,
+                    "multicast": {
+                        "both": (
+                            "perc_min_traffic",
+                            (*MULTICAST_PERC_LEVELS, MULTICAST_MIN_TRAFFIC),
+                        )
+                    },
+                },
+                _interface_with_multicast_rates(
+                    speed=ONE_GBIT,
+                    in_octets=0.1 * ONE_GBIT_IN_BYTES_PER_SEC,
+                    out_octets=0.1 * ONE_GBIT_IN_BYTES_PER_SEC,
+                ),
+            )
+        )
+    )
+
+
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces(

@@ -612,6 +612,40 @@ def _vs_packet_levels(
                 ),
             ),
             (
+                "perc_min_traffic",
+                _("Percentual levels, if minimum traffic reached") + percent_detail,
+                Tuple(
+                    orientation="float",
+                    show_titles=False,
+                    elements=[
+                        Percentage(
+                            label=_("Warning at"),
+                            default_value=percent_levels[0],
+                        ),
+                        Percentage(
+                            label=_("Critical at"),
+                            default_value=percent_levels[1],
+                        ),
+                        Percentage(
+                            label=_("Minimum traffic"),
+                            help=_(
+                                "The levels are only applied if the used bandwidth, in relation "
+                                "to the operating speed of the interface, reaches at least this "
+                                "value. On interfaces with little traffic, a few packets can "
+                                "already account for a large share of the overall traffic, which "
+                                "makes percentual levels fire even though the absolute traffic "
+                                "volume is negligible. If the used bandwidth cannot be "
+                                "determined, because the operating speed of the interface is "
+                                "unknown or no traffic counters are available, the levels are "
+                                "always applied."
+                            ),
+                            maxvalue=100.0,
+                            default_value=5.0,
+                        ),
+                    ],
+                ),
+            ),
+            (
                 "abs",
                 _("Absolute levels") + abs_detail,
                 Tuple(

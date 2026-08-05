@@ -24,7 +24,8 @@ def Age(
         return int(value)
 
     def int_to_float(value: object) -> float:
-        assert isinstance(value, int)
+        if not isinstance(value, int):
+            raise ValueError(f"Expected an integer, got {value!r} of type {type(value).__name__}")
         return float(value)
 
     if displayed_magnitudes is None:
@@ -36,6 +37,8 @@ def Age(
         ]
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
+        title=title,
+        help_text=help_text,
         wrapped_form_spec=TimeSpan(
             title=title,
             help_text=help_text,

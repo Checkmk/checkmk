@@ -107,6 +107,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     piggyback_max_cachefile_age: int
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
+    telemetry_custom_service: Sequence[RuleSpec[Mapping[str, object]]]
     cmc_real_time_checks: RealTimeChecks | None
     snmp_check_interval: list[
         RuleSpec[

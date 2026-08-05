@@ -120,6 +120,7 @@ class SourceBuilder:
                 omd_root=self.omd_root,
                 metrics_association=self._metrics_association,
                 check_mk_check_interval=self.check_mk_check_interval,
+                telemetry_custom_service=source_config.telemetry_custom_service,
             )
         )
 

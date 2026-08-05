@@ -128,7 +128,7 @@ def perform_load_plugins(edition: Edition) -> None:
     main_modules.register(edition)
 
     if errors := main_modules.get_failed_plugins():
-        raise Exception(f"The following errors occured during plug-in loading: {errors}")
+        raise Exception(f"The following errors occurred during plug-in loading: {errors}")
 
 
 @contextmanager

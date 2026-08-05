@@ -43,10 +43,40 @@ class TestPackageVersion:
         # this is not correct, but we don't care:
         assert PackageVersion("v2").sort_key > PackageVersion("v10").sort_key
 
-    @pytest.mark.parametrize("raw_str", ["1/2/3"])
+    @pytest.mark.parametrize("raw_str", ["1/2/3", "/", "1.2.3/"])
     def test_invalid_version(self, raw_str: str) -> None:
-        with pytest.raises(ValueError, match=raw_str):
-            _ = PackageName(raw_str)
+        with pytest.raises(ValueError, match="must not contain slashes"):
+            _ = PackageVersion(raw_str)
+
+    @pytest.mark.parametrize(
+        "raw_str",
+        [
+            "1.2.3",
+            "0.0.0",
+            "1.2.3-alpha",
+            "1.2.3-alpha.1",
+            "1.2.3+build.42",
+            "1.2.3-beta.2+x64",
+        ],
+    )
+    def test_parse_semver(self, raw_str: str) -> None:
+        assert PackageVersion.parse_semver(raw_str) == raw_str
+
+    @pytest.mark.parametrize(
+        "raw_str",
+        [
+            "",
+            "1",
+            "1.2",
+            "1.2.3.4",
+            "01.2.3",
+            "v1.2.3",
+            "1.2.3-",
+        ],
+    )
+    def test_parse_semver_invalid(self, raw_str: str) -> None:
+        with pytest.raises(ValueError, match="Not a valid semantic versioning string"):
+            _ = PackageVersion.parse_semver(raw_str)
 
 
 @pytest.mark.parametrize("raw_str", ["", "foo;bar"])

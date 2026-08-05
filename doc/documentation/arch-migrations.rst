@@ -203,7 +203,7 @@ Integration, composition and GUI end-to-end tests as well as parts of the OMD pa
 Centralized ``bin/BUILD`` to self-contained CLI entry points
 ============================================================
 
-:Phase: starting
+:Phase: in progress
 :Owner: Moritz Kiemer.
 :Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``
 :New: ``bin/`` in the repo does not exist. Each package declares its shipped own entry points via the ``entry_points`` argument to the ``py_wheel`` rule.

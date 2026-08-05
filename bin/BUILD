@@ -3,6 +3,12 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink"
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 
+#
+# Don't add new stuff to this file!
+#
+# See doc/documentation/arch-migrations.rst
+#
+
 cc_binary(
     name = "mkevent",
     srcs = ["mkevent.cc"],

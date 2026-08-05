@@ -1,4 +1,9 @@
 
+#
+# Don't add new stuff to this file!
+#
+# See doc/documentation/arch-migrations.rst
+#
 
 per-file check_mk=file:/component_owners/command_line_cmk/OWNERS_DEFINITION
 per-file check_mk=set noparent

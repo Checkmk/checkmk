@@ -15,7 +15,7 @@ py_library(
         "//cmk/base:base-app",
         "//cmk/base:checkers",
         "//cmk/base:parent-scan",
-        "//cmk/base:utils",
+        "//cmk/base:profiling",
         "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/base/core",

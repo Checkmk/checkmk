@@ -60,9 +60,8 @@ from cmk.base.automations.automations import Automation, load_config, load_plugi
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
-from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, raise_mkterminate_on_sigint
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
@@ -373,7 +372,7 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
         )
 
     if keepalive := not community_edition and "keepalive" in options:
-        register_sigint_handler()
+        raise_mkterminate_on_sigint()
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(

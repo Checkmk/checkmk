@@ -2,12 +2,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
+# TODO: looks like this should go to cmk-profiling.
 py_library(
-    name = "utils",
-    srcs = [
-        "profiling.py",
-        "utils.py",
-    ],
+    name = "profiling",
+    srcs = ["profiling.py"],
     imports = ["../.."],
     visibility = [
         "//cmk:__pkg__",
@@ -15,7 +13,6 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-profiling:backend",
     ],
 )
@@ -156,7 +153,7 @@ py_library(
     deps = [
         ":base-app",
         ":events",
-        ":utils",
+        ":profiling",
         "//cmk/automations",
         "//cmk/base/automations",
         "//cmk/base/config",
@@ -323,7 +320,6 @@ py_library(
         ":localize",
         ":notify",
         ":parent-scan",
-        ":utils",
         "//cmk/base/api",
         "//cmk/base/automation_helper:automation-helper",
         "//cmk/base/automations",

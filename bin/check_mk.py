@@ -27,7 +27,6 @@ except KeyError:
     sys.stderr.write("Checkmk can be used only as site user.\n")
     sys.exit(1)
 
-import cmk.base.utils
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk import trace
@@ -44,6 +43,7 @@ from cmk.ccc.exceptions import (
     MKBailOut,
     MKGeneralException,
     MKTerminate,
+    raise_mkterminate_on_sigint,
 )
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.crash import (
@@ -110,7 +110,7 @@ def main() -> int:
     root_logger.addHandler(handler)
     logger = root_logger.getChild("base")
 
-    cmk.base.utils.register_sigint_handler()
+    raise_mkterminate_on_sigint()
 
     init_span_processor(
         trace.init_tracing(

@@ -36,7 +36,7 @@ py_library(
         "//cmk/base:base-app",
         "//cmk/base:checkers",
         "//cmk/base:dump-host",
-        "//cmk/base:utils",
+        "//cmk/base:profiling",
         "//cmk/base/automations",
         "//cmk/base/config",
         "//cmk/base/configlib",

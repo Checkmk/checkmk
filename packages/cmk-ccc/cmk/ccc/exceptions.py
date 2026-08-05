@@ -5,6 +5,8 @@
 """User-defined exceptions and error handling related constant."""
 
 import enum
+import signal
+from typing import NoReturn
 
 __all__ = [
     "MKBailOut",
@@ -42,7 +44,13 @@ class MKGeneralException(Exception):
 # nor an error message should be done. The program is stopped with
 # exit code 0.
 class MKTerminate(MKException):
-    pass
+    @classmethod
+    def raise_from_signal(cls, _signum: object, _frame: object) -> NoReturn:
+        raise cls
+
+
+def raise_mkterminate_on_sigint() -> None:
+    signal.signal(signal.SIGINT, MKTerminate.raise_from_signal)
 
 
 # This is raised to print an error message and then end the program.

@@ -56,30 +56,6 @@ from cmk.trace.export import (
     init_span_processor,
 )
 
-root_logger = logging.getLogger("cmk")
-root_logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stderr)
-handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-root_logger.addHandler(handler)
-
-cmk.base.utils.register_sigint_handler()
-
-
-init_span_processor(
-    trace.init_tracing(
-        service_namespace=trace.service_namespace_from_config(
-            "", omd_config := get_omd_config(OMD_ROOT)
-        ),
-        service_name="cmk",
-        service_instance_id=omd_site(),
-        extra_resource_attributes=trace.resource_attributes_from_config(OMD_ROOT),
-    ),
-    exporter_from_config(
-        exporter_log_level=logging.CRITICAL,
-        config=trace.trace_send_config(omd_config),
-    ),
-)
-
 
 class CrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
@@ -120,6 +96,31 @@ def _generate_crash_report() -> CrashReport:
         crash_report_base_path=make_crash_report_base_path(OMD_ROOT),
         version_info=cmk_version.get_general_version_infos(OMD_ROOT),
     )
+
+
+root_logger = logging.getLogger("cmk")
+root_logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+root_logger.addHandler(handler)
+
+cmk.base.utils.register_sigint_handler()
+
+
+init_span_processor(
+    trace.init_tracing(
+        service_namespace=trace.service_namespace_from_config(
+            "", omd_config := get_omd_config(OMD_ROOT)
+        ),
+        service_name="cmk",
+        service_instance_id=omd_site(),
+        extra_resource_attributes=trace.resource_attributes_from_config(OMD_ROOT),
+    ),
+    exporter_from_config(
+        exporter_log_level=logging.CRITICAL,
+        config=trace.trace_send_config(omd_config),
+    ),
+)
 
 
 modes = Modes(plugins=discover_modes(), general_options=general_options())

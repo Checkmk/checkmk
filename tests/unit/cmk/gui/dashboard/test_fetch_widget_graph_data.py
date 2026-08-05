@@ -25,7 +25,7 @@ from cmk.gui.dashboard.token_util import InvalidWidgetError
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig
 from cmk.gui.graphing._engine_discovery import BuiltGraph, DiscoveredGraphs
 from cmk.gui.graphing._engine_dispatch import EvaluatedGraphs
-from cmk.gui.graphing._engine_rrd import FetchDiagnostics
+from cmk.gui.graphing._engine_source import FetchDiagnostics
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi.models import ApiTimeRange
 from cmk.gui.logged_in import user

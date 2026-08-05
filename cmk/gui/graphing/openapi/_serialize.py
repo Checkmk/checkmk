@@ -22,7 +22,7 @@ from cmk.graphing_engine import (
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 
-from .._engine_rrd import FetchDiagnostics
+from .._engine_source import FetchDiagnostics
 from .models import (
     ApiConsolidation,
     ApiHorizontalLine,

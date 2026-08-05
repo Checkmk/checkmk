@@ -27,11 +27,10 @@ from cmk.graphing_engine import (
 from cmk.gui.config import Config
 from cmk.gui.graphing._engine_discovery import BuiltGraph
 from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
-from cmk.gui.graphing._engine_rrd import (
+from cmk.gui.graphing._engine_source import (
     EngineRRDFetchData,
     EngineRRDFetchMetricNames,
     HOST_PSEUDO_SERVICE,
-    parse_performance_data,
     PerformanceDataRow,
 )
 from cmk.gui.graphing._engine_template_graphs import (
@@ -54,14 +53,6 @@ _SERVICE_ROW = {
     "metrics": ["x"],
     "check_command": "check_mk-foo",
 }
-
-
-def test_parse_performance_data_merges_rrd_only_metrics() -> None:
-    # Legacy reads the livestatus "metrics" column too, so a metric present in RRD but absent from
-    # the live perf_data string still shows up (as a synthetic value=1 entry, deduplicated).
-    parsed = parse_performance_data("live=5", "check_mk-foo", ["live", "rrd_only"], debug=False)
-    by_name = {name: value.value for name, value in parsed.values.items()}
-    assert by_name == {"live": 5.0, "rrd_only": 1.0}
 
 
 def test_fetch_metric_names_of_a_host_reads_the_hosts_table(

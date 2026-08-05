@@ -24,7 +24,7 @@ from ._engine_codec import (
     GraphCodec,
     time_range_of,
 )
-from ._engine_rrd import FetchDiagnostics
+from ._engine_source import FetchDiagnostics
 from ._from_api import GraphFromAPI
 
 

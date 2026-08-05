@@ -15,7 +15,7 @@ from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import _engine_template_graphs as template_graphs_module
 from cmk.gui.graphing._engine_discovery import BuiltGraph
-from cmk.gui.graphing._engine_rrd import EngineRRDFetchMetricNames
+from cmk.gui.graphing._engine_source import EngineRRDFetchMetricNames
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.livestatus_client import MKLivestatusSocketError
 from tests.testlib.rest_api_client import ClientRegistry

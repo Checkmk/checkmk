@@ -13,7 +13,7 @@ from cmk.gui.utils.html import HTML
 from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 
 from . import _engine_plugins as engine_plugins
-from ._engine_rrd import EngineRRDFetchMetricNames
+from ._engine_source import EngineRRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._frontend import _DEFAULT_INTERACTION, to_cmk_time_series_graph
 from ._graph_display_config import HTML_SIZE_PER_EX

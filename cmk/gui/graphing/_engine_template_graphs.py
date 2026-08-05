@@ -37,7 +37,7 @@ from ._engine_dispatch import (
     legacy_graph_id,
 )
 from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
-from ._engine_rrd import EngineRRDFetchData, EngineRRDFetchMetricNames
+from ._engine_source import EngineRRDFetchData, EngineRRDFetchMetricNames
 from ._from_api import GraphFromAPI
 
 TEMPLATE_KIND: Final = "template"

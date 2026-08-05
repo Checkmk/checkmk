@@ -430,6 +430,7 @@ watch(
       @mouseleave="clearHoverAfterDelay"
       @mousedown="onPlotMouseDown"
       @keydown="onPlotKeydown"
+      @contextmenu.prevent
     />
     <OverlayLayer
       :hover-state="hoverState"

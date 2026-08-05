@@ -49,6 +49,7 @@ void main() {
                     .bazelversion \
                     defines.make \
                     omd/strip_binaries \
+                    omd/strip_binaries.sh \
                     omd/distros/*.mk \
                     package_versions.bzl \
                 buildscripts/infrastructure/build-nodes/scripts

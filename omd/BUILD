@@ -18,6 +18,12 @@ exports_files([
     "dev-requirements.in",
 ])
 
+sh_binary(
+    name = "strip_binaries",
+    srcs = ["strip_binaries.sh"],
+    visibility = ["//visibility:public"],
+)
+
 pip_compile(
     name = "requirements_lock",
     requirements_in = ":requirements.txt",

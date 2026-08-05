@@ -54,14 +54,12 @@ from cmk.trace.export import (
     exporter_from_config,
     init_span_processor,
 )
-from cmk.utils.log import console
 
 root_logger = logging.getLogger("cmk")
 root_logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
 root_logger.addHandler(handler)
-logger = root_logger.getChild("base")
 
 cmk.base.utils.register_sigint_handler()
 
@@ -128,8 +126,8 @@ modes = Modes(plugins=discover_modes(), general_options=general_options())
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
 except getopt.GetoptError as err:
-    console.error(f"ERROR: {err}\n", file=sys.stderr)
-    sys.stdout.write(modes.help())
+    prog = sys.argv[0].split("/")[-1]
+    sys.stdout.write(f"ERROR: {err} (see `{prog} --help` for valid options)\n")
     sys.exit(1)
 
 # First load the general modifying options

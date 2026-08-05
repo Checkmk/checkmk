@@ -12,6 +12,7 @@ from cmk.graphing_engine import (
     EvaluatedCurve,
     EvaluatedGraph,
     IECNotation,
+    SeriesAttributes,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
@@ -26,6 +27,7 @@ from .models import (
     ApiConsolidation,
     ApiHorizontalLine,
     ApiMetric,
+    ApiMetricAttribute,
     ApiMetricMetadata,
     ApiMetricRender,
     ApiPrecision,
@@ -104,6 +106,16 @@ def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine
     ]
 
 
+def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAttribute]:
+    # Flattened into one entry per attribute so the order the response carries is stable: the kinds
+    # in the order the fetch layer grouped them, each kind's attributes sorted by name.
+    return [
+        ApiMetricAttribute(kind=kind, name=name, value=value)
+        for kind, of_kind in attributes.items()
+        for name, value in sorted(of_kind.items())
+    ]
+
+
 def curve_to_api_metric(
     curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool
 ) -> ApiMetric:
@@ -113,6 +125,7 @@ def curve_to_api_metric(
             title=curve.attributes.title,
             unit=unit_to_api_unit_format(curve.attributes.unit),
             color=curve.attributes.color,
+            attributes=_series_attributes_to_api(curve.series_attributes),
         ),
         render=ApiMetricRender(stack=stack, inverse=inverse, hidden=hidden),
         data_points=list(curve.time_series.values),

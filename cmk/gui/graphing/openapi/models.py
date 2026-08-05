@@ -54,6 +54,17 @@ class ApiTimeRange:
 
 
 @api_model
+class ApiMetricAttribute:
+    kind: str = api_field(
+        description="The kind of source the attribute describes, e.g. the resource the metric was "
+        "collected from, the scope that collected it or the data point itself.",
+        example="resource",
+    )
+    name: str = api_field(description="The attribute name.", example="service.name")
+    value: str = api_field(description="The attribute value.", example="checkout")
+
+
+@api_model
 class ApiMetricMetadata:
     name: str = api_field(
         description="The stable structural identifier of the metric.",
@@ -65,6 +76,12 @@ class ApiMetricMetadata:
     )
     unit: ApiUnitFormat = api_field(description="The metric unit.")
     color: str = api_field(description="The metric color.", example="#ff0000")
+    attributes: list[ApiMetricAttribute] = api_field(
+        description="The attributes of the series the metric was fetched from. Empty for a metric "
+        "without any, e.g. one fetched from an RRD.",
+        default_factory=list,
+        example=[],
+    )
 
 
 @api_model

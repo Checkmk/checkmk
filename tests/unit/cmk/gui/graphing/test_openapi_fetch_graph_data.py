@@ -16,7 +16,9 @@ from cmk.graphing_engine import (
     Curve,
     CurveAttributes,
     DecimalNotation,
+    EvaluatedCurve,
     EvaluatedGraph,
+    EvaluatedLine,
     FetchedData,
     Graph,
     HostName,
@@ -284,3 +286,74 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     # show/hide toggle keys on, which is no label a user should read.
     assert horizontal_line.title == "Warning"
     assert (horizontal_line.value, horizontal_line.color) == (80.0, "#ffcc00")
+
+
+def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() -> None:
+    # A metric fetched from a backend carries the attributes of its series; the legend shows them, so
+    # the response has to spell them out - flattened, with the name of the kind each belongs to.
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    time_range = TimeRange(start=0, end=30, step=10)
+    evaluated = EvaluatedGraph(
+        name="g",
+        title="t",
+        vertical_range=None,
+        stacks=[],
+        lines=[
+            EvaluatedLine(
+                curve=EvaluatedCurve(
+                    id="c",
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                    value=1.0,
+                    time_series=TimeSeries(time_range=time_range, values=[1.0]),
+                    series_attributes={
+                        "resource": {"service.name": "checkout", "host.name": "h0"},
+                        "scope": {"name": "otel"},
+                    },
+                ),
+                inverse=False,
+            )
+        ],
+    )
+
+    response = evaluated_to_response(
+        evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
+    )
+
+    [metric] = response.metrics
+    assert [
+        (attribute.kind, attribute.name, attribute.value)
+        for attribute in metric.metadata.attributes
+    ] == [
+        ("resource", "host.name", "h0"),
+        ("resource", "service.name", "checkout"),
+        ("scope", "name", "otel"),
+    ]
+
+
+def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None:
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    time_range = TimeRange(start=0, end=30, step=10)
+    evaluated = EvaluatedGraph(
+        name="g",
+        title="t",
+        vertical_range=None,
+        stacks=[],
+        lines=[
+            EvaluatedLine(
+                curve=EvaluatedCurve(
+                    id="c",
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                    value=1.0,
+                    time_series=TimeSeries(time_range=time_range, values=[1.0]),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+
+    response = evaluated_to_response(
+        evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
+    )
+
+    [metric] = response.metrics
+    assert metric.metadata.attributes == []

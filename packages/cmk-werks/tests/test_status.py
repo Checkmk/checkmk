@@ -157,7 +157,7 @@ def test_a_leftover_legacy_stash_is_a_problem(tmp_path: Path) -> None:
         Problem(
             item="legacy_stash",
             problem="exists next to the current werk ID files",
-            fix="werk init",
+            fix="look at both stash files and merge them by hand",
         )
     ]
     assert status.legacy_stash.exists is True

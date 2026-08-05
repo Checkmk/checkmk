@@ -113,14 +113,17 @@ def _problems(
     werk_exists: Callable[[WerkId], bool],
 ) -> Iterator[Problem]:
     # Only a legacy file next to the current ones is a problem: on its own it is the stash
-    # that is still in use, and 'werk init' migrates the IDs in it.
+    # that is still in use.
     if paths.legacy_stash_file.exists() and (
         paths.secret_file.exists() or paths.stash_file.exists()
     ):
         yield Problem(
             item="legacy_stash",
             problem="exists next to the current werk ID files",
-            fix="werk init",
+            # Deliberately not 'werk init': it needs the ID server, so it is no help in the
+            # state that made every other command bail out, and it carries over only the IDs
+            # of project 'cmk' before deleting the file, losing all the others.
+            fix="look at both stash files and merge them by hand",
         )
 
     if not paths.secret_file.exists():

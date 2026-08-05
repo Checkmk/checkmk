@@ -110,8 +110,8 @@ def _valuespec_agent_config_mk_sap() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "This rule set will deploy the agent plug-in <tt>mk_sap</tt> for (locally) monitoring "
-            "SAP R/3 instances. Note: you still need to manually deploy the SAP NetWeaver RFCSDK "
-            "(nwrfcsdk) and the Python module sapnwrfc."
+            "SAP R/3 instances. Note: you still need to manually install the Python module "
+            "<tt>pyrfc</tt> (which itself requires the SAP NetWeaver RFC SDK) on the monitored host."
         ),
         elements={
             "deployment": DictElement(

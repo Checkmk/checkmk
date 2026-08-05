@@ -1781,6 +1781,7 @@ allows = [
   "cmk.gui",
   "cmk.metric_backend.gui",
   "cmk.otel_collector.gui",
+  "cmk.shared_typing.mode_custom_services",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.host_name_template",
 ]

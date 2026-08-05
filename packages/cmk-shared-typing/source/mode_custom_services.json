@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "custom_services_wizard",
+  "properties": {
+    "back_url": { "type": "string" }
+  },
+  "required": ["back_url"]
+}

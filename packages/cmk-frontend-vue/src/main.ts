@@ -27,6 +27,7 @@ import { GlobalTimePickerApp } from './graphing/GlobalTimePicker'
 import GraphGroup from './graphing/components/GraphGroup.vue'
 import CustomGraphDesignerApp from './graphing/designer/CustomGraphDesignerApp.vue'
 import { registerMetricBackendFormComponents } from './metric-backend/registerFormComponents'
+import CustomServicesWizardApp from './mode-custom-services/CustomServicesWizardApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
 import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
 import OAuth2ConnectionInfoApp from './mode-oauth2-connection/OAuth2ConnectionInfoApp.vue'
@@ -69,6 +70,7 @@ defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-prometheus-conf', ModeCreatePrometheusConfApp)
+defineCmkComponent('cmk-mode-custom-services', CustomServicesWizardApp)
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
 defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2ConnectionApp)
 defineCmkComponent('cmk-oauth2-connection-info', OAuth2ConnectionInfoApp)

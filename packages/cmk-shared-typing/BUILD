@@ -35,6 +35,7 @@ SOURCES_COMMON = [
     "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",
+    "mode_custom_services.json",
     "mode_host.json",
     "mode_oauth2_connection.json",
     "monitoring/all_hosts.json",

@@ -13,8 +13,8 @@ import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { ConsolidationFn } from '../consolidation'
-import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT } from '../constants'
-import { measureTimeLabel } from './axes/labelWidth'
+import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, VALUE_LABEL_GUTTER } from '../constants'
+import { measureAxisLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
 import { computeYDomain } from './axes/valueAxis'
 import { downsampleToColumns, m4 } from './decimation/decimate'
@@ -40,11 +40,12 @@ const emit = defineEmits<{
   reset: []
   pinCreate: [PinPayload]
   pinAction: [PinPayload]
+  'update:plotLeft': [number]
 }>()
 
 const consolidationFn = computed<ConsolidationFn>(() => props.consolidationFunction ?? 'avg')
 
-const MARGIN = { top: 5, right: CANVAS_MARGIN_RIGHT, bottom: 24, left: CANVAS_MARGIN_LEFT } as const
+const MARGIN = { top: 5, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
 const PIN_HANDLE_HEADROOM = 24
 // Bucket count for the M4 cache built on receive (4000 is the default, consider changing
 // if necessary).
@@ -53,13 +54,15 @@ const M4_BUCKETS = 4000
 const canvas = ref<HTMLCanvasElement | null>(null)
 const axesContainer = ref<SVGGElement | null>(null)
 
-const measureLabel = (text: string): number => measureTimeLabel(text, axesContainer.value)
+const measureLabel = (text: string): number => measureAxisLabel(text, axesContainer.value)
+
+const marginLeft = ref(CANVAS_MARGIN_LEFT)
 
 // size is the outer figure size; the plot (canvas) area is what remains after
 // subtracting the axis/label margins.
 const figureWidth = computed(() => props.size.width)
 const figureHeight = computed(() => props.size.height)
-const plotWidth = computed(() => figureWidth.value - MARGIN.left - MARGIN.right)
+const plotWidth = computed(() => figureWidth.value - marginLeft.value - MARGIN.right)
 const plotTop = computed(() => MARGIN.top + (props.pinEnabled ? PIN_HANDLE_HEADROOM : 0))
 const plotHeight = computed(() => figureHeight.value - plotTop.value - MARGIN.bottom)
 
@@ -100,7 +103,7 @@ const yTickFormatter = computed((): ((value: number) => string) => {
 const xScale = scaleTime()
 const yScale = scaleLinear()
 
-const { prepareValueDomain, drawValueGrid, drawValueAxis, drawTimeAxis } = useAxes(
+const { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawTimeAxis } = useAxes(
   axesContainer,
   xScale,
   yScale,
@@ -228,6 +231,7 @@ function draw(): void {
     ? [props.valueRange.min, props.valueRange.max]
     : [autoYMin, autoYMax]
   prepareValueDomain(rawYMin, rawYMax)
+  fitMarginToValueLabels()
 
   // Setting width/height resets the 2d context state; setTransform must follow.
   const dpr = window.devicePixelRatio || 1
@@ -257,6 +261,17 @@ function draw(): void {
   if (axesContainer.value) {
     drawHorizontalLines(axesContainer.value, props.horizontal_lines, yScale, plotWidth.value)
   }
+}
+
+// The value axis is drawn into the left margin, so the margin has to hold the widest label
+// the current domain produces. Writing it back grows plotWidth, which redraws once more with
+// the labels the wider plot resolves to; that second pass settles.
+function fitMarginToValueLabels(): void {
+  const widestLabel = valueTickLabels().reduce(
+    (widest, label) => Math.max(widest, measureLabel(label)),
+    0
+  )
+  marginLeft.value = Math.max(CANVAS_MARGIN_LEFT, Math.ceil(widestLabel) + VALUE_LABEL_GUTTER)
 }
 
 function plotCoords(ev: MouseEvent): { x: number; y: number } | null {
@@ -351,11 +366,14 @@ watch(
     props.consolidationFunction,
     props.curveInterpolator,
     props.horizontal_lines,
-    props.highlightedMetricName
+    props.highlightedMetricName,
+    plotWidth.value
   ],
   draw,
   { deep: true }
 )
+
+watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
 </script>
 
 <template>
@@ -378,25 +396,25 @@ watch(
              don't spill over the y-axis numbers / margin. -->
         <clipPath :id="panClipId">
           <rect
-            :x="MARGIN.left"
+            :x="marginLeft"
             :y="plotTop + plotHeight"
             :width="plotWidth"
             :height="MARGIN.bottom"
           />
         </clipPath>
       </defs>
-      <g ref="axesContainer" :transform="`translate(${MARGIN.left},${plotTop})`" />
+      <g ref="axesContainer" :transform="`translate(${marginLeft},${plotTop})`" />
       <!-- Ruler-scrub overlay (pan preview): a shaded band plus ticks/labels that slide
            with the cursor, clipped to the plot width. Only mounted while dragging. -->
       <g v-if="panActive" :clip-path="`url(#${panClipId})`">
         <rect
           class="graphing-time-series-graph__pan-band"
-          :x="MARGIN.left"
+          :x="marginLeft"
           :y="plotTop + plotHeight + 1"
           :width="plotWidth"
           :height="MARGIN.bottom - 1"
         />
-        <g :transform="`translate(${MARGIN.left + panDx},${plotTop})`">
+        <g :transform="`translate(${marginLeft + panDx},${plotTop})`">
           <template v-for="(tick, index) in panRulerTicks" :key="index">
             <line
               v-if="tick.lineWidth > 0"
@@ -425,7 +443,7 @@ watch(
       tabindex="0"
       role="img"
       :aria-label="plotAriaLabel"
-      :style="{ left: `${MARGIN.left}px`, top: `${plotTop}px`, cursor: plotCursor }"
+      :style="{ left: `${marginLeft}px`, top: `${plotTop}px`, cursor: plotCursor }"
       @mousemove="onMouseMove"
       @mouseleave="clearHoverAfterDelay"
       @mousedown="onPlotMouseDown"
@@ -437,13 +455,13 @@ watch(
       :plot-width="plotWidth"
       :plot-height="plotHeight"
       :pin-x="pinX"
-      :style="{ left: `${MARGIN.left}px`, top: `${plotTop}px` }"
+      :style="{ left: `${marginLeft}px`, top: `${plotTop}px` }"
     />
     <div
       v-if="selectionBand"
       class="graphing-time-series-graph__zoom-band"
       :style="{
-        left: `${MARGIN.left + selectionBand.x}px`,
+        left: `${marginLeft + selectionBand.x}px`,
         top: `${plotTop + selectionBand.y}px`,
         width: `${selectionBand.width}px`,
         height: `${selectionBand.height}px`
@@ -454,7 +472,7 @@ watch(
       v-if="panEnabled"
       class="graphing-time-series-graph__pan-zone"
       :style="{
-        left: `${MARGIN.left}px`,
+        left: `${marginLeft}px`,
         top: `${plotTop + plotHeight}px`,
         width: `${plotWidth}px`,
         height: `${MARGIN.bottom}px`,
@@ -478,14 +496,14 @@ watch(
     <PinHandle
       v-if="pinHandleX !== null"
       variant="remove"
-      :style="{ left: `${MARGIN.left + pinHandleX}px`, top: `${plotTop}px` }"
+      :style="{ left: `${marginLeft + pinHandleX}px`, top: `${plotTop}px` }"
       @action="onPinActionClick"
     />
     <PinHandle
       v-if="pinEnabled && hoverState"
       variant="add"
       :style="{
-        left: `${MARGIN.left + crosshairCentreX(hoverState.snapX)}px`,
+        left: `${marginLeft + crosshairCentreX(hoverState.snapX)}px`,
         top: `${plotTop}px`
       }"
       @action="onPinAddClick"

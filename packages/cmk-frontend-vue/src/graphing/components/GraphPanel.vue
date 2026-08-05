@@ -26,11 +26,7 @@ import GraphHeader from './GraphHeader.vue'
 import TimeSeriesGraph from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
 import type { ConsolidationFn } from './consolidation'
-import {
-  CANVAS_MARGIN_HORIZONTAL,
-  CANVAS_MARGIN_LEFT,
-  MIN_ZOOM_TIME_RANGE_SECONDS
-} from './constants'
+import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, MIN_ZOOM_TIME_RANGE_SECONDS } from './constants'
 import GraphLegend from './legend/GraphLegend.vue'
 
 const { _t } = usei18n()
@@ -161,6 +157,11 @@ const showGraphHeader: Ref<boolean> = computed(
 )
 
 const headerIsCompact = computed(() => props.figureWidth < 400)
+
+// The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
+// it so the strip stays under the plot.
+const plotLeft = ref(CANVAS_MARGIN_LEFT)
+const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVAS_MARGIN_RIGHT)
 </script>
 
 <template>
@@ -219,6 +220,7 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
             @reset="onReset"
             @pin-create="onPinCreate"
             @pin-action="clearPin"
+            @update:plot-left="plotLeft = $event"
           />
           <CmkAlertBox
             v-if="dataTimeRange && !anyMetricShown"
@@ -229,11 +231,6 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
           </CmkAlertBox>
         </div>
 
-        <!--
-          The brush spans the full figure width; its plot track mirrors the renderer's
-          horizontal margins (plot-left=CANVAS_MARGIN_LEFT, plot-width=figure minus
-          CANVAS_MARGIN_HORIZONTAL) so it aligns under the plot.
-        -->
         <GraphBrush
           v-if="interaction.brush === 'enabled' && overview && dataTimeRange"
           class="graphing-graph-panel__brush"
@@ -242,8 +239,8 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
           :window="viewTimeRange"
           :min-span="null"
           :width="figureWidth"
-          :plot-left="CANVAS_MARGIN_LEFT"
-          :plot-width="figureWidth - CANVAS_MARGIN_HORIZONTAL"
+          :plot-left="plotLeft"
+          :plot-width="brushPlotWidth"
           @update:requested-time-range="updateTimeRange"
         />
       </div>

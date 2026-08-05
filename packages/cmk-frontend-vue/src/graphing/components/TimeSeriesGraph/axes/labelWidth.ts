@@ -39,7 +39,7 @@ function labelFont(reference: Element | null): LabelFont {
   return font
 }
 
-export function measureTimeLabel(text: string, reference: Element | null): number {
+export function measureAxisLabel(text: string, reference: Element | null): number {
   const font = labelFont(reference)
   const key = `${font.spec}|${text}`
   const cached = widthByFontAndText.get(key)

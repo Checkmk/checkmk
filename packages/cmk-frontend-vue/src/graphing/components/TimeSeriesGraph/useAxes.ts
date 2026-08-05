@@ -73,6 +73,11 @@ export function useAxes(
     yStep.value = step
   }
 
+  function valueTickLabels(): string[] {
+    const formatter = yTickFormatter.value
+    return yScale.ticks(yTickCount()).map((value) => formatter(value.valueOf()))
+  }
+
   function drawValueGrid(): void {
     if (!axisGroupRef.value) {
       return
@@ -165,5 +170,5 @@ export function useAxes(
       .text((tick) => tick.text)
   }
 
-  return { prepareValueDomain, drawValueGrid, drawValueAxis, drawTimeAxis }
+  return { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawTimeAxis }
 }

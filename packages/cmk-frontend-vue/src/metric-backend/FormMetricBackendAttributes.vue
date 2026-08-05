@@ -116,6 +116,19 @@ immediateWatch(
   }
 )
 
+// The backend echoes the typed text back as a (query, query) choice; drop it since we
+// offer our own free-text entry, along with any incomplete suggestion.
+function suggestionsWithoutEcho(
+  choices: Array<Suggestion> | Array<Section>,
+  query: string
+): Suggestion[] {
+  return flattenSuggestions(choices).filter(
+    (suggestion) =>
+      suggestion.name !== query &&
+      (suggestion.name === null || (suggestion.name.length > 0 && suggestion.title.length > 0))
+  )
+}
+
 async function querySuggestions(query: string): Promise<Response | ErrorResponse> {
   // The three key autocompleters are independent, so fetch them concurrently.
   const responses = await Promise.all(
@@ -141,13 +154,8 @@ async function querySuggestions(query: string): Promise<Response | ErrorResponse
     if (!response || response instanceof ErrorResponse) {
       return
     }
-    // The backend echoes the typed text as a leading (query, query) choice; a real
-    // key equal to the query is indistinguishable from the echo and is dropped too,
-    // falling into the section-less user entry below (its type stays unresolved).
-    const suggestions = flattenSuggestions(response.choices).filter(
-      (s: Suggestion) =>
-        s.name !== query && (s.name === null || (s.name.length > 0 && s.title.length > 0))
-    )
+    // A real key equal to the query drops with the echo and survives only as the free-text entry.
+    const suggestions = suggestionsWithoutEcho(response.choices, query)
     for (const suggestion of suggestions) {
       if (suggestion.name) {
         cacheKeyKind(suggestion.name, attributeKind)
@@ -167,8 +175,10 @@ async function queryValueSuggestions(
   condition: Condition,
   query: string
 ): Promise<Response | ErrorResponse> {
+  // Always offer the typed text as a free-text entry, even when the backend cannot help.
+  const userEntry: Suggestion[] = query ? [{ name: query, title: untranslated(query) }] : []
   if (condition.attributeKind === null || !condition.key) {
-    return new Response([])
+    return new Response(userEntry)
   }
   // Scope suggestions to the edited pill's AND group; sibling OR disjuncts must not narrow them.
   const editedGroup = filterModel.value.find((group) =>
@@ -190,13 +200,9 @@ async function queryValueSuggestions(
   }
   const response = await fetchSuggestions(autocompleter, query)
   if (response instanceof ErrorResponse) {
-    return response
+    return new Response(userEntry)
   }
-  return new Response(
-    flattenSuggestions(response.choices).filter(
-      (s: Suggestion) => s.name === null || (s.name.length > 0 && s.title.length > 0)
-    )
-  )
+  return new Response([...userEntry, ...suggestionsWithoutEcho(response.choices, query)])
 }
 
 function resolveAttributeKind(key: string): AttributeKind {

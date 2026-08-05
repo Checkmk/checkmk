@@ -11,7 +11,7 @@ import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
-import { KEY_IDENTS } from '@/metric-backend/attributeFilterAdapter'
+import { KEY_IDENTS, VALUE_IDENTS } from '@/metric-backend/attributeFilterAdapter'
 
 // Keys the backend offers under each attribute-kind key autocompleter, keyed by its ident.
 const KEY_SUGGESTIONS: Record<string, string[]> = {
@@ -109,6 +109,25 @@ async function openKeyFilter(): Promise<HTMLElement> {
   return screen.getByRole('textbox', { name: 'filter' })
 }
 
+async function selectKey(query: string, key: string): Promise<void> {
+  const filterInput = await openKeyFilter()
+  await userEvent.type(filterInput, query)
+  // Wait out the debounce before clicking; un-keyed <li>s mean a mid-re-render click misses.
+  await screen.findByRole('option', { name: query })
+  await userEvent.click(screen.getByRole('option', { name: key }))
+}
+
+async function openValueFilter(): Promise<HTMLElement> {
+  const valueCombobox = await screen.findByRole('combobox', { name: 'Attribute value' })
+  if (valueCombobox.getAttribute('aria-expanded') !== 'true') {
+    await userEvent.click(valueCombobox)
+  }
+  await waitFor(() => {
+    expect(valueCombobox.getAttribute('aria-expanded')).toBe('true')
+  })
+  return screen.getByRole('textbox', { name: 'filter' })
+}
+
 test('renders the filter conditions as pills', () => {
   renderAttributes(THREE_ATTRIBUTES)
 
@@ -167,6 +186,54 @@ test.each([true, false])('allowOr=%s shows the OR connector only when enabled', 
 
   const connector = screen.queryByRole('button', { name: 'Toggle connector, currently OR' })
   expect(Boolean(connector)).toBe(allowOr)
+})
+
+test.each([
+  { when: 'offers no choices', failValueAutocompleter: false },
+  { when: 'errors', failValueAutocompleter: true }
+])(
+  'a typed value stays selectable and commits when the value backend $when (CMK-37726)',
+  async ({ failValueAutocompleter }) => {
+    // A 500 makes cmkFetch log an expected console.info; silence it so vitest-fail-on-console
+    // does not flag it (harmless no-op in the other case).
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    if (failValueAutocompleter) {
+      server.use(
+        http.post(`${API_BASE}/objects/autocomplete/:ident`, ({ params }) =>
+          params.ident === VALUE_IDENTS.resource
+            ? new HttpResponse(null, { status: 500 })
+            : undefined
+        )
+      )
+    }
+    const model = renderAttributes()
+
+    await selectKey('service', 'service.name')
+    const valueInput = await openValueFilter()
+    await userEvent.type(valueInput, 'web')
+    await userEvent.click(await screen.findByRole('option', { name: 'web' }))
+
+    // A single condition is emitted as the bare equals leaf (see toAttributeFilter).
+    await waitFor(() => {
+      expect(model.value).toEqual({
+        type: 'equals',
+        key: { kind: 'resource', name: 'service.name' },
+        value: 'web'
+      })
+    })
+    infoSpy.mockRestore()
+  }
+)
+
+test('a typed value is offered even when the attribute kind is unresolved (CMK-37726)', async () => {
+  // A free-text key has no resolvable kind, so the value dropdown cannot fetch.
+  renderAttributes()
+
+  await selectKey('custom.key', 'custom.key')
+  const valueInput = await openValueFilter()
+  await userEvent.type(valueInput, 'web')
+
+  expect(await screen.findByRole('option', { name: 'web' })).toBeInTheDocument()
 })
 
 test('initializes the pills from a provided attribute filter, including exists', () => {

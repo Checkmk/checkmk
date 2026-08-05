@@ -2644,7 +2644,7 @@ def main_umount(
             sys.stdout.flush()
 
             returncode = unmount_tmpfs_as_root(site_id, kill=kill, capture_output=True)
-            if not show_success(returncode):
+            if show_success(returncode):
                 exit_status = 1
     else:
         # Skip the site even when it is partly running

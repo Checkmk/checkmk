@@ -8,8 +8,14 @@ import pytest
 from cmk.gui.monitor.services._api._validators import (
     parse_service_search_query,
     parse_service_sort_options,
+    validate_uniqueness,
 )
 from cmk.gui.monitor.services._models import ServiceSort, ServiceSortColumn, ServiceSortDirection
+
+
+def test_validate_uniqueness() -> None:
+    with pytest.raises(ValueError, match="Duplicate values are not allowed."):
+        validate_uniqueness(["OK", "OK", "WARN"])
 
 
 class TestServiceSearchQuery:

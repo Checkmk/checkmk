@@ -13,7 +13,7 @@ they will return. This allows us to pass stubs when testing our applications.
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import Service, ServiceSort
+from ._models import Service, ServiceFilter, ServiceSort
 
 
 class HostServicesRepository(Protocol):
@@ -28,6 +28,7 @@ class HostServicesRepository(Protocol):
         limit: int | None,
         query: str,
         sorters: Sequence[ServiceSort],
+        filters: ServiceFilter,
     ) -> Sequence[Service]:
         """Fetch services of a host."""
         ...
@@ -36,6 +37,6 @@ class HostServicesRepository(Protocol):
         """Count the total services of a host in your environment."""
         ...
 
-    def count_matched(self, hostname: str, *, query: str) -> int:
+    def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
         """Count the services of a host matching the given criteria."""
         ...

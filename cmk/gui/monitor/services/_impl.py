@@ -18,7 +18,7 @@ from cmk.livestatus_client.expressions import And, NothingExpression, QueryExpre
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
 
-from ._models import Service, ServiceSort, ServiceSortColumn, ServiceState
+from ._models import Service, ServiceFilter, ServiceSort, ServiceSortColumn, ServiceState
 from ._sorting import service_sorter
 
 
@@ -37,8 +37,9 @@ class LiveStatusHostServicesRepository:
         limit: int | None,
         query: str,
         sorters: Sequence[ServiceSort],
+        filters: ServiceFilter,
     ) -> Sequence[Service]:
-        extra_headers = [_build_primary_sort(sorters)]
+        extra_headers = [*filters.splitlines(), _build_primary_sort(sorters)]
 
         if limit is not None:
             extra_headers.append(f"Limit: {limit}")
@@ -76,18 +77,21 @@ class LiveStatusHostServicesRepository:
     def count_total(self, hostname: str) -> int:
         return self._count_services(hostname)
 
-    def count_matched(self, hostname: str, *, query: str) -> int:
+    def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
         # A filtered total can't be read from the ``status`` table, so the matches are counted
         # server-side via ``Stats`` instead of transferring and counting every matching row.
-        return self._count_services(hostname, query=query)
+        return self._count_services(hostname, query=query, filters=filters)
 
-    def _count_services(self, hostname: str, *, query: str = "") -> int:
+    def _count_services(
+        self, hostname: str, *, query: str = "", filters: ServiceFilter = ServiceFilter("")
+    ) -> int:
         filter_expr = _build_host_services_filter(hostname, _sanitize_query(query))
         stats_query = "\n".join(
             [
                 f"GET {Services.__tablename__}",
                 "Stats: state >= 0",
                 *(": ".join(line) for line in filter_expr.render()),
+                *filters.splitlines(),
             ]
         )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))

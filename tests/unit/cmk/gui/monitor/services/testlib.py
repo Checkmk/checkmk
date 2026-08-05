@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.monitor.services._models import Service, ServiceSort
+from cmk.gui.monitor.services._models import Service, ServiceFilter, ServiceSort
 from cmk.gui.monitor.services._repositories import HostServicesRepository
 from cmk.gui.monitor.services._sorting import service_sorter
 
@@ -33,6 +33,7 @@ def get_fake_host_services_repository(*, n_services: int) -> HostServicesReposit
             limit: int | None,
             query: str,
             sorters: Sequence[ServiceSort],
+            filters: ServiceFilter,
         ) -> Sequence[Service]:
             matches = [s for s in self._services if query.lower() in s.name.lower()]
             return sorted(matches, key=service_sorter(sorters))[:limit]
@@ -40,7 +41,9 @@ def get_fake_host_services_repository(*, n_services: int) -> HostServicesReposit
         def count_total(self, hostname: str) -> int:
             return len(self._services)
 
-        def count_matched(self, hostname: str, *, query: str) -> int:
+        def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
+            # Not implementing filter matching as we don't need to test a fake implementation of
+            # this.
             return len([s for s in self._services if query.lower() in s.name.lower()])
 
     return HostServicesFakeRepository()

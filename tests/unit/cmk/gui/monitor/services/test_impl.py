@@ -7,7 +7,12 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.monitor.services._impl import _build_primary_sort, LiveStatusHostServicesRepository
-from cmk.gui.monitor.services._models import ServiceSort, ServiceSortColumn, ServiceSortDirection
+from cmk.gui.monitor.services._models import (
+    ServiceFilter,
+    ServiceSort,
+    ServiceSortColumn,
+    ServiceSortDirection,
+)
 from cmk.livestatus_client.testing import expect_single_query
 
 # "foo-server-01" matches no row in the default hosts/services test-data, so queries against it
@@ -24,7 +29,7 @@ def test_fetch_filters_by_exact_hostname_and_applies_limit() -> None:
         f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}\nLimit: 500",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.fetch(_UNKNOWN_HOSTNAME, limit=500, query="", sorters=[])
+        repo.fetch(_UNKNOWN_HOSTNAME, limit=500, query="", sorters=[], filters=ServiceFilter(""))
 
 
 def test_fetch_without_limit_omits_limit_header() -> None:
@@ -34,7 +39,7 @@ def test_fetch_without_limit_omits_limit_header() -> None:
         match_type="ellipsis",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.fetch(_UNKNOWN_HOSTNAME, limit=None, query="", sorters=[])
+        repo.fetch(_UNKNOWN_HOSTNAME, limit=None, query="", sorters=[], filters=ServiceFilter(""))
 
 
 def test_fetch_orders_by_the_primary_sorter() -> None:
@@ -49,6 +54,7 @@ def test_fetch_orders_by_the_primary_sorter() -> None:
             limit=None,
             query="",
             sorters=[ServiceSort(ServiceSortColumn.STATE, ServiceSortDirection.DESC)],
+            filters=ServiceFilter(""),
         )
 
 
@@ -61,7 +67,30 @@ def test_fetch_filters_by_search_query_on_description() -> None:
         match_type="ellipsis",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.fetch(_UNKNOWN_HOSTNAME, limit=None, query="CPU", sorters=[])
+        repo.fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="CPU",
+            sorters=[],
+            filters=ServiceFilter(""),
+        )
+
+
+def test_fetch_applies_filters() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS}\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n"
+        f"Filter: state = 1\n{_DEFAULT_ORDER_BY}",
+        match_type="ellipsis",
+    ) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        repo.fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter("Filter: state = 1"),
+        )
 
 
 def test_count_matched_query_shape() -> None:
@@ -71,7 +100,17 @@ def test_count_matched_query_shape() -> None:
         "Filter: description ~~ CPU\nAnd: 2",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.count_matched(_UNKNOWN_HOSTNAME, query="CPU")
+        assert repo.count_matched(_UNKNOWN_HOSTNAME, query="CPU", filters=ServiceFilter("")) == 0
+
+
+def test_count_matched_applies_filters() -> None:
+    with expect_single_query(
+        f"GET services\nStats: state >= 0\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n"
+        "Filter: state = 1",
+    ) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        repo.count_matched(_UNKNOWN_HOSTNAME, query="", filters=ServiceFilter("Filter: state = 1"))
 
 
 def test_host_exists_returns_false_for_unknown_host() -> None:

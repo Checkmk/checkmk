@@ -5,7 +5,12 @@
 import pytest
 
 from cmk.gui.monitor.services._api._list_host_services import _handle_list_services
-from cmk.gui.monitor.services._models import ServiceSort, ServiceSortColumn, ServiceSortDirection
+from cmk.gui.monitor.services._models import (
+    ServiceFilter,
+    ServiceSort,
+    ServiceSortColumn,
+    ServiceSortDirection,
+)
 from cmk.gui.openapi.utils import ProblemException
 
 from .testlib import get_fake_host_services_repository, KNOWN_HOSTNAME
@@ -73,7 +78,14 @@ def test_handle_list_services_forwards_requested_sort() -> None:
 
 def test_handle_list_services_filters_by_search_query() -> None:
     services_repo = get_fake_host_services_repository(n_services=10)
-    known_name = services_repo.fetch(KNOWN_HOSTNAME, limit=1, query="", sorters=[])[0].name
+    items = services_repo.fetch(
+        KNOWN_HOSTNAME,
+        limit=1,
+        query="",
+        sorters=[],
+        filters=ServiceFilter(""),
+    )
+    known_name = items[0].name
 
     response = _handle_list_services(
         services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID, query=known_name

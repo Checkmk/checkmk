@@ -32,6 +32,7 @@ from cmk.gui.utils import permission_verification as permissions
 from .._impl import LiveStatusHostServicesRepository
 from .._models import (
     Service,
+    ServiceFilter,
     ServiceSort,
     ServiceSortColumn,
     ServiceSortDirection,
@@ -39,6 +40,7 @@ from .._models import (
 )
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
+from ._filters import parse_as_livestatus_filter, ServiceFilterNode
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
@@ -128,6 +130,10 @@ class ServicesRequestBody:
         example="CPU",
         default_factory=ApiOmitted,
     )
+    filter: ServiceFilterNode | ApiOmitted = api_field(
+        description="Boolean filter expression tree. Omit to return all services.",
+        default_factory=ApiOmitted,
+    )
 
 
 def list_services(
@@ -157,6 +163,12 @@ def list_services(
             case _:
                 limit = body.limit
 
+        parsed_filters = (
+            ServiceFilter("")
+            if isinstance(body.filter, ApiOmitted)
+            else parse_as_livestatus_filter(body.filter)
+        )
+
         return _handle_list_services(
             host_services_repo,
             hostname=hostname,
@@ -164,6 +176,7 @@ def list_services(
             limit=limit,
             query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+            filters=parsed_filters,
         )
 
 
@@ -175,6 +188,7 @@ def _handle_list_services(
     limit: int | None = _DEFAULT_LIMIT,
     query: str = "",
     sorters: Sequence[ServiceSort] = _DEFAULT_SORT,
+    filters: ServiceFilter = ServiceFilter(""),
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
         raise ProblemException(
@@ -183,12 +197,16 @@ def _handle_list_services(
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None
 
-    services = host_services_repo.fetch(hostname, limit=limit, query=query, sorters=sorters)
+    services = host_services_repo.fetch(
+        hostname, limit=limit, query=query, sorters=sorters, filters=filters
+    )
     total_service_count = host_services_repo.count_total(hostname)
     if limit is None:
         matched_service_count = len(services)
-    elif query:
-        matched_service_count = host_services_repo.count_matched(hostname, query=query)
+    elif query or filters:
+        matched_service_count = host_services_repo.count_matched(
+            hostname, query=query, filters=filters
+        )
     else:
         matched_service_count = total_service_count
 

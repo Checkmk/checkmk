@@ -78,6 +78,124 @@ class TestMonitorHostServicesQueryParamValidation:
         )
         assert resp.status_code == 400
 
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            pytest.param({}, id="empty payload"),
+            pytest.param(
+                {"type": "condition", "field": "state", "op": "one_of", "value": []},
+                id="min length of 'one_of' condition",
+            ),
+            pytest.param(
+                {"type": "condition", "field": "state", "op": "one_of", "value": ["OK", "OK"]},
+                id="uniqueness in 'one_of' condition",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "state", "op": "one_of", "value": ["OK"]},
+                    ],
+                },
+                id="min length of 'and' condition",
+            ),
+        ],
+    )
+    def test_filters_validation_errors(
+        self,
+        clients: ClientRegistry,
+        filters: dict[str, object],
+    ) -> None:
+        resp = clients.MonitorHosts.list_host_services(
+            hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, filters=filters, expect_ok=False
+        )
+        assert resp.status_code == 400
+
+
+class TestMonitorHostServicesFilters:
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_filters(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 1,
+                    "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
+                    "last_check": time.time(),
+                    "last_state_change": time.time(),
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                f"Filter: name = {_HOSTNAME}",
+                "Limit: 1",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICES_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                "Filter: state = 1",
+                "Filter: state = 2",
+                "Or: 2",
+                _DEFAULT_ORDER_BY,
+                f"Limit: {_LIMIT}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                "Stats: state >= 0",
+                f"Filter: host_name = {_HOSTNAME}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                "Stats: state >= 0",
+                f"Filter: host_name = {_HOSTNAME}",
+                "Filter: state = 1",
+                "Filter: state = 2",
+                "Or: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+        filters = {
+            "type": "condition",
+            "field": "state",
+            "op": "one_of",
+            "value": ["WARN", "CRIT"],
+        }
+
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, filters=filters
+            )
+
+        assert resp.json["services"] == [
+            {
+                "name": "CPU load",
+                "state": "WARN",
+                "summary": "WARN - load average: 3.10, 2.05, 1.01",
+                "last_check": "2026-07-13T11:39:00Z",
+                "last_state_change": "2026-07-13T11:39:00Z",
+            }
+        ]
+
 
 class TestMonitorHostServices:
     def test_missing_host_returns_404(

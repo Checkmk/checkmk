@@ -10,6 +10,7 @@ Architecture
    arch-index.rst
    sec-certificates.rst
    sec-auth.rst
+   sec-boundaries.rst
    arch-werk.rst
 
 APIs

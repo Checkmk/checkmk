@@ -9,7 +9,6 @@ from ._artwork import (
     GraphArtworkAnnotations,
     iter_graph_artworks,
 )
-from ._engine_graph_group import render_engine_graph_group
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -23,6 +22,7 @@ from ._from_api import (
 from ._frontend import (
     default_time_range_seconds,
     global_time_picker_props,
+    render_engine_graph_group,
     user_default_refresh_time,
     user_first_day_of_week,
 )

@@ -58,9 +58,9 @@ from ._artwork import (
     LayoutedCurve,
     Scalars,
 )
-from ._engine_graph_group import render_engine_graph_group
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
+from ._frontend import render_engine_graph_group
 from ._graph_display_config import (
     GraphDisplayConfigHTML,
     HTML_SIZE_PER_EX,

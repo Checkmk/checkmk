@@ -225,7 +225,3 @@ def main() -> int:
 
     finally:
         output_profile(profile_dir)
-
-
-if __name__ == "__main__":
-    sys.exit(main())

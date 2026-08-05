@@ -315,6 +315,7 @@ py_library(
         "//cmk/base/default_config:default-config",
         "//cmk/base/errorhandling",
         "//cmk/base/modes",
+        "//cmk/base/modes:main",
         "//cmk/base/modes:modes-registry",
         "//cmk/base/plugins:plugins-bakery",
         "//packages/cmk-check-engine:sources",

@@ -5,7 +5,6 @@ py_library(
     srcs = ["modes.py"],
     imports = ["../../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
@@ -27,7 +26,6 @@ py_library(
     ],
     imports = ["../../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
     ],
@@ -76,6 +74,28 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-profiling:backend",
+        "//packages/cmk-trace",
+    ],
+)
+
+# currently can't be in either of the above (cycle)
+py_library(
+    name = "main",
+    srcs = ["main.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__pkg__",
+        "//cmk/base:__subpackages__",
+    ],
+    deps = [
+        ":modes",
+        ":modes-registry",
+        "//cmk/base:app",
+        "//cmk/utils",
+        "//packages/cmk-ccc:debug",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:site",
         "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",
     ],

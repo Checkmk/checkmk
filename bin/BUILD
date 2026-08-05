@@ -1,5 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 
@@ -39,12 +39,6 @@ cc_binary(
     tags = ["no-lint"],
 )
 
-pkg_mklink(
-    name = "cmk_link",
-    link_name = "bin/cmk",
-    target = "check_mk",
-)
-
 pkg_files(
     name = "bin_750",
     srcs = [
@@ -59,7 +53,6 @@ pkg_files(
 pkg_files(
     name = "bin_755",
     srcs = [
-        ":check_mk.py",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets.py",
         ":cmk-migrate-oracle-rulesets.py",
@@ -81,7 +74,6 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {
-        "check_mk.py": "check_mk",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
         "cmk-piggyback-hub.py": "cmk-piggyback-hub",
@@ -95,7 +87,6 @@ pkg_tar(
     srcs = [
         ":bin_750",
         ":bin_755",
-        ":cmk_link",
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
@@ -103,22 +94,6 @@ pkg_tar(
 
 # Not shipped — only exists so that static analysis tools (ruff, …)
 # can discover these .py files via Bazel.
-py_library(
-    name = "check_mk_py",
-    srcs = ["check_mk.py"],
-    imports = ["."],
-    deps = [
-        "//cmk/base:app",
-        "//cmk/base/modes",
-        "//cmk/base/modes:modes-registry",
-        "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-crash:crash",
-        "//packages/cmk-trace",
-    ],
-)
-
 py_library(
     name = "cmk_piggyback_hub_py",
     srcs = ["cmk-piggyback-hub.py"],

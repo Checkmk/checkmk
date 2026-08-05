@@ -18,7 +18,6 @@ import {
 import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
 import FormValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { ref, watch } from 'vue'
@@ -27,21 +26,14 @@ import type { ValidationMessages } from '@/form'
 
 import FormAttributeFilter from './attribute-filter/FormAttributeFilter.vue'
 import { SUPPORTED_OPERATORS } from './attribute-filter/types'
-import type {
-  AttributeFilterModel,
-  AttributeKind,
-  Condition,
-  Operator
-} from './attribute-filter/types'
+import type { AttributeFilterModel, Condition, Operator } from './attribute-filter/types'
 import {
-  ATTRIBUTE_KIND_ORDER,
-  type AttributeKindKey,
-  KEY_IDENTS,
   VALUE_IDENTS,
   buildAutocompleteContext,
   fromAttributeFilter,
   toAttributeFilter
 } from './attributeFilterAdapter'
+import { useAttributeKeySuggestions } from './attributeKeySuggestions'
 
 const { _t } = usei18n()
 
@@ -68,31 +60,20 @@ const attributeFilter = defineModel<AttributeFilter | undefined>('attributeFilte
   default: undefined
 })
 
-const SECTION_TITLES: Record<AttributeKindKey, TranslatedString> = {
-  resource: _t('Resource'),
-  scope: _t('Scope'),
-  data_point: _t('Data point')
-}
-
 // The flat pill model is the UI's single source of truth.
 const filterModel = ref<AttributeFilterModel>(
   attributeFilter.value ? fromAttributeFilter(attributeFilter.value, () => randomId()) : []
 )
 // Populate the filter up front so an unedited form still submits it (watch fires only on change).
 attributeFilter.value = toAttributeFilter(filterModel.value)
-// A key may be offered under more than one attribute kind, so record the set of
-// kinds each suggested key belongs to (see `resolveAttributeKind`).
-const keyKindCache = new Map<string, Set<AttributeKindKey>>()
 const validationMessages = ref<string[]>([])
 
-function cacheKeyKind(name: string, attributeKind: AttributeKindKey): void {
-  const kinds = keyKindCache.get(name)
-  if (kinds) {
-    kinds.add(attributeKind)
-  } else {
-    keyKindCache.set(name, new Set([attributeKind]))
-  }
-}
+const { querySuggestions, resolveKind: resolveAttributeKind } = useAttributeKeySuggestions(() =>
+  buildAutocompleteContext(filterModel.value, {
+    metricName: props.metricName,
+    staticResourceAttributeKeys: props.staticResourceAttributeKeys
+  })
+)
 
 watch(
   filterModel,
@@ -129,48 +110,6 @@ function suggestionsWithoutEcho(
   )
 }
 
-async function querySuggestions(query: string): Promise<Response | ErrorResponse> {
-  // The three key autocompleters are independent, so fetch them concurrently.
-  const responses = await Promise.all(
-    ATTRIBUTE_KIND_ORDER.map((attributeKind) => {
-      const autocompleter: Autocompleter = {
-        fetch_method: 'rest_autocomplete',
-        data: {
-          ident: KEY_IDENTS[attributeKind],
-          params: {
-            context: buildAutocompleteContext(filterModel.value, {
-              metricName: props.metricName,
-              staticResourceAttributeKeys: props.staticResourceAttributeKeys
-            })
-          }
-        }
-      }
-      return fetchSuggestions(autocompleter, query)
-    })
-  )
-  const sections: Section[] = []
-  ATTRIBUTE_KIND_ORDER.forEach((attributeKind, index) => {
-    const response = responses[index]
-    if (!response || response instanceof ErrorResponse) {
-      return
-    }
-    // A real key equal to the query drops with the echo and survives only as the free-text entry.
-    const suggestions = suggestionsWithoutEcho(response.choices, query)
-    for (const suggestion of suggestions) {
-      if (suggestion.name) {
-        cacheKeyKind(suggestion.name, attributeKind)
-      }
-    }
-    if (suggestions.length > 0) {
-      sections.push({ title: SECTION_TITLES[attributeKind], suggestions })
-    }
-  })
-  const userEntry: Section[] = query
-    ? [{ title: untranslated(''), suggestions: [{ name: query, title: untranslated(query) }] }]
-    : []
-  return new Response([...userEntry, ...sections])
-}
-
 async function queryValueSuggestions(
   condition: Condition,
   query: string
@@ -203,13 +142,6 @@ async function queryValueSuggestions(
     return new Response(userEntry)
   }
   return new Response([...userEntry, ...suggestionsWithoutEcho(response.choices, query)])
-}
-
-function resolveAttributeKind(key: string): AttributeKind {
-  // A key offered under more than one attribute kind is ambiguous: leave it
-  // unresolved so the attribute-kind dropdown opens for the user to choose.
-  const kinds = keyKindCache.get(key)
-  return kinds?.size === 1 ? [...kinds][0]! : null
 }
 
 function clearAttributeSelection(): void {

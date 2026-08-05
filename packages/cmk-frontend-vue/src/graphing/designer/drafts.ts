@@ -54,7 +54,7 @@ export function isComplete(item: DesignerItem): item is GraphItem {
     case 'scalar':
       return isFilled(item.host_name) && isFilled(item.service_name) && isFilled(item.metric_name)
     case 'constant':
-      return item.value !== null
+      return item.value !== null && String(item.value) !== ''
     case 'rrd_query':
     case 'metric_backend':
       return isFilled(item.metric_name)

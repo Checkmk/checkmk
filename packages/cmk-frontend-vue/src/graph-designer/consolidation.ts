@@ -7,6 +7,12 @@ import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-sha
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 
 import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
+import type { GroupByModel } from '@/metric-backend/group-by/types'
+import {
+  groupKeysToWire,
+  groupPercentileToWire,
+  percentileGroupBy
+} from '@/metric-backend/group-by/wire'
 
 export const DEFAULT_HISTOGRAM_PERCENTILE = 90
 export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
@@ -22,7 +28,13 @@ export function consolidationFunctionFromWire(
     case 'sum':
       return { type: 'sum', function: wire.function }
     case 'histogram':
-      return { type: 'histogram', function: wire.function }
+      // histogram_preserve_quantile names a consolidation and a grouping at once. The
+      // picker holds the "preserve histograms" half, the group-by clause the other.
+      return {
+        type: 'histogram',
+        function:
+          wire.function === 'histogram_preserve_quantile' ? 'histogram_preserve' : wire.function
+      }
     default:
       staticAssertNever(wire)
       throw new Error(`unhandled consolidation type: ${JSON.stringify(wire)}`)
@@ -35,7 +47,8 @@ export function buildConsolidationFunction(
   percentile: number,
   thresholdForFractionBelow: number,
   lowerThresholdForFractionBetween: number,
-  upperThresholdForFractionBetween: number
+  upperThresholdForFractionBetween: number,
+  groupBy: GroupByModel = percentileGroupBy()
 ): WireConsolidationFunction {
   switch (consolidationFunction?.function) {
     case 'gauge_max':
@@ -108,6 +121,21 @@ export function buildConsolidationFunction(
         percentile: 0,
         lower_threshold: lowerThresholdForFractionBetween,
         upper_threshold: upperThresholdForFractionBetween
+      }
+    case 'histogram_preserve':
+      // "Preserve histograms" is only half a wire function: the group-by clause it is
+      // paired with names the other half and owns that half's parameters.
+      switch (groupBy.function) {
+        case 'percentile':
+          return {
+            type: 'histogram',
+            function: 'histogram_preserve_quantile',
+            lookback_seconds: lookbackSeconds,
+            percentile: groupPercentileToWire(groupBy),
+            group_by: groupKeysToWire(groupBy.keys)
+          }
+        default:
+          throw new Error(`grouping without a "preserve histograms" pairing: ${groupBy.function}`)
       }
     case 'gauge_last':
     default:

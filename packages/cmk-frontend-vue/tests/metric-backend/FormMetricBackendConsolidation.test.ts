@@ -70,17 +70,32 @@ function chip() {
   return screen.getByRole('button', { name: /Edit consolidation/ })
 }
 
-test('a histogram metric shows the quantile function with the stored percentile', () => {
+test('a histogram metric defaults to preserve histograms', () => {
+  renderConsolidation({
+    aggregationLookback: 120,
+    metricTypes: ['histogram']
+  })
+
+  expect(chip()).toHaveTextContent('[histogram]')
+  expect(chip()).toHaveTextContent('preserve histograms')
+  expect(chip()).toHaveTextContent('2 m')
+})
+
+test('picking the quantile function seeds the default percentile', async () => {
   renderConsolidation({
     aggregationLookback: 120,
     aggregationHistogramPercentile: 90,
     metricTypes: ['histogram']
   })
 
-  expect(chip()).toHaveTextContent('[histogram]')
-  // 90 % maps to quantile 0.9, shown as p90.
-  expect(chip()).toHaveTextContent('p90')
-  expect(chip()).toHaveTextContent('2 m')
+  await userEvent.click(chip())
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Quantile' }))
+  await userEvent.keyboard('{Escape}')
+
+  // A freshly picked function seeds its own default (95 %); it does not inherit
+  // whatever percentile happened to be stored from a previous function.
+  expect(chip()).toHaveTextContent('p95')
 })
 
 test('a sum metric shows the rate function and no quantile input', async () => {
@@ -129,13 +144,14 @@ test('a gauge metric offers the last, max, avg and min functions', async () => {
   })
 })
 
-test('a histogram metric offers the quantile, count delta, count rate, sum rate, sum delta, fraction below, fraction between and cumulative sum field functions', async () => {
+test('a histogram metric offers the preserve histograms, quantile, count delta, count rate, sum rate, sum delta, fraction below, fraction between and cumulative sum field functions', async () => {
   renderConsolidation({ metricTypes: ['histogram'] })
 
   await userEvent.click(chip())
   await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
 
   await waitFor(() => {
+    expect(screen.getByRole('option', { name: 'Preserve histograms' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'Quantile' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'Count delta' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'Count rate' })).toBeVisible()
@@ -179,6 +195,9 @@ test('editing the quantile writes the percentile back as a percentage', async ()
   })
 
   await userEvent.click(chip())
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Quantile' }))
+
   const quantile = screen.getByLabelText('Quantile (0 to 1)')
   await userEvent.clear(quantile)
   await userEvent.type(quantile, '0.5')

@@ -46,6 +46,8 @@ const props = defineProps<{
   querySuggestions: QuerySuggestionsFn
   resolveLevel?: ((key: string) => GroupLevel | null) | undefined
   ariaLabel?: string | undefined
+  // Restricts the offered functions to the ones the backend implements for this form.
+  allowedFunctions?: readonly GroupByFunction[] | undefined
 }>()
 
 const model = defineModel<GroupByModel>({ required: true })
@@ -55,7 +57,7 @@ const editAriaLabel = computed(() => `${_t('Edit group by')}: ${summary.value}`)
 
 const functionOptions = computed<Suggestions>(() => ({
   type: 'fixed',
-  suggestions: functionsForInputType(props.inputType).map((fn) => ({
+  suggestions: functionsForInputType(props.inputType, props.allowedFunctions).map((fn) => ({
     name: fn,
     title: functionLabel(fn)
   }))
@@ -74,15 +76,13 @@ function onFunctionUpdate(value: string | null): void {
   applyFunction(value as GroupByFunction)
 }
 
-// A new output type may no longer offer the current function; reset to its default.
-watch(
-  () => props.inputType,
-  (type) => {
-    if (!isFunctionValidForInputType(type, model.value.function)) {
-      applyFunction(defaultFunction(type))
-    }
+// A new output type (or a narrower allowlist) may no longer offer the current
+// function; reset to its default.
+watch([() => props.inputType, () => props.allowedFunctions], ([type, allowed]) => {
+  if (!isFunctionValidForInputType(type, model.value.function, allowed)) {
+    applyFunction(defaultFunction(type, allowed))
   }
-)
+})
 
 const paramKind = computed<ParamKind>(() => functionParamKind(model.value.function))
 

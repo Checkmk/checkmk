@@ -8,12 +8,22 @@ import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_fil
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
 import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendConsolidation.vue'
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
+import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapter'
+import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
 import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
+import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
+import type { GroupByModel } from '@/metric-backend/group-by/types'
+import {
+  HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
+  groupKeysToWire,
+  groupPercentileToWire,
+  percentileGroupBy
+} from '@/metric-backend/group-by/wire'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import type { DraftMetricBackendItem } from '../../drafts'
@@ -43,9 +53,24 @@ function toStored(
   percentile: number,
   thresholdForFractionBelow: number,
   lowerThresholdForFractionBetween: number,
-  upperThresholdForFractionBetween: number
+  upperThresholdForFractionBetween: number,
+  groupBy: GroupByModel
 ): Consolidation {
   switch (consolidationFunction?.function) {
+    case 'histogram_preserve':
+      // "Preserve histograms" is only half a wire function: the group-by clause it is
+      // paired with names the other half and owns that half's parameters.
+      switch (groupBy.function) {
+        case 'percentile':
+          return {
+            type: 'histogram_preserve_quantile',
+            lookback_seconds: lookbackSeconds,
+            percentile: groupPercentileToWire(groupBy),
+            group_by: groupKeysToWire(groupBy.keys)
+          }
+        default:
+          throw new Error(`grouping without a "preserve histograms" pairing: ${groupBy.function}`)
+      }
     case 'gauge_max':
       return { type: 'gauge_max', lookback_seconds: lookbackSeconds }
     case 'gauge_avg':
@@ -109,6 +134,8 @@ function toPicker(consolidation: Consolidation): ConsolidationFunction {
     case 'histogram_fraction_below':
     case 'histogram_fraction_between':
       return { type: 'histogram', function: consolidation.type }
+    case 'histogram_preserve_quantile':
+      return { type: 'histogram', function: 'histogram_preserve' }
   }
 }
 
@@ -146,7 +173,8 @@ function storeCurrentWith(overrides: {
       overrides.lowerThresholdForFractionBetween ??
         aggregationHistogramLowerThresholdForFractionBetween.value,
       overrides.upperThresholdForFractionBetween ??
-        aggregationHistogramUpperThresholdForFractionBetween.value
+        aggregationHistogramUpperThresholdForFractionBetween.value,
+      groupBy.value
     )
   )
 }
@@ -192,6 +220,28 @@ const consolidationFunction = computed<ConsolidationFunction>({
   get: () => toPicker(item.consolidation_function),
   set: (value) => storeCurrentWith({ consolidationFunction: value })
 })
+
+const showGroupBy = computed<boolean>(
+  () => consolidationFunction.value.function === 'histogram_preserve'
+)
+
+// The draft the widget edits, not a view of the stored value: an empty pill (a key the
+// user has just added but not filled in) is not persisted, so reading the group-by back
+// out of the store would drop it again the moment it appears.
+const groupBy = ref<GroupByModel>(
+  percentileGroupBy(
+    item.consolidation_function.type === 'histogram_preserve_quantile'
+      ? item.consolidation_function
+      : undefined
+  )
+)
+
+watch(groupBy, () => storeCurrentWith({}))
+
+// The group-by pills pick from the same attribute keys as the where clause, and a group
+// level is an attribute kind, so the resolved kind is the pill's level.
+const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLevel } =
+  useAttributeKeySuggestions(() => buildAutocompleteContext([], { metricName: metricName.value }))
 </script>
 
 <template>
@@ -230,6 +280,20 @@ const consolidationFunction = computed<ConsolidationFunction>({
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
       />
+      <tr v-if="showGroupBy">
+        <td class="graphing-metric-backend-form__label-cell">
+          {{ _t('Group by') }}
+        </td>
+        <td>
+          <FormGroupBy
+            v-model="groupBy"
+            input-type="histogram"
+            :allowed-functions="HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS"
+            :query-suggestions="groupByQuerySuggestions"
+            :resolve-level="groupByResolveLevel"
+          />
+        </td>
+      </tr>
     </tbody>
   </table>
 </template>

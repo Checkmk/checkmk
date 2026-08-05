@@ -13,7 +13,7 @@ import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineV
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { type ValidationMessages } from '@/form/private/validation'
 
@@ -28,7 +28,15 @@ import {
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
 import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendConsolidation.vue'
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
+import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapter'
+import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
 import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
+import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
+import type { GroupByModel } from '@/metric-backend/group-by/types'
+import {
+  HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
+  percentileGroupBy
+} from '@/metric-backend/group-by/wire'
 
 const { _t } = usei18n()
 
@@ -121,19 +129,42 @@ const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
   }
 })
 
+// The draft the widget edits, not a view of the stored value: an empty pill (a key the
+// user has just added but not filled in) is not persisted, so reading the group-by back
+// out of the consolidation would drop it again the moment it appears.
+const groupBy = ref<GroupByModel>(
+  percentileGroupBy(
+    consolidation.value.function === 'histogram_preserve_quantile' ? consolidation.value : undefined
+  )
+)
+
+function rebuildConsolidation(consolidationFunction: ConsolidationFunction | null): void {
+  consolidation.value = buildConsolidationFunction(
+    consolidationFunction,
+    aggregationLookback.value,
+    aggregationHistogramPercentile.value,
+    aggregationHistogramThresholdForFractionBelow.value,
+    aggregationHistogramLowerThresholdForFractionBetween.value,
+    aggregationHistogramUpperThresholdForFractionBetween.value,
+    groupBy.value
+  )
+}
+
 const consolidationFunction = computed<ConsolidationFunction | null>({
   get: () => consolidationFunctionFromWire(consolidation.value),
-  set: (value) => {
-    consolidation.value = buildConsolidationFunction(
-      value,
-      aggregationLookback.value,
-      aggregationHistogramPercentile.value,
-      aggregationHistogramThresholdForFractionBelow.value,
-      aggregationHistogramLowerThresholdForFractionBetween.value,
-      aggregationHistogramUpperThresholdForFractionBetween.value
-    )
-  }
+  set: rebuildConsolidation
 })
+
+watch(groupBy, () => rebuildConsolidation(consolidationFunction.value))
+
+const showGroupBy = computed<boolean>(
+  () => consolidationFunction.value?.function === 'histogram_preserve'
+)
+
+// The group-by pills pick from the same attribute keys as the where clause, and a group
+// level is an attribute kind, so the resolved kind is the pill's level.
+const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLevel } =
+  useAttributeKeySuggestions(() => buildAutocompleteContext([], { metricName: metricName.value }))
 </script>
 
 <template>
@@ -175,6 +206,18 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
       />
+      <tr v-if="showGroupBy">
+        <td>{{ _t('Group by') }}</td>
+        <td>
+          <FormGroupBy
+            v-model="groupBy"
+            input-type="histogram"
+            :allowed-functions="HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS"
+            :query-suggestions="groupByQuerySuggestions"
+            :resolve-level="groupByResolveLevel"
+          />
+        </td>
+      </tr>
       <slot name="additional-rows"></slot>
     </tbody>
   </table>

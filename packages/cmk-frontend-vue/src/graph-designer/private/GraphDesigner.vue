@@ -844,6 +844,20 @@ function consolidationEquals(a: WireConsolidationFunction, b: WireConsolidationF
         a.lower_threshold === b.lower_threshold &&
         a.upper_threshold === b.upper_threshold
       )
+    case 'histogram_preserve_quantile': {
+      const aGroupBy = a.group_by ?? []
+      const bGroupBy = b.function === 'histogram_preserve_quantile' ? (b.group_by ?? []) : undefined
+      return (
+        b.function === 'histogram_preserve_quantile' &&
+        a.lookback_seconds === b.lookback_seconds &&
+        a.percentile === b.percentile &&
+        bGroupBy !== undefined &&
+        aGroupBy.length === bGroupBy.length &&
+        aGroupBy.every(
+          (key, index) => key.kind === bGroupBy[index]?.kind && key.key === bGroupBy[index]?.key
+        )
+      )
+    }
     default:
       staticAssertNever(a)
       return false

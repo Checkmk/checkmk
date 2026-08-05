@@ -33,17 +33,37 @@ export interface GroupByModel {
   keys: GroupKey[]
 }
 
-/** The grouping functions offered for an input type, in catalog (dropdown) order. */
-export function functionsForInputType(type: GroupByInputType): readonly GroupByFunction[] {
-  return type === 'histogram' ? HISTOGRAM_FUNCTIONS : FLOAT_FUNCTIONS
+/**
+ * The grouping functions offered for an input type, in catalog (dropdown) order.
+ *
+ * `allowed` narrows that catalog: a histogram_preserve line passes ['percentile'], so
+ * histogram + percentile stays and histogram + fraction_below drops out. Omitted, every
+ * function of the type is offered.
+ */
+export function functionsForInputType(
+  type: GroupByInputType,
+  allowed?: readonly GroupByFunction[]
+): readonly GroupByFunction[] {
+  const all = type === 'histogram' ? HISTOGRAM_FUNCTIONS : FLOAT_FUNCTIONS
+  if (allowed === undefined) {
+    return all
+  }
+  return all.filter((fn) => allowed.includes(fn))
 }
 
-export function isFunctionValidForInputType(type: GroupByInputType, fn: GroupByFunction): boolean {
-  return functionsForInputType(type).includes(fn)
+export function isFunctionValidForInputType(
+  type: GroupByInputType,
+  fn: GroupByFunction,
+  allowed?: readonly GroupByFunction[]
+): boolean {
+  return functionsForInputType(type, allowed).includes(fn)
 }
 
-export function defaultFunction(type: GroupByInputType): GroupByFunction {
-  return functionsForInputType(type)[0]!
+export function defaultFunction(
+  type: GroupByInputType,
+  allowed?: readonly GroupByFunction[]
+): GroupByFunction {
+  return functionsForInputType(type, allowed)[0]!
 }
 
 export function functionTakesKeys(fn: GroupByFunction): boolean {

@@ -92,7 +92,7 @@
     --default-nav-border-color: var(--ux-theme-6);
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
-    --default-bg-color: var(--ux-theme-2);
+    --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-6);
     --default-form-element-border-color: var(--color-mid-grey-60);
@@ -121,7 +121,7 @@
     --odd-tr-bg-color: var(--ux-theme-4);
     --inline-help-text-bg: rgb(223 239 251);
     --inline-help-icon-bg: rgb(12 129 238);
-    --slide-in-left-part: var(--color-daylight-grey-30);
+    --slide-in-left-part: var(--color-daylight-grey-20);
     --dropdown-arrow-color: var(--color-conference-grey-100);
     --dashed-border-color: var(--color-mid-grey-20);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);

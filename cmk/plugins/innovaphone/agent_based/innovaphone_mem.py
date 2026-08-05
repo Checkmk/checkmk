@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, NewType
 
 from cmk.agent_based.legacy.conversion import (
     # Temporary compatibility layer until we migrate the corresponding ruleset.
@@ -22,23 +22,29 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+MemoryUsedPercent = NewType("MemoryUsedPercent", int)
 
-def discover_innovaphone_mem(section: StringTable) -> DiscoveryResult:
+
+def parse_innovaphone_mem(string_table: StringTable) -> MemoryUsedPercent | None:
+    match string_table:
+        case [[_, str(value)]] if value.isdigit():
+            return MemoryUsedPercent(int(value))
+        case _:
+            return None
+
+
+def discover_innovaphone_mem(section: MemoryUsedPercent) -> DiscoveryResult:
     yield Service()
 
 
-def check_innovaphone_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+def check_innovaphone_mem(params: Mapping[str, Any], section: MemoryUsedPercent) -> CheckResult:
     yield from check_levels(
-        int(section[0][1]),
+        section,
         "mem_used_percent",
         params["levels"],
         human_readable_func=render.percent,
         infoname="Current",
     )
-
-
-def parse_innovaphone_mem(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_innovaphone_mem = AgentSection(

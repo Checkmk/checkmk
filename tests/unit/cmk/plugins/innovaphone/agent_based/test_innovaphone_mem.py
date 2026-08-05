@@ -15,18 +15,30 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.innovaphone.agent_based.innovaphone_mem import (
     check_innovaphone_mem,
     discover_innovaphone_mem,
+    MemoryUsedPercent,
     parse_innovaphone_mem,
 )
 
-_SECTION: StringTable = [["MEM", "55"]]
+
+@pytest.mark.parametrize(
+    "string_table",
+    [
+        pytest.param([], id="empty payload"),
+        pytest.param([[]], id="empty nested payload"),
+        pytest.param([["", "not-a-number"]], id="not a number"),
+    ],
+)
+def test_parse_innovaphone_mem_empty_data(string_table: StringTable) -> None:
+    assert parse_innovaphone_mem(string_table) is None
 
 
-def test_parse_innovaphone_mem_keeps_string_table() -> None:
-    assert parse_innovaphone_mem(_SECTION) == _SECTION
+def test_parse_innovaphone_mem_success() -> None:
+    assert parse_innovaphone_mem([["MEM", "55"]]) == MemoryUsedPercent(55)
 
 
 def test_discover_innovaphone_mem() -> None:
-    assert list(discover_innovaphone_mem(_SECTION)) == [Service()]
+    section = MemoryUsedPercent(55)
+    assert list(discover_innovaphone_mem(section)) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -34,7 +46,7 @@ def test_discover_innovaphone_mem() -> None:
     [
         pytest.param(
             {"levels": (60.0, 70.0)},
-            [["MEM", "55"]],
+            MemoryUsedPercent(55),
             [
                 Result(state=State.OK, summary="Current: 55.00%"),
                 Metric("mem_used_percent", 55.0, levels=(60.0, 70.0)),
@@ -43,7 +55,7 @@ def test_discover_innovaphone_mem() -> None:
         ),
         pytest.param(
             {"levels": (60.0, 70.0)},
-            [["MEM", "65"]],
+            MemoryUsedPercent(65),
             [
                 Result(state=State.WARN, summary="Current: 65.00% (warn/crit at 60.00%/70.00%)"),
                 Metric("mem_used_percent", 65.0, levels=(60.0, 70.0)),
@@ -52,7 +64,7 @@ def test_discover_innovaphone_mem() -> None:
         ),
         pytest.param(
             {"levels": (60.0, 70.0)},
-            [["MEM", "85"]],
+            MemoryUsedPercent(85),
             [
                 Result(state=State.CRIT, summary="Current: 85.00% (warn/crit at 60.00%/70.00%)"),
                 Metric("mem_used_percent", 85.0, levels=(60.0, 70.0)),
@@ -62,6 +74,8 @@ def test_discover_innovaphone_mem() -> None:
     ],
 )
 def test_check_innovaphone_mem(
-    params: Mapping[str, Any], section: StringTable, expected: list[Result | Metric]
+    params: Mapping[str, Any],
+    section: MemoryUsedPercent,
+    expected: list[Result | Metric],
 ) -> None:
     assert list(check_innovaphone_mem(params, section)) == expected

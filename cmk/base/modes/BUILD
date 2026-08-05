@@ -36,7 +36,6 @@ py_library(
         "//cmk/base:base-app",
         "//cmk/base:checkers",
         "//cmk/base:dump-host",
-        "//cmk/base:profiling",
         "//cmk/base/automations",
         "//cmk/base/config",
         "//cmk/base/configlib",
@@ -77,6 +76,7 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",
     ],
 )

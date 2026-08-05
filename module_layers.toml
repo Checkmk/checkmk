@@ -514,10 +514,9 @@ allows = [
   "@ccc",
   "@crash",
   "@trace",
+  "cmk.profiling",
   "cmk.base.app",
   "cmk.base.modes",
-  "cmk.base.profiling",
-  "cmk.base.utils",
   "cmk.utils",
 ]
 

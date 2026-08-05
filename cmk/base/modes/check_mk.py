@@ -29,7 +29,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.base import config, profiling
+from cmk.base import config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
     CheckerConfig,
@@ -137,6 +137,7 @@ from cmk.inventory.structured_data import (
 )
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.piggyback import backend as piggyback_backend
+from cmk.profiling import backend as profiling
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import (
     BundledHostRulesetMatcher,
@@ -244,6 +245,7 @@ _DEBUG_OPTION = Option(
 
 def option_profile() -> None:
     profiling.enable()
+    log.logger.debug("Enabled profiling")
 
 
 _PROFILE_OPTION = Option(
@@ -2098,7 +2100,7 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
         try:
             result = automations.execute(app, name, automation_args)
         finally:
-            profiling.output_profile()
+            profiling.output_profile(cmk.utils.paths.profiles_dir)
         if isinstance(result, AutomationError):
             return result
         with suppress(IOError):

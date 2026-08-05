@@ -15,6 +15,7 @@ py_library(
     srcs = [
         "cmk/profiling/backend/__init__.py",
         "cmk/profiling/backend/_flamegraph.py",
+        "cmk/profiling/backend/_profile.py",
         "cmk/profiling/backend/_store.py",
     ],
     data = [":backend_py_typed"],

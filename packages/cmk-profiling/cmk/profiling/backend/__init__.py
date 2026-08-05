@@ -12,6 +12,7 @@ from ._flamegraph import (
     get_summary_stats,
     get_top_hotspots,
 )
+from ._profile import enable, enabled, output_profile
 from ._store import (
     DEFAULT_MAX_PROFILES,
     delete_all_profiles,
@@ -30,6 +31,9 @@ from ._store import (
 )
 
 __all__ = [
+    "enable",
+    "enabled",
+    "output_profile",
     "DEFAULT_MAX_PROFILES",
     "PROFILE_ID_RE",
     "PROFILE_SUFFIXES",

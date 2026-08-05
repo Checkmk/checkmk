@@ -7,10 +7,9 @@ import marshal
 import sys
 import time
 from contextlib import suppress
+from pathlib import Path
 
-import cmk.utils.paths
-from cmk.profiling.backend import enforce_retention, write_profile
-from cmk.utils.log import console
+from ._store import enforce_retention, write_profile
 
 _profile = None
 _start_time: float | None = None
@@ -23,14 +22,13 @@ def enable() -> None:
     _profile = cProfile.Profile()
     _start_time = time.monotonic()
     _profile.enable()
-    console.verbose("Enabled profiling.")
 
 
 def enabled() -> bool:
     return _profile is not None
 
 
-def output_profile() -> None:
+def output_profile(profiles_dir: Path) -> None:
     if _profile is None:
         return
 
@@ -41,7 +39,6 @@ def output_profile() -> None:
     # runtime config. The GUI reconciles to the configured cap on the next save
     # or page load.
     _profile.create_stats()
-    profiles_dir = cmk.utils.paths.profiles_dir
     try:
         profile_id = write_profile(
             profiles_dir,

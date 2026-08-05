@@ -30,7 +30,6 @@ except KeyError:
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.base import profiling
 from cmk.base.app import make_app
 from cmk.base.modes.call import call
 from cmk.base.modes.check_mk import general_options
@@ -53,10 +52,12 @@ from cmk.crash import (
     make_crash_report_base_path,
     VersionInfo,
 )
+from cmk.profiling.backend import output_profile
 from cmk.trace.export import (
     exporter_from_config,
     init_span_processor,
 )
+from cmk.utils.paths import profile_dir
 
 
 class CrashReport(ABCCrashReport[BaseDetails]):
@@ -223,7 +224,7 @@ def main() -> int:
         return 1
 
     finally:
-        profiling.output_profile()
+        output_profile(profile_dir)
 
 
 if __name__ == "__main__":

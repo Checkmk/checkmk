@@ -112,12 +112,12 @@ from cmk.gui.utils.misc import savefloat
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.urls import is_allowed_url, makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 from cmk.livestatus_client import LivestatusResponse
 from cmk.ruleset_matcher.labels import AndOrNotLiteral, LabelSources
 from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
+from cmk.web.utils.urls import is_allowed_url, makeuri, urlencode
 
 seconds_per_day = 86400
 

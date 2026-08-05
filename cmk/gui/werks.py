@@ -50,7 +50,6 @@ from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -63,6 +62,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.web_pages import web_page_endpoint
 from cmk.utils import paths
 from cmk.utils.man_pages import make_man_page_path_map
+from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.werks.site import load_werk_entries
 from cmk.werks.site.acknowledgement import is_acknowledged
 from cmk.werks.site.acknowledgement import load_acknowledgements as werks_load_acknowledgements

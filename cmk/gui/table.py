@@ -35,7 +35,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
-from cmk.gui.utils.urls import makeuri, requested_file_name
+from cmk.web.utils.urls import makeuri, requested_file_name
 
 
 class TableHeader(NamedTuple):

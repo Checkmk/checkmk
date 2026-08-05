@@ -40,7 +40,6 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils import html
 from cmk.gui.utils.temperate_unit import temperature_unit_choices, TemperatureUnit
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -148,6 +147,7 @@ from cmk.rulesets.internal.form_specs import (
 )
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import (

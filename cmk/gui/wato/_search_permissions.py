@@ -11,10 +11,10 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.search.permissions import VisibilityCheck
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.urls import file_name_and_query_vars_from_url
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.utils import paths
+from cmk.web.utils.urls import file_name_and_query_vars_from_url
 
 
 class SetupPermissionsHandler:

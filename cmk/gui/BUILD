@@ -94,6 +94,7 @@ py_library(
         "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
     ],
 )
@@ -211,6 +212,7 @@ py_library(
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -338,6 +340,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("python-dateutil"),
     ],
 )
@@ -364,6 +367,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-web",
+        "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-werks:site",
         "//packages/cmk-werks:tool",
         "//packages/cmk-werks:web",
@@ -394,6 +398,7 @@ py_library(
         "//packages/cmk-ec",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -448,6 +453,7 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -504,6 +510,7 @@ py_library(
         ":html_toolkit",
         "//cmk/gui/utils:middle",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -567,6 +574,7 @@ py_library(
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
     ],
 )
@@ -597,6 +605,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -650,6 +659,7 @@ py_library(
         "//cmk/gui/data_source",
         "//cmk/gui/utils:middle",
         "//cmk/gui/visuals",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -690,6 +700,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -789,6 +800,7 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-trace",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
         requirement("werkzeug"),
     ],

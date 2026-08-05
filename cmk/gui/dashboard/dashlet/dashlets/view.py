@@ -33,8 +33,8 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
 from cmk.gui.views.store import get_all_views, get_permitted_views
+from cmk.web.utils.urls import makeuri_contextless, requested_file_name
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 

@@ -15,10 +15,10 @@ from cmk.gui.site_config import (
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
 )
-from cmk.gui.utils.urls import makeuri
 from cmk.product_usage.config import load_product_usage_config
 from cmk.shared_typing.product_usage_analytics import ProductUsageAnalyticsConfig
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri
 
 from ._popup_cookie import (
     product_usage_analytics_popup_timestamp_cookie,

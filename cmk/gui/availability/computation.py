@@ -18,7 +18,6 @@ from cmk.gui.type_defs import (
     ViewProcessTracking,
     VisualContext,
 )
-from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.view_utils import cmp_service_name_equiv
 from cmk.gui.watolib.groups_io import all_groups
 from cmk.livestatus_client import (
@@ -27,6 +26,7 @@ from cmk.livestatus_client import (
     Query,
     QuerySpecification,
 )
+from cmk.web.utils.urls import urlencode_vars
 
 from .annotations import reclassify_history_by_annotations
 from .options import get_outage_statistic_options

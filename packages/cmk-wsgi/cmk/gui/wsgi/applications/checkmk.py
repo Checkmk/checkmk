@@ -46,7 +46,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
-from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
     ensure_authentication,
@@ -56,6 +55,7 @@ from cmk.gui.wsgi.applications.utils import (
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
 from cmk.web.exceptions import MKNotFound as WebMKNotFound
+from cmk.web.utils.urls import requested_file_name
 
 tracer = trace.get_tracer()
 

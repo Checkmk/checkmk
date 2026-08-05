@@ -27,7 +27,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.userdb import load_roles
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.global_settings import load_configuration_settings
@@ -49,6 +48,7 @@ from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.utils import paths
 from cmk.utils.timeperiod import timeperiod_spec_alias
+from cmk.web.utils.urls import makeuri_contextless
 
 from .openapi_fields import HostContactGroup
 

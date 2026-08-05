@@ -14,7 +14,7 @@ import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import DocReference
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,

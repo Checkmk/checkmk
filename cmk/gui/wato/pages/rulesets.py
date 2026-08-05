@@ -93,19 +93,13 @@ from cmk.gui.type_defs import (
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-    makeuri,
-    makeuri_contextless,
-)
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -222,6 +216,7 @@ from cmk.ruleset_matcher.tags import GroupedTag, TagGroupID, TagID
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item, ServiceName
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ._rule_conditions import DictHostTagCondition
 

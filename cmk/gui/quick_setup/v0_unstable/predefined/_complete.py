@@ -36,7 +36,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -87,6 +86,7 @@ from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import PasswordConfig as StorePassword
+from cmk.web.utils.urls import makeuri_contextless
 
 
 class DCDHook:

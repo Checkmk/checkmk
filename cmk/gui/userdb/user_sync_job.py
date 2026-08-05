@@ -32,7 +32,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._connections import active_connections
 from ._user_attribute import get_user_attributes, UserAttribute

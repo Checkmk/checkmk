@@ -41,7 +41,6 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.gui.views.command import (
@@ -56,6 +55,7 @@ from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import Dummy, OnlySites
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils.urls import makeuri, urlencode_vars
 
 from .bi_manager import BIManager, load_compiled_branch
 from .foldable_tree_renderer import (

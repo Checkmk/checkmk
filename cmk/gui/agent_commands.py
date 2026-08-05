@@ -14,7 +14,7 @@ from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.permissions import PermissionRegistry
-from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
     AgentRegistrationCmds,

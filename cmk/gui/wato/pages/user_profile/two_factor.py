@@ -97,12 +97,12 @@ from cmk.gui.userdb.session import (
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.wato.pages._user_security_message import (
@@ -113,6 +113,7 @@ from cmk.gui.watolib.mode import redirect
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .page_menu import page_menu_dropdown_user_related
 from .verify_requirements import verify_requirements

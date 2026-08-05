@@ -35,6 +35,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

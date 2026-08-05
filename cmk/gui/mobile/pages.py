@@ -34,7 +34,6 @@ from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer
@@ -49,6 +48,7 @@ from cmk.gui.views.page_show_view import (
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import get_only_sites_from_context, view_title
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils.urls import makeuri, requested_file_name
 
 HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
 Items = list[tuple[str, str, str]]

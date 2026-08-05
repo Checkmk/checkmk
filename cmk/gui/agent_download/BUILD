@@ -27,5 +27,6 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

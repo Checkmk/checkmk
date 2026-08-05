@@ -87,6 +87,7 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("cryptography"),
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),

@@ -47,7 +47,6 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import (
@@ -82,6 +81,7 @@ from cmk.livestatus_client import (
     OnlySites,
 )
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices

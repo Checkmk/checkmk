@@ -32,12 +32,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import (
-    DocReference,
-    makeuri,
-    makeuri_contextless_rulespec_group,
-)
 from cmk.gui.valuespec import (
     DEF_VALUE,
     Dictionary,
@@ -63,6 +59,7 @@ from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
 from cmk.utils import paths
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
+from cmk.web.utils.urls import makeuri, makeuri_contextless_rulespec_group
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry

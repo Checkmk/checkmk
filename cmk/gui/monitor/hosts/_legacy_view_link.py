@@ -7,8 +7,8 @@ from dataclasses import asdict
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.page_link_button import MonitoringPageLinkButton
+from cmk.web.utils.urls import makeuri_contextless
 
 _LEGACY_VIEW_NAME = "allhosts"
 

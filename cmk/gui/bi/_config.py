@@ -66,17 +66,11 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    DocReference,
-    makeactionuri,
-    makeactionuri_contextless,
-    makeuri,
-    makeuri_contextless,
-)
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
@@ -122,6 +116,12 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
+from cmk.web.utils.urls import (
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri,
+    makeuri_contextless,
+)
 
 from ._cron import reset_compile_bi_aggregations_scheduling
 from ._packs import get_cached_bi_packs

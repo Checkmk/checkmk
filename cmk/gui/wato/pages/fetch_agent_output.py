@@ -42,7 +42,6 @@ from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import (
@@ -54,6 +53,7 @@ from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
 from cmk.gui.watolib.mode import mode_url
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def register(

@@ -33,7 +33,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import is_kiosk_request
+from cmk.web.utils.urls import is_kiosk_request
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -20,12 +20,12 @@ from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.host_services import (
     MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 _SUPPORTED_ACTIONS: tuple[str, ...] = (
     "acknowledge",

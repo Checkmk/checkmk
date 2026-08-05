@@ -54,7 +54,6 @@ from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
@@ -89,6 +88,7 @@ from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils import paths, render
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .sites import sort_sites
 

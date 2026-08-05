@@ -50,9 +50,9 @@ from cmk.gui.userdb import (
     UserConnectionConfigFile,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,

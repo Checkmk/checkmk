@@ -10,8 +10,8 @@ from cmk.gui.config import Config
 from cmk.gui.groups import GroupType
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import urlencode
 from cmk.gui.watolib.groups_io import all_groups
+from cmk.web.utils.urls import urlencode
 
 from ._base import SidebarSnapin
 from ._helpers import bulletlink

@@ -1311,6 +1311,7 @@ flask==3.1.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-web/requirements.in
     #   -r packages/cmk-wsgi/requirements.in
 fonttools==4.63.0 \
     --hash=sha256:032038247a96c1690f9f31e377c389383c902531b085aa4e4dabd6f57f870e69 \

@@ -45,7 +45,7 @@ from cmk.gui.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
-from cmk.gui.utils.urls import DocReference
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib import config_domains as legacy_config_domains

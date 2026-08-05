@@ -37,10 +37,10 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri
 from cmk.livestatus_client.expressions import LqSafe
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
+from cmk.web.utils.urls import makeuri
 
 from ..matchers import ABCMatchPlugin, match_plugin_registry, MatchPluginRegistry
 from ._helpers import transform_legacy_results_to_unified

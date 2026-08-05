@@ -37,7 +37,6 @@ from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -50,6 +49,7 @@ from cmk.gui.watolib.mode import WatoMode
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.keypair_store import Key, KeyAlreadyExists, KeyId, KeypairMap, KeypairStore
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 
 class ModeKeyManagement(WatoMode[object]):

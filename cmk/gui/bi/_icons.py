@@ -12,9 +12,9 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._compiler import is_part_of_aggregation
 

@@ -11,9 +11,9 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.urls import makeuri, urlencode_vars
 
 from .columns import availability_columns
 from .computation import cell_active, check_av_levels, history_url_of

@@ -22,6 +22,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-trace",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("pydantic"),
     ],
 )

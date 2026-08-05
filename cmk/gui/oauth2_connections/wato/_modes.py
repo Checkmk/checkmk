@@ -41,7 +41,6 @@ from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIco
 from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -88,6 +87,7 @@ from cmk.shared_typing.mode_oauth2_connection import (
     Oauth2Urls,
 )
 from cmk.utils.oauth2_connection import OAuth2Connection
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def register(mode_registry: ModeRegistry) -> None:

@@ -31,5 +31,6 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

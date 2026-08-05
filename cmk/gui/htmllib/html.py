@@ -45,14 +45,15 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.dataclasses import asdict_strip_none
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
+from cmk.web.utils.urls import requested_file_name
 
 from .generator import HTMLWriter
 from .tag_rendering import (

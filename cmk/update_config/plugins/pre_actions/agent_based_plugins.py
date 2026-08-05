@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import override
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.urls import werk_reference_url, WerkReference
+from cmk.gui.utils.doc_references import werk_reference_url, WerkReference
 from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (

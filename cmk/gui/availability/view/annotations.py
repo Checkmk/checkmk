@@ -40,7 +40,6 @@ from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Checkbox,
@@ -56,6 +55,7 @@ from cmk.gui.valuespec import (
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
+from cmk.web.utils.urls import makeactionuri, makeuri, urlencode_vars
 
 
 def show_annotations(

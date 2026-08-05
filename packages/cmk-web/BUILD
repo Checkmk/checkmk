@@ -11,15 +11,27 @@ exports_files([
     "requirements.in",
 ])
 
+# The contracts a feature implements: no dependency on the rest of cmk.web, so
+# that low level code like //packages/cmk-web/cmk/web/utils can use them.
 py_library(
-    name = "pages",
+    name = "context",
     srcs = [
         "cmk/web/context.py",
         "cmk/web/exceptions.py",
+    ],
+    imports = ["."],
+    visibility = ["//packages/cmk-web:__subpackages__"],
+)
+
+py_library(
+    name = "pages",
+    srcs = [
         "cmk/web/page_container.py",
         "cmk/web/pages.py",
     ],
     imports = ["."],
+    visibility = ["//packages/cmk-web:__subpackages__"],
+    deps = [":context"],
 )
 
 py_library(
@@ -29,6 +41,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        ":context",
         ":pages",
         "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
@@ -39,6 +52,7 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = [
+        ":context",
         ":pages",
         "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
@@ -49,6 +63,7 @@ py_requirements_test(
     name = "requirements-test",
     libs = [
         ":cmk-web",
+        ":context",
         ":pages",
         "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
@@ -65,6 +80,7 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = [
         ":cmk-web",
+        ":context",
         ":pages",
         "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",

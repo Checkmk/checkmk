@@ -28,6 +28,7 @@ py_library(
     srcs = [
         "confirm_links.py",
         "dataclasses.py",
+        "doc_references.py",
         "escaping.py",
         "flashed_messages.py",
         "html.py",
@@ -42,7 +43,6 @@ py_library(
         "selection_id.py",
         "timeout_manager.py",
         "transaction_manager.py",
-        "urls.py",
         "user_errors.py",
         "user_frontend_settings_cookie.py",
     ],
@@ -65,6 +65,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
     ],
 )
@@ -115,6 +116,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
     ],
 )

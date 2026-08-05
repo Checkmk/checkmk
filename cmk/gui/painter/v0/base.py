@@ -50,7 +50,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import (
     CellSpec,
@@ -58,6 +57,7 @@ from cmk.gui.view_utils import (
     JSONExportError,
     PythonExportError,
 )
+from cmk.web.utils.urls import makeuri
 
 from ..v1.painter_lib import (
     experimental_painter_registry,

@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from typing import override
 
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.urls import urlencode_vars
+from cmk.web.utils.urls import urlencode_vars
 
 
 @dataclass

@@ -34,6 +34,13 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_links import get_confirm_link_title
+from cmk.gui.utils.doc_references import (
+    doc_reference_url,
+    DocReference,
+    DocReferenceUtm,
+    youtube_reference_url,
+    YouTubeReference,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
@@ -42,18 +49,8 @@ from cmk.gui.utils.loading_transition import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
-from cmk.gui.utils.urls import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-    makeuri,
-    requested_file_name,
-    urlencode,
-    urlencode_vars,
-    youtube_reference_url,
-    YouTubeReference,
-)
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri, requested_file_name, urlencode, urlencode_vars
 
 
 @dataclass

@@ -15,7 +15,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri
+from cmk.web.utils.urls import makeuri
 
 
 def confirm_with_preview(

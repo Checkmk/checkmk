@@ -18,8 +18,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.livestatus_client import MKLivestatusNotFoundError
+from cmk.web.utils.urls import makeuri_contextless
 
 from ..base import RelativeLayoutConstraints, WidgetSize
 from ..figure_dashlet import ABCFigureDashlet

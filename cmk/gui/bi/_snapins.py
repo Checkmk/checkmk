@@ -16,7 +16,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import bulletlink, SidebarSnapin, SnapinRegistry
-from cmk.gui.utils.urls import makeuri_contextless, urlencode
+from cmk.web.utils.urls import makeuri_contextless, urlencode
 
 from ._packs import aggregation_group_choices, get_aggregation_group_trees
 

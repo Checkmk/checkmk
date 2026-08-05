@@ -83,12 +83,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.urls import makeuri
 
 from .annotations import _handle_edit_annotations, handle_delete_annotations, show_annotations
 from .csv import _output_csv

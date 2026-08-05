@@ -15,7 +15,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Age,
@@ -29,6 +28,7 @@ from cmk.gui.valuespec import (
     Timerange,
     Tuple,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 from .type_defs import (
     AVObjectType,

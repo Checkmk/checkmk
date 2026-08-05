@@ -10,7 +10,7 @@ from cmk.gui.groups import GroupName
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 from .store import load_users
 

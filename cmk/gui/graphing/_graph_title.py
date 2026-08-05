@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _u
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._graph_display_config import GraphDisplayConfigHTML, GraphDisplayConfigImage
 from ._graph_specification import GraphSpecification

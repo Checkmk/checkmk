@@ -71,7 +71,6 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui/utils",
         "//cmk/gui/utils:base",
-        "//cmk/gui/utils:middle",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:resulttype",
@@ -79,6 +78,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-licensing",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -163,10 +163,10 @@ py_library(
     deps = [
         ":config_infra",
         "//cmk/gui:core_toolkit",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

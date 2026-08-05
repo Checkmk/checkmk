@@ -32,7 +32,6 @@ from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages._user_security_message import (
     SecurityNotificationEvent,
@@ -45,6 +44,7 @@ from cmk.gui.watolib.users import (
 )
 from cmk.utils import paths
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.urls import makeuri_contextless
 
 from .page_menu import user_profile_page_menu
 from .verify_requirements import verify_requirements

@@ -22,8 +22,8 @@ from cmk.gui.token_auth import (
 )
 from cmk.gui.type_defs import IconNames, StaticIcon, VisualName
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.visuals._store import TVisual
+from cmk.web.utils.urls import makeuri_contextless
 
 from .store import get_all_dashboards
 from .type_defs import DashboardConfig, DashboardName

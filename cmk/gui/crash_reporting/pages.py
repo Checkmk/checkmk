@@ -57,9 +57,9 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
+from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 
 from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable

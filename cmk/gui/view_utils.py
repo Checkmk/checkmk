@@ -24,12 +24,12 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label
 from cmk.gui.utils.loading_transition import with_loading_transition
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import LabelGroups, Labels, LabelSource, LabelSources
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.utils.html import replace_state_markers
 from cmk.utils.macros import replace_macros_in_str
+from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode
 
 
 def cmp_service_name_equiv(r: str) -> int:

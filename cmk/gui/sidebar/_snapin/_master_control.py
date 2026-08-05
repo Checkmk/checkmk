@@ -20,7 +20,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.livestatus_client import (
     DisableEventHandlers,
@@ -37,6 +36,7 @@ from cmk.livestatus_client import (
     StopExecutingHostChecks,
     StopExecutingServiceChecks,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._base import PageHandlers, SidebarSnapin
 from ._helpers import write_snapin_exception

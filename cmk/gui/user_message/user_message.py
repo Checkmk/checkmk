@@ -30,7 +30,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri
+from cmk.web.utils.urls import makeactionuri
 
 
 class PageUserMessage(Page):

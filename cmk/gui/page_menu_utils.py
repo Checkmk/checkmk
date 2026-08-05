@@ -25,13 +25,13 @@ from cmk.gui.page_menu import (
 from cmk.gui.type_defs import IconNames, InfoName, Rows, SingleInfos, StaticIcon, Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def get_context_page_menu_dropdowns(

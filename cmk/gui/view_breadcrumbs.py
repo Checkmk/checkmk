@@ -14,11 +14,11 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import append_site_from_request, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.urls import append_site_from_request, makeuri_contextless
 
 
 def view_breadcrumb(view: View) -> Breadcrumb:

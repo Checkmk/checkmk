@@ -21,5 +21,6 @@ py_library(
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:version",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

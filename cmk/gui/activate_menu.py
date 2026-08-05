@@ -14,7 +14,6 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, MainMenuLinkItem
 from cmk.gui.userdb.store import load_custom_attr
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.shared_typing.changes import ChangesProps, NavbarChangesActionChoices
 from cmk.shared_typing.main_menu import (
@@ -27,6 +26,7 @@ from cmk.shared_typing.main_menu import (
     NavItemVueApp,
     NavVueAppIdEnum,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def _hide_menu() -> bool:

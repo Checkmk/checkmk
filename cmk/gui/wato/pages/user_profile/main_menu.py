@@ -23,7 +23,6 @@ from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.main_menu import (
     ChipModeEnum,
     ColorEnum,
@@ -36,6 +35,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopicEntryChip,
     NavItemTopicEntryToggle,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def register(

@@ -35,14 +35,14 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb import get_user_attributes, htpasswd
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import (
+from cmk.gui.utils.doc_references import (
     doc_reference_url,
     DocReference,
     DocReferenceUtm,
     werk_reference_url,
     WerkReference,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACSingleResult,

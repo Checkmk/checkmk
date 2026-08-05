@@ -109,7 +109,6 @@ from cmk.gui.utils.roles import (
     UserPermissions,
     UserPermissionSerializableConfig,
 )
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -184,6 +183,7 @@ from cmk.utils import agent_registration, paths, render
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.visuals import invalidate_visuals_cache
+from cmk.web.utils.urls import makeuri_contextless
 
 # TODO: Make private
 Phase = Literal[

@@ -26,7 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.urls import makeuri, requested_file_name
+from cmk.web.utils.urls import makeuri, requested_file_name
 
 
 class DashletDetails(TypedDict):

@@ -35,7 +35,7 @@ from cmk.gui.rule_specs.legacy_converter import (
 )
 from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
-from cmk.gui.utils.urls import DocReference
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs

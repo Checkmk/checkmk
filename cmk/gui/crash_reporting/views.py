@@ -32,7 +32,6 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import (
     Command,
@@ -56,6 +55,7 @@ from cmk.livestatus_client import (
     Query,
     QuerySpecification,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 from .helpers import local_files_involved_in_crash
 

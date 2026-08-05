@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.http import request
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.objref import ObjectRef
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def make_object_audit_log_url(object_ref: ObjectRef) -> str:

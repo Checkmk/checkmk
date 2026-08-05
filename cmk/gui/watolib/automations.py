@@ -57,7 +57,6 @@ from cmk.gui.utils.compatibility import (
     LicensingCompatible,
     make_incompatible_info,
 )
-from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.utils import mk_repr
 from cmk.licensing.handler import LicenseState
@@ -65,6 +64,7 @@ from cmk.licensing.registry import get_license_state
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.web.utils.urls import urlencode_vars
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()

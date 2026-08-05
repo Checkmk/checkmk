@@ -71,7 +71,6 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -112,6 +111,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 
 def _masked_value_for_log(

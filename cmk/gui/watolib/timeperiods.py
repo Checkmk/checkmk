@@ -10,7 +10,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
@@ -23,6 +22,7 @@ from cmk.utils.timeperiod import (
     TimeperiodSpec,
     TimeperiodSpecs,
 )
+from cmk.web.utils.urls import makeuri_contextless
 
 from .config_domain_name import CORE
 from .pending_changes import Change, ChangeScope, PendingChanges

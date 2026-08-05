@@ -96,7 +96,6 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
@@ -105,6 +104,7 @@ from cmk.gui.views.store import get_all_views, get_permitted_views, multisite_bu
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.urls import makeuri_contextless
 
 
 @request_memoize()

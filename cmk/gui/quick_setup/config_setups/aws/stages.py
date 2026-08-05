@@ -50,11 +50,12 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.livestatus_client import SiteConfiguration
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.web.utils.urls import makeuri_contextless
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")

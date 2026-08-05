@@ -15,9 +15,9 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import DynamicIcon, HTTPVariables, IconNames, Row, StaticIcon
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def _render_wato_icon(

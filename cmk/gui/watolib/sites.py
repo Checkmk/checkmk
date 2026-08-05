@@ -59,7 +59,6 @@ from cmk.gui.userdb import (
     saml_connection_choices,
 )
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
     Dictionary as _LegacyDictionary,
 )
@@ -127,6 +126,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils import paths
 from cmk.utils.automation_config import RemoteAutomationConfig
+from cmk.web.utils.urls import makeactionuri
 
 STATIC_PERMISSIONS_SITES = ["sites"]
 

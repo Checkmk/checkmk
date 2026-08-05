@@ -12,8 +12,8 @@ from cmk.gui.i18n import _
 from cmk.gui.user_connection_config_types import SAMLUserConnectionConfig
 from cmk.gui.userdb.type_defs import RelayState
 from cmk.gui.utils.escaping import escape_text
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def show_saml2_login(

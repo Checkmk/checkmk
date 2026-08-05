@@ -42,7 +42,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.view_breadcrumbs import view_breadcrumb
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
@@ -52,6 +51,7 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils.urls import makeuri_contextless
 
 from . import availability
 from .exporter import exporter_registry

@@ -37,9 +37,9 @@ from cmk.gui.userdb import get_user_attributes, load_user, UserAttribute
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
-from cmk.gui.utils.urls import requested_file_name
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.urls import requested_file_name
 
 auth_logger = logger.getChild("auth")
 

@@ -48,9 +48,9 @@ from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.livestatus_client import LivestatusClient, MKLogwatchAcknowledge
+from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |

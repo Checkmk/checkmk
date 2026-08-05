@@ -64,7 +64,6 @@ from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
@@ -138,6 +137,7 @@ from cmk.shared_typing.mode_host import (
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
 from cmk.utils.paths import omd_root, uuid_lookup_dir
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link

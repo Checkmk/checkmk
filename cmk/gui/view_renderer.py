@@ -47,19 +47,20 @@ from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import HTTPVariables, IconNames, InfoName, Rows, StaticIcon, ViewSpec
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.view_breadcrumbs import view_breadcrumb
 from cmk.gui.views.command import Command, do_actions, get_command_groups, should_show_command_form
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:

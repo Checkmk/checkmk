@@ -48,8 +48,8 @@ from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIco
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,

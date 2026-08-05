@@ -7,8 +7,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_link, PageMenuEntry
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, folder_tree
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:

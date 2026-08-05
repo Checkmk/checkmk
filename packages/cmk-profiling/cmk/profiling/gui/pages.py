@@ -34,7 +34,6 @@ from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIco
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri_contextless, makeuri_contextless
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.profiling.backend import (
     build_flamegraph_tree,
@@ -51,6 +50,7 @@ from cmk.shared_typing.profiling_flamegraph import (
     ProfileMetadata as WireProfileMetadata,
 )
 from cmk.shared_typing.profiling_flamegraph import ProfilingFlamegraphData
+from cmk.web.utils.urls import makeactionuri_contextless, makeuri_contextless
 
 # Upload cap — 10 MB is generous for a cProfile dump (typical request profiles
 # are <1 MB). A tighter limit reduces the worst-case size of bytes fed into

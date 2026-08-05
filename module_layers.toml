@@ -365,6 +365,7 @@ allows = []
 
 [components."cmk.backup"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@crypto",
   "cmk.gui.breadcrumb",
@@ -746,6 +747,7 @@ allows = ["@ccc"]
 
 [components."cmk.network_flow.gui"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@network_flow",
@@ -899,6 +901,7 @@ allows = ["@plugin_apis", "cmk.gui"]
 
 [components."cmk.gui.nonfree.pro"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@crypto",
   "@livestatus_client",
@@ -950,6 +953,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui.nonfree.ultimate"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@crypto",
   "@livestatus_client",
@@ -989,6 +993,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui.nonfree.ultimatemt"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -1021,6 +1026,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui.nonfree.cloud"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@crypto",
   "@plugin_apis",
@@ -1190,6 +1196,7 @@ allows = ["cmk.ccc.store", "cmk.shared_typing.profiling_flamegraph"]
 
 [components."cmk.profiling.gui"]
 allows = [
+  "cmk.web.utils",
   "cmk.gui",
   "cmk.profiling.backend",
   "cmk.shared_typing.profiling_flamegraph",
@@ -1319,6 +1326,7 @@ allows = [
 
 [components."cmk.update_config"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@messaging",
@@ -1429,6 +1437,7 @@ allows = [
 
 [components."cmk.robotmk"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -1677,6 +1686,7 @@ allows = ["@ccc", "cmk.utils"]
 
 [components."cmk.dcd.gui"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -1775,6 +1785,7 @@ allows = [
 
 [components."cmk.telemetry.gui"]
 allows = [
+  "cmk.web.utils",
   "@livestatus_client",
   "@plugin_apis",
   "cmk.fields",

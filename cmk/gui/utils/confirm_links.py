@@ -7,8 +7,8 @@
 import json
 
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import quote_plus
 from cmk.web.utils.escaping import escape_text
+from cmk.web.utils.urls import quote_plus
 
 
 def make_confirm_link(

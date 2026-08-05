@@ -15,9 +15,9 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, Row, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def _render_mkeventd_icon(

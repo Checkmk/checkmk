@@ -17,7 +17,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 
 class MenuItem:

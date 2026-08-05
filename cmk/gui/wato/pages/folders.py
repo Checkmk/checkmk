@@ -63,6 +63,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference, YouTubeReference
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -74,13 +75,6 @@ from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    DocReference,
-    makeactionuri,
-    makeuri,
-    makeuri_contextless,
-    YouTubeReference,
-)
 from cmk.gui.valuespec import (
     AjaxDropdownChoice,
     DropdownChoice,
@@ -128,6 +122,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes

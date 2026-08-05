@@ -36,7 +36,6 @@ from cmk.gui.type_defs import Users
 from cmk.gui.userdb import load_users
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestResult,
@@ -46,6 +45,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
 from cmk.utils import paths
 from cmk.utils.html import replace_state_markers
+from cmk.web.utils.urls import makeuri_contextless
 
 
 @dataclass(frozen=True)

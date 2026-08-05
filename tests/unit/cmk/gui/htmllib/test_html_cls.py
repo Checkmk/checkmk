@@ -17,8 +17,8 @@ from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
+from cmk.web.utils.urls import makeuri_contextless
 from tests.unit.cmk.gui.compare_html import compare_html
 
 

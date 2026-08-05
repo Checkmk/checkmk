@@ -23,14 +23,15 @@ from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualTypeName
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.gui.watolib.config_domain_name import config_domain_registry, ConfigDomainRegistry
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri_contextless
 
 from .breadcrumb import dashboard_breadcrumb, EvaluatedBreadcrumbItem
 from .metadata import DashboardMetadataObject

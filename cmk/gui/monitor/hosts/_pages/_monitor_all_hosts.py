@@ -30,7 +30,6 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.user_sites import sorted_sites
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.all_hosts import (
     Edition,
     MonitoringAction,
@@ -40,6 +39,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
     Site,
 )
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri_contextless
 
 _PAGE_TITLE = _("All hosts (experimental)")
 

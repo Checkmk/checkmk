@@ -29,9 +29,9 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry, VisualType
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def render_link_to_view(

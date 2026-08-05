@@ -53,10 +53,10 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.main_menu import NavItemTopic
 from cmk.shared_typing.sidebar import SidebarConfig
 from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
+from cmk.web.utils.urls import makeuri_contextless
 
 from . import _snapin
 from ._openapi.registration import register as register_openapi_endpoints

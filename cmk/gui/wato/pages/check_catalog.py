@@ -47,7 +47,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import DynamicIconName, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID, ValueSpec
 from cmk.gui.wato.pages.rulesets import render_value_model_readonly
 from cmk.gui.watolib.check_mk_automations import get_check_information
@@ -58,6 +57,7 @@ from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import man_pages, paths
+from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ._tile_menu import TileMenuRenderer
 

@@ -44,7 +44,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.livestatus_client import SiteConfiguration
 from cmk.plugins.gcp.rulesets import gcp  # astrein: disable=cmk-module-layer-violation
 from cmk.ruleset_matcher.definition import RuleGroup

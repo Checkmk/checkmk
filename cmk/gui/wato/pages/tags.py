@@ -47,11 +47,11 @@ from cmk.gui.type_defs import (
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
@@ -102,6 +102,7 @@ from cmk.gui.watolib.tags import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.urls import makeuri
 
 from ._tile_menu import TileMenuRenderer
 

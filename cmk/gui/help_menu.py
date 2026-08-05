@@ -13,9 +13,9 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.type_defs import IconNames
+from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.licensing.registry import get_license_message
 from cmk.shared_typing.main_menu import (
@@ -32,6 +32,7 @@ from cmk.shared_typing.main_menu import (
     TopicItemMode,
 )
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def register(

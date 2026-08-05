@@ -33,13 +33,14 @@ from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import load_connection_config, UserConnectionConfigFile
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.urls import makeuri_contextless
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)

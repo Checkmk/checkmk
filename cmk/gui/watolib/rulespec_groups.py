@@ -8,7 +8,7 @@
 from typing import override
 
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import DocReference
+from cmk.gui.utils.doc_references import DocReference
 
 from .rulespecs import (
     RulespecGroup,

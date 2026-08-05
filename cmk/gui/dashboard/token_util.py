@@ -36,9 +36,9 @@ from cmk.gui.token_auth import (
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.views.store import get_permitted_views, ViewStore
 from cmk.utils import paths
+from cmk.web.utils.urls import urlencode_vars
 
 
 class InvalidWidgetError(MKException):

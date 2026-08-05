@@ -47,7 +47,6 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import file_name_and_query_vars_from_url, makeuri_contextless
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
     Checkbox,
@@ -64,6 +63,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
+from cmk.web.utils.urls import file_name_and_query_vars_from_url, makeuri_contextless
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._filter_valuespecs import VisualFilterList

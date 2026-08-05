@@ -33,7 +33,6 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -50,6 +49,7 @@ from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.object_diff import make_diff_text
+from cmk.web.utils.urls import makeuri
 
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand

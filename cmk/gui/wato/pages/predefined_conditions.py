@@ -22,7 +22,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.table import Table
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,
     DictionaryEntry,
@@ -43,6 +42,7 @@ from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionSpec, PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
 

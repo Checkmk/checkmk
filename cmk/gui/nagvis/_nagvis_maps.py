@@ -21,7 +21,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import footnotelinks, PageHandlers, SidebarSnapin
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 # Relative prefix used for the "Edit" footnote link (from check_mk/ to nagvis/).
 _NAGVIS_URL_PREFIX = "../nagvis/"

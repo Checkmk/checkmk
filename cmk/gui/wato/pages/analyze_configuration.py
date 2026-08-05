@@ -42,8 +42,8 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestCategories,
@@ -52,6 +52,7 @@ from cmk.gui.watolib.analyze_configuration import (
     perform_tests,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.web.utils.urls import makeactionuri
 
 
 def register(mode_registry: ModeRegistry) -> None:

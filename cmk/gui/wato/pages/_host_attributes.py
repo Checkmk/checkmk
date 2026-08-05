@@ -20,7 +20,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.html import quick_setup_render_link
 from cmk.gui.utils.html import HTML as HTML
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import FixedValue, ValueSpec
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
@@ -38,6 +37,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.urls import makeuri_contextless
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog

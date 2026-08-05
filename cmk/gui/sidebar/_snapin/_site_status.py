@@ -17,7 +17,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._base import PageHandlers, SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, link, render_link

@@ -63,6 +63,7 @@ from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -70,7 +71,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
@@ -137,6 +137,7 @@ from cmk.utils.html import get_html_state_marker
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import Item
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._status_links import make_host_status_link
 

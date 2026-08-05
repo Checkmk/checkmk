@@ -28,9 +28,9 @@ from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 from cmk.gui.wsgi.type_defs import WSGIResponse
+from cmk.web.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

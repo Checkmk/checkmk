@@ -9,19 +9,21 @@ from werkzeug.test import create_environ
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.urls import (
-    add_kiosk_to_url,
+from cmk.gui.utils.doc_references import (
     doc_reference_url,
     DocReference,
     DocReferenceUtm,
     get_docs_base_url,
+)
+from cmk.web.exceptions import MKNotFound
+from cmk.web.utils.urls import (
+    add_kiosk_to_url,
     is_kiosk_request,
     makeuri_contextless,
     requested_file_name,
     urlencode,
     urlencode_vars,
 )
-from cmk.web.exceptions import MKNotFound
 
 
 @pytest.mark.parametrize(

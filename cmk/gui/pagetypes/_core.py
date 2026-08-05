@@ -101,7 +101,6 @@ from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermission
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
@@ -129,6 +128,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
+from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 SubPagesSpec = list[tuple[str, str, StaticIcon]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]

@@ -15,8 +15,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import DropdownChoice
+from cmk.web.utils.urls import makeuri
 
 
 def DatasourceSelection() -> DropdownChoice[str]:

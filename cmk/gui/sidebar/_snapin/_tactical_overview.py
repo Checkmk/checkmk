@@ -19,8 +19,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import IconNames, StaticIcon, VisualContext
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
+from cmk.web.utils.urls import makeuri_contextless
 
 from ._base import CustomizableSidebarSnapin
 from ._helpers import link

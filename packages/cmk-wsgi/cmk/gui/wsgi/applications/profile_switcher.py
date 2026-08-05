@@ -44,7 +44,7 @@ from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 import pyprof2calltree
 
-from cmk.gui.utils.urls import is_truthy_query_value
+from cmk.web.utils.urls import is_truthy_query_value
 
 P = typing.ParamSpec("P")
 

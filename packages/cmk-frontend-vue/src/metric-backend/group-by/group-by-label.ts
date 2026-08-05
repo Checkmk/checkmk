@@ -34,7 +34,7 @@ export function levelLabel(level: GroupLevel): TranslatedString {
   const labels: Record<GroupLevel, TranslatedString> = {
     resource: _t('Resource'),
     scope: _t('Scope'),
-    datapoint: _t('Data point')
+    data_point: _t('Data point')
   }
   return labels[level]
 }

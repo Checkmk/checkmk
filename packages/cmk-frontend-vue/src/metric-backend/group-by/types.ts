@@ -12,7 +12,7 @@ export type GroupByInputType = ConsolidationOutputType
 export const FLOAT_FUNCTIONS = ['none', 'avg', 'min', 'max', 'sum', 'count'] as const
 export const HISTOGRAM_FUNCTIONS = ['percentile', 'fraction_below', 'fraction_between'] as const
 
-export const GROUP_LEVELS = ['resource', 'scope', 'datapoint'] as const
+export const GROUP_LEVELS = ['resource', 'scope', 'data_point'] as const
 
 export type FloatFunction = (typeof FLOAT_FUNCTIONS)[number]
 export type HistogramFunction = (typeof HISTOGRAM_FUNCTIONS)[number]

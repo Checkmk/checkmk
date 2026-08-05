@@ -32,7 +32,7 @@ export const groupByPresets: Record<PresetName, GroupByModel> = {
     params: {},
     keys: [
       { id: 'preset-service', level: 'resource', key: 'service.name' },
-      { id: 'preset-route', level: 'datapoint', key: 'http.route' }
+      { id: 'preset-route', level: 'data_point', key: 'http.route' }
     ]
   },
   histogramPercentile: {

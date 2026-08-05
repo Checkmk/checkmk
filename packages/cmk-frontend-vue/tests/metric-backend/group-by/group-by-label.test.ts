@@ -47,7 +47,7 @@ test.each<[string, GroupByModel, string]>([
       params: {},
       keys: [
         { id: '1', level: 'resource', key: 'service.name' },
-        { id: '2', level: 'datapoint', key: 'http.route' }
+        { id: '2', level: 'data_point', key: 'http.route' }
       ]
     },
     'avg by [Resource] service.name, [Data point] http.route'

@@ -13,7 +13,7 @@ import type { GroupKey, GroupLevel } from '@/metric-backend/group-by/types'
 
 const KEY_LEVELS: Record<string, GroupLevel> = {
   'service.name': 'resource',
-  'http.route': 'datapoint'
+  'http.route': 'data_point'
 }
 
 function querySuggestions(query: string): Promise<Response> {

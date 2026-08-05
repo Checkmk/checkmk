@@ -13,7 +13,7 @@ import type { GroupByInputType, GroupByModel, GroupLevel } from '@/metric-backen
 
 const KEY_LEVELS: Record<string, GroupLevel> = {
   'service.name': 'resource',
-  'http.route': 'datapoint'
+  'http.route': 'data_point'
 }
 
 function querySuggestions(query: string): Promise<Response> {
@@ -65,7 +65,7 @@ test('the collapsed chip summarises the clause with the level shown dimmed', () 
     function: 'avg',
     keys: [
       { id: '1', level: 'resource', key: 'service.name' },
-      { id: '2', level: 'datapoint', key: 'http.route' }
+      { id: '2', level: 'data_point', key: 'http.route' }
     ]
   })
   const chip = screen.getByRole('button', { name: /Edit group by/ })
@@ -210,7 +210,7 @@ test('picking a key applies key and inferred level in one mutation (also for a s
   await selectKey('http.route')
 
   await waitFor(() => expect(model.value.keys[1]!.key).toBe('http.route'))
-  expect(model.value.keys[1]!.level).toBe('datapoint')
+  expect(model.value.keys[1]!.level).toBe('data_point')
 })
 
 test('entering edit with a single key opens that key pill for editing', async () => {
@@ -228,7 +228,7 @@ test('entering edit with several keys leaves the key pills collapsed', async () 
       function: 'avg',
       keys: [
         { id: 'k1', level: 'resource', key: 'service.name' },
-        { id: 'k2', level: 'datapoint', key: 'http.route' }
+        { id: 'k2', level: 'data_point', key: 'http.route' }
       ]
     },
     'float'

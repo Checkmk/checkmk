@@ -112,7 +112,7 @@ const dummyKeySections: TypedSection[] = [
     ]
   },
   {
-    level: 'datapoint',
+    level: 'data_point',
     title: 'Data point',
     suggestions: [
       { name: 'http.method', title: 'http.method' },

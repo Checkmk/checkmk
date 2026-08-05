@@ -78,7 +78,6 @@ py_library(
         "confirm_with_preview.py",
         "csrf_token.py",
         "encrypter.py",
-        "filter.py",
         "htpasswd.py",
         "json.py",
         "labels.py",

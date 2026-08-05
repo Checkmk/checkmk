@@ -7,8 +7,9 @@ import abc
 import collections
 import contextlib
 import json
+import re
 from collections.abc import Callable, Iterator, Sequence
-from typing import override
+from typing import Final, override
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.pages
@@ -46,9 +47,16 @@ from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.top_heading import top_heading
-from cmk.gui.type_defs import HTTPVariables, IconNames, InfoName, Rows, StaticIcon, ViewSpec
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    IconNames,
+    InfoName,
+    Rows,
+    StaticIcon,
+    ViewSpec,
+    VisualContext,
+)
 from cmk.gui.utils.doc_references import DocReference
-from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
@@ -61,6 +69,53 @@ from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.web.utils.urls import makeuri, makeuri_contextless
+
+_NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
+    {"_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name", "name"}
+)
+_NON_DEFAULT_KEY_REGEX: Final = re.compile(r".*(_op|_bool|_count|_indexof_\d+)$")
+_COUNT_KEY_REGEX: Final = re.compile(r".*_count$")
+_OP_KEY_REGEX: Final = re.compile(r".*_op$")
+
+
+def check_if_non_default_filter_in_request(ctx: VisualContext) -> bool:
+    if request.var("filled_in") != "filter" or request.var("_active") == "":
+        return False
+
+    ctx_keys = set(ctx.keys())
+    request_arg_keys = request.args.keys() - _NON_DEFAULT_KEYS_TO_IGNORE
+
+    for active_key in (request.var("_active") or "").split(";"):
+        if active_key in ctx:
+            ctx_keys.discard(active_key)
+            request_arg_keys.discard(active_key)
+
+            if ctx_sub_keys := ctx[active_key].keys():
+                request_arg_keys -= ctx_sub_keys
+                for sub_key in ctx_sub_keys:
+                    given = request.var(sub_key) or ""
+                    default = ctx[active_key][sub_key] or ""
+                    default = "is" if _OP_KEY_REGEX.match(sub_key) and default == "" else default
+
+                    # Variables with the `_count` suffix and a value of "" are valid as they
+                    # can also increase the count.
+                    if given != default and not _COUNT_KEY_REGEX.match(sub_key):
+                        return True
+
+            # First request check: only hit if key in _active and ctx without sub keys.
+            elif request.var(active_key):
+                return True
+
+        # Second request check: hit if key found in _active but not in context.
+        elif request.var(active_key):
+            return True
+
+    # If any request args remain and are not default keys, a filter must exist.
+    if any(key for key in request_arg_keys if not _NON_DEFAULT_KEY_REGEX.match(key)):
+        return True
+
+    # If any context keys remain post-processing, a filter must exist.
+    return bool(ctx_keys)
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:

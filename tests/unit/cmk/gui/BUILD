@@ -485,6 +485,7 @@ py_cmk_test(
         "//cmk/gui:ntop",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:painter_options",
+        "//cmk/gui:view_toolkit",
         "//cmk/gui:visual_link",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/job",

@@ -5,13 +5,13 @@
 
 import pytest
 
-import cmk.gui.utils.filter
+import cmk.gui.view_renderer
 
 
 def test_requested_filter_is_not_default__empty_request(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars_={}))
+    monkeypatch.setattr(cmk.gui.view_renderer, "request", _RequestStub(args=[], vars_={}))
 
-    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({})
+    value = cmk.gui.view_renderer.check_if_non_default_filter_in_request({})
     expected = False
 
     assert value == expected
@@ -28,9 +28,9 @@ def test_requested_filter_is_not_default__request_args(
     args: list[str], expected: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     stub = _RequestStub(args=args, vars_={"filled_in": "filter", "_active": "foo;bar"})
-    monkeypatch.setattr(cmk.gui.utils.filter, "request", stub)
+    monkeypatch.setattr(cmk.gui.view_renderer, "request", stub)
 
-    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({})
+    value = cmk.gui.view_renderer.check_if_non_default_filter_in_request({})
 
     assert value == expected
 
@@ -46,9 +46,11 @@ def test_requested_filter_is_not_default__request_vars_with_static_ctx(
     vars_: dict[str, str], expected: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     stub = _RequestStub(args=[], vars_=vars_)
-    monkeypatch.setattr(cmk.gui.utils.filter, "request", stub)
+    monkeypatch.setattr(cmk.gui.view_renderer, "request", stub)
 
-    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({"foo": {"hello": "world"}})
+    value = cmk.gui.view_renderer.check_if_non_default_filter_in_request(
+        {"foo": {"hello": "world"}}
+    )
 
     assert value == expected
 
@@ -195,9 +197,9 @@ def test_requested_filter_is_not_default__request_vars_with_dynamic_ctx(
     expected: bool,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars_=vars_))
+    monkeypatch.setattr(cmk.gui.view_renderer, "request", _RequestStub(args=[], vars_=vars_))
 
-    value = cmk.gui.utils.filter.check_if_non_default_filter_in_request(ctx)
+    value = cmk.gui.view_renderer.check_if_non_default_filter_in_request(ctx)
 
     assert value == expected
 

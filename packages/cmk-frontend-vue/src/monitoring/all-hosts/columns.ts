@@ -21,10 +21,10 @@ export interface HostColumnOptions {
 }
 
 /**
- * The columns a user may hide.
- * These should satisfy the HostOptionalField type.
+ * Columns the user may hide that also map to API-optional fields.
+ * When hidden, their field is omitted from the API request.
  */
-const HIDEABLE_COLUMNS = [
+const OPTIONAL_FIELD_COLUMNS = [
   'alias',
   'address',
   'folder',
@@ -38,14 +38,23 @@ const HIDEABLE_COLUMNS = [
   'last_state_change'
 ] as const satisfies readonly HostOptionalField[]
 
-const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set(HIDEABLE_COLUMNS)
+/**
+ * Columns the user may hide whose fields are always included in every API
+ * response (not declared optional) and therefore never need to be requested.
+ */
+const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id'] as const
+
+const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set([
+  ...OPTIONAL_FIELD_COLUMNS,
+  ...ALWAYS_FETCHED_HIDEABLE_COLUMNS
+])
 
 /**
  * The host optional fields (columns) the table currently shows,
  * to ask the API for those alone.
  */
 export function visibleHostFields(visibility: VisibilityState): HostOptionalField[] {
-  return HIDEABLE_COLUMNS.filter((field) => visibility[field] !== false)
+  return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
 function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
@@ -191,6 +200,14 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
     {
       accessorKey: 'folder',
       header: _t('Folder'),
+      sortDescFirst: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true }
+    },
+    {
+      accessorKey: 'site_id',
+      header: _t('Site'),
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,

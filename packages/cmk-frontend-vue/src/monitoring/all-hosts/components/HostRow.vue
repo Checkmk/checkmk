@@ -92,6 +92,7 @@ const lastStateChange = computed(() =>
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
   <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
+  <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />
   <NumberCell
     v-if="hasColumn('num_services')"
     column-id="num_services"

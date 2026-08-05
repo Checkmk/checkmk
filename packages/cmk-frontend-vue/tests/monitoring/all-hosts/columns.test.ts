@@ -70,6 +70,7 @@ test('the optional columns are offered in the picker, labelled by their header',
     { id: 'alias', label: 'Host alias' },
     { id: 'address', label: 'IP address' },
     { id: 'folder', label: 'Folder' },
+    { id: 'site_id', label: 'Site' },
     { id: 'num_services', label: 'All services' },
     { id: 'num_services_ok', label: 'OK' },
     { id: 'num_services_warn', label: 'Wa' },
@@ -87,6 +88,7 @@ test('most offered columns are shown on first use, but alias, folder and the tim
   expect(service.defaultColumnVisibility).toEqual({
     alias: false,
     folder: false,
+    site_id: false,
     last_check: false,
     last_state_change: false
   })
@@ -102,6 +104,7 @@ test('the fixed columns keep their position around the optional ones', () => {
     'alias',
     'address',
     'folder',
+    'site_id',
     'num_services',
     'num_services_ok',
     'num_services_warn',
@@ -115,7 +118,12 @@ test('the fixed columns keep their position around the optional ones', () => {
 })
 
 test('every hideable column asks for its field while nothing is hidden', () => {
-  expect(visibleHostFields({})).toEqual(makeService().toggleableColumns.map((column) => column.id))
+  // site_id is always present in every API response, so it is not an optional
+  // field and does not appear in visibleHostFields.
+  const optionalFieldColumns = makeService()
+    .toggleableColumns.map((column) => column.id)
+    .filter((id) => id !== 'site_id')
+  expect(visibleHostFields({})).toEqual(optionalFieldColumns)
 })
 
 test('a hidden column stops asking for its field', () => {
@@ -127,11 +135,12 @@ test('a hidden column stops asking for its field', () => {
 })
 
 test('the fields of the fixed columns are never asked for, the API always sending them', () => {
-  // Only what the API treats as optional can be requested; 'state', 'name' and
-  // the modes come with every host either way.
+  // Only what the API treats as optional can be requested; 'state', 'name',
+  // 'site_id' and the modes come with every host either way.
   expect(visibleHostFields({})).not.toContain('state')
   expect(visibleHostFields({})).not.toContain('name')
   expect(visibleHostFields({})).not.toContain('modes')
+  expect(visibleHostFields({})).not.toContain('site_id')
 })
 
 test('the actions column is neither rendered nor pinned when no row action is permitted', () => {

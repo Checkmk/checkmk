@@ -125,15 +125,15 @@ test('renders one cell per service state with its count', () => {
   )
 
   const tds = Array.from(container.querySelectorAll('td'))
-  // select, state, modes, name, alias, address, folder, total, ok, warn, crit, unknown, pending,
-  // last_check, last_state_change
-  expect(tds).toHaveLength(15)
-  expect(tds[7]).toHaveTextContent('15')
-  expect(tds[8]).toHaveTextContent('1')
-  expect(tds[9]).toHaveTextContent('2')
-  expect(tds[10]).toHaveTextContent('3')
-  expect(tds[11]).toHaveTextContent('4')
-  expect(tds[12]).toHaveTextContent('5')
+  // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
+  // pending, last_check, last_state_change
+  expect(tds).toHaveLength(16)
+  expect(tds[8]).toHaveTextContent('15')
+  expect(tds[9]).toHaveTextContent('1')
+  expect(tds[10]).toHaveTextContent('2')
+  expect(tds[11]).toHaveTextContent('3')
+  expect(tds[12]).toHaveTextContent('4')
+  expect(tds[13]).toHaveTextContent('5')
 })
 
 test('toggles the row selection when the checkbox is clicked', async () => {

@@ -134,24 +134,22 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_grep.set_defaults(func=main_grep)
 
-    # IDS
+    # IDS (removed)
     parser_ids = subparsers.add_parser(
-        "ids",
-        help="Show the number of reserved Werk IDs",
+        "ids", help="[Removed] Werk IDs are reserved automatically, see 'status'"
     )
-    parser_ids.add_argument(
-        "count",
-        nargs="?",
-        type=int,
-        help="ignored, kept for backwards compatibility",
+    # still accepted so that invocations from the days of manual reservation get the hint
+    # of main_ids_removed instead of an argparse error
+    parser_ids.add_argument("count", nargs="?", type=int, help=argparse.SUPPRESS)
+    parser_ids.add_argument("-n", "--no-commit", action="store_true", help=argparse.SUPPRESS)
+    parser_ids.set_defaults(func=main_ids_removed)
+
+    # STATUS
+    parser_status = subparsers.add_parser(
+        "status",
+        help="Show the status of your reserved Werk IDs (only on the master and 3.0.0 branch)",
     )
-    parser_ids.add_argument(
-        "-n",
-        "--no-commit",
-        action="store_true",
-        help="ignored, kept for backwards compatibility",
-    )
-    parser_ids.set_defaults(func=main_show_ids)
+    parser_status.set_defaults(func=main_status)
 
     # LIST
     parser_list = subparsers.add_parser("list", help="List Werks")
@@ -957,15 +955,20 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             subprocess.run(["git", "status"], check=True)
 
 
-def main_show_ids(args: argparse.Namespace) -> None:
-    # '--no-commit' is ignored; it is kept only so that existing invocations from
-    # the days of manual reservation don't fail. IDs are now reserved on the fly.
-    sys.stdout.write(repr(load_stash_from_file(make_paths_object(Path.home()))))
-    if args.count is not None:
-        bail_out(
-            "The manual reservation of werk IDs is no longer supported, as these IDs are now"
-            " reserved on the fly. Should any issues arise, please open a ticket."
-        )
+_BRANCHES_WITH_STATUS = "the master or the 3.0.0 branch"
+
+
+def main_status(_args: argparse.Namespace) -> None:
+    bail_out(
+        f"'werk status' is not available on this branch. Please run it on {_BRANCHES_WITH_STATUS}."
+    )
+
+
+def main_ids_removed(_args: argparse.Namespace) -> None:
+    bail_out(
+        "The 'ids' subcommand has been removed: Werk IDs are now reserved automatically during"
+        f" 'werk new'. To see your reserved IDs, run 'werk status' on {_BRANCHES_WITH_STATUS}."
+    )
 
 
 def main_preview(args: argparse.Namespace) -> None:

@@ -7,22 +7,17 @@ import datetime
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal, NamedTuple, override, TypeVar
+from typing import Literal, NamedTuple, override
 
 from pydantic import BaseModel, Field
 
 from ..in_out_elements import TTY_NORMAL, TTY_RED
 from ..parse import WerkV2ParseResult, WerkV3ParseResult
 
-T = TypeVar("T", bound="Stash")
-
 
 class Stash(BaseModel):
     stash_version: Literal["3"] = Field(default="3", alias="__version__")
     ids: list[int] = Field(default=[])
-
-    def __repr__(self) -> str:
-        return f"Stash({self.ids!r})"
 
     def count(self) -> int:
         """
@@ -38,7 +33,8 @@ class Stash(BaseModel):
             return WerkId(sorted(self.ids)[0])
         except (KeyError, IndexError) as e:
             raise RuntimeError(
-                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
+                "You have no Werk IDs. Please ensure that you're in the VPN and the werk IDs "
+                "server is reachable, then try again."
             ) from e
 
     def free_id(self, werk_id: "WerkId") -> None:

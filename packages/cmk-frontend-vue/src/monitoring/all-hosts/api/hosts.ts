@@ -3,10 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { SortingState } from '@tanstack/vue-table'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { RequestedLimit } from '@/monitoring/shared/services/MonitoringService'
+import { MonitoringApi, type MonitoringQueryParams } from '@/monitoring/shared/api/MonitoringApi'
 
 import type {
   FilterNode,
@@ -16,26 +15,21 @@ import type {
   HostsRequestBody,
   HostsResponse
 } from '../../shared/api/types'
-import { DEFAULT_BATCH_SIZE } from '../../shared/constants'
 
-export interface HostQueryParams {
-  limit?: RequestedLimit
-  sort?: SortingState
+export interface HostQueryParams extends MonitoringQueryParams {
   searchQuery?: string
   filter?: FilterNode | undefined
   fields?: HostOptionalField[]
 }
 
-export class HostApi {
+export class HostApi extends MonitoringApi {
   public async fetchHosts(
     params: HostQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostsResponse> {
-    const sort = (params.sort ?? []).map((s) => `${s.id}:${s.desc ? 'desc' : 'asc'}`)
     const searchQuery = params.searchQuery?.trim()
     const body: HostsRequestBody = {
-      limit: params.limit === undefined ? DEFAULT_BATCH_SIZE : params.limit,
-      ...(sort.length > 0 && { sort }),
+      ...this.buildRequestBody(params),
       ...(searchQuery && { q: searchQuery }),
       ...(params.filter && { filter: params.filter }),
       ...(params.fields !== undefined && { fields: params.fields })

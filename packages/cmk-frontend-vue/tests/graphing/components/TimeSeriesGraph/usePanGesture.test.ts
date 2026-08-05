@@ -26,25 +26,26 @@ const DRAG_SECONDS = 200
 type PanGesture = ReturnType<typeof usePanGesture>
 type ZoomGesture = ReturnType<typeof useZoomGesture>
 
-function buildScales() {
+function buildScales(range: TimeRange = TIME_RANGE) {
   const xScale = scaleTime()
-    .domain([new Date(TIME_RANGE.start * 1000), new Date(TIME_RANGE.end * 1000)])
+    .domain([new Date(range.start * 1000), new Date(range.end * 1000)])
     .range([0, PLOT_WIDTH])
   const yScale = scaleLinear().domain([0, 100]).range([PLOT_HEIGHT, 0])
   return { xScale, yScale }
 }
 
 // useId and onBeforeUnmount need a mounted harness.
-function mountPan(options: { panEnabled?: boolean } = {}) {
+function mountPan(options: { panEnabled?: boolean; timeRange?: TimeRange } = {}) {
+  const timeRange = options.timeRange ?? TIME_RANGE
   const onCommit = vi.fn()
   const onStart = vi.fn()
-  const { xScale } = buildScales()
+  const { xScale } = buildScales(timeRange)
   let api!: PanGesture
   const harness = defineComponent({
     setup() {
       api = usePanGesture({
         panEnabled: () => options.panEnabled ?? true,
-        timeRange: () => TIME_RANGE,
+        timeRange: () => timeRange,
         measureLabel: (text: string) => text.length * 6,
         plotWidth: ref(PLOT_WIDTH),
         xScale,
@@ -132,6 +133,34 @@ function committedRange(onCommit: ReturnType<typeof mountPan>['onCommit']): Time
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('usePanGesture — the end of the navigable axis', () => {
+  function rangeEndingToday(spanSeconds: number): TimeRange {
+    const endOfToday = new Date()
+    endOfToday.setHours(23, 59, 59, 999)
+    const end = Math.floor(endOfToday.getTime() / 1000)
+    return { start: end - spanSeconds, end, step: 60 }
+  }
+
+  test('a drag towards the future stops at the end of the current day', () => {
+    const { api, onCommit } = mountPan({ timeRange: rangeEndingToday(SPAN_SECONDS) })
+
+    pan(api, PRESS_X, PRESS_X - DRAG_DISTANCE_PX)
+
+    const endOfToday = new Date()
+    endOfToday.setHours(23, 59, 59, 999)
+    expect(committedRange(onCommit).end).toBe(Math.floor(endOfToday.getTime() / 1000))
+  })
+
+  test('a window held at the bound keeps its span', () => {
+    const { api, onCommit } = mountPan({ timeRange: rangeEndingToday(SPAN_SECONDS) })
+
+    pan(api, PRESS_X, PRESS_X - DRAG_DISTANCE_PX)
+
+    const committed = committedRange(onCommit)
+    expect(committed.end - committed.start).toBe(SPAN_SECONDS)
+  })
 })
 
 describe('usePanGesture', () => {

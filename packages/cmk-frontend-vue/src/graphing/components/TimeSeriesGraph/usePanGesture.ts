@@ -13,6 +13,7 @@ import {
   computeTimeAxis
 } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 
+import { endOfCurrentDaySeconds, withinNavigableTime } from './interaction/timeBounds'
 import type { TimeRange } from './types'
 
 // A drag shorter than this is treated as a click, not a pan (mirrors the zoom threshold).
@@ -92,11 +93,16 @@ export function usePanGesture(options: PanGestureOptions) {
     const range = options.timeRange()
     const span = range.end - range.start
     const shiftSeconds = -(dx / options.plotWidth.value) * span
-    options.onCommit({
-      start: range.start + shiftSeconds,
-      end: range.end + shiftSeconds,
-      step: range.step
-    })
+    options.onCommit(
+      withinNavigableTime(
+        {
+          start: range.start + shiftSeconds,
+          end: range.end + shiftSeconds,
+          step: range.step
+        },
+        endOfCurrentDaySeconds()
+      )
+    )
   }
 
   onBeforeUnmount(() => {

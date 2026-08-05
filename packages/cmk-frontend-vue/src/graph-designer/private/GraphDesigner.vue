@@ -210,6 +210,7 @@ const dataQuery = ref<Query>({
     lookback_seconds: dataQueryAggregationLookbackDefault
   }
 })
+const queryFormKey = ref(0)
 
 function consolidationPercentile(cf: WireConsolidationFunction): number {
   return cf.function === 'histogram_quantile'
@@ -482,6 +483,10 @@ async function addQuery() {
         lookback_seconds: dataQueryAggregationLookbackDefault
       }
     }
+    // Resetting dataQuery cannot reach the form's local drafts (the group-by clause, the
+    // consolidation pill, the resolved metric types), so remount it instead. Otherwise the
+    // next query silently inherits the added line's grouping.
+    queryFormKey.value += 1
   }
 }
 
@@ -1438,6 +1443,7 @@ const graphDesignerContentAsJson = computed(() => {
     <template #query>
       <div>
         <FormMetricBackendCustomQuery
+          :key="queryFormKey"
           v-model:metric-name="dataQuery.metricName"
           v-model:attribute-filter="dataQuery.attributeFilter"
           v-model:consolidation="dataQuery.consolidationFunction"

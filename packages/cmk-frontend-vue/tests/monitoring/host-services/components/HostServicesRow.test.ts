@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import type { Row } from '@tanstack/vue-table'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent, h } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
@@ -22,12 +23,20 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
   }
 }
 
-function mountRow(row: HostServiceEntry) {
+function makeTableRow(overrides: Partial<Row<HostServiceEntry>> = {}): Row<HostServiceEntry> {
+  return {
+    getIsSelected: () => false,
+    toggleSelected: () => {},
+    ...overrides
+  } as unknown as Row<HostServiceEntry>
+}
+
+function mountRow(row: HostServiceEntry, tableRow: Row<HostServiceEntry> = makeTableRow()) {
   return render(
     defineComponent({
       components: { HostServicesRow },
       render() {
-        return h('table', [h('tbody', [h('tr', [h(HostServicesRow, { row })])])])
+        return h('table', [h('tbody', [h('tr', [h(HostServicesRow, { row, tableRow })])])])
       }
     })
   )
@@ -44,7 +53,7 @@ test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(5)
+  expect(tds).toHaveLength(6)
 })
 
 test('renders the two timestamps as formatted date-time strings', () => {
@@ -53,8 +62,8 @@ test('renders the two timestamps as formatted date-time strings', () => {
   const cellText = (td: Element): string =>
     (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(cellText(tds[3]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
   expect(cellText(tds[4]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+  expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
 })
 
 test('renders the state badge with success color for state OK', () => {
@@ -87,4 +96,30 @@ test('renders the state badge with unknown color for state UNKNOWN', () => {
   const stateTag = container.querySelector('.cmk-tag--color-unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNKN')
+})
+
+test('renders a checkbox cell for row selection', () => {
+  mountRow(makeService())
+
+  const checkbox = screen.getByRole('checkbox', { name: /Select service CPU load/i })
+  expect(checkbox).toBeInTheDocument()
+})
+
+test('checkbox reflects selected state from tableRow', () => {
+  const tableRow = makeTableRow({ getIsSelected: () => true })
+  mountRow(makeService(), tableRow)
+
+  const checkbox = screen.getByRole('checkbox', { name: /Select service CPU load/i })
+  expect(checkbox).toBeChecked()
+})
+
+test('checkbox calls toggleSelected on tableRow when clicked', async () => {
+  const toggleSelected = vi.fn()
+  const tableRow = makeTableRow({ toggleSelected })
+  mountRow(makeService(), tableRow)
+
+  const checkbox = screen.getByRole('checkbox', { name: /Select service CPU load/i })
+  await fireEvent.click(checkbox)
+
+  expect(toggleSelected).toHaveBeenCalledWith(true)
 })

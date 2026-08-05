@@ -13,6 +13,14 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
 
   return [
     {
+      id: 'select',
+      header: '',
+      enableSorting: false,
+      minSize: 36,
+      maxSize: 36,
+      meta: { selectColumn: true, justify: 'center' }
+    },
+    {
       accessorKey: 'state',
       header: _t('State'),
       sortDescFirst: true,

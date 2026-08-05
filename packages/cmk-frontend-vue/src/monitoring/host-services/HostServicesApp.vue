@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { RowSelectionState } from '@tanstack/vue-table'
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -29,6 +30,8 @@ import { HostServicesService } from './services/HostServicesService'
 const { _t } = usei18n()
 
 const props = defineProps<MonitoringHostServicesApp>()
+
+const rowSelection = ref<RowSelectionState>({})
 
 const columns = useHostServicesColumns()
 
@@ -117,6 +120,7 @@ function closeSlideIn(): void {
       </div>
     </div>
     <MonitoringTable
+      v-model:row-selection="rowSelection"
       :rows="hostServicesService.items.value"
       :fetch-state="hostServicesService.fetchState.value"
       :has-loaded="hostServicesService.hasLoaded.value"
@@ -125,8 +129,8 @@ function closeSlideIn(): void {
       :get-row-key="rowKey"
       @update:filter-state="hostServicesService.onColumnFiltersUpdate($event)"
     >
-      <template #row="{ row }">
-        <HostServicesRow :row="row" @open="openSlideIn" />
+      <template #row="{ row, tableRow }">
+        <HostServicesRow :row="row" :table-row="tableRow" @open="openSlideIn" />
       </template>
       <template #empty-state>
         <MonitoringEmptyState

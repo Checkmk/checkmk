@@ -23,8 +23,12 @@ class Queue:
     length: int
 
 
-def parse_qmail_stats(string_table: StringTable) -> Queue:
-    return Queue(int(string_table[0][0]))
+def parse_qmail_stats(string_table: StringTable) -> Queue | None:
+    if not string_table or not string_table[0]:
+        return None
+    if not (raw_length := string_table[0][-1]).isdigit():
+        return None
+    return Queue(int(raw_length))
 
 
 def discover_qmail_stats(section: Queue) -> LegacyDiscoveryResult:

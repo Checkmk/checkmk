@@ -9,7 +9,10 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 import FilterDropdown from '@/monitoring/shared/components/filter/FilterDropdown.vue'
-import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
+import type {
+  CheckboxListFilter,
+  ColumnFilterValue
+} from '@/monitoring/shared/components/filter/types'
 
 const definition: CheckboxListFilter<'state'> = {
   type: 'checkbox-list',
@@ -37,8 +40,8 @@ function renderDropdown(initial: ColumnFilterNode<FilterField> | undefined = und
             definition: definition,
             label: 'State',
             modelValue: model.value,
-            'onUpdate:modelValue': (value: ColumnFilterNode<FilterField> | undefined) => {
-              model.value = value
+            'onUpdate:modelValue': (value: ColumnFilterValue<FilterField> | undefined) => {
+              model.value = value as ColumnFilterNode<FilterField> | undefined
             }
           },
           {
@@ -106,9 +109,10 @@ test('a click that unmounts its own target does not close the funnel', async () 
   await user.click(screen.getByRole('button', { name: 'Open' }))
   const panel = screen.getByRole('group', { name: 'Filter State' })
 
-  // Stands in for content that unmounts as it is activated. It is still in the
-  // panel at pointerdown and detached by the time the document-level click
-  // handler runs, so a containment check made then sees a node inside nothing.
+  // Stands in for floating content that unmounts as it is activated - a dropdown
+  // option, say. It is still in the panel at pointerdown and detached by the time
+  // the document-level click handler runs, so a containment check made then sees
+  // a node that is inside nothing at all.
   const option = document.createElement('button')
   option.addEventListener('click', () => option.remove())
   panel.appendChild(option)

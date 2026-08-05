@@ -8,7 +8,7 @@ Generic popover shell for a column filter. It owns only shell concerns:
 open/close, positioning, click-outside and keyboard navigation between the
 focusable rows (via the shared KeyShortcutService). The actual filter UI is
 mounted from a per-type registry; each filter component owns its own state and
-communicates via v-model (a `ColumnFilterNode` or undefined). New filter types
+communicates via v-model (a `ColumnFilterValue` or undefined). New filter types
 (numeric range, IP range, ...) register in FILTER_COMPONENTS without touching
 this shell.
 
@@ -23,9 +23,10 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
+import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
 
-import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
+import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { MONITORING_SERVICE } from '../MonitoringTableContext'
 import FilterBooleanGroup from './FilterBooleanGroup.vue'
@@ -33,14 +34,16 @@ import FilterCheckboxList from './FilterCheckboxList.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
-import type { ColumnFilterDefinition } from './types'
+import FilterVisualFilter from './FilterVisualFilter.vue'
+import type { ColumnFilterDefinition, ColumnFilterValue } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
   'string-input': FilterStringInput,
   numeric: FilterNumeric,
   'boolean-group': FilterBooleanGroup,
-  'column-visibility': FilterColumnVisibility
+  'column-visibility': FilterColumnVisibility,
+  'visual-filter': FilterVisualFilter
 }
 
 const props = defineProps<{
@@ -50,7 +53,7 @@ const props = defineProps<{
   clearLabel?: string
 }>()
 
-const model = defineModel<ColumnFilterNode<FilterField> | undefined>({ default: undefined })
+const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
 
 const { _t } = usei18n()
 
@@ -70,7 +73,7 @@ const pressStartedInside = ref(false)
 
 // Staged edits, snapshotted from the committed model on open. Only Apply writes
 // this back to the model; cancelling discards it.
-const draft = ref<ColumnFilterNode<FilterField> | undefined>(undefined)
+const draft = ref<ColumnFilterValue<FilterField> | undefined>(undefined)
 
 // Bumped to force the mounted filter component to re-initialise from the draft.
 // The per-type filter components derive their internal display state from the
@@ -81,6 +84,13 @@ const isValid = ref(true)
 
 const panel = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
+
+// A filter component may mount floating content of its own (a CmkDropdown's
+// suggestion list, say). Unless it lands inside the panel it teleports to the
+// body, and then opening it reads as a click outside the panel and closes the
+// whole funnel. Registering the panel as the floating target keeps that content
+// within it, the way CmkSlideIn does for its own descendants.
+provideFloatingTarget(() => panel.value ?? undefined)
 
 const isActive = computed(() => model.value !== undefined)
 
@@ -99,7 +109,7 @@ function open(): void {
     suppressNextClickOutside.value = false
   }, 0)
   registerShortcuts()
-  // Capture, so it still runs when the content stops propagation.
+  // Capture, so it still runs when the floating content stops propagation.
   document.addEventListener('pointerdown', onPointerDown, true)
   void nextTick(() => {
     positionPanel()
@@ -145,11 +155,11 @@ function clear(): void {
   draftKey.value += 1
 }
 
-// Content inside the panel may unmount on the very click that activates it. The
-// click-outside check runs after that, on a target already detached from the
-// document, so it no longer tests as "inside" and the funnel would close along
-// with it. Pointerdown fires while the target is still mounted, so that is where
-// "inside" is decided.
+// Floating content inside the panel typically unmounts on the very click that
+// activates it - picking a dropdown option, say. The click-outside check runs
+// after that, on a target already detached from the document, so it no longer
+// tests as "inside" and the funnel would close along with it. Pointerdown fires
+// while the target is still mounted, so that is where "inside" is decided.
 function onPointerDown(event: PointerEvent): void {
   const target = event.target as Node | null
   pressStartedInside.value =

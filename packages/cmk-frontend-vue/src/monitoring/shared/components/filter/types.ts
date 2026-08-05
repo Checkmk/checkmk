@@ -3,7 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { FilterField } from '@/monitoring/shared/api/types'
+import type { ConfiguredValues } from 'cmk-ui-library/components/filter'
+
+import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
 /** A single checkable value shown in the {@link CheckboxListFilter} dropdown. */
 export interface FilterCheckboxOption {
@@ -75,6 +77,22 @@ export interface ColumnVisibilityFilter {
 }
 
 /**
+ * Filter whose content is a registered visuals filter - one of the `Filter`
+ * subclasses the REST API serves under /domain-types/visual_filter - rendered
+ * from that filter's own definition.
+ *
+ * Unlike the other variants this carries no `field`: its value is the filter's
+ * `ConfiguredValues`, keyed by the filter's own HTTP variables, rather than a
+ * condition on a column. A page using it therefore owns the mapping from column
+ * to filter and does not go through the FilterStore.
+ */
+export interface VisualFilterColumnFilter {
+  type: 'visual-filter'
+  /** Ident of the registered filter whose definition the funnel renders. */
+  filterId: string
+}
+
+/**
  * Per-column filter description, injected via `columnDef.meta.filter`. The
  * `FilterDropdown` switches its rendered content on `type`.
  *
@@ -88,6 +106,7 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | NumericFilter<F>
   | BooleanGroupFilter<F>
   | ColumnVisibilityFilter
+  | VisualFilterColumnFilter
 
 /**
  * The API field(s) a column filter targets: single-field filters expose one,
@@ -101,3 +120,12 @@ export function filterFields(filter: ColumnFilterDefinition): FilterField[] {
   }
   return 'field' in filter ? [filter.field] : []
 }
+
+/**
+ * The committed value of a column funnel: a typed condition for the
+ * field-centric variants, or a visuals filter's configured values for
+ * {@link VisualFilterColumnFilter}.
+ */
+export type ColumnFilterValue<F extends FilterField = FilterField> =
+  | ColumnFilterNode<F>
+  | ConfiguredValues

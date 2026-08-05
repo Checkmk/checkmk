@@ -19,10 +19,11 @@ import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type CSSProperties, inject } from 'vue'
 
-import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
+import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
+import type { ColumnFilterValue } from './filter/types'
 
 const { _t } = usei18n()
 
@@ -33,13 +34,13 @@ defineProps<{
   disabled?: boolean
 }>()
 
-function filterValue(column: Column<T, unknown>): ColumnFilterNode<FilterField> | undefined {
-  return column.getFilterValue() as ColumnFilterNode<FilterField> | undefined
+function filterValue(column: Column<T, unknown>): ColumnFilterValue<FilterField> | undefined {
+  return column.getFilterValue() as ColumnFilterValue<FilterField> | undefined
 }
 
 function setFilterValue(
   column: Column<T, unknown>,
-  node: ColumnFilterNode<FilterField> | undefined
+  node: ColumnFilterValue<FilterField> | undefined
 ): void {
   column.setFilterValue(node)
 }

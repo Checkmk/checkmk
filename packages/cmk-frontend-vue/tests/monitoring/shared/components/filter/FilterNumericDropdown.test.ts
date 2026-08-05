@@ -9,7 +9,7 @@ import { defineComponent, h, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 import FilterDropdown from '@/monitoring/shared/components/filter/FilterDropdown.vue'
-import type { NumericFilter } from '@/monitoring/shared/components/filter/types'
+import type { ColumnFilterValue, NumericFilter } from '@/monitoring/shared/components/filter/types'
 
 const definition: NumericFilter<'num_services'> = {
   type: 'numeric',
@@ -28,8 +28,8 @@ function renderDropdown(initial: ColumnFilterNode<FilterField> | undefined = und
             definition,
             label: 'Services',
             modelValue: model.value,
-            'onUpdate:modelValue': (value: ColumnFilterNode<FilterField> | undefined) => {
-              model.value = value
+            'onUpdate:modelValue': (value: ColumnFilterValue<FilterField> | undefined) => {
+              model.value = value as ColumnFilterNode<FilterField> | undefined
             }
           },
           {

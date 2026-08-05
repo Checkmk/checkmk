@@ -63,9 +63,9 @@ section-order = [
 werks = ["werks"]
 cmc_proto = ["cmc_proto"]
 testlib = ["tests.testlib"]
-integrationtests = ["tests.integration"]
-compositiontests = ["tests.composition"]
-unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+integrationtests = ["tests.system.singlesite"]
+compositiontests = ["tests.system.multisite"]
+unittests = ["tests.unit", "tests.system.plugins", "tests.system.update"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_utils = ["cmk.utils"]
@@ -141,7 +141,7 @@ module = [
     "cmk.update_config.*",
     "cmk.utils.crypto.*",
     "cmk.utils.livestatus_helpers.*",
-    "tests.gui_e2e.*",
+    "tests.system.gui.*",
     "tests.testlib.*",
     "tests.unit.cmk.ec.*",
     "tests.unit.cmk.update_config.*",

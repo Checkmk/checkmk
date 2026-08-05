@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
@@ -18,6 +19,24 @@ from ._validators import validate_uniqueness
 # the OpenAPI spec registers component schemas by class name across every endpoint family; an
 # unprefixed name would collide with the identically-shaped, but differently-fielded, hosts filter
 # models.
+
+_NO_NEWLINES_REGEX = r"^[^\n]*$"
+
+type ServiceStringOp = Literal["contains", "matches"]
+
+
+@api_model
+class ServiceStringCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["name", "summary"] = api_field(
+        description="String service field to filter on", example="name"
+    )
+    op: ServiceStringOp = api_field(description="String match operation", example="contains")
+    value: str = api_field(
+        description="Value to match against the field", example="CPU", pattern=_NO_NEWLINES_REGEX
+    )
 
 
 @api_model
@@ -35,7 +54,7 @@ class ServiceStateChoiceCondition:
     )
 
 
-type ServiceConditionNode = ServiceStateChoiceCondition
+type ServiceConditionNode = ServiceStateChoiceCondition | ServiceStringCondition
 
 
 @api_model(slots=False)
@@ -46,10 +65,8 @@ class ServiceAndNode:
     children: Annotated[list["ServiceFilterNode"], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
+            ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
             ServiceStateChoiceCondition(type="condition", field="state", op="one_of", value=["OK"]),
-            ServiceStateChoiceCondition(
-                type="condition", field="state", op="one_of", value=["WARN"]
-            ),
         ],
     )
 
@@ -62,10 +79,8 @@ class ServiceOrNode:
     children: Annotated[list["ServiceFilterNode"], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
+            ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
             ServiceStateChoiceCondition(type="condition", field="state", op="one_of", value=["OK"]),
-            ServiceStateChoiceCondition(
-                type="condition", field="state", op="one_of", value=["WARN"]
-            ),
         ],
     )
 
@@ -89,6 +104,10 @@ def parse_as_livestatus_filter(node: ServiceFilterNode) -> ServiceFilter:
 
 def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
     match node:
+        case ServiceStringCondition():
+            column = _LIVESTATUS_FIELD_OVERRIDES.get(node.field, node.field)
+            filters.append(f"Filter: {column} {_STRING_OP_TO_LS[node.op]} {node.value}")
+
         case ServiceStateChoiceCondition():
             for value in node.value:
                 filters.append(f"Filter: {node.field} = {ServiceState[value]}")
@@ -110,3 +129,15 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
         case ServiceNotNode():
             _accumulate_filters(node.child, filters)
             filters.append("Negate:")
+
+
+_STRING_OP_TO_LS = {
+    "contains": "~~",
+    "matches": "~",
+}
+# The domain names these fields after what the table shows, which for some of them differs from
+# the livestatus column they are read from.
+_LIVESTATUS_FIELD_OVERRIDES: Mapping[str, str] = {
+    "name": "description",
+    "summary": "plugin_output",
+}

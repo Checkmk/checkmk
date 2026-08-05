@@ -3,13 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
+import pytest
+
 from cmk.gui.monitor.services._api._filters import (
     parse_as_livestatus_filter,
     ServiceAndNode,
     ServiceNotNode,
     ServiceOrNode,
     ServiceStateChoiceCondition,
+    ServiceStringCondition,
+    ServiceStringOp,
 )
+
+
+@pytest.mark.parametrize(
+    "op, ls_op",
+    [
+        ("contains", "~~"),
+        ("matches", "~"),
+    ],
+)
+def test_query_builder_string_condition(op: ServiceStringOp, ls_op: str) -> None:
+    condition = ServiceStringCondition(type="condition", field="name", op=op, value="CPU")
+    assert parse_as_livestatus_filter(condition) == f"Filter: description {ls_op} CPU"
+
+
+@pytest.mark.parametrize(
+    "public, private",
+    [
+        ("name", "description"),
+        ("summary", "plugin_output"),
+    ],
+)
+def test_query_builder_string_fields_are_properly_overriden(
+    public: Literal["name", "summary"],
+    private: str,
+) -> None:
+    condition = ServiceStringCondition(type="condition", field=public, op="contains", value="CPU")
+    assert parse_as_livestatus_filter(condition) == f"Filter: {private} ~~ CPU"
 
 
 def test_query_builder_state_choice_single_no_or() -> None:
@@ -65,5 +98,22 @@ def test_query_builder_nested_conditions() -> None:
 
     value = parse_as_livestatus_filter(nodes)
     expected = "Filter: state = 1\nFilter: state = 0\nFilter: state = 3\nOr: 2\nNegate:\nAnd: 2"
+
+    assert value == expected
+
+
+def test_query_builder_mixed_string_and_state_conditions() -> None:
+    nodes = ServiceAndNode(
+        type="and",
+        children=[
+            ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
+            ServiceStateChoiceCondition(
+                type="condition", field="state", op="one_of", value=["WARN"]
+            ),
+        ],
+    )
+
+    value = parse_as_livestatus_filter(nodes)
+    expected = "Filter: description ~~ CPU\nFilter: state = 1\nAnd: 2"
 
     assert value == expected

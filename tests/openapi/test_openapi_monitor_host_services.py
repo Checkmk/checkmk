@@ -91,6 +91,10 @@ class TestMonitorHostServicesQueryParamValidation:
                 id="uniqueness in 'one_of' condition",
             ),
             pytest.param(
+                {"type": "condition", "field": "name", "op": "contains", "value": "x\n"},
+                id="newline in string value",
+            ),
+            pytest.param(
                 {
                     "type": "and",
                     "children": [
@@ -114,7 +118,7 @@ class TestMonitorHostServicesQueryParamValidation:
 
 class TestMonitorHostServicesFilters:
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
-    def test_filters(
+    def test_single_filter(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
@@ -179,6 +183,90 @@ class TestMonitorHostServicesFilters:
             "field": "state",
             "op": "one_of",
             "value": ["WARN", "CRIT"],
+        }
+
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, filters=filters
+            )
+
+        assert resp.json["services"] == [
+            {
+                "name": "CPU load",
+                "state": "WARN",
+                "summary": "WARN - load average: 3.10, 2.05, 1.01",
+                "last_check": "2026-07-13T11:39:00Z",
+                "last_state_change": "2026-07-13T11:39:00Z",
+            }
+        ]
+
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_with_multiple_conditions(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 1,
+                    "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
+                    "last_check": time.time(),
+                    "last_state_change": time.time(),
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                f"Filter: name = {_HOSTNAME}",
+                "Limit: 1",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICES_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                "Filter: description ~~ CPU",
+                "Filter: state = 1",
+                "And: 2",
+                _DEFAULT_ORDER_BY,
+                f"Limit: {_LIMIT}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                "Stats: state >= 0",
+                f"Filter: host_name = {_HOSTNAME}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                "Stats: state >= 0",
+                f"Filter: host_name = {_HOSTNAME}",
+                "Filter: description ~~ CPU",
+                "Filter: state = 1",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+        filters = {
+            "type": "and",
+            "children": [
+                {"type": "condition", "field": "name", "op": "contains", "value": "CPU"},
+                {"type": "condition", "field": "state", "op": "one_of", "value": ["WARN"]},
+            ],
         }
 
         with mock_livestatus():

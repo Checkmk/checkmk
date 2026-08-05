@@ -6,6 +6,9 @@
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { type ComputedRef, computed, shallowRef } from 'vue'
 
+import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
+import { endsInThePast } from './private/timeRange'
+
 export type ActiveTimeRange = DateTimeRange | null
 
 // Singleton shared across the page's Vue apps. Write only via setActiveTimeRange.
@@ -18,6 +21,14 @@ const activeTimeRange = computed(() => rangeState.value)
 
 function setActiveTimeRange(value: ActiveTimeRange): void {
   rangeState.value = value
+  pauseRefreshForRangeEndingInThePast(value)
+}
+
+// Such a window cannot gain new data. One-way: resuming stays the user's call.
+function pauseRefreshForRangeEndingInThePast(value: ActiveTimeRange): void {
+  if (value !== null && endsInThePast(value)) {
+    useGlobalRefresh().setRefreshPaused(true)
+  }
 }
 
 export interface GlobalTimeRange {

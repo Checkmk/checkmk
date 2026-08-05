@@ -21,3 +21,10 @@ export function durationSeconds(range: DateTimeRange): number {
 export function endsNow(range: DateTimeRange, toleranceSeconds = 60): boolean {
   return Math.abs(range.to.toDate().getTime() - Date.now()) <= toleranceSeconds * 1000
 }
+
+/** Whether the range ends before now. Not the negation of `endsNow`: the calendar quick
+ * ranges (Today, This week, …) end in the future and still cover the present.
+ */
+export function endsInThePast(range: DateTimeRange, toleranceSeconds = 60): boolean {
+  return range.to.toDate().getTime() < Date.now() - toleranceSeconds * 1000
+}

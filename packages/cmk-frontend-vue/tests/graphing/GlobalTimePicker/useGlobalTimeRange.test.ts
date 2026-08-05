@@ -5,9 +5,14 @@
  */
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick, watch } from 'vue'
 
+import {
+  resetGlobalRefresh,
+  useGlobalRefresh
+} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+import { rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 
 const TZ = 'Europe/Berlin'
@@ -45,5 +50,57 @@ describe('useGlobalTimeRange', () => {
     useGlobalTimeRange().setActiveTimeRange(range(9, 10))
     await nextTick()
     expect(seen).toEqual([range(9, 10)])
+  })
+
+  describe('pausing the global refresh', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      // Noon on the 10th: range(9, 10) has ended, range(10, 11) has not.
+      vi.setSystemTime(zoned(10).add({ hours: 12 }).toDate())
+      resetGlobalRefresh()
+      useGlobalRefresh().setRefreshPaused(false)
+    })
+
+    afterEach(() => {
+      resetGlobalRefresh()
+      vi.useRealTimers()
+    })
+
+    test('a range that already ended pauses the refresh', () => {
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10))
+
+      expect(useGlobalRefresh().refreshPaused.value).toBe(true)
+    })
+
+    test('a range ending now keeps the refresh running', () => {
+      useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600))
+
+      expect(useGlobalRefresh().refreshPaused.value).toBe(false)
+    })
+
+    test('a range ending in the future keeps the refresh running', () => {
+      // The "Today" quick range shape: ends at the end of the day.
+      useGlobalTimeRange().setActiveTimeRange(range(10, 11))
+
+      expect(useGlobalRefresh().refreshPaused.value).toBe(false)
+    })
+
+    test('going back to a range ending now does not resume the refresh', () => {
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10))
+
+      useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600))
+
+      expect(useGlobalRefresh().refreshPaused.value).toBe(true)
+    })
+
+    test('resuming while a range that already ended is selected keeps that range', () => {
+      const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+      setActiveTimeRange(range(9, 10))
+
+      useGlobalRefresh().setRefreshPaused(false)
+
+      expect(useGlobalRefresh().refreshPaused.value).toBe(false)
+      expect(activeTimeRange.value).toEqual(range(9, 10))
+    })
   })
 })

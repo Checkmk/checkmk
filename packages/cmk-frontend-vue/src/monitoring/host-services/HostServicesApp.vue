@@ -4,12 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { ColumnFiltersState } from '@tanstack/vue-table'
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
-import { computed, onMounted, ref } from 'vue'
+import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
+import { computed, onBeforeUnmount, provide } from 'vue'
 
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
-import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
@@ -17,36 +17,33 @@ import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import MonitoringTotalCount from '../shared/components/MonitoringTotalCount.vue'
+import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { HostServicesApi } from './api/services'
 import { useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
+import { HostServicesService } from './services/HostServicesService'
 
 const props = defineProps<MonitoringHostServicesApp>()
 
-const api = new HostServicesApi()
-
-const services = ref<HostServiceEntry[]>([])
-const matched = ref(0)
-const total = ref(0)
-const fetchState = ref<FetchState>('foreground')
-const hasLoaded = ref(false)
-const columnFilters = ref<ColumnFiltersState>([])
-
 const columns = useHostServicesColumns()
 
-const isNarrowed = computed(() => columnFilters.value.length > 0)
-
-onMounted(async () => {
-  try {
-    const response = await api.fetchServices(props.host, props.site)
-    services.value = response.services
-    matched.value = response.meta.matched
-    total.value = response.meta.total
-  } finally {
-    fetchState.value = 'idle'
-    hasLoaded.value = true
+const hostServicesService = new HostServicesService(
+  new HostServicesApi(),
+  { name: props.host, site_id: props.site },
+  getKeyShortcutServiceInstance(),
+  {
+    pollIntervalMs: props.poll_interval_ms,
+    columns
   }
+)
+
+const isNarrowed = computed(() => hostServicesService.filters.activeFilterCount > 0)
+
+onBeforeUnmount(() => {
+  hostServicesService.destruct()
 })
+
+provide(MONITORING_SERVICE, hostServicesService)
 
 function rowKey(row: HostServiceEntry): string {
   return row.name
@@ -62,17 +59,27 @@ function rowKey(row: HostServiceEntry): string {
   />
   <div class="monitoring-host-services-app">
     <div class="monitoring-host-services-app__counts">
-      <MonitoringResultsCount :matched="matched" :narrowed="isNarrowed" />
-      <MonitoringTotalCount :total="total" />
+      <MonitoringResultsCount :matched="hostServicesService.matched.value" :narrowed="isNarrowed" />
+      <div class="monitoring-host-services-app__counts-end">
+        <MonitoringTotalCount :total="hostServicesService.total.value" />
+        <RefreshCountdown
+          :remaining="hostServicesService.secondsRemaining.value"
+          :interval="hostServicesService.pollIntervalSeconds"
+          :paused="hostServicesService.paused.value"
+          :manual-paused="hostServicesService.manualPaused.value"
+          size="small"
+          @toggle="hostServicesService.togglePause()"
+        />
+      </div>
     </div>
     <MonitoringTable
-      :rows="services"
-      :fetch-state="fetchState"
-      :has-loaded="hasLoaded"
+      :rows="hostServicesService.items.value"
+      :fetch-state="hostServicesService.fetchState.value"
+      :has-loaded="hostServicesService.hasLoaded.value"
       :columns="columns"
-      :filter-state="columnFilters"
+      :filter-state="hostServicesService.tableColumnFilters.value"
       :get-row-key="rowKey"
-      @update:filter-state="columnFilters = $event"
+      @update:filter-state="hostServicesService.onColumnFiltersUpdate($event)"
     >
       <template #row="{ row }">
         <HostServicesRow :row="row" />
@@ -100,5 +107,11 @@ function rowKey(row: HostServiceEntry): string {
   flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
+}
+
+.monitoring-host-services-app__counts-end {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
 }
 </style>

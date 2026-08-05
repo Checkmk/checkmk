@@ -5,24 +5,23 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { HostServicesResponse } from '@/monitoring/shared/api/types'
+import { MonitoringApi, type MonitoringQueryParams } from '@/monitoring/shared/api/MonitoringApi'
+import type { HostRef, HostServicesResponse } from '@/monitoring/shared/api/types'
 
-const DEFAULT_SERVICE_LIMIT = 1000
-
-export class HostServicesApi {
+export class HostServicesApi extends MonitoringApi {
   public async fetchServices(
-    host: string,
-    site: string,
+    host: HostRef,
+    params: MonitoringQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostServicesResponse> {
     return unwrap(
       await client.POST('/monitor/hosts/{hostname}/services', {
         params: {
-          path: { hostname: host },
-          query: { site_id: site },
+          path: { hostname: host.name },
+          query: { site_id: host.site_id },
           header: { 'Content-Type': 'application/json' }
         },
-        body: { limit: DEFAULT_SERVICE_LIMIT },
+        body: this.buildRequestBody(params),
         ...(signal && { signal })
       })
     )

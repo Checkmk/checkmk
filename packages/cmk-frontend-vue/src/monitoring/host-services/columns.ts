@@ -15,7 +15,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     {
       accessorKey: 'state',
       header: _t('State'),
-      enableSorting: false,
+      sortDescFirst: true,
       minSize: 74,
       maxSize: 100,
       meta: { justify: 'center' }
@@ -23,27 +23,27 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     {
       accessorKey: 'name',
       header: _t('Service'),
-      enableSorting: false,
+      sortDescFirst: false,
       minSize: 150,
       maxSize: 350
     },
     {
       accessorKey: 'summary',
       header: _t('Summary'),
-      enableSorting: false,
+      sortDescFirst: false,
       minSize: 200
     },
     {
       accessorKey: 'last_check',
       header: _t('Last check'),
-      enableSorting: false,
+      sortDescFirst: true,
       minSize: 120,
       maxSize: 200
     },
     {
       accessorKey: 'last_state_change',
       header: _t('Last state change'),
-      enableSorting: false,
+      sortDescFirst: true,
       minSize: 120,
       maxSize: 200
     }

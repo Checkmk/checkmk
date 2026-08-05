@@ -8,8 +8,11 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
+import type { HostRef } from '@/monitoring/shared/api/types'
 
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
+
+const HOST: HostRef = { name: 'web-1', site_id: 'local' }
 
 function makeApiEntry(overrides: Partial<ApiServiceEntry> = {}): ApiServiceEntry {
   return {
@@ -62,7 +65,45 @@ describe('HostServicesApi.fetchServices', () => {
   it('calls the host services endpoint with the host, site and default limit', async () => {
     mockSuccess([])
 
-    await new HostServicesApi().fetchServices('web-1', 'local')
+    await new HostServicesApi().fetchServices(HOST)
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
+      ...EXPECTED_PARAMS,
+      body: { limit: 1000 }
+    })
+  })
+
+  it('sends the requested limit', async () => {
+    mockSuccess([])
+
+    await new HostServicesApi().fetchServices(HOST, { limit: 25 })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
+      ...EXPECTED_PARAMS,
+      body: { limit: 25 }
+    })
+  })
+
+  it('encodes the sort state as column:direction values', async () => {
+    mockSuccess([])
+
+    await new HostServicesApi().fetchServices(HOST, {
+      sort: [
+        { id: 'state', desc: true },
+        { id: 'name', desc: false }
+      ]
+    })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
+      ...EXPECTED_PARAMS,
+      body: { limit: 1000, sort: ['state:desc', 'name:asc'] }
+    })
+  })
+
+  it('omits the sort key when nothing is sorted', async () => {
+    mockSuccess([])
+
+    await new HostServicesApi().fetchServices(HOST, { sort: [] })
 
     expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
       ...EXPECTED_PARAMS,
@@ -74,7 +115,7 @@ describe('HostServicesApi.fetchServices', () => {
     mockSuccess([])
     const signal = new AbortController().signal
 
-    await new HostServicesApi().fetchServices('web-1', 'local', signal)
+    await new HostServicesApi().fetchServices(HOST, {}, signal)
 
     expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
       ...EXPECTED_PARAMS,
@@ -87,7 +128,7 @@ describe('HostServicesApi.fetchServices', () => {
     const entry = makeApiEntry()
     mockSuccess([entry])
 
-    const response = await new HostServicesApi().fetchServices('web-1', 'local')
+    const response = await new HostServicesApi().fetchServices(HOST)
 
     expect(response.services).toEqual([entry])
   })
@@ -102,7 +143,7 @@ describe('HostServicesApi.fetchServices', () => {
       response: new Response()
     } as never)
 
-    const response = await new HostServicesApi().fetchServices('web-1', 'local')
+    const response = await new HostServicesApi().fetchServices(HOST)
 
     expect(response.meta.matched).toBe(7)
     expect(response.meta.total).toBe(42)
@@ -115,6 +156,6 @@ describe('HostServicesApi.fetchServices', () => {
       response: new Response('', { status: 404, statusText: 'Not Found' })
     } as never)
 
-    await expect(new HostServicesApi().fetchServices('web-1', 'local')).rejects.toThrow()
+    await expect(new HostServicesApi().fetchServices(HOST)).rejects.toThrow()
   })
 })

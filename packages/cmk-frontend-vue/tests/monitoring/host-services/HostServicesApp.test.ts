@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
@@ -24,6 +25,20 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+function servicesResponse(
+  services: ApiServiceEntry[],
+  counts: { matched: number; total: number }
+): unknown {
+  return {
+    data: {
+      services,
+      meta: { hostname: 'web-1', site_id: 'local', limit: 1000, ...counts }
+    },
+    error: undefined,
+    response: new Response()
+  }
+}
+
 function mockServices(
   services: ApiServiceEntry[],
   counts: { matched: number; total: number } = {
@@ -31,14 +46,7 @@ function mockServices(
     total: services.length
   }
 ): void {
-  postSpy.mockResolvedValueOnce({
-    data: {
-      services,
-      meta: { hostname: 'web-1', site_id: 'local', limit: 1000, ...counts }
-    },
-    error: undefined,
-    response: new Response()
-  } as never)
+  postSpy.mockResolvedValue(servicesResponse(services, counts) as never)
 }
 
 function makeApiEntry(): ApiServiceEntry {
@@ -82,4 +90,43 @@ test('shows no matching count while nothing narrows the services', async () => {
 
   expect(await screen.findByText('Total rows: 42')).toBeInTheDocument()
   expect(screen.queryByText(/Rows matching your criteria/)).not.toBeInTheDocument()
+})
+
+test('requests the services sorted by name ascending on the first click of the Service header', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('button', { name: 'Service' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Service' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000, sort: ['name:asc'] } })
+  )
+})
+
+test('requests a descending sort first for the State column', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('button', { name: 'State' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'State' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000, sort: ['state:desc'] } })
+  )
+})
+
+test('marks the sorted column with its direction', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('button', { name: 'Service' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Service' }))
+
+  expect(screen.getByRole('columnheader', { name: 'Service' })).toHaveAttribute(
+    'aria-sort',
+    'ascending'
+  )
 })

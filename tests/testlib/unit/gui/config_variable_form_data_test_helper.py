@@ -646,8 +646,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[add]": {"host": "127.0.0.1", "mangling": False, "port": 2003, "prefix": ""},
     },
     "cmc_real_time_checks": {
-        "[choice 0]": None,
-        "[choice 1]": {"port": 6559},
+        "[enable]": {"port": 6559},
     },
     "cmc_smartping_tuning": {
         "throttling": (10, 1000),

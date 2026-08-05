@@ -5,8 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
+import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, onBeforeUnmount, provide } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue'
 
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -23,6 +25,8 @@ import { useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
 import { HostServicesService } from './services/HostServicesService'
 
+const { _t } = usei18n()
+
 const props = defineProps<MonitoringHostServicesApp>()
 
 const columns = useHostServicesColumns()
@@ -37,7 +41,17 @@ const hostServicesService = new HostServicesService(
   }
 )
 
-const isNarrowed = computed(() => hostServicesService.filters.activeFilterCount > 0)
+const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+
+const isNarrowed = computed(
+  () =>
+    hostServicesService.filters.activeFilterCount > 0 ||
+    hostServicesService.committedSearchQuery.value !== ''
+)
+
+onMounted(() => {
+  hostServicesService.onFocusSearch(() => searchInput.value?.focus())
+})
 
 onBeforeUnmount(() => {
   hostServicesService.destruct()
@@ -58,6 +72,17 @@ function rowKey(row: HostServiceEntry): string {
     :url="legacy_view_button.url"
   />
   <div class="monitoring-host-services-app">
+    <div class="monitoring-host-services-app__header">
+      <CmkSearchInput
+        ref="searchInput"
+        v-model="hostServicesService.searchQuery.value"
+        class="monitoring-host-services-app__search"
+        :placeholder="_t('Search services…')"
+        @search="hostServicesService.updateSearch($event)"
+        @focusin="hostServicesService.beginAutoPause()"
+        @focusout="hostServicesService.endAutoPause()"
+      />
+    </div>
     <div class="monitoring-host-services-app__counts">
       <MonitoringResultsCount :matched="hostServicesService.matched.value" :narrowed="isNarrowed" />
       <div class="monitoring-host-services-app__counts-end">
@@ -85,7 +110,10 @@ function rowKey(row: HostServiceEntry): string {
         <HostServicesRow :row="row" />
       </template>
       <template #empty-state>
-        <MonitoringEmptyState :has-active-filter="isNarrowed" />
+        <MonitoringEmptyState
+          :has-search-query="hostServicesService.committedSearchQuery.value !== ''"
+          :has-active-filter="hostServicesService.filters.activeFilterCount > 0"
+        />
       </template>
     </MonitoringTable>
   </div>
@@ -100,6 +128,18 @@ function rowKey(row: HostServiceEntry): string {
   min-height: 0;
   padding-bottom: var(--spacing);
   padding-right: var(--spacing);
+}
+
+.monitoring-host-services-app__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+.monitoring-host-services-app__search {
+  flex: 1;
+  max-width: 360px;
 }
 
 .monitoring-host-services-app__counts {

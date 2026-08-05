@@ -70,7 +70,7 @@ describe('HostServicesService', () => {
 
     expect(fetchServices).toHaveBeenLastCalledWith(
       HOST,
-      { limit: DEFAULT_BATCH_SIZE, sort: [] },
+      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: '' },
       expect.any(AbortSignal)
     )
   })
@@ -86,7 +86,23 @@ describe('HostServicesService', () => {
 
     expect(fetchServices).toHaveBeenLastCalledWith(
       { ...HOST },
-      { limit: DEFAULT_BATCH_SIZE, sort: [{ id: 'state', desc: true }] },
+      { limit: DEFAULT_BATCH_SIZE, sort: [{ id: 'state', desc: true }], searchQuery: '' },
+      expect.any(AbortSignal)
+    )
+  })
+
+  it('passes the search query to api.fetchServices after updateSearch is called', async () => {
+    const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
+    service = new HostServicesService({ fetchServices }, HOST, makeKeyShortcutService())
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSearch('CPU')
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchServices).toHaveBeenLastCalledWith(
+      { ...HOST },
+      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'CPU' },
       expect.any(AbortSignal)
     )
   })

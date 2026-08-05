@@ -12,12 +12,14 @@ import type { RequestedLimit } from '@/monitoring/shared/services/MonitoringServ
 export interface MonitoringQueryParams {
   limit?: RequestedLimit
   sort?: SortingState
+  searchQuery?: string
 }
 
 /** The part of a listing request body that is the same for every monitoring listing. */
 export interface MonitoringRequestBody {
   limit: RequestedLimit
   sort?: string[]
+  q?: string
 }
 
 export abstract class MonitoringApi {
@@ -27,9 +29,11 @@ export abstract class MonitoringApi {
    */
   protected buildRequestBody(params: MonitoringQueryParams): MonitoringRequestBody {
     const sort = this.encodeSort(params.sort)
+    const searchQuery = params.searchQuery?.trim()
     return {
       limit: params.limit === undefined ? DEFAULT_BATCH_SIZE : params.limit,
-      ...(sort.length > 0 && { sort })
+      ...(sort.length > 0 && { sort }),
+      ...(searchQuery && { q: searchQuery })
     }
   }
 

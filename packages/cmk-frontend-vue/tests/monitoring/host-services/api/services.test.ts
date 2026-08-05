@@ -100,6 +100,28 @@ describe('HostServicesApi.fetchServices', () => {
     })
   })
 
+  it('sends the trimmed search query as q', async () => {
+    mockSuccess([])
+
+    await new HostServicesApi().fetchServices(HOST, { searchQuery: '  CPU  ' })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
+      ...EXPECTED_PARAMS,
+      body: { limit: 1000, q: 'CPU' }
+    })
+  })
+
+  it('omits q when the search query is blank', async () => {
+    mockSuccess([])
+
+    await new HostServicesApi().fetchServices(HOST, { searchQuery: '   ' })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/{hostname}/services', {
+      ...EXPECTED_PARAMS,
+      body: { limit: 1000 }
+    })
+  })
+
   it('omits the sort key when nothing is sorted', async () => {
     mockSuccess([])
 

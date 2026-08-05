@@ -17,7 +17,6 @@ import type {
 } from '../../shared/api/types'
 
 export interface HostQueryParams extends MonitoringQueryParams {
-  searchQuery?: string
   filter?: FilterNode | undefined
   fields?: HostOptionalField[]
 }
@@ -27,10 +26,8 @@ export class HostApi extends MonitoringApi {
     params: HostQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostsResponse> {
-    const searchQuery = params.searchQuery?.trim()
     const body: HostsRequestBody = {
       ...this.buildRequestBody(params),
-      ...(searchQuery && { q: searchQuery }),
       ...(params.filter && { filter: params.filter }),
       ...(params.fields !== undefined && { fields: params.fields })
     }

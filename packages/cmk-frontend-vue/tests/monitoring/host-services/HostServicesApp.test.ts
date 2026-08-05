@@ -118,6 +118,30 @@ test('requests a descending sort first for the State column', async () => {
   )
 })
 
+test('requests the services matching a submitted search query', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByPlaceholderText('Search services…')
+
+  await userEvent.type(screen.getByPlaceholderText('Search services…'), 'CPU{Enter}')
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000, q: 'CPU' } })
+  )
+})
+
+test('tells the user the empty result came from their search', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByPlaceholderText('Search services…')
+  mockServices([], { matched: 0, total: 42 })
+
+  await userEvent.type(screen.getByPlaceholderText('Search services…'), 'nope{Enter}')
+
+  expect(await screen.findByText('No results found for your search.')).toBeInTheDocument()
+})
+
 test('marks the sorted column with its direction', async () => {
   mockServices([makeApiEntry()])
   renderApp()

@@ -5,7 +5,9 @@
 
 from pathlib import Path
 
-from cmk.mkp_tool import PackagePart, PathConfig
+import pytest
+
+from cmk.mkp_tool import CONFIG_PARTS, PackagePart, PathConfig, ui_title
 from cmk.mkp_tool._parts import make_path_config_template, permissions
 
 
@@ -51,3 +53,66 @@ def test_permissions() -> None:
     assert permissions(PackagePart.BIN, Path("some_binary")) == 0o700
     assert permissions(PackagePart.LIB, Path("nagios/plugins/check_foobar")) == 0o700
     assert permissions(PackagePart.LIB, Path("something/else/check_foobar")) == 0o600
+
+
+@pytest.mark.parametrize("part", list(PackagePart))
+def test_permissions_are_defined_for_every_part(part: PackagePart) -> None:
+    # guards the assert_never branch: a new part must be assigned permissions
+    assert permissions(part, Path("some/file")) in (0o600, 0o700)
+
+
+@pytest.mark.parametrize("part", list(PackagePart))
+def test_ui_title_is_defined_for_every_part(part: PackagePart) -> None:
+    # guards the assert_never branch: a new part must get a UI title
+    assert ui_title(part, lambda s: s)
+
+
+def test_ui_titles_are_distinct() -> None:
+    titles = [ui_title(part, lambda s: s) for part in PackagePart]
+
+    assert len(set(titles)) == len(titles)
+
+
+def test_ui_title_is_translated() -> None:
+    assert ui_title(PackagePart.AGENTS, lambda s: f"<{s}>") == "<Agents>"
+
+
+@pytest.mark.parametrize("part", list(PackagePart))
+def test_get_path_is_defined_for_every_part(part: PackagePart, path_config: PathConfig) -> None:
+    # guards the assert_never branch: a new part must be mapped to a path
+    _ = path_config.get_path(part)
+
+
+def test_get_path_maps_every_part_to_a_distinct_path(path_config: PathConfig) -> None:
+    paths = [path_config.get_path(part) for part in PackagePart]
+
+    assert len(set(paths)) == len(paths)
+
+
+def test_config_parts_are_package_parts() -> None:
+    assert set(CONFIG_PARTS) <= set(PackagePart)
+
+
+def test_package_part_idents_are_stable() -> None:
+    # These strings end up in the 'files' mapping of every manifest on disk.
+    # Changing one silently orphans the files of already-installed packages.
+    assert {part.ident for part in PackagePart} == {
+        "agent_based",
+        "agents",
+        "alert_handlers",
+        "bin",
+        "checkman",
+        "checks",
+        "cmk_addons_plugins",
+        "cmk_plugins",
+        "doc",
+        "ec_rule_packs",
+        "gui",
+        "inventory",
+        "lib",
+        "locales",
+        "mibs",
+        "notifications",
+        "pnp-templates",
+        "web",
+    }

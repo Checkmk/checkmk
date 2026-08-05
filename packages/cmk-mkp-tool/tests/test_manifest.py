@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import io
 import pprint
+import tarfile
 from pathlib import Path
 
 import pydantic
 import pytest
 
-from cmk.mkp_tool import PackageName, PackagePart, PackageVersion
-from cmk.mkp_tool._mkp import Manifest, read_manifest_optionally
+from cmk.mkp_tool import PackageError, PackageName, PackagePart, PackageVersion
+from cmk.mkp_tool._mkp import (
+    extract_manifest,
+    extract_manifest_optionally,
+    extract_manifests,
+    Manifest,
+    read_manifest_optionally,
+)
 
 TEST_MANIFEST = Manifest(
     title="Unit test package",
@@ -128,6 +136,73 @@ def test_field_conversion_package_name() -> None:
             " 'version.min_required': '2.1.0',\n"
             " 'version.packaged': '2.1.0p2'}\n"
         )
+
+
+def _make_tgz(members: dict[str, bytes], *, dirs: tuple[str, ...] = ()) -> bytes:
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
+        for name in dirs:
+            info = tarfile.TarInfo(name)
+            info.type = tarfile.DIRTYPE
+            tar.addfile(info)
+        for name, content in members.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(content)
+            tar.addfile(info, io.BytesIO(content))
+    return buffer.getvalue()
+
+
+class TestExtractManifest:
+    def test_ok(self) -> None:
+        mkp = _make_tgz({"info": TEST_MANIFEST.file_content().encode()})
+
+        assert extract_manifest(mkp) == TEST_MANIFEST
+
+    def test_info_missing(self) -> None:
+        mkp = _make_tgz({"something-else": b"whatever"})
+
+        with pytest.raises(PackageError, match="'info' not contained in MKP"):
+            _ = extract_manifest(mkp)
+
+    def test_info_is_not_a_regular_file(self) -> None:
+        mkp = _make_tgz({}, dirs=("info",))
+
+        with pytest.raises(PackageError, match="'info' is not a regular file"):
+            _ = extract_manifest(mkp)
+
+    def test_not_a_tarball(self) -> None:
+        with pytest.raises(tarfile.TarError):
+            _ = extract_manifest(b"this is not an MKP")
+
+
+class TestExtractManifestOptionally:
+    def test_ok(self, tmp_path: Path) -> None:
+        mkp_path = tmp_path / "ok.mkp"
+        mkp_path.write_bytes(_make_tgz({"info": TEST_MANIFEST.file_content().encode()}))
+
+        assert extract_manifest_optionally(mkp_path) == TEST_MANIFEST
+
+    def test_broken_file_is_swallowed(self, tmp_path: Path) -> None:
+        broken = tmp_path / "broken.mkp"
+        broken.write_bytes(b"not an MKP at all")
+
+        assert extract_manifest_optionally(broken) is None
+
+    def test_missing_file_is_swallowed(self, tmp_path: Path) -> None:
+        assert extract_manifest_optionally(tmp_path / "missing.mkp") is None
+
+
+class TestExtractManifests:
+    def test_empty(self) -> None:
+        assert extract_manifests([]) == []
+
+    def test_broken_files_are_filtered_out(self, tmp_path: Path) -> None:
+        good = tmp_path / "good.mkp"
+        good.write_bytes(_make_tgz({"info": TEST_MANIFEST.file_content().encode()}))
+        broken = tmp_path / "broken.mkp"
+        broken.write_bytes(b"not an MKP at all")
+
+        assert extract_manifests([good, broken, tmp_path / "missing.mkp"]) == [TEST_MANIFEST]
 
 
 def test_field_conversion_package_part() -> None:

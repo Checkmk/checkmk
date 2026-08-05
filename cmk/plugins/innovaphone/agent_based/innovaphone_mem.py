@@ -17,18 +17,18 @@ from cmk.agent_based.v2 import (
 )
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
-MemoryUsedPercent = NewType("MemoryUsedPercent", int)
+Utilization = NewType("Utilization", int)
 
 
-def parse_innovaphone_mem(string_table: StringTable) -> MemoryUsedPercent | None:
+def parse_innovaphone_mem(string_table: StringTable) -> Utilization | None:
     match string_table:
         case [[_, str(value)]] if value.isdigit():
-            return MemoryUsedPercent(int(value))
+            return Utilization(int(value))
         case _:
             return None
 
 
-def discover_innovaphone_mem(section: MemoryUsedPercent) -> DiscoveryResult:
+def discover_innovaphone_mem(section: Utilization) -> DiscoveryResult:
     yield Service()
 
 
@@ -36,7 +36,7 @@ class CheckParams(TypedDict):
     levels: SimpleLevelsConfigModel[float]
 
 
-def check_innovaphone_mem(params: CheckParams, section: MemoryUsedPercent) -> CheckResult:
+def check_innovaphone_mem(params: CheckParams, section: Utilization) -> CheckResult:
     yield from check_levels(
         section,
         label="Current",

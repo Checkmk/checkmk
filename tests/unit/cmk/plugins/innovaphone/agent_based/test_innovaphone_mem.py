@@ -10,8 +10,8 @@ from cmk.plugins.innovaphone.agent_based.innovaphone_mem import (
     check_innovaphone_mem,
     CheckParams,
     discover_innovaphone_mem,
-    MemoryUsedPercent,
     parse_innovaphone_mem,
+    Utilization,
 )
 
 
@@ -28,11 +28,11 @@ def test_parse_innovaphone_mem_empty_data(string_table: StringTable) -> None:
 
 
 def test_parse_innovaphone_mem_success() -> None:
-    assert parse_innovaphone_mem([["MEM", "55"]]) == MemoryUsedPercent(55)
+    assert parse_innovaphone_mem([["MEM", "55"]]) == Utilization(55)
 
 
 def test_discover_innovaphone_mem() -> None:
-    section = MemoryUsedPercent(55)
+    section = Utilization(55)
     assert list(discover_innovaphone_mem(section)) == [Service()]
 
 
@@ -41,7 +41,7 @@ def test_discover_innovaphone_mem() -> None:
     [
         pytest.param(
             {"levels": ("fixed", (60.0, 70.0))},
-            MemoryUsedPercent(55),
+            Utilization(55),
             [
                 Result(state=State.OK, summary="Current: 55.00%"),
                 Metric("mem_used_percent", 55.0, levels=(60.0, 70.0)),
@@ -50,7 +50,7 @@ def test_discover_innovaphone_mem() -> None:
         ),
         pytest.param(
             {"levels": ("fixed", (60.0, 70.0))},
-            MemoryUsedPercent(65),
+            Utilization(65),
             [
                 Result(state=State.WARN, summary="Current: 65.00% (warn/crit at 60.00%/70.00%)"),
                 Metric("mem_used_percent", 65.0, levels=(60.0, 70.0)),
@@ -59,7 +59,7 @@ def test_discover_innovaphone_mem() -> None:
         ),
         pytest.param(
             {"levels": ("fixed", (60.0, 70.0))},
-            MemoryUsedPercent(85),
+            Utilization(85),
             [
                 Result(state=State.CRIT, summary="Current: 85.00% (warn/crit at 60.00%/70.00%)"),
                 Metric("mem_used_percent", 85.0, levels=(60.0, 70.0)),
@@ -70,7 +70,7 @@ def test_discover_innovaphone_mem() -> None:
 )
 def test_check_innovaphone_mem(
     params: CheckParams,
-    section: MemoryUsedPercent,
+    section: Utilization,
     expected: list[Result | Metric],
 ) -> None:
     assert list(check_innovaphone_mem(params, section)) == expected

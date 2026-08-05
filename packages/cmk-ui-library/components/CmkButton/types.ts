@@ -5,6 +5,8 @@
  */
 import { type VariantProps, cva } from 'class-variance-authority'
 
+import type { IconSizeNames, SimpleIcons } from '../CmkIcon/types'
+
 const buttonVariants = cva('', {
   variants: {
     variant: {
@@ -38,6 +40,14 @@ export { buttonVariants }
 
 export type ButtonVariants = VariantProps<typeof buttonVariants>
 
+export interface ButtonIcon {
+  name: SimpleIcons
+  /** Which side of the label the icon sits on. Defaults to `'left'`. */
+  side?: 'left' | 'right'
+  rotate?: number
+  size?: IconSizeNames
+}
+
 export interface ButtonProps {
   variant?: ButtonVariants['variant']
   size?: ButtonVariants['size']
@@ -45,4 +55,7 @@ export interface ButtonProps {
   title?: string | undefined
   href?: string | undefined
   target?: string | undefined
+  icon?: ButtonIcon | undefined
+  /** Pulses the button while the action it triggers is still running. */
+  running?: boolean | undefined
 }

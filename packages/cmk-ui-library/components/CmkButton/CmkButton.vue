@@ -6,7 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { type ButtonProps, buttonVariants } from './types'
+import CmkIcon from '../CmkIcon/CmkIcon.vue'
+import { type ButtonIcon, type ButtonProps, buttonVariants } from './types'
 
 const buttonRef = ref<HTMLButtonElement | HTMLAnchorElement | null>(null)
 
@@ -19,8 +20,17 @@ defineExpose({
 
 const props = defineProps<ButtonProps>()
 
-const isDisabled = computed(() => props.disabled === true || props.disabled === 'true')
+const isDisabled = computed(
+  () => props.disabled === true || props.disabled === 'true' || props.running === true
+)
 const isLink = computed(() => props.href !== undefined)
+
+const leftIcon = computed<ButtonIcon | undefined>(() =>
+  props.icon !== undefined && (props.icon.side ?? 'left') === 'left' ? props.icon : undefined
+)
+const rightIcon = computed<ButtonIcon | undefined>(() =>
+  props.icon?.side === 'right' ? props.icon : undefined
+)
 
 defineEmits(['click'])
 </script>
@@ -30,10 +40,14 @@ defineEmits(['click'])
     v-if="isLink"
     ref="buttonRef"
     class="cmk-button"
-    :class="buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled })"
+    :class="[
+      buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled }),
+      { 'cmk-button--with-icon': props.icon !== undefined, 'cmk-button--running': props.running }
+    ]"
     :href="isDisabled ? undefined : props.href"
     :target="props.target"
     :title="title || ''"
+    :aria-busy="props.running"
     @click="
       (e) => {
         if (isDisabled) {
@@ -44,15 +58,31 @@ defineEmits(['click'])
       }
     "
   >
+    <CmkIcon
+      v-if="leftIcon"
+      :name="leftIcon.name"
+      :rotate="leftIcon.rotate"
+      :size="leftIcon.size"
+    />
     <slot />
+    <CmkIcon
+      v-if="rightIcon"
+      :name="rightIcon.name"
+      :rotate="rightIcon.rotate"
+      :size="rightIcon.size"
+    />
   </a>
   <button
     v-else
     ref="buttonRef"
     class="cmk-button"
-    :class="buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled })"
+    :class="[
+      buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled }),
+      { 'cmk-button--with-icon': props.icon !== undefined, 'cmk-button--running': props.running }
+    ]"
     :disabled="isDisabled"
     :aria-disabled="isDisabled"
+    :aria-busy="props.running"
     :title="title || ''"
     @click.prevent="
       (e) => {
@@ -60,7 +90,19 @@ defineEmits(['click'])
       }
     "
   >
+    <CmkIcon
+      v-if="leftIcon"
+      :name="leftIcon.name"
+      :rotate="leftIcon.rotate"
+      :size="leftIcon.size"
+    />
     <slot />
+    <CmkIcon
+      v-if="rightIcon"
+      :name="rightIcon.name"
+      :rotate="rightIcon.rotate"
+      :size="rightIcon.size"
+    />
   </button>
 </template>
 
@@ -78,6 +120,25 @@ defineEmits(['click'])
   text-decoration: none;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.cmk-button--with-icon {
+  gap: var(--dimension-4);
+}
+
+.cmk-button--running {
+  animation: cmk-button-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes cmk-button-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .cmk-button--size-medium {

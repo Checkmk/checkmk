@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, within } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { describe, expect, it, vi } from 'vitest'
 
 import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.vue'
@@ -29,8 +29,7 @@ describe('ActionButton', () => {
         }
       })
       const button = screen.getByRole('button')
-      expect(button.firstElementChild?.tagName).toBe('SPAN')
-      expect(within(button.firstElementChild as HTMLElement).getByRole('img')).toBeInTheDocument()
+      expect(button.firstElementChild).toBe(screen.getByRole('img'))
     })
 
     it('renders the icon after the label when icon.side is "right"', () => {
@@ -42,23 +41,21 @@ describe('ActionButton', () => {
         }
       })
       const button = screen.getByRole('button')
-      expect(button.textContent).toMatch(/Next\s+/)
-      expect(button.lastElementChild?.tagName).toBe('SPAN')
-      expect(within(button.lastElementChild as HTMLElement).getByRole('img')).toBeInTheDocument()
+      expect(button).toHaveTextContent('Next')
+      expect(button.lastElementChild).toBe(screen.getByRole('img'))
     })
 
-    it('renders no extra icon span when no icon is provided', () => {
+    it('renders no icon when none is provided', () => {
       render(ActionButton, { props: { label: 'Create', action: vi.fn() } })
-      const button = screen.getByRole('button')
-      expect(button.querySelectorAll('span')).toHaveLength(0)
+      expect(screen.queryByRole('img')).not.toBeInTheDocument()
     })
 
-    it('does not render icon span when icon.side is neither "left" nor "right"', () => {
+    it('renders the icon before the label when icon.side is omitted', () => {
       render(ActionButton, {
         props: { label: 'Save', icon: { name: 'save' }, action: vi.fn() }
       })
       const button = screen.getByRole('button')
-      expect(button.querySelectorAll('span')).toHaveLength(0)
+      expect(button.firstElementChild).toBe(screen.getByRole('img'))
     })
   })
 

@@ -5,7 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 import type { ButtonVariants } from 'cmk-ui-library/components/CmkButton'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
 
 import codeExample from './UclCmkButtonCodeExample.vue?raw'
 
@@ -58,6 +60,28 @@ export const panelConfig = {
     title: 'Disabled',
     initialState: false
   },
+  icon: {
+    type: 'list' as const,
+    title: 'Icon',
+    options: [
+      { title: 'None', name: '' },
+      { title: 'Acknowledge', name: 'ack' },
+      { title: 'Downtime', name: 'downtime' },
+      { title: 'Reload', name: 'reload' },
+      { title: 'Save', name: 'save' }
+    ],
+    initialState: '' as const,
+    help: 'Renders the icon left of the content, with the label spacing handled by the button.'
+  },
+  iconSide: {
+    type: 'list' as const,
+    title: 'Icon side',
+    options: [
+      { title: 'Left', name: 'left' },
+      { title: 'Right', name: 'right' }
+    ],
+    initialState: 'left' as const
+  },
   href: {
     type: 'string' as const,
     title: 'Href',
@@ -79,8 +103,17 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'Title Attribute',
     initialState: ''
+  },
+  running: {
+    type: 'boolean' as const,
+    title: 'Running',
+    initialState: false,
+    help: 'Pulses the button while the action it triggers is still running.'
   }
-} satisfies PanelConfigFor<typeof CmkButton>
+} satisfies PanelConfigFor<typeof CmkButton, 'icon'> & {
+  icon: ListPropDef<SimpleIcons | ''>
+  iconSide: ListPropDef<'left' | 'right'>
+}
 </script>
 
 <script setup lang="ts">
@@ -94,13 +127,21 @@ import {
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import type { ButtonIcon } from 'cmk-ui-library/components/CmkButton'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import { computed } from 'vue'
 
 import UclCmkButtonDev from './UclCmkButtonDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkButton>().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkButton, 'icon'>().createRef(panelConfig)
+
+const icon = computed<ButtonIcon | undefined>(() =>
+  propState.value.icon === ''
+    ? undefined
+    : { name: propState.value.icon, side: propState.value.iconSide }
+)
 </script>
 
 <template>
@@ -115,6 +156,8 @@ const propState = new PanelStateCreator<typeof CmkButton>().createRef(panelConfi
         :href="propState.href || undefined"
         :target="propState.target || undefined"
         :title="propState.title"
+        :icon="icon"
+        :running="propState.running"
       >
         Click Me
       </CmkButton>

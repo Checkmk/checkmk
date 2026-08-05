@@ -99,7 +99,7 @@ void execute_test(Map config = [:]) {
 // of the result of the executed command or callback.
 void run_this(Map args) {
     try {
-        // do not change this order, see test-gui-e2e-single.groovy
+        // do not change this order, see test-system-gui-single.groovy
         if (args.cmd) {
             run_sh_command(args.cmd);
         }
@@ -357,8 +357,8 @@ Object analyse_issues(result_check_type, result_check_file_pattern, as_stage=tru
                 name: 'Ruff Format', // Name shown on left side menu
                 regex: '(^\\+\\+\\+\\s)(.*\\.py$)\\n(@@\\s\\-)(\\d)(\\,\\d\\s\\+.*\\s@@\\n)([\\s\\w\\+\\.\\-\\(\\@\\)]*\\n)*', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(2)).setLineStart(Integer.parseInt(matcher.group(4))).setMessage(matcher.group(6)).buildOptional()', // Mapping script
-                example: """--- gui_e2e/test_menu_help.py
-                +++ gui_e2e/test_menu_help.py
+                example: """--- system/gui/test_menu_help.py
+                +++ system/gui/test_menu_help.py
                 @@ -7,8 +7,8 @@
                  import pytest
 

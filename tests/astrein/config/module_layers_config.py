@@ -1145,7 +1145,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_WERKS,
         "cmk.utils.werks",
     ),
-    Component("tests.composition"): _allow(
+    Component("tests.system.multisite"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         "cmk.piggyback.backend",
@@ -1159,7 +1159,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui.utils",
         "cmk.utils.paths",
     ),
-    Component("tests.gui_e2e"): _allow(
+    Component("tests.system.gui"): _allow(
         *PACKAGE_CRYPTO,
         "cmk.utils.licensing",
         "cmk.utils.nonfree.pro.licensing",
@@ -1185,13 +1185,13 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.server_side_calls_backend",
         "cmk.utils",
     ),
-    Component("tests.integration.cmk.base.nonfree.pro.helper_bake_and_sign"): (
+    Component("tests.system.singlesite.cmk.base.nonfree.pro.helper_bake_and_sign"): (
         lambda *_a, **_kw: True
     ),
-    Component("tests.integration.cmk.base.nonfree.pro.helper_bake_without_sign"): (
+    Component("tests.system.singlesite.cmk.base.nonfree.pro.helper_bake_without_sign"): (
         lambda *_a, **_kw: True
     ),
-    Component("tests.integration.cmk.base"): _allow(
+    Component("tests.system.singlesite.cmk.base"): _allow(
         *PACKAGE_CCC,
         "cmk.automations",
         "cmk.base",
@@ -1201,17 +1201,17 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.discover_plugins",
         "cmk.utils",
     ),
-    Component("tests.integration.cmk.nonfree.pro.liveproxy"): _allow(
+    Component("tests.system.singlesite.cmk.nonfree.pro.liveproxy"): _allow(
         *PACKAGE_CCC,
         "cmk.nonfree.pro.liveproxy",
     ),
-    Component("tests.integration.cmk.nonfree.pro.robotmk"): _allow(
+    Component("tests.system.singlesite.cmk.nonfree.pro.robotmk"): _allow(
         *PACKAGE_CCC,
         "cmk.nonfree.pro.robotmk",
         "cmk.utils.rulesets",
         "cmk.utils.servicename",
     ),
-    Component("tests.integration.cmk.gui"): _allow(
+    Component("tests.system.singlesite.cmk.gui"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
@@ -1220,33 +1220,33 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.shared_typing",
         "cmk.utils",
     ),
-    Component("tests.integration.cmk.post_rename_site"): _allow(
+    Component("tests.system.singlesite.cmk.post_rename_site"): _allow(
         "cmk.post_rename_site",
     ),
-    Component("tests.integration.cmk.snmplib"): _allow(
+    Component("tests.system.singlesite.cmk.snmplib"): _allow(
         *PACKAGE_CCC,
         "cmk.snmplib",
         "cmk.utils",
     ),
-    Component("tests.integration.nonfree.ultimate.metric_backend"): _allow(
+    Component("tests.system.singlesite.nonfree.ultimate.metric_backend"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_METRIC_BACKEND,
         "cmk.gui",
         "cmk.plugins",
         "cmk.utils",
     ),
-    Component("tests.integration.nonfree.ultimate.otel"): _allow(
+    Component("tests.system.singlesite.nonfree.ultimate.otel"): _allow(
         *PACKAGE_CCC,
         "cmk.otel_collector.constants",
     ),
-    Component("tests.integration.nonfree.ultimate.relay"): _allow(
+    Component("tests.system.singlesite.nonfree.ultimate.relay"): _allow(
         *PACKAGE_RELAY_PROTOCOLS,
         "cmk.agent_receiver.lib.certs",
         "cmk.crypto.certificate",
         "cmk.crypto.keys",
         "cmk.crypto.x509",
     ),
-    Component("tests.integration"): _allow(
+    Component("tests.system.singlesite"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
         *PACKAGE_PLUGIN_APIS,
@@ -1258,10 +1258,10 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.server_side_calls_backend",
         "cmk.utils",
     ),
-    Component("tests.integration_redfish"): _allow(
+    Component("tests.system.redfish"): _allow(
         *PACKAGE_CCC,
     ),
-    Component("tests.plugins_integration"): _allow(
+    Component("tests.system.plugins"): _allow(
         *PACKAGE_CRYPTO,
     ),
     # Tests are allowed to import everything for now. Should be cleaned up soon (TM)
@@ -1343,7 +1343,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils",
         "cmk.validate_config",
     ),
-    Component("tests.update"): _allow(
+    Component("tests.system.update"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         "cmk.utils.licensing",

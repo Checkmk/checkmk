@@ -78,7 +78,7 @@ void main() {
         |===================================================
         """.stripMargin());
 
-    def relative_job_name = "${branch_base_folder}/builders/test-integration-single";
+    def relative_job_name = "${branch_base_folder}/builders/test-system-singlesite-single";
 
     /// avoid failures due to leftover artifacts from prior runs
     /// and create folder before entering containers to not delete the folder after leaving the container

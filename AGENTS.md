@@ -85,10 +85,10 @@ make -C tests test-format
 make -C tests test-mypy
 
 # Integration and system tests
-make -C tests test-integration
-make -C tests test-composition
-make -C tests test-gui-e2e
-make -C tests test-plugins
+make -C tests test-system-singlesite
+make -C tests test-system-multisite
+make -C tests test-system-gui
+make -C tests test-system-plugins
 ```
 
 ### Package-Specific Development
@@ -109,9 +109,9 @@ Each package in `packages/` has its own `run` script with standardized options:
 ### Test Categories
 
 1. **Unit tests**: Fast, isolated component testing (`tests/unit/`)
-2. **Integration tests**: Component interaction testing (`tests/integration/`)
-3. **Composition tests**: Multi-service integration (`tests/composition/`)
-4. **GUI E2E tests**: End-to-end web interface testing (`tests/gui_e2e/`)
+2. **Integration tests**: Component interaction testing (`tests/system/singlesite/`)
+3. **Composition tests**: Multi-service integration (`tests/system/multisite/`)
+4. **GUI E2E tests**: End-to-end web interface testing (`tests/system/gui/`)
 5. **Plugin tests**: Monitoring plugin validation (`tests/plugins_*/`)
 6. **Agent plugin tests**: Cross-platform agent functionality (`tests/agent-plugin-unit/`)
 

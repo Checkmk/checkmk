@@ -30,31 +30,31 @@ EDITION ?= pro
 RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
-    test-integration \
-    test-integration-k8s \
-    test-integration-non-root \
-    test-integration-redfish \
-    test-integration-otel \
-    test-composition \
-    test-update-community \
-    test-update-pro \
-    test-update-ultimate \
-    test-update-ultimatemt \
-    test-update-cloud \
-    test-update-cross-edition-pro-to-ultimate \
-    test-update-cross-edition-pro-to-ultimatemt \
-    test-update-cross-edition-community-to-ultimate \
-    test-update-cross-edition-community-to-pro \
-    test-plugins \
-    test-plugins-piggyback \
-    test-gui-crawl \
-    test-xss-crawl \
-    test-gui-e2e \
-    test-gui-e2e-non-free \
-    test-gui-e2e-pro \
-    test-gui-e2e-ultimate \
-    test-gui-e2e-ultimatemt \
-    test-gui-e2e-cloud \
+    test-system-singlesite \
+    test-system-singlesite-k8s \
+    test-system-singlesite-non-root \
+    test-system-redfish \
+    test-system-otel \
+    test-system-multisite \
+    test-system-update-community \
+    test-system-update-pro \
+    test-system-update-ultimate \
+    test-system-update-ultimatemt \
+    test-system-update-cloud \
+    test-system-update-cross-edition-pro-to-ultimate \
+    test-system-update-cross-edition-pro-to-ultimatemt \
+    test-system-update-cross-edition-community-to-ultimate \
+    test-system-update-cross-edition-community-to-pro \
+    test-system-plugins \
+    test-system-plugins-piggyback \
+    test-system-gui-crawl \
+    test-system-gui-crawl-xss \
+    test-system-gui \
+    test-system-gui-non-free \
+    test-system-gui-pro \
+    test-system-gui-ultimate \
+    test-system-gui-ultimatemt \
+    test-system-gui-cloud \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := \
     $(TEST_FILTER) \
@@ -90,8 +90,8 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
-	test-integration-agent-plugin test-integration-agent-plugin-docker \
-	test-relay-integration test-relay-integration-docker \
+	test-system-mk-oracle test-system-mk-oracle-docker \
+	test-system-relay test-system-relay-docker \
 	test-format \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
@@ -123,10 +123,10 @@ help:
 	done
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
-	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
-	@echo "test-integration-agent-plugin-docker - Run agent plugin integration tests in docker"
-	@echo "test-relay-integration              - Run relay integration tests"
-	@echo "test-relay-integration-docker       - Run relay integration tests in docker"
+	@echo "test-system-mk-oracle               - Run mk-oracle system tests"
+	@echo "test-system-mk-oracle-docker        - Run mk-oracle system tests in docker"
+	@echo "test-system-relay                   - Run relay system tests"
+	@echo "test-system-relay-docker            - Run relay system tests in docker"
 	@echo "test-mypy-community                 - Run mypy with community config"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-unit                           - Run unit tests"
@@ -196,23 +196,23 @@ test-docker:
 	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x $(realpath docker) $(PYTEST_SYSTEM_TEST_ARGS)
 
-test-integration-agent-plugin-docker:
+test-system-mk-oracle-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-	    ../scripts/run-in-docker.sh make --quiet test-integration-agent-plugin
+	    ../scripts/run-in-docker.sh make --quiet test-system-mk-oracle
 
-test-integration-agent-plugin:
-	$(PYTEST) -x $(realpath agent_plugin_integration) \
+test-system-mk-oracle:
+	$(PYTEST) -x $(realpath system/mk_oracle) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600 \
 	-o junit_logging=all \
 	$(if $(RESULT_PATH),--junitxml="$(RESULT_PATH)/junit.xml") \
 	$(MK_ORACLE_BINARY_PATH)
 
-test-relay-integration-docker:
+test-system-relay-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-	    ../scripts/run-in-docker.sh make --quiet test-relay-integration
+	    ../scripts/run-in-docker.sh make --quiet test-system-relay
 
-test-relay-integration:
-	$(PYTEST) -x $(realpath relay_integration) \
+test-system-relay:
+	$(PYTEST) -x $(realpath system/relay) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
 test-lint-bazel:
@@ -227,96 +227,96 @@ test-performance: prepare-playwright
 test-performance-docker:
 	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
 
-test-gui-crawl: prepare-playwright
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py
+test-system-gui-crawl: prepare-playwright
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui_crawl)/test_gui_crawl.py
 
-test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py --numprocesses=0
+test-system-gui-crawl-xss: prepare-playwright
+	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui_crawl)/test_gui_crawl.py --numprocesses=0
 
-test-gui-e2e test-gui-e2e-pro: prepare-playwright # full e2e test is done for pro
+test-system-gui test-system-gui-pro: prepare-playwright # full e2e test is done for pro
 	$(PYTEST) --cmk-edition pro --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e) --numprocesses=0
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui) --numprocesses=0
 
-test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (pro or higher)
+test-system-gui-non-free: prepare-playwright # limited e2e test for non-free editions (pro or higher)
 	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e)/nonfree --numprocesses=0
+	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath system/gui)/nonfree --numprocesses=0
 
-test-gui-e2e-ultimate:
-	EDITION=ultimate $(MAKE) test-gui-e2e-non-free
+test-system-gui-ultimate:
+	EDITION=ultimate $(MAKE) test-system-gui-non-free
 
-test-gui-e2e-ultimatemt:
-	EDITION=ultimatemt $(MAKE) test-gui-e2e-non-free
+test-system-gui-ultimatemt:
+	EDITION=ultimatemt $(MAKE) test-system-gui-non-free
 
-test-gui-e2e-cloud:
-	EDITION=cloud $(MAKE) test-gui-e2e-non-free
+test-system-gui-cloud:
+	EDITION=cloud $(MAKE) test-system-gui-non-free
 
-test-integration:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+test-system-singlesite:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/singlesite) \
 	--session-timeout 7200
 
-test-integration-k8s:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+test-system-singlesite-k8s:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/singlesite) \
 	-m "not requires_non_root_user" --session-timeout 7200
 
-test-integration-non-root:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+test-system-singlesite-non-root:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/singlesite) \
 	-m requires_non_root_user --session-timeout 600
 
-test-integration-redfish:
+test-system-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath integration_redfish) --session-timeout 1800
+	$(realpath system/redfish) --session-timeout 1800
 
-test-integration-otel:
+test-system-otel:
 	EDITION=ultimate $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath integration)/nonfree/ultimate/otel/ --session-timeout 1800
+	$(realpath system/singlesite)/nonfree/ultimate/otel/ --session-timeout 1800
 
-test-composition:
+test-system-multisite:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
 	    $(PYTEST) --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
-	    $(realpath composition)
+	    $(realpath system/multisite)
 
 test-extension-compatibility:
 	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
-test-update-community:
-	$(PYTEST) --cmk-edition community $(realpath update)/community $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+test-system-update-community:
+	$(PYTEST) --cmk-edition community $(realpath system/update)/community $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
-test-update-pro:
-	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+test-system-update-pro:
+	$(PYTEST) --cmk-edition pro $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
-test-update-ultimate:
-	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
+test-system-update-ultimate:
+	$(PYTEST) --cmk-edition ultimate $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
 
-test-update-ultimatemt:
-	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
+test-system-update-ultimatemt:
+	$(PYTEST) --cmk-edition ultimatemt $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
 
-test-update-cloud:
-	$(PYTEST) --cmk-edition cloud $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
+test-system-update-cloud:
+	$(PYTEST) --cmk-edition cloud $(realpath system/update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 	--session-timeout 5400
 
-test-update-cross-edition-pro-to-ultimate: # from pro to ultimate
-	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
+test-system-update-cross-edition-pro-to-ultimate: # from pro to ultimate
+	$(PYTEST) --cmk-edition pro $(realpath system/update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-pro-to-ultimatemt: # from pro to ultimatemt
-	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
+test-system-update-cross-edition-pro-to-ultimatemt: # from pro to ultimatemt
+	$(PYTEST) --cmk-edition pro $(realpath system/update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimatemt --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-community-to-pro: # from community to pro
-	$(PYTEST) --cmk-edition community $(realpath update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
+test-system-update-cross-edition-community-to-pro: # from community to pro
+	$(PYTEST) --cmk-edition community $(realpath system/update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=pro --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-community-to-ultimate: # from community to ultimate
-	$(PYTEST) --cmk-edition community $(realpath update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
+test-system-update-cross-edition-community-to-ultimate: # from community to ultimate
+	$(PYTEST) --cmk-edition community $(realpath system/update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
-test-plugins:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	--ignore=plugins_integration/nonfree/pro/test_plugin_piggyback.py --session-timeout 7200
+test-system-plugins:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/plugins) \
+	--ignore=system/plugins/nonfree/pro/test_plugin_piggyback.py --session-timeout 7200
 
-test-plugins-piggyback:
+test-system-plugins-piggyback:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath plugins_integration)/nonfree/pro/test_plugin_piggyback.py --session-timeout 3600
+	$(realpath system/plugins)/nonfree/pro/test_plugin_piggyback.py --session-timeout 3600
 
 test-plugins-siteless:
 	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless) \

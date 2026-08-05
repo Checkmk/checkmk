@@ -3,21 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    StringTable,
+)
 
 
-def discover_innovaphone_mem(info):
-    yield None, {}
+def discover_innovaphone_mem(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_innovaphone_mem(_no_item, params, info):
-    yield check_levels(
-        int(info[0][1]),
+def check_innovaphone_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    yield from check_levels(
+        int(section[0][1]),
         "mem_used_percent",
         params["levels"],
         human_readable_func=render.percent,
@@ -29,9 +41,14 @@ def parse_innovaphone_mem(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["innovaphone_mem"] = LegacyCheckDefinition(
+agent_section_innovaphone_mem = AgentSection(
     name="innovaphone_mem",
     parse_function=parse_innovaphone_mem,
+)
+
+
+check_plugin_innovaphone_mem = CheckPlugin(
+    name="innovaphone_mem",
     service_name="Memory",
     discovery_function=discover_innovaphone_mem,
     check_function=check_innovaphone_mem,

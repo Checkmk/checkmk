@@ -18,6 +18,7 @@ export interface MetricBackendRuleQuery {
   metric_name: string
   attribute_filter: AttributeFilter
   aggregation_lookback: number
+  consolidation_function: MetricBackendItem['consolidation_function']['type']
   aggregation_histogram_percentile: number
   aggregation_histogram_threshold_for_fraction_below: number
   aggregation_histogram_lower_threshold_for_fraction_between: number
@@ -35,6 +36,7 @@ export function metricBackendRuleQuery(
     metric_name: item.metric_name,
     attribute_filter: item.attribute_filter,
     aggregation_lookback: consolidation.lookback_seconds,
+    consolidation_function: consolidation.type,
     aggregation_histogram_percentile:
       consolidation.type === 'histogram_quantile'
         ? consolidation.percentile

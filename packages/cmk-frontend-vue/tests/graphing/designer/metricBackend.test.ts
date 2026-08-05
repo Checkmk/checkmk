@@ -54,6 +54,17 @@ test('an embedded default title macro is expanded within a custom title', () => 
   expect(query.service_name_template).toBe('p95 of $METRIC_NAME$ - $SERIES_ID$')
 })
 
+test('the consolidation function name is carried over', () => {
+  const query = metricBackendRuleQuery(
+    metricBackendItem('A', {
+      consolidation_function: { type: 'sum_rate', lookback_seconds: 300 }
+    }),
+    DEFAULT_TITLE
+  )
+
+  expect(query.consolidation_function).toBe('sum_rate')
+})
+
 test('the quantile percentile is carried over', () => {
   const query = metricBackendRuleQuery(
     metricBackendItem('A', {

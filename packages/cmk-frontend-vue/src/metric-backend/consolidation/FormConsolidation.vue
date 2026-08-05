@@ -44,7 +44,7 @@ const props = defineProps<{
   // An empty list results in every type's functions to be offered.
   availableTypes: MetricType[]
   // Restricts offered functions per type; undefined offers the full catalog.
-  allowedFunctions?: AllowedFunctions
+  allowedFunctions?: AllowedFunctions | undefined
   label?: TranslatedString | undefined
 }>()
 

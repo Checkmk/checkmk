@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { userEvent } from '@testing-library/user-event'
+import { render, screen, waitFor } from '@testing-library/vue'
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import type { ValidationMessages } from '@/form'
@@ -41,4 +42,17 @@ test('surfaces the service-name-template error on its field', () => {
   })
 
   expect(screen.getByText('Service name template cannot be empty.')).toBeVisible()
+})
+
+test('the rule offers the scalar-valued functions only', async () => {
+  // Preserving histograms has no stored spelling, so offering it would save an unparsable name.
+  render(FormSpecMetricBackendCustomQuery, {
+    props: { spec: SPEC, data: { ...SPEC }, backendValidation: [] }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /Edit consolidation/ }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+
+  await waitFor(() => expect(screen.getByRole('option', { name: 'Quantile' })).toBeVisible())
+  expect(screen.queryByRole('option', { name: 'Preserve histograms' })).toBeNull()
 })

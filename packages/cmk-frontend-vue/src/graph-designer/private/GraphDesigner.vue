@@ -1007,6 +1007,7 @@ const slideInAPI = {
           metric_name: graphLineQuery.value.metric_name,
           attribute_filter: graphLineQuery.value.attribute_filter,
           aggregation_lookback: cf.lookback_seconds,
+          consolidation_function: cf.function,
           aggregation_histogram_percentile: consolidationPercentile(cf),
           aggregation_histogram_threshold_for_fraction_below:
             consolidationThresholdForFractionBelow(cf),

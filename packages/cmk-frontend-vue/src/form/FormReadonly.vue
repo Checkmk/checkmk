@@ -60,7 +60,16 @@ import {
 
 import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
 import { fromAttributeFilter } from '@/metric-backend/attributeFilterAdapter'
-import { lookbackLabel } from '@/metric-backend/consolidation/consolidation-label'
+import {
+  compactFunction,
+  lookbackLabel,
+  typeLabel
+} from '@/metric-backend/consolidation/consolidation-label'
+import { consolidationFunctionFromName } from '@/metric-backend/consolidation/types'
+import type {
+  ConsolidationFunction,
+  ConsolidationParams
+} from '@/metric-backend/consolidation/types'
 
 import {
   type Operator,
@@ -196,6 +205,25 @@ function renderOAuth2ConnectionSetup(formSpec: Oauth2ConnectionSetup, value: unk
   return renderForm(formSpec.form_spec, value)
 }
 
+function consolidationParams(
+  value: MetricBackendCustomQuery,
+  fn: ConsolidationFunction
+): ConsolidationParams {
+  switch (fn.function) {
+    case 'histogram_quantile':
+      return { quantile: value.aggregation_histogram_percentile / 100 }
+    case 'histogram_fraction_below':
+      return { fractionBelowThreshold: value.aggregation_histogram_threshold_for_fraction_below }
+    case 'histogram_fraction_between':
+      return {
+        fractionLowerThreshold: value.aggregation_histogram_lower_threshold_for_fraction_between,
+        fractionUpperThreshold: value.aggregation_histogram_upper_threshold_for_fraction_between
+      }
+    default:
+      return {}
+  }
+}
+
 function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode {
   const rows: VNode[] = []
 
@@ -220,19 +248,34 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     )
   }
 
-  rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
-      h('td', [lookbackLabel(value.aggregation_lookback)])
-    ])
-  )
-
-  rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Percentile (histograms):']),
-      h('td', [`${value.aggregation_histogram_percentile} %`])
-    ])
-  )
+  const consolidationFunction = consolidationFunctionFromName(value.consolidation_function)
+  if (consolidationFunction) {
+    rows.push(
+      h('tr', [
+        h('td', { class: 'dict_title' }, ['Consolidation:']),
+        h('td', [
+          `[${typeLabel(consolidationFunction.type)}] ${compactFunction({
+            ...consolidationFunction,
+            params: consolidationParams(value, consolidationFunction),
+            lookbackSeconds: value.aggregation_lookback
+          })} · ${lookbackLabel(value.aggregation_lookback)}`
+        ])
+      ])
+    )
+  } else {
+    rows.push(
+      h('tr', [
+        h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
+        h('td', [lookbackLabel(value.aggregation_lookback)])
+      ])
+    )
+    rows.push(
+      h('tr', [
+        h('td', { class: 'dict_title' }, ['Percentile (histograms):']),
+        h('td', [`${value.aggregation_histogram_percentile} %`])
+      ])
+    )
+  }
 
   rows.push(
     h('tr', [

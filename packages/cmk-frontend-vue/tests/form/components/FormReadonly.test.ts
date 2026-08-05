@@ -390,7 +390,10 @@ const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   service_name_template: ''
 }
 
-function renderMetricBackendCustomQuery(attributeFilter?: unknown): void {
+function renderMetricBackendCustomQuery(
+  attributeFilter?: unknown,
+  consolidationFunction: string = 'sum_rate'
+): void {
   render(FormReadonly, {
     props: {
       spec: metricBackendCustomQuerySpec,
@@ -399,7 +402,11 @@ function renderMetricBackendCustomQuery(attributeFilter?: unknown): void {
         metric_name: 'metric',
         attribute_filter: attributeFilter,
         aggregation_lookback: 222,
-        aggregation_histogram_percentile: 0.5,
+        consolidation_function: consolidationFunction,
+        aggregation_histogram_percentile: 95,
+        aggregation_histogram_threshold_for_fraction_below: 5,
+        aggregation_histogram_lower_threshold_for_fraction_between: 10,
+        aggregation_histogram_upper_threshold_for_fraction_between: 90,
         service_name_template: 'svc'
       }
     }
@@ -436,4 +443,32 @@ test('FormReadonly omits the attribute row and renders a compact lookback withou
   renderMetricBackendCustomQuery(undefined)
   expect(screen.queryByText('Attributes:')).toBeNull()
   screen.getByText(/3\s+m\s+42\s+s/)
+})
+
+test('FormReadonly renders the persisted consolidation function as a pill sentence', () => {
+  renderMetricBackendCustomQuery(undefined)
+  screen.getByText('Consolidation:')
+  screen.getByText(/\[Sum\] rate · 3\s+m\s+42\s+s/)
+})
+
+test.each([
+  ['histogram_quantile', /\[Histogram\] p95 ·/],
+  ['histogram_fraction_below', /\[Histogram\] fraction <5 ·/],
+  ['histogram_fraction_between', /\[Histogram\] fraction 10–90 ·/]
+])(
+  'FormReadonly renders only the parameters of the picked function',
+  (consolidationFunction, sentence) => {
+    renderMetricBackendCustomQuery(undefined, consolidationFunction)
+    screen.getByText(sentence)
+    expect(screen.queryByText(/Percentile/)).toBeNull()
+  }
+)
+
+test('FormReadonly falls back to the plain fields for a name outside the catalog', () => {
+  renderMetricBackendCustomQuery(undefined, 'gone_from_the_catalog')
+
+  expect(screen.queryByText('Consolidation:')).toBeNull()
+  screen.getByText('Aggregation lookback:')
+  screen.getByText('Percentile (histograms):')
+  screen.getByText('95 %')
 })

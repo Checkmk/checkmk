@@ -87,6 +87,13 @@ export type AllowedFunctions = {
   [T in MetricType]?: FunctionsByType[T][]
 }
 
+/** For consumers needing a scalar; only histograms have a function that is not one. */
+export const FLOAT_OUTPUT_FUNCTIONS: AllowedFunctions = {
+  histogram: CONSOLIDATION_CATALOG.histogram
+    .filter((spec) => spec.output === 'float')
+    .map((spec) => spec.fn)
+}
+
 /**
  * Functions offered for a type, in catalog order. An allowlist filters them;
  * a filter that matches nothing falls back to the full catalog.
@@ -138,4 +145,16 @@ export function outputType(
 export function consolidationFunctionOf(model: ConsolidationModel): ConsolidationFunction {
   const { params: _params, lookbackSeconds: _lookbackSeconds, ...fn } = model
   return fn
+}
+
+/** Resolve a persisted function name to its type/function pair; null for unknown names. */
+export function consolidationFunctionFromName(name: string): ConsolidationFunction | null {
+  for (const type of METRIC_TYPES) {
+    for (const spec of CONSOLIDATION_CATALOG[type]) {
+      if (spec.fn === name) {
+        return { type, function: spec.fn } as ConsolidationFunction
+      }
+    }
+  }
+  return null
 }

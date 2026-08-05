@@ -20,6 +20,7 @@ import {
   defaultFunction
 } from '@/metric-backend/consolidation/types'
 import type {
+  AllowedFunctions,
   ConsolidationFunction,
   ConsolidationModel,
   MetricType
@@ -31,6 +32,7 @@ const FALLBACK_TYPE: MetricType = 'histogram'
 const props = defineProps<{
   label: TranslatedString
   metricTypes: string[]
+  allowedFunctions?: AllowedFunctions | undefined
 }>()
 
 const backendValidation = defineModel<ValidationMessages>('backendValidation', { default: [] })
@@ -80,7 +82,8 @@ function paramsFor(fn: ConsolidationFunction): ConsolidationModel['params'] {
 
 function buildModel(): ConsolidationModel {
   const fn =
-    consolidationFunction.value ?? defaultFunction(availableTypes.value[0] ?? FALLBACK_TYPE)
+    consolidationFunction.value ??
+    defaultFunction(availableTypes.value[0] ?? FALLBACK_TYPE, props.allowedFunctions)
   return {
     ...fn,
     params: paramsFor(fn),
@@ -192,6 +195,11 @@ immediateWatch(
 <template>
   <div>
     <CmkInlineValidation :validation="validationMessages" />
-    <FormConsolidation v-model="model" :available-types="availableTypes" :label="props.label" />
+    <FormConsolidation
+      v-model="model"
+      :available-types="availableTypes"
+      :allowed-functions="props.allowedFunctions"
+      :label="props.label"
+    />
   </div>
 </template>

@@ -15,7 +15,11 @@ import { computed, ref } from 'vue'
 import { type ValidationMessages } from '@/form'
 import FormHelp from '@/form/private/FormHelp.vue'
 
-import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
+import {
+  type ConsolidationFunction,
+  FLOAT_OUTPUT_FUNCTIONS,
+  consolidationFunctionFromName
+} from '@/metric-backend/consolidation/types'
 
 import FormMetricBackendCustomQuery from './FormMetricBackendCustomQuery.vue'
 import { buildConsolidationFunction, consolidationFunctionFromWire } from './consolidation'
@@ -38,9 +42,9 @@ const serviceNameTemplateErrors = computed<string[]>(() =>
 
 const componentId = useId()
 
-// MetricBackendCustomQuery has no persisted consolidation function, only the two
-// numbers below; the picked function is kept here, local to this component instance.
-const pickedFunction = ref<ConsolidationFunction | null>(null)
+const pickedFunction = ref<ConsolidationFunction | null>(
+  consolidationFunctionFromName(data.value.consolidation_function)
+)
 
 const consolidation = computed<WireConsolidationFunction>({
   get: () =>
@@ -53,9 +57,14 @@ const consolidation = computed<WireConsolidationFunction>({
       data.value.aggregation_histogram_upper_threshold_for_fraction_between
     ),
   set: (value) => {
-    pickedFunction.value = consolidationFunctionFromWire(value)
+    const picked = consolidationFunctionFromWire(value)
+    if (picked.function === 'histogram_preserve') {
+      throw new Error('preserve histograms cannot be stored in the custom-query rule')
+    }
+    pickedFunction.value = picked
     data.value = {
       ...data.value,
+      consolidation_function: picked.function,
       aggregation_lookback: value.lookback_seconds,
       aggregation_histogram_percentile:
         value.function === 'histogram_quantile'
@@ -87,6 +96,7 @@ const consolidation = computed<WireConsolidationFunction>({
     v-model:attribute-filter="data.attribute_filter"
     v-model:consolidation="consolidation"
     :backend-validation="props.backendValidation"
+    :allowed-functions="FLOAT_OUTPUT_FUNCTIONS"
   >
     <template #additional-rows>
       <tr>

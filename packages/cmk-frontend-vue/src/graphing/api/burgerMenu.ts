@@ -83,9 +83,7 @@ export const graphExport = async (
       }
     })
   )
-  // The prepared URL answers with a Content-Disposition attachment, so following it downloads the
-  // file instead of leaving the graph.
-  window.location.href = downloadUrl
+  window.open(downloadUrl, '_blank', 'noopener')
 }
 
 interface ApiBurgerMenuGroup {

@@ -4,12 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import type { Component } from 'vue'
 
-import { ScheduleDowntimeApi } from '@/monitoring/shared/api/actions/downtime'
-import type { HostRef } from '@/monitoring/shared/api/types'
+import {
+  ScheduleDowntimeApi,
+  type ScheduleDowntimeOptions
+} from '@/monitoring/shared/api/actions/downtime'
 
 import type { MonitoringAction } from '../types'
-import ScheduleDowntimeForm, {
+import {
   type ScheduleDowntimeFormValues,
   defaultScheduleDowntimeValues,
   downtimeWindow
@@ -17,21 +21,36 @@ import ScheduleDowntimeForm, {
 
 export const SCHEDULE_DOWNTIME_ACTION_ID = 'schedule_downtimes'
 
-export function useScheduleDowntimeAction(): MonitoringAction<ScheduleDowntimeFormValues> {
-  const { _t, _tn } = usei18n()
+export interface ScheduleDowntimeKindConfig<Target> {
+  submitLabel: TranslatedString
+  description: readonly TranslatedString[]
+  form: Component
+  /** Perform the API call for the resolved targets and return the count actually acted on. */
+  schedule(
+    api: ScheduleDowntimeApi,
+    targets: Target[],
+    values: ScheduleDowntimeFormValues,
+    options: ScheduleDowntimeOptions
+  ): Promise<number>
+  successMessage(count: number): TranslatedString
+  errorMessage: TranslatedString
+}
+
+/** Shared downtime-scheduling flow for hosts and services: only the API call and wording differ. */
+export function createScheduleDowntimeAction<Target>(
+  config: ScheduleDowntimeKindConfig<Target>
+): MonitoringAction<ScheduleDowntimeFormValues, Target> {
+  const { _t } = usei18n()
   const api = new ScheduleDowntimeApi()
 
   return {
     id: SCHEDULE_DOWNTIME_ACTION_ID,
     title: _t('Schedule downtimes'),
-    submitLabel: _t('Schedule host downtime'),
-    description: [
-      _t('Scheduled downtimes set the hosts in planned maintenance.'),
-      _t('Downtimes reduce false alarms and avoid skewed availability statistics.')
-    ],
-    form: ScheduleDowntimeForm,
+    submitLabel: config.submitLabel,
+    description: config.description,
+    form: config.form,
     defaultValues: defaultScheduleDowntimeValues,
-    perform: async (targets: HostRef[], values: ScheduleDowntimeFormValues) => {
+    perform: async (targets: Target[], values: ScheduleDowntimeFormValues) => {
       const window = downtimeWindow(values)
       if (window === null) {
         return {
@@ -40,34 +59,18 @@ export function useScheduleDowntimeAction(): MonitoringAction<ScheduleDowntimeFo
         }
       }
       try {
-        const hostNames = targets.map((target) => target.name)
-        if (values.includeChildHosts) {
-          hostNames.push(...(await api.resolveChildHosts(hostNames)))
-        }
         const durationMinutes = values.flexible
           ? Math.round((new Date(window.end).getTime() - new Date(window.start).getTime()) / 60_000)
           : 0
-        await api.scheduleDowntime(hostNames, {
+        const count = await config.schedule(api, targets, values, {
           comment: values.comment.trim(),
           startTime: window.start,
           endTime: window.end,
           durationMinutes
         })
-        const count = hostNames.length
-        return {
-          variant: 'success',
-          message: _tn(
-            'Scheduled a downtime for %{count} host',
-            'Scheduled a downtime for %{count} hosts',
-            count,
-            { count }
-          )
-        }
+        return { variant: 'success', message: config.successMessage(count) }
       } catch {
-        return {
-          variant: 'error',
-          message: _t('Could not schedule the downtime for the selected hosts.')
-        }
+        return { variant: 'error', message: config.errorMessage }
       }
     }
   }

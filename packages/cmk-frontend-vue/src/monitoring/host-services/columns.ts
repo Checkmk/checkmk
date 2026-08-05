@@ -3,10 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ColumnDef } from '@tanstack/vue-table'
+import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+
+/**
+ * The columns frozen to the edges of the table once it has to scroll
+ * horizontally.
+ */
+export function buildHostServicesColumnPinning(): ColumnPinningState {
+  return { left: ['select', 'state', 'name'] }
+}
 
 export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
@@ -16,6 +24,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       id: 'select',
       header: '',
       enableSorting: false,
+      enableHiding: false,
       minSize: 36,
       maxSize: 36,
       meta: { selectColumn: true, justify: 'center' }
@@ -24,6 +33,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       accessorKey: 'state',
       header: _t('State'),
       sortDescFirst: true,
+      enableHiding: false,
       minSize: 74,
       maxSize: 100,
       meta: { justify: 'center' }
@@ -32,6 +42,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       accessorKey: 'name',
       header: _t('Service'),
       sortDescFirst: false,
+      enableHiding: false,
       minSize: 150,
       maxSize: 350
     },

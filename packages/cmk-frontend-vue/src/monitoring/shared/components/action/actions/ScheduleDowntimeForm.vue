@@ -123,6 +123,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
+const props = withDefaults(defineProps<{ targetKind?: 'host' | 'service' }>(), {
+  targetKind: 'host'
+})
+
 const model = defineModel<ScheduleDowntimeFormValues>({ required: true })
 
 const emit = defineEmits<{
@@ -283,6 +287,7 @@ function selectDuration(id: DurationSelection): void {
       <CmkCollapsible :open="advancedOpen">
         <div class="monitoring-schedule-downtime-form__section-body">
           <CmkCheckbox
+            v-if="props.targetKind === 'host'"
             v-model="model.includeChildHosts"
             :label="_t('Only for hosts: Set child hosts in downtime.')"
           />

@@ -29,9 +29,9 @@ import {
   RESCHEDULE_ACTION_ID,
   useRescheduleAction
 } from '../shared/components/action/actions/reschedule'
-import { useScheduleDowntimeAction } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
+import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
 import { HostApi } from './api/hosts'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
@@ -142,7 +142,7 @@ const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 const actionRegistry = createActionRegistry([
   useAcknowledgeAction(),
   useRescheduleAction(),
-  useScheduleDowntimeAction()
+  useScheduleHostDowntimeAction()
 ])
 
 onMounted(() => {

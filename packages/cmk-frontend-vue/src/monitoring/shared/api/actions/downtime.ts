@@ -70,4 +70,26 @@ export class ScheduleDowntimeApi {
       })
     )
   }
+
+  public async scheduleServiceDowntime(
+    hostName: string,
+    serviceDescriptions: string[],
+    options: ScheduleDowntimeOptions
+  ): Promise<void> {
+    unwrap(
+      await client.POST('/domain-types/downtime/collections/service', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          downtime_type: 'service',
+          host_name: hostName,
+          service_descriptions: serviceDescriptions,
+          start_time: options.startTime,
+          end_time: options.endTime,
+          recur: 'fixed',
+          duration: options.durationMinutes,
+          comment: options.comment
+        }
+      })
+    )
+  }
 }

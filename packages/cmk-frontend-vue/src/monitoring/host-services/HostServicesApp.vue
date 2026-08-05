@@ -4,40 +4,50 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { RowSelectionState } from '@tanstack/vue-table'
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import type { HostRef, HostServiceEntry } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
-import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
-import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
+import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
-import MonitoringTable from '../shared/components/MonitoringTable.vue'
-import MonitoringTotalCount from '../shared/components/MonitoringTotalCount.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { createActionRegistry } from '../shared/components/action/registry'
+import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
 import { HostServicesApi } from './api/services'
-import { useHostServicesColumns } from './columns'
+import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
 import ServiceSlideIn from './components/ServiceSlideIn.vue'
 import { HostServicesService } from './services/HostServicesService'
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 const props = defineProps<MonitoringHostServicesApp>()
 
-const rowSelection = ref<RowSelectionState>({})
+const host: HostRef = { name: props.host, site_id: props.site }
+
+const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
+  id: action.ident,
+  label: action.title as TranslatedString,
+  icon: action.icon as SimpleIcons
+}))
 
 const columns = useHostServicesColumns()
+const columnPinning = buildHostServicesColumnPinning()
 
 const hostServicesService = new HostServicesService(
   new HostServicesApi(),
-  { name: props.host, site_id: props.site },
+  host,
   getKeyShortcutServiceInstance(),
   {
     pollIntervalMs: props.poll_interval_ms,
@@ -45,13 +55,9 @@ const hostServicesService = new HostServicesService(
   }
 )
 
-const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+const actionRegistry = createActionRegistry<string>([useScheduleServiceDowntimeAction(host)])
 
-const isNarrowed = computed(
-  () =>
-    hostServicesService.filters.activeFilterCount > 0 ||
-    hostServicesService.committedSearchQuery.value !== ''
-)
+const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
 onMounted(() => {
   hostServicesService.onFocusSearch(() => searchInput.value?.focus())
@@ -66,8 +72,6 @@ provide(MONITORING_SERVICE, hostServicesService)
 function rowKey(row: HostServiceEntry): string {
   return row.name
 }
-
-const hostRef: HostRef = { name: props.host, site_id: props.site }
 
 const slideInService = ref<HostServiceEntry | null>(null)
 
@@ -84,6 +88,20 @@ function closeSlideIn(): void {
   }
   slideInService.value = null
 }
+
+function serviceRef(row: HostServiceEntry): string {
+  return row.name
+}
+
+function serviceSelectionLabel(count: number): TranslatedString {
+  return _tn('%{count} service selected', '%{count} services selected', count, { count })
+}
+
+function onActionPerformed(result: ActionFeedbackResult): void {
+  if (result.variant === 'success') {
+    hostServicesService.refresh(ACTION_REFRESH_DELAY_MS)
+  }
+}
 </script>
 
 <template>
@@ -95,20 +113,18 @@ function closeSlideIn(): void {
   />
   <div class="monitoring-host-services-app">
     <div class="monitoring-host-services-app__header">
-      <CmkSearchInput
-        ref="searchInput"
-        v-model="hostServicesService.searchQuery.value"
-        class="monitoring-host-services-app__search"
-        :placeholder="_t('Search services…')"
-        @search="hostServicesService.updateSearch($event)"
-        @focusin="hostServicesService.beginAutoPause()"
-        @focusout="hostServicesService.endAutoPause()"
-      />
-    </div>
-    <div class="monitoring-host-services-app__counts">
-      <MonitoringResultsCount :matched="hostServicesService.matched.value" :narrowed="isNarrowed" />
-      <div class="monitoring-host-services-app__counts-end">
-        <MonitoringTotalCount :total="hostServicesService.total.value" />
+      <div class="monitoring-host-services-app__toolbar">
+        <CmkSearchInput
+          ref="searchInput"
+          v-model="hostServicesService.searchQuery.value"
+          class="monitoring-host-services-app__search"
+          :placeholder="_t('Search services…')"
+          @search="hostServicesService.updateSearch($event)"
+          @focusin="hostServicesService.beginAutoPause()"
+          @focusout="hostServicesService.endAutoPause()"
+        />
+      </div>
+      <div class="monitoring-host-services-app__header-end">
         <RefreshCountdown
           :remaining="hostServicesService.secondsRemaining.value"
           :interval="hostServicesService.pollIntervalSeconds"
@@ -119,27 +135,23 @@ function closeSlideIn(): void {
         />
       </div>
     </div>
-    <MonitoringTable
-      v-model:row-selection="rowSelection"
-      :rows="hostServicesService.items.value"
-      :fetch-state="hostServicesService.fetchState.value"
-      :has-loaded="hostServicesService.hasLoaded.value"
+    <MonitoringSplitPane
+      :service="hostServicesService"
+      :actions="actionRegistry"
+      :bulk-actions="serviceActions"
       :columns="columns"
-      :filter-state="hostServicesService.tableColumnFilters.value"
+      :column-pinning="columnPinning"
       :get-row-key="rowKey"
-      @update:filter-state="hostServicesService.onColumnFiltersUpdate($event)"
+      :get-action-target="serviceRef"
+      :selection-label="serviceSelectionLabel"
+      :actions-label="_t('Actions for selected services')"
+      @performed="onActionPerformed"
     >
       <template #row="{ row, tableRow }">
         <HostServicesRow :row="row" :table-row="tableRow" @open="openSlideIn" />
       </template>
-      <template #empty-state>
-        <MonitoringEmptyState
-          :has-search-query="hostServicesService.committedSearchQuery.value !== ''"
-          :has-active-filter="hostServicesService.filters.activeFilterCount > 0"
-        />
-      </template>
-    </MonitoringTable>
-    <ServiceSlideIn :service="slideInService" :host="hostRef" @close="closeSlideIn" />
+    </MonitoringSplitPane>
+    <ServiceSlideIn :service="slideInService" :host="host" @close="closeSlideIn" />
   </div>
 </template>
 
@@ -158,24 +170,24 @@ function closeSlideIn(): void {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  justify-content: space-between;
+}
+
+.monitoring-host-services-app__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+.monitoring-host-services-app__header-end {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
   gap: var(--spacing);
 }
 
 .monitoring-host-services-app__search {
   flex: 1;
   max-width: 360px;
-}
-
-.monitoring-host-services-app__counts {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.monitoring-host-services-app__counts-end {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
 }
 </style>

@@ -121,9 +121,12 @@ test('requests a descending sort first for the State column', async () => {
 test('requests the services matching a submitted search query', async () => {
   mockServices([makeApiEntry()])
   renderApp()
-  await screen.findByPlaceholderText('Search services…')
+  const input = await screen.findByPlaceholderText('Search services…')
 
-  await userEvent.type(screen.getByPlaceholderText('Search services…'), 'CPU{Enter}')
+  // Focus explicitly: CmkSplitPane's resizable layout keeps userEvent's
+  // simulated click from landing focus on the input under jsdom.
+  input.focus()
+  await userEvent.type(input, 'CPU{Enter}')
 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
@@ -134,10 +137,13 @@ test('requests the services matching a submitted search query', async () => {
 test('tells the user the empty result came from their search', async () => {
   mockServices([makeApiEntry()])
   renderApp()
-  await screen.findByPlaceholderText('Search services…')
+  const input = await screen.findByPlaceholderText('Search services…')
   mockServices([], { matched: 0, total: 42 })
 
-  await userEvent.type(screen.getByPlaceholderText('Search services…'), 'nope{Enter}')
+  // Focus explicitly: CmkSplitPane's resizable layout keeps userEvent's
+  // simulated click from landing focus on the input under jsdom.
+  input.focus()
+  await userEvent.type(input, 'nope{Enter}')
 
   expect(await screen.findByText('No results found for your search.')).toBeInTheDocument()
 })

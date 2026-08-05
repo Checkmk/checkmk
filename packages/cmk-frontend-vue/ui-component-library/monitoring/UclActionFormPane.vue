@@ -40,10 +40,10 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Component, computed, ref } from 'vue'
 
+import { useScheduleHostDowntimeAction } from '@/monitoring/all-hosts/actions/scheduleHostDowntime'
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
 import { useCommentAction } from '@/monitoring/shared/components/action/actions/comment'
 import { useRescheduleAction } from '@/monitoring/shared/components/action/actions/reschedule'
-import { useScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -57,7 +57,7 @@ const propState = ref(
 const actions: Record<Exclude<FormKind, 'none'>, MonitoringAction> = {
   comment: useCommentAction(),
   reschedule: useRescheduleAction(),
-  'schedule-downtime': useScheduleDowntimeAction()
+  'schedule-downtime': useScheduleHostDowntimeAction()
 }
 
 const activeAction = computed<MonitoringAction | undefined>(() =>

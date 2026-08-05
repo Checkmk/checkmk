@@ -31,18 +31,20 @@ def test_special_agent_multiple_command_lines(site: Site) -> None:
 
     def _plugin_files() -> Iterable[AbstractContextManager[Path]]:
         root = Path(__file__).parent
-        for file in (
-            "server_side_calls/special_agent.py",
-            "rulesets/special_agent.py",
-            "libexec/agent_multicalltest",
+        for src_file, dst_file in (
+            ("server_side_calls/special_agent.py", "server_side_calls/special_agent.py"),
+            ("rulesets/special_agent.py", "rulesets/special_agent.py"),
+            # FYI: In the repo the Python file is required to have a `.py` extension,
+            # but in the site's plugin directory its name has to match the plugin name exactly (i.e. no extension)
+            ("libexec/agent_multicalltest.py", "libexec/agent_multicalltest"),
         ):
             yield site.copy_file(
-                root / _PLUGIN_SRC_FAMILY_DIR / file, f"{_PLUGIN_FAMILY_DIR}/{file}"
+                root / _PLUGIN_SRC_FAMILY_DIR / src_file, f"{_PLUGIN_FAMILY_DIR}/{dst_file}"
             )
 
-    with ExitStack() as sack:
+    with ExitStack() as stack:
         for file in _plugin_files():
-            sack.enter_context(file)
+            stack.enter_context(file)
 
         site.run(["chmod", "+x", site.path(agent_path).as_posix()])
 

@@ -783,7 +783,7 @@ def _get_package_id(
             )
 
 
-def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argparse.Namespace:
+def _parse_arguments(argv: Sequence[str], site_context: SiteContext | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="mkp",
         description=__doc__,
@@ -862,8 +862,9 @@ def main(
     path_config: PathConfig | None = None,
     site_context: SiteContext | None = None,
     persisting_function: Callable[[Path, bytes], None] = simple_file_write,
+    argv: Sequence[str] = sys.argv[1:] or ["--help"],
 ) -> int:
-    args = _parse_arguments(sys.argv[1:] or ["--help"], site_context)
+    args = _parse_arguments(argv, site_context)
     set_up_logging(args.verbose)
 
     try:

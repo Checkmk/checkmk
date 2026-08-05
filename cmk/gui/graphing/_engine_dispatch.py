@@ -27,6 +27,7 @@ from ._engine_codec import (
     time_range_of,
 )
 from ._engine_rrd import FetchDiagnostics
+from ._from_api import GraphFromAPI
 from ._graph_specification import GraphSpecification
 
 
@@ -38,6 +39,19 @@ class BuiltGraph:
     # replay.
     graph: Graph
     specification: GraphSpecification | None
+
+
+def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:
+    """The graph id a built graph is addressed by in the specifications legacy stores and replays.
+
+    A fallback single-metric graph must carry the "METRIC_" prefix legacy stores it under; without
+    it the legacy recipe lookup finds neither a plug-in nor the metric.
+    """
+    if graph.name.startswith("METRIC_") or any(
+        registered.name == graph.name for registered in registered_graphs
+    ):
+        return graph.name
+    return f"METRIC_{graph.name}"
 
 
 @dataclass(frozen=True, kw_only=True)

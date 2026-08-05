@@ -31,6 +31,7 @@ from ._engine_dispatch import (
     EngineGraphDispatcher,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
+    legacy_graph_id,
 )
 from ._engine_plugins import registered_translations
 from ._engine_rrd import EngineRRDFetchData
@@ -49,18 +50,6 @@ def _assert_uniform_unit(graph: Graph) -> None:
             _("Cannot create graph with metrics of different units: %(units)s")
             % {"units": ", ".join(sorted(repr(unit) for unit in units))}
         )
-
-
-def _legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:
-    # The write side of the graph-name match the engine filters by: a graph named after a registered
-    # plug-in is addressed by that name, while a fallback single-metric graph must carry the
-    # "METRIC_" prefix legacy stores it under - without it the legacy recipe lookup finds neither a
-    # plug-in nor the metric.
-    if graph.name.startswith("METRIC_") or any(
-        registered.name == graph.name for registered in registered_graphs
-    ):
-        return graph.name
-    return f"METRIC_{graph.name}"
 
 
 def _resolved_site(graph: Graph) -> SiteId | None:
@@ -96,7 +85,7 @@ def build_template_graphs(
                 site=_resolved_site(graph) or specification.site,
                 host_name=specification.host_name,
                 service_description=specification.service_description,
-                graph_id=_legacy_graph_id(graph, registered_graphs),
+                graph_id=legacy_graph_id(graph, registered_graphs),
                 destination=specification.destination,
             ),
         )

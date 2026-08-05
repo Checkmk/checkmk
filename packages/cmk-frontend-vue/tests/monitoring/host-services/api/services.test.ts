@@ -99,25 +99,16 @@ describe('HostServicesApi.fetchServices', () => {
     ])
   })
 
-  it('normalizes the UNKN state label to the shared UNKNOWN state', async () => {
-    mockSuccess([makeApiEntry({ state: 'UNKN' })])
+  it.each(['OK', 'WARN', 'CRIT', 'UNKNOWN'] as const)(
+    'carries the %s state label into the view model',
+    async (label) => {
+      mockSuccess([makeApiEntry({ state: label })])
 
-    const [entry] = await new HostServicesApi().fetchServices('web-1', 'local')
+      const [entry] = await new HostServicesApi().fetchServices('web-1', 'local')
 
-    expect(entry!.state).toBe('UNKNOWN')
-  })
-
-  it.each([
-    ['OK', 'OK'],
-    ['WARN', 'WARN'],
-    ['CRIT', 'CRIT']
-  ] as const)('passes the %s state through unchanged', async (label, expected) => {
-    mockSuccess([makeApiEntry({ state: label })])
-
-    const [entry] = await new HostServicesApi().fetchServices('web-1', 'local')
-
-    expect(entry!.state).toBe(expected)
-  })
+      expect(entry!.state).toBe(label)
+    }
+  )
 
   it('throws when the response is not ok', async () => {
     postSpy.mockResolvedValueOnce({

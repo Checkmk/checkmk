@@ -10,16 +10,6 @@ import type { ServiceState } from '@/monitoring/shared/api/types'
 
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
 
-// The endpoint labels the unknown state 'UNKN'; the shared ServiceState (and its display
-// component) speak 'UNKNOWN'. Bridge the two at the API boundary so the view layer only ever
-// sees ServiceState.
-const SERVICE_STATE_BY_LABEL: Record<ApiServiceEntry['state'], ServiceState> = {
-  OK: 'OK',
-  WARN: 'WARN',
-  CRIT: 'CRIT',
-  UNKN: 'UNKNOWN'
-}
-
 const DEFAULT_SERVICE_LIMIT = 1000
 
 export interface ServiceEntry {
@@ -53,7 +43,7 @@ export class HostServicesApi {
   private toEntry(entry: ApiServiceEntry): ServiceEntry {
     return {
       name: entry.name,
-      state: SERVICE_STATE_BY_LABEL[entry.state],
+      state: entry.state,
       summary: entry.summary,
       last_check: entry.last_check,
       last_state_change: entry.last_state_change

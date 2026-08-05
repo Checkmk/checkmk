@@ -42,7 +42,7 @@ def test_handle_list_services_state_label_conversion() -> None:
     response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
     service_states = [service.state for service in response.services]
 
-    assert all(state in {"OK", "WARN", "CRIT", "UNKN"} for state in service_states)
+    assert all(state in {"OK", "WARN", "CRIT", "UNKNOWN"} for state in service_states)
 
 
 def test_handle_list_services_meta_round_trips_hostname_and_site() -> None:

@@ -18,14 +18,14 @@ import datetime as dt
 import enum
 from typing import assert_never, Literal
 
-type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKN"]
+type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN"]
 
 
 class ServiceState(enum.IntEnum):
     OK = 0
     WARN = 1
     CRIT = 2
-    UNKN = 3
+    UNKNOWN = 3
 
 
 @dataclasses.dataclass(frozen=True)
@@ -45,8 +45,8 @@ class Service:
                 return "WARN"
             case ServiceState.CRIT:
                 return "CRIT"
-            case ServiceState.UNKN:
-                return "UNKN"
+            case ServiceState.UNKNOWN:
+                return "UNKNOWN"
             case _:
                 assert_never(self.state)
 

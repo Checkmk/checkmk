@@ -1561,8 +1561,8 @@ def _compute_deprecation_result_of_views_plugin(
     if "inventory_displayhints.update(" in content:
         return compute_deprecation_result(
             version=__version__,
-            deprecated_version="2.6.0",
-            removed_version="2.7.0",
+            deprecated_version="3.0.0",
+            removed_version="3.1.0",
             title_entity=(_("HW/SW inventory display hints in %r") % plugin_filepath.parent.name),
             title_api=_("legacy"),
             site_id=site_id,

@@ -1533,47 +1533,20 @@ class Rule:
         if not _match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
-        value_text = None
-        try:
-            value_model = self.ruleset.rulespec.value_model
-            if isinstance(value_model, FormSpec):
-                visitor = get_visitor(
-                    value_model,
-                    VisitorOptions(migrate_values=True, mask_values=True),
-                )
-                _spec, data = visitor.to_vue(RawDiskData(self.value))
-                value_text = repr(data)
-            else:
-                value_text = str(value_model.value_to_html(self.value))
-        except MKAuthException as e:
-            html.show_error(
-                _("Failed to search rule of rule set '%(ruleset)s': %(error)s")
-                % {"ruleset": self.ruleset.title(), "error": e}
-            )
-        except Exception as e:
-            logger.exception(
-                "error searching ruleset %(ruleset)s", {"ruleset": self.ruleset.title()}
-            )
-            html.show_warning(
-                _(
-                    "Failed to search rule of rule set '%(ruleset)s' in folder '%(folder)s' (%(config)r): %(error)s"
-                )
-                % {
-                    "ruleset": self.ruleset.title(),
-                    "folder": self.folder.title(),
-                    "config": self.to_config(),
-                    "error": e,
-                }
-            )
-
-        if value_text is not None and not _match_search_expression(
-            search_options, "rule_value", value_text
-        ):
-            return False
-
         if "rule_host_list" in search_options and not _match_rule_host_list(
             rule=self,
             search_hosts_str=search_options["rule_host_list"],
+        ):
+            return False
+
+        value_text = (
+            self._value_text_for_search()
+            if "rule_value" in search_options or "fulltext" in search_options
+            else None
+        )
+
+        if value_text is not None and not _match_search_expression(
+            search_options, "rule_value", value_text
         ):
             return False
 
@@ -1665,6 +1638,39 @@ class Rule:
                         raise MKGeneralException(f"Unknown search condition: {search_condition}")
 
         return True
+
+    def _value_text_for_search(self) -> str | None:
+        try:
+            value_model = self.ruleset.rulespec.value_model
+            if isinstance(value_model, FormSpec):
+                visitor = get_visitor(
+                    value_model,
+                    VisitorOptions(migrate_values=True, mask_values=True),
+                )
+                _spec, data = visitor.to_vue(RawDiskData(self.value))
+                return repr(data)
+            return str(value_model.value_to_html(self.value))
+        except MKAuthException as e:
+            html.show_error(
+                _("Failed to search rule of rule set '%(ruleset)s': %(error)s")
+                % {"ruleset": self.ruleset.title(), "error": e}
+            )
+        except Exception as e:
+            logger.exception(
+                "error searching ruleset %(ruleset)s", {"ruleset": self.ruleset.title()}
+            )
+            html.show_warning(
+                _(
+                    "Failed to search rule of rule set '%(ruleset)s' in folder '%(folder)s' (%(config)r): %(error)s"
+                )
+                % {
+                    "ruleset": self.ruleset.title(),
+                    "folder": self.folder.title(),
+                    "config": self.to_config(),
+                    "error": e,
+                }
+            )
+        return None
 
     def _get_search_folders(self, search_options: SearchOptions) -> list[str]:
         current_folder, do_recursion = search_options["rule_folder"]

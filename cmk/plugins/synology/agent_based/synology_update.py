@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from enum import Enum
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -23,13 +22,27 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.synology import lib as synology
 
-_STATES: Mapping[int, str] = {
-    1: "Available",
-    2: "Unavailable",
-    3: "Connecting",
-    4: "Disconnected",
-    5: "Others",
-}
+
+class Status(Enum):
+    AVAILABLE = 1
+    UNAVAILABLE = 2
+    CONNECTING = 3
+    DISCONNECTED = 4
+    OTHERS = 5
+
+    @property
+    def ruleset_name(self) -> str:
+        return self.name.lower()
+
+    @property
+    def title(self) -> str:
+        return self.name.capitalize()
+
+
+class Params(TypedDict):
+    ok_states: Sequence[str]
+    warn_states: Sequence[str]
+    crit_states: Sequence[str]
 
 
 @dataclass(frozen=True)
@@ -70,20 +83,21 @@ def discovery(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check(params: Params, section: Section) -> CheckResult:
+    status = Status(section.status)
     state = State.UNKNOWN
-    if section.status in params["ok_states"]:
+    if status.ruleset_name in params["ok_states"]:
         state = State.OK
-    elif section.status in params["warn_states"]:
+    elif status.ruleset_name in params["warn_states"]:
         state = State.WARN
-    elif section.status in params["crit_states"]:
+    elif status.ruleset_name in params["crit_states"]:
         state = State.CRIT
-    elif section.status == 3:
+    elif status is Status.CONNECTING:
         # to prevent flapping between update avail and Connection
         raise IgnoreResultsError("Devices try to connect to the update server")
     yield Result(
         state=state,
-        summary=f"Update Status: {_STATES[section.status]}, Current Version: {section.version}",
+        summary=f"Update Status: {status.title}, Current Version: {section.version}",
     )
 
 
@@ -94,9 +108,9 @@ check_plugin_synology_update = CheckPlugin(
     discovery_function=discovery,
     check_function=check,
     check_ruleset_name="synology_update",
-    check_default_parameters={
-        "ok_states": [2],
-        "warn_states": [5],
-        "crit_states": [1, 4],
-    },
+    check_default_parameters=Params(
+        ok_states=[Status.UNAVAILABLE.ruleset_name],
+        warn_states=[Status.OTHERS.ruleset_name],
+        crit_states=[Status.AVAILABLE.ruleset_name, Status.DISCONNECTED.ruleset_name],
+    ),
 )

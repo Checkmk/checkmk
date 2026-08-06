@@ -3,25 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-
-from collections.abc import Mapping, Sequence
-
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
 from cmk.plugins.synology.agent_based import synology_update
+from cmk.plugins.synology.agent_based.synology_update import Params
 
 SECTION_TABLE = [
     ["nana batman", "0"],
 ]
 
-DEFAULT_PARAMS: Mapping[str, Sequence[int]] = {
-    "ok_states": [2],
-    "warn_states": [5],
-    "crit_states": [1, 4],
-}
+DEFAULT_PARAMS = Params(
+    ok_states=["unavailable"],
+    warn_states=["others"],
+    crit_states=["available", "disconnected"],
+)
 
 
 def test_parsing() -> None:
@@ -40,10 +36,15 @@ def test_discovery() -> None:
 @pytest.mark.parametrize("observed_state", range(1, 6))
 def test_result_state(cmk_state: State, observed_state: int) -> None:
     state_names = {State.OK: "ok_states", State.WARN: "warn_states", State.CRIT: "crit_states"}
-    params: dict[str, object] = {name: [] for name in ["ok_states", "warn_states", "crit_states"]}
-    params[state_names[cmk_state]] = [1, 2, 3, 4, 5]
+    params = Params(ok_states=[], warn_states=[], crit_states=[])
+    params[state_names[cmk_state]] = [  # type: ignore[literal-required]
+        "available",
+        "unavailable",
+        "connecting",
+        "disconnected",
+        "others",
+    ]
     section = synology_update.Section(version="robin", status=observed_state)
-    assert section is not None
     result = list(synology_update.check(section=section, params=params))[0]
     assert isinstance(result, Result)
     assert result.state == cmk_state
@@ -88,7 +89,7 @@ def test_raise_if_connection_not_explicit_named_in_states() -> None:
 
 def test_connecting_is_reported_when_a_rule_names_it() -> None:
     """The status-3 IgnoreResults is the last branch, so a rule that lists it still wins."""
-    params: Mapping[str, Sequence[int]] = {"ok_states": [3], "warn_states": [], "crit_states": []}
+    params = Params(ok_states=["connecting"], warn_states=[], crit_states=[])
     section = synology_update.Section(version="robin", status=3)
 
     assert list(synology_update.check(section=section, params=params)) == [

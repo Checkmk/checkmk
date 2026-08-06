@@ -7282,7 +7282,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('synology_update', [])
 
 checkgroup_parameters['synology_update'] = [
-{'id': 'd866c73e-60e4-4bfc-99ed-e29fd11fcf24', 'value': {'ok_states': [2], 'warn_states': [5], 'crit_states': [1, 4]}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd866c73e-60e4-4bfc-99ed-e29fd11fcf24', 'value': {'ok_states': ['unavailable'], 'warn_states': ['others'], 'crit_states': ['available', 'disconnected']}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['synology_update']
 
 
@@ -14514,7 +14514,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('synology_update', [])
 
 static_checks['synology_update'] = [
-{'id': 'e3d6d74e-8876-444e-be1d-b8259f0d13bb', 'value': ('synology_update', None, {'ok_states': [2], 'warn_states': [5], 'crit_states': [1, 4]}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'e3d6d74e-8876-444e-be1d-b8259f0d13bb', 'value': ('synology_update', None, {'ok_states': ['unavailable'], 'warn_states': ['others'], 'crit_states': ['available', 'disconnected']}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['synology_update']
 
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.sidebar import SidebarSnapin, snapin_registry
@@ -11,21 +11,26 @@ from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 
 class SnapinTest(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "test"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return "test"
 
     @classmethod
+    @override
     def description(cls) -> str:
         return "test"
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
+    @override
     def show(self, config: Config) -> None:
         pass
 

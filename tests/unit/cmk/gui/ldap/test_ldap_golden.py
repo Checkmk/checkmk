@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 # Golden Tests for the LDAP connector
@@ -15,6 +14,7 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from time import time
+from typing import override
 from unittest import mock
 from unittest.mock import ANY, MagicMock
 
@@ -222,11 +222,13 @@ class AnyOrderMatcher:
     def __init__(self, args: Sequence):
         self.args = args
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, list):
             raise ValueError(f"Invalid value: {other!r}")
         return set(other) == set(self.args)
 
+    @override
     def __repr__(self) -> str:
         return f"AnyOrderMatcher({self.args})"
 

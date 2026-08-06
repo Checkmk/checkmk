@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterator, Mapping, Sequence
+from typing import override
 
 import pytest
 
@@ -571,6 +570,7 @@ _HEAP_MEM_GRAPH = {
 
 
 class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
+    @override
     def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         perf_data, check_command = parse_perf_data(
             "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False

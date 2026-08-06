@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -16,7 +15,7 @@ import socket
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 import pytest
 from pytest import MonkeyPatch
@@ -524,10 +523,12 @@ class FakeLabelConfig(ABCLabelConfig):
     def __init__(self, service_labels: Mapping[str, str]):
         self._service_lables = service_labels
 
+    @override
     def host_labels(self, host_name: HostName, /) -> Labels:
         """Returns the configured labels for a host"""
         return {}
 
+    @override
     def service_labels(
         self,
         host_name: HostName,

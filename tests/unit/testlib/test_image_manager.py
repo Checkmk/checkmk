@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Unit tests for :mod:`tests.testlib.image_manager`.
 
 Cover the four-step lookup priority of :py:meth:`ABCImageManager.get`:
@@ -17,6 +15,7 @@ The Docker client and its ``images`` collection are mocked so the tests don't
 touch a real Docker daemon.
 """
 
+from typing import override
 from unittest.mock import MagicMock
 
 import docker.errors
@@ -47,12 +46,15 @@ class _FakeImageManager(ABCImageManager):
         self.build_calls = 0
         self._build_makes_tag_present = build_makes_tag_present
 
+    @override
     def local_tag(self, version: str) -> str:
         return _LOCAL_TAG
 
+    @override
     def registry_ref(self, version: str) -> str:
         return _REGISTRY_REF
 
+    @override
     def build(self, version: str) -> str:
         self.build_calls += 1
         if self._build_makes_tag_present:

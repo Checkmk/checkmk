@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """
 This script helps managing Bandit '# nosec' exclusions in our codebase.
 It can scan the codebase for all instances of '# nosec' and cross-reference
@@ -25,6 +23,7 @@ import sys
 import tomllib
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import override
 
 LOGGER = logging.getLogger(__name__)
 
@@ -174,9 +173,11 @@ class BnsId:
             raise ValueError("Invalid BNS ID")
         self._id = id_
 
+    @override
     def __repr__(self) -> str:
         return self._id
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, BnsId):
             return NotImplemented
@@ -225,6 +226,7 @@ class Nosec:
         """Report the file and line number of this marker"""
         return f"{self.file}:{self.line_no}"
 
+    @override
     def __repr__(self) -> str:
         return f"{self.location}\n>\t{self.line}"
 

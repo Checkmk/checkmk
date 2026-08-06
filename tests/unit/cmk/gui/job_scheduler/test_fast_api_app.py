@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import logging
 import threading
 from collections import Counter
+from typing import override
 
 from fastapi.testclient import TestClient
 
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 class DummyExecutor(JobExecutor):
     def __init__(self, logger: logging.Logger) -> None: ...
 
+    @override
     def start(
         self,
         type_id: str,
@@ -52,17 +53,21 @@ class DummyExecutor(JobExecutor):
     ) -> result.Result[None, StartupError]:
         return result.OK(None)
 
+    @override
     def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         return result.OK(None)
 
+    @override
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         return result.OK(True)
 
+    @override
     def all_running_jobs(self) -> dict[str, int]:
         return {
             "job_id": 42,
         }
 
+    @override
     def job_executions(self) -> dict[str, int]:
         return {
             "job_1": 1,
@@ -75,10 +80,12 @@ class HelloJob(BackgroundJob):
     on_scheduler_start_called = False
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return "Hello Job"
 
     @classmethod
+    @override
     def on_scheduler_start(cls, executor: JobExecutor, *, debug: bool) -> None:
         HelloJob.on_scheduler_start_called = True
 
@@ -88,6 +95,7 @@ class DummyThread(threading.Thread):
         super().__init__()
         self._is_stopped = is_stopped
 
+    @override
     def is_alive(self) -> bool:
         return not self._is_stopped
 

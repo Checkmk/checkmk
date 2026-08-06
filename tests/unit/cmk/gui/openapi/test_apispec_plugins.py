@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
+from typing import override
 
 import pytest
 from apispec import APISpec
@@ -25,6 +25,7 @@ class Movie:
         self.director = director
         self.year = year
 
+    @override
     def __repr__(self) -> str:
         return f"<Movie(title={self.title!r}, director={self.director!r}, year={self.year})>"
 
@@ -33,6 +34,7 @@ class Movie:
             return NotImplemented
         return self.year > other.year
 
+    @override
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, Movie)

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from pathlib import Path
+from typing import override
 
 from cmk.gui.dashboard import page_show_dashboard
 from cmk.gui.type_defs import GlobalSettings
@@ -23,23 +22,29 @@ class _FakeNetworkFlowDomain(ABCConfigDomain):
         self._value = value
 
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return ConfigDomainName("network_flow")
 
+    @override
     def config_dir(self) -> Path:
         return Path("network_flow.d")
 
+    @override
     def default_globals(self) -> GlobalSettings:
         return {"network_flow": ("disabled", None)}
 
+    @override
     def load(
         self, site_specific: bool = False, custom_site_path: str | None = None
     ) -> GlobalSettings:
         return {} if site_specific else {"network_flow": self._value}
 
+    @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 

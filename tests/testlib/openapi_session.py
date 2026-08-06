@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """
 Module Summary:
@@ -41,7 +40,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 from enum import StrEnum
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, override
 
 import requests
 
@@ -177,11 +176,13 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
+    @override
     def get(  # type: ignore[override]
         self, url: str, api_version: APIVersion | None = None, **kwargs: Any
     ) -> requests.Response:
         return self.request("GET", url, api_version=api_version, **kwargs)
 
+    @override
     def post(  # type: ignore[override]
         self,
         url: str,
@@ -192,11 +193,13 @@ class CMKOpenApiSession(requests.Session):
     ) -> requests.Response:
         return self.request("POST", url, api_version=api_version, data=data, json=json, **kwargs)
 
+    @override
     def put(  # type: ignore[override]
         self, url: str, api_version: APIVersion | None = None, data: Any = None, **kwargs: Any
     ) -> requests.Response:
         return self.request("PUT", url, api_version=api_version, data=data, **kwargs)
 
+    @override
     def patch(  # type: ignore[override]
         self,
         url: str,
@@ -207,11 +210,13 @@ class CMKOpenApiSession(requests.Session):
     ) -> requests.Response:
         return self.request("PATCH", url, api_version=api_version, data=data, json=json, **kwargs)
 
+    @override
     def delete(  # type: ignore[override]
         self, url: str, api_version: APIVersion | None = None, **kwargs: Any
     ) -> requests.Response:
         return self.request("DELETE", url, api_version=api_version, **kwargs)
 
+    @override
     def request(  # type: ignore[override]
         self,
         method: str | bytes,

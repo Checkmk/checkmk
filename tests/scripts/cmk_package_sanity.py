@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Package sanity check: install CMK package(s) on a clean OS in a Docker container.
 
 For each package a matching OS container is started (the target OS is derived from
@@ -27,7 +25,7 @@ from pathlib import Path
 from re import match, search
 from sys import exit as sys_exit
 from textwrap import dedent
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, override
 
 import docker
 import docker.models
@@ -164,6 +162,7 @@ class AlmaLinuxContainer(OsContainer):
     package_manager: ClassVar[Literal["dnf", "apt-get", "zypper"]] = "dnf"
     image_name = "almalinux"
 
+    @override
     def install_extras(self) -> None:
         epel_package = (
             f"https://dl.fedoraproject.org/pub/epel/epel-release-latest-{self.tag_name}.noarch.rpm"
@@ -186,6 +185,7 @@ class AptContainer(OsContainer):
     environment = {"DEBIAN_FRONTEND": "noninteractive"}
 
     @property
+    @override
     def os_label(self) -> str:
         return f"{self.os_title} {self.os_version} {self.tag_name}"
 
@@ -217,6 +217,7 @@ class UbuntuContainer(AptContainer):
             for _ in json.loads(requests.get(sources_url).text).get("entries", {})
         }
 
+    @override
     def files(self) -> dict[str, bytes]:
         """Return the files that must be written to the container."""
         return {
@@ -246,6 +247,7 @@ class SLESContainer(OsContainer):
     yes_flag = ""
     package_manager_flags = "--non-interactive"
 
+    @override
     def install_extras(self) -> None:
         self.run_step(
             "Registering PackageHub extension...",

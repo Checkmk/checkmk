@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -14,6 +13,7 @@ import logging
 import os
 import queue
 from collections.abc import Generator, Iterator
+from typing import override
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -85,30 +85,37 @@ from tests.testlib.rest_api_client import (  # noqa: E402
 
 
 class _DummyNotificationHandler(NotificationHandler):
+    @override
     def manage_notification(self) -> None:
         pass
 
 
 class DummyLicensingHandler(LicensingHandler):
     @classmethod
+    @override
     def make(cls) -> DummyLicensingHandler:
         return cls()
 
     @property
+    @override
     def state(self) -> LicenseState:
         return LicenseState.LICENSED
 
     @property
+    @override
     def message(self) -> str:
         return ""
 
+    @override
     def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
         return UserEffect(header=None, email=None, block=None)
 
+    @override
     def effect(self, licensing_settings_link: str | None = None) -> UserEffect:
         return UserEffect(header=None, email=None, block=None)
 
     @property
+    @override
     def notification_handler(self) -> NotificationHandler:
         return _DummyNotificationHandler(email_notification=None)
 

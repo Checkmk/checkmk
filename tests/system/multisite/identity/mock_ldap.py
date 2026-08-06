@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """In-process LDAP mock for the user identity & auth composition tests.
 
 A lightweight stand-in for the ``osixia/openldap`` container that serves the
@@ -19,7 +17,7 @@ import socket
 import socketserver
 import threading
 from types import TracebackType
-from typing import cast, Self
+from typing import cast, override, Self
 
 from tests.system.multisite.identity.directory import Directory
 
@@ -172,6 +170,7 @@ class _LdapRequestHandler(socketserver.BaseRequestHandler):
 
     request: socket.socket
 
+    @override
     def handle(self) -> None:
         client = self.request
         while True:

@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import socket
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import override
 
 from cmk.automations.results import (
     ABCAutomationResult,
@@ -42,6 +41,7 @@ class AutomationResultTest(ABCAutomationResult):
     e: Mapping[str, str]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("test")
 

@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 import pytest
 
@@ -1230,6 +1229,7 @@ def test_updater_merge_tables_outdated(
 )
 def test_inventorize_host(failed_state: int | None, expected: int) -> None:
     class TestFetcher(FetcherFunction):
+        @override
         def __call__(
             self, host_name: HostName, *, ip_address: HostAddress | None
         ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
@@ -1306,6 +1306,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
 def test_inventorize_host_with_no_data_nor_files() -> None:
     class TestFetcher(FetcherFunction):
+        @override
         def __call__(
             self, host_name: HostName, *, ip_address: HostAddress | None
         ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:

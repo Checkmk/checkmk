@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """This module provides functionality for managing package downloads and installations for
 different Linux distributions.
 """
@@ -16,7 +14,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import NewType
+from typing import NewType, override
 
 import requests
 
@@ -274,12 +272,15 @@ class PackageManagerDEB(ABCPackageManager):
         distro_name = match.group(1)
         return cls(distro_name)
 
+    @override
     def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}_0.{self.distro_name}_amd64.deb"
 
+    @override
     def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}"
 
+    @override
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
         package_name = package_path.name
         # Match: check-mk-{edition}-...
@@ -290,6 +291,7 @@ class PackageManagerDEB(ABCPackageManager):
         edition_str = match.group(1)
         return CMKEdition.edition_from_text(edition_str)
 
+    @override
     def get_version(self, package_path: Path) -> str:
         package_name = package_path.name
         # Match: check-mk-{edition}-{version}_0.{distro}_amd64.deb
@@ -299,11 +301,13 @@ class PackageManagerDEB(ABCPackageManager):
 
         return match.group(1)
 
+    @override
     def _install_package(self, package_path: Path) -> None:
         # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
         # this step should fail in case additional packages would be required
         self._execute(["dpkg", "-i", package_path])
 
+    @override
     def _uninstall_package(self, package_name: str) -> None:
         self._execute(["dpkg", "-P", package_name])
 
@@ -326,12 +330,15 @@ class ABCPackageManagerRPM(ABCPackageManager):
         # Default to RHEL for other RPM-based distros
         return PackageManagerRHEL(distro_name)
 
+    @override
     def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}-{self.distro_name}-38.x86_64.rpm"
 
+    @override
     def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}"
 
+    @override
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
         package_name = package_path.name
         # Match: check-mk-{edition}-...
@@ -342,6 +349,7 @@ class ABCPackageManagerRPM(ABCPackageManager):
         edition_str = match.group(1)
         return CMKEdition.edition_from_text(edition_str)
 
+    @override
     def get_version(self, package_path: Path) -> str:
         package_name = package_path.name
         # Match: check-mk-{edition}-{version}-{distro}-38.x86_64.rpm
@@ -353,23 +361,28 @@ class ABCPackageManagerRPM(ABCPackageManager):
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
+    @override
     def _install_package(self, package_path: Path) -> None:
         self._execute(["rpm", "-i", package_path])
 
+    @override
     def _uninstall_package(self, package_name: str) -> None:
         self._execute(["rpm", "-e", package_name])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):
+    @override
     def _install_package(self, package_path: Path) -> None:
         self._execute(["yum", "install", "-y", package_path])
 
+    @override
     def _uninstall_package(self, package_name: str) -> None:
         self._execute(["rpm", "-e", package_name])
 
 
 class PackageManagerCMA(PackageManagerDEB):
     @classmethod
+    @override
     def from_package_file(cls, package_path: Path) -> "PackageManagerCMA":
         package_name = package_path.name
         # Extract CMA version from package filename
@@ -382,12 +395,15 @@ class PackageManagerCMA(PackageManagerDEB):
         distro_name = f"cma-{cma_version}"
         return cls(distro_name)
 
+    @override
     def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
 
+    @override
     def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}"
 
+    @override
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
         package_name = package_path.name
         # Match: check-mk-{edition}-...
@@ -398,6 +414,7 @@ class PackageManagerCMA(PackageManagerDEB):
         edition_str = match.group(1)
         return CMKEdition.edition_from_text(edition_str)
 
+    @override
     def get_version(self, package_path: Path) -> str:
         package_name = package_path.name
         # Match: check-mk-{edition}-{version}-{cma_version}-x86_64.cma

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 import pytest
 
@@ -52,21 +52,27 @@ class _FakeConductor(ABCQuicksearchConductor):
         self._num_rows = rows
         self._exceeded = exceeded
 
+    @override
     def do_query(self) -> None:
         pass
 
+    @override
     def num_rows(self) -> int:
         return self._num_rows
 
+    @override
     def remove_rows_from_end(self, num: int) -> None:
         self._num_rows = max(0, self._num_rows - num)
 
+    @override
     def row_limit_exceeded(self) -> bool:
         return self._exceeded
 
+    @override
     def get_search_url_params(self) -> HTTPVariables:
         return []
 
+    @override
     def create_results(self, build_url: object) -> list[SearchResult]:
         return []
 

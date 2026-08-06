@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import socket
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 import pytest
 from pytest import MonkeyPatch
@@ -1582,6 +1581,7 @@ _EXPECTED_HOST_LABELS = [
 
 
 class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
+    @override
     def __call__(
         self, host_name: object, rule_set_name: object, rule_set_type: str
     ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:

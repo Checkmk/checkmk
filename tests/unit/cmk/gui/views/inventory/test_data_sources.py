@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 import pytest
 
@@ -91,24 +91,28 @@ def fixture_view() -> View:
 
 class RowTableInventoryTest1(RowTableInventory):
     @staticmethod
+    @override
     def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
         return LivestatusResponse([LivestatusRow(["this_site", "this_hostname"])])
 
 
 class RowTableInventoryTest2(RowTableInventory):
     @staticmethod
+    @override
     def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
         return LivestatusResponse([LivestatusRow(["this_site", "this_hostname", "foobar"])])
 
 
 class RowTableInventoryHistoryTest1(RowTableInventoryHistory):
     @staticmethod
+    @override
     def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
         return LivestatusResponse([LivestatusRow(["this_site", "this_hostname"])])
 
 
 class RowTableInventoryHistoryTest2(RowTableInventoryHistory):
     @staticmethod
+    @override
     def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
         return LivestatusResponse([LivestatusRow(["this_site", "this_hostname", "foobar"])])
 

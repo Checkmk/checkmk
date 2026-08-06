@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Mapping
 from pathlib import Path
+from typing import override
 
 import pytest
 from pytest import MonkeyPatch
@@ -71,14 +70,17 @@ class _LabelConfig(ABCLabelConfig):
         self._host_labels = host_labels or {}
         self._service_labels = service_labels or {}
 
+    @override
     def host_labels(self, *args: object) -> Mapping[str, str]:
         return self._host_labels
 
+    @override
     def service_labels(self, *args: object) -> Mapping[str, str]:
         return self._service_labels
 
 
 class _LabelManagerWithMockedDiscoerdLabels(LabelManager):
+    @override
     def _discovered_labels_of_host(self, hostname: HostName) -> Mapping[str, str]:
         return {
             "prio-1": "discovered-value",

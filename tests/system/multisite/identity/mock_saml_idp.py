@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """In-process SAML IdP mock for the user identity & auth composition tests.
 
@@ -30,7 +29,7 @@ from datetime import datetime, timedelta, UTC
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Self
+from typing import Any, override, Self
 from urllib.parse import parse_qs, urlparse
 
 from cryptography import x509
@@ -293,7 +292,8 @@ def _build_idp_config(
 class _MockSamlIdpHandler(BaseHTTPRequestHandler):
     """HTTP handler dispatching to the parent IdP (carried on ``server.mock_idp``)."""
 
-    def log_message(self, format: str, *args: object) -> None:  # noqa: A002
+    @override
+    def log_message(self, format: str, *args: object) -> None:
         logger.debug("mock-saml-idp %s — %s", self.address_string(), format % args)
 
     def _mock_idp(self) -> MockSamlIdp:

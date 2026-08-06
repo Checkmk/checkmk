@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable
+from typing import override
 
 import pytest
 
@@ -43,6 +43,7 @@ def _validate_integer_larger_than_10(value: object) -> None:
 
 
 class _Unconvertible:
+    @override
     def __str__(self):
         raise TypeError("Cannot convert to string")
 

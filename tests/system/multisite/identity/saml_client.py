@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Minimal SAML SP-initiated login client.
 
 Drives the SP -> IdP -> SP login flow against the real Checkmk SAML endpoints
@@ -15,6 +13,7 @@ import logging
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
+from typing import override
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
@@ -32,6 +31,7 @@ class _FormParser(HTMLParser):
         self.fields: dict[str, str] = {}
         self._in_form = False
 
+    @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attr_dict = {k: v or "" for k, v in attrs}
         if tag == "form" and self.action is None:
@@ -43,6 +43,7 @@ class _FormParser(HTMLParser):
             if name:
                 self.fields[name] = attr_dict.get("value", "")
 
+    @override
     def handle_endtag(self, tag: str) -> None:
         if tag == "form":
             self._in_form = False

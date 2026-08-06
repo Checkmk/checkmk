@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 import pytest
 
@@ -15,6 +15,7 @@ class Plugin:
 
 
 class PluginRegistry(cmk.ccc.plugin_registry.Registry[type[Plugin]]):
+    @override
     def plugin_name(self, instance: type[Plugin]) -> str:
         return instance.__name__
 
@@ -105,5 +106,6 @@ def test_get(basic_registry: PluginRegistry) -> None:
 
 
 class InstanceRegistry(cmk.ccc.plugin_registry.Registry[Plugin]):
+    @override
     def plugin_name(self, instance: Plugin) -> str:
         return instance.__class__.__name__

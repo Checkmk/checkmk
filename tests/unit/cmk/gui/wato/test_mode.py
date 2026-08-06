@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -26,10 +25,12 @@ module_registry = MainModuleRegistry()
 
 class SomeWatoMode(WatoMode):
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "some_wato_mode"
 
@@ -41,34 +42,42 @@ class SomeWatoMode(WatoMode):
 @module_registry.register
 class SomeMainModule(ABCMainModule):
     @property
+    @override
     def mode_or_url(self) -> str:
         return "some_wato_mode"
 
     @property
+    @override
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
+    @override
     def title(self) -> str:
         return "Main Module"
 
     @property
+    @override
     def icon(self) -> DynamicIcon:
         return DynamicIconName("icon")
 
     @property
+    @override
     def permission(self) -> None | str:
         return "some_permission"
 
     @property
+    @override
     def description(self) -> str:
         return "Description"
 
     @property
+    @override
     def sort_index(self) -> int:
         return 30
 
     @property
+    @override
     def is_show_more(self) -> bool:
         return False
 

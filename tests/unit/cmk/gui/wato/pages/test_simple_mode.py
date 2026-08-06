@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -32,18 +31,23 @@ class SomeSpec(TypedDict):
 
 
 class SomeModeType(SimpleModeType[SomeSpec]):
+    @override
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return []
 
+    @override
     def can_be_disabled(self) -> bool:
         return False
 
+    @override
     def is_site_specific(self) -> bool:
         return False
 
+    @override
     def name_singular(self) -> str:
         return "some-mode-type"
 
+    @override
     def type_name(self) -> str:
         return "some-mode-type"
 
@@ -75,17 +79,21 @@ class SomeEditMode(SimpleEditMode[SomeSpec]):
         super().__init__(edition, mode_type, store)
         self.mock = MagicMock(spec=Dictionary)
 
+    @override
     def valuespec(self) -> Dictionary:
         return self.mock
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "some-edit-mode"
 
     @staticmethod
+    @override
     def static_permissions() -> Sequence[str]:
         return ["some-edit-mode"]
 
+    @override
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         return [("foo", TextInput(title="Foo"))]
 

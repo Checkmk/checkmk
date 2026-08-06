@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import inspect
 from collections.abc import Callable
-from typing import get_args
+from typing import get_args, override
 
 import pytest
 
@@ -22,14 +20,17 @@ from cmk.shared_typing.unified_search import ProviderName
 
 
 class _FakeGenerator(ABCMatchItemGenerator):
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield from ()
 
     @staticmethod
+    @override
     def is_affected_by_change(change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return False
 

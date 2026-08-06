@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Consolidate methods which relate to processing version and edition of a Checkmk package."""
 
 import logging
@@ -13,7 +11,7 @@ import re
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, Literal, Self
+from typing import Final, Literal, override, Self
 
 from cmk.ccc.version import (
     Edition,
@@ -67,6 +65,7 @@ class TypeCMKEdition:
         """Return a new instance, which is initialized with an 'Edition' value."""
         return TypeCMKEdition(edition)
 
+    @override
     def __eq__(self, item: object) -> bool:
         """Enable comparison of two `TypeCMKEdition` objects.
 
@@ -293,6 +292,7 @@ class CMKVersion:
     def is_release_candidate(self) -> bool:
         return bool(self.version_data.release_candidate.value)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}([{self.version}][{self.branch}])"
 
@@ -300,6 +300,7 @@ class CMKVersion:
         if not isinstance(other, self.__class__):
             raise TypeError(f"Expected comparison with another '{self.__class__.__name__}' object!")
 
+    @override
     def __eq__(self, other: object) -> bool:
         self._check_instance(other)
         return self.version_data.__eq__(getattr(other, "version_data"))
@@ -342,9 +343,11 @@ class CMKPackageInfo:
         self._version = version
         self._edition = edition
 
+    @override
     def __str__(self) -> str:
         return self.omd_version()
 
+    @override
     def __repr__(self) -> str:
         return (
             "CMKPackageInfo"

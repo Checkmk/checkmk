@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import json
 from collections.abc import Iterable
 from pathlib import Path
+from typing import override
 
 import pytest
 from pytest import MonkeyPatch
@@ -67,6 +66,7 @@ def test_match_item_generator_settings(
     )
 
     class SomeSettingsMode(DefaultModeEditGlobals):
+        @override
         def iter_all_configuration_variables(
             self, *, debug: bool
         ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -12,6 +11,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
+from typing import override
 from unittest.mock import MagicMock
 
 import pytest
@@ -57,6 +57,7 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
         super().__init__(omd_root)
         self._payload = payload
 
+    @override
     def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
         if isinstance(fetcher, PiggybackFetcher):
             return result.OK(b"")
@@ -158,6 +159,7 @@ def _patch_plugin_loading(
 
 
 class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
+    @override
     def _execute_check_plugin(self, commandline: Sequence[str]) -> tuple[int, str]:
         return (0, f"Assume I ran {commandline!r}")
 

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Sequence
+from typing import override
 
 import pytest
 from pytest import MonkeyPatch
@@ -35,27 +35,33 @@ from cmk.gui.watolib.rulespecs import (
 def test_rulespec_sub_group() -> None:
     class TestGroup(RulespecGroup):
         @property
+        @override
         def name(self) -> str:
             return "main_group"
 
         @property
+        @override
         def title(self) -> str:
             return "Title"
 
         @property
+        @override
         def help(self) -> str:
             return "help text"
 
     class TestSubGroup(RulespecSubGroup):
         @property
+        @override
         def main_group(self) -> type[RulespecGroup]:
             return TestGroup
 
         @property
+        @override
         def sub_group_name(self) -> str:
             return "sub_group"
 
         @property
+        @override
         def title(self) -> str:
             return "Sub"
 
@@ -199,28 +205,34 @@ def test_rulespec_get_host_groups() -> None:
 
 class DummyGroup(RulespecGroup):
     @property
+    @override
     def name(self) -> str:
         return "group"
 
     @property
+    @override
     def title(self) -> str:
         return "Group title"
 
     @property
+    @override
     def help(self) -> str:
         return "help text"
 
 
 class DummySubGroup(RulespecSubGroup):
     @property
+    @override
     def main_group(self) -> type[RulespecGroup]:
         return DummyGroup
 
     @property
+    @override
     def sub_group_name(self) -> str:
         return "sub"
 
     @property
+    @override
     def title(self) -> str:
         return "Sub title"
 
@@ -275,14 +287,17 @@ def test_rulespecs_get_by_group() -> None:
 def test_match_item_generator_rules() -> None:
     class SomeRulespecGroup(RulespecGroup):
         @property
+        @override
         def name(self) -> str:
             return "rulespec_group"
 
         @property
+        @override
         def title(self) -> str:
             return "Rulespec Group"
 
         @property
+        @override
         def help(self) -> str:
             return ""
 

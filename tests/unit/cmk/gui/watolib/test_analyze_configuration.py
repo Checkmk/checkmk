@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import ast
 from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -65,18 +64,23 @@ def test_registered_ac_tests() -> None:
 
 
 class _FakeACTestSingleSite(ACTest):
+    @override
     def category(self) -> str:
         return "category"
 
+    @override
     def title(self) -> str:
         return "Fake AC test"
 
+    @override
     def help(self) -> str:
         return "Help"
 
+    @override
     def is_relevant(self) -> bool:
         return False
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield ACSingleResult(
             state=ACResultState.OK,
@@ -91,18 +95,23 @@ class _FakeACTestSingleSite(ACTest):
 
 
 class _FakeACTestMultiSite(ACTest):
+    @override
     def category(self) -> str:
         return "category"
 
+    @override
     def title(self) -> str:
         return "Fake AC test"
 
+    @override
     def help(self) -> str:
         return "Help"
 
+    @override
     def is_relevant(self) -> bool:
         return False
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield ACSingleResult(
             state=ACResultState.OK,

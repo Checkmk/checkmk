@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -18,6 +17,15 @@ from typing import Mapping, Optional, Sequence, Tuple
 import pytest
 
 from cmk.plugins.files.agents import mk_filestats
+
+# override decorator is only available in Python 3.12+
+try:
+    from typing import override
+except ImportError:
+
+    def override(func):
+        return func
+
 
 MYLAZYFILE = mk_filestats.FileStat.from_path(__file__, __file__)
 # Overwrite the path to be reproducable...
@@ -157,6 +165,7 @@ def test_output_aggregator_single_file_servicename(group_name: str, expected: st
 
 
 class MockConfigParser(configparser.RawConfigParser):
+    @override
     def read(self, cfg_file):  # type: ignore[override]
         pass
 

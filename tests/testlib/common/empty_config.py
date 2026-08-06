@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 import cmk.utils.paths
 from cmk.base.configlib.loaded_config import BaseConfig
@@ -263,9 +263,11 @@ EMPTY_NAGIOS_CORE_CONFIG = NagiosCoreConfig(
 
 
 class EmptyLabelConfig(ABCLabelConfig):
+    @override
     def host_labels(self, hn: object) -> Labels:
         return {}
 
+    @override
     def service_labels(self, hn: object, sd: object, sn: object) -> Labels:
         return {}
 

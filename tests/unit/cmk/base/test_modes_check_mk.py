@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from dataclasses import replace
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -39,6 +39,7 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
         super().__init__(omd_root=Path("/"))
         self._payload = payload
 
+    @override
     def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
         if isinstance(fetcher, PiggybackFetcher):
             return result.OK(b"")

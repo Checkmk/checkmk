@@ -3,19 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from pathlib import Path
+from typing import override
 
 from cmk.gui.watolib.appendstore import ABCAppendStore
 
 
 class AppendStoreTest(ABCAppendStore[object]):
     @staticmethod
+    @override
     def _serialize(entry: object) -> object:
         return entry
 
     @staticmethod
+    @override
     def _deserialize(raw: object) -> object:
         return raw
 

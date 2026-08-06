@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import auto, Enum
+from typing import override
 
 import pytest
 
@@ -27,6 +27,7 @@ class _FileKind(Enum):
     plugin = "plugins"
     local = "local_checks"
 
+    @override
     def __str__(self):
         return str(self.value)
 

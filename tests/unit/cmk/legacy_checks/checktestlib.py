@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import NamedTuple
+from typing import NamedTuple, override
 from unittest import mock
 
 from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
@@ -42,6 +41,7 @@ class Check:
 
         self.info = info
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """This module defines various classes and functions for handling REST API requests in Checkmk.
 
@@ -22,16 +21,7 @@ import pprint
 import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import (
-    Any,
-    cast,
-    ClassVar,
-    Literal,
-    NoReturn,
-    NotRequired,
-    Self,
-    TypedDict,
-)
+from typing import Any, cast, ClassVar, Literal, NoReturn, NotRequired, override, Self, TypedDict
 
 from cmk.ccc import version
 from cmk.crash import make_crash_report_base_path
@@ -125,6 +115,7 @@ class RestApiRequestException(Exception):
         self.body = body
         self.headers = headers
 
+    @override
     def __str__(self) -> str:
         return pprint.pformat(
             {
@@ -158,6 +149,7 @@ class RestApiException(Exception):
         self.headers = headers
         self.response = response
 
+    @override
     def __str__(self) -> str:
         try:
             formatted_body = json.loads(cast(bytes, self.response.body))

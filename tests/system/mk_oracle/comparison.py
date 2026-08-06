@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Plugin output parsing and comparison utilities.
 
 This module provides classes for:
@@ -15,6 +13,7 @@ This module provides classes for:
 import re
 from collections import Counter
 from dataclasses import dataclass
+from typing import override
 
 
 @dataclass
@@ -25,9 +24,11 @@ class AgentSection:
     content: list[str]
     line_start: int
 
+    @override
     def __hash__(self) -> int:
         return hash(self.name)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, AgentSection) and self.name == other.name
 

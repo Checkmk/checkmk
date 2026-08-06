@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import asyncio
 import io
 import json
@@ -20,7 +18,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from types import TracebackType
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, override
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
@@ -111,6 +109,7 @@ class Url:
         self.referer_url = referer_url
         self.follow = follow
 
+    @override
     def __hash__(self) -> int:
         return hash(self.url)
 
@@ -741,6 +740,7 @@ class Crawler:
 class XssCrawler(Crawler):
     Payload = """javascript:/*--></title></style></textarea></script></xmp><svg/onload='+/"/+/onmouseover=1/+/[*/[]/+console.log("XSS vulnerability")//'>"""
 
+    @override
     def handle_error(self, url: Url, error_type: str, message: str = "") -> bool:
         if error_type in ("HtmlError", "HtmlTagImbalance"):
             return False
@@ -748,6 +748,7 @@ class XssCrawler(Crawler):
             return False
         return super().handle_error(url, error_type, message)
 
+    @override
     def handle_page_done(self, url: Url, duration: float) -> bool:
         if super().handle_page_done(url, duration):
             for mutated_url in mutate_url_with_xss_payload(url, self.Payload):

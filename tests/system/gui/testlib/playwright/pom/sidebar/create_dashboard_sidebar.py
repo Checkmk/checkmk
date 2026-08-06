@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import re
 from enum import StrEnum
 from typing import override
@@ -49,6 +47,7 @@ class BaseDashboarCreationSidebar(SidebarHelper):
         """Locator property for the input to set a custom unique ID."""
         return self.locator().get_by_role("textbox", name="Add unique ID")
 
+    @override
     def expect_page_title(self) -> None:
         """Verify that the sidebar title is visible."""
         expect(

@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
+from typing import override
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -59,6 +58,7 @@ class _RecordingStore(PendingChangesStore):
     def __init__(self) -> None:
         self.appended: list[tuple[SiteId, dict[str, object]]] = []
 
+    @override
     def append(self, site_id: SiteId, entry: Mapping[str, object]) -> None:
         self.appended.append((site_id, dict(entry)))
 
@@ -275,6 +275,7 @@ def test_hooks_fire_after_store_append() -> None:
     observation: list[str] = []
 
     class TracingStore(PendingChangesStore):
+        @override
         def append(self, site_id: SiteId, entry: Mapping[str, object]) -> None:
             observation.append("store")
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Test the documentation of the host label functions.
 
 Currently the helper below is just used to facilitate the testing.
@@ -14,7 +12,7 @@ builtin host labels.
 
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
-from typing import Final
+from typing import Final, override
 
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -180,6 +178,7 @@ class _TextSection:
             return len(line) - len(stripped)
         return 0
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(header={self.header}, lines={self.lines})"
 

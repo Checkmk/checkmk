@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 import pytest
 
@@ -17,6 +17,7 @@ from cmk.inventory.structured_data import deserialize_tree, ImmutableTree, SDNod
 @pytest.mark.usefixtures("request_context")
 def test_row_post_processor() -> None:
     class _FakeJoinCell(JoinCell):
+        @override
         def painter_parameters(self) -> PainterParameters | None:
             return self._painter_params
 

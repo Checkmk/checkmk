@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
+from typing import override
 
 import pytest
 
@@ -23,6 +23,7 @@ CHOICES: Sequence[vs.ListChoiceChoice] = [
 
 def _get_list_choice(allow_empty: bool = True) -> vs.ListChoice:
     class _LC(vs.ListChoice):
+        @override
         def get_elements(self) -> Sequence[vs.ListChoiceChoice]:
             return CHOICES
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 import pytest
 
@@ -39,13 +39,16 @@ class TestCategoriesFor:
 
 
 class _FakeGenerator(ABCMatchItemGenerator):
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         return iter([])
 
     @staticmethod
+    @override
     def is_affected_by_change(change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return False

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
 import os
 import threading
@@ -12,6 +10,7 @@ from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -39,6 +38,7 @@ class ResultTest(ABCAutomationResult):
     field_1: int
     field_2: str | None
 
+    @override
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
@@ -47,6 +47,7 @@ class ResultTest(ABCAutomationResult):
         )
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("test")
 

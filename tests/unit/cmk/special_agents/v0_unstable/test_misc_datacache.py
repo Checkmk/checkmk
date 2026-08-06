@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -20,12 +20,15 @@ def _patch_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 class KeksDose(DataCache):
     @property
+    @override
     def cache_interval(self) -> int:
         return 5
 
+    @override
     def get_validity_from_args(self, *args: object) -> bool:
         return bool(args[0])
 
+    @override
     def get_live_data(self, *args: object) -> object:
         return "live data"
 

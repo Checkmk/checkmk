@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import os
 import shutil
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -67,9 +66,11 @@ class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
         super().__init__(Path(), log_debug=lambda x: None)
         self.update_count = 0
 
+    @override
     def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:
         return {}
 
+    @override
     def update(self, update: object) -> None:
         pass
 

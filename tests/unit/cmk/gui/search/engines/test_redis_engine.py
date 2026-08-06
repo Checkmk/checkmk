@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from typing import override
 
 import pytest
 from fakeredis import FakeRedis
@@ -139,14 +139,17 @@ class MatchItemGeneratorLocDep(ABCMatchItemGenerator):
         match_texts=["localization_dependent"],
     )
 
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield self.match_item
 
     @staticmethod
+    @override
     def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True
 
@@ -159,14 +162,17 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
         match_texts=["change_dependent"],
     )
 
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield self.match_item
 
     @staticmethod
+    @override
     def is_affected_by_change(change_action_name: str) -> bool:
         return "change_dependent" in change_action_name
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return False
 

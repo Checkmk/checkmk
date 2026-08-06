@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -19,7 +18,7 @@ from base64 import b64encode
 from collections.abc import Generator, Mapping
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import contextmanager, nullcontext
-from typing import Any, cast, Literal, Protocol
+from typing import Any, cast, Literal, override, Protocol
 
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
@@ -68,21 +67,27 @@ class WebTestAppForCMK(FlaskClient):
         self.username = username
         self.password = password
 
+    @override
     def get(self, *args: Any, **kw: Any) -> CmkTestResponse:
         return self.call_method("get", *args, **kw)
 
+    @override
     def post(self, *args: Any, **kw: Any) -> CmkTestResponse:
         return self.call_method("post", *args, **kw)
 
+    @override
     def put(self, *args: Any, **kw: Any) -> CmkTestResponse:
         return self.call_method("put", *args, **kw)
 
+    @override
     def delete(self, *args: Any, **kw: Any) -> CmkTestResponse:
         return self.call_method("delete", *args, **kw)
 
+    @override
     def patch(self, *args: Any, **kw: Any) -> CmkTestResponse:
         return self.call_method("patch", *args, **kw)
 
+    @override
     def options(self, *args: Any, **kw: Any) -> CmkTestResponse:
         return self.call_method("options", *args, **kw)
 
@@ -252,10 +257,12 @@ def _reset_cache_for_folders_and_hosts_setup() -> None:
 class CmkTestResponse(TestResponse):
     """Wrap `werkzeug.tests.TestReponse` to accomodate unit test validations."""
 
+    @override
     def __str__(self) -> str:
         return self.text
 
     @property
+    @override
     def json(self) -> dict:
         return cast(dict, super().json)
 
@@ -280,9 +287,11 @@ class WebTestAppRequestHandler(RequestHandler):
     def __init__(self, wsgi_app: WebTestAppForCMK):
         self.client = wsgi_app
 
+    @override
     def set_credentials(self, username: str, password: str) -> None:
         self.client.set_authorization(("Bearer", f"{username} {password}"))
 
+    @override
     def request(
         self,
         method: HTTPMethod,

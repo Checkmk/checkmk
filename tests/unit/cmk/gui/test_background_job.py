@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
 import threading
 import time
 from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 from opentelemetry import trace as otel_trace
@@ -88,6 +87,7 @@ class DummyBackgroundJob(BackgroundJob):
     job_prefix = "dummy_job"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return "Dummy Job"
 
@@ -478,6 +478,7 @@ class InMemorySpanExporter(SpanExporter):
         self._lock = threading.Lock()
         self._spans: list[ReadableSpan] = []
 
+    @override
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         with self._lock:
             self._spans += spans
@@ -488,6 +489,7 @@ class InMemorySpanExporter(SpanExporter):
         with self._lock:
             return self._spans
 
+    @override
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
 
@@ -498,11 +500,13 @@ class JobSpanExporter(SpanExporter):
     def __init__(self, path: Path) -> None:
         self.path = path
 
+    @override
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
             with self.path.open("a+") as f:
                 f.write(str(span.name) + "\n")
         return SpanExportResult.SUCCESS
 
+    @override
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True

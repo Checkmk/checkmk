@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Resolve Docker images required by tests, preserving origin in the tag.
 
 Lookup order for a given version ``X`` (see :py:meth:`ABCImageManager.get`):
@@ -25,7 +23,7 @@ only the image-specific bits.
 import abc
 import logging
 import subprocess
-from typing import Final
+from typing import Final, override
 
 import docker
 import docker.errors
@@ -123,12 +121,15 @@ class RelayImageManager(ABCImageManager):
     # The bazel rule always loads under this tag (see omd/non-free/relay/BUILD).
     _BAZEL_OUTPUT_TAG: Final = "check-mk-relay:latest"
 
+    @override
     def local_tag(self, version: str) -> str:
         return f"{self.IMAGE_NAME}:{version}"
 
+    @override
     def registry_ref(self, version: str) -> str:
         return f"{self.REGISTRY}/{self.REGISTRY_NAMESPACE}/{self.IMAGE_NAME}:{version}"
 
+    @override
     def build(self, version: str) -> str:
         # Remove any stale ``:latest`` so a previous run's image can't shadow this build.
         try:

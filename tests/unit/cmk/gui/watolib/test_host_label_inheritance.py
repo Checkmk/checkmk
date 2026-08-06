@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="typeddict-unknown-key"
 
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.
@@ -17,6 +16,7 @@ see the key as absent.
 import os
 import shutil
 from collections.abc import Iterator
+from typing import override
 
 import pytest
 
@@ -143,21 +143,27 @@ class _ClearingTestAttribute(ABCHostAttributeValueSpec):
     """Mimics the relay attribute: emits a label for a real value, and the
     clear-sentinel for an empty (explicit "off") value."""
 
+    @override
     def name(self) -> str:
         return "clearing_test"
 
+    @override
     def title(self) -> str:
         return "Clearing test"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
+    @override
     def openapi_field(self) -> Field:
         return String()
 
+    @override
     def valuespec(self) -> TextInput:
         return TextInput()
 
+    @override
     def labels(self, value: str) -> Labels:
         if value:
             return {"test/relay": value, "test/relay_monitored": "yes"}

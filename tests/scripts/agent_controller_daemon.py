@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -16,6 +15,7 @@ import sys
 from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
+from typing import override
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
+    @override
     def handle(self) -> None:
         self.request.sendall(
             subprocess.run(

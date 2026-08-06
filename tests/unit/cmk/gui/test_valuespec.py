@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -11,6 +10,7 @@
 import datetime
 from binascii import unhexlify
 from collections.abc import Sequence
+from typing import override
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -432,10 +432,12 @@ def _stack_imbalance_errors(html_fragment: str) -> list[str]:
             self.stack: list[str] = []
             self.errors: list[str] = []
 
+        @override
         def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
             if tag not in void_elements:
                 self.stack.append(tag)
 
+        @override
         def handle_endtag(self, tag: str) -> None:
             if tag in void_elements:
                 return

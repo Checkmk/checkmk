@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -14,6 +13,7 @@ import os
 import pprint
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import override
 
 import cmk.ccc.resulttype as result
 import cmk.utils.paths
@@ -59,6 +59,7 @@ class BasicSubmitter(Submitter):
         super().__init__(hostname_, perfdata_format="standard", show_perfdata=True)
         self.results: list[FormattedSubmittee] = []
 
+    @override
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         self.results.extend(formatted_submittees)
 
@@ -148,6 +149,7 @@ def compare_services_states(
 
 
 class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
+    @override
     def __call__(
         self, host_name: object, rule_set_name: object, rule_set_type: str
     ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:

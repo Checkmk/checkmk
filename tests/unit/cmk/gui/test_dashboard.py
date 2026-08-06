@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
+from typing import override
 
 import pytest
 
@@ -23,18 +23,22 @@ class DummyDashletConfig(DashletConfig): ...
 
 class DummyDashlet(Dashlet[DummyDashletConfig]):
     @classmethod
+    @override
     def type_name(cls):
         return "dummy"
 
     @classmethod
+    @override
     def title(cls):
         return "DUMMy"
 
     @classmethod
+    @override
     def description(cls):
         return "duMMy"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 123
 

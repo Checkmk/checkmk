@@ -26,17 +26,6 @@ from ._engine_codec import (
 )
 from ._engine_rrd import FetchDiagnostics
 from ._from_api import GraphFromAPI
-from ._graph_specification import GraphSpecification
-
-
-@dataclass(frozen=True)
-class BuiltGraph:
-    # An engine graph bundled with the legacy specification it can be added to (dashboard, report,
-    # graph collection, custom graph). ``specification`` is None for graph kinds that offer no "Add
-    # to" action; otherwise it carries the concrete per-graph specification the add-to endpoints
-    # replay.
-    graph: Graph
-    specification: GraphSpecification | None
 
 
 def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:

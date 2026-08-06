@@ -16,8 +16,8 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
 from cmk.gui.type_defs import IconNames
 
-from .._engine_discovery import DiscoveredGraphs
-from .._engine_dispatch import BuiltGraph, serialize_graphs
+from .._engine_discovery import BuiltGraph, DiscoveredGraphs
+from .._engine_dispatch import serialize_graphs
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 

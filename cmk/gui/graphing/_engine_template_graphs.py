@@ -18,23 +18,26 @@ from cmk.graphing_engine import (
     evaluate_graphs,
     FetchMetricNamesProtocol,
     Graph,
+    HostName,
     RRDMetric,
+    ServiceName,
 )
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._engine_codec import GraphCodec
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
 
+from ._engine_discovery import BuiltGraph, DiscoveredGraphs
 from ._engine_dispatch import (
-    BuiltGraph,
     CommonGraphOptions,
     EngineGraphDispatcher,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
     legacy_graph_id,
 )
-from ._engine_plugins import registered_translations
-from ._engine_rrd import EngineRRDFetchData
+from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
+from ._engine_rrd import EngineRRDFetchData, EngineRRDFetchMetricNames
 from ._from_api import GraphFromAPI
 
 TEMPLATE_KIND: Final = "template"
@@ -130,3 +133,34 @@ def template_graph_dispatcher(codec: GraphCodec) -> EngineGraphDispatcher:
         codec=codec,
         make_evaluate=_EvaluateTemplateGraphs.make,
     )
+
+
+def discover_template_graphs(
+    specification: TemplateGraphSpecification, *, debug: bool
+) -> DiscoveredGraphs:
+    """Discover the template graphs of a service."""
+    try:
+        graphs = build_template_graphs(
+            specification,
+            registered_graphs=registered_graphs(),
+            registered_metrics=registered_metrics(),
+            fetch_metric_names=EngineRRDFetchMetricNames(
+                host_name=HostName(specification.host_name),
+                service_name=ServiceName(specification.service_description),
+                debug=debug,
+                site_id=specification.site,
+                registered_translations=registered_translations(),
+            ),
+        )
+    except MKMissingDataError as exc:
+        return DiscoveredGraphs.nothing(str(exc))
+
+    if not graphs:
+        return DiscoveredGraphs.nothing(
+            _("The service '%(service)s' of host '%(host)s' has no matching template graphs.")
+            % {
+                "service": specification.service_description,
+                "host": specification.host_name,
+            }
+        )
+    return DiscoveredGraphs.found(graphs)

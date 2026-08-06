@@ -25,7 +25,8 @@ from cmk.graphing_engine import (
     TimeSeries,
 )
 from cmk.gui.config import Config
-from cmk.gui.graphing._engine_dispatch import BuiltGraph, CommonGraphOptions
+from cmk.gui.graphing._engine_discovery import BuiltGraph
+from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
 from cmk.gui.graphing._engine_rrd import (
     EngineRRDFetchData,
     EngineRRDFetchMetricNames,

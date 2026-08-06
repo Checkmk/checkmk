@@ -20,6 +20,7 @@ from cmk.ccc.version import Edition
 from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
+from cmk.gui.form_specs.unstable import OptionalChoice
 from cmk.gui.groups import GroupName
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages
@@ -130,8 +131,9 @@ from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
+from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Label, Title
 
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import (
@@ -3374,15 +3376,9 @@ ConfigVariableInventoryCheckInterval = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
     primary_domain=ConfigDomainCore,
     ident="inventory_check_interval",
-    valuespec=lambda context: Optional(
-        valuespec=Integer(
-            title=_("Perform service discovery check every"),
-            unit=_("minutes"),
-            minvalue=1,
-            default_value=720,
-        ),
-        title=_("Enable regular service discovery checks (deprecated)"),
-        help=_(
+    form_spec=lambda context: OptionalChoice(
+        title=Title("Enable regular service discovery checks (deprecated)"),
+        help_text=Help(
             "If enabled, Checkmk will create one additional service per host "
             "that does a regular check, if the service discovery would find new services "
             "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
@@ -3392,6 +3388,12 @@ ConfigVariableInventoryCheckInterval = ConfigVariable(
             "settings done here."
         )
         % {"url": "wato.py?mode=edit_ruleset&varname=periodic_discovery"},
+        parameter_form=fs.Integer(
+            title=Title("Perform service discovery check every"),
+            unit_symbol=_("minutes"),
+            prefill=fs.DefaultValue(720),
+            custom_validate=[fs.validators.NumberInRange(min_value=1)],
+        ),
     ),
 )
 
@@ -3399,18 +3401,19 @@ ConfigVariableInventoryCheckSeverity = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
     primary_domain=ConfigDomainCore,
     ident="inventory_check_severity",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Severity of failed service discovery check"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[int](
+        title=Title("Severity of failed service discovery check"),
+        help_text=Help(
             "Please select which alarm state the service discovery check services "
             "shall assume in case that un-monitored services are found."
         ),
-        choices=[
-            (0, _("OK - do not alert, just display")),
-            (1, _("Warning")),
-            (2, _("Critical")),
-            (3, _("Unknown")),
+        elements=[
+            SingleChoiceElementExtended(name=0, title=Title("OK - do not alert, just display")),
+            SingleChoiceElementExtended(name=1, title=Title("Warning")),
+            SingleChoiceElementExtended(name=2, title=Title("Critical")),
+            SingleChoiceElementExtended(name=3, title=Title("Unknown")),
         ],
+        prefill=fs.DefaultValue(0),
     ),
 )
 
@@ -3418,12 +3421,12 @@ ConfigVariableInventoryCheckAutotrigger = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
     primary_domain=ConfigDomainCore,
     ident="inventory_check_autotrigger",
-    valuespec=lambda context: Checkbox(
-        title=_("Service discovery triggers service discovery check"),
-        label=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Service discovery triggers service discovery check"),
+        label=Label(
             "Automatically schedule service discovery check after service configuration changes"
         ),
-        help=_(
+        help_text=Help(
             "When this option is enabled then after each change of the service "
             "configuration of a host via Setup - may it be via manual changes or a bulk "
             "discovery - the service discovery check is automatically rescheduled in order "

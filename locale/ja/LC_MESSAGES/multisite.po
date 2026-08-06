@@ -3616,6 +3616,11 @@ msgstr ""
 "合、いずれかのPodが設定期間よりも長く保留されると、サービスはWARN/CRITになり"
 "ます。クラスタとノードは、空きポッド数のレベルを定義することができます。"
 
+msgid ""
+"Account names on Windows, user or group names - or numeric IDs - on Linux "
+"and UNIX."
+msgstr ""
+
 msgid "Accounts display name"
 msgstr "アカウント表示名"
 
@@ -27237,6 +27242,25 @@ msgstr ""
 "セキュリティ上の理由から、パスワードの設定にはパスワードストアを使用すること"
 "をお勧めします。"
 
+msgid ""
+"For security reasons the plug-in checks the permissions of the Oracle client "
+"files it is about to load, because loading them as an administrative user "
+"means executing whoever may write them with those privileges. If they can be "
+"modified from outside the Oracle installation, the plug-in stops processing "
+"and Oracle monitoring breaks. On Windows the client files may only be "
+"writable by privileged accounts (SYSTEM, the local Administrators group, "
+"Domain and Enterprise Admins). On Linux and UNIX the client library, its "
+"directory and their parent directories may only be writable by <tt>root</tt> "
+"or by the conventional Oracle owner, the user <tt>oracle</tt> and the group "
+"<tt>oinstall</tt>, so a standard installation works unchanged. Oracle "
+"software kept under any other account or group has to be allowed explicitly "
+"below. You may <tt>disable</tt> this option if it is the only way to "
+"continue monitoring the Oracle database - typically when the permissions "
+"cannot be corrected and no dedicated account can be used to monitor it. Even "
+"with the check enabled you may allow specific groups and/or users to have "
+"write access to the Oracle client files."
+msgstr ""
+
 msgid "For specific SIDs"
 msgstr "特定のSIDの場合"
 
@@ -38629,6 +38653,10 @@ msgstr "期間ごとの温度低下のレベル"
 msgid "Levels on temperature increase per period"
 msgstr "期間ごとの温度上昇のレベル"
 
+#, fuzzy
+msgid "Levels on the read latency"
+msgstr "遅延のレベル"
+
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
 "reached"
@@ -38644,6 +38672,10 @@ msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
 msgstr "合計帯域幅のレベルは、入力/出力帯域幅の場合と同じように機能します。"
+
+#, fuzzy
+msgid "Levels on the write latency"
+msgstr "遅延のレベル"
 
 msgid "Levels on time offset"
 msgstr "時間オフセットのレベル"
@@ -44755,6 +44787,10 @@ msgstr "NetAppシステム時刻のオフセット"
 msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtreeの検出"
 
+#, fuzzy
+msgid "NetApp SVM traffic"
+msgstr "ネットデータトラフィック"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetAppスナップショットリザーブ"
 
@@ -48816,12 +48852,12 @@ msgstr "Oracle アーカイブログ 小規模書き込みバイト数"
 msgid "Oracle archive log small writes"
 msgstr "Oracle アーカイブログ 小規模書き込み"
 
-#, python-format
-msgid "Oracle binaries permissions check %s"
+#, fuzzy
+msgid "Oracle binaries permissions check"
 msgstr "Oracle バイナリのパーミッション・チェック %s"
 
-#, fuzzy
-msgid "Oracle binaries permissions check (Windows only)"
+#, python-format
+msgid "Oracle binaries permissions check %s"
 msgstr "Oracle バイナリのパーミッション・チェック %s"
 
 msgid "Oracle block change"
@@ -57688,6 +57724,10 @@ msgstr "SUSEConnect(Linux)"
 
 msgid "SVM Status"
 msgstr "SVMステータス"
+
+#, fuzzy
+msgid "SVM name"
+msgstr "VM名"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -69527,7 +69567,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"The old bakery plug-in API will be removed in Checkmk version 3.0.0. Plug-in "
 "files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
 "new API."
 msgstr ""
@@ -70472,6 +70512,9 @@ msgstr ""
 "インベントリ化されたサービスのサービスの名は、SAPのパスのと同様の形式で命名さ"
 "れています。このオプションを使用すると、インベントリ機能は命名時に最後のx段落"
 "のパスレベルのみを使用するように設定できます。"
+
+msgid "The service reports the latency of every protocol the SVM serves."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -96670,6 +96713,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Oracle binaries permissions check (Windows only)"
+#~ msgstr "Oracle バイナリのパーミッション・チェック %s"
 
 #, fuzzy
 #~ msgid "Eaton UPS: temperature and humidity sensors"

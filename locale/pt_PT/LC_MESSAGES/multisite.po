@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-04 17:59+0000\n"
+"PO-Revision-Date: 2026-08-05 19:59+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -3671,6 +3671,11 @@ msgstr ""
 "WARN/CRIT depois que qualquer um dos pods estiver pendente por mais tempo do "
 "que a duração definida. Para clusters e nós, é possível definir níveis no "
 "número de pods livres."
+
+msgid ""
+"Account names on Windows, user or group names - or numeric IDs - on Linux "
+"and UNIX."
+msgstr ""
 
 #, fuzzy
 msgid "Accounts display name"
@@ -28447,6 +28452,25 @@ msgstr ""
 "Por razões de segurança, recomenda-se a utilização do armazenamento de "
 "palavras-passe para definir a palavra-passe."
 
+msgid ""
+"For security reasons the plug-in checks the permissions of the Oracle client "
+"files it is about to load, because loading them as an administrative user "
+"means executing whoever may write them with those privileges. If they can be "
+"modified from outside the Oracle installation, the plug-in stops processing "
+"and Oracle monitoring breaks. On Windows the client files may only be "
+"writable by privileged accounts (SYSTEM, the local Administrators group, "
+"Domain and Enterprise Admins). On Linux and UNIX the client library, its "
+"directory and their parent directories may only be writable by <tt>root</tt> "
+"or by the conventional Oracle owner, the user <tt>oracle</tt> and the group "
+"<tt>oinstall</tt>, so a standard installation works unchanged. Oracle "
+"software kept under any other account or group has to be allowed explicitly "
+"below. You may <tt>disable</tt> this option if it is the only way to "
+"continue monitoring the Oracle database - typically when the permissions "
+"cannot be corrected and no dedicated account can be used to monitor it. Even "
+"with the check enabled you may allow specific groups and/or users to have "
+"write access to the Oracle client files."
+msgstr ""
+
 msgid "For specific SIDs"
 msgstr "Para SIDs específicos"
 
@@ -40577,6 +40601,10 @@ msgstr "Níveis de diminuição da temperatura por período"
 msgid "Levels on temperature increase per period"
 msgstr "Níveis de aumento de temperatura por período"
 
+#, fuzzy
+msgid "Levels on the read latency"
+msgstr "Níveis de latência"
+
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
 "reached"
@@ -40596,6 +40624,10 @@ msgid ""
 msgstr ""
 "Os níveis na largura de banda total actuarão da mesma forma que actuam na "
 "largura de banda de entrada/saída."
+
+#, fuzzy
+msgid "Levels on the write latency"
+msgstr "Níveis de latência"
 
 msgid "Levels on time offset"
 msgstr "Níveis de compensação de tempo"
@@ -46979,6 +47011,10 @@ msgstr "Netapp systemtime"
 msgid "NetApp Qtree discovery"
 msgstr "Descoberta do NetApp Qtree"
 
+#, fuzzy
+msgid "NetApp SVM traffic"
+msgstr "Tráfego líquido de dados"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "Reserva de Instantâneos da NetApp"
 
@@ -51256,11 +51292,12 @@ msgstr "ORACLE Total Pequenos bytes de escrita"
 msgid "Oracle archive log small writes"
 msgstr "ORACLE Total Pequenas Escritas"
 
+#, fuzzy
+msgid "Oracle binaries permissions check"
+msgstr "Sessões Oracle Longas Ativas"
+
 #, python-format
 msgid "Oracle binaries permissions check %s"
-msgstr ""
-
-msgid "Oracle binaries permissions check (Windows only)"
 msgstr ""
 
 #, fuzzy
@@ -60769,6 +60806,10 @@ msgstr "SUSEConnect (Linux)"
 #, fuzzy
 msgid "SVM Status"
 msgstr "Estado"
+
+#, fuzzy
+msgid "SVM name"
+msgstr "nome da VM"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -73120,7 +73161,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"The old bakery plug-in API will be removed in Checkmk version 3.0.0. Plug-in "
 "files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
 "new API."
 msgstr ""
@@ -74065,6 +74106,9 @@ msgstr ""
 "As descrições de serviço dos serviços inventariados são nomeadas como os "
 "caminhos no SAP. Essa opção pode ser usada para que a função de inventário "
 "só utilize os últimos x níveis de caminho para a atribuição de nomes."
+
+msgid "The service reports the latency of every protocol the SVM serves."
+msgstr ""
 
 #, fuzzy
 msgid ""

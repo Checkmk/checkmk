@@ -3686,6 +3686,11 @@ msgstr ""
 "los pods haya estado pendiente durante más tiempo del establecido. Para los "
 "clusters y nodos se pueden definir niveles en el número de pods libres."
 
+msgid ""
+"Account names on Windows, user or group names - or numeric IDs - on Linux "
+"and UNIX."
+msgstr ""
+
 #, fuzzy
 msgid "Accounts display name"
 msgstr "Mostrar nombre"
@@ -28640,6 +28645,25 @@ msgstr ""
 "Por motivos de seguridad, se recomienda el uso de password store para "
 "establecer la contraseña."
 
+msgid ""
+"For security reasons the plug-in checks the permissions of the Oracle client "
+"files it is about to load, because loading them as an administrative user "
+"means executing whoever may write them with those privileges. If they can be "
+"modified from outside the Oracle installation, the plug-in stops processing "
+"and Oracle monitoring breaks. On Windows the client files may only be "
+"writable by privileged accounts (SYSTEM, the local Administrators group, "
+"Domain and Enterprise Admins). On Linux and UNIX the client library, its "
+"directory and their parent directories may only be writable by <tt>root</tt> "
+"or by the conventional Oracle owner, the user <tt>oracle</tt> and the group "
+"<tt>oinstall</tt>, so a standard installation works unchanged. Oracle "
+"software kept under any other account or group has to be allowed explicitly "
+"below. You may <tt>disable</tt> this option if it is the only way to "
+"continue monitoring the Oracle database - typically when the permissions "
+"cannot be corrected and no dedicated account can be used to monitor it. Even "
+"with the check enabled you may allow specific groups and/or users to have "
+"write access to the Oracle client files."
+msgstr ""
+
 msgid "For specific SIDs"
 msgstr "Para las DIM específicas"
 
@@ -40857,6 +40881,10 @@ msgstr "Niveles de disminución de la temperatura por período"
 msgid "Levels on temperature increase per period"
 msgstr "Niveles de aumento de la temperatura por período"
 
+#, fuzzy
+msgid "Levels on the read latency"
+msgstr "Niveles de latencia"
+
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
 "reached"
@@ -40876,6 +40904,10 @@ msgid ""
 msgstr ""
 "Los niveles en el ancho de banda total actuarán de la misma manera que para "
 "el ancho de banda de entrada/salida."
+
+#, fuzzy
+msgid "Levels on the write latency"
+msgstr "Niveles de latencia"
 
 msgid "Levels on time offset"
 msgstr "Niveles en la compensación de tiempo"
@@ -47316,6 +47348,10 @@ msgstr "Netapp systemtime"
 msgid "NetApp Qtree discovery"
 msgstr "Descubrimiento de Qtree de NetApp"
 
+#, fuzzy
+msgid "NetApp SVM traffic"
+msgstr "Tráfico neto de datos"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "Reserva de instantáneas de NetApp"
 
@@ -51649,11 +51685,12 @@ msgstr "ORACLE Total de pequeños bytes de escritura"
 msgid "Oracle archive log small writes"
 msgstr "Total de escrituras pequeñas de ORACLE"
 
+#, fuzzy
+msgid "Oracle binaries permissions check"
+msgstr "Sesiones activas largas de Oracle"
+
 #, python-format
 msgid "Oracle binaries permissions check %s"
-msgstr ""
-
-msgid "Oracle binaries permissions check (Windows only)"
 msgstr ""
 
 #, fuzzy
@@ -61235,6 +61272,10 @@ msgstr "SUSEConnect (Linux)"
 #, fuzzy
 msgid "SVM Status"
 msgstr "Estado"
+
+#, fuzzy
+msgid "SVM name"
+msgstr "Nombre de la máquina virtual"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -73713,7 +73754,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"The old bakery plug-in API will be removed in Checkmk version 3.0.0. Plug-in "
 "files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
 "new API."
 msgstr ""
@@ -74670,6 +74711,9 @@ msgstr ""
 "Las descripciones de los servicios inventariados se nombran como las rutas "
 "en SAP. Puede utilizar esta opción para que la función de inventario sólo "
 "utilice los últimos x niveles de ruta para la denominación."
+
+msgid "The service reports the latency of every protocol the SVM serves."
+msgstr ""
 
 #, fuzzy
 msgid ""

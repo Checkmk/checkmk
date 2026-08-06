@@ -3685,6 +3685,11 @@ msgstr ""
 "ist. Für Cluster und Knoten können Levels für die Anzahl der freien Pods "
 "festgelegt werden."
 
+msgid ""
+"Account names on Windows, user or group names - or numeric IDs - on Linux "
+"and UNIX."
+msgstr ""
+
 msgid "Accounts display name"
 msgstr "Anzeigename des Kontos"
 
@@ -27318,6 +27323,25 @@ msgstr ""
 "Aus Sicherheitsgründen wird empfohlen, den Passwortspeicher für die "
 "Festlegung des Passworts zu verwenden."
 
+msgid ""
+"For security reasons the plug-in checks the permissions of the Oracle client "
+"files it is about to load, because loading them as an administrative user "
+"means executing whoever may write them with those privileges. If they can be "
+"modified from outside the Oracle installation, the plug-in stops processing "
+"and Oracle monitoring breaks. On Windows the client files may only be "
+"writable by privileged accounts (SYSTEM, the local Administrators group, "
+"Domain and Enterprise Admins). On Linux and UNIX the client library, its "
+"directory and their parent directories may only be writable by <tt>root</tt> "
+"or by the conventional Oracle owner, the user <tt>oracle</tt> and the group "
+"<tt>oinstall</tt>, so a standard installation works unchanged. Oracle "
+"software kept under any other account or group has to be allowed explicitly "
+"below. You may <tt>disable</tt> this option if it is the only way to "
+"continue monitoring the Oracle database - typically when the permissions "
+"cannot be corrected and no dedicated account can be used to monitor it. Even "
+"with the check enabled you may allow specific groups and/or users to have "
+"write access to the Oracle client files."
+msgstr ""
+
 msgid "For specific SIDs"
 msgstr "Für spezifische SIDs"
 
@@ -38826,6 +38850,10 @@ msgstr "Levels für Temperaturabfall pro Zeitperiode"
 msgid "Levels on temperature increase per period"
 msgstr "Levels für Temperaturanstieg pro Zeitperiode"
 
+#, fuzzy
+msgid "Levels on the read latency"
+msgstr "Levels für die Server-Latenz"
+
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
 "reached"
@@ -38845,6 +38873,10 @@ msgid ""
 msgstr ""
 "Die Levels für die Gesamtbandbreite verhalten sich genauso wie für die In/"
 "Out-Bandbreite."
+
+#, fuzzy
+msgid "Levels on the write latency"
+msgstr "Levels für die Server-Latenz"
 
 msgid "Levels on time offset"
 msgstr "Levels für Zeitversatz"
@@ -44856,6 +44888,10 @@ msgstr "NetApp NTP-Zeitverschiebung"
 msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtree Erkennung"
 
+#, fuzzy
+msgid "NetApp SVM traffic"
+msgstr "Netzwerkdaten"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
 
@@ -48923,12 +48959,13 @@ msgstr "Oracle Archiv-Log Small Write in Bytes"
 msgid "Oracle archive log small writes"
 msgstr "Oracle Archiv-Log Small Writes"
 
+#, fuzzy
+msgid "Oracle binaries permissions check"
+msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
+
 #, python-format
 msgid "Oracle binaries permissions check %s"
 msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
-
-msgid "Oracle binaries permissions check (Windows only)"
-msgstr "Berechtigungsprüfung für Oracle-Binärdateien (nur Windows)"
 
 msgid "Oracle block change"
 msgstr "Oracle Blockänderung"
@@ -57743,6 +57780,10 @@ msgstr "SUSEConnect (Linux)"
 
 msgid "SVM Status"
 msgstr "SVM-Status"
+
+#, fuzzy
+msgid "SVM name"
+msgstr "VM-Name"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -70016,9 +70057,9 @@ msgstr ""
 "Befehl 'lodctr /s:counters.txt' eine detaillierte Liste der verfügbaren "
 "Zähler in einer Windows-Shell erhalten."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"The old bakery plug-in API will be removed in Checkmk version 3.0.0. Plug-in "
 "files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
 "new API."
 msgstr ""
@@ -71024,6 +71065,9 @@ msgstr ""
 "die Pfade im SAP. Mit dieser Option können Sie festlegen, dass die "
 "Inventarisierungsfunktion nur die letzten x Pfadebenen zur Benennung "
 "verwendet."
+
+msgid "The service reports the latency of every protocol the SVM serves."
+msgstr ""
 
 msgid ""
 "The service will trigger a WARNING or CRITICAL state if the size of the "
@@ -97579,6 +97623,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Oracle binaries permissions check (Windows only)"
+#~ msgstr "Berechtigungsprüfung für Oracle-Binärdateien (nur Windows)"
 
 #~ msgid "Eaton UPS: temperature and humidity sensors"
 #~ msgstr "Eaton UPS: Temperatur- und Luftfeuchtigkeitssensoren"

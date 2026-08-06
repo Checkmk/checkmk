@@ -3691,6 +3691,11 @@ msgstr ""
 "fost în așteptare mai mult decât durata stabilită. Pentru clustere și noduri "
 "se pot defini niveluri privind numărul de poduri libere."
 
+msgid ""
+"Account names on Windows, user or group names - or numeric IDs - on Linux "
+"and UNIX."
+msgstr ""
+
 msgid "Accounts display name"
 msgstr "Numele de afișare a conturilor"
 
@@ -28537,6 +28542,25 @@ msgstr ""
 "Din motive de securitate, se recomandă să se utilizeze memoria de parole "
 "pentru a seta parola."
 
+msgid ""
+"For security reasons the plug-in checks the permissions of the Oracle client "
+"files it is about to load, because loading them as an administrative user "
+"means executing whoever may write them with those privileges. If they can be "
+"modified from outside the Oracle installation, the plug-in stops processing "
+"and Oracle monitoring breaks. On Windows the client files may only be "
+"writable by privileged accounts (SYSTEM, the local Administrators group, "
+"Domain and Enterprise Admins). On Linux and UNIX the client library, its "
+"directory and their parent directories may only be writable by <tt>root</tt> "
+"or by the conventional Oracle owner, the user <tt>oracle</tt> and the group "
+"<tt>oinstall</tt>, so a standard installation works unchanged. Oracle "
+"software kept under any other account or group has to be allowed explicitly "
+"below. You may <tt>disable</tt> this option if it is the only way to "
+"continue monitoring the Oracle database - typically when the permissions "
+"cannot be corrected and no dedicated account can be used to monitor it. Even "
+"with the check enabled you may allow specific groups and/or users to have "
+"write access to the Oracle client files."
+msgstr ""
+
 msgid "For specific SIDs"
 msgstr "Pentru SID-uri specifice"
 
@@ -40715,6 +40739,10 @@ msgstr "Niveluri de scădere a temperaturii pe perioadă"
 msgid "Levels on temperature increase per period"
 msgstr "Niveluri de creștere a temperaturii pe perioadă"
 
+#, fuzzy
+msgid "Levels on the read latency"
+msgstr "Niveluri privind latența"
+
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
 "reached"
@@ -40734,6 +40762,10 @@ msgid ""
 msgstr ""
 "Nivelurile pentru lățimea de bandă totală vor acționa în același mod ca și "
 "în cazul lățimii de bandă de intrare/ieșire."
+
+#, fuzzy
+msgid "Levels on the write latency"
+msgstr "Niveluri privind latența"
 
 msgid "Levels on time offset"
 msgstr "Niveluri pe decalaj de timp"
@@ -47117,6 +47149,10 @@ msgstr "Netapp systemtime"
 msgid "NetApp Qtree discovery"
 msgstr "Descoperirea Qtree de la NetApp"
 
+#, fuzzy
+msgid "NetApp SVM traffic"
+msgstr "Traficul net de date"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "Rezerva de instantanee NetApp"
 
@@ -51411,11 +51447,12 @@ msgstr "ORACLE Total de octeți mici de scriere"
 msgid "Oracle archive log small writes"
 msgstr "ORACLE Total scrieri mici"
 
+#, fuzzy
+msgid "Oracle binaries permissions check"
+msgstr "Sesiuni active lungi Oracle"
+
 #, python-format
 msgid "Oracle binaries permissions check %s"
-msgstr ""
-
-msgid "Oracle binaries permissions check (Windows only)"
 msgstr ""
 
 #, fuzzy
@@ -60910,6 +60947,10 @@ msgstr "SUSEConnect (Linux)"
 #, fuzzy
 msgid "SVM Status"
 msgstr "Stare"
+
+#, fuzzy
+msgid "SVM name"
+msgstr "Nume VM"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -73396,7 +73437,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"The old bakery plug-in API will be removed in Checkmk version 3.0.0. Plug-in "
 "files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
 "new API."
 msgstr ""
@@ -74354,6 +74395,9 @@ msgstr ""
 "Descrierile serviciilor inventariate sunt denumite ca și căile de acces din "
 "SAP. Puteți utiliza această opțiune pentru a permite funcției de "
 "inventariere să utilizeze doar ultimele x niveluri de cale pentru denumire."
+
+msgid "The service reports the latency of every protocol the SVM serves."
+msgstr ""
 
 #, fuzzy
 msgid ""

@@ -57,6 +57,7 @@ def discover_template_graphs(
                 host_name=HostName(specification.host_name),
                 service_name=ServiceName(specification.service_description),
                 debug=debug,
+                site_id=specification.site,
                 registered_translations=registered_translations(),
             ),
         )

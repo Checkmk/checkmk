@@ -546,26 +546,26 @@ def parse_performance_data(
 
 @dataclass(frozen=True)
 class EngineRRDFetchMetricNames:
-    # The single service to resolve, identified by host and service name only: its site is not an
-    # input but resolved from the livestatus rows (prepend_site), so a same host/service on two
-    # sites yields two entries.
+    # The single service to resolve. Its site is an input because the same host/service can be
+    # monitored by two sites: without a scope both are resolved, and a template graph - which is
+    # single-service - cannot be built from two. A caller that knows the site (it painted a row, it
+    # loaded a specification) passes it; None resolves across all sites the user may see.
     host_name: HostName
     service_name: ServiceName
     debug: bool
+    site_id: SiteId | None = None
     registered_translations: Sequence[translations_v1.Translation] = ()
 
     def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
         # prepend_site tags each row with the site its data lives on (as the legacy fetch does), so
-        # each resolved service carries its real site - the site scope, if any, is the caller's
-        # (an only_sites context). The graph built from these services thereby carries the site on
-        # its metrics (for per-site fetching and tuning scoping), and a same host/service on two
-        # sites is kept apart as two entries.
+        # each resolved service carries its real site. The graph built from these services thereby
+        # carries the site on its metrics (for per-site fetching and tuning scoping).
         result: dict[Service, frozenset[MetricName]] = {}
         for query in _object_queries(
             [Service(host_name=self.host_name, service_name=self.service_name)],
             ["perf_data", "metrics", "check_command"],
         ):
-            with sites.prepend_site():
+            with sites.only_sites(self.site_id), sites.prepend_site():
                 for row_site, *row in sites.live().query(query.lql):
                     service, values = query.parse_row(row, SiteID(str(row_site)))
                     perf_data_string, rrd_metrics, check_command = values

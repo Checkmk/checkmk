@@ -46,6 +46,7 @@ def render_engine_graph_group(
             host_name=EngineHostName(host_name),
             service_name=EngineServiceName(service_name),
             debug=debug,
+            site_id=specification.site,
             registered_translations=engine_plugins.registered_translations(),
         ),
     )

@@ -17,7 +17,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:scopes",
-        "//cmk/gui/utils:csrf_token",
+        "//cmk/gui/utils",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
         "//cmk/utils:paths",

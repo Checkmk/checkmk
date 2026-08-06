@@ -12,8 +12,8 @@ py_cmk_test(
     deps = [
         "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
-        "//cmk/gui/utils:encrypter",
-        "//cmk/gui/utils:html",
+        "//cmk/gui/utils",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//packages/cmk-crypto",
         "//tests/unit:conftest",

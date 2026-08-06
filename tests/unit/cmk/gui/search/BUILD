@@ -18,7 +18,7 @@ py_cmk_test(
         "//cmk/gui:session_context",
         "//cmk/gui/background_job/process",
         "//cmk/gui/search",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("fakeredis"),

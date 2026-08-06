@@ -45,7 +45,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/spec",
         "//cmk/gui/openapi/spec/editions",
-        "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:middle",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
         requirement("apispec"),

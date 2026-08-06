@@ -11,8 +11,7 @@ py_cmk_test(
     deps = [
         "//cmk/gui:config",
         "//cmk/gui/painter:v0_base",
-        "//cmk/gui/utils:html",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
     ],

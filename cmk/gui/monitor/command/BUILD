@@ -10,7 +10,7 @@ py_library(
     ],
     deps = [
         "//cmk/gui:auth_core",
-        "//cmk/gui/utils:speaklater",
+        "//cmk/gui/utils:base",
         "//packages/cmk-ccc:plugin-registry",
     ],
 )

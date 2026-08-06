@@ -20,10 +20,7 @@ py_library(
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/token_auth",
-        "//cmk/gui/utils:csrf_token",
-        "//cmk/gui/utils:flashed_messages",
-        "//cmk/gui/utils:html",
-        "//cmk/gui/utils:transaction_manager",
-        "//cmk/gui/utils:urls",
+        "//cmk/gui/utils",
+        "//cmk/gui/utils:middle",
     ],
 )

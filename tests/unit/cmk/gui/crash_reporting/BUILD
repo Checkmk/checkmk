@@ -10,7 +10,7 @@ py_cmk_test(
     deps = [
         "//cmk/gui:core_toolkit",
         "//cmk/gui/crash_reporting",
-        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/utils:middle",
         "//packages/cmk-crash:crash",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//tests/unit:conftest",

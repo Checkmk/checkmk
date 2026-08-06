@@ -12,7 +12,7 @@ py_cmk_test(
     deps = [
         "//cmk/gui:core_toolkit",
         "//cmk/gui/bi",
-        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/visuals",
         "//cmk/gui/wato",
         "//cmk/utils",

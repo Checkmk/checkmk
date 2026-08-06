@@ -15,7 +15,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/background_job/job",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:store",

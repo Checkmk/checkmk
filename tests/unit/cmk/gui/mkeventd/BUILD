@@ -13,7 +13,7 @@ py_cmk_test(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/mkeventd",
         "//cmk/gui/search:matchers",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/views:components",
         "//packages/cmk-ec",
         "//tests/unit:conftest",

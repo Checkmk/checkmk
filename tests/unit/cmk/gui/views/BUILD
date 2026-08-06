@@ -21,7 +21,7 @@ py_cmk_test(
         "//cmk/gui/inventory",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/plugins/views",
-        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/views",
         "//cmk/gui/visuals",
         "//tests/unit:conftest",

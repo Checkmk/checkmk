@@ -13,7 +13,7 @@ py_library(
     deps = [
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/utils:middle",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",

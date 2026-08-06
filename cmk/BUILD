@@ -13,7 +13,7 @@ py_library(
     imports = [".."],
     visibility = ["//:__subpackages__"],
     deps = [
-        "//cmk/gui/utils:htpasswd",
+        "//cmk/gui/utils",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",

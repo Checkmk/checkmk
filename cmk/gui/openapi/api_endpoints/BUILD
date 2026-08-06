@@ -33,7 +33,7 @@ py_library(
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:urls",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",

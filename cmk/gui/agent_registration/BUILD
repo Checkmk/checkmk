@@ -18,7 +18,7 @@ py_library(
         "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/token_auth",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/utils",
         "//packages/cmk-ccc:version",

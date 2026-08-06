@@ -15,7 +15,7 @@ py_cmk_test(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//packages/cmk-ccc:user",
         "//packages/cmk-crypto",

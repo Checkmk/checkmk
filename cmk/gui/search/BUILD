@@ -24,8 +24,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/utils:loading_transition",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils",
+        "//cmk/gui/utils:middle",
     ],
 )
 

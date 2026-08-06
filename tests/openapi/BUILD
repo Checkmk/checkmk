@@ -16,7 +16,7 @@ py_library(
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib:password_store",
         "//cmk/plugins",
         "//packages/cmk-ccc:user",

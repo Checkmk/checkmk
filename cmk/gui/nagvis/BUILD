@@ -17,7 +17,7 @@ py_library(
         "//cmk/gui/sidebar",
         "//cmk/gui/sidebar/_snapin:snapin_registry",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils:paths",

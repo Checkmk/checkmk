@@ -12,7 +12,7 @@ py_cmk_test(
         "//cmk/gui:session_context",
         "//cmk/gui/form_specs",
         "//cmk/gui/oauth2_connections",
-        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:middle",
         "//packages/cmk-ccc:user",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//tests/unit:conftest",

@@ -115,7 +115,6 @@ class BaseConfig:  # type: ignore[explicit-any]
         ]
     ]
     apply_bake_revision: bool
-    bake_agents_on_restart: bool
     agent_bakery_logging: int | None
     is_distributed_setup_remote_site: bool
     simulation_mode: bool

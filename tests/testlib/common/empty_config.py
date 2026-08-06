@@ -44,7 +44,6 @@ EMPTY_CONFIG = BaseConfig(
     snmp_check_interval=[],
     agent_bakery_logging=None,
     apply_bake_revision=False,
-    bake_agents_on_restart=False,
     is_distributed_setup_remote_site=False,
     simulation_mode=False,
     use_dns_cache=True,

@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, KW_ONLY
-from typing import Generic, Protocol, Self, TypeVar
+from typing import Generic, override, Protocol, Self, TypeVar
 
 from ._localize import Label, Title
 from ._style import Alignment, BackgroundColor, LabelColor
@@ -21,6 +19,7 @@ class Comparable(Protocol):
     An object which is comparable, ie. it supports equal, lower and greater comparisons
     """
 
+    @override
     def __eq__(self, other: object) -> bool: ...
     def __lt__(self, other: Self) -> bool: ...
     def __gt__(self, other: Self) -> bool: ...

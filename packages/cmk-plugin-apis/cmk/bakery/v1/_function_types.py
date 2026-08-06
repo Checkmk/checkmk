@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import functools
 import inspect
 import string
 from collections.abc import Callable, Iterator, Sequence
-from typing import Final, NamedTuple, Self
+from typing import Final, NamedTuple, override, Self
 
 from ._artifact_types import (
     Plugin,
@@ -76,12 +75,15 @@ class BakeryPluginName:
         self._value: Final = __str
         self._hash: Final = hash(type(self).__name__ + self._value)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._value!r})"
 
+    @override
     def __str__(self) -> str:
         return self._value
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError(f"cannot compare {self!r} and {other!r}")
@@ -101,6 +103,7 @@ class BakeryPluginName:
     def __ge__(self, other: Self) -> bool:
         return not self < other
 
+    @override
     def __hash__(self) -> int:
         return self._hash
 

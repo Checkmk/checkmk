@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 
 import argparse
@@ -23,7 +22,7 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     LogData,
@@ -109,6 +108,7 @@ class BackupTask:
             super().__init__(msg)
             self.line = line
 
+        @override
         def __repr__(self) -> str:
             return "%s(%d, %r)" % (self.__class__.__name__, self.line, super().__str__())
 
@@ -177,6 +177,7 @@ class BackupTask:
             if isinstance(line, str) and line.strip()
         )
 
+    @override
     def __str__(self) -> str:
         return "BackupTask({!r}, t={!r}, vms={!r})".format(
             self.type,

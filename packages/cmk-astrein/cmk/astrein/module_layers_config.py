@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Domain types and loader for module layer architecture rules.
 
 The architectural rules (components, allowed imports, etc.) are defined
@@ -18,7 +16,7 @@ import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Protocol
+from typing import Final, override, Protocol
 
 CONFIG_FILENAME = "module_layers.toml"
 
@@ -33,17 +31,21 @@ class Component:
         self.name: Final = name
         self.parts: Final = tuple(name.split("."))
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
+    @override
     def __str__(self) -> str:
         return self.name
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Component):
             return NotImplemented
         return self.parts == other.parts
 
+    @override
     def __hash__(self) -> int:
         return hash(self.parts)
 
@@ -57,12 +59,15 @@ class ModuleName:
         self.name: Final = name
         self.parts: Final = tuple(name.split("."))
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
+    @override
     def __str__(self) -> str:
         return self.name
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ModuleName):
             return NotImplemented

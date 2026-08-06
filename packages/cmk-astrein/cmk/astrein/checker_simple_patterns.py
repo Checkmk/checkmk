@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import ast
 from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
+from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
 from cmk.astrein.placeholders import has_positional_placeholder
@@ -18,9 +17,11 @@ from cmk.astrein.placeholders import has_positional_placeholder
 class ABCMetaMetaclassChecker(ASTVisitorChecker):
     """Detects use of `metaclass=ABCMeta` instead of inheriting from ABC."""
 
+    @override
     def checker_id(self) -> str:
         return "abcmeta-metaclass"
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         for keyword in node.keywords:
             if keyword.arg == "metaclass" and self._is_abcmeta(keyword.value):
@@ -43,9 +44,11 @@ class ABCMetaMetaclassChecker(ASTVisitorChecker):
 class HTMLDebugChecker(ASTVisitorChecker):
     """Detects calls to `html.debug(...)`."""
 
+    @override
     def checker_id(self) -> str:
         return "html-debug"
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if (
             isinstance(node.func, ast.Attribute)
@@ -110,9 +113,11 @@ class LoggingNamedPlaceholderChecker(ASTVisitorChecker):
         self._excluded_prefixes = excluded_prefixes
         self._included_paths = included_paths
 
+    @override
     def checker_id(self) -> str:
         return "logging-named-placeholder"
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if not self._is_excluded():
             self._check(node)
@@ -161,9 +166,11 @@ class PillowImportChecker(ASTVisitorChecker):
     (e.g. cmk.gui.utils.images for GUI code).
     """
 
+    @override
     def checker_id(self) -> str:
         return "pillow-import"
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         if self._is_excluded():
             return
@@ -176,6 +183,7 @@ class PillowImportChecker(ASTVisitorChecker):
                 )
         self.generic_visit(node)
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if self._is_excluded():
             return
@@ -196,6 +204,7 @@ class PillowImportChecker(ASTVisitorChecker):
 class PydanticTypeAdapterChecker(ASTVisitorChecker):
     """Detects TypeAdapter() calls inside function/method bodies (module-level is fine)."""
 
+    @override
     def checker_id(self) -> str:
         return "pydantic-type-adapter"
 
@@ -203,16 +212,19 @@ class PydanticTypeAdapterChecker(ASTVisitorChecker):
         super().__init__(file_path, repo_root, source_code)
         self._function_depth = 0
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._function_depth += 1
         self.generic_visit(node)
         self._function_depth -= 1
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._function_depth += 1
         self.generic_visit(node)
         self._function_depth -= 1
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if self._function_depth > 0 and self._is_type_adapter_call(node):
             self.add_error(
@@ -235,11 +247,13 @@ class PydanticTypeAdapterChecker(ASTVisitorChecker):
 class TarfileOpenReadChecker(ASTVisitorChecker):
     """Detects tarfile.open() / TarFile.open() in read mode."""
 
+    @override
     def checker_id(self) -> str:
         return "tarfile-open-read"
 
     _EXCLUDED_DIRS = frozenset({"mkp_tool", "tests", "testlib"})
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if self._is_excluded():
             self.generic_visit(node)

@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """
 Base classes for implementing serialization protocols
 """
 
 import abc
 from collections.abc import Buffer, Iterator
-from typing import Protocol, Self, SupportsBytes
+from typing import override, Protocol, Self, SupportsBytes
 
 
 class Serializer(Protocol):
@@ -30,6 +28,7 @@ class Serializer(Protocol):
         concrete implementation here.
     """
 
+    @override
     def __eq__(self, other: object) -> bool:
         # Test both `Buffer` and `SupportsBytes`.
         #
@@ -40,6 +39,7 @@ class Serializer(Protocol):
             return bytes(self) == bytes(other)
         return NotImplemented
 
+    @override
     def __hash__(self) -> int:
         return hash(bytes(self))
 
@@ -77,9 +77,11 @@ class Deserializer(Protocol):
         raise NotImplementedError
 
     @abc.abstractmethod
+    @override
     def __eq__(self, other: object) -> bool:
         return NotImplemented
 
     @abc.abstractmethod
+    @override
     def __hash__(self) -> int:
         raise NotImplementedError

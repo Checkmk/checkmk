@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import re
 import string
 from collections.abc import Sequence
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, override
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.translations import translate, TranslationOptions
@@ -115,6 +113,7 @@ class SectionMarker(NamedTuple):
             separator=separator,
         )
 
+    @override
     def __str__(self) -> str:
         opts: dict[str, str] = {}
         if self.cached:

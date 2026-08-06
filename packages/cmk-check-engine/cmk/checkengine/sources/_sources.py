@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import os.path
 import socket
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, override
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Fetcher
@@ -109,6 +108,7 @@ class SNMPSource(Source[SNMPRawData]):
         self._file_cache_path_base: Final = file_cache_path_base
         self._file_cache_path_relative: Final = file_cache_path_relative
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -118,6 +118,7 @@ class SNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> Fetcher:
         return _make_snmp_fetcher(
             self._source_config,
@@ -128,6 +129,7 @@ class SNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[SNMPRawData]:
@@ -172,6 +174,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self._file_cache_path_base: Final = file_cache_path_base
         self._file_cache_path_relative: Final = file_cache_path_relative
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -181,6 +184,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> Fetcher:
         return _make_snmp_fetcher(
             self._source_config,
@@ -191,6 +195,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[SNMPRawData]:
@@ -231,6 +236,7 @@ class IPMISource(Source[AgentRawData]):
         self._file_cache_path_base: Final = file_cache_path_base
         self._file_cache_path_relative: Final = file_cache_path_relative
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -240,6 +246,7 @@ class IPMISource(Source[AgentRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> IPMIFetcher:
         username, password = self._source_config.ipmi_credentials(self.host_name)
         return IPMIFetcher(
@@ -248,6 +255,7 @@ class IPMISource(Source[AgentRawData]):
             password=password,
         )
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
@@ -289,6 +297,7 @@ class ProgramSource(Source[AgentRawData]):
         self._file_cache_path_base: Final = file_cache_path_base
         self._file_cache_path_relative: Final = file_cache_path_relative
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -298,6 +307,7 @@ class ProgramSource(Source[AgentRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(
             cmdline=self._source_config.program_commandline(
@@ -307,6 +317,7 @@ class ProgramSource(Source[AgentRawData]):
             is_cmc=self._source_config.is_cmc,
         )
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
@@ -340,6 +351,7 @@ class PushAgentSource(Source[AgentRawData]):
         self._file_cache_path_base: Final = file_cache_path_base
         self._file_cache_path_relative: Final = file_cache_path_relative
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -349,9 +361,11 @@ class PushAgentSource(Source[AgentRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> NoFetcher:
         return NoFetcher(NoFetcherError.NO_FETCHER)
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
@@ -402,6 +416,7 @@ class TCPSource(Source[AgentRawData]):
         self._file_cache_path_relative: Final = file_cache_path_relative
         self._tls_config: Final = tls_config
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -411,6 +426,7 @@ class TCPSource(Source[AgentRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> TCPFetcher:
         tcp_fetcher_config = self._source_config.tcp_fetcher_config
         return TCPFetcher(
@@ -424,6 +440,7 @@ class TCPSource(Source[AgentRawData]):
             tls_config=self._tls_config,
         )
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
@@ -469,6 +486,7 @@ class SpecialAgentSource(Source[AgentRawData]):
         self._file_cache_path_relative: Final = file_cache_path_relative
         self._source_idx: Final = source_idx
 
+    @override
     def source_info(self) -> SourceInfo:
         ident = f"special_{self._agent_name}"
         if self._source_idx is not None:
@@ -481,6 +499,7 @@ class SpecialAgentSource(Source[AgentRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(
             cmdline=self._cmdline,
@@ -488,6 +507,7 @@ class SpecialAgentSource(Source[AgentRawData]):
             is_cmc=self._source_config.is_cmc,
         )
 
+    @override
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
@@ -516,6 +536,7 @@ class PiggybackSource(Source[AgentRawData]):
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -525,14 +546,16 @@ class PiggybackSource(Source[AgentRawData]):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher()
 
+    @override
     def file_cache(
         self,
         *,
-        simulation: bool,  # noqa: ARG002
-        file_cache_options: FileCacheOptions,  # noqa: ARG002
+        simulation: bool,
+        file_cache_options: FileCacheOptions,
     ) -> FileCache[AgentRawData]:
         return _NO_CACHE
 
@@ -547,6 +570,7 @@ class MissingIPSource(Source):
         self.ipaddress: Final = ipaddress
         self.ident: Final = ident
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -556,10 +580,12 @@ class MissingIPSource(Source):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> NoFetcher:
         return NoFetcher(NoFetcherError.MISSING_IP)
 
-    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:  # noqa: ARG002
+    @override
+    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
         return _NO_CACHE
 
 
@@ -573,6 +599,7 @@ class MissingSourceSource(Source):
         self.ipaddress: Final = ipaddress
         self.ident: Final = ident
 
+    @override
     def source_info(self) -> SourceInfo:
         return SourceInfo(
             self.host_name,
@@ -582,8 +609,10 @@ class MissingSourceSource(Source):
             self.source_type,
         )
 
+    @override
     def fetcher(self) -> NoFetcher:
         return NoFetcher(NoFetcherError.NO_FETCHER)
 
-    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:  # noqa: ARG002
+    @override
+    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
         return _NO_CACHE

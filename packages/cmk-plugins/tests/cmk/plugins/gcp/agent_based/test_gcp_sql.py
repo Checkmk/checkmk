@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Sequence
+from typing import override
 
 import pytest
 
@@ -57,14 +56,17 @@ ASSET_TABLE = [
 
 class TestDiscover(DiscoverTester):
     @property
+    @override
     def _assets(self) -> StringTable:
         return ASSET_TABLE
 
     @property
+    @override
     def expected_items(self) -> set[str]:
         return {"checktest", "follower"}
 
     @property
+    @override
     def expected_labels(self) -> set[ServiceLabel]:
         return {
             ServiceLabel("cmk/gcp/labels/reason", "check-development"),
@@ -75,11 +77,13 @@ class TestDiscover(DiscoverTester):
             ServiceLabel("cmk/gcp/location", "us-central1"),
         }
 
+    @override
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
         yield from discover(section_gcp_service_cloud_sql=None, section_gcp_assets=assets)
 
 
 class TestDiscoverReplication(TestDiscover):
+    @override
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
         cloud_sql_stringtable = generate_stringtable("checktest", 0.42, CLOUDSQL)
         cloud_sql_stringtable.extend(generate_stringtable("follower", 0.42, CLOUDSQL))

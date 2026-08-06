@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -13,7 +12,7 @@ import os
 import signal
 import subprocess
 from contextlib import suppress
-from typing import Final, Self, TypedDict
+from typing import Final, override, Self, TypedDict
 
 from cmk.checkengine.fetcher_abc import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.helper_interface import AgentRawData
@@ -41,6 +40,7 @@ class ProgramFetcher(Fetcher[AgentRawData, ProgramFetcherParams]):
         self.is_cmc: Final = is_cmc
         self._process: subprocess.Popen | None = None
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
@@ -54,6 +54,7 @@ class ProgramFetcher(Fetcher[AgentRawData, ProgramFetcherParams]):
             + ")"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ProgramFetcher):
             return False
@@ -63,13 +64,16 @@ class ProgramFetcher(Fetcher[AgentRawData, ProgramFetcherParams]):
             and self.is_cmc == other.is_cmc
         )
 
+    @override
     def serialized_params(self) -> ProgramFetcherParams:
         return {"cmdline": self.cmdline, "stdin": self.stdin, "is_cmc": self.is_cmc}
 
     @classmethod
+    @override
     def from_params(cls, params: ProgramFetcherParams, _ctx: DeserializationContext) -> Self:
         return cls(**params)
 
+    @override
     def open(self) -> None:
         logger.debug("Calling: %(cmdline)s", {"cmdline": self.cmdline})
         if self.stdin:
@@ -93,6 +97,7 @@ class ProgramFetcher(Fetcher[AgentRawData, ProgramFetcherParams]):
             close_fds=True,
         )
 
+    @override
     def close(self):
         if self._process is None:
             return
@@ -122,6 +127,7 @@ class ProgramFetcher(Fetcher[AgentRawData, ProgramFetcherParams]):
         self._process.stderr.close()
         self._process = None
 
+    @override
     def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
         logger.debug("Get data from program")
         if self._process is None:

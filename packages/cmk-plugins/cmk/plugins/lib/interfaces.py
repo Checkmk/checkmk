@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="redundant-expr"
 
@@ -36,7 +35,7 @@ from ipaddress import (
     IPv6Interface,
     IPv6Network,
 )
-from typing import Any, assert_never, Final, Literal, ParamSpec, Protocol, TypedDict
+from typing import Any, assert_never, Final, Literal, override, ParamSpec, Protocol, TypedDict
 
 import pydantic
 
@@ -158,6 +157,7 @@ class AugmentedIPInterface:
     # so we need the agent to provide this information.
     is_temporary: None | bool = None
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}({super().__str__()!r}"
@@ -257,6 +257,7 @@ StateMappings = IndependentMapping | CombinedMapping
 
 
 class _MissingOperStatus:
+    @override
     def __str__(self) -> str:
         return "Not available"
 
@@ -267,6 +268,7 @@ class MemberInfo:
     oper_status_name: str | _MissingOperStatus
     admin_status_name: str | None = None
 
+    @override
     def __str__(self) -> str:
         status_info = (
             f"({self.oper_status_name})"

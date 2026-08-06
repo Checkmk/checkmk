@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Checker to prevent disallowed imports of modules."""
 
 from __future__ import annotations
@@ -12,6 +10,7 @@ from __future__ import annotations
 import ast
 import contextlib
 from pathlib import Path
+from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
 from cmk.astrein.module_layers_config import (
@@ -56,6 +55,7 @@ class ModuleLayersChecker(ASTVisitorChecker):
         # Find the component this file belongs to
         self.component = self._find_component(self.module_name, self.relative_path)
 
+    @override
     def checker_id(self) -> str:
         return "cmk-module-layer-violation"
 
@@ -90,11 +90,13 @@ class ModuleLayersChecker(ASTVisitorChecker):
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
         return ModuleName(p.parts[-1] if p.parts else self.file_path.stem)
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             self._check_import(node, ModuleName(alias.name))
         self.generic_visit(node)
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.level in {1, 2}:
             # This is a relative import. Assume this is fine.

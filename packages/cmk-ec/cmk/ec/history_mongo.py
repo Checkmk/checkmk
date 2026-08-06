@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import contextlib
 import datetime
@@ -12,7 +11,7 @@ import os
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from .config import Config
 from .event import Event
@@ -55,9 +54,11 @@ class MongoDBHistory(History):
         self._mongodb = MongoDB()
         self._reload_configuration_mongodb()
 
+    @override
     def flush(self) -> None:
         self._mongodb.db.ec_archive.drop()
 
+    @override
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         _log_event(self._config, self._logger, event, what, who, addinfo)
         if not self._mongodb.connection:
@@ -79,6 +80,7 @@ class MongoDBHistory(History):
             }
         )
 
+    @override
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         history_entries = []
 
@@ -114,6 +116,7 @@ class MongoDBHistory(History):
 
         return history_entries
 
+    @override
     def housekeeping(self) -> None:
         """Not needed in mongo since the lifetime of DB entries is taken care automatically."""
 
@@ -122,6 +125,7 @@ class MongoDBHistory(History):
         _update_mongodb_indexes(self._settings, self._mongodb)
         _update_mongodb_history_lifetime(self._settings, self._config, self._mongodb)
 
+    @override
     def close(self) -> None:
         if self._mongodb.connection:
             self._mongodb.connection.close()

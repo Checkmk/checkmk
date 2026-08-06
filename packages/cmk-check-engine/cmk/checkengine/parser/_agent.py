@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import abc
 import logging
 import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
-from typing import Final, final, NamedTuple
+from typing import Final, final, NamedTuple, override
 
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
@@ -274,20 +272,25 @@ class ParserState(abc.ABC):
 
 
 class NOOPParser(ParserState):
-    def do_action(self, line: bytes) -> ParserState:  # noqa: ARG002
+    @override
+    def do_action(self, line: bytes) -> ParserState:
         return self
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         return self
 
+    @override
     def on_section_header(self, section_header: SectionMarker) -> ParserState:
         return self.to_host_section_parser(section_header)
 
+    @override
     def on_section_footer(self) -> ParserState:
         # Optional
         return self.to_noop_parser()
@@ -313,21 +316,26 @@ class PiggybackParser(ParserState):
         )
         self.current_host: Final = current_host
 
-    def do_action(self, line: bytes) -> ParserState:  # noqa: ARG002
+    @override
+    def do_action(self, line: bytes) -> ParserState:
         # We are not in a section -> ignore line.
         return self
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         return self.to_noop_parser()
 
+    @override
     def on_section_header(self, section_header: SectionMarker) -> ParserState:
         return self.to_piggyback_section_parser(self.current_host, section_header)
 
+    @override
     def on_section_footer(self) -> ParserState:
         # Optional
         return self.to_piggyback_noop_parser(self.current_host)
@@ -355,21 +363,26 @@ class PiggybackSectionParser(ParserState):
         self.current_host: Final = current_host
         self.current_section: Final = current_section
 
+    @override
     def do_action(self, line: bytes) -> ParserState:
         self.piggyback_sections[self.current_host][-1].section.append(AgentRawData(line))
         return self
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         return self.to_noop_parser()
 
+    @override
     def on_section_header(self, section_header: SectionMarker) -> ParserState:
         return self.to_piggyback_section_parser(self.current_host, section_header)
 
+    @override
     def on_section_footer(self) -> ParserState:
         # Optional
         return self.to_piggyback_noop_parser(self.current_host)
@@ -395,40 +408,50 @@ class PiggybackNOOPParser(ParserState):
         )
         self.current_host: Final = current_host
 
-    def do_action(self, line: bytes) -> PiggybackNOOPParser:  # noqa: ARG002
+    @override
+    def do_action(self, line: bytes) -> PiggybackNOOPParser:
         return self
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         return self.to_noop_parser()
 
+    @override
     def on_section_header(self, section_header: SectionMarker) -> ParserState:
         return self.to_piggyback_section_parser(self.current_host, section_header)
 
+    @override
     def on_section_footer(self) -> ParserState:
         # Optional
         return self.to_piggyback_noop_parser(self.current_host)
 
 
 class PiggybackIgnoreParser(ParserState):
-    def do_action(self, line: bytes) -> PiggybackIgnoreParser:  # noqa: ARG002
+    @override
+    def do_action(self, line: bytes) -> PiggybackIgnoreParser:
         return self
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         return self.to_noop_parser()
 
-    def on_section_header(self, section_header: SectionMarker) -> PiggybackIgnoreParser:  # noqa: ARG002
+    @override
+    def on_section_header(self, section_header: SectionMarker) -> PiggybackIgnoreParser:
         return self
 
+    @override
     def on_section_footer(self) -> PiggybackIgnoreParser:
         return self
 
@@ -453,23 +476,28 @@ class HostSectionParser(ParserState):
         )
         self.current_section: Final = current_section
 
+    @override
     def do_action(self, line: bytes) -> ParserState:
         self.sections[-1].section.append(
             AgentRawData(line if self.current_section.nostrip else line.strip())
         )
         return self
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         return self.to_noop_parser()
 
+    @override
     def on_section_header(self, section_header: SectionMarker) -> ParserState:
         return self.to_host_section_parser(section_header)
 
+    @override
     def on_section_footer(self) -> ParserState:
         # Optional
         return self.to_noop_parser()
@@ -497,6 +525,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
 
+    @override
     def parse(
         self,
         raw_data: AgentRawData,

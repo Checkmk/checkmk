@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import dataclasses
 import re
-from typing import Self
+from typing import override, Self
 
 
 @dataclasses.dataclass(frozen=True, slots=True, order=True)
@@ -21,6 +19,7 @@ class SemanticVersion:
     patch: int
     """Patch release with backwards compatible bug fixes."""
 
+    @override
     def __str__(self) -> str:
         """Format the semantic version into a string."""
         return f"{self.major}.{self.minor}.{self.patch}"

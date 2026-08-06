@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.checkengine.snmplib import SNMPRawData
 
@@ -16,13 +16,14 @@ __all__ = ["SNMPParser"]
 class SNMPParser(Parser[SNMPRawData, SNMPParsedData]):
     """A parser for SNMP data"""
 
+    @override
     def parse(
         self,
         raw_data: SNMPRawData,
         *,
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
-        selection: object,  # noqa: ARG002
+        selection: object,
     ) -> HostSections[SNMPParsedData]:
         marked_sections = {SectionMarker.from_header(n): content for n, content in raw_data.items()}
         return HostSections[SNMPParsedData](

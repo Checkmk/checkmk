@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import errno
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 import requests
@@ -305,16 +304,19 @@ def test_load_stash_from_file_secret_no_stash_returns_empty_stash(tmp_path: Path
 
 
 class FakeWerkIDsClient(WerkIDsClient):
+    @override
     def reserve_werk_ids(self, _secret_file_path: Path, _stored_werk_ids: int) -> Sequence[int]:
         return [30, 40]
 
 
 class FakeEmptyServerClient(WerkIDsClient):
+    @override
     def reserve_werk_ids(self, _secret_file_path: Path, _stored_werk_ids: int) -> Sequence[int]:
         return []
 
 
 class FakeForbiddenServerClient(WerkIDsClient):
+    @override
     def reserve_werk_ids(self, _secret_file_path: Path, _stored_werk_ids: int) -> Sequence[int]:
         raise AssertionError("the werk IDs server must not be contacted")
 

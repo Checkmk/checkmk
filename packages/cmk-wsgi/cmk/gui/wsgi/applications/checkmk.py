@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
@@ -14,6 +13,7 @@ import http.client as http_client
 import json
 import traceback
 from collections.abc import Callable
+from typing import override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
 import flask
@@ -181,6 +181,7 @@ class CheckmkApp(AbstractWSGIApp):
         self.testing = testing
 
     @tracer.instrument("CheckmkApp.wsgi_app")
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
         with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():

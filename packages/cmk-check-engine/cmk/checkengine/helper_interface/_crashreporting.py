@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Check_MK base specific code of the crash reporting"""
 
 import os
@@ -12,7 +10,7 @@ import sys
 import traceback
 from collections.abc import Callable
 from pathlib import Path
-from typing import Self
+from typing import override, Self
 
 from cmk.crash import ABCCrashReport, BaseDetails, CrashReportStore, VersionInfo
 
@@ -55,6 +53,7 @@ class FetcherDetails(BaseDetails):
 
 class CMKFetcherCrashReport(ABCCrashReport[FetcherDetails]):
     @classmethod
+    @override
     def type(cls) -> str:
         return "fetcher"
 

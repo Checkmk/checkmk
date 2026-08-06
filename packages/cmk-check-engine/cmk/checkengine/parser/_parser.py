@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -12,7 +11,7 @@ import abc
 import enum
 from collections.abc import Iterable, Mapping, Sequence
 from functools import partial
-from typing import Final, Protocol
+from typing import Final, override, Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
@@ -57,6 +56,7 @@ class HostSections[Tout: Mapping[SectionName, Sequence]]:
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
@@ -65,6 +65,7 @@ class HostSections[Tout: Mapping[SectionName, Sequence]]:
             f"piggybacked_raw_data={self.piggybacked_raw_data!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, HostSections):
             return False

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -13,7 +12,7 @@ import enum
 import json
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import asdict, dataclass
-from typing import Final, Literal, Protocol, Self, TypedDict
+from typing import Final, Literal, override, Protocol, Self, TypedDict
 
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
 
@@ -94,7 +93,8 @@ class DiscoveryMode(enum.Enum):
     FALLBACK = 5  # not sure why this could happen
 
     @classmethod
-    def _missing_(cls, value: object) -> DiscoveryMode:  # noqa: ARG003
+    @override
+    def _missing_(cls, value: object) -> DiscoveryMode:
         return cls.FALLBACK
 
     @classmethod

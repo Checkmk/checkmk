@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -22,7 +21,7 @@ Docs:
 
 import datetime
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from pydantic import BaseModel, Field
 
@@ -564,6 +563,7 @@ class ShelfTemperatureModel(ShelfObjectModel):
             self.high_critical,
         )
 
+    @override
     def consider_installed(self) -> bool:
         return super().consider_installed() and self._has_sensor_data()
 

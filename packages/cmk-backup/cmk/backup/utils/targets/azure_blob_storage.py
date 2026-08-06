@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import assert_never, Final, Literal, TYPE_CHECKING, TypedDict, Union
+from typing import assert_never, Final, Literal, override, TYPE_CHECKING, TypedDict, Union
 
 from cmk.backup.utils.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.ccc.exceptions import MKGeneralException
@@ -122,6 +121,7 @@ class BlobStorage:
 
 class BlobStorageTarget(RemoteTarget[BlobStorageParams, BlobStorage]):
     @staticmethod
+    @override
     def _remote_storage(remote_params: BlobStorageParams) -> BlobStorage:
         return BlobStorage(remote_params)
 

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-# ruff: noqa: ARG002
 # ruff: noqa: SLF001
 
 
@@ -15,7 +13,7 @@ import dataclasses
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, override
 
 import pytest
 
@@ -58,12 +56,15 @@ SNMPConfig = SNMPHostConfig(
 
 class SNMPTestBackend(SNMPBackend):
     @staticmethod
+    @override
     def get_type() -> SNMPBackendEnum:
         return SNMPBackendEnum.CLASSIC
 
+    @override
     def get(self, /, oid, *, context):
         pass
 
+    @override
     def walk(self, /, oid, *, context, **kw):
         return [(f"{oid}.{r}", b"C0FEFE") for r in (1, 2, 3)]
 
@@ -137,12 +138,15 @@ def test_sanitize_snmp_encoding(
 def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> None:
     class Backend(SNMPBackend):
         @staticmethod
+        @override
         def get_type() -> SNMPBackendEnum:
             return SNMPBackendEnum.CLASSIC
 
+        @override
         def get(self, /, *args: object, **kw: object) -> NoReturn:
             assert False
 
+        @override
         def walk(
             self,
             /,
@@ -182,12 +186,15 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
 def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None:
     class Backend(SNMPBackend):
         @staticmethod
+        @override
         def get_type() -> SNMPBackendEnum:
             return SNMPBackendEnum.CLASSIC
 
+        @override
         def get(self, /, *args: object, **kw: object) -> NoReturn:
             assert False
 
+        @override
         def walk(
             self,
             /,

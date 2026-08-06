@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -21,7 +20,7 @@ import logging
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 import requests
 import urllib3
@@ -53,6 +52,7 @@ class _RestVersion(NamedTuple):
         raw_major, raw_minor = raw_version.split(".", 1)
         return cls(int(raw_major), int(raw_minor))
 
+    @override
     def __str__(self) -> str:
         return f"{self.major}.{self.minor}"
 

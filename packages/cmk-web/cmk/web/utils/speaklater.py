@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable, Iterator
-from typing import Self
+from typing import override, Self
 
 
 class LazyString:
@@ -29,9 +27,11 @@ class LazyString:
             return getattr(string, attr)
         raise AttributeError(attr)
 
+    @override
     def __repr__(self) -> str:
         return f"l'{str(self)}'"
 
+    @override
     def __str__(self) -> str:
         string = str(self._func(self._text))
         if self._args is None:
@@ -68,9 +68,11 @@ class LazyString:
     def __le__(self, other: str) -> bool:
         return str(self) <= other
 
+    @override
     def __eq__(self, other: object) -> bool:
         return str(self) == other
 
+    @override
     def __ne__(self, other: object) -> bool:
         return str(self) != other
 
@@ -83,6 +85,7 @@ class LazyString:
     def __html__(self) -> str:
         return str(self)
 
+    @override
     def __hash__(self) -> int:
         return hash(str(self))
 
@@ -129,9 +132,11 @@ class LazyText:
             return getattr(string, attr)
         raise AttributeError(attr)
 
+    @override
     def __repr__(self) -> str:
         return f"l'{str(self)}'"
 
+    @override
     def __str__(self) -> str:
         return str(self._func())
 
@@ -165,9 +170,11 @@ class LazyText:
     def __le__(self, other: str) -> bool:
         return str(self) <= other
 
+    @override
     def __eq__(self, other: object) -> bool:
         return str(self) == other
 
+    @override
     def __ne__(self, other: object) -> bool:
         return str(self) != other
 
@@ -180,6 +187,7 @@ class LazyText:
     def __html__(self) -> str:
         return str(self)
 
+    @override
     def __hash__(self) -> int:
         return hash(str(self))
 

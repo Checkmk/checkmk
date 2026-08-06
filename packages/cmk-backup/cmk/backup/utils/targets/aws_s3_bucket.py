@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final, NotRequired, ReadOnly, TypedDict
+from typing import Final, NotRequired, override, ReadOnly, TypedDict
 
 from cmk.backup.utils.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.ccc.exceptions import MKGeneralException
@@ -89,6 +88,7 @@ def _client_args(params: S3Params, secret: str) -> dict[str, str]:
 
 class S3Target(RemoteTarget[S3Params, S3Bucket]):
     @staticmethod
+    @override
     def _remote_storage(remote_params: S3Params) -> S3Bucket:
         return S3Bucket(remote_params)
 

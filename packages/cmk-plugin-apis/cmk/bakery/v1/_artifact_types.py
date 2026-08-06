@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import override
 
 from ._constants import DebStep, OS, PkgStep, RpmStep, SolStep, WindowsConfigContent
 
@@ -102,6 +101,7 @@ class Plugin:
         self.timeout = timeout
         self.retry_count = retry_count
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -114,6 +114,7 @@ class Plugin:
             f"retry_count={self.retry_count!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -142,6 +143,7 @@ class SystemBinary:
         self.source = source
         self.target = target
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -150,6 +152,7 @@ class SystemBinary:
             f"target={self.target!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -195,6 +198,7 @@ class PluginConfig:
         self.target = target
         self.include_header = include_header
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -204,6 +208,7 @@ class PluginConfig:
             f"include_header={self.include_header!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -249,6 +254,7 @@ class SystemConfig:
         self.target = target
         self.include_header = include_header
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -258,6 +264,7 @@ class SystemConfig:
             f"include_header={self.include_header!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -298,9 +305,11 @@ class Scriptlet:
                 f"got {type(step).__name__}"
             )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(step={self.step!r}, lines={self.lines!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -360,9 +369,11 @@ class WindowsConfigEntry:
         self.path = path
         self.content = content
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={self.path!r}, content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -398,9 +409,11 @@ class WindowsConfigItems:
             except TypeError as te:
                 raise TypeError(f"At index {index} of content argument: {te}")
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={self.path!r}, content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -423,9 +436,11 @@ class WindowsGlobalConfigEntry:
         self.name = name
         self.content = content
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -448,8 +463,10 @@ class WindowsSystemConfigEntry:
         self.name = name
         self.content = content
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -59,7 +58,7 @@ import time
 from collections.abc import Sequence, Sized
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, NamedTuple, NoReturn, Self, TypedDict
+from typing import Any, Final, NamedTuple, NoReturn, override, Self, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -145,6 +144,7 @@ class FileCache[TRawData: Sized](
         self.use_only_cache = use_only_cache
         self.file_cache_mode = FileCacheMode(file_cache_mode)
 
+    @override
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -159,6 +159,7 @@ class FileCache[TRawData: Sized](
             )
         )
 
+    @override
     def serialized_params(self) -> FileCacheParams:
         # `base_path` is intentionally omitted: it is supplied by the
         # `DeserializationContext` of the reading process.
@@ -171,6 +172,7 @@ class FileCache[TRawData: Sized](
         }
 
     @classmethod
+    @override
     def from_params(cls, params: FileCacheParams, ctx: DeserializationContext) -> Self:
         return cls(
             base_path=ctx.base_path,
@@ -288,18 +290,22 @@ class NoCache[TRawData: Sized](FileCache[TRawData]):
             file_cache_mode=FileCacheMode.DISABLED,
         )
 
+    @override
     def serialized_params(self) -> FileCacheParams:
         return {}
 
     @classmethod
+    @override
     def from_params(cls, _params: FileCacheParams, _ctx: DeserializationContext) -> Self:
         return cls()
 
     @staticmethod
+    @override
     def _from_cache_file(_raw_data: object) -> NoReturn:
         raise TypeError("NoCache")
 
     @staticmethod
+    @override
     def _to_cache_file(_raw_data: TRawData) -> NoReturn:
         raise TypeError("NoCache")
 

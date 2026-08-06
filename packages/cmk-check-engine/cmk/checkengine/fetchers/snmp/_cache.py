@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 import contextlib
@@ -12,6 +11,7 @@ import json
 import logging
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from pathlib import Path
+from typing import override
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTimeout
@@ -58,24 +58,31 @@ class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
     def _iterfiles(self) -> Iterable[Path]:
         return self._path.iterdir() if self._path.is_dir() else ()
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"
 
+    @override
     def __getitem__(self, key: tuple[str, str, bool]) -> SNMPRowInfo:
         return self._store.__getitem__(key)
 
+    @override
     def __setitem__(self, key: tuple[str, str, bool], value: SNMPRowInfo) -> None:
         return self._store.__setitem__(key, value)
 
+    @override
     def __delitem__(self, key: tuple[str, str, bool]) -> None:
         return self._store.__delitem__(key)
 
+    @override
     def __iter__(self) -> Iterator[tuple[str, str, bool]]:
         return self._store.__iter__()
 
+    @override
     def __len__(self) -> int:
         return self._store.__len__()
 
+    @override
     def clear(self) -> None:
         for path in self._iterfiles():
             path.unlink(missing_ok=True)

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 
 import json
@@ -18,7 +17,7 @@ from collections.abc import (
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 import cmk.utils.paths
 from cmk.ccc import store
@@ -161,6 +160,7 @@ class _ValueStore(MutableMapping[str, object]):
             raise TypeError(f"value store key must be `str`, got {key!r}")
         return key
 
+    @override
     def __getitem__(self, key: str) -> object:
         key = self._validate_key(key)
         try:
@@ -169,6 +169,7 @@ class _ValueStore(MutableMapping[str, object]):
             pass
         return self._accessed.setdefault(key, self._deserialize(self._serialized[key]))
 
+    @override
     def __setitem__(self, key: str, value: object) -> None:
         """
         It would be nice to serialize immediately (to raise errors in plugin scope),
@@ -176,6 +177,7 @@ class _ValueStore(MutableMapping[str, object]):
         """
         self._accessed[self._validate_key(key)] = value
 
+    @override
     def __delitem__(self, key: str) -> None:
         key = self._validate_key(key)
         if key not in self._serialized and key not in self._accessed:
@@ -183,9 +185,11 @@ class _ValueStore(MutableMapping[str, object]):
         self._serialized.pop(key, None)
         self._accessed.pop(key, None)
 
+    @override
     def __iter__(self) -> Iterator[str]:
         return iter(self._serialized | self._accessed)
 
+    @override
     def __len__(self) -> int:
         return sum(1 for _ in self)
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import abc
@@ -15,7 +13,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from random import Random
-from typing import Final, final, IO, Literal
+from typing import Final, final, IO, Literal, override
 
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
@@ -180,6 +178,7 @@ class Submitter(abc.ABC):
 
 
 class NoOpSubmitter(Submitter):
+    @override
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         pass
 
@@ -208,6 +207,7 @@ class PipeSubmitter(Submitter):
 
         return cls._nagios_command_pipe
 
+    @override
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         if not (pipe := PipeSubmitter._open_command_pipe()):
             return
@@ -257,6 +257,7 @@ class _RandomNameSequence:
 class FileSubmitter(Submitter):
     _names = _RandomNameSequence()
 
+    @override
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         now = time.time()
 

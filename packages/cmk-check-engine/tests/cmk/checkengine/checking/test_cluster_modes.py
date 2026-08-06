@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="explicit-any"
 
 # ruff: noqa: ARG001
@@ -12,7 +11,7 @@
 import re
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import pytest
 
@@ -36,9 +35,11 @@ class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
     def __init__(self) -> None:
         super().__init__(Path(), log_debug=lambda x: None)
 
+    @override
     def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:
         return {}
 
+    @override
     def update(self, update: object) -> None:
         pass
 

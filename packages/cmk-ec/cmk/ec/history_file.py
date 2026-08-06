@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import shlex
 import subprocess
@@ -13,7 +12,7 @@ import time
 from collections.abc import Callable, Iterable, Sequence
 from logging import Logger
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from .config import Config
 from .event import Event, scrub_string
@@ -40,9 +39,11 @@ class FileHistory(History):
         self._lock = threading.Lock()
         self._active_history_period = ActiveHistoryPeriod()
 
+    @override
     def flush(self) -> None:
         _expire_logfiles(self._settings, self._config, self._logger, self._lock, True)
 
+    @override
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         """Make a new entry in the event history.
 
@@ -73,6 +74,7 @@ class FileHistory(History):
             ).open(mode="ab") as f:
                 f.write(b"\t".join(columns) + b"\n")
 
+    @override
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         if not self._settings.paths.history_dir.value.exists():
             return []
@@ -127,9 +129,11 @@ class FileHistory(History):
                 limit -= len(new_entries)
         return history_entries
 
+    @override
     def housekeeping(self) -> None:
         _expire_logfiles(self._settings, self._config, self._logger, self._lock, False)
 
+    @override
     def close(self) -> None:
         pass
 

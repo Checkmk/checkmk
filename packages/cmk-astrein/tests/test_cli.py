@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import ast
 import json
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -151,9 +150,11 @@ def test_collect_files_sorts_results(tmp_path: Path) -> None:
 
 
 class HappyChecker(ASTVisitorChecker):
+    @override
     def checker_id(self) -> str:
         return "happy-checker"
 
+    @override
     def visit_Module(self, node: ast.Module) -> None: ...
 
 
@@ -201,10 +202,12 @@ def test_run_checkers_counts_files_with_errors_correctly(tmp_path: Path) -> None
 
 def _make_checker(errors_by_file: dict[Path, list[CheckerError]]) -> type[ASTVisitorChecker]:
     class CustomChecker(ASTVisitorChecker):
+        @override
         def checker_id(self) -> str:
             return "custom-checker"
 
-        def check(self, tree: ast.AST) -> list[CheckerError]:  # noqa: ARG002
+        @override
+        def check(self, tree: ast.AST) -> list[CheckerError]:
             return errors_by_file.get(self.file_path, [])
 
     return CustomChecker

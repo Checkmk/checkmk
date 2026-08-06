@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # my py: disable-error-code="misc"
 # my py: disable-error-code="type-arg"
 
 import datetime
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
@@ -38,6 +37,7 @@ def _forward_message(
 
     class TestForwardTcpMessageForwarder(MessageForwarder):
         @staticmethod
+        @override
         def _forward_send_tcp(
             _method: object,
             message_chunks: Iterable[tuple[float, int, list[str]]],

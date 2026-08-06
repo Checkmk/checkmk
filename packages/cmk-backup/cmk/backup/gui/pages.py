@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Pages for managing backup and restore of WATO"""
@@ -40,58 +39,70 @@ def register(edition: Edition, page_registry: PageRegistry, mode_registry: ModeR
 
 class ModeBackup(handler.ModeBackup):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     def __init__(self, edition: Edition) -> None:
         super().__init__(edition, key_store=make_site_backup_keypair_store())
 
+    @override
     def title(self) -> str:
         return _("Site backup")
 
 
 class ModeBackupTargets(handler.ModeBackupTargets):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_targets"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
 
 class ModeEditBackupTarget(handler.ModeEditBackupTarget):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_backup_target"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupTargets
 
 
 class ModeEditBackupJob(handler.ModeEditBackupJob):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_backup_job"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
@@ -101,14 +112,17 @@ class ModeEditBackupJob(handler.ModeEditBackupJob):
 
 class ModeBackupJobState(handler.ModeBackupJobState):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_job_state"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
@@ -140,14 +154,17 @@ def make_site_backup_keypair_store() -> handler.BackupKeypairStore:
 
 class ModeBackupKeyManagement(handler.ModeBackupKeyManagement):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_keys"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
@@ -157,14 +174,17 @@ class ModeBackupKeyManagement(handler.ModeBackupKeyManagement):
 
 class ModeBackupEditKey(handler.ModeBackupEditKey):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_edit_key"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
@@ -174,20 +194,24 @@ class ModeBackupEditKey(handler.ModeBackupEditKey):
 
 class ModeBackupUploadKey(handler.ModeBackupUploadKey):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_upload_key"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
     def __init__(self, edition: Edition) -> None:
         super().__init__(edition, key_store=make_site_backup_keypair_store())
 
+    @override
     def _upload_key(self, key_file: str, alias: str, passphrase: Password) -> None:
         log_audit(
             action="upload-backup-key",
@@ -200,14 +224,17 @@ class ModeBackupUploadKey(handler.ModeBackupUploadKey):
 
 class ModeBackupDownloadKey(handler.ModeBackupDownloadKey):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_download_key"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
@@ -217,14 +244,17 @@ class ModeBackupDownloadKey(handler.ModeBackupDownloadKey):
 
 class ModeBackupRestore(handler.ModeBackupRestore):
     @classmethod
+    @override
     def name(cls) -> str:
         return "backup_restore"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 

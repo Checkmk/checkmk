@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
-from typing import Any
+from typing import Any, override
 
 from cmk.gui.openapi.utils import ProblemException
 
@@ -44,6 +43,7 @@ class ParameterDict(dict):
 
     """
 
+    @override
     def __getitem__(self, key: str) -> Any:
         if key in self:
             rv = super().__getitem__(key)

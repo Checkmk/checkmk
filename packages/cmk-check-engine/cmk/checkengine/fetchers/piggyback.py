@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
-from typing import Self, TypedDict
+from typing import override, Self, TypedDict
 
 from cmk.checkengine.fetcher_abc import DeserializationContext, Fetcher, Mode
 from cmk.checkengine.helper_interface import AgentRawData
@@ -21,25 +19,32 @@ class PiggybackFetcher(Fetcher[AgentRawData, PiggybackFetcherParams]):
     ) -> None:
         super().__init__()
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, PiggybackFetcher)
 
+    @override
     def serialized_params(self) -> PiggybackFetcherParams:
         return {}
 
     @classmethod
+    @override
     def from_params(cls, _params: PiggybackFetcherParams, _ctx: DeserializationContext) -> Self:
         return cls()
 
+    @override
     def open(self) -> None:
         pass
 
+    @override
     def close(self) -> None:
         pass
 
+    @override
     def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
         # The piggybacked data is fetched from disk by the piggyback parser, not here.
         # We still maintain this fetcher for symmetry and to make sure the fetcher

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """WATO pages for viewing stored performance profiles and flamegraphs."""
 
 from __future__ import annotations
@@ -96,16 +94,20 @@ def _require_feature_enabled(config: Config) -> None:
 
 class ModePerformanceProfiles(WatoMode[None]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "performance_profiles"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["performance_profiles"]
 
+    @override
     def title(self) -> str:
         return _("Performance profiles")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         max_age_days = retention_kwargs(config.profiling_options)["max_age_days"]
         if max_age_days is None:
@@ -183,6 +185,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
@@ -224,6 +227,7 @@ class ModePerformanceProfiles(WatoMode[None]):
 
         return redirect(ModePerformanceProfiles.mode_url())
 
+    @override
     def page(self, config: Config) -> None:
         _require_feature_enabled(config)
 
@@ -284,25 +288,31 @@ class ModeProfileFlamegraph(WatoMode[None]):
     """Displays a flamegraph SVG inline within the Checkmk GUI frame."""
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "profile_flamegraph"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode[None]] | None:
         return ModePerformanceProfiles
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["performance_profiles"]
 
+    @override
     def _from_vars(self) -> None:
         self._profile_id = request.get_str_input_mandatory("profile_id")
         _validate_profile_id(self._profile_id)
         self._store = ProfileStore(cmk.utils.paths.profiles_dir)
 
+    @override
     def title(self) -> str:
         return _("Flamegraph: %(id)s") % {"id": self._profile_id}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         dl_url = makeuri_contextless(
             request,
@@ -348,9 +358,11 @@ class ModeProfileFlamegraph(WatoMode[None]):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         return None
 
+    @override
     def page(self, config: Config) -> None:
         _require_feature_enabled(config)
 

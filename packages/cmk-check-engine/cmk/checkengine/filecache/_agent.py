@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
+
+from typing import override
 
 from cmk.checkengine.helper_interface import AgentRawData
 
@@ -16,9 +16,11 @@ __all__ = ["AgentFileCache"]
 
 class AgentFileCache(FileCache[AgentRawData]):
     @staticmethod
+    @override
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
         return AgentRawData(raw_data)
 
     @staticmethod
+    @override
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
         return raw_data

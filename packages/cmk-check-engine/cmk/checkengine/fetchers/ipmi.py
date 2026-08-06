@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="unreachable"
 
@@ -14,7 +13,7 @@ import logging
 import os
 from collections.abc import Iterable
 from dataclasses import astuple, dataclass
-from typing import Final, Self, TYPE_CHECKING, TypedDict
+from typing import Final, override, Self, TYPE_CHECKING, TypedDict
 
 import pyghmi.constants as ipmi_const  # type: ignore[import-untyped,unused-ignore] # nosec B415 # BNS:7c4e91
 from pyghmi.exceptions import (  # type: ignore[import-untyped,unused-ignore] # nosec B415 # BNS:7c4e91
@@ -137,6 +136,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
         self.password: Final = password
         self._command: ipmi_cmd.Command | None = None
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
@@ -150,6 +150,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
             + ")"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, IPMIFetcher):
             return False
@@ -159,6 +160,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
             and self.password == other.password
         )
 
+    @override
     def serialized_params(self) -> IPMIFetcherParams:
         return {
             "address": self.address,
@@ -167,6 +169,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
         }
 
     @classmethod
+    @override
     def from_params(cls, params: IPMIFetcherParams, _ctx: DeserializationContext) -> Self:
         return cls(
             address=HostAddress(params["address"]),
@@ -174,6 +177,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
             password=params["password"],
         )
 
+    @override
     def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
         logger.debug("Get IPMI data")
         if self._command is None:
@@ -181,6 +185,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
 
         return AgentRawData(b"" + self._sensors_section() + self._firmware_section())
 
+    @override
     def open(self) -> None:
         logger.debug(
             "Connecting to %(address)s:623 (User: %(user)s, Privlevel: 2)",
@@ -200,6 +205,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
         except IpmiException as exc:
             raise FetcherError("IPMI connection failed") from exc
 
+    @override
     def close(self) -> None:
         if self._command is None:
             return

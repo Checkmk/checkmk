@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Base framework for AST-based code quality checkers."""
 
 from __future__ import annotations
@@ -14,6 +12,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 
 @dataclass(frozen=True)
@@ -32,6 +31,7 @@ class CheckerError:
             f"{self.file_path}:{self.line}:{self.column}: error: [{self.checker_id}] {self.message}"
         )
 
+    @override
     def __str__(self) -> str:
         return self.format_gcc()
 

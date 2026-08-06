@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Unpack
+from typing import Any, override, Unpack
 
 import pytest
 from mypy_boto3_logs.client import CloudWatchLogsClient
@@ -291,6 +290,7 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
         def __init__(self):
             pass
 
+        @override
         def get_query_results(
             self, **kwargs: Unpack[GetQueryResultsRequestTypeDef]
         ) -> GetQueryResultsResponseTypeDef:

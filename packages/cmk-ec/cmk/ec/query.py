@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
@@ -14,7 +13,7 @@ import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, override
 
 from cmk.ccc.exceptions import MKException
 
@@ -120,6 +119,7 @@ class Query:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
         self.__method, self.method_arg = parts
 
+    @override
     def __repr__(self) -> str:
         return self.__method + " " + self.method_arg
 

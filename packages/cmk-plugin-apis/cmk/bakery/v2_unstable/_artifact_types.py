@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 from cmk.bakery.v1 import OS, PluginConfig, SystemConfig
 
@@ -57,6 +56,7 @@ class Plugin:
         self.timeout = None if timeout is None else int(round(timeout))
         self.retry_count = None if retry_count is None else int(round(retry_count))
 
+    @override
     def __repr__(self) -> str:
         args = (
             f"base_os={self.base_os!r}",
@@ -75,6 +75,7 @@ class Plugin:
         )
         return f"{self.__class__.__name__}({', '.join(args)})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -100,9 +101,11 @@ class SystemBinary:
         self.source = Path(source)
         self.target = None if target is None else Path(target)
 
+    @override
     def __repr__(self) -> str:
         t_arg = "" if self.target is None else f", target={self.target!r}"
         return f"{self.__class__.__name__}(base_os={self.base_os!r}, source={self.source!r}{t_arg})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__

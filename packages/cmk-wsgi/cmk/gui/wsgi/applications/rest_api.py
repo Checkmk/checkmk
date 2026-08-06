@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
@@ -22,7 +21,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime, UTC
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Literal, NotRequired, TYPE_CHECKING, TypedDict
+from typing import Any, Literal, NotRequired, override, TYPE_CHECKING, TypedDict
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from apispec.yaml_utils import dict_to_yaml
@@ -224,6 +223,7 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         self.endpoint = endpoint
         self.requested_version = requested_version
 
+    @override
     def __repr__(self) -> str:
         return f"<VersionedEndpointAdapter {self.endpoint.metadata.method} {self.endpoint.metadata.path}>"
 
@@ -232,6 +232,7 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         query_args = request.args
         return {key: query_args.getlist(key) for key in query_args}
 
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self._handle_request(environ, start_response, None)
 
@@ -304,9 +305,11 @@ class LegacyEndpointAdapter(AbstractWSGIApp):
         super().__init__(debug)
         self.endpoint = endpoint
 
+    @override
     def __repr__(self) -> str:
         return f"<LegacyEndpointAdapter {self.endpoint!r}>"
 
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
 
@@ -501,6 +504,7 @@ class ServeSpec(AbstractWSGIApp):
         self.extension = extension
         self.version = version
 
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         def _url(_environ: WSGIEnvironment) -> str:
             return "/".join(get_url(_environ).split("/")[:-1])
@@ -521,6 +525,7 @@ class ServeSwaggerUI(AbstractWSGIApp):
         self.prefix = prefix
         self.data: dict[str, Any] | None = None
 
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         filename = get_filename_from_url(get_url(environ)) or "index.html"
 
@@ -741,6 +746,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             requested_version,
         )
 
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         response: WSGIApplication
 
@@ -852,5 +858,6 @@ class APICrashReport(ABCCrashReport[RestAPIDetails]):
     """API specific crash reporting class."""
 
     @classmethod
+    @override
     def type(cls) -> str:
         return "rest_api"

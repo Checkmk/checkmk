@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import socket
 from codecs import BOM_UTF8
 from collections.abc import Iterable, Mapping
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 
 class SyslogPriority:
@@ -28,9 +26,11 @@ class SyslogPriority:
     def __init__(self, value: int) -> None:
         self.value = value
 
+    @override
     def __repr__(self) -> str:
         return f"SyslogPriority({self.value})"
 
+    @override
     def __str__(self) -> str:
         try:
             return self.NAMES[self.value]
@@ -75,9 +75,11 @@ class SyslogFacility:
             )
         self.value = int(value)
 
+    @override
     def __repr__(self) -> str:
         return f"SyslogFacility({self.value})"
 
+    @override
     def __str__(self) -> str:
         try:
             return self.NAMES[self.value]
@@ -135,17 +137,21 @@ class StructuredDataName:
     def name(self) -> str:
         return self.__name
 
+    @override
     def __repr__(self) -> str:
         return self.name
 
+    @override
     def __hash__(self) -> int:
         return hash(self.name)
 
+    @override
     def __eq__(self, o: object) -> bool:
         if isinstance(o, StructuredDataName):
             return self.name == o.name
         return NotImplemented
 
+    @override
     def __ne__(self, other: object) -> bool:
         result = self.__eq__(other)
         if result is NotImplemented:
@@ -165,12 +171,15 @@ class StructuredDataID:
     def id(self) -> str:
         return self.__id
 
+    @override
     def __repr__(self) -> str:
         return self.id
 
+    @override
     def __hash__(self) -> int:
         return hash(self.id)
 
+    @override
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, StructuredDataID):
             return NotImplemented
@@ -202,6 +211,7 @@ class StructuredDataValue:
             raise ValueError("Structured data values must not contain linebreaks.")
         self.__value = value
 
+    @override
     def __repr__(self) -> str:
         value_escaped = self.__value
         for char_to_escape in (
@@ -216,6 +226,7 @@ class StructuredDataValue:
 class StructuredDataParameters(dict[StructuredDataName, StructuredDataValue]):
     """Represents SD-PARAMs of one SD-ELEMENT from https://tools.ietf.org/html/rfc5424"""
 
+    @override
     def __repr__(self) -> str:
         return " ".join(f'{repr(name)}="{repr(value)}"' for name, value in self.items())
 
@@ -223,6 +234,7 @@ class StructuredDataParameters(dict[StructuredDataName, StructuredDataValue]):
 class StructuredData(dict[StructuredDataID, StructuredDataParameters]):
     """Represents STRUCTURED-DATA from https://tools.ietf.org/html/rfc5424"""
 
+    @override
     def __repr__(self) -> str:
         if not self:
             return _NILVALUE
@@ -337,6 +349,7 @@ class SyslogMessage:
             }
         )
 
+    @override
     def __repr__(self) -> str:
         return (
             f"<{self._priority}>1 "

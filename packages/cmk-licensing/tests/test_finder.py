@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from importlib.metadata import EntryPoint, EntryPoints, PackagePath, PathDistribution
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -22,14 +21,17 @@ class _FakeDistribution(PathDistribution):
             f.dist = self
 
     @property
+    @override
     def entry_points(self) -> EntryPoints:
         return self._entry_points
 
     @property
+    @override
     def files(self) -> list[PackagePath] | None:
         return self._files
 
     @property
+    @override
     def name(self) -> str:
         return "cmk-fake-package"
 

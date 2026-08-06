@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """
@@ -26,7 +25,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from io import TextIOWrapper
 from pathlib import Path
-from typing import assert_never, cast, Final
+from typing import assert_never, cast, Final, override
 
 import cmk.ccc.version as cmk_version
 from cmk.backup.gui.formspec_adapter import FormspecAdapter
@@ -405,9 +404,11 @@ class Job(MKBackupJob):
     def is_encrypted(self) -> bool:
         return self.config["encrypt"] is not None
 
+    @override
     def state_file_path(self) -> Path:
         return omd_root / "var/check_mk/backup" / ("%s.state" % self.ident)
 
+    @override
     def _start_command(self) -> Sequence[str | Path]:
         return [mkbackup_path(), "backup", "--background", self.ident]
 
@@ -457,6 +458,7 @@ class Job(MKBackupJob):
 
 
 class ModeBackup(WatoMode[object]):
+    @override
     def title(self) -> str:
         return _("Site backup")
 
@@ -464,6 +466,7 @@ class ModeBackup(WatoMode[object]):
         super().__init__(edition)
         self.key_store = key_store
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -523,6 +526,7 @@ class ModeBackup(WatoMode[object]):
             is_suggested=True,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if (ident := request.var("_job")) is None:
             raise MKUserError("_job", _("Missing job ID."))
@@ -569,6 +573,7 @@ class ModeBackup(WatoMode[object]):
         job.stop()
         flash(_("The backup has been stopped."))
 
+    @override
     def page(self, config: Config) -> None:
         show_key_download_warning(self.key_store.load())
         backup_jobs = sorted(BackupConfig.load().jobs.values(), key=lambda j: j.ident)
@@ -773,9 +778,11 @@ class ModeEditBackupJob(WatoMode[object]):
             self._job_cfg = {}
             self._title = _("Add backup job")
 
+    @override
     def title(self) -> str:
         return self._title
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Job"), breadcrumb, form_name="edit_job", button_name="_save"
@@ -1017,6 +1024,7 @@ class ModeEditBackupJob(WatoMode[object]):
             )
         ]
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1046,6 +1054,7 @@ class ModeEditBackupJob(WatoMode[object]):
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
+    @override
     def page(self, config: Config) -> None:
         backup_config = BackupConfig.load()
         flat_catalog = create_flat_catalog_from_dictionary(self._fs_backup_job(backup_config))
@@ -1135,6 +1144,7 @@ class ModeBackupJobState(WatoMode[object]):
         super().__init__(edition)
         self._from_vars()
 
+    @override
     def _from_vars(self) -> None:
         if (job_ident := request.var("job")) is None:
             raise MKUserError("job", _("You need to specify a backup job."))
@@ -1149,9 +1159,11 @@ class ModeBackupJobState(WatoMode[object]):
     def job(self) -> MKBackupJob:
         return self._job
 
+    @override
     def title(self) -> str:
         return _("Job state: %(title)s") % {"title": self._job.title}
 
+    @override
     def page(self, config: Config) -> None:
         job_page(self.job, self._ident)
 
@@ -1250,6 +1262,7 @@ class ABCBackupTargetType(abc.ABC):
 
 
 class TargetTypeRegistry(Registry[type[ABCBackupTargetType]]):
+    @override
     def plugin_name(self, instance: type[ABCBackupTargetType]) -> str:
         return instance.ident()
 
@@ -1263,30 +1276,37 @@ class BackupTargetLocal(ABCBackupTargetType):
         self._local_target = LocalTarget(TargetId(""), params)
 
     @property
+    @override
     def parameters(self) -> LocalTargetParams:
         return self._params
 
     @property
+    @override
     def target(self) -> LocalTarget:
         return self._local_target
 
     @staticmethod
+    @override
     def ident() -> str:
         return "local"
 
     @staticmethod
+    @override
     def title() -> str:
         return _("Local path")
 
     @classmethod
+    @override
     def dictionary_elements(cls) -> Mapping[str, DictElement]:
         return _local_directory_configuration_elements(77)
 
+    @override
     def validate(self) -> None:
         _validate_local_target(
             self.target,
         )
 
+    @override
     def remove_backup(self, backup_ident: str) -> None:
         _check_if_target_ready(self.target)
         shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
@@ -1306,14 +1326,17 @@ class ABCBackupTargetRemote[TRemoteParams: Mapping[str, object], TRemoteStorage:
         self._target = self._instantiate_target(params)
 
     @property
+    @override
     def parameters(self) -> RemoteTargetParams:
         return self._params
 
     @property
+    @override
     def target(self) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
         return self._target
 
     @classmethod
+    @override
     def dictionary_elements(cls) -> Mapping[str, DictElement]:
         return {
             "remote": DictElement(
@@ -1337,6 +1360,7 @@ class ABCBackupTargetRemote[TRemoteParams: Mapping[str, object], TRemoteStorage:
             ),
         }
 
+    @override
     def remove_backup(self, backup_ident: str) -> None:
         backup_info = self.backups().get(backup_ident)
         for remote_key in (
@@ -1350,6 +1374,7 @@ class ABCBackupTargetRemote[TRemoteParams: Mapping[str, object], TRemoteStorage:
                     f"Removal of {remote_key} in remote storage failed. Original error: {e}"
                 )
 
+    @override
     def validate(self) -> None:
         _validate_remote_target(self.target)
 
@@ -1366,18 +1391,22 @@ class ABCBackupTargetRemote[TRemoteParams: Mapping[str, object], TRemoteStorage:
 
 class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
     @staticmethod
+    @override
     def ident() -> str:
         return "aws_s3_bucket"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("AWS S3 bucket")
 
     @staticmethod
+    @override
     def _instantiate_target(params: RemoteTargetParams[S3Params]) -> S3Target:
         return S3Target(TargetId(""), params)
 
     @classmethod
+    @override
     def _remote_dictionary_elements(cls) -> Mapping[str, DictElement]:
         return {
             "access_key": DictElement(
@@ -1435,20 +1464,24 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
 
 class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, BlobStorage]):
     @staticmethod
+    @override
     def ident() -> str:
         return "azure_blob_storage"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Azure Blob Storage")
 
     @staticmethod
+    @override
     def _instantiate_target(
         params: RemoteTargetParams[BlobStorageParams],
     ) -> BlobStorageTarget:
         return BlobStorageTarget(TargetId(""), params)
 
     @classmethod
+    @override
     def _remote_dictionary_elements(cls) -> Mapping[str, DictElement]:
         return {
             "storage_account_name": DictElement(
@@ -1784,9 +1817,11 @@ def _show_target_list(
 
 
 class ModeBackupTargets(WatoMode[object]):
+    @override
     def title(self) -> str:
         return _("Site backup targets")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -1817,6 +1852,7 @@ class ModeBackupTargets(WatoMode[object]):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
@@ -1847,6 +1883,7 @@ class ModeBackupTargets(WatoMode[object]):
                 % {"jobs": ", ".join(job.title for job in jobs)},
             )
 
+    @override
     def page(self, config: Config) -> None:
         _show_site_and_system_targets(BackupConfig.load(), table_row_limit=config.table_row_limit)
 
@@ -1874,9 +1911,11 @@ class ModeEditBackupTarget(WatoMode[object]):
             self._target_cfg = None
             self._title = _("Add backup target")
 
+    @override
     def title(self) -> str:
         return self._title
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Target"), breadcrumb, form_name="edit_target", button_name="_save"
@@ -1953,6 +1992,7 @@ class ModeEditBackupTarget(WatoMode[object]):
         if TargetId(value) in backup_config.site_targets:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1983,6 +2023,7 @@ class ModeEditBackupTarget(WatoMode[object]):
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
+    @override
     def page(self, config: Config) -> None:
         flat_catalog = create_flat_catalog_from_dictionary(
             self.fs_backup_target(BackupConfig.load())
@@ -2029,13 +2070,16 @@ class ModeBackupKeyManagement(key_mgmt.ModeKeyManagement):
     upload_mode = "backup_upload_key"
     download_mode = "backup_download_key"
 
+    @override
     def title(self) -> str:
         return _("Keys for backups")
 
+    @override
     def page(self, config: Config) -> None:
         show_key_download_warning(self.key_store.load())
         super().page(config)
 
+    @override
     def _key_in_use(self, key: Key) -> bool:
         key_digest = key.fingerprint(HashAlgorithm.MD5)
         return any(
@@ -2043,18 +2087,22 @@ class ModeBackupKeyManagement(key_mgmt.ModeKeyManagement):
             for job in BackupConfig.load().jobs.values()
         )
 
+    @override
     def _table_title(self) -> str:
         return self.title()
 
+    @override
     def _delete_confirm_msg(self) -> str:
         return _(
             "<b>Beware:</b> Deleting this key means that you will not be able to encrypt or sign backups with the key. Already created backups which have been encrypted, cannot be decrypted without access to this key. So please be sure that you either have a backup or don't need this key anymore."
         )
 
+    @override
     def _delete_confirm_title(self, nr: int) -> str:
         return _("Delete backup key #%(nr)d") % {"nr": nr}
 
     @property
+    @override
     def component_name(self) -> CertManagementEvent.ComponentType:
         return "backup encryption keys"
 
@@ -2062,9 +2110,11 @@ class ModeBackupKeyManagement(key_mgmt.ModeKeyManagement):
 class ModeBackupEditKey(key_mgmt.ModeEditKey):
     back_mode = "backup_keys"
 
+    @override
     def title(self) -> str:
         return _("Create backup key")
 
+    @override
     def _passphrase_help(self) -> str:
         return _(
             "The backup key will be stored encrypted using this passphrase on your "
@@ -2075,6 +2125,7 @@ class ModeBackupEditKey(key_mgmt.ModeEditKey):
         )
 
     @property
+    @override
     def component_name(self) -> CertManagementEvent.ComponentType:
         return "backup encryption keys"
 
@@ -2082,9 +2133,11 @@ class ModeBackupEditKey(key_mgmt.ModeEditKey):
 class ModeBackupUploadKey(key_mgmt.ModeUploadKey):
     back_mode = "backup_keys"
 
+    @override
     def title(self) -> str:
         return _("Upload backup key")
 
+    @override
     def _passphrase_help(self) -> str:
         return _(
             "The backup key will be stored encrypted using this passphrase on your "
@@ -2095,6 +2148,7 @@ class ModeBackupUploadKey(key_mgmt.ModeUploadKey):
         )
 
     @property
+    @override
     def component_name(self) -> CertManagementEvent.ComponentType:
         return "backup encryption keys"
 
@@ -2102,14 +2156,17 @@ class ModeBackupUploadKey(key_mgmt.ModeUploadKey):
 class ModeBackupDownloadKey(key_mgmt.ModeDownloadKey):
     back_mode = "backup_keys"
 
+    @override
     def title(self) -> str:
         return _("Download backup key")
 
+    @override
     def _send_download(self, keys: KeypairMap, key_id: KeyId) -> None:
         super()._send_download(keys, key_id)
         keys[key_id].not_downloaded = False
         self.key_store.save(keys)
 
+    @override
     def _file_name(self, key_id: KeyId, key: Key) -> str:
         return f"Check_MK-{hostname()}-{omd_site()}-backup_key-{key_id}.pem"
 
@@ -2157,12 +2214,14 @@ class RestoreJob(MKBackupJob):
     def title(self) -> str:
         return _("Restore")
 
+    @override
     def state_file_path(self) -> Path:
         return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])  # nosec B108 # BNS:13b2c8
 
     def complete(self) -> None:
         self.cleanup()
 
+    @override
     def _start_command(self) -> Sequence[str | Path]:
         assert self._target_ident is not None
         assert self._backup_ident is not None
@@ -2174,6 +2233,7 @@ class RestoreJob(MKBackupJob):
             self._backup_ident,
         ]
 
+    @override
     def start(self, **env_updates: str) -> None:
         if self._passphrase:
             env_updates["MKBACKUP_PASSPHRASE"] = self._passphrase.raw
@@ -2207,11 +2267,13 @@ class ModeBackupRestore(WatoMode[object]):
     def _get_target(self, target_ident: TargetId) -> Target:
         return BackupConfig.load().all_targets[target_ident]
 
+    @override
     def title(self) -> str:
         if not self._target:
             return _("Site restore")
         return _("Restore from target: %(title)s") % {"title": self._target.title}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -2266,6 +2328,7 @@ class ModeBackupRestore(WatoMode[object]):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         action = request.var("_action")
         backup_ident = request.var("_backup")
@@ -2431,6 +2494,7 @@ class ModeBackupRestore(WatoMode[object]):
         RestoreJob(self._target_ident, backup_ident).stop()
         flash(_("The restore has been stopped."))
 
+    @override
     def page(self, config: Config) -> None:
         if self._restore_was_started():
             self._show_restore_progress(config)

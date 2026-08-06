@@ -7,7 +7,6 @@
 # all useful information from mypy. :-/ See
 # https://library.netapp.com/ecmdocs/ECMLP3364865/html/index.html#9181-library-updates
 # mypy: disable-error-code="attr-defined"
-# mypy: disable-error-code="explicit-override"
 
 """agent_netapp_ontap
 
@@ -20,7 +19,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from enum import Enum
-from typing import Final
+from typing import Final, override
 
 import urllib3
 from netapp_ontap import resources as NetAppResource
@@ -82,6 +81,7 @@ class FetchedResource(Enum):
     snapvault = "snapvault"
     fc_interfaces = "fc_interfaces"
 
+    @override
     def __str__(self) -> str:
         return self.value
 

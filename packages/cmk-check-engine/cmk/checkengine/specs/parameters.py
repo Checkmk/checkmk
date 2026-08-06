@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
 import pprint
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Reversible, Sequence
-from typing import Any, Final, TypedDict
+from typing import Any, Final, override, TypedDict
 
 import cmk.ccc.debug
 from cmk.utils.timeperiod import TimeperiodName, TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
@@ -39,15 +38,19 @@ class Parameters(Mapping[str, Any]):
     def __init__(self, data: Mapping[str, Any]) -> None:
         self._data = dict(data)
 
+    @override
     def __getitem__(self, key: str) -> object:
         return self._data[key]
 
+    @override
     def __len__(self) -> int:
         return len(self._data)
 
+    @override
     def __iter__(self) -> Iterator[str]:
         return iter(self._data)
 
+    @override
     def __repr__(self) -> str:
         # use pformat to be testable.
         return f"{self.__class__.__name__}({pprint.pformat(self._data)})"
@@ -69,9 +72,11 @@ class TimespecificParameters:
     def __init__(self, entries: Sequence[TimespecificParameterSet] = ()) -> None:
         self.entries: Final = tuple(entries)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, TimespecificParameters) and self.entries == other.entries
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.entries!r})"
 
@@ -117,6 +122,7 @@ class TimespecificParameterSet:
             return cls(default, tp_values)
         return cls(parameters, ())
 
+    @override
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, TimespecificParameterSet)
@@ -124,6 +130,7 @@ class TimespecificParameterSet:
             and self.timeperiod_values == other.timeperiod_values
         )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.default!r}, {self.timeperiod_values!r})"
 

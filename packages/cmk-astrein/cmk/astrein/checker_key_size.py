@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
 from pathlib import PurePosixPath
+from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
 
@@ -81,9 +80,11 @@ _RULES: tuple[_KeySizeRule, ...] = (
 class KeySizeUnitTestChecker(ASTVisitorChecker):
     """Detects crypto function calls in unit tests without small key size (1024)."""
 
+    @override
     def checker_id(self) -> str:
         return "key-size-unit-test"
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if not self._is_unit_test_file():
             return

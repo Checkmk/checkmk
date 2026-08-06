@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 __version__ = "3.0.0b1"
@@ -21,7 +19,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, Self
+from typing import Final, Literal, NamedTuple, override, Self
 
 from cmk.ccc.site import get_omd_config
 from cmk.ccc.version_info import VersionInfo
@@ -133,6 +131,7 @@ class ReleaseType(enum.IntEnum):
     p = 3
     daily = 4
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self.name}"
 
@@ -143,6 +142,7 @@ class BuildDate:
     month: int
     day: int
 
+    @override
     def __str__(self) -> str:
         return f"{self.year:04}.{self.month:02}.{self.day:02}"
 
@@ -168,6 +168,7 @@ class _ReleaseCandidate:
 class _ReleaseMeta:
     value: str | None
 
+    @override
     def __str__(self) -> str:
         return f"{self.value}"
 
@@ -198,6 +199,7 @@ class _BaseVersion:
     minor: int
     sub: int
 
+    @override
     def __str__(self) -> str:
         return f"{self.major}.{self.minor}.{self.sub}"
 
@@ -336,9 +338,11 @@ class Version:
     def version_rc_aware(self) -> str:
         return str(self)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.base!r}, {self.release!r}, {self.release_candidate!r}, {self.meta!r})"
 
+    @override
     def __str__(self) -> str:
         optional_rc_suffix = (
             "" if self.release_candidate.value is None else f"-rc{self.release_candidate.value}"
@@ -364,6 +368,7 @@ class Version:
 
         return self.release_candidate < other.release_candidate
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
@@ -501,6 +506,7 @@ class VersionsIncompatible:
     def __init__(self, reason: str) -> None:
         self._reason = reason
 
+    @override
     def __str__(self) -> str:
         return self._reason
 

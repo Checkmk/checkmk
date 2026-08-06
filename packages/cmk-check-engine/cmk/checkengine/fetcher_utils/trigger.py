@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import abc
 from collections.abc import Mapping, Sized
 from functools import partial
 from pathlib import Path
-from typing import Final, final, Protocol, Self, TypeVar
+from typing import Final, final, override, Protocol, Self, TypeVar
 
 import cmk.ccc.resulttype as result
 from cmk.ccc import debug
@@ -100,16 +99,19 @@ class FetcherTriggerFactory(Protocol):
 class PlainFetcherTrigger(FetcherTrigger):
     """A simple trigger that fetches data without any additional logic."""
 
+    @override
     def _trigger(
         self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: FetcherSecrets
     ) -> result.Result[_TRawData, Exception]:
         with secrets.provide_file(), fetcher:
             return fetcher.fetch(mode)
 
+    @override
     def serialized_params(self) -> Mapping[str, str]:
         return {"omd_root": str(self.omd_root)}
 
     @classmethod
+    @override
     def from_params(cls, params: Mapping[str, str], _ctx: DeserializationContext) -> Self:
         """Create a PlainFetcherTrigger from serialized parameters."""
         return cls(omd_root=Path(params["omd_root"]))

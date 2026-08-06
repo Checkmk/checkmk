@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -37,7 +36,7 @@ from collections.abc import Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from multiprocessing import Lock
-from typing import Any, Final, Literal, Required, TypedDict
+from typing import Any, Final, Literal, override, Required, TypedDict
 
 import requests
 from pydantic import BaseModel, RootModel
@@ -254,6 +253,7 @@ class AzureSubscription(_AzureEntity):
             "subscription_name": name,
         }
 
+    @override
     def _unique_name(self) -> str:
         return self._compute_unique_name((self.id,), "subscription")
 
@@ -277,12 +277,14 @@ class AzureTenant(_AzureEntity):
         }
 
     @property
+    @override
     def piggytarget(self) -> str:
         raise NotImplementedError(
             "The tenant host is the source host in CheckMk, it is not a piggyback host "
             "therefore this method should not be called for the AzureTenant object"
         )
 
+    @override
     def _unique_name(self) -> str:
         raise NotImplementedError(
             "The tenant host is the source host in CheckMk, it is not a piggyback host "
@@ -315,6 +317,7 @@ class AzureResourceGroup(_AzureEntity):
         }
         self.subscription = subscription
 
+    @override
     def _unique_name(self) -> str:
         return self._compute_unique_name(
             # adding type because a resource-group can have the same name of a subscription
@@ -552,6 +555,7 @@ class GroupConfig:
             return
         raise ValueError("unknown config key: %s" % key)
 
+    @override
     def __str__(self) -> str:
         if self.fetchall:
             return "[%s]\n  <fetchall>" % self.name
@@ -592,6 +596,7 @@ class ExplicitConfig:
             return True
         return resource.info["name"] in group_config.resources
 
+    @override
     def __str__(self) -> str:
         if self.fetchall:
             return "[<fetchall>]"
@@ -609,6 +614,7 @@ class TagBasedConfig:
             return False
         return all(resource.tags.get(key) == val for key, val in self._values)
 
+    @override
     def __str__(self) -> str:
         lines = []
         if self._required:
@@ -629,6 +635,7 @@ class Selector:
             resource
         ) and self._tag_based_config.is_configured(resource)
 
+    @override
     def __str__(self) -> str:
         lines = [
             "Explicit configuration:\n  %s" % str(self._explicit_config).replace("\n", "\n  "),
@@ -681,6 +688,7 @@ class _Section:
             sys.stdout.write("<<<<>>>>\n")
             sys.stdout.flush()
 
+    @override
     def __repr__(self) -> str:
         return (
             f"Section(\n"
@@ -691,6 +699,7 @@ class _Section:
             f")"
         )
 
+    @override
     def __eq__(self, value):
         if not isinstance(value, _Section):
             return False
@@ -719,6 +728,7 @@ class _AzureBaseLabelsSection(AzureSection):
         super().add(json.dumps(labels))  # first line: labels
         super().add(json.dumps(tags))  # second line: tags
 
+    @override
     def add(self, info: str | Sequence[object] | Sequence[Sequence[object]]) -> None:
         raise NotImplementedError("Use constructor to add labels and tags")
 
@@ -745,6 +755,7 @@ class AzureTenantLabelsSection(_AzureBaseLabelsSection):
         super().__init__("labels", separator=0)
         self._initialize_data(self._apply_default_label(labels), tags)
 
+    @override
     def _apply_default_label(self, labels: Mapping[str, str]) -> Mapping[str, str]:
         return super()._apply_default_label({"entity": "tenant", **labels})
 
@@ -918,6 +929,7 @@ class AzureResource(_AzureEntity):
         if region := self.info.get("location"):
             self.labels["region"] = region
 
+    @override
     def _unique_name(self) -> str:
         resource_type = self.info.get("type", "")
         fetched = FetchedResource.from_type(resource_type)
@@ -936,6 +948,7 @@ class AzureResource(_AzureEntity):
             fetched.abbreviation,
         )
 
+    @override
     def dumpinfo(self) -> Sequence[tuple]:
         # TODO: Hmmm, should the variable-length tuples actually be lists?
         lines: list[tuple[str | int, ...]] = [("Resource",), (json.dumps(self.info),)]
@@ -1537,17 +1550,21 @@ class AzureAsyncCache(DataCache):
     # and the queries are also done per region and resource type
     _open_cache_semaphore = asyncio.Semaphore(10)
 
+    @override
     async def get_cached_data(self):
         async with AzureAsyncCache._open_cache_semaphore:
             return super().get_cached_data()
 
+    @override
     async def _write_to_cache(self, data):
         async with AzureAsyncCache._open_cache_semaphore:
             super()._write_to_cache(data)
 
+    @override
     def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
+    @override
     async def get_data(self, *args, **kwargs):
         use_cache = kwargs.pop("use_cache", True)
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
@@ -1599,6 +1616,7 @@ class UsageDetailsCache(AzureAsyncCache):
         )
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 60 * 60 * 4
 
@@ -1657,6 +1675,7 @@ class UsageDetailsCache(AzureAsyncCache):
         common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
         return _process_query_id(columns, rows, common_metadata)
 
+    @override
     async def get_live_data(self, *args: Any) -> Any:
         async with UsageDetailsCache._cost_query_lock:
             while True:
@@ -1716,6 +1735,7 @@ class CacheMetricsGroupDefinition:
 
 
 class MetricCache(AzureAsyncCache):
+    @override
     def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
@@ -1775,6 +1795,7 @@ class MetricCache(AzureAsyncCache):
         return f"{subscription[:6]}_{subdir}"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return self.timedelta.seconds
 
@@ -1823,6 +1844,7 @@ class MetricCache(AzureAsyncCache):
                 return await _query_metrics(params)
             return []
 
+    @override
     async def get_live_data(self, *args: Any) -> Any:
         mgmt_client: BaseAsyncApiClient = args[0]
         region: str = args[1]

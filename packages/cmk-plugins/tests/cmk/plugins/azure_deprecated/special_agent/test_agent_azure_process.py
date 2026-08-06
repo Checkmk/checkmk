@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, override
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -61,22 +60,27 @@ class MockMgmtApiClient(MgmtApiClient):
             "mock_subscription",
         )
 
+    @override
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups
 
+    @override
     def vmview(self, group: str, name: str) -> Mapping[str, Sequence[Mapping[str, str]]]:
         return self.vmviews[group][name]
 
     @property
+    @override
     def ratelimit(self) -> float:
         return self.rate_limit
 
+    @override
     def usagedetails(self) -> Sequence[object]:
         if self.usage_details_exception is not None:
             raise self.usage_details_exception
 
         return self.usage_data
 
+    @override
     def resource_health_view(self) -> object:
         if self.resource_health_exception is not None:
             raise self.resource_health_exception

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -33,7 +32,7 @@ import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, override
 
 import msal
 import requests
@@ -905,6 +904,7 @@ class GroupConfig:
             return
         raise ValueError("unknown config key: %s" % key)
 
+    @override
     def __str__(self) -> str:
         if self.fetchall:
             return "[%s]\n  <fetchall>" % self.name
@@ -945,6 +945,7 @@ class ExplicitConfig:
             return True
         return resource.info["name"] in group_config.resources
 
+    @override
     def __str__(self) -> str:
         if self.fetchall:
             return "[<fetchall>]"
@@ -962,6 +963,7 @@ class TagBasedConfig:
             return False
         return all(resource.tags.get(key) == val for key, val in self._values)
 
+    @override
     def __str__(self) -> str:
         lines = []
         if self._required:
@@ -982,6 +984,7 @@ class Selector:
             resource
         ) and self._tag_based_config.is_configured(resource)
 
+    @override
     def __str__(self) -> str:
         lines = [
             "Explicit configuration:\n  %s" % str(self._explicit_config).replace("\n", "\n  "),
@@ -1494,12 +1497,15 @@ class MetricCache(DataCache):
         return "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
 
     @property
+    @override
     def cache_interval(self) -> int:
         return self.timedelta.seconds
 
+    @override
     def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
+    @override
     def get_live_data(self, *args: Any) -> Any:
         mgmt_client: MgmtApiClient = args[0]
         region: str = args[1]

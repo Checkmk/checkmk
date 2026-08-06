@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
 import subprocess
 from collections.abc import Iterable
-from typing import assert_never, Literal
+from typing import assert_never, Literal, override
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
@@ -47,9 +45,11 @@ def _sanitize_tuple(tuple_: object) -> str:
 
 class ClassicSNMPBackend(SNMPBackend):
     @staticmethod
+    @override
     def get_type() -> SNMPBackendEnum:
         return SNMPBackendEnum.CLASSIC
 
+    @override
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
@@ -119,14 +119,15 @@ class ClassicSNMPBackend(SNMPBackend):
 
         return strip_snmp_value(value)
 
+    @override
     def walk(
         self,
         /,
         oid: str,
         *,
         context: SNMPContext,
-        section_name: object = None,  # noqa: ARG002
-        table_base_oid: object = None,  # noqa: ARG002
+        section_name: object = None,
+        table_base_oid: object = None,
     ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 

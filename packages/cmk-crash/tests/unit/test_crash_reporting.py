@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import base64
 import copy
@@ -12,7 +11,7 @@ import json
 from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, override, TypedDict
 
 import pytest
 
@@ -135,6 +134,7 @@ def test_format_var_for_export_broken_repr() -> None:
     """
 
     class BrokenRepr:
+        @override
         def __repr__(self) -> str:
             raise RuntimeError("repr is broken")
 
@@ -149,6 +149,7 @@ class UnitTestDetails(TypedDict):
 
 class UnitTestCrashReport(ABCCrashReport[UnitTestDetails]):
     @classmethod
+    @override
     def type(cls) -> str:
         return "test"
 

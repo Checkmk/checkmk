@@ -51,6 +51,14 @@ try:
 except ImportError:
     HAS_DOCKERLIB = False
 
+# override decorator is only available in Python 3.12+
+try:
+    from typing import override
+except ImportError:
+
+    def override(func):
+        return func
+
 
 DEBUG = "--debug" in sys.argv[1:]
 
@@ -263,7 +271,8 @@ class MKDockerClient(docker.DockerClient):
 
         self._df_caller = ParallelDfCall(call=super().df)
 
-    def df(self):  # type: ignore[explicit-override]
+    @override
+    def df(self):
         return self._df_caller()
 
     def device_map(self):

@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, override
 
 import cmk.checkengine.fetchers.snmp._scan as snmp_scan
 from cmk.ccc.exceptions import OnError
@@ -43,13 +41,16 @@ class SNMPTestBackend(SNMPBackend):
         super().__init__(SNMP_CONFIG)
 
     @staticmethod
+    @override
     def get_type() -> SNMPBackendEnum:
         return SNMPBackendEnum.CLASSIC
 
+    @override
     def get(self, /, *_a: object, **_kw: object) -> None:
         # See also: `snmp_mode.get_single_oid()`
         return None
 
+    @override
     def walk(self, /, *_a: object, **_kw: object) -> NoReturn:
         raise NotImplementedError("walk")
 

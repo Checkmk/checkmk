@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import hashlib
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 
 class Secret(NamedTuple):
@@ -45,9 +43,11 @@ class Secret(NamedTuple):
     def _hash(self) -> str:
         return hashlib.sha256(self.revealed.encode("utf-8")).hexdigest()
 
+    @override
     def __str__(self) -> str:
         return self._hash()
 
+    @override
     def __repr__(self) -> str:
         """*UNSTABLE* Masks the actual value of the secret
 

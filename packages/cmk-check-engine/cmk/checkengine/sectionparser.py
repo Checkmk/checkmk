@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -13,7 +12,7 @@ import time
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, NamedTuple, Self
+from typing import Any, Final, NamedTuple, override, Self
 
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
@@ -79,6 +78,7 @@ class SectionsParser[TSeq: Sequence]:
         self._host_name = host_name
         self.error_handling: Final = error_handling
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}(host_sections={self._host_sections!r}, host_name={self._host_name!r})"
 
@@ -139,6 +139,7 @@ class ParsedSectionsResolver:
         self._producers = ParsedSectionsResolver._init_producers(section_plugins)
         self._memoized_results: dict[ParsedSectionName, ResolvedResult | None] = {}
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(section_plugins={self.section_plugins})"
 

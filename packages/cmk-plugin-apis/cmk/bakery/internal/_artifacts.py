@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -234,6 +233,7 @@ class PluginContainer(BaseFileContainer):
 
         self._apply_generic_rules(agconf)
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -245,6 +245,7 @@ class PluginContainer(BaseFileContainer):
             f"retry_count={self._retry_count!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -264,6 +265,7 @@ class PluginContainer(BaseFileContainer):
         if self.content.target.match(interval_config["pattern"]):
             self._interval = interval_config["interval"]
 
+    @override
     def apply_config(self, yml_store: YamlStore) -> None:
         if any((self._asynchronous, self._interval, self._timeout, self._retry_count)):
             execution = yml_store.make_sub_list("plugins", "execution")
@@ -280,6 +282,7 @@ class PluginContainer(BaseFileContainer):
     def relative_source_path(self) -> Path | None:
         return None if self.content.source is None else ("plugins" / self.content.source)
 
+    @override
     def _specific_target_location(self, target_location: Path) -> Path:
         if self.base_os is OS.WINDOWS:
             return target_location
@@ -312,9 +315,11 @@ class SystemBinaryContainer(BaseFileContainer):
     def __init__(self, content: ABCBakeryFile, plugin_module: str | None, **_kw: Any) -> None:
         super().__init__(content=content, plugin_module=plugin_module, logical_path=LogicalPath.BIN)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -328,9 +333,11 @@ class PluginConfigContainer(BaseFileContainer):
             content=content, plugin_module=plugin_module, logical_path=LogicalPath.CONFIG
         )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -342,9 +349,11 @@ class SystemConfigContainer(BaseFileContainer):
     def __init__(self, content: ABCBakeryFile, plugin_module: str | None) -> None:
         super().__init__(content=content, plugin_module=plugin_module, logical_path=LogicalPath.ETC)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -361,9 +370,11 @@ class LibFileContainer(BaseFileContainer):
             preserve_executable=True,
         )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -380,9 +391,11 @@ class AgentInternalFileContainer(BaseFileContainer):
             preserve_executable=True,
         )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -396,9 +409,11 @@ class RootFileContainer(BaseFileContainer):
             content=content, plugin_module=plugin_module, logical_path=LogicalPath.ROOT
         )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -415,9 +430,11 @@ class HomeFileContainer(BaseFileContainer):
             preserve_executable=True,
         )
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(content={self.content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -453,6 +470,7 @@ class CustomFileContainer(BaseFileContainer):
         )
         self._package = package
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -462,6 +480,7 @@ class CustomFileContainer(BaseFileContainer):
             f"logical_path={self.logical_path!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -490,9 +509,11 @@ class ScriptletHandle:
         self.step: Final = step
         self.depends_on: Final = set(depends_on) if depends_on else None
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(step={self.step!r}, lines={self.lines!r}, depends_on={self.depends_on!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -519,12 +540,15 @@ class YamlEntry(ABCYamlConfig):
         super().__init__(path)
         self._content = content
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={self._path!r}, content={self._content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
+    @override
     def process(self, yml_store: YamlStore) -> None:
         yml_store.set_content(self._path, self._content)
 
@@ -534,12 +558,15 @@ class YamlItems(ABCYamlConfig):
         super().__init__(path)
         self._content = list(content)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={self._path!r}, content={self._content!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
+    @override
     def process(self, yml_store: YamlStore) -> None:
         yml_store.insert_content(self._path, self._content)
 
@@ -553,6 +580,7 @@ class YamlPluginSettings:
         self._name = name
         self._value = value
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -562,6 +590,7 @@ class YamlPluginSettings:
             f"value={self._value!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
@@ -690,6 +719,7 @@ class FileFromSite(ABCBakeryFile):
         self.source: Path = source
         self._line_mapping = line_mapping or {}
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -699,12 +729,15 @@ class FileFromSite(ABCBakeryFile):
             f"line_mapping={self._line_mapping!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
+    @override
     def add_to_line_mapping(self, mapping: Mapping[str, str]) -> None:
         self._line_mapping.update(mapping)
 
+    @override
     def _specific_place(self, source_path: Path | None, target_path: Path) -> None:
         assert isinstance(source_path, Path)
         if self._line_mapping:
@@ -744,6 +777,7 @@ class GeneratedTextFile(ABCBakeryFile):
         self._lines = lines
         self._include_header = include_header
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -753,9 +787,11 @@ class GeneratedTextFile(ABCBakeryFile):
             f"include_header={self._include_header!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
+    @override
     def _specific_place(self, _source_path: object, target_path: Path) -> None:
         newline = "\r\n" if self.base_os is OS.WINDOWS else "\n"
 
@@ -770,6 +806,7 @@ class GeneratedBinaryFile(ABCBakeryFile):
         super().__init__(base_os=base_os, target=target)
         self._content = content
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("
@@ -778,8 +815,10 @@ class GeneratedBinaryFile(ABCBakeryFile):
             f"target={self.target!r})"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
 
+    @override
     def _specific_place(self, _source_path: object, target_path: Path) -> None:
         target_path.write_bytes(self._content)

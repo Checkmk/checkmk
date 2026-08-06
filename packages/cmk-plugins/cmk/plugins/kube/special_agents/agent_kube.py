@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """agent_kube
 
 Checkmk special agent for monitoring Kubernetes clusters.
@@ -26,6 +24,7 @@ from contextlib import nullcontext
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
+from typing import override
 
 import requests
 import urllib3
@@ -774,6 +773,7 @@ class CollectorHandlingException(Exception):
         self.detail = detail
         super().__init__()
 
+    @override
     def __str__(self) -> str:
         return f"{self.title}: {self.detail}" if self.detail else self.title
 

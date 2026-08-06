@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
 import itertools
 import sys
 from collections.abc import Callable, Iterator, Mapping
 from logging import DEBUG, Logger
-from typing import Any, Final
+from typing import Any, Final, override
 
 __all__ = [
     "ABCResourceObserver",
@@ -154,9 +152,11 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
     ) -> None:
         super().__init__(logger, allowed_growth, get_vm_size, config_cache_dump_sizes)
 
+    @override
     def _context(self) -> str:
         return f'[cycle {self._num_check_cycles}, command "{self._hint}"]'
 
+    @override
     def check_resources(self, hint: str | None, verbose: bool = True) -> None:
         self._register_check(hint)
 

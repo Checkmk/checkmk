@@ -2,11 +2,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Custom exception hierarchy for cmk-dev-deploy."""
 
 from __future__ import annotations
+
+from typing import override
 
 
 class DeployError(Exception):
@@ -17,6 +17,7 @@ class DeployError(Exception):
         self.message: str = message
         self.recovery: str | None = recovery
 
+    @override
     def __str__(self) -> str:
         if self.recovery:
             return f"{self.message}\n\n{self.recovery}"

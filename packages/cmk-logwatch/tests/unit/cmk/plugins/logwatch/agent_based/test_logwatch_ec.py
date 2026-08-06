@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -11,6 +10,7 @@
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -314,9 +314,11 @@ class _FakeForwarder(MessageForwarder):
         pass
 
     @property
+    @override
     def debug(self) -> bool:
         return False
 
+    @override
     def __call__(
         self,
         method: str | tuple,
@@ -730,9 +732,11 @@ class _RaisingForwarder(MessageForwarder):
         pass
 
     @property
+    @override
     def debug(self) -> bool:
         return False
 
+    @override
     def __call__(
         self,
         method: str | tuple,

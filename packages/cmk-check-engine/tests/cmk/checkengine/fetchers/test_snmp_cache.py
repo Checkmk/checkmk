@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterable, MutableMapping
 from pathlib import Path
+from typing import override
 
 from cmk.checkengine.fetchers.snmp._cache import WalkCache
 from cmk.checkengine.snmplib import SNMPRowInfo
@@ -17,12 +16,15 @@ class MockWalkCache(WalkCache):
         super().__init__(path)
         self.mock_stored_on_fs = mockdata
 
+    @override
     def _read_row(self, path: Path) -> SNMPRowInfo:
         return self.mock_stored_on_fs[str(path.name)]
 
+    @override
     def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:
         self.mock_stored_on_fs[str(path.name)] = rowinfo
 
+    @override
     def _iterfiles(self) -> Iterable[Path]:
         return (Path(k) for k in self.mock_stored_on_fs)
 

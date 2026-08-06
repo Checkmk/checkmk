@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: ARG002
 # ruff: noqa: ARG005
 
 
@@ -18,6 +16,7 @@ import itertools
 import time
 from collections.abc import Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -758,18 +757,23 @@ class ParserStateAdapter(ParserState):
             encoding_fallback="utf-8",
         )
 
+    @override
     def do_action(self, line: bytes) -> ParserState:
         raise AssertionError("unexpected data line")
 
+    @override
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
         raise AssertionError("unexpected piggyback header")
 
+    @override
     def on_piggyback_footer(self) -> ParserState:
         raise AssertionError("unexpected piggyback footer")
 
+    @override
     def on_section_header(self, section_header: SectionMarker) -> ParserState:
         raise AssertionError("unexpected section header")
 
+    @override
     def on_section_footer(self) -> ParserState:
         raise AssertionError("unexpected section footer")
 
@@ -786,6 +790,7 @@ class TestSectionMarker:
         parsed: SectionMarker | None = None
 
         class ExpectSectionHeader(ParserStateAdapter):
+            @override
             def on_section_header(self, section_header: SectionMarker) -> ParserState:
                 nonlocal parsed
                 parsed = section_header
@@ -872,6 +877,7 @@ class TestSectionMarker:
     )
     def test_options_from_headerline(self, line: bytes, expected: SectionMarker | None) -> None:
         class ExpectSectionHeader(ParserStateAdapter):
+            @override
             def on_section_header(self, section_header: SectionMarker) -> ParserState:
                 assert section_header == expected
                 return self
@@ -930,9 +936,11 @@ class MockStore(SectionStore):
         super().__init__(path)
         self._sections = sections
 
+    @override
     def store(self, sections):
         self._sections = copy.copy(sections)
 
+    @override
     def load(self):
         return copy.copy(self._sections)
 
@@ -1127,6 +1135,7 @@ class TestMarkers:
     @pytest.mark.parametrize("line", [b"<<<x>>>", b"<<<x:cached(10, 5)>>>"])
     def test_section_header(self, line: bytes) -> None:
         class ExpectSectionHeader(ParserStateAdapter):
+            @override
             def on_section_header(self, section_header: SectionMarker) -> ParserState:
                 return self
 
@@ -1135,6 +1144,7 @@ class TestMarkers:
     @pytest.mark.parametrize("line", [b"<<<>>>", b"<<<:cached(10, 5)>>>"])
     def test_section_footer(self, line: bytes) -> None:
         class ExpectSectionFooter(ParserStateAdapter):
+            @override
             def on_section_footer(self) -> ParserState:
                 return self
 
@@ -1142,6 +1152,7 @@ class TestMarkers:
 
     def test_piggybacked_host_header(self) -> None:
         class ExpectPiggybackHeader(ParserStateAdapter):
+            @override
             def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
                 return self
 
@@ -1149,6 +1160,7 @@ class TestMarkers:
 
     def test_piggybacked_host_translation_results_in_None(self) -> None:
         class ExpectPiggybackHeader(ParserStateAdapter):
+            @override
             def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
                 assert piggyback_header.hostname is None
                 return self
@@ -1164,6 +1176,7 @@ class TestMarkers:
 
     def test_piggybacked_host_footer(self) -> None:
         class ExpectPiggybackFooter(ParserStateAdapter):
+            @override
             def on_piggyback_footer(self) -> ParserState:
                 return self
 

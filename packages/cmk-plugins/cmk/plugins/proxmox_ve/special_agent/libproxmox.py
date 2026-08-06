@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from json import JSONDecodeError
-from typing import Any
+from typing import Any, override
 
 import requests
 
@@ -55,6 +54,7 @@ class _ProxmoxVeSession:
             self.pve_auth_cookie = response["ticket"]
             self.csrf_prevention_token = response["CSRFPreventionToken"]
 
+        @override
         def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
             r.headers["CSRFPreventionToken"] = self.csrf_prevention_token
             return r

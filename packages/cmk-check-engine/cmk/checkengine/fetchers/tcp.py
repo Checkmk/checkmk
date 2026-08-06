@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import errno
 import logging
 import os
@@ -13,7 +11,7 @@ import ssl
 from collections.abc import Buffer, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Self, TypedDict
+from typing import Final, override, Self, TypedDict
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -139,6 +137,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
         self.tls_config: Final = tls_config
         self._socket: socket.socket | None = None
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
@@ -155,6 +154,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
             + ")"
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TCPFetcher):
             return False
@@ -168,6 +168,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
             and self.tls_config == other.tls_config
         )
 
+    @override
     def serialized_params(self) -> TCPFetcherParams:
         return {
             "family": self.family.value,
@@ -185,6 +186,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
         }
 
     @classmethod
+    @override
     def from_params(cls, params: TCPFetcherParams, _ctx: DeserializationContext) -> Self:
         address = params["address"]
         tls_config = params["tls_config"]
@@ -205,6 +207,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
             ),
         )
 
+    @override
     def open(self) -> None:
         ip_addr, _port = self.address
         if ip_addr in ("0.0.0.0", "::"):  # nosec B104 # BNS:d61a82
@@ -232,6 +235,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
             self.close()
             raise FetcherError("Communication failed: %s" % e)
 
+    @override
     def close(self) -> None:
         if self._socket is None:
             return
@@ -242,6 +246,7 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
         self._socket.close()
         self._socket = None
 
+    @override
     def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
         sock = self._socket
         if sock is None:

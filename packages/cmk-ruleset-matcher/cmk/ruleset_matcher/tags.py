@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 
 """Helper functions for dealing with Check_MK tags"""
@@ -14,7 +13,7 @@ from __future__ import annotations
 import contextlib
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from typing import Final, NamedTuple, NewType, NotRequired, Self, TypedDict
+from typing import Final, NamedTuple, NewType, NotRequired, override, Self, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -849,6 +848,7 @@ class BuiltinTagConfig(TagConfig):
             },
         ]
 
+    @override
     def insert_tag_group(self, tag_group: TagGroup) -> None:
         self._insert_tag_group(tag_group)
 

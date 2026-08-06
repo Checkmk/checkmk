@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """EC History sqlite backend."""
 
 import itertools
@@ -20,7 +18,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from shutil import disk_usage
-from typing import Final, Literal
+from typing import Final, Literal, override
 
 from .config import Config
 from .event import Event
@@ -279,11 +277,13 @@ class SQLiteHistory(History):
             for index_statement in SQLITE_INDEXES:
                 connection.execute(index_statement)
 
+    @override
     def flush(self) -> None:
         """Delete all entries the history table."""
         with self.conn as connection:
             connection.execute("DELETE FROM history;")
 
+    @override
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         """Add a single entry to the history table.
 
@@ -306,6 +306,7 @@ class SQLiteHistory(History):
                 ),
             )
 
+    @override
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         """Retrieve entries from the history table.
 
@@ -320,6 +321,7 @@ class SQLiteHistory(History):
             cur.execute(sqlite_query, sqlite_arguments)
             return cur.fetchall()
 
+    @override
     def housekeeping(self) -> None:
         """Remove old entries from the history table, performin a VACUUM to shrink the database file
         if needed"""
@@ -383,6 +385,7 @@ class SQLiteHistory(History):
         self.conn.execute("VACUUM;")
         self._logger.info("VACUUM on %(database)s done", {"database": self._settings.database})
 
+    @override
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.
 

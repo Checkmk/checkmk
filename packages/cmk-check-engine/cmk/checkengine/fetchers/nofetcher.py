@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import enum
-from typing import Final, NoReturn, Self, TypedDict
+from typing import Final, NoReturn, override, Self, TypedDict
 
 from cmk.checkengine.fetcher_abc import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.helper_interface import AgentRawData
@@ -36,23 +34,29 @@ class NoFetcher(Fetcher[AgentRawData, NoFetcherParams]):
         super().__init__()
         self.canned: Final = canned
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, NoFetcher):
             return False
         return self.canned == other.canned
 
+    @override
     def serialized_params(self) -> NoFetcherParams:
         return {"canned": self.canned.name}
 
     @classmethod
+    @override
     def from_params(cls, params: NoFetcherParams, _ctx: DeserializationContext) -> Self:
         return cls(NoFetcherError[params["canned"]])
 
+    @override
     def open(self) -> None:
         pass
 
+    @override
     def close(self) -> None:
         pass
 
+    @override
     def _fetch_from_io(self, _mode: Mode) -> NoReturn:
         raise FetcherError(self.canned.value)

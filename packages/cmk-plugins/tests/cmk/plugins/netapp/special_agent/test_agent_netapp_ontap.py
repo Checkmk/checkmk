@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 # netapp_ontap switched to a lazy loading scheme via apipkg which hides all useful
 # information from mypy. :-/ See
 # https://library.netapp.com/ecmdocs/ECMLP3364865/html/index.html#9181-library-updates
@@ -13,6 +11,7 @@
 import argparse
 import logging
 from collections.abc import Iterator
+from typing import override
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -38,6 +37,7 @@ class _AuthError(NetAppRestError):
         Exception.__init__(self, "401 Unauthorized")
 
     @property
+    @override
     def status_code(self) -> int:
         return 401
 
@@ -49,6 +49,7 @@ class _ServerError(NetAppRestError):
         Exception.__init__(self, "503 Service Unavailable")
 
     @property
+    @override
     def status_code(self) -> int:
         return 503
 

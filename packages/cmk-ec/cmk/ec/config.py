@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Collection, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from re import Pattern
-from typing import Any, Literal, NewType, TypedDict
+from typing import Any, Literal, NewType, override, TypedDict
 
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.translations import TranslationOptions
@@ -223,32 +222,39 @@ class MkpRulePackProxy(MutableMapping[str, Any]):
         self.id_ = rule_pack_id
         self.rule_pack: ECRulePackSpec | None = None
 
+    @override
     def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]  # type: ignore[literal-required] # TODO: Nuke this!
 
+    @override
     def __setitem__(self, key: str, value: Any) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         self.rule_pack[key] = value  # type: ignore[literal-required] # TODO: Nuke this!
 
+    @override
     def __delitem__(self, key: str) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         del self.rule_pack[key]  # type: ignore[misc] # TODO: Nuke this!
 
+    @override
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}("{self.id_}")'
 
     # __iter__ and __len__ are only defined as a workaround for a buggy entry
     # in the typeshed
+    @override
     def __iter__(self) -> Iterator[str]:
         yield from self.keys()
 
+    @override
     def __len__(self) -> int:
         return len(self.keys())
 
+    @override
     def keys(self) -> KeysView[str]:
         """List of keys of this rule pack."""
         if self.rule_pack is None:

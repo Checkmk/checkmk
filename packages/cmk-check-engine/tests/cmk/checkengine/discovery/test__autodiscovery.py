@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # ruff: noqa: ARG002
-# mypy: disable-error-code="explicit-override"
 
 import datetime
 import logging
 import time
 from collections.abc import Mapping
 from io import StringIO
+from typing import override
 from zoneinfo import ZoneInfo
 
 import time_machine
@@ -94,9 +94,11 @@ class _AutochecksConfigDummy:
 class _AutochecksConfigIgnoreAll(_AutochecksConfigDummy):
     """AutochecksConfig where every service and plugin matches a disabled rule."""
 
+    @override
     def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
         return True
 
+    @override
     def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
         return True
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ import socket
 import time
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
-from typing import Any, cast, NamedTuple, NoReturn, Self
+from typing import Any, cast, NamedTuple, NoReturn, override, Self
 
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unused-ignore]
@@ -250,16 +249,20 @@ class StubFileCache[TRawData: Sized](FileCache[TRawData]):
         self.cache: TRawData | None = None
 
     @staticmethod
+    @override
     def _from_cache_file(_raw_data: bytes) -> TRawData:
         assert 0, "unreachable"
 
     @staticmethod
+    @override
     def _to_cache_file(_raw_data: TRawData) -> bytes:
         assert 0, "unreachable"
 
+    @override
     def write(self, raw_data: TRawData, _mode: Mode) -> None:
         self.cache = raw_data
 
+    @override
     def read(self, _mode: Mode) -> TRawData | None:
         return self.cache
 
@@ -271,6 +274,7 @@ class CannedFetcherTrigger(PlainFetcherTrigger):
         super().__init__(omd_root)
         self._canned = canned
 
+    @override
     def _trigger(
         self, _fetcher: Fetcher[Any], _mode: Mode, _secrets: Any
     ) -> result.Result[Any, Exception]:
@@ -351,6 +355,7 @@ class TestIPMISensor:
 
 
 class IPMIFetcherStub(IPMIFetcher):
+    @override
     def open(self) -> None:
         raise IpmiException  # type: ignore[no-untyped-call,unused-ignore]
 
@@ -856,6 +861,7 @@ class TestSNMPFetcherConfiguredCaching:
 
 
 class SNMPFetcherStub(SNMPFetcher):
+    @override
     def _fetch_from_io(self, _mode: Mode) -> SNMPRawData:
         return {SNMPSectionMarker("section"): [[b"fetched"]]}
 
@@ -1020,19 +1026,24 @@ class TestFetcherCaching:
     @pytest.fixture
     def fetcher(self) -> Fetcher[AgentRawData]:
         class _Fetcher(Fetcher[AgentRawData]):
+            @override
             def open(self) -> None:
                 pass
 
+            @override
             def close(self) -> None:
                 pass
 
+            @override
             def _fetch_from_io(self, *_args: object, **_kw: object) -> AgentRawData:
                 return AgentRawData(b"fetched_section")
 
+            @override
             def serialized_params(self) -> Mapping[str, Any]:
                 raise NotImplementedError
 
             @classmethod
+            @override
             def from_params(cls, _params: Mapping[str, Any], _ctx: object) -> Self:
                 raise NotImplementedError
 
@@ -1075,19 +1086,24 @@ class TestFetcherTimeout:
     type T = tuple[None]
 
     class TimeoutFetcher(Fetcher[T]):
+        @override
         def open(self) -> None:
             pass
 
+        @override
         def close(self) -> None:
             pass
 
+        @override
         def _fetch_from_io(self, *_args: object, **_kw: object) -> NoReturn:
             raise MKTimeout
 
+        @override
         def serialized_params(self) -> Mapping[str, Any]:
             raise NotImplementedError
 
         @classmethod
+        @override
         def from_params(cls, _params: Mapping[str, Any], _ctx: object) -> Self:
             raise NotImplementedError
 

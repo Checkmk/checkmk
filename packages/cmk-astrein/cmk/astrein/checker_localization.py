@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Checker for localization function calls."""
 
 from __future__ import annotations
 
 import ast
 import re
+from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
 from cmk.astrein.placeholders import has_positional_placeholder
@@ -59,9 +58,11 @@ class LocalizationChecker(ASTVisitorChecker):
         f"</?({_ALLOWED_TAGS}|a|(a.*? href=.*?))>"  # unfortunately, we have to allow links at the moment
     )
 
+    @override
     def checker_id(self) -> str:
         return "localization-checker"
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         """Check localization function calls."""
         # Check if this is a simple function call (not a method or complex expression)
@@ -127,9 +128,11 @@ class LocalizationNamedPlaceholderChecker(ASTVisitorChecker):
 
     _TRANSLATION_FUNCTIONS = _TRANSLATION_FUNCTIONS
 
+    @override
     def checker_id(self) -> str:
         return "localization-named-placeholder"
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if isinstance(node.func, ast.Name) and node.func.id in self._TRANSLATION_FUNCTIONS:
             for arg in node.args:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ import hmac
 import zlib
 from collections.abc import Buffer, Callable, Iterator
 from enum import Enum
-from typing import assert_never, Final, Self
+from typing import assert_never, Final, override, Self
 
 from cmk.checkengine.fetcher_abc import FetcherError
 from cmk.checkengine.helper_interface import Deserializer, Serializer
@@ -86,6 +85,7 @@ class AgentCtlMessage(Deserializer):
         self.payload: Final = payload
 
     @classmethod
+    @override
     def from_bytes(cls, data: Buffer) -> AgentCtlMessage:
         version = Version.from_bytes(data)
         message = memoryview(data)[version.length() :]
@@ -94,9 +94,11 @@ class AgentCtlMessage(Deserializer):
         # unreachable
         raise NotImplementedError
 
+    @override
     def __hash__(self) -> int:
         return hash((hash(self.version), hash(self.payload)))
 
+    @override
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, AgentCtlMessage):
             return self.version == __o.version and self.payload == __o.payload
@@ -107,10 +109,12 @@ class HeaderV1(Serializer, Deserializer):
     def __init__(self, compression_type: CompressionType) -> None:
         self.compression_type: Final = compression_type
 
+    @override
     def __iter__(self) -> Iterator[Buffer]:
         yield bytes(self.compression_type)
 
     @classmethod
+    @override
     def from_bytes(cls, data: Buffer) -> HeaderV1:
         return cls(CompressionType.from_bytes(data))
 
@@ -121,15 +125,18 @@ class MessageV1(Deserializer):
         self.payload: Final = payload
 
     @classmethod
+    @override
     def from_bytes(cls, data: Buffer) -> MessageV1:
         return cls(
             header := HeaderV1.from_bytes(data),
             _decompress(header.compression_type, memoryview(data)[len(header) :]),
         )
 
+    @override
     def __hash__(self) -> int:
         return hash((hash(self.header), hash(self.payload)))
 
+    @override
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, MessageV1):
             return self.header == __o.header and self.payload == __o.payload

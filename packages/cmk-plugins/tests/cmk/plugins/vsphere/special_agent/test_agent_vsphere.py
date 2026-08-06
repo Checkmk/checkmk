@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import argparse
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import override
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -96,6 +95,7 @@ class FakeConnection(ESXConnection):
     def __init__(self) -> None:
         pass
 
+    @override
     def query_server(self, method: str, **kwargs: str) -> str:
         return (
             # this is thinned out data

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
@@ -12,7 +11,7 @@
 import asyncio
 import logging
 from collections.abc import Callable, Mapping, MutableMapping
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, override
 
 import aiohttp
 import msal
@@ -329,6 +328,7 @@ class SharedSessionApiClient(BaseAsyncApiClient):
         if SharedSessionApiClient._shared_session_lock is None:
             SharedSessionApiClient._shared_session_lock = asyncio.Lock()
 
+    @override
     async def __aenter__(self):
         if SharedSessionApiClient._shared_session_lock is None:
             raise RuntimeError(
@@ -350,6 +350,7 @@ class SharedSessionApiClient(BaseAsyncApiClient):
 
         return self
 
+    @override
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if SharedSessionApiClient._shared_session_lock is None:
             raise RuntimeError(

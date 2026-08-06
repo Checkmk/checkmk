@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from enum import Enum, StrEnum, unique
-from typing import Final
+from typing import Final, override
 
 from cmk.bakery.v1 import OS
 
@@ -36,6 +34,7 @@ class ScriptType(StrEnum):
     PLUGIN = "plugin"
     LOCAL = "local"
 
+    @override
     def __str__(self) -> str:
         return str(self.value)
 

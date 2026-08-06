@@ -6,7 +6,6 @@
 # mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -37,7 +36,16 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TYPE_CHECKING, TypedDict
+from typing import (
+    Any,
+    assert_never,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    override,
+    TYPE_CHECKING,
+    TypedDict,
+)
 
 import boto3
 import botocore
@@ -703,11 +711,13 @@ class ResultDistributorS3Limits(ResultDistributor):
         super().__init__()
         self._received_results: dict[str, tuple[AWSSection, AWSComputedContent]] = {}
 
+    @override
     def add(self, sender_name: str, colleague: "AWSSection") -> None:
         super().add(sender_name, colleague)
         for sender, content in self._received_results.values():
             colleague.receive(sender, content)
 
+    @override
     def distribute(self, sender: "AWSSection", result: "AWSComputedContent") -> None:
         self._received_results.setdefault(sender.name, (sender, result))
         super().distribute(sender, result)
@@ -784,6 +794,7 @@ class AWSSection(DataCache):
 
     @property
     @abc.abstractmethod
+    @override
     def cache_interval(self) -> int:
         """
         In general the default resolution of AWS metrics is 5 min (300 sec)
@@ -881,6 +892,7 @@ class AWSSection(DataCache):
             final_results.append(result)
         return AWSSectionResults(final_results, computed_content.cache_timestamp)
 
+    @override
     def get_validity_from_args(self, *args: AWSColleagueContents) -> bool:
         (colleague_contents,) = args
         my_cache_timestamp = self.cache_timestamp
@@ -903,6 +915,7 @@ class AWSSection(DataCache):
         """
 
     @abc.abstractmethod
+    @override
     def get_live_data(self, *args):
         """
         Call API methods, eg. 'response = ec2_client.describe_instances()' and
@@ -1012,6 +1025,7 @@ class AWSSectionLimits(AWSSection):
             )
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, limits)
@@ -1029,6 +1043,7 @@ class AWSSectionLimits(AWSSection):
 
 
 class AWSSectionLabels(AWSSection):
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         assert isinstance(computed_content.content, dict), (
             "%s: Computed result of Labels section must be of type 'dict'" % self.name
@@ -1040,11 +1055,13 @@ class AWSSectionLabels(AWSSection):
             for piggyback_hostname, rows in computed_content.content.items()
         ]
 
+    @override
     def _validate_result_content(self, content: list | dict) -> None:
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
 class AWSSectionCloudwatch(AWSSection):
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
         end_time = NOW.timestamp()
@@ -1123,10 +1140,12 @@ class AWSSectionCloudwatch(AWSSection):
 
 class CostsAndUsage(AWSSection):
     @property
+    @override
     def name(self) -> str:
         return "costs_and_usage"
 
     @property
+    @override
     def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
@@ -1140,12 +1159,15 @@ class CostsAndUsage(AWSSection):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         granularity_name, granularity_interval = "DAILY", self.granularity
         fmt = "%Y-%m-%d"
@@ -1163,21 +1185,25 @@ class CostsAndUsage(AWSSection):
         )
         return self._get_response_content(response, "ResultsByTime")
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
 
 class ReservationUtilization(AWSSection):
     @property
+    @override
     def name(self) -> str:
         return "reservation_utilization"
 
     @property
+    @override
     def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
@@ -1191,12 +1217,15 @@ class ReservationUtilization(AWSSection):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400  # one day
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """Query the AWS GetReservationUtilization API.
 
@@ -1223,11 +1252,13 @@ class ReservationUtilization(AWSSection):
             return []
         return self._get_response_content(response, "UtilizationsByTime")
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -1245,20 +1276,25 @@ class ReservationUtilization(AWSSection):
 
 class EC2Limits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "ec2_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         quota_list = list(self._iter_service_quotas("ec2")) + list(self._iter_service_quotas("vpc"))
         quota_dicts = [q.model_dump() for q in quota_list]
@@ -1295,6 +1331,7 @@ class EC2Limits(AWSSectionLimits):
             quota_dicts,
         )
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -1593,23 +1630,28 @@ class EC2Summary(AWSSection):
         self._tags = self._config.service_config["ec2_tags"]
 
     @property
+    @override
     def name(self) -> str:
         return "ec2_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]] | None:
         (colleague_contents,) = args
         if self._tags is None and self._names is not None:
@@ -1677,6 +1719,7 @@ class EC2Summary(AWSSection):
             for inst in res["Instances"]
         ]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -1695,33 +1738,40 @@ class EC2Summary(AWSSection):
                 formatted_instances[inst_id] = inst
         return formatted_instances
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class EC2Labels(AWSSectionLabels):
     @property
+    @override
     def name(self) -> str:
         return "ec2_labels"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]] | None:
         (colleague_contents,) = args
         return colleague_contents.content
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -1748,23 +1798,28 @@ class EC2SecurityGroups(AWSSection):
         self._tags = self._config.service_config["ec2_tags"]
 
     @property
+    @override
     def name(self) -> str:
         return "ec2_security_groups"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def get_live_data(self, *args):
         sec_groups = self._describe_security_groups()
         return {group["GroupId"]: group for group in sec_groups}
@@ -1786,6 +1841,7 @@ class EC2SecurityGroups(AWSSection):
         response = self._client.describe_security_groups()
         return self._get_response_content(response, "SecurityGroups")
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -1798,6 +1854,7 @@ class EC2SecurityGroups(AWSSection):
                 content_by_piggyback_hosts.setdefault(instance_name, []).append(security_group)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -1807,14 +1864,17 @@ class EC2SecurityGroups(AWSSection):
 
 class EC2(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "ec2"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
@@ -1822,12 +1882,14 @@ class EC2(AWSSectionCloudwatch):
     def host_labels(self) -> Mapping[str, str]:
         return {"cmk/aws/ec2": "instance"}
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
         for idx, (instance_name, instance) in enumerate(colleague_contents.content.items()):
@@ -1868,6 +1930,7 @@ class EC2(AWSSectionCloudwatch):
                 )
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -1876,6 +1939,7 @@ class EC2(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows, self.host_labels)
@@ -1899,20 +1963,25 @@ class EC2(AWSSectionCloudwatch):
 
 class EBSLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "ebs_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         response = self._client.describe_volumes()
         volumes = self._get_response_content(response, "Volumes")
@@ -1921,6 +1990,7 @@ class EBSLimits(AWSSectionLimits):
         snapshots = self._get_response_content(response, "Snapshots")
         return volumes, snapshots
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2069,17 +2139,21 @@ class EBSSummary(AWSSection):
         self._tags = self._config.service_config["ebs_tags"]
 
     @property
+    @override
     def name(self) -> str:
         return "ebs_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ebs_limits")
         volumes = []
@@ -2096,6 +2170,7 @@ class EBSSummary(AWSSection):
 
         return AWSColleagueContents((volumes, instances), max_cache_timestamp)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Mapping[str, Mapping[str, object]]:
         (colleague_contents,) = args
         col_volumes, _col_instances = colleague_contents.content
@@ -2140,6 +2215,7 @@ class EBSSummary(AWSSection):
         response = self._client.describe_volumes()
         return self._get_response_content(response, "Volumes")
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2166,6 +2242,7 @@ class EBSSummary(AWSSection):
                 content_by_piggyback_hosts[instance_name].append(vol)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -2175,17 +2252,21 @@ class EBSSummary(AWSSection):
 
 class EBS(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "ebs"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ebs_summary")
         if colleague and colleague.content:
@@ -2199,6 +2280,7 @@ class EBS(AWSSectionCloudwatch):
             )
         return AWSColleagueContents([], 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         muv: list[tuple[str, str, list[str]]] = [
             ("VolumeReadOps", "Count", []),
@@ -2243,6 +2325,7 @@ class EBS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2251,6 +2334,7 @@ class EBS(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -2306,10 +2390,12 @@ class S3BucketHelper:
 
 class S3Limits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "s3_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
@@ -2324,12 +2410,15 @@ class S3Limits(AWSSectionLimits):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Buckets:
         """
         There's no API method for getting account limits thus we have to
@@ -2337,6 +2426,7 @@ class S3Limits(AWSSectionLimits):
         """
         return S3BucketHelper.list_buckets(self._client)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2359,10 +2449,12 @@ class S3Summary(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["s3_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "s3_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
@@ -2376,15 +2468,18 @@ class S3Summary(AWSSection):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("s3_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
         found_buckets = []
@@ -2434,6 +2529,7 @@ class S3Summary(AWSSection):
             return True
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2441,16 +2537,19 @@ class S3Summary(AWSSection):
             {bucket["Name"]: bucket for bucket in raw_content.content}, raw_content.cache_timestamp
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class S3(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "s3"
 
     @property
+    @override
     def cache_interval(self) -> int:
         # BucketSizeBytes and NumberOfObjects are available per day
         # and must include 00:00h
@@ -2466,15 +2565,18 @@ class S3(AWSSectionCloudwatch):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("s3_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
         for idx, bucket_name in enumerate(colleague_contents.content):
@@ -2520,6 +2622,7 @@ class S3(AWSSectionCloudwatch):
                     )
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2529,29 +2632,35 @@ class S3(AWSSectionCloudwatch):
                 row.update(bucket)
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
 
 class S3Requests(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "s3_requests"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("s3_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
         for idx, bucket_name in enumerate(colleague_contents.content):
@@ -2596,6 +2705,7 @@ class S3Requests(AWSSectionCloudwatch):
                 )
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2605,6 +2715,7 @@ class S3Requests(AWSSectionCloudwatch):
                 row.update(bucket)
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -2622,10 +2733,12 @@ class S3Requests(AWSSectionCloudwatch):
 
 class GlacierLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "glacier_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
@@ -2639,12 +2752,15 @@ class GlacierLimits(AWSSectionLimits):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """
         There's no API method for getting account limits thus we have to
@@ -2653,6 +2769,7 @@ class GlacierLimits(AWSSectionLimits):
         response = self._client.list_vaults()
         return self._get_response_content(response, "VaultList")
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2681,10 +2798,12 @@ class Glacier(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["glacier_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "glacier"
 
     @property
+    @override
     def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
@@ -2698,15 +2817,18 @@ class Glacier(AWSSection):
         return cache_interval
 
     @property
+    @override
     def granularity(self) -> int:
         return 86400
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("glacier_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
         """
         1. get all vaults from AWS Glacier.
@@ -2768,11 +2890,13 @@ class Glacier(AWSSection):
 
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -2790,21 +2914,26 @@ class Glacier(AWSSection):
 
 class ELBLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "elb_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         # If you change this, you might have to adjust the defaults for 'levels_spillover' in checks/aws_elb
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """
         The AWS/ELB API method 'describe_account_limits' provides limit values
@@ -2821,6 +2950,7 @@ class ELBLimits(AWSSectionLimits):
         limits = self._get_response_content(response, "Limits")
         return load_balancers, limits
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2888,23 +3018,28 @@ class ELBSummaryGeneric(AWSSection):
         )
 
     @property
+    @override
     def name(self) -> str:
         return "%s_summary" % self._resource
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("%s_limits" % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
         found_load_balancers = []
@@ -2957,6 +3092,7 @@ class ELBSummaryGeneric(AWSSection):
             return True
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -2970,6 +3106,7 @@ class ELBSummaryGeneric(AWSSection):
             content_by_piggyback_hosts.setdefault(dns_name, load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", list(computed_content.content.values()))]
 
@@ -2987,27 +3124,33 @@ class ELBLabelsGeneric(AWSSectionLabels):
         super().__init__(client, region, config, distributor=distributor)
 
     @property
+    @override
     def name(self) -> str:
         return "%s_generic_labels" % self._resource
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("%s_summary" % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> object:
         (colleague_contents,) = args
         return colleague_contents.content
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3021,23 +3164,28 @@ class ELBLabelsGeneric(AWSSectionLabels):
 
 class ELBHealth(AWSSection):
     @property
+    @override
     def name(self) -> str:
         return "elb_health"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Mapping[str, Sequence[str]]:
         (colleague_contents,) = args
         load_balancers: dict[str, list[str]] = {}
@@ -3049,11 +3197,13 @@ class ELBHealth(AWSSection):
                 load_balancers.setdefault(load_balancer_dns_name, states)
         return load_balancers
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, content)
@@ -3063,14 +3213,17 @@ class ELBHealth(AWSSection):
 
 class ELB(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "elb"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
@@ -3078,12 +3231,14 @@ class ELB(AWSSectionCloudwatch):
     def host_labels(self) -> Mapping[str, str]:
         return {"cmk/aws/service": "elb"}
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
@@ -3127,6 +3282,7 @@ class ELB(AWSSectionCloudwatch):
                 )
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3135,6 +3291,7 @@ class ELB(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows, self.host_labels)
@@ -3155,20 +3312,25 @@ class ELB(AWSSectionCloudwatch):
 
 class ELBv2Limits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "elbv2_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """
         The AWS/ELBv2 API method 'describe_account_limits' provides limit values
@@ -3206,6 +3368,7 @@ class ELBv2Limits(AWSSectionLimits):
         limits = self._get_response_content(response, "Limits")
         return load_balancers, limits
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3315,23 +3478,28 @@ class ELBv2Limits(AWSSectionLimits):
 
 class ELBv2TargetGroups(AWSSection):
     @property
+    @override
     def name(self) -> str:
         return "elbv2_target_groups"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> LoadBalancers:
         (colleague_contents,) = args
         load_balancers: LoadBalancers = {}
@@ -3362,11 +3530,13 @@ class ELBv2TargetGroups(AWSSection):
             )
         return load_balancers
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, content)
@@ -3393,23 +3563,28 @@ class ELBv2TargetGroups(AWSSection):
 
 class ELBv2Application(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "elbv2_application"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
@@ -3460,6 +3635,7 @@ class ELBv2Application(AWSSectionCloudwatch):
                 )
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3468,6 +3644,7 @@ class ELBv2Application(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -3491,13 +3668,16 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         self._separator = " "
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
@@ -3563,6 +3743,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
 
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3573,6 +3754,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(load_bal_dns, []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -3582,9 +3764,11 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
 
 class ELBv2ApplicationTargetGroupsHTTP(ELBv2ApplicationTargetGroupsResponses):
     @property
+    @override
     def name(self) -> str:
         return "elbv2_application_target_groups_http"
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         return self._get_metrics_with_specs(
             colleague_contents,
@@ -3601,9 +3785,11 @@ class ELBv2ApplicationTargetGroupsHTTP(ELBv2ApplicationTargetGroupsResponses):
 
 class ELBv2ApplicationTargetGroupsLambda(ELBv2ApplicationTargetGroupsResponses):
     @property
+    @override
     def name(self) -> str:
         return "elbv2_application_target_groups_lambda"
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         return self._get_metrics_with_specs(
             colleague_contents, ["lambda"], ["RequestCount", "LambdaUserError"]
@@ -3623,23 +3809,28 @@ class ELBv2ApplicationTargetGroupsLambda(ELBv2ApplicationTargetGroupsResponses):
 
 class ELBv2Network(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "elbv2_network"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
@@ -3689,6 +3880,7 @@ class ELBv2Network(AWSSectionCloudwatch):
                 )
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3697,6 +3889,7 @@ class ELBv2Network(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -3738,20 +3931,25 @@ AWSRDSLimitNameMap: Mapping[str, tuple[str, str]] = {
 
 class RDSLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "rds_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """
         AWS/RDS API method 'describe_account_attributes' already sends
@@ -3760,6 +3958,7 @@ class RDSLimits(AWSSectionLimits):
         response = self._client.describe_account_attributes()
         return self._get_response_content(response, "AccountQuotas")
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3797,20 +3996,25 @@ class RDSSummary(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["rds_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "rds_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         db_instances = []
 
@@ -3857,6 +4061,7 @@ class RDSSummary(AWSSection):
             return True
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3865,6 +4070,7 @@ class RDSSummary(AWSSection):
             raw_content.cache_timestamp,
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", list(computed_content.content.values()))]
 
@@ -3881,23 +4087,28 @@ class RDS(AWSSectionCloudwatch):
         self._separator = " "
 
     @property
+    @override
     def name(self) -> str:
         return "rds"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("rds_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         # the documentation
         # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MonitoringOverview.html
@@ -3955,6 +4166,7 @@ class RDS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -3963,6 +4175,7 @@ class RDS(AWSSectionCloudwatch):
             row.update(colleague_contents.content.get(instance_id, {}))
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -3997,20 +4210,25 @@ class CloudFrontSummary(AWSSection):
         )
 
     @property
+    @override
     def name(self) -> str:
         return "cloudfront_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         distributions = []
 
@@ -4041,11 +4259,13 @@ class CloudFrontSummary(AWSSection):
 
         return distributions
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -4063,23 +4283,28 @@ class CloudFront(AWSSectionCloudwatch):
         self.assign_to_origin_domain_host = host_assignment == "domain_host"
 
     @property
+    @override
     def name(self) -> str:
         return "cloudfront_cloudwatch"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("cloudfront_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics = []
         for idx, instance in enumerate(colleague_contents.content):
@@ -4134,6 +4359,7 @@ class CloudFront(AWSSectionCloudwatch):
             host_by_distribution[distribution_id] = distribution_origin
         return host_by_distribution
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4149,6 +4375,7 @@ class CloudFront(AWSSectionCloudwatch):
             content_by_host[piggyback_host].append(distribution_data)
         return AWSComputedContent(content_by_host, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_host, content)
@@ -4169,23 +4396,29 @@ class CloudFront(AWSSectionCloudwatch):
 
 class CloudwatchAlarmsLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "cloudwatch_alarms_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         return list(_describe_alarms(self._client, self._get_response_content))
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4213,23 +4446,28 @@ class CloudwatchAlarms(AWSSection):
         self._names = self._config.service_config["cloudwatch_alarms"]
 
     @property
+    @override
     def name(self) -> str:
         return "cloudwatch_alarms"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("cloudwatch_alarms_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
         if self._names:
@@ -4244,6 +4482,7 @@ class CloudwatchAlarms(AWSSection):
             )
         return list(_describe_alarms(self._client, self._get_response_content))
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4252,6 +4491,7 @@ class CloudwatchAlarms(AWSSection):
         dflt_alarms = [{"AlarmName": "Check_MK/CloudWatch Alarms", "StateValue": "NO_ALARMS"}]
         return AWSComputedContent(dflt_alarms, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -4269,14 +4509,17 @@ class CloudwatchAlarms(AWSSection):
 
 class DynamoDB(AWSSection):
     @property
+    @override
     def name(self) -> str:
         return "dynamodb"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
@@ -4284,16 +4527,19 @@ class DynamoDB(AWSSection):
     def host_labels(self) -> Mapping[str, str]:
         return {"cmk/aws/service": "dynamodb"}
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]] | None:
         (colleague_contents,) = args
         return colleague_contents.content
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("dynamodb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4303,6 +4549,7 @@ class DynamoDB(AWSSection):
 
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows, self.host_labels)
@@ -4323,27 +4570,33 @@ class DynamoDBLabelsGeneric(AWSSectionLabels):
         super().__init__(client, region, config, distributor=distributor)
 
     @property
+    @override
     def name(self) -> str:
         return "%s_generic_labels" % self._resource
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("%s_summary" % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> object:
         (colleague_contents,) = args
         return colleague_contents.content
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4357,20 +4610,25 @@ class DynamoDBLabelsGeneric(AWSSectionLabels):
 
 class DynamoDBLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "dynamodb_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """
         The AWS/DynamoDB API method 'describe_limits' provides limits only, but no usage data. We
@@ -4410,6 +4668,7 @@ class DynamoDBLimits(AWSSectionLimits):
             ),
         )
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4477,23 +4736,28 @@ class DynamoDBSummary(AWSSection):
         )
 
     @property
+    @override
     def name(self) -> str:
         return "dynamodb_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("dynamodb_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
         (colleague_contents,) = args
 
@@ -4541,6 +4805,7 @@ class DynamoDBSummary(AWSSection):
             return True
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4551,29 +4816,35 @@ class DynamoDBSummary(AWSSection):
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class DynamoDBTable(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "dynamodb_table"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("dynamodb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
 
@@ -4621,6 +4892,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4643,6 +4915,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -4676,20 +4949,25 @@ class WAFV2Limits(AWSSectionLimits):
         self._scope = scope
 
     @property
+    @override
     def name(self) -> str:
         return "wafv2_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         """
         We get lists of the following resources, since they have per-region limits:
@@ -4722,6 +5000,7 @@ class WAFV2Limits(AWSSectionLimits):
 
         return resources, web_acls
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4778,23 +5057,28 @@ class WAFV2Summary(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["wafv2_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "wafv2_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("wafv2_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
         (colleague_contents,) = args
         found_web_acls = []
@@ -4838,6 +5122,7 @@ class WAFV2Summary(AWSSection):
             return True
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4848,6 +5133,7 @@ class WAFV2Summary(AWSSection):
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", list(computed_content.content.values()))]
 
@@ -4878,23 +5164,28 @@ class WAFV2WebACL(AWSSectionCloudwatch):
             ]
 
     @property
+    @override
     def name(self) -> str:
         return "wafv2_web_acl"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("wafv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         metrics: Metrics = []
 
@@ -4921,6 +5212,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -4929,6 +5221,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -4950,23 +5243,29 @@ ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
 class LambdaRegionLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "lambda_region_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args):
         return self._client.get_account_settings()
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5017,20 +5316,25 @@ class LambdaSummary(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "lambda_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args):
         functions = []
         for page in self._client.get_paginator("list_functions").paginate():
@@ -5056,6 +5360,7 @@ class LambdaSummary(AWSSection):
             return True
         return any(tag in self._tags for tag in tagging)
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5064,6 +5369,7 @@ class LambdaSummary(AWSSection):
             raw_content.cache_timestamp,
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -5078,17 +5384,21 @@ def _function_arn_to_function_name_dim(function_arn: str) -> str:
 
 class LambdaCloudwatch(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "lambda"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         # lambda_provisioned_concurrency has to be used, because some metrics for provisioned concurrency will only
         # be reported if the ARN for the provisioned concurrency configuration is used.
@@ -5098,6 +5408,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         def _get_function_arns(colleague_content: dict) -> Sequence[str]:
             function_arns = []
@@ -5166,6 +5477,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
             for metric_name, unit, stat in metrics
         ]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5174,23 +5486,28 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
             raw_content.cache_timestamp,
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
 
 class LambdaProvisionedConcurrency(AWSSection):
     @property
+    @override
     def name(self) -> str:
         return "lambda_provisioned_concurrency"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("lambda_summary")
         if colleague and colleague.content:
@@ -5208,6 +5525,7 @@ class LambdaProvisionedConcurrency(AWSSection):
             for config in self._get_response_content(page, "ProvisionedConcurrencyConfigs")
         ]
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> ProvisionedConcurrencyConfigs:
         (colleague_contents,) = args
         return {
@@ -5217,6 +5535,7 @@ class LambdaProvisionedConcurrency(AWSSection):
             for lambda_function in colleague_contents.content
         }
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5225,9 +5544,11 @@ class LambdaProvisionedConcurrency(AWSSection):
             raw_content.cache_timestamp,
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
+    @override
     def _validate_result_content(self, content: list | dict) -> None:
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
@@ -5252,17 +5573,21 @@ class LambdaCloudwatchInsights(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "lambda_cloudwatch_insights"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         # lambda_provisioned_concurrency has to be used, because some metrics for provisioned concurrency will only
         # be reported if the ARN for the provisioned concurrency configuration is used.
@@ -5358,6 +5683,7 @@ class LambdaCloudwatchInsights(AWSSection):
         # anymore so we are filtering it to just have the log groups for the existing functions
         return [e for e in functions_log_groups if e in all_existing_log_groups]
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Mapping[str, LambdaMetricStats] | None:
         (colleague_contents,) = args
 
@@ -5403,6 +5729,7 @@ class LambdaCloudwatchInsights(AWSSection):
                 cloudwatch_data[fn_arn] = fn_stats
         return cloudwatch_data
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5411,9 +5738,11 @@ class LambdaCloudwatchInsights(AWSSection):
             raw_content.cache_timestamp,
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
+    @override
     def _validate_result_content(self, content: list | dict) -> None:
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
@@ -5459,20 +5788,25 @@ class Route53HealthChecks(AWSSection):
         super().__init__(client, region, config, distributor=distributor)
 
     @property
+    @override
     def name(self) -> str:
         return "route53_health_checks"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[HealthCheck]:
         return list(
             itertools.chain.from_iterable(
@@ -5481,6 +5815,7 @@ class Route53HealthChecks(AWSSection):
             )
         )
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5489,6 +5824,7 @@ class Route53HealthChecks(AWSSection):
             raw_content.cache_timestamp,
         )
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -5504,23 +5840,28 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
         super().__init__(client, region, config, distributor=None)
 
     @property
+    @override
     def name(self) -> str:
         return "route53_cloudwatch"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("route53_health_checks")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         health_checks: Sequence[HealthCheck] = colleague_contents.content
         return [
@@ -5554,6 +5895,7 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
             ]
         ]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5562,6 +5904,7 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", rows) for _id, rows in computed_content.content.items()]
 
@@ -5673,20 +6016,25 @@ class SNSLimits(AWSSectionLimits):
         self._sns_topics_fetcher = sns_topics_fetcher
 
     @property
+    @override
     def name(self) -> str:
         return "sns_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping]:
         # We don't want to filter by name and tags for the limits section since the filtered topics
         # are considered in the AWS account limits
@@ -5707,6 +6055,7 @@ class SNSLimits(AWSSectionLimits):
             for topic in topics
         ]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -5749,23 +6098,28 @@ class SNSSummary(AWSSection):
         self._sns_topics_fetcher = sns_topics_fetcher
 
     @property
+    @override
     def name(self) -> str:
         return "sns_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("sns_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
         (colleague_contents,) = args
 
@@ -5796,31 +6150,38 @@ class SNSSummary(AWSSection):
 
         return found_topics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
 
 class SNSSMS(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "sns_sms_cloudwatch"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         # The metrics of this class are grouped by AWS region because AWS doesn't provide SMS-relatd
         # metrics on a per-topic level but only per-region
@@ -5846,11 +6207,13 @@ class SNSSMS(AWSSectionCloudwatch):
         }
         return [sms_success_rate_metric, sms_spending_metric]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -5860,23 +6223,28 @@ class SNS(AWSSectionCloudwatch):
         super().__init__(client, region, config)
 
     @property
+    @override
     def name(self) -> str:
         return "sns_cloudwatch"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("sns_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         # The metrics of this class are grouped by SNS topic
         metrics = []
@@ -5908,11 +6276,13 @@ class SNS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -5967,20 +6337,25 @@ def get_ecs_clusters(ecs_client: BaseClient, cluster_ids: Sequence[str]) -> Iter
 
 class ECSLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "ecs_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> tuple[Sequence[object], Sequence[object]]:
@@ -6000,6 +6375,7 @@ class ECSLimits(AWSSectionLimits):
 
         return AWS_ECS_QUOTA_DEFAULTS[quota_name]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -6068,17 +6444,21 @@ class ECSSummary(AWSSection):
         self._tags = self.prepare_tags_for_api_response(self._config.service_config["ecs_tags"])
 
     @property
+    @override
     def name(self) -> str:
         return "ecs_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ecs_limits")
         if colleague and colleague.content:
@@ -6110,6 +6490,7 @@ class ECSSummary(AWSSection):
                 if self._tags and cluster_tag.model_dump() in self._tags:
                     yield cluster.model_dump()
 
+    @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
         clusters = self._fetch_clusters(colleague_contents.content)
@@ -6119,12 +6500,14 @@ class ECSSummary(AWSSection):
 
         return [c.model_dump() for c in clusters]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         clusters = [Cluster(**c) for c in raw_content.content]
         return AWSComputedContent(clusters, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         clusters = []
         for cluster in computed_content.content:
@@ -6136,17 +6519,21 @@ class ECSSummary(AWSSection):
 
 class ECS(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "ecs"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ecs_summary")
         if colleague and colleague.content:
@@ -6156,6 +6543,7 @@ class ECS(AWSSectionCloudwatch):
             )
         return AWSColleagueContents([], 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         muv: list[tuple[str, str]] = [
             ("CPUUtilization", "Percent"),
@@ -6189,11 +6577,13 @@ class ECS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -6251,20 +6641,25 @@ def get_paginated_resources(
 
 class ElastiCacheLimits(AWSSectionLimits):
     @property
+    @override
     def name(self) -> str:
         return "elasticache_limits"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
+    @override
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> tuple[
@@ -6321,6 +6716,7 @@ class ElastiCacheLimits(AWSSectionLimits):
                 return int(quota.Value)
         return AWS_ELASTICACHE_QUOTA_DEFAULTS[quota_name]
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
@@ -6394,17 +6790,21 @@ class ElastiCacheSummary(AWSSection):
         )
 
     @property
+    @override
     def name(self) -> str:
         return "elasticache_summary"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elasticache_limits")
         if colleague and colleague.content:
@@ -6459,6 +6859,7 @@ class ElastiCacheSummary(AWSSection):
                     yield node.model_dump()
                     break
 
+    @override
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> tuple[Sequence[Mapping[str, object]], Sequence[Mapping[str, object]]]:
@@ -6481,28 +6882,34 @@ class ElastiCacheSummary(AWSSection):
 
         return filtered_cluster_dicts, filtered_node_dicts
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content[0])]
 
 
 class ElastiCache(AWSSectionCloudwatch):
     @property
+    @override
     def name(self) -> str:
         return "elasticache"
 
     @property
+    @override
     def cache_interval(self) -> int:
         return 300
 
     @property
+    @override
     def granularity(self) -> int:
         return 300
 
+    @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elasticache_summary")
         if colleague and colleague.content:
@@ -6512,6 +6919,7 @@ class ElastiCache(AWSSectionCloudwatch):
             )
         return AWSColleagueContents([], 0.0)
 
+    @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         muv: list[tuple[str, str]] = [
             ("CPUUtilization", "Percent"),
@@ -6554,11 +6962,13 @@ class ElastiCache(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
+    @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
@@ -6752,6 +7162,7 @@ class AWSSectionsUSEast(AWSSections):
     US East is the AWS Standard region.
     """
 
+    @override
     def init_sections(
         self,
         services: Sequence[str],
@@ -6870,6 +7281,7 @@ def _create_route53_sections(
 
 
 class AWSSectionsGeneric(AWSSections):
+    @override
     def init_sections(
         self,
         services: Sequence[str],

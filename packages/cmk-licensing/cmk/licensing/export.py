@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 """This file is synced from the check_mk repo to the cmk-license repo."""
@@ -17,7 +16,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
-from typing import Literal, TypedDict
+from typing import Literal, override, TypedDict
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -384,9 +383,11 @@ class Parser:
 
 
 class ParserV1_0(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -421,9 +422,11 @@ class ParserV1_0(Parser):
 
 
 class ParserV1_1(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -431,9 +434,11 @@ class ParserV1_1(Parser):
 
 
 class ParserV1_2(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -441,9 +446,11 @@ class ParserV1_2(Parser):
 
 
 class ParserV1_3(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -451,9 +458,11 @@ class ParserV1_3(Parser):
 
 
 class ParserV1_4(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -488,9 +497,11 @@ class ParserV1_4(Parser):
 
 
 class ParserV1_5(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, _instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -527,9 +538,11 @@ class ParserV1_5(Parser):
 
 
 class ParserV2_0(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -537,9 +550,11 @@ class ParserV2_0(Parser):
 
 
 class ParserV2_1(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -547,9 +562,11 @@ class ParserV2_1(Parser):
 
 
 class ParserV3_0(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, _instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -659,9 +676,11 @@ def _parse_sample_v3_2(
 
 
 class ParserV3_1(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -669,9 +688,11 @@ class ParserV3_1(Parser):
 
 
 class ParserV3_2(Parser):
+    @override
     def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
         return _parse_subscription_details(raw)
 
+    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:

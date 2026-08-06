@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 """Middleware support for conditional request profiling in WSGI applications.
@@ -40,6 +39,7 @@ import threading
 import time
 import typing
 import urllib.parse
+from typing import override
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 import pyprof2calltree
@@ -272,6 +272,7 @@ class DirectWrappingProfilingMiddleware(ProfilingMiddleware):
         config_loader.switch_mode("imported")
         super().__init__(config_loader=config_loader)
 
+    @override
     def load_app(self) -> WSGIApplication:
         return self._app_to_wrap
 
@@ -311,6 +312,7 @@ class LazyImportProfilingMiddleware(ProfilingMiddleware):
         self.app_factory_kwargs = app_factory_kwargs
         super().__init__(config_loader=config_loader)
 
+    @override
     def load_app(self) -> WSGIApplication:
         module = importlib.import_module(self.app_factory_module)
         app_factory = getattr(module, self.app_factory_name)

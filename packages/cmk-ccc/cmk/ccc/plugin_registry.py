@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from abc import abstractmethod
 from collections.abc import Iterator, Mapping
-from typing import TypeVar
+from typing import override, TypeVar
 
 _VT = TypeVar("_VT")
 
@@ -64,12 +62,15 @@ class Registry(Mapping[str, _VT]):
     def unregister(self, name: str) -> None:
         del self._entries[name]
 
+    @override
     def __getitem__(self, key: str) -> _VT:
         return self._entries.__getitem__(key)
 
+    @override
     def __len__(self) -> int:
         return self._entries.__len__()
 
+    @override
     def __iter__(self) -> Iterator[str]:
         return self._entries.__iter__()
 

@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import abc
-from typing import final
+from typing import final, override
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from cmk.gui.wsgi.type_defs import WSGIResponse
@@ -37,6 +35,7 @@ class OverrideRequestMethod(AbstractWSGIMiddleware):
     as this should be handled by other layers.
     """
 
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         override = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")
         if override and environ["REQUEST_METHOD"].lower() == "post":
@@ -45,5 +44,6 @@ class OverrideRequestMethod(AbstractWSGIMiddleware):
 
 
 class AuthenticationMiddleware(AbstractWSGIMiddleware):
+    @override
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.app(environ, start_response)

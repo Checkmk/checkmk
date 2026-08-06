@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import ast
+from typing import override
 
 from cmk.astrein.framework import ASTVisitorChecker
 
@@ -47,13 +46,16 @@ class RequestValidatedInputChecker(ASTVisitorChecker):
     """Detects request.var/get_str_input/get_str_input_mandatory values flowing into
     UserId/HostAddress/Hostname constructors within the same function."""
 
+    @override
     def checker_id(self) -> str:
         return "use-request-getvalidatedinputtype"
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._check_function_body(node)
         self.generic_visit(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._check_function_body(node)
         self.generic_visit(node)

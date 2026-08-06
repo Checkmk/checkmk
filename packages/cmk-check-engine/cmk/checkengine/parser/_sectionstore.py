@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
 from collections.abc import Callable, Mapping, MutableMapping
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 import cmk.ccc.store as _store
 from cmk.ccc.hostaddress import HostName
@@ -27,6 +25,7 @@ class SectionStore[T]:
         super().__init__()
         self.path: Final = Path(path)
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.path!r})"
 

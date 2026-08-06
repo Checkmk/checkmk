@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -13,7 +12,7 @@ from __future__ import annotations
 import abc
 import random
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
-from typing import Any, TypedDict
+from typing import Any, override, TypedDict
 
 from cmk.plugins.aws.constants import AWS_EC2_INST_TYPES
 
@@ -51,6 +50,7 @@ class List(Entity):
         self._elements = elements
         self._from_choice = from_choice
 
+    @override
     def create(self, idx, amount):
         if self._from_choice:
             list_ = []
@@ -70,6 +70,7 @@ class Dict(Entity):
         self._values = values
         self._enumerate_keys = enumerate_keys
 
+    @override
     def create(self, idx, amount):
         dict_ = {}
         if self._enumerate_keys:
@@ -88,21 +89,25 @@ class Str(Entity):
         super().__init__(key)
         self.value = value
 
+    @override
     def create(self, idx, amount):
         return f"{self.value or self.key}-{idx}"
 
 
 class Int(Entity):
+    @override
     def create(self, idx, amount):
         return random.choice(list(range(100)))
 
 
 class Float(Entity):
+    @override
     def create(self, idx, amount):
         return 1.0 * random.choice(list(range(100)))
 
 
 class Timestamp(Entity):
+    @override
     def create(self, idx, amount):
         return "2019-%02d-%02d" % (
             random.choice(list(range(1, 13))),
@@ -111,6 +116,7 @@ class Timestamp(Entity):
 
 
 class Enum(Entity):
+    @override
     def create(self, idx, amount):
         return [f"{self.key}-{idx}-{x}" for x in range(amount)]
 
@@ -120,6 +126,7 @@ class Choice(Entity):
         super().__init__(key)
         self.choices = choices
 
+    @override
     def create(self, idx, amount):
         return random.choice(self.choices)
 
@@ -130,6 +137,7 @@ class BoolChoice(Choice):
 
 
 class Bytes(Str):
+    @override
     def create(self, idx, amount):
         return bytes(super().create(idx, amount), "utf-8")
 
@@ -230,6 +238,7 @@ class DictInstanceBuilder:
 
 
 class S3ListBucketsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Name"),
@@ -238,6 +247,7 @@ class S3ListBucketsIB(InstanceBuilder):
 
 
 class S3BucketTaggingIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Key"),
@@ -250,6 +260,7 @@ class S3BucketTaggingIB(InstanceBuilder):
 
 
 class CloudwatchDescribeAlarmsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("AlarmName"),
@@ -401,6 +412,7 @@ class CloudwatchDescribeAlarmsIB(InstanceBuilder):
 
 
 class CEGetCostsAndUsageIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Dict(
@@ -449,6 +461,7 @@ class CEGetCostsAndUsageIB(InstanceBuilder):
 
 
 class RDSDescribeAccountAttributesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
@@ -482,6 +495,7 @@ class RDSDescribeAccountAttributesIB(InstanceBuilder):
 
 
 class RDSDescribeDBInstancesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("DBInstanceIdentifier"),
@@ -665,6 +679,7 @@ class RDSDescribeDBInstancesIB(InstanceBuilder):
 
 
 class RDSListTagsForResourceIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [Str("Key"), Str("Value")]
 
@@ -674,6 +689,7 @@ class RDSListTagsForResourceIB(InstanceBuilder):
 
 
 class ELBDescribeLoadBalancersIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerName"),
@@ -763,6 +779,7 @@ class ELBDescribeLoadBalancersIB(InstanceBuilder):
 
 
 class ELBDescribeTagsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerName"),
@@ -778,6 +795,7 @@ class ELBDescribeTagsIB(InstanceBuilder):
 
 
 class ELBDescribeInstanceHealthIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("InstanceId"),
@@ -788,6 +806,7 @@ class ELBDescribeInstanceHealthIB(InstanceBuilder):
 
 
 class ELBDescribeAccountLimitsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
@@ -812,6 +831,7 @@ class ELBDescribeAccountLimitsIB(InstanceBuilder):
 
 
 class ELBv2DescribeLoadBalancersIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerArn"),
@@ -875,6 +895,7 @@ class ELBv2DescribeLoadBalancersIB(InstanceBuilder):
 
 
 class ELBv2DescribeTargetGroupsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("TargetGroupArn"),
@@ -925,6 +946,7 @@ class ELBv2DescribeTargetGroupsIB(InstanceBuilder):
 
 
 class ELBv2DescribeListenersIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("ListenerArn"),
@@ -1039,6 +1061,7 @@ class ELBv2DescribeListenersIB(InstanceBuilder):
 
 
 class ELBv2DescribeRulesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("RuleArn"),
@@ -1194,6 +1217,7 @@ class ELBv2DescribeRulesIB(InstanceBuilder):
 
 
 class ELBv2DescribeAccountLimitsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
@@ -1220,6 +1244,7 @@ class ELBv2DescribeAccountLimitsIB(InstanceBuilder):
 
 
 class ELBv2DescribeTargetHealthIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Dict(
@@ -1273,6 +1298,7 @@ class ELBv2DescribeTargetHealthIB(InstanceBuilder):
 
 
 class EC2DescribeReservedInstancesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("AvailabilityZone"),
@@ -1354,6 +1380,7 @@ class EC2DescribeReservedInstancesIB(InstanceBuilder):
 
 
 class EC2DescribeAddressesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("InstanceId"),
@@ -1382,6 +1409,7 @@ class EC2DescribeAddressesIB(InstanceBuilder):
 
 
 class EC2DescribeSecurityGroupsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Description"),
@@ -1482,6 +1510,7 @@ class EC2DescribeSecurityGroupsIB(InstanceBuilder):
 
 
 class EC2DescribeNetworkInterfacesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Dict(
@@ -1585,6 +1614,7 @@ class EC2DescribeNetworkInterfacesIB(InstanceBuilder):
 
 
 class EC2DescribeSpotInstanceRequestsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("ActualBlockHourlyPrice"),
@@ -1761,6 +1791,7 @@ class EC2DescribeSpotInstanceRequestsIB(InstanceBuilder):
 
 
 class EC2DescribeSpotFleetRequestsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Choice(
@@ -2046,6 +2077,7 @@ class EC2DescribeSpotFleetRequestsIB(InstanceBuilder):
 
 
 class EC2DescribeInstancesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Int("AmiLaunchIndex"),
@@ -2360,6 +2392,7 @@ class EC2DescribeInstancesIB(InstanceBuilder):
 
 
 class EC2DescribeVolumesIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
@@ -2424,6 +2457,7 @@ class EC2DescribeVolumesIB(InstanceBuilder):
 
 
 class EC2DescribeSnapshotsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("DataEncryptionKeyId"),
@@ -2457,6 +2491,7 @@ class EC2DescribeSnapshotsIB(InstanceBuilder):
 
 
 class EC2DescribeVolumeStatusIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
@@ -2514,6 +2549,7 @@ class EC2DescribeVolumeStatusIB(InstanceBuilder):
 
 
 class DynamoDBDescribeLimitsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Int("AccountMaxReadCapacityUnits"),
@@ -2524,6 +2560,7 @@ class DynamoDBDescribeLimitsIB(InstanceBuilder):
 
 
 class DynamoDBDescribeTableIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
@@ -2689,6 +2726,7 @@ class DynamoDBDescribeTableIB(InstanceBuilder):
 
 
 class DynamoDBListTagsOfResourceIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Key"),
@@ -2701,6 +2739,7 @@ class DynamoDBListTagsOfResourceIB(InstanceBuilder):
 
 
 class WAFV2ListOperationIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [Str("Name"), Str("Id"), Str("Description"), Str("LockToken"), Str("ARN")]
 
@@ -2773,6 +2812,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
             ],
         )
 
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Name"),
@@ -2953,6 +2993,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
 
 
 class WAFV2ListTagsForResourceIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [Str("ResourceARN"), List("TagList", [Str("Key"), Str("Value")])]
 
@@ -3206,6 +3247,7 @@ class FakeServiceQuotasClient:
 
 
 class LambdaListFunctionsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return {
             Str("FunctionName"),
@@ -3294,14 +3336,17 @@ class LambdaListFunctionsIB(InstanceBuilder):
 
 
 class LambdaListTagsInstancesIB(DictInstanceBuilder):
+    @override
     def _key(self):
         return Str("Tag")
 
+    @override
     def _value(self):
         return Str("Value")
 
 
 class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return {
             Str(
@@ -3318,6 +3363,7 @@ class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
 
 
 class SNSListSubscriptionsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("SubscriptionArn"),
@@ -3329,6 +3375,7 @@ class SNSListSubscriptionsIB(InstanceBuilder):
 
 
 class SNSListTopicsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [Str("TopicArn", value="arn:aws:sns:eu-west-1:710145618630:TopicName")]
 
@@ -3338,6 +3385,7 @@ class SNSListTopicsIB(InstanceBuilder):
 
 
 class GlacierListVaultsIB(InstanceBuilder):
+    @override
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("VaultARN"),
@@ -3350,8 +3398,10 @@ class GlacierListVaultsIB(InstanceBuilder):
 
 
 class GlacierListTagsInstancesIB(DictInstanceBuilder):
+    @override
     def _key(self):
         return Str("Tag")
 
+    @override
     def _value(self):
         return Str("Value")

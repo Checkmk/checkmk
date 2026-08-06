@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Self
+from typing import override, Self
 
 
 class ConnectorObject[HostT: str](abc.ABC):
@@ -55,23 +53,29 @@ class ConnectorObject[HostT: str](abc.ABC):
 
 class NullObject[HostT: str](ConnectorObject[HostT]):
     @classmethod
+    @override
     def deserialize_attributes(cls, _serialized: dict) -> Self:  # type: ignore[type-arg]
         return cls()
 
+    @override
     def _serialize_attributes(self) -> Mapping[str, Sequence[HostT] | int]:
         return {}
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
 
 class FailedToContactRemoteSite[HostT: str](ConnectorObject[HostT]):
     @classmethod
+    @override
     def deserialize_attributes(cls, _serialized: dict) -> Self:  # type: ignore[type-arg]
         return cls()
 
+    @override
     def _serialize_attributes(self) -> Mapping[str, Sequence[HostT] | int]:
         return {}
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"

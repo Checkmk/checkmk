@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Abstract classes and types."""
 
 import logging
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from cmk.checkengine.snmplib import (
     OID,
@@ -36,9 +34,11 @@ class StoredWalkSNMPBackend(SNMPBackend):
             raise BackendError(f"No snmpwalk file {self.path}")
 
     @staticmethod
+    @override
     def get_type() -> SNMPBackendEnum:
         return SNMPBackendEnum.STORED_WALK
 
+    @override
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         walk = self.walk(oid, context=context)
         # get_stored_snmpwalk returns all oids that start with oid but here
@@ -49,14 +49,15 @@ class StoredWalkSNMPBackend(SNMPBackend):
             return walk[0][1]
         return None
 
+    @override
     def walk(
         self,
         /,
         oid: OID,
         *,
-        context: object,  # noqa: ARG002
-        section_name: object = None,  # noqa: ARG002
-        table_base_oid: object = None,  # noqa: ARG002
+        context: object,
+        section_name: object = None,
+        table_base_oid: object = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]

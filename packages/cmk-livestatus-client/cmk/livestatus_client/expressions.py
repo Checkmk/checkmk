@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """
 Livestatus Query Expression System
 
@@ -71,6 +69,7 @@ class LqSafe:
 
         object.__setattr__(self, "value", str_value)
 
+    @override
     def __str__(self) -> str:
         """Return the underlying string value"""
         return self.value

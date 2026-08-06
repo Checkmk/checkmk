@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """This module contains functions that can be used in all Checkmk components
 to produce crash reports in a generic format which can then be sent to Checkmk
@@ -22,7 +21,7 @@ import urllib.parse
 import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import cast, Final, NotRequired, TypedDict
+from typing import cast, Final, NotRequired, override, TypedDict
 
 from cmk.ccc.version_info import VersionInfo, VersionInfoBase
 
@@ -105,6 +104,7 @@ class AggregatedCrashInfo[TDetails](_CrashInfoCommon[TDetails]):
 # reporting it is totally ok to have some string representations of the objects.
 class RobustJSONEncoder(json.JSONEncoder):
     # Are there cases where no __str__ is available? if so, we should do something like %r
+    @override
     def default(self, o: object) -> str:
         return str(o)
 

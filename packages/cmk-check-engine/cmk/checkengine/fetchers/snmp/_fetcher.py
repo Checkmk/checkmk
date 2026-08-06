@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import copy
 import dataclasses
@@ -18,7 +17,7 @@ from collections.abc import (
     Sequence,
 )
 from pathlib import Path
-from typing import Any, Final, Self, TypedDict
+from typing import Any, Final, override, Self, TypedDict
 
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
@@ -140,6 +139,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
         self.force_stored_walks: Final = force_stored_walks
         self._backend: SNMPBackend | None = None
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SNMPFetcher):
             return False
@@ -156,6 +156,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
             and self.force_stored_walks == other.force_stored_walks
         )
 
+    @override
     def serialized_params(self) -> SNMPFetcherParams:
         # NOTE: we deliberately skip the `plugin_store` here.
         # It is quite large, and the same for all hosts.
@@ -176,6 +177,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
         }
 
     @classmethod
+    @override
     def from_params(cls, params: SNMPFetcherParams, ctx: DeserializationContext) -> Self:
         snmp_config = copy.deepcopy(dict(params["snmp_config"]))
         if isinstance(snmp_config["credentials"], list):
@@ -213,6 +215,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
     def inventory_sections(self) -> frozenset[SNMPSectionName]:
         return frozenset(name for name, data in self.plugin_store.items() if data.inventory)
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
@@ -233,6 +236,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
             + ")"
         )
 
+    @override
     def open(self) -> None:
         # TODO: Why is this stored_walk_path different from the one in the self.snmp_config?
         snmp_config = dataclasses.replace(
@@ -243,6 +247,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
             use_cache=self.force_stored_walks,
         )
 
+    @override
     def close(self) -> None:
         self._backend = None
 
@@ -286,6 +291,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
 
         return frozenset()
 
+    @override
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         """Select the sections we need to fetch and do that
 

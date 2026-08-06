@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import html
 from collections.abc import Iterable
+from typing import override
 
 
 # TODO: In case one tries to __add__ or __iadd__ a str to a HTML object, this should fail by default
@@ -73,12 +72,15 @@ class HTML:
 
         return str(value) if isinstance(value, HTML) else html.escape(value)
 
+    @override
     def __str__(self) -> str:
         return self._value
 
+    @override
     def __repr__(self) -> str:
         return 'HTML("%s")' % self._value
 
+    @override
     def __hash__(self) -> int:
         """Return the hash of the value
 
@@ -108,9 +110,11 @@ class HTML:
         """
         return HTML(self._value.join(map(self._ensure_str, iterable)), escape=False)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self._value == self._ensure_str(other)
 
+    @override
     def __ne__(self, other: object) -> bool:
         return self._value != self._ensure_str(other)
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """MK Livestatus Python API"""
 
@@ -462,6 +461,7 @@ def get_livestatus_blob_columns() -> set[str]:
 
 class _SupportsJsonFormat(Protocol):
     def supports_json_format(self) -> bool: ...
+    @override
     def __str__(self) -> str: ...
 
 

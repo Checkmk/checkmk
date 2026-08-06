@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -83,6 +83,7 @@ class TestAllValueStoresStore:
 
 
 class _BrokenRepr(str):
+    @override
     def __repr__(self) -> str:
         raise ValueError("I'm broken!")
 
@@ -163,9 +164,11 @@ class _AllValueStoresStoreSpy(value_store.AllValueStoresStore):
         super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
         self.inspect_updated: Mapping[value_store.ValueStoreKey, Mapping[str, str]] | None = None
 
+    @override
     def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:
         return {}
 
+    @override
     def update(self, update: Mapping[value_store.ValueStoreKey, Mapping[str, str]]) -> None:
         self.inspect_updated = update
 

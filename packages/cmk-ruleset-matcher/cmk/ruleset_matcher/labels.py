@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Helper functions for dealing with Checkmk labels of all kind"""
 
 from __future__ import annotations
@@ -16,7 +14,7 @@ from ast import literal_eval
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, Self, TypedDict
+from typing import Final, Literal, override, Self, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -53,9 +51,11 @@ class BaseLabel:
     def label(self) -> str:
         return f"{self.name}:{self.value}"
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError(f"cannot compare {type(self)} to {type(other)}")
@@ -143,9 +143,11 @@ class HostLabel(BaseLabel):
             "plugin_name": None if self.plugin_name is None else str(self.plugin_name),
         }
 
+    @override
     def __repr__(self) -> str:
         return f"HostLabel({self.name!r}, {self.value!r}, plugin_name={self.plugin_name!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, HostLabel):
             raise TypeError(f"{other!r} is not of type HostLabel")
@@ -155,6 +157,7 @@ class HostLabel(BaseLabel):
             and self.plugin_name == other.plugin_name
         )
 
+    @override
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 

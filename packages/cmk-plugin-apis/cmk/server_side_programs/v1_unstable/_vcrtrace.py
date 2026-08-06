@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 # Arguments: unused / shadowing builtins. But we're following argparse.Action protocol.
 # ruff: noqa: A001, A002
 
@@ -13,6 +11,7 @@ import atexit
 import sys
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
+from typing import override
 
 _ALLOWDIR = "tmp/check_mk/debug"
 
@@ -84,6 +83,7 @@ def vcrtrace(
                 metavar=metavar,
             )
 
+        @override
         def __call__(
             self,
             parser: argparse.ArgumentParser,

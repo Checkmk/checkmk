@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import datetime
 import random
 import time
+from typing import override
 
 import polyfactory.factories.pydantic_factory
 import pytest
@@ -36,6 +36,7 @@ class EntryFactory(polyfactory.factories.pydantic_factory.ModelFactory):
 
 class RecentEntryFactory(EntryFactory):
     @classmethod
+    @override
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
             oldest=(CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN).timestamp() + 1.0,  # noqa: SLF001
@@ -45,6 +46,7 @@ class RecentEntryFactory(EntryFactory):
 
 class OutdatedEntryFactory(EntryFactory):
     @classmethod
+    @override
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
             oldest=1.0,

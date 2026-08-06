@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import contextvars
 import logging
+from typing import override
 
 import pytest
 from _pytest.logging import LogCaptureFixture
@@ -133,6 +132,7 @@ def test_contextual_formatter_passes_through_messages_without_context() -> None:
 
 
 class _NonSerializable:
+    @override
     def __repr__(self) -> str:
         return "<non-serializable>"
 

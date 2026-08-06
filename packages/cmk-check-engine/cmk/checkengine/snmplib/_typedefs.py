@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import abc
 import copy
@@ -20,6 +19,7 @@ from typing import (
     NamedTuple,
     NewType,
     NotRequired,
+    override,
     Protocol,
     Self,
     TypedDict,
@@ -356,15 +356,19 @@ class SNMPPluginStore(Mapping[SNMPSectionName, SNMPPluginStoreItem]):
     ) -> None:
         self._store: Final[Mapping[SNMPSectionName, SNMPPluginStoreItem]] = store if store else {}
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"
 
+    @override
     def __getitem__(self, key: SNMPSectionName) -> SNMPPluginStoreItem:
         return self._store.__getitem__(key)
 
+    @override
     def __iter__(self) -> Iterator[SNMPSectionName]:
         return self._store.__iter__()
 
+    @override
     def __len__(self) -> int:
         return self._store.__len__()
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import importlib
 import os
 import pkgutil
@@ -14,7 +12,7 @@ from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Protocol, Self
+from typing import Final, override, Protocol, Self
 
 from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 
@@ -33,6 +31,7 @@ class PluginLocation:
     module: str
     name: str
 
+    @override
     def __str__(self) -> str:
         return f"{self.module}:{self.name}"
 

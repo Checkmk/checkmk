@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """
 Reusable base class for JSON (de-)serialization with a type tag.
 """
 
 import abc
 from collections.abc import Mapping
-from typing import final, Self, TypedDict
+from typing import final, override, Self, TypedDict
 
 
 class JsonEnvelope[TParams: Mapping[str, object]](TypedDict):
@@ -55,6 +53,7 @@ class JsonSerializable[TParams: Mapping[str, object], TContext](abc.ABC):
         """Rebuild an instance from `params`, pulling non-serialized
         dependencies from `ctx`."""
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, JsonSerializable):
             return NotImplemented

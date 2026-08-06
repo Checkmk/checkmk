@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import ast
+from typing import override
 
 from cmk.checkengine.snmplib import SNMPRawData, SNMPSectionMarker
 
@@ -18,11 +17,13 @@ __all__ = ["SNMPFileCache"]
 
 class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
+    @override
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
         return {
             SNMPSectionMarker(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()
         }
 
     @staticmethod
+    @override
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Fetcher config path manipulation."""
 
 from __future__ import annotations
@@ -15,7 +13,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from cmk.ccc.store import DimSerializer, ObjectStore
 
@@ -67,18 +65,22 @@ class VersionedConfigPath:
         # But fixing this would require changing a lot of code.
         self.serial: Final = serial
 
+    @override
     def __str__(self) -> str:
         return str(self.root / str(self.serial))
 
     def __fspath__(self) -> str:
         return str(self)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.base!r}, {self.serial!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return Path(self) == Path(other) if isinstance(other, os.PathLike) else NotImplemented
 
+    @override
     def __hash__(self) -> int:
         return hash(Path(self))
 

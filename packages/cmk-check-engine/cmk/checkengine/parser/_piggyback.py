@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import json
@@ -12,7 +10,7 @@ import logging
 import time
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import AgentRawData
@@ -63,6 +61,7 @@ class PiggybackParser(Parser[AgentRawData, AgentRawDataSection]):
         self.keep_outdated: Final = keep_outdated
         self.encoding_fallback: Final = encoding_fallback
 
+    @override
     def parse(
         self,
         raw_data: AgentRawData,

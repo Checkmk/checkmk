@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 # TODO: Refactor/document locking. It is not clear when and how to apply
 # locks or when they are held by which component.
@@ -36,7 +35,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, assert_never, ClassVar, IO, Literal, TypedDict
+from typing import Any, assert_never, ClassVar, IO, Literal, override, TypedDict
 
 from setproctitle import setthreadtitle
 
@@ -171,6 +170,7 @@ class ECServerThread(threading.Thread):
         self._terminate_event = threading.Event()
         self._logger = logger
 
+    @override
     def run(self) -> None:
         self._logger.info("Starting up")
         setthreadtitle(self.name)
@@ -678,6 +678,7 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
+    @override
     def serve(self) -> None:
         pipe = self.open_pipe()
         # We just read()/recvfrom() these, so we create no new FDs via them.
@@ -1940,6 +1941,7 @@ class StatusTableEvents(StatusTable):
         # NOTE: We depend on the dict insertion order below, but this is guaranteed for Python >= 3.7.
         self._columns_dict = dict(self.columns)
 
+    @override
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
@@ -1971,6 +1973,7 @@ class StatusTableHistory(StatusTable):
         super().__init__(logger)
         self._history = history
 
+    @override
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._history.get(query)
 
@@ -1987,6 +1990,7 @@ class StatusTableRules(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
+    @override
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._event_status.get_rule_stats()
 
@@ -2000,6 +2004,7 @@ class StatusTableStatus(StatusTable):
         super().__init__(logger)
         self._event_server = event_server
 
+    @override
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._event_server.get_status()
 
@@ -2164,6 +2169,7 @@ class StatusServer(ECServerThread):
         self._table_history = StatusTableHistory(self._logger, self._history)
         self._reopen_sockets = True
 
+    @override
     def serve(self) -> None:
         while not self._terminate_event.is_set():
             client_socket = None
@@ -3714,5 +3720,6 @@ def main() -> None:
 
 class ECCrashReport(ABCCrashReport[None]):
     @classmethod
+    @override
     def type(cls) -> str:
         return "ec"

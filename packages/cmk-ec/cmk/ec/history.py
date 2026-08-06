@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import datetime
 import time
 from abc import ABC, abstractmethod
@@ -12,7 +10,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from logging import Logger
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 from .config import Config
 from .event import Event
@@ -72,22 +70,27 @@ class TimedHistory(History):
                 {"method_name": method_name, "duration_ms": (time.time() - tic) * 1000},
             )
 
+    @override
     def flush(self) -> None:
         with self._timing("flush"):
             self._history.flush()
 
+    @override
     def housekeeping(self) -> None:
         with self._timing("housekeeping"):
             self._history.housekeeping()
 
+    @override
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         with self._timing("add"):
             self._history.add(event, what, who, addinfo)
 
+    @override
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         with self._timing("get"):
             return self._history.get(query)
 
+    @override
     def close(self) -> None:
         with self._timing("close"):
             return self._history.close()

@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import dataclasses
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import Self
+from typing import override, Self
 
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.check_utils import worst_service_state
@@ -37,6 +35,7 @@ class ServiceCheckResult:
 
 
 class SubmittableServiceCheckResult(ServiceCheckResult):
+    @override
     def is_submittable(self) -> bool:
         return True
 
@@ -50,6 +49,7 @@ class SubmittableServiceCheckResult(ServiceCheckResult):
 
 
 class UnsubmittableServiceCheckResult(ServiceCheckResult):
+    @override
     def is_submittable(self) -> bool:
         return False
 

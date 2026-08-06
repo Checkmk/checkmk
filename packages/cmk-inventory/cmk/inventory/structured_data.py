@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """
@@ -25,7 +24,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, NewType, Self, TypedDict
+from typing import Literal, NewType, override, Self, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -213,6 +212,7 @@ class _MutableAttributes:
         # if there are no pairs.
         return len(self.pairs)
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _MutableAttributes | ImmutableAttributes):
             return NotImplemented
@@ -299,6 +299,7 @@ class _MutableTable:
         # have no impact if there are no rows.
         return sum(map(len, self.rows_by_ident.values()))
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
@@ -465,6 +466,7 @@ class MutableTree:
             + [len(node) for node in self.nodes_by_name.values()]
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, MutableTree | ImmutableTree):
             return NotImplemented
@@ -560,6 +562,7 @@ class MutableTree:
             "Nodes": {name: node.bare for name, node in self.nodes_by_name.items()},
         }
 
+    @override
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
@@ -584,6 +587,7 @@ class ImmutableAttributes:
         # if there are no pairs.
         return len(self.pairs)
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _MutableAttributes | ImmutableAttributes):
             return NotImplemented
@@ -609,6 +613,7 @@ class ImmutableTable:
         # have no impact if there are no rows.
         return sum(map(len, self.rows_by_ident.values()))
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
@@ -667,6 +672,7 @@ class ImmutableTree:
             + [len(node) for node in self.nodes_by_name.values()]
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, MutableTree | ImmutableTree):
             return NotImplemented
@@ -714,6 +720,7 @@ class ImmutableTree:
             "Nodes": {name: node.bare for name, node in self.nodes_by_name.items()},
         }
 
+    @override
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
@@ -852,6 +859,7 @@ class ImmutableDeltaTree:
             "Nodes": {edge: node.bare for edge, node in self.nodes_by_name.items()},
         }
 
+    @override
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 

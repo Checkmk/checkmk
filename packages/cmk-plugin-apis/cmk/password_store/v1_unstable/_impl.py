@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import hashlib
 import os
 import secrets
 from collections.abc import Mapping
 from pathlib import Path
-from typing import final
+from typing import final, override
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -39,6 +37,7 @@ class Secret[T]:
     def __init__(self, value: T, /) -> None:
         self._value = value
 
+    @override
     def __repr__(self) -> str:
         """Return a string omitting the actual value.
 
@@ -46,12 +45,14 @@ class Secret[T]:
         """
         return f"Secret('{self}')"
 
+    @override
     def __str__(self) -> str:
         return "****"
 
     def reveal(self) -> T:
         return self._value
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Secret):
             return NotImplemented

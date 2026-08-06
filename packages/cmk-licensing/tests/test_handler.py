@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -23,28 +22,35 @@ class LicensingHandlerMock(LicensingHandler):
         self._state = state
 
     @property
+    @override
     def state(self) -> LicenseState:
         return self._state
 
     @classmethod
+    @override
     def make(cls) -> LicensingHandler:
         raise NotImplementedError
 
     @property
+    @override
     def message(self) -> str:
         raise NotImplementedError
 
+    @override
     def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
         raise NotImplementedError
 
+    @override
     def effect(self, licensing_settings_link: str | None = None) -> UserEffect:
         raise NotImplementedError
 
     @property
+    @override
     def notification_handler(self) -> NotificationHandler:
         raise NotImplementedError
 
     @property
+    @override
     def remaining_trial_time_rounded(self) -> RemainingTrialTime:
         raise NotImplementedError
 

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Exceptions a self-rendering feature page may raise.
 
 ``cmk.gui`` translates these into its own HTTP-aware exceptions when composing
 the page, so a feature stays free of a ``cmk.gui`` dependency.
 """
+
+from typing import override
 
 
 class MKUserError(Exception):
@@ -23,5 +23,6 @@ class MKUserError(Exception):
         self.varname = varname
         self.message = message
 
+    @override
     def __str__(self) -> str:
         return self.message

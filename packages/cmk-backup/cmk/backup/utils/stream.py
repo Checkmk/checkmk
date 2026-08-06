@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import os
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import IO
+from typing import IO, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.crypto.certificate import Certificate, CertificatePEM
@@ -107,6 +106,7 @@ class MKBackupStream:
 
 
 class BackupStream(MKBackupStream):
+    @override
     def _init_processing(self) -> bytes | None:
         if self._key_ident is None:
             return None
@@ -123,6 +123,7 @@ class BackupStream(MKBackupStream):
         # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
         return b"%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
 
+    @override
     def _get_encrypted_chunk(self) -> tuple[bytes, bool]:
         assert self._cipher is not None
 
@@ -155,6 +156,7 @@ class RestoreStream(MKBackupStream):
         # remove the padding if not.
         self._previous_chunk: bytes | None = None
 
+    @override
     def _init_processing(self) -> bytes | None:
         if self._key_ident is None:
             return None
@@ -166,6 +168,7 @@ class RestoreStream(MKBackupStream):
         self._cipher = AesCbcCipher("decrypt", secret_key, self._iv)
         return None
 
+    @override
     def _get_encrypted_chunk(self) -> tuple[bytes, bool]:
         assert self._cipher is not None
 

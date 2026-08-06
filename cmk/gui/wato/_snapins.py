@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 
-from typing import TypedDict
+from typing import override, TypedDict
 
 from cmk.gui import site_config, sites
 from cmk.gui.config import active_config, Config
@@ -160,30 +159,37 @@ MainMenuSetup = MainMenuItem(
 
 class SidebarSnapinWATOMini(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "admin_mini"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Setup shortcuts")
 
     @classmethod
+    @override
     def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[RoleName]:
         return ["admin", "user"]
 
     # refresh pending changes, if other user modifies something
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
+    @override
     def show(self, config: Config) -> None:
         render_wato(config, mini=True)
 
@@ -307,14 +313,17 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
 
 class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "wato_foldertree"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Tree of folders")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "This snap-in shows the folders defined in Setup. It can be used to "
@@ -322,6 +331,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "interaction with any other snap-in."
         )
 
+    @override
     def show(self, config: Config) -> None:
         user_permissions = UserPermissions.from_config(config, permission_registry)
         if (

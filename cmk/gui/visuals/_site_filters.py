@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterable
 from functools import partial
+from typing import override
 
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
@@ -84,6 +84,7 @@ class SiteFilter(Filter):
         self.query_filter = query_filter
         self._heading_info = heading_info
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield DynamicDropdown(
             id=self.query_filter.request_vars[0],
@@ -93,9 +94,11 @@ class SiteFilter(Filter):
             ),
         )
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return self._heading_info(value)
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {"site": row["site"]}
 
@@ -126,6 +129,7 @@ class MultipleSitesFilter(SiteFilter):
     def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         if choices := dict(self._site_choices(active_config)):
             yield DualList(

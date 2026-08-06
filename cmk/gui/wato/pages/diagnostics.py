@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import json
 import os
@@ -153,13 +152,16 @@ class _DiagnosticsParameters(NamedTuple):
 
 class ModeDiagnostics(WatoMode[object]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "diagnostics"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["diagnostics"]
 
+    @override
     def _from_vars(self) -> None:
         self._site = request.var("select_site_p_site")
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))
@@ -182,9 +184,11 @@ class ModeDiagnostics(WatoMode[object]):
             checkmk_server_host=str(params.get("checkmk_server_host") or ""),
         )
 
+    @override
     def title(self) -> str:
         return _("Support diagnostics")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.has_var("site"):
             menu = make_simple_form_page_menu(
@@ -226,6 +230,7 @@ class ModeDiagnostics(WatoMode[object]):
         menu.add_doc_reference(self.title(), DocReference[self.name().upper()])
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -271,6 +276,7 @@ class ModeDiagnostics(WatoMode[object]):
 
         return redirect(self._job.detail_url())
 
+    @override
     def page(self, config: Config) -> None:
         if self._job.is_active():
             # Job is already running, don't give the user the chance to start another one.
@@ -491,12 +497,14 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
     job_prefix = "diagnostics_dump"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Diagnostics dump")
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
 
+    @override
     def _back_url(self) -> str:
         return makeuri(request, [])
 
@@ -591,12 +599,15 @@ class PageDownloadDiagnosticsDump(Page):
 # TODO(3.1): delete — serves older central sites that build explicit file
 # lists remotely. The form of this version no longer walks any files.
 class AutomationDiagnosticsDumpOsWalk(AutomationCommand[str]):
+    @override
     def command_name(self) -> str:
         return "diagnostics-dump-os-walk"
 
+    @override
     def execute(self, api_request: str) -> str:
         return json.dumps(list(os.walk(api_request)))
 
+    @override
     def get_request(self, config: Config, request: Request) -> str:
         return request.get_ascii_input_mandatory("folder")
 
@@ -609,14 +620,17 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
         super().__init__()
         self._diagnostics_dir = cmk.utils.paths.diagnostics_dir
 
+    @override
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 
+    @override
     def execute(self, api_request: str) -> bytes:
         return _get_local_diagnostics_dump_file(
             diagnostics_dir=self._diagnostics_dir, tarfile_name=api_request
         )
 
+    @override
     def get_request(self, config: Config, request: Request) -> str:
         return request.get_ascii_input_mandatory("tarfile_name")
 

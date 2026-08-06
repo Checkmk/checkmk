@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import traceback
-from typing import Literal
+from typing import Literal, override
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
@@ -15,6 +13,7 @@ from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_p
 
 class AgentCrashReport(ABCCrashReport[None]):
     @classmethod
+    @override
     def type(cls) -> Literal["agent"]:
         return "agent"
 

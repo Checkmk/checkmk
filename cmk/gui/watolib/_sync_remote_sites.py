@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -14,6 +13,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
+from typing import override
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
@@ -77,9 +77,11 @@ class SyncRemoteSitesResult:
 
 
 class AutomationSyncRemoteSites(AutomationCommand[int]):
+    @override
     def command_name(self) -> str:
         return "sync-remote-site"
 
+    @override
     def execute(self, api_request: int) -> str:
         site_id = omd_site()
 
@@ -89,14 +91,17 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
 
         return SyncRemoteSitesResult(audit_logs, site_changes).to_json()
 
+    @override
     def get_request(self, config: Config, request: Request) -> int:
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
 class AutomationClearSiteChanges(AutomationCommand[str]):
+    @override
     def command_name(self) -> str:
         return "clear-site-changes"
 
+    @override
     def execute(self, api_request: str) -> None:
         site_id = omd_site()
         with SiteChanges(site_id).mutable_view() as site_entries:
@@ -107,6 +112,7 @@ class AutomationClearSiteChanges(AutomationCommand[str]):
                     break
             site_entries[:] = site_entries[keep_idx:]
 
+    @override
     def get_request(self, config: Config, request: Request) -> str:
         return request.get_str_input_mandatory("last_change_id")
 

@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override,no-any-return"
 
 from collections.abc import Iterable
-from typing import Any, Literal, NewType
+from typing import Any, Literal, NewType, override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
 import docstring_parser
@@ -67,6 +66,7 @@ class GeneralRestAPIException(HTTPException):
         self.ext = ext
         super().__init__(description=title)
 
+    @override
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 
@@ -271,6 +271,7 @@ class ProblemException(HTTPException):
         self.ext = ext
         self.fields = fields
 
+    @override
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 

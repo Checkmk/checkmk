@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import time
 from collections.abc import Iterable, Iterator
+from typing import override
 
 from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
@@ -84,6 +84,7 @@ class FilterWatoFolder(Filter):
         )
         self.last_wato_data_update: None | float = None
 
+    @override
     def available(self) -> bool:
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
@@ -128,6 +129,7 @@ class FilterWatoFolder(Filter):
                 allowed_folders.add(subfolder)
         return allowed_folders
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.ident,
@@ -135,6 +137,7 @@ class FilterWatoFolder(Filter):
             default_value="",  # root folder
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
         if folder := value.get(self.ident):
@@ -156,6 +159,7 @@ class FilterWatoFolder(Filter):
         for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
             yield from self.folder_selection(subfolder, depth + 1)
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         # FIXME: There is a problem with caching data and changing titles of Setup files
         # Everything is changed correctly but the filter object is stored in the
@@ -184,11 +188,13 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
             return folders.split("|")
         return []
 
+    @override
     def choices(self) -> ChoiceMapping:
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
         return {name: folder for name, folder in super().choices().items() if name}
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         if choices := self.choices():
             yield DualList(
@@ -198,16 +204,19 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         else:
             yield StaticText(text=_("There are no elements for selection."))
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
         regex_values = list(map(_wato_folders_to_lq_regex, self._to_list(value)))
         return lq_logic("Filter: host_filename", regex_values, "Or")
 
+    @override
     def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
         return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         self.check_wato_data_update()
         return ", ".join(

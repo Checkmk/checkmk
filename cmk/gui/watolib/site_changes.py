@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, NotRequired, TypedDict
+from typing import Any, cast, NotRequired, override, TypedDict
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -51,12 +50,14 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
         super().__init__(wato_var_dir() / (f"replication_changes_{site_id}.mk"))
 
     @staticmethod
+    @override
     def _serialize(entry: ChangeSpec) -> object:
         raw: dict[str, object] = dict(entry)
         raw["object"] = entry["object"].serialize() if entry["object"] else None
         return raw
 
     @staticmethod
+    @override
     def _deserialize(raw: object) -> ChangeSpec:
         if not isinstance(raw, dict):
             raise ValueError("expected a dictionary")

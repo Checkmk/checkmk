@@ -3,13 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import dataclasses
 from collections.abc import Callable, Mapping, Sequence
-from typing import (
-    assert_never,
-)
+from typing import assert_never, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -43,6 +39,7 @@ class CheckingConfig(ABCCheckingConfig):
         self._parameter_rules = parameter_rules
         self._labels_of_host = labels_of_host
 
+    @override
     def __call__(
         self, host_name: HostName, item: Item, service_labels: Labels, ruleset_name: RulesetName
     ) -> Sequence[Mapping[str, object]]:
@@ -70,6 +67,7 @@ class DiscoveryConfig(ABCDiscoveryConfig):
     labels_of_host: Callable[[HostName], Labels]
     rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
 
+    @override
     def __call__(
         self, host_name: HostName, rule_set_name: RuleSetName, rule_set_type: RuleSetTypeName
     ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:

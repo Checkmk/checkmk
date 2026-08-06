@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import override
 
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
@@ -50,30 +49,37 @@ def register_data_sources(
 
 class DataSourceHosts(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "hosts"
 
     @property
+    @override
     def title(self) -> str:
         return _("All hosts")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["host"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["host_name", "host_downtimes"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name"]
 
     @property
+    @override
     def join(self) -> tuple[str, str] | None:
         return ("services", "host_name")
 
     @property
+    @override
     def link_filters(self) -> dict[str, str]:
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
@@ -85,56 +91,69 @@ class DataSourceHosts(DataSourceLivestatus):
 
 class DataSourceHostsByGroup(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "hostsbygroup"
 
     @property
+    @override
     def title(self) -> str:
         return _("Hosts grouped by host groups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["host", "hostgroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["host_name", "host_downtimes"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "hostgroup_name", "host_name"]
 
     @property
+    @override
     def join(self) -> tuple[str, str] | None:
         return ("services", "host_name")
 
 
 class DataSourceServices(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "services"
 
     @property
+    @override
     def title(self) -> str:
         return _("All services")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["service", "host"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["host_name", "service_description", "service_downtimes"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name", "service_description"]
 
     @property
+    @override
     def join_key(self) -> str | None:
         return "service_description"
 
     @property
+    @override
     def link_filters(self) -> dict[str, str]:
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
@@ -147,66 +166,81 @@ class DataSourceServices(DataSourceLivestatus):
 
 class DataSourceServicesByGroup(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "servicesbygroup"
 
     @property
+    @override
     def title(self) -> str:
         return _("Services grouped by service groups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["service", "host", "servicegroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["host_name", "service_description", "service_downtimes"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "servicegroup_name", "host_name", "service_description"]
 
 
 class DataSourceServicesByHostGroup(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "servicesbyhostgroup"
 
     @property
+    @override
     def title(self) -> str:
         return _("Services grouped by host groups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["service", "host", "hostgroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["host_name", "service_description", "service_downtimes"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "hostgroup_name", "host_name", "service_description"]
 
 
 class DataSourceHostGroups(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "hostgroups"
 
     @property
+    @override
     def title(self) -> str:
         return _("Host groups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["hostgroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["hostgroup_name"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "hostgroup_name"]
 
@@ -215,52 +249,64 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
 
     @property
+    @override
     def ident(self) -> str:
         return "merged_hostgroups"
 
     @property
+    @override
     def title(self) -> str:
         return _("Host groups, merged")
 
     @property
+    @override
     def table(self) -> RowTableLivestatus:
         return RowTableLivestatus("hostgroups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["hostgroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["hostgroup_name"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["hostgroup_name"]
 
     @property
+    @override
     def merge_by(self) -> str | None:
         return "hostgroup_name"
 
 
 class DataSourceServiceGroups(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "servicegroups"
 
     @property
+    @override
     def title(self) -> str:
         return _("Service groups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["servicegroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["servicegroup_name"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "servicegroup_name"]
 
@@ -269,160 +315,196 @@ class DataSourceMergedServiceGroups(ABCDataSource):
     """Merged groups across sites"""
 
     @property
+    @override
     def ident(self) -> str:
         return "merged_servicegroups"
 
     @property
+    @override
     def title(self) -> str:
         return _("Service groups, merged")
 
     @property
+    @override
     def table(self) -> RowTableLivestatus:
         return RowTableLivestatus("servicegroups")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["servicegroup"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["servicegroup_name"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["servicegroup_name"]
 
     @property
+    @override
     def merge_by(self) -> str | None:
         return "servicegroup_name"
 
 
 class DataSourceComments(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "comments"
 
     @property
+    @override
     def title(self) -> str:
         return _("Host and service comments")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["comment", "host", "service"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["comment_id", "comment_type", "host_name", "service_description"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "comment_id"]
 
 
 class DataSourceDowntimes(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "downtimes"
 
     @property
+    @override
     def title(self) -> str:
         return _("Scheduled downtimes")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["downtime", "host", "service"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return ["downtime_id", "service_description"]
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "downtime_id"]
 
 
 class LogDataSource(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "log"
 
     @property
+    @override
     def table(self) -> RowTableLivestatus:
         return RowTableLivestatus("log")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["log", "host", "service", "contact", "command"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["log_lineno"]
 
     @property
+    @override
     def time_filters(self) -> list[str]:
         return ["logtime"]
 
 
 class DataSourceLog(LogDataSource):
     @property
+    @override
     def title(self) -> str:
         return _("The log file")
 
 
 class DataSourceLogHostAndServiceEvents(LogDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "log_events"
 
     @property
+    @override
     def title(self) -> str:
         return _("Host and service events")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["log", "host", "service"]
 
     @property
+    @override
     def add_headers(self) -> str:
         return "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n"
 
 
 class DataSourceLogHostEvents(LogDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "log_host_events"
 
     @property
+    @override
     def title(self) -> str:
         return _("Host events")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["log", "host"]
 
     @property
+    @override
     def add_headers(self) -> str:
         return "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n"
 
 
 class DataSourceLogAlertStatistics(LogDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "alert_stats"
 
     @property
+    @override
     def title(self) -> str:
         return _("Alert statistics")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["log", "host", "service", "contact", "command"]
 
     @property
+    @override
     def add_columns(self) -> list[ColumnName]:
         return [
             "log_alerts_ok",
@@ -433,47 +515,58 @@ class DataSourceLogAlertStatistics(LogDataSource):
         ]
 
     @property
+    @override
     def add_headers(self) -> str:
         return "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n"
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["host_name", "service_description"]
 
     @property
+    @override
     def ignore_limit(self) -> bool:
         return True
 
+    @override
     def post_process(self, rows: Rows) -> Rows:
         return list(filter(lambda row: row["host_name"], rows))
 
 
 class DataSourceServiceDiscovery(ABCDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "service_discovery"
 
     @property
+    @override
     def title(self) -> str:
         return _("Service discovery")
 
     @property
+    @override
     def table(self) -> ServiceDiscoveryRowTable:
         return ServiceDiscoveryRowTable()
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["host", "discovery"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["host_name"]
 
     @property
+    @override
     def add_columns(self) -> list[ColumnName]:
         return [
             "discovery_state",
@@ -498,6 +591,7 @@ class ServiceDiscoveryRowTable(RowTable):
             )
         )
 
+    @override
     def query(
         self,
         datasource: ABCDataSource,

@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
-from typing import TypedDict
+from typing import override, TypedDict
 
 from werkzeug.datastructures import Headers
 
@@ -26,9 +24,11 @@ class _BaseParameterAnnotation:
         self.description = description
         self.example = example
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(alias={self.alias!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, self.__class__)
@@ -55,6 +55,7 @@ class QueryParam(_BaseParameterAnnotation):
         super().__init__(description=description, example=example, alias=alias)
         self.is_list = is_list
 
+    @override
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, self.__class__)

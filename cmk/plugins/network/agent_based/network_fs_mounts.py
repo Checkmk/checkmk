@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 
 import json
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, NamedTuple, override
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -48,6 +47,7 @@ class NetworkFSState(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
+    @override
     def _missing_(cls, value: object) -> "NetworkFSState":
         return NetworkFSState.UNKNOWN
 

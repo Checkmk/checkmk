@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterable
+from typing import override
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import diskstat
@@ -45,6 +44,7 @@ class TimeParagraphParser(ParagraphParser):
         super().__init__(hp)
         self.time: int
 
+    @override
     def parse(self, line: list[str]) -> None:
         self.time = int(line[0])
 
@@ -56,6 +56,7 @@ class NamesParagraphParser(ParagraphParser):
         super().__init__(hp)
         self.names: dict[str, str] = {}
 
+    @override
     def parse(self, line: list[str]) -> None:
         if len(line) < 2:
             return
@@ -69,6 +70,7 @@ class StatParagraphParser(ParagraphParser):
         super().__init__(hp)
         self.stat: dict[str, dict[str, str]] = {}
 
+    @override
     def parse(self, line: list[str]) -> None:
         stat: dict[str, str] = {}
         for kv_pair in line[1:]:

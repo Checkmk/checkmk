@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import os
 import sys
 from pathlib import Path
+from typing import override
 
 from cmk.ccc.version import get_general_version_infos
 from cmk.crash import (
@@ -31,10 +30,12 @@ def create_crash_report(omd_root: Path) -> None:
 
 class CMKBaseCrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
+    @override
     def type(cls) -> str:
         return "base"
 
     @classmethod
+    @override
     def make_crash_info(
         cls,
         version_info: VersionInfo,

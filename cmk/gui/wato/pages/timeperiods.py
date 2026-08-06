@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -16,7 +15,7 @@ import logging
 import time
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 import recurring_ical_events
 from icalendar import Calendar, Event
@@ -171,6 +170,7 @@ class ICalEvent(Event):
     def add_timerange(self, new_timerange: tuple[str, str]) -> None:
         self.time_ranges.append(new_timerange)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({super().__repr__()})"
 
@@ -219,10 +219,12 @@ class ICalEvent(Event):
 
 class ModeTimeperiods(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "timeperiods"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
@@ -230,9 +232,11 @@ class ModeTimeperiods(WatoMode):
         super().__init__(edition)
         self._timeperiods = load_timeperiods()
 
+    @override
     def title(self) -> str:
         return _("Time periods")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -274,6 +278,7 @@ class ModeTimeperiods(WatoMode):
         menu.add_doc_reference(_("Time periods"), DocReference.TIMEPERIODS)
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         delname = request.var("_delete")
         if not delname:
@@ -310,6 +315,7 @@ class ModeTimeperiods(WatoMode):
 
         return redirect(mode_url("timeperiods"))
 
+    @override
     def page(self, config: Config) -> None:
         with table_element(
             "timeperiods",
@@ -368,22 +374,27 @@ class ModeTimeperiods(WatoMode):
 # these information
 class ModeTimeperiodImportICal(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "import_ical"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTimeperiods
 
+    @override
     def title(self) -> str:
         if request.var("upload"):
             return _("Add time period")
         return _("Import iCalendar File to create a time period")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.var("upload"):
             return make_simple_form_page_menu(
@@ -445,6 +456,7 @@ class ModeTimeperiodImportICal(WatoMode):
         ):
             raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
 
+    @override
     def page(self, config: Config) -> None:
         if not request.var("upload"):
             self._show_import_ical_page()
@@ -534,17 +546,21 @@ class ModeTimeperiodImportICal(WatoMode):
 
 class ModeEditTimeperiod(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_timeperiod"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTimeperiods
 
+    @override
     def _from_vars(self) -> None:
         self._timeperiods = load_timeperiods()
         self._name = (
@@ -574,11 +590,13 @@ class ModeEditTimeperiod(WatoMode):
         except KeyError:
             raise MKUserError(None, _("This time period does not exist."))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add time period")
         return _("Edit time period")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Time period"), breadcrumb, form_name="timeperiod", button_name="_save"
@@ -766,6 +784,7 @@ class ModeEditTimeperiod(WatoMode):
 
         return False
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -808,6 +827,7 @@ class ModeEditTimeperiod(WatoMode):
         self._timeperiods = load_timeperiods()
         return redirect(mode_url("timeperiods"))
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("timeperiod", method="POST"):
             self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))

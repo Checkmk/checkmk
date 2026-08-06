@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -22,7 +21,7 @@ from collections.abc import Collection, Generator, Iterator, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, TypedDict
+from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, override, TypedDict
 
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log
@@ -338,6 +337,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         declare_notification_plugin_permissions()
 
     @classmethod
+    @override
     def _rule_match_conditions(
         cls,
         edition: Edition,
@@ -701,6 +701,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         except IndexError:
             return _("Plain email")
 
+    @override
     def _add_change(
         self,
         *,
@@ -876,10 +877,12 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
 class ModeNotifications(ABCNotificationsMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "notifications"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
@@ -888,15 +891,18 @@ class ModeNotifications(ABCNotificationsMode):
         options = user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
 
+    @override
     def title(self) -> str:
         return _("Notifications")
 
+    @override
     def _breadcrumb_url(self) -> str:
         search = request.get_str_input("search", "")
         if search:
             return self.mode_url(search=search)
         return self.mode_url()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         search_vars: HTTPVariables = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
@@ -1079,6 +1085,7 @@ class ModeNotifications(ABCNotificationsMode):
             ),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1124,6 +1131,7 @@ class ModeNotifications(ABCNotificationsMode):
             },
         )
 
+    @override
     def page(self, config: Config) -> None:
         self._show_overview()
         self._show_rules(analyse=None, config=config)
@@ -1450,16 +1458,20 @@ class ModeAnalyzeNotifications(ModeNotifications):
         self._show_user_rules = options.get("show_user_rules", False)
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "analyze_notifications"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotifications
 
+    @override
     def title(self) -> str:
         return _("Analyze recent notifications")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -1567,6 +1579,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         )
         return menu
 
+    @override
     def _extend_display_dropdown(self, menu: PageMenu) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
         display_dropdown.topics.insert(
@@ -1617,6 +1630,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             ),
         )
 
+    @override
     def page(self, config: Config) -> None:
         result = self._get_result_from_request(debug=config.debug)
         self._show_bulk_notifications(debug=config.debug, table_row_limit=config.table_row_limit)
@@ -1772,6 +1786,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(css=["notification_context hidden"])
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1808,9 +1823,11 @@ class NotificationTestRequest(NamedTuple):
 
 
 class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
+    @override
     def command_name(self) -> str:
         return "notification-test"
 
+    @override
     def get_request(self, config: Config, request: Request) -> NotificationTestRequest:
         if (context := request.var("context")) is None:
             raise MKGeneralException(_("Context is missing"))
@@ -1821,6 +1838,7 @@ class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
             debug=request.var("debug", "") == "1",
         )
 
+    @override
     def execute(self, api_request: NotificationTestRequest) -> NotifyAnalysisInfo | None:
         return notification_test(
             raw_context=json.loads(api_request.context),
@@ -1846,16 +1864,20 @@ class ModeTestNotifications(ModeNotifications):
         self._show_user_rules = options.get("show_user_rules", False)
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "test_notifications"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotifications
 
+    @override
     def title(self) -> str:
         return _("Test notifications")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         search_vars: HTTPVariables = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
@@ -1968,6 +1990,7 @@ class ModeTestNotifications(ModeNotifications):
         )
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1993,6 +2016,7 @@ class ModeTestNotifications(ModeNotifications):
 
         return redirect(self.mode_url())
 
+    @override
     def page(self, config: Config) -> None:
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
@@ -2798,6 +2822,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def __init__(self, edition: Edition) -> None:
         super().__init__(edition)
 
+    @override
     def _from_vars(self) -> None:
         self._users = userdb.load_users(
             lock=transactions.is_transaction() or request.has_var("_move")
@@ -2814,9 +2839,11 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def _user_id(self) -> UserId:
         raise NotImplementedError
 
+    @override
     def title(self) -> str:
         return _("Custom notification table for user %(user_id)s") % {"user_id": self._user_id()}
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url(user=self._user_id()))
@@ -2869,6 +2896,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             return redirect(self.mode_url(user=self._user_id(), search=search))
         return redirect(self.mode_url(user=self._user_id()))
 
+    @override
     def page(self, config: Config) -> None:
         self._render_notification_rules(
             rules=self._rules,
@@ -2888,14 +2916,17 @@ def _get_notification_sync_sites(site_configs: SiteConfigurations) -> list[SiteI
 
 class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "user_notifications"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditUser
 
@@ -2908,18 +2939,22 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def _breadcrumb_url(self) -> str:
         search = request.get_str_input("search", "")
         if search:
             return self.mode_url(user=self._user_id(), search=search)
         return self.mode_url(user=self._user_id())
 
+    @override
     def _user_id(self) -> UserId:
         return request.get_validated_type_input_mandatory(UserId, "user")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         search_vars: HTTPVariables = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
@@ -2979,10 +3014,12 @@ class ModeUserNotifications(ABCUserNotificationsMode):
 
 class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "user_notifications_p"
 
     @staticmethod
+    @override
     def static_permissions() -> None:
         return None
 
@@ -2990,15 +3027,18 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         super().__init__(edition)
         user.need_permission("general.edit_notifications")
 
+    @override
     def main_menu(self) -> NavItem:
         return main_menu_registry.menu_user()
 
+    @override
     def _breadcrumb_url(self) -> str:
         search = request.get_str_input("search", "")
         if search:
             return self.mode_url(search=search)
         return self.mode_url()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         search_vars: HTTPVariables = (
             [("search", search)] if (search := request.get_str_input("search", "")) else []
@@ -3040,11 +3080,13 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
             inpage_search=PageMenuSearch(),
         )
 
+    @override
     def _user_id(self) -> UserId:
         if user.id is None:
             raise MKUserError("user", _("User ID must not be None"))
         return user.id
 
+    @override
     def _add_change(
         self,
         *,
@@ -3072,6 +3114,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                 site_configs=site_configs,
             )
 
+    @override
     def title(self) -> str:
         return _("Your personal notification rules")
 
@@ -3102,6 +3145,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         raise NotImplementedError
 
     @abc.abstractmethod
+    @override
     def title(self) -> str:
         raise NotImplementedError
 
@@ -3113,6 +3157,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         """Optional method to update the rule after editing with the valuespec"""
         return rule
 
+    @override
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._clone_nr = request.get_integer_input_mandatory("clone", -1)
@@ -3600,11 +3645,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Notification rule"), breadcrumb, form_name="rule", button_name="_save"
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -3655,6 +3702,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         return self._back_mode()
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("rule", method="POST"):
             vs = self._valuespec(config)
@@ -3668,22 +3716,27 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     """Edit a global notification rule"""
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "notification_rule"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotifications
 
+    @override
     def _load_rules(self) -> list[EventRule]:
         if transactions.is_transaction():
             return NotificationRuleConfigFile().load_for_modification()
         return NotificationRuleConfigFile().load_for_reading()
 
+    @override
     def _save_rules(
         self,
         rules: list[EventRule],
@@ -3692,20 +3745,24 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     ) -> None:
         NotificationRuleConfigFile().save(rules, pprint_value=pprint_value)
 
+    @override
     def _user_id(self) -> None:
         return None
 
+    @override
     def _back_mode(self) -> ActionResult:
         search = request.get_str_input("search", "")
         if search:
             return redirect(mode_url("notifications", search=search))
         return redirect(mode_url("notifications"))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add notification rule")
         return _("Edit notification rule %(edit_nr)d") % {"edit_nr": self._edit_nr}
 
+    @override
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification rule")
@@ -3744,26 +3801,32 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
     """Edit notification rule of a given user"""
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "user_notification_rule"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeUserNotifications
 
+    @override
     def _user_id(self) -> UserId:
         return request.get_validated_type_input_mandatory(UserId, "user")
 
+    @override
     def _back_mode(self) -> ActionResult:
         search = request.get_str_input("search", "")
         if search:
             return redirect(mode_url("user_notifications", user=self._user_id(), search=search))
         return redirect(mode_url("user_notifications", user=self._user_id()))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add notification rule for user %(user_id)s") % {"user_id": self._user_id()}
@@ -3772,10 +3835,12 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
             "user_id": self._user_id(),
         }
 
+    @override
     def _load_rules(self) -> list[EventRule]:
         self._users = userdb.load_users(lock=transactions.is_transaction())
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
+    @override
     def _save_rules(
         self,
         rules: list[EventRule],
@@ -3791,23 +3856,28 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
             call_users_saved_hook=True,
         )
 
+    @override
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
 
+    @override
     def _log_text(self, edit_nr: int) -> str:
         return _log_text(self._new, self._user_id(), edit_nr)
 
 
 class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "notification_rule_p"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePersonalUserNotifications
 
     @staticmethod
+    @override
     def static_permissions() -> None:
         return None
 
@@ -3815,11 +3885,13 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         super().__init__(edition)
         user.need_permission("general.edit_notifications")
 
+    @override
     def _user_id(self) -> UserId:
         if user.id is None:
             raise MKUserError("user", _("User ID must not be None"))
         return user.id
 
+    @override
     def _add_change(
         self,
         *,
@@ -3847,27 +3919,32 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
                 site_configs=site_configs,
             )
 
+    @override
     def _back_mode(self) -> ActionResult:
         search = request.get_str_input("search", "")
         if search:
             return redirect(mode_url("user_notifications_p", search=search))
         return redirect(mode_url("user_notifications_p"))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %(edit_nr)d") % {"edit_nr": self._edit_nr}
 
+    @override
     def _get_default_notification_rule(self) -> EventRule | dict[str, object]:
         # For user notifications, we still need the old way to load the
         # default rule. Parameters are stored within the rule
         # (contacts.mk) so no need for a parameter ID here.
         return {}
 
+    @override
     def _load_rules(self) -> list[EventRule]:
         self._users = userdb.load_users(lock=transactions.is_transaction())
         return _load_rules_ensure_user(user_id=self._user_id(), users=self._users)
 
+    @override
     def _save_rules(
         self,
         rules: list[EventRule],
@@ -3883,29 +3960,36 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             call_users_saved_hook=True,
         )
 
+    @override
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         return _set_event_rule_attrs(event_rule=rule, user_id=self._user_id())
 
+    @override
     def _log_text(self, edit_nr: int) -> str:
         return _log_text(self._new, self._user_id(), edit_nr)
 
 
 class ModeNotificationParametersOverview(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "notification_parameters_overview"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotifications
 
+    @override
     def title(self) -> str:
         return _("Parameters for notification methods")
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         # Override to prevent forwarding the search parameter from this page to the parent
         # "Notifications" breadcrumb link. The search here filters notification parameter
@@ -3914,6 +3998,7 @@ class ModeNotificationParametersOverview(WatoMode):
             request.del_var("search")
             return super().breadcrumb()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -3957,6 +4042,7 @@ class ModeNotificationParametersOverview(WatoMode):
         menu.add_doc_reference(_("Notifications"), DocReference.NOTIFICATIONS)
         return menu
 
+    @override
     def page(self, config: Config) -> None:
         html.vue_component(
             component_name="cmk-notification-parameters-overview",
@@ -4014,13 +4100,16 @@ class ModeNotificationParametersOverview(WatoMode):
 
 class ABCNotificationParameterMode(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "notification_parameter"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
+    @override
     def title(self) -> str:
         raise NotImplementedError
 
@@ -4071,6 +4160,7 @@ class ABCNotificationParameterMode(WatoMode):
     def _log_text(self, edit_nr: int) -> str:
         raise NotImplementedError
 
+    @override
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._edit_parameter = request.get_str_input_mandatory("parameter", "")
@@ -4140,6 +4230,7 @@ class ABCNotificationParameterMode(WatoMode):
             return convert_to_legacy_valuespec(plugin.parameter_form(), _)
         return plugin.spec()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Notification parameter"),
@@ -4148,6 +4239,7 @@ class ABCNotificationParameterMode(WatoMode):
             button_name="_save",
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -4239,25 +4331,31 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     """Show notification parameter for a specific method"""
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "notification_parameters"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotificationParametersOverview
 
+    @override
     def _breadcrumb_url(self) -> str:
         """Ensure the URL is computed correctly when linking from man pages to the topic"""
         return self.mode_url(method=self._method())
 
+    @override
     def title(self) -> str:
         return _("Parameters for %(method_name)s") % {"method_name": self._method_name()}
 
+    @override
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification parameter")
         return _("Changed notification parameter %(edit_nr)d") % {"edit_nr": edit_nr}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -4293,6 +4391,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             inpage_search=PageMenuSearch(),
         )
 
+    @override
     def page(self, config: Config) -> None:
         if self._method() not in load_notification_scripts():
             raise MKUserError(
@@ -4413,6 +4512,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                         spec.value_to_html(parameter["parameter_properties"])
                     )
 
+    @override
     def _add_change(
         self,
         *,
@@ -4493,25 +4593,31 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     """Edit a notification parameter"""
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_notification_parameter"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotificationParameters
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         with request.stashed_vars():
             request.set_var("method", self._method())
             return super().breadcrumb()
 
+    @override
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("notification_parameters", **self._preserved_vars()))
 
+    @override
     def title(self) -> str:
         if self._new:
             if self._clone_id:
@@ -4526,6 +4632,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             "edit_nr": self._edit_nr,
         }
 
+    @override
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification parameter")
@@ -4534,6 +4641,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     def _form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return notification_parameter_registry.form_spec(self._method())
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -4577,6 +4685,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             isinstance(data, RawDiskData) and not self._new
         )
 
+    @override
     def page(self, config: Config) -> None:
         value = self._get_parameter_value_and_origin()
 
@@ -4594,13 +4703,16 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
 class ModeEditNotificationRuleQuickSetup(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "notification_rule_quick_setup"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotifications
 
+    @override
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._clone_nr = request.get_integer_input_mandatory("clone", -1)
@@ -4629,20 +4741,24 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         self._quick_setup_id = quick_setup.id
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add notification rule")
         return _("Edit notification rule %(edit_nr)d") % {"edit_nr": self._edit_nr}
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         with request.stashed_vars():
             if request.var("back_mode") != ModeNotifications.name():
                 request.del_var("search")
             return super().breadcrumb()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         search = request.get_str_input("search", "")
         back_mode = request.var("back_mode") or ModeNotifications.name()
@@ -4663,6 +4779,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
             ),
         )
 
+    @override
     def page(self, config: Config) -> None:
         html.enable_help_toggle()
         # TODO temp. solution to provide flashed message after quick setup
@@ -4697,6 +4814,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
 
 class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         for script_name, script_title in notification_script_choices():
             title = _("%(script_title)s") % {"script_title": script_title}
@@ -4715,10 +4833,12 @@ class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
             )
 
     @staticmethod
+    @override
     def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True
 

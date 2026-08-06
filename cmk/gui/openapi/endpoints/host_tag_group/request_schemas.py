@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 import re
-from typing import Any
+from typing import Any, override
 
 from cmk import fields
 from cmk.ccc.regex import REGEX_ID
@@ -44,6 +43,7 @@ class Tags(fields.List):
             **kwargs,
         )
 
+    @override
     def _validate(self, value):
         super()._validate(value)
 
@@ -83,6 +83,7 @@ class HostTagGroupId(fields.String):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
+    @override
     def _validate(self, value):
         super()._validate(value)
         if not (re.match(TAG_GROUP_NAME_PATTERN, value) and re.match(REGEX_ID, value)):

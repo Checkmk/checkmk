@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import itertools
 import logging
 import multiprocessing
@@ -14,6 +12,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 from ssl import SSLCertVerificationError
+from typing import override
 
 from pydantic import BaseModel
 
@@ -53,6 +52,7 @@ class ReceivingProcess[ModelT: BaseModel](multiprocessing.Process):
         self.message_ttl = message_ttl
         self.task_name = f"receiving on queue '{self.queue.value}'"
 
+    @override
     def run(self) -> None:
         self.logger.info("Starting: %(task_name)s", {"task_name": self.task_name})
         signal.signal(

@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import hashlib
 import secrets
 from pathlib import Path
-from typing import assert_never
+from typing import assert_never, override
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
@@ -21,6 +19,7 @@ class AuthenticationSecret(LocalSecret):
     """Secret used to derive cookie authentication hash"""
 
     @property
+    @override
     def path(self) -> Path:
         return paths.auth_secret_file
 
@@ -34,6 +33,7 @@ class PasswordStoreSecret(LocalSecret):
     """
 
     @property
+    @override
     def path(self) -> Path:
         return paths.password_store_secret_file
 
@@ -51,6 +51,7 @@ class SiteInternalSecret(LocalSecret):
     """Used to authenticate between site internal components, e.g. agent-receiver and rest_api"""
 
     @property
+    @override
     def path(self) -> Path:
         return paths.site_internal_secret_file
 

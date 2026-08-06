@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """WATO-Module for the rules and aggregations of Checkmk BI"""
@@ -168,34 +167,42 @@ MainModuleTopicBI = MainModuleTopic(
 
 class MainModuleBI(ABCMainModule):
     @property
+    @override
     def mode_or_url(self) -> str:
         return "bi_packs"
 
     @property
+    @override
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicBI
 
     @property
+    @override
     def title(self) -> str:
         return _("Business Intelligence")
 
     @property
+    @override
     def icon(self) -> StaticIcon | DynamicIcon:
         return StaticIcon(IconNames.aggr)
 
     @property
+    @override
     def permission(self) -> None | str:
         return "bi_rules"
 
     @property
+    @override
     def description(self) -> str:
         return _("Configuration of the Business Intelligence component of Checkmk")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 70
 
     @property
+    @override
     def is_show_more(self) -> bool:
         return True
 
@@ -243,6 +250,7 @@ class ABCBIMode(WatoMode):
                 % {"title": bi_pack.title}
             )
 
+    @override
     def title(self) -> str:
         return _("Business Intelligence")
 
@@ -328,22 +336,27 @@ class ABCBIMode(WatoMode):
 
 class ModeBIEditPack(ABCBIMode):
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_edit_pack"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules", "bi_admin"]
 
+    @override
     def title(self) -> str:
         if self._bi_pack:
             return _("Edit BI pack %(title)s") % {"title": self.bi_pack.title}
         return _("Add BI pack")
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -396,6 +409,7 @@ class ModeBIEditPack(ABCBIMode):
 
         return redirect(mode_url("bi_packs"))
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("BI pack"),
@@ -405,6 +419,7 @@ class ModeBIEditPack(ABCBIMode):
             save_title=_("Save") if self._bi_pack else _("Create"),
         )
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("bi_pack", method="POST"):
             if self._bi_pack is None:
@@ -498,13 +513,16 @@ class ModeBIPacks(ABCBIMode):
         self._contact_group_names = load_contact_group_information()
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_packs"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         bi_config_entries = []
         if user.may("wato.bi_admin"):
@@ -561,6 +579,7 @@ class ModeBIPacks(ABCBIMode):
         page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.BI)
         return page_menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())
@@ -602,6 +621,7 @@ class ModeBIPacks(ABCBIMode):
         self._save_config_and_schedule_compilation()
         return redirect(self.mode_url())
 
+    @override
     def page(self, config: Config) -> None:
         with table_element(
             "bi_packs", title=_("BI configuration packs"), limit=config.table_row_limit
@@ -685,10 +705,12 @@ def _get_pack_confirm_message(pack: BIAggregationPack) -> str:
 
 class ModeBIRules(ABCBIMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_rules"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
@@ -701,6 +723,7 @@ class ModeBIRules(ABCBIMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
@@ -709,17 +732,21 @@ class ModeBIRules(ABCBIMode):
         self._view_type = request.var("view", "list")
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(pack=self.bi_pack.id)
 
+    @override
     def title(self) -> str:
         if self._view_type == "list":
             return self.title_for_pack(self.bi_pack) + " - " + _("Rules")
         return self.title_for_pack(self.bi_pack) + " - " + _("Unused Rules")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         rules_entries = []
         if is_contact_for_pack(self.bi_pack):
@@ -830,6 +857,7 @@ class ModeBIRules(ABCBIMode):
             inpage_search=PageMenuSearch(),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
 
@@ -932,6 +960,7 @@ class ModeBIRules(ABCBIMode):
             )
         self._save_config_and_schedule_compilation()
 
+    @override
     def page(self, config: Config) -> None:
         self.verify_pack_permission(self.bi_pack)
         if self.bi_pack.num_aggregations() == 0 and self.bi_pack.num_rules() == 0:
@@ -1188,10 +1217,12 @@ class ModeBIRules(ABCBIMode):
 
 class ModeBIEditRule(ABCBIMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_edit_rule"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
@@ -1209,14 +1240,17 @@ class ModeBIEditRule(ABCBIMode):
         return self._rule_id
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIRules
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add BI rule")
         return _("Edit rule") + " " + escaping.escape_attribute(self._rule_id)
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Rule"),
@@ -1227,6 +1261,7 @@ class ModeBIEditRule(ABCBIMode):
             save_is_enabled=is_contact_for_pack(self.bi_pack),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1324,6 +1359,7 @@ class ModeBIEditRule(ABCBIMode):
                 forbidden_packs.add(pack_id)
         return forbidden_packs
 
+    @override
     def page(self, config: Config) -> None:
         self.verify_pack_permission(self.bi_pack)
         schema_inst = BIRuleSchema()
@@ -1602,12 +1638,14 @@ class ModeBIEditRule(ABCBIMode):
 
 
 class BIRuleForm(Dictionary):
+    @override
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
         html.javascript("new cmk.bi.BIRulePreview('#form_birule', %s)" % json.dumps(varprefix))
 
 
 class BIAggregationForm(Dictionary):
+    @override
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
         html.javascript(
@@ -1715,6 +1753,7 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._style_type = type
 
+    @override
     def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         html.div("", id_=varprefix)
         html.javascript(
@@ -1722,15 +1761,19 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
+    @override
     def mask(self, value: dict[str, Any]) -> dict[str, Any]:
         return value
 
+    @override
     def canonical_value(self) -> dict[str, Any]:
         return {}
 
+    @override
     def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return ""
 
+    @override
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         value = self.default_value()
         for key, val in request.itervars():
@@ -1744,12 +1787,15 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
                     value["style_config"][clean_key[15:]] = val == "on"
         return value
 
+    @override
     def default_value(self) -> dict[str, Any]:
         return {"type": "none", "style_config": {}}
 
+    @override
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         raise NotImplementedError  # FIXME! Violates LSP!
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         raise NotImplementedError  # FIXME! Violates LSP!
 
@@ -1773,10 +1819,12 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
 
 class BIModeEditAggregation(ABCBIMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_edit_aggregation"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
@@ -1808,9 +1856,11 @@ class BIModeEditAggregation(ABCBIMode):
                 raise MKUserError("id", _("This aggregation does not exist."))
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
+    @override
     def title(self) -> str:
         if self._clone:
             return _("Clone aggregation %(clone)s") % {
@@ -1820,6 +1870,7 @@ class BIModeEditAggregation(ABCBIMode):
             return _("Add aggregation")
         return _("Edit aggregation")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Aggregation"),
@@ -1836,6 +1887,7 @@ class BIModeEditAggregation(ABCBIMode):
                 ids[bi_aggregation.id] = (bi_pack, bi_aggregation)
         return ids
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1907,6 +1959,7 @@ class BIModeEditAggregation(ABCBIMode):
 
         return redirect(mode_url("bi_aggregations", **redirect_kwargs))
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("biaggr", method="POST"):
             # For rendering of the BI aggregation valuespecs we need this
@@ -2145,14 +2198,17 @@ class BIModeEditAggregation(ABCBIMode):
 
 class BIModeAggregations(ABCBIMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_aggregations"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
@@ -2165,18 +2221,22 @@ class BIModeAggregations(ABCBIMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(pack=self.bi_pack.id)
 
+    @override
     def title(self) -> str:
         return self.title_for_pack(self.bi_pack) + " - " + _("Aggregations")
 
     def have_rules(self) -> bool:
         return sum(x.num_rules() for x in self._bi_packs.get_packs().values()) > 0
 
+    @override
     def action(self, config: Config) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction():
@@ -2262,6 +2322,7 @@ class BIModeAggregations(ABCBIMode):
             )
         self._save_config_and_schedule_compilation()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         aggr_entries = []
         if self.have_rules() and is_contact_for_pack(self.bi_pack):
@@ -2340,6 +2401,7 @@ class BIModeAggregations(ABCBIMode):
             inpage_search=PageMenuSearch(),
         )
 
+    @override
     def page(self, config: Config) -> None:
         if request.has_var("reload_page"):
             url = mode_url(self.name(), pack=self.bi_pack.id)
@@ -2522,14 +2584,17 @@ class BIModeAggregations(ABCBIMode):
 
 class ModeBIRuleTree(ABCBIMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bi_rule_tree"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
@@ -2540,14 +2605,17 @@ class ModeBIRuleTree(ABCBIMode):
             raise MKUserError("id", _("This BI rule does not exist"))
         self._rule_tree_bi_pack = rule_tree_bi_pack
 
+    @override
     def title(self) -> str:
         return (
             self.title_for_pack(self._rule_tree_bi_pack) + _("Rule tree of") + " " + self._rule_id
         )
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
+    @override
     def page(self, config: Config) -> None:
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -17,6 +16,7 @@ from __future__ import annotations
 import dataclasses
 import time
 from collections.abc import Collection
+from typing import override
 
 import cmk.utils.paths
 from cmk.ccc import store
@@ -61,10 +61,12 @@ class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.utils.paths.var_dir / "acknowledged_bp_tests.mk"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "analyze_config"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["analyze_config"]
 
@@ -73,14 +75,17 @@ class ModeAnalyzeConfig(WatoMode):
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
 
+    @override
     def _from_vars(self) -> None:
         self._show_ok = request.has_var("show_ok")
         self._show_failed = not request.has_var("hide_failed")
         self._show_ack = request.has_var("show_ack")
 
+    @override
     def title(self) -> str:
         return _("Analyze configuration")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -108,6 +113,7 @@ class ModeAnalyzeConfig(WatoMode):
         )
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return None
@@ -138,6 +144,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         return None
 
+    @override
     def page(self, config: Config) -> None:
         analyze_sites = activation_sites(config.sites)
         if not analyze_sites:

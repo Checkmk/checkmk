@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import override, Protocol
 
 from cmk.agent_based.v2 import render
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
@@ -30,6 +29,7 @@ class Metric:
     levels: tuple[float, float] | None
     boundaries: tuple[float, float] | None
 
+    @override
     def __str__(self) -> str:
         l = f"{self.levels[0]};{self.levels[1]};" if self.levels else ";;"
         b = f"{self.boundaries[0]};{self.boundaries[1]}" if self.boundaries else ";"

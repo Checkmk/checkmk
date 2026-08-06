@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
@@ -13,7 +12,7 @@
 import abc
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
-from typing import Any, Literal, TypeGuard
+from typing import Any, Literal, override, TypeGuard
 
 import cmk.gui.view_utils
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -253,12 +252,15 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
 
 class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
+    @override
     def css_class(self) -> str:
         return "aggrtree"
 
+    @override
     def _toggle_js_function(self) -> str:
         return "cmk.bi.toggle_subtree"
 
+    @override
     def _show_subtree(
         self,
         tree: BIAggrTreeState | BILeafTreeState,
@@ -353,6 +355,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             html.close_li()
 
     @contextmanager
+    @override
     def _show_node(
         self,
         tree: BIAggrTreeState | BILeafTreeState,
@@ -446,12 +449,15 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
 
 class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
+    @override
     def css_class(self) -> str:
         return "aggrtree_box"
 
+    @override
     def _toggle_js_function(self) -> str:
         return "cmk.bi.toggle_box"
 
+    @override
     def _show_subtree(
         self,
         tree: BIAggrTreeState | BILeafTreeState,
@@ -508,6 +514,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             html.close_span()
 
     @contextmanager
+    @override
     def _show_node(
         self,
         tree: BIAggrTreeState | BILeafTreeState,
@@ -517,6 +524,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     ) -> Iterator[None]:
         yield
 
+    @override
     def _assume_icon(self, site: str, host: str, service: str | None) -> None:
         return  # No assume icon with boxes
 
@@ -524,6 +532,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
 class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
     _mirror = False
 
+    @override
     def _show_tree(self) -> None:
         td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"
 

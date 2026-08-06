@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -215,6 +214,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
     def __init__(self, configured_sites: SiteConfigurations) -> None:
         self._configured_sites = configured_sites
 
+    @override
     def form_spec(self) -> CascadingSingleChoice:
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
         site_elements: list[SingleChoiceElementExtended[str]] = [
@@ -262,6 +262,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
             ),
         )
 
+    @override
     def from_form_spec(self, data: object) -> tuple[SiteId, str] | None:
         match data:
             case ("disabled", None):
@@ -271,6 +272,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
             case _:
                 raise ValueError(f"Invalid status host form data: {data!r}")
 
+    @override
     def to_form_spec(self, model: tuple[SiteId, str] | None) -> tuple[str, object]:
         if model is None:
             return "disabled", None
@@ -279,14 +281,17 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
 
 class ModeEditSite(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_site"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_SITES
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeDistributedMonitoring
 
@@ -299,6 +304,7 @@ class ModeEditSite(WatoMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
@@ -366,15 +372,18 @@ class ModeEditSite(WatoMode):
             except KeyError:
                 raise MKUserError(None, _("The requested site does not exist"))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add site connection")
         return _("Edit site connection %(site_id)s") % {"site_id": self._site_id}
 
+    @override
     def _breadcrumb_url(self) -> str:
         assert self._site_id is not None
         return self.mode_url(site=self._site_id)
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"), breadcrumb, form_name="site", button_name="_save"
@@ -464,6 +473,7 @@ class ModeEditSite(WatoMode):
         flash(msg)
         return redirect(mode_url("sites"))
 
+    @override
     def action(self, config: Config) -> ActionResult:
         site_spec = self._site_from_form_spec(config)
         return self.save_site_changes(
@@ -475,6 +485,7 @@ class ModeEditSite(WatoMode):
             liveproxyd_enabled=config.liveproxyd_enabled,
         )
 
+    @override
     def page(self, config: Config) -> None:
         flat_catalog = self._flat_catalog(config)
         with html.form_context("site"):
@@ -832,14 +843,17 @@ class ModeEditSite(WatoMode):
 
 class ModeEditBrokerConnection(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_broker_connection"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_SITES
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeDistributedMonitoring
 
@@ -852,6 +866,7 @@ class ModeEditBrokerConnection(WatoMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
@@ -889,15 +904,18 @@ class ModeEditBrokerConnection(WatoMode):
                     None, _("The requested connection %(el_id)s does not exist") % {"el_id": el_id}
                 )
 
+    @override
     def title(self) -> str:
         if self._is_new:
             return _("Add message broker connection")
         return _("Edit message broker connection %(edit_id)s") % {"edit_id": self._edit_id}
 
+    @override
     def _breadcrumb_url(self) -> str:
         assert self._edit_id is not None
         return self.mode_url(site=self._edit_id)
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Connection"), breadcrumb, form_name="broker_connection", button_name="_save"
@@ -911,6 +929,7 @@ class ModeEditBrokerConnection(WatoMode):
                 % {"connection_id": connection_id},
             )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
@@ -955,6 +974,7 @@ class ModeEditBrokerConnection(WatoMode):
         flash(msg)
         return redirect(mode_url("sites"))
 
+    @override
     def page(self, config: Config) -> None:
         connection_vs = (
             {
@@ -1050,10 +1070,12 @@ class ModeEditBrokerConnection(WatoMode):
 
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "sites"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_SITES
 
@@ -1061,9 +1083,11 @@ class ModeDistributedMonitoring(WatoMode):
         super().__init__(edition)
         self._site_mgmt = site_management_registry["site_management"]
 
+    @override
     def title(self) -> str:
         return _("Distributed monitoring")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         page_menu: PageMenu = PageMenu(
             dropdowns=[
@@ -1105,6 +1129,7 @@ class ModeDistributedMonitoring(WatoMode):
         page_menu.add_doc_reference(title=self.title(), doc_ref=DocReference.DISTRIBUTED_MONITORING)
         return page_menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1478,6 +1503,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.footer()
         return FinalizeRequest(code=200)
 
+    @override
     def page(self, config: Config) -> None:
         sites = sort_sites(site_configs := self._site_mgmt.load_sites())
 
@@ -1901,14 +1927,17 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_site_globals"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_SITES
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSite
 
@@ -1921,6 +1950,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
@@ -1944,12 +1974,15 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         else:
             self._current_settings = self._site.get("globals", {})
 
+    @override
     def title(self) -> str:
         return _("Edit site-specific global settings of %(site_id)s") % {"site_id": self._site_id}
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(site=self._site_id)
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -1965,6 +1998,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return menu
 
     # TODO: Consolidate with ModeEditGlobals.action()
+    @override
     def action(self, config: Config) -> ActionResult:
         varname = request.get_ascii_input("_varname")
         action = request.get_ascii_input("_action")
@@ -2039,13 +2073,16 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("edit_site_globals", site=self._site_id))
 
+    @override
     def _groups(self) -> Iterable[ConfigVariableGroup]:
         return self._get_groups(show_all=True)
 
     @property
+    @override
     def edit_mode_name(self) -> str:
         return "edit_site_configvar"
 
+    @override
     def page(self, config: Config) -> None:
         html.help(
             _(
@@ -2088,17 +2125,21 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_site_configvar"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSiteGlobals
 
+    @override
     def _from_vars(self) -> None:
         super()._from_vars()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
@@ -2112,12 +2153,15 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         self._current_settings = site.setdefault("globals", {})
         self._global_settings = load_configuration_settings()
 
+    @override
     def title(self) -> str:
         return _("Site-specific global configuration for %(site_id)s") % {"site_id": self._site_id}
 
+    @override
     def _affected_sites(self) -> list[SiteId]:
         return [self._site_id]
 
+    @override
     def _save(
         self, tree: FolderTree, *, pprint_value: bool, use_git: bool, liveproxyd_enabled: bool
     ) -> None:
@@ -2133,12 +2177,14 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
+    @override
     def _show_global_setting(self) -> None:
         forms.section(_("Global setting"))
         self._render_readonly_value(
             "_vue_global_settings_global", self._global_settings[self._varname]
         )
 
+    @override
     def _back_url(self) -> str:
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
@@ -2149,14 +2195,17 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "site_livestatus_encryption"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_SITES
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSite
 
@@ -2170,9 +2219,11 @@ class ModeSiteLivestatusEncryption(WatoMode):
         except KeyError:
             raise MKUserError("site", _("This site does not exist."))
 
+    @override
     def title(self) -> str:
         return _("Livestatus encryption of %(site_id)s") % {"site_id": self._site_id}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -2183,6 +2234,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return None
@@ -2256,6 +2308,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         )
         return None
 
+    @override
     def page(self, config: Config) -> None:
         if not is_livestatus_encrypted(self._site):
             html.show_message(

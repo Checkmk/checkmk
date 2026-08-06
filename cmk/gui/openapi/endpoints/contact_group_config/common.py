@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, override, TypedDict
 
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
@@ -55,6 +54,7 @@ class PathRestriction(OneOfSchema):
         "restrict_values": RestrictValues,
     }
 
+    @override
     def get_obj_type(self, obj: object) -> str:
         if isinstance(obj, dict) and self.type_field in obj:
             return obj[self.type_field]
@@ -122,6 +122,7 @@ class InventoryPaths(OneOfSchema):
         "specific_paths": InventoryPathSpecificPaths,
     }
 
+    @override
     def get_obj_type(self, obj: object) -> str:
         if isinstance(obj, dict) and self.type_field in obj:
             return obj[self.type_field]

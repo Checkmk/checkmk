@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.ccc import version as cmk_version
 from cmk.ccc.i18n import _
@@ -14,6 +14,7 @@ class LicenseStateIncompatible:
     def __init__(self, reason: str) -> None:
         self._reason = reason
 
+    @override
     def __str__(self) -> str:
         return self._reason
 
@@ -22,6 +23,7 @@ class EditionsIncompatible:
     def __init__(self, reason: str) -> None:
         self._reason = reason
 
+    @override
     def __str__(self) -> str:
         return self._reason
 

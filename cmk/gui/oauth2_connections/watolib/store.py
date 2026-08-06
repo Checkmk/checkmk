@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
-from typing import Literal, TypeGuard
+from typing import Literal, override, TypeGuard
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.exceptions import MKUserError
@@ -52,11 +50,13 @@ class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):
             )
         }
 
+    @override
     def filter_usable_entries(
         self, entries: dict[str, OAuth2Connection], acting_user: LoggedInUser
     ) -> dict[str, OAuth2Connection]:
         return self.filter_by_passwords(entries, load_passwords(acting_user))
 
+    @override
     def filter_editable_entries(
         self, entries: dict[str, OAuth2Connection], acting_user: LoggedInUser
     ) -> dict[str, OAuth2Connection]:

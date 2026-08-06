@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
 from collections.abc import Iterable
+from typing import override
 
 import cmk.utils.paths
 from cmk.base.config import LoadingResult
@@ -40,6 +39,7 @@ def _anonymize_auto_check(anon_interface: AnonInterface, check: AutocheckEntry) 
 
 
 class AutochecksSteps(AnonymizeStep):
+    @override
     def run(
         self,
         anon_interface: AnonInterface,

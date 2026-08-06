@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Notification-related automation results."""
 
 from __future__ import annotations
 
 from ast import literal_eval
 from dataclasses import asdict, dataclass
-from typing import Self
+from typing import override, Self
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -27,6 +25,7 @@ from ..types import AutomationID
 @dataclass
 class NotificationReplayResult(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("notification-replay")
 
@@ -39,6 +38,7 @@ class NotificationAnalyseResult(ABCAutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("notification-analyse")
 
@@ -51,6 +51,7 @@ class NotificationTestResult(ABCAutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("notification-test")
 
@@ -63,6 +64,7 @@ class NotificationGetBulksResult(ABCAutomationResult):
     result: NotifyBulks
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("notification-get-bulks")
 
@@ -76,13 +78,16 @@ class NotifyResult(ABCAutomationResult):
     output: str
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("notify")
 
     @classmethod
+    @override
     def deserialize(cls, serialized_result: SerializedResult) -> Self:
         return cls(**literal_eval(serialized_result))
 
+    @override
     def serialize(
         self,
         for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites

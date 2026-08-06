@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -20,7 +19,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Collection, Mapping, Sequence
-from typing import Any, overload, TypedDict, Union
+from typing import Any, overload, override, TypedDict, Union
 
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -95,13 +94,16 @@ def show_value_model_editable(used_value_model: FormSpec[Any] | ValueSpec) -> No
 
 class ModeCheckPlugins(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "check_plugins"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
+    @override
     def _from_vars(self) -> None:
         self._manpages = _get_check_catalog(
             discover_families(raise_errors=False),
@@ -110,14 +112,17 @@ class ModeCheckPlugins(WatoMode):
         )
         self._titles = man_pages.CATALOG_TITLES
 
+    @override
     def title(self) -> str:
         return _("Catalog of check plug-ins")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(config, breadcrumb)
         menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
+    @override
     def page(self, config: Config) -> None:
         html.help(
             _(
@@ -148,17 +153,21 @@ class ModeCheckPlugins(WatoMode):
 
 class ModeCheckPluginSearch(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "check_plugin_search"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPlugins
 
+    @override
     def _from_vars(self) -> None:
         self._search = get_search_expression()
         self._manpages = _get_check_catalog(
@@ -168,9 +177,11 @@ class ModeCheckPluginSearch(WatoMode):
         )
         self._titles = man_pages.CATALOG_TITLES
 
+    @override
     def title(self) -> str:
         return "{}: {}".format(_("Check plug-ins matching"), self._search)
 
+    @override
     def page(self, config: Config) -> None:
         search_form(title="%s: " % _("Search for check plug-ins"), mode="check_plugin_search")
 
@@ -233,14 +244,17 @@ class ModeCheckPluginSearch(WatoMode):
 
 class ModeCheckPluginTopic(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "check_plugin_topic"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPlugins
 
@@ -253,9 +267,11 @@ class ModeCheckPluginTopic(WatoMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         """Add each individual level of the catalog topics as single breadcrumb item"""
         parent_cls = self.parent_mode()
@@ -266,10 +282,12 @@ class ModeCheckPluginTopic(WatoMode):
         breadcrumb.append(self._breadcrumb_item())
         return breadcrumb
 
+    @override
     def _breadcrumb_url(self) -> str:
         """Ensure the URL is computed correctly when linking from man pages to the topic"""
         return self.mode_url(topic=self._topic)
 
+    @override
     def _from_vars(self) -> None:
         self._topic = request.get_ascii_input_mandatory("topic", "")
         if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
@@ -297,11 +315,13 @@ class ModeCheckPluginTopic(WatoMode):
         if len(self._path) == 2:
             self._topic_title = self._titles.get(self._path[1], self._path[1])
 
+    @override
     def title(self) -> str:
         if self._topic == "unsorted":
             return "unsorted"
         return self._topic_title
 
+    @override
     def page(self, config: Config) -> None:
         if isinstance(self._manpages, list):
             _render_manpage_list(
@@ -522,17 +542,21 @@ def _get_check_catalog(
 
 class ModeCheckManPage(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "check_manpage"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPluginTopic
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
         # ensure that the topic is available.
@@ -555,6 +579,7 @@ class ModeCheckManPage(WatoMode):
 
         return None
 
+    @override
     def _from_vars(self) -> None:
         self._check_plugin_name = request.get_ascii_input_mandatory("check_type", "")
 
@@ -607,6 +632,7 @@ class ModeCheckManPage(WatoMode):
                 % {"check_plugin_name": self._check_plugin_name},
             )
 
+    @override
     def title(self) -> str:
         return self._manpage.title
 
@@ -615,6 +641,7 @@ class ModeCheckManPage(WatoMode):
     # is currently in use (Livestatus query) and display this information
     # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plug-in is not in use.
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if self._check_plugin_name.startswith("check_"):
             command = "check_mk_active-" + self._check_plugin_name[6:]
@@ -648,6 +675,7 @@ class ModeCheckManPage(WatoMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def page(self, config: Config) -> None:
         html.open_table(class_=["data", "headerleft"])
 

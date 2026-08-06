@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Plain GUI pages that want an entry in a main menu.
 
 Views, dashboards and pagetypes reach a main menu through their own stores. A
@@ -18,6 +16,7 @@ plugin only loads in the editions that ship it.
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import override
 
 import cmk.ccc.plugin_registry
 from cmk.gui.type_defs import Visual
@@ -37,6 +36,7 @@ class MainMenuPage:
 
 
 class MainMenuPageRegistry(cmk.ccc.plugin_registry.Registry[MainMenuPage]):
+    @override
     def plugin_name(self, instance: MainMenuPage) -> str:
         return instance.ident
 

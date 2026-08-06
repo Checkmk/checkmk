@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -214,32 +213,40 @@ def transform_old_dict_based_snapins() -> None:
             _spec = snapin
 
             @classmethod
+            @override
             def type_name(cls) -> str:
                 return cls._type_name
 
             @classmethod
+            @override
             def title(cls) -> str:
                 return cls._spec["title"]
 
             @classmethod
+            @override
             def description(cls) -> str:
                 return cls._spec.get("description", "")
 
+            @override
             def show(self, config: Config) -> None:
                 return self._spec["render"]()
 
             @classmethod
+            @override
             def refresh_regularly(cls) -> bool:
                 return cls._spec.get("refresh", False)
 
             @classmethod
+            @override
             def refresh_on_restart(cls) -> bool:
                 return cls._spec.get("restart", False)
 
             @classmethod
+            @override
             def allowed_roles(cls) -> list[str]:
                 return cls._spec["allowed"]
 
+            @override
             def styles(self) -> str | None:
                 return self._spec.get("styles")
 
@@ -431,12 +438,14 @@ class UserSidebarSnapin:
             "visibility": self.visible.value,
         }
 
+    @override
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, UserSidebarSnapin):
             return False
 
         return self.snapin_type == other.snapin_type and self.visible == other.visible
 
+    @override
     def __ne__(self, other: Any) -> bool:
         return not self.__eq__(other)
 

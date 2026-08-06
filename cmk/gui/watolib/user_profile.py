@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import ast
 import time
@@ -13,7 +12,7 @@ from datetime import datetime
 from logging import Logger
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
-from typing import Any, cast, Literal, NamedTuple
+from typing import Any, cast, Literal, NamedTuple, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
@@ -293,9 +292,11 @@ class PushUserProfilesRequest(NamedTuple):
 
 
 class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
+    @override
     def command_name(self) -> str:
         return "push-profiles"
 
+    @override
     def get_request(self, config: Config, request: Request) -> PushUserProfilesRequest:
         return PushUserProfilesRequest(
             ast.literal_eval(request.get_str_input_mandatory("profiles")),
@@ -305,6 +306,7 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
             config.wato_pprint_config,
         )
 
+    @override
     def execute(self, api_request: PushUserProfilesRequest) -> Literal[True]:
         user_profiles = api_request.user_profiles
         visuals_by_user = api_request.user_visuals

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.hooks import request_memoize
@@ -73,6 +72,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs, pprint_value: bool) -> None:
 
 
 class TimeperiodUsageFinderRegistry(Registry[TimeperiodUsageFinder]):
+    @override
     def plugin_name(self, instance: TimeperiodUsageFinder) -> str:
         return instance.__name__
 

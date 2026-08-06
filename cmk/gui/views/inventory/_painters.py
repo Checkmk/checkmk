@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import time
 from collections.abc import Callable, Mapping, Sequence
-from typing import TypedDict
+from typing import override, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -97,24 +96,30 @@ class PainterOptionShowInternalTreePaths(PainterOption):
 
 class PainterInventoryTree(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "inventory_tree"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Inventory tree")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_inventory", "host_structured_status"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["show_internal_tree_paths"]
 
     @property
+    @override
     def load_inv(self) -> bool:
         return True
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> ImmutableTree:
         try:
             _validate_inventory_tree_uniqueness(row)
@@ -123,6 +128,7 @@ class PainterInventoryTree(Painter):
 
         return row.get("host_inventory", ImmutableTree())
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not (tree := self._compute_data(row, cell, user)):
             return "", ""
@@ -142,35 +148,44 @@ class PainterInventoryTree(Painter):
 
         return "invtree", code
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawTree:
         return serialize_tree(self._compute_data(row, cell, user))
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawTree:
         return serialize_tree(self._compute_data(row, cell, user))
 
 
 class PainterInvhistTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "invhist_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Inventory date/time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Date/time")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["invhist_time"],
@@ -183,20 +198,25 @@ class PainterInvhistTime(Painter):
 
 class PainterInvhistDelta(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "invhist_delta"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Inventory changes")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["show_internal_tree_paths"]
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> ImmutableDeltaTree:
         try:
             _validate_inventory_tree_uniqueness(row)
@@ -205,6 +225,7 @@ class PainterInvhistDelta(Painter):
 
         return row.get("invhist_delta", ImmutableDeltaTree())
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not (tree := self._compute_data(row, cell, user)):
             return "", ""
@@ -224,12 +245,15 @@ class PainterInvhistDelta(Painter):
 
         return "invtree", code
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawDeltaTree:
         return serialize_delta_tree(self._compute_data(row, cell, user))
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawDeltaTree:
         return serialize_delta_tree(self._compute_data(row, cell, user))
 
@@ -243,57 +267,72 @@ def _paint_invhist_count(row: Row, what: str) -> CellSpec:
 
 class PainterInvhistRemoved(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "invhist_removed"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Removed entries")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Removed")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_removed"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_invhist_count(row, "removed")
 
 
 class PainterInvhistNew(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "invhist_new"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("New entries")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("New")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_new"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_invhist_count(row, "new")
 
 
 class PainterInvhistChanged(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "invhist_changed"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Changed entries")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Changed")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_changed"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_invhist_count(row, "changed")
 

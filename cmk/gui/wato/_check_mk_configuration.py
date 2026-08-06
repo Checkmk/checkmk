@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -13,7 +12,7 @@
 import logging
 import re
 from collections.abc import Generator, Iterable, Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
@@ -4199,14 +4198,17 @@ ExtraServiceConfFlapDetectionEnabled = ServiceRulespec(
 
 class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
     @property
+    @override
     def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDiscoveryCheckParameters
 
     @property
+    @override
     def sub_group_name(self) -> str:
         return "inventory_and_check_mk_settings"
 
     @property
+    @override
     def title(self) -> str:
         return _("Discovery and Checkmk settings")
 
@@ -5439,14 +5441,17 @@ ExtraServiceConfEscapePluginOutput = ServiceRulespec(
 
 class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
     @property
+    @override
     def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupAgent
 
     @property
+    @override
     def sub_group_name(self) -> str:
         return "general_settings"
 
     @property
+    @override
     def title(self) -> str:
         return _("General Settings")
 
@@ -5793,14 +5798,17 @@ SnmpPorts = HostRulespec(
 
 class RulespecGroupAgentCMKAgent(RulespecSubGroup):
     @property
+    @override
     def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupAgent
 
     @property
+    @override
     def sub_group_name(self) -> str:
         return "check_mk_agent"
 
     @property
+    @override
     def title(self) -> str:
         return _("Checkmk agent")
 

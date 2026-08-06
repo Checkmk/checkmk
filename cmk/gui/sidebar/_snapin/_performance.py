@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui import site_config, sites, user_sites
 from cmk.gui.config import Config
@@ -18,25 +18,31 @@ from ._helpers import snapin_site_choice
 
 class Performance(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "performance"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Server performance")
 
     @classmethod
+    @override
     def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Live monitor of the overall performance of all monitoring servers")
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
+    @override
     def show(self, config: Config) -> None:
         only_sites = snapin_site_choice("performance", user_sites.get_configured_site_choices())
 
@@ -96,10 +102,12 @@ class Performance(SidebarSnapin):
         html.close_table()
 
     @classmethod
+    @override
     def refresh_on_restart(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[RoleName]:
         return [
             "admin",

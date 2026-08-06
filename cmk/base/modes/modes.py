@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -14,6 +13,7 @@ import sys
 import textwrap
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
+from typing import override
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
@@ -302,12 +302,14 @@ class Mode(Option):
         self.long_help = long_help
         self.sub_options = sub_options or []
 
+    @override
     def short_getopt_specs(self) -> list[str]:
         specs = super().short_getopt_specs()
         for option in self.sub_options:
             specs += option.short_getopt_specs()
         return specs
 
+    @override
     def long_getopt_specs(self) -> list[str]:
         specs = super().long_getopt_specs()
         for option in self.sub_options:

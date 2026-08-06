@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -26,7 +25,7 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from pathlib import Path
-from typing import assert_never, Final, Literal, NamedTuple
+from typing import assert_never, Final, Literal, NamedTuple, override
 
 from pydantic import BaseModel
 
@@ -1318,6 +1317,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     housekeeping_max_count = 20
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Service discovery")
 

@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import copy
 from collections.abc import Collection, Sequence
+from typing import override
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
@@ -65,18 +65,23 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class PasswordStoreModeType(SimpleModeType[PasswordConfig]):
+    @override
     def type_name(self) -> str:
         return "password"
 
+    @override
     def name_singular(self) -> str:
         return _("password")
 
+    @override
     def is_site_specific(self) -> bool:
         return False
 
+    @override
     def can_be_disabled(self) -> bool:
         return False
 
+    @override
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         # handled in _add_change
         raise NotImplementedError
@@ -84,10 +89,12 @@ class PasswordStoreModeType(SimpleModeType[PasswordConfig]):
 
 class ModePasswords(SimpleListMode[PasswordConfig]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "passwords"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["passwords"]
 
@@ -99,12 +106,15 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
         )
         self._contact_groups = load_contact_group_information()
 
+    @override
     def title(self) -> str:
         return _("Passwords")
 
+    @override
     def _table_title(self) -> str:
         return _("Passwords")
 
+    @override
     def _validate_deletion(self, ident: str, entry: PasswordConfig, *, debug: bool) -> None:
         if is_locked_by_quick_setup(entry.get("locked_by")):
             raise MKUserError(
@@ -121,6 +131,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
                 % {"name_singular": self._mode_type.name_singular()},
             )
 
+    @override
     def _delete_confirm_message(self) -> str:
         return " ".join(
             [
@@ -133,6 +144,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
             ]
         )
 
+    @override
     def _show_delete_action(self, nr: int, ident: str, entry: PasswordConfig) -> None:
         if is_locked_by_quick_setup(entry.get("locked_by")):
             html.icon_button(
@@ -153,6 +165,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
         else:
             super()._show_delete_action(nr, ident, entry)
 
+    @override
     def page(self, config: Config) -> None:
         html.p(
             _(
@@ -170,6 +183,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
         )
         super().page(config)
 
+    @override
     def _show_entry_cells(self, table: Table, ident: str, entry: PasswordConfig) -> None:
         table.cell(_("ID"), ident)
         table.cell(_("Title"), entry["title"])
@@ -194,6 +208,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
     def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
+    @override
     def _add_change(
         self,
         *,
@@ -237,14 +252,17 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
 
 class ModeEditPassword(SimpleEditMode[PasswordConfig]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_password"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["passwords"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePasswords
 
@@ -256,6 +274,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
             store=PasswordStore(),
         )
 
+    @override
     def _clone_entry(self, entry: PasswordConfig) -> PasswordConfig:
         self._clone_source = entry
         clone = copy.deepcopy(entry)
@@ -263,6 +282,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
         clone.pop("locked_by", None)
         return clone
 
+    @override
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
         elements = super()._vs_mandatory_elements()
         locked_by = None if self._new else self._entry.get("locked_by")
@@ -294,6 +314,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
     def _mandatory_elements(self) -> dict[str, DictElement]:
         return convert_dict_elements_vs2fs(self._vs_mandatory_elements())
 
+    @override
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_passwords"):
             admin_element: list[ValueSpec] = [
@@ -363,6 +384,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
 
         return elements
 
+    @override
     def _page_form_quick_setup_warning(self) -> None:
         locked_by = None if self._new else self._entry.get("locked_by")
         if (
@@ -374,6 +396,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
         elif self._clone_source and (locked_by := self._clone_source.get("locked_by")):
             quick_setup_duplication_warning(locked_by, self._mode_type.name_singular())
 
+    @override
     def _add_change(
         self,
         *,

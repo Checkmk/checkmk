@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import Config
@@ -28,19 +27,24 @@ from cmk.gui.watolib.hosts_and_folders import (
 
 class PainterHostFilename(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_filename"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Checkmk config file name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("File name")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("tt", row["host_filename"])
 
@@ -87,69 +91,87 @@ def paint_wato_folder(row: Row, how: str, *, request: Request) -> CellSpec:
 
 class PainterWatoFolderAbs(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "wato_folder_abs"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Folder - complete path")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Folder")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "wato_folder_abs"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_wato_folder(row, "abs", request=self.request)
 
 
 class PainterWatoFolderRel(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "wato_folder_rel"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Folder - relative path")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Folder")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "wato_folder_rel"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_wato_folder(row, "rel", request=self.request)
 
 
 class PainterWatoFolderPlain(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "wato_folder_plain"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Folder - just folder name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Folder")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "wato_folder_plain"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_wato_folder(row, "plain", request=self.request)
 

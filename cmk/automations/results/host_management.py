@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Host and configuration management results.
 
@@ -15,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import override
 
 from cmk.automations.results._base import ABCAutomationResult, result_type_registry
 from cmk.ccc.hostaddress import HostName
@@ -30,6 +30,7 @@ class RenameHostsResult(ABCAutomationResult):
     action_counts: Mapping[str, int]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("rename-hosts")
 
@@ -40,6 +41,7 @@ result_type_registry.register(RenameHostsResult)
 @dataclass
 class DeleteHostsResult(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("delete-hosts")
 
@@ -50,6 +52,7 @@ result_type_registry.register(DeleteHostsResult)
 @dataclass
 class DeleteHostsKnownRemoteResult(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("delete-hosts-known-remote")
 
@@ -62,6 +65,7 @@ class RestartResult(ABCAutomationResult):
     config_warnings: ConfigurationWarnings
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("restart")
 
@@ -72,6 +76,7 @@ result_type_registry.register(RestartResult)
 @dataclass
 class ReloadResult(RestartResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("reload")
 
@@ -84,6 +89,7 @@ class GetConfigurationResult(ABCAutomationResult):
     result: Mapping[str, object]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("get-configuration")
 
@@ -96,6 +102,7 @@ class GetCheckInformationResult(ABCAutomationResult):
     plugin_infos: Mapping[str, Mapping[str, object]]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("get-check-information")
 
@@ -108,6 +115,7 @@ class GetSectionInformationResult(ABCAutomationResult):
     section_infos: Mapping[str, Mapping[str, str]]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("get-section-information")
 
@@ -121,6 +129,7 @@ class UpdateDNSCacheResult(ABCAutomationResult):
     failed_hosts: Sequence[HostName]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("update-dns-cache")
 
@@ -131,6 +140,7 @@ result_type_registry.register(UpdateDNSCacheResult)
 @dataclass
 class UpdatePasswordsMergedFileResult(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("update-passwords-merged-file")
 
@@ -145,6 +155,7 @@ class GetAgentOutputResult(ABCAutomationResult):
     raw_agent_data: AgentRawData
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("get-agent-output")
 
@@ -157,6 +168,7 @@ class BakeAgentsResult(ABCAutomationResult):
     output: str | None
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("bake-agents")
 
@@ -173,6 +185,7 @@ class BakeryChangedTargetsResult(ABCAutomationResult):
     changed: Sequence[str]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("bakery-changed-targets")
 

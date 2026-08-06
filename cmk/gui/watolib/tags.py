@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Helper functions for dealing with host tags"""
 
@@ -13,7 +12,7 @@ import contextlib
 import dataclasses
 from collections.abc import Mapping, Sequence
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 import cmk.ruleset_matcher.tags
 from cmk.ccc.exceptions import MKGeneralException
@@ -258,11 +257,13 @@ class ABCTagGroupOperation(ABCOperation, abc.ABC):
 
 
 class OperationRemoveTagGroup(ABCTagGroupOperation):
+    @override
     def confirm_title(self) -> str:
         return _("Confirm tag group deletion")
 
 
 class OperationRemoveAuxTag(ABCTagGroupOperation):
+    @override
     def confirm_title(self) -> str:
         return _("Confirm aux tag deletion")
 
@@ -279,6 +280,7 @@ class OperationReplaceGroupedTags(ABCOperation):
         self.remove_tag_ids = remove_tag_ids
         self.replace_tag_ids = replace_tag_ids
 
+    @override
     def confirm_title(self) -> str:
         return _("Confirm tag modifications")
 

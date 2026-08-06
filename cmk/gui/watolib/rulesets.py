@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -409,6 +408,7 @@ class RuleConditions:
     def __bool__(self) -> bool:
         return bool(self.to_config(UseHostFolder.HOST_FOLDER_FOR_UI))
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, RuleConditions) and self.to_config(
             UseHostFolder.HOST_FOLDER_FOR_UI

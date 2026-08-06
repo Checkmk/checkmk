@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
@@ -15,6 +14,7 @@ modified via rules."""
 
 import functools
 from collections.abc import Callable, Collection, Container, Iterator
+from typing import override
 
 import cmk.gui.view_utils
 from cmk.automations.results import AnalyseServiceResult, ServiceInfo
@@ -80,17 +80,21 @@ class ModeObjectParameters(WatoMode):
     _PARAMETERS_OMIT: list = []
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "object_parameters"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "rulesets"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
+    @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
         host = folder_from_request(folder_tree(), request.var("folder"), self._hostname).host(
@@ -104,12 +108,14 @@ class ModeObjectParameters(WatoMode):
         # TODO: Validate?
         self._service = request.get_str_input("service")
 
+    @override
     def title(self) -> str:
         title = _("Effective parameters of") + " " + self._hostname
         if self._service:
             title += " / " + self._service
         return title
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -141,6 +147,7 @@ class ModeObjectParameters(WatoMode):
         if self._service:
             yield make_service_status_link(self._host.name(), self._service)
 
+    @override
     def page(self, config: Config) -> None:
         all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
         for_host: bool = not self._service

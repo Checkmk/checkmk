@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import time
-from typing import Literal
+from typing import Literal, override
 
 from dateutil.relativedelta import relativedelta
 
@@ -61,13 +59,16 @@ class ModeKeyManagement(WatoMode[object]):
         super().__init__(edition)
         self.key_store = key_store
 
+    @override
     def title(self) -> str:
         raise NotImplementedError
 
     @classmethod
+    @override
     def name(cls) -> str:
         raise NotImplementedError
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._may_edit_config():
             return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -110,6 +111,7 @@ class ModeKeyManagement(WatoMode[object]):
     def _may_edit_config(self) -> bool:
         return True
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -155,6 +157,7 @@ class ModeKeyManagement(WatoMode[object]):
     def _table_title(self) -> str:
         raise NotImplementedError
 
+    @override
     def page(self, config: Config) -> None:
         with table_element(
             title=self._table_title(),
@@ -208,11 +211,13 @@ class ModeEditKey(WatoMode[object]):
         self._minlen = 12
         self.key_store = key_store
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Create")
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -260,6 +265,7 @@ class ModeEditKey(WatoMode[object]):
             )
         )
 
+    @override
     def page(self, config: Config) -> None:
         # Currently only "new" is supported
         with html.form_context("key", method="POST"):
@@ -307,11 +313,13 @@ class ModeUploadKey(WatoMode[object]):
         super().__init__(edition)
         self.key_store = key_store
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Upload")
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -388,6 +396,7 @@ class ModeUploadKey(WatoMode[object]):
             )
         )
 
+    @override
     def page(self, config: Config) -> None:
         # Note about the cert/key requirements:
         # * The private key has to be an RSA key because both backup encryption and agent signing
@@ -474,11 +483,13 @@ class ModeDownloadKey(WatoMode[object]):
         super().__init__(edition)
         self.key_store = key_store
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Download")
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -516,6 +527,7 @@ class ModeDownloadKey(WatoMode[object]):
     def _file_name(self, key_id: KeyId, key: Key) -> str:
         raise NotImplementedError
 
+    @override
     def page(self, config: Config) -> None:
         html.p(
             _(

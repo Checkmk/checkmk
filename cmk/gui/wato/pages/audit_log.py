@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Handling of the audit logfiles"""
@@ -13,7 +12,7 @@ import dataclasses
 import time
 from collections.abc import Collection, Iterator
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.version import Edition
@@ -108,6 +107,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
     def _filename_selection_id(self) -> str:
         return "selected_filename"
 
+    @override
     def _parse_data_from_request(self, req: Request) -> Result[AuditLogRequestData, None]:
         if not req.has_var(self._filename_selection_id()):
             return Error(None)
@@ -150,10 +150,12 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             return Error(None)
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "auditlog"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["auditlog"]
 
@@ -172,9 +174,11 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         self._show_object_type = request.get_integer_input_mandatory("show_object_type", 1) == 1
         self._show_object = request.get_integer_input_mandatory("show_object", 1) == 1
 
+    @override
     def title(self) -> str:
         return _("Audit log")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -371,6 +375,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             self._display_audit_log_options()
             return HTML.without_escaping(output_funnel.drain())
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
@@ -388,6 +393,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         return redirect(makeuri(request, []))
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("fileselection_form", method="POST"):
             if self._request_data.is_error() or not self._request_data.ok.selected_filename:

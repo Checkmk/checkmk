@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
@@ -6183,6 +6182,7 @@ class BuiltinViewExtender:
 
 
 class BuiltinViewExtenderRegistry(Registry[BuiltinViewExtender]):
+    @override
     def plugin_name(self, instance: BuiltinViewExtender) -> str:
         return instance.ident
 

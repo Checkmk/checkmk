@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from pydantic import BaseModel
 
@@ -90,12 +88,14 @@ class ParentScanBackgroundJob(BackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Parent scan")
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
 
+    @override
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
             folder_tree(),

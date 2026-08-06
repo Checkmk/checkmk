@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -28,7 +27,18 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
-from typing import Any, cast, Final, Literal, NamedTuple, NotRequired, Protocol, Self, TypedDict
+from typing import (
+    Any,
+    cast,
+    Final,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    override,
+    Protocol,
+    Self,
+    TypedDict,
+)
 
 from redis import Redis
 from redis.client import Pipeline
@@ -942,14 +952,17 @@ class ABCWATOInfoStorage:
 
 
 class StandardWATOInfoStorage(ABCWATOInfoStorage):
+    @override
     def read(self, file_path: Path) -> WATOFolderInfo:
         return store.load_object_from_file(file_path, default={})
 
+    @override
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         store.save_object_to_file(file_path, data)
 
 
 class _PickleWATOInfoStorage(ABCWATOInfoStorage):
+    @override
     def read(self, file_path: Path) -> WATOFolderInfo | None:
         pickle_path = self._add_suffix(file_path)
         if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
@@ -966,6 +979,7 @@ class _PickleWATOInfoStorage(ABCWATOInfoStorage):
 
         return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
 
+    @override
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         pickle_store = store.ObjectStore(
             self._add_suffix(file_path),
@@ -1563,6 +1577,7 @@ class Folder:
             self._loaded_subfolders = self._load_subfolders()
         return self._loaded_subfolders
 
+    @override
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
 
@@ -1989,6 +2004,7 @@ class Folder:
             return False
         return self == folder or self.path() == folder.path()
 
+    @override
     def __eq__(self, other: object) -> bool:
         return id(self) == id(other) or (isinstance(other, Folder) and self.path() == other.path())
 
@@ -1998,6 +2014,7 @@ class Folder:
 
         return self.path() < other.path()
 
+    @override
     def __hash__(self) -> int:
         return id(self)
 
@@ -3339,6 +3356,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Folder]):
         self.tree = tree
         self._raw_dict: dict[PathWithoutSlash, Folder | None] = values
 
+    @override
     def __getitem__(self, path_without_slash: PathWithoutSlash) -> Folder:
         item: Folder | None = self._raw_dict[path_without_slash]
         if item is None:
@@ -3346,9 +3364,11 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Folder]):
             self._raw_dict.__setitem__(path_without_slash, item)
         return item
 
+    @override
     def __iter__(self) -> Iterator[PathWithoutSlash]:
         return iter(self._raw_dict)
 
+    @override
     def __len__(self) -> int:
         return len(self._raw_dict)
 
@@ -3415,6 +3435,7 @@ class SearchFolder:
         self._found_hosts: dict[HostName, Host] | None = None
         self._name = None
 
+    @override
     def __repr__(self) -> str:
         return f"SearchFolder({self.tree!r}, {self._base_folder.path()!r}, {self._name})"
 
@@ -3628,6 +3649,7 @@ class Host:
         self._cluster_nodes = cluster_nodes
         self._cached_host_tags: None | dict[TagGroupID, TagID] = None
 
+    @override
     def __repr__(self) -> str:
         return "Host(%r)" % (self._name)
 
@@ -4303,6 +4325,7 @@ class HostActionMenuEntry:
 
 
 class HostActionMenuRegistry(Registry[HostActionMenuEntry]):
+    @override
     def plugin_name(self, instance: HostActionMenuEntry) -> str:
         return instance.ident
 
@@ -4425,6 +4448,7 @@ class FolderValidators:
 
 
 class FolderValidatorsRegistry(Registry[FolderValidators]):
+    @override
     def plugin_name(self, instance: FolderValidators) -> str:
         return instance.ident
 

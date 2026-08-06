@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Verify or find out a hosts agent related configuration"""
@@ -80,14 +79,17 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
 
 class ModeDiagHost(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "diag_host"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "diag_host"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
@@ -103,6 +105,7 @@ class ModeDiagHost(WatoMode):
             ("traceroute", _("Traceroute")),
         ]
 
+    @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
         self._tree = folder_tree()
@@ -117,9 +120,11 @@ class ModeDiagHost(WatoMode):
         if "cmk/relay_monitored" in self._host.labels():
             raise MKGeneralException(_("This page is not available for hosts monitored via Relay."))
 
+    @override
     def title(self) -> str:
         return _("Test connection to host") + " " + self._hostname
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -167,6 +172,7 @@ class ModeDiagHost(WatoMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -242,6 +248,7 @@ class ModeDiagHost(WatoMode):
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
+    @override
     def page(self, config: Config) -> None:
         html.open_div(class_="diag_host")
         html.open_table()

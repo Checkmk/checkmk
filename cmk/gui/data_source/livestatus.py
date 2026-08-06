@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import functools
 from collections.abc import Callable, Sequence
-from typing import cast
+from typing import cast, override
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -35,6 +33,7 @@ class DataSourceLivestatus(ABCDataSource):
     """Base class for all simple data sources which 1:1 base on a livestatus table"""
 
     @property
+    @override
     def table(self) -> RowTableLivestatus:
         return RowTableLivestatus(self.ident)
 
@@ -85,6 +84,7 @@ class RowTableLivestatus(RowTable):
     def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers: str) -> Query:
         return Query(QuerySpecification(table=self.table_name, columns=columns, headers=headers))
 
+    @override
     def query(
         self,
         datasource: ABCDataSource,

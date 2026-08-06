@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Callable, Collection
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import marshmallow
 from marshmallow.utils import from_iso_time
@@ -54,6 +53,7 @@ class TimePeriodName(fields.String):
             **kwargs,
         )
 
+    @override
     def _validate(self, value):
         super()._validate(value)
 
@@ -101,6 +101,7 @@ class TimePeriodAlias(fields.String):
             **kwargs,
         )
 
+    @override
     def _validate(self, value):
         super()._validate(value)
 

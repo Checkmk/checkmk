@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -53,7 +52,7 @@ from collections.abc import (
 from enum import Enum
 from pathlib import Path
 from re import Pattern
-from typing import Any, cast, Final, Literal, NamedTuple, Protocol, SupportsFloat
+from typing import Any, cast, Final, Literal, NamedTuple, override, Protocol, SupportsFloat
 
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
@@ -381,12 +380,15 @@ class FixedValue[T](ValueSpec[T]):
         self._value = value
         self._totext = totext
 
+    @override
     def canonical_value(self) -> T:
         return self._value
 
+    @override
     def render_input(self, varprefix: str, value: T) -> None:
         html.span(self.value_to_html(value), class_="vs_fixed_value")
 
+    @override
     def value_to_html(self, value: T) -> ValueSpecText:
         if self._totext is not None:
             return self._totext
@@ -394,18 +396,23 @@ class FixedValue[T](ValueSpec[T]):
             return value
         return str(value)
 
+    @override
     def mask(self, value: T) -> T:
         return value
 
+    @override
     def value_to_json(self, value: T) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> T:
         return json_value
 
+    @override
     def from_html_vars(self, varprefix: str) -> T:
         return self._value
 
+    @override
     def validate_datatype(self, value: T, varprefix: str) -> None:
         if not self._value == value:
             raise MKUserError(
@@ -444,9 +451,11 @@ class Age(ValueSpec[int]):
         self._display = display if display is not None else ["days", "hours", "minutes", "seconds"]
         self._cssclass = [] if cssclass is None else [cssclass]
 
+    @override
     def canonical_value(self) -> int:
         return self._bounds.lower(0)
 
+    @override
     def render_input(self, varprefix: str, value: int) -> None:
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
@@ -481,6 +490,7 @@ class Age(ValueSpec[int]):
 
         html.close_div()
 
+    @override
     def from_html_vars(self, varprefix: str) -> int:
         # TODO: Validate for correct numbers!
         return (
@@ -490,20 +500,25 @@ class Age(ValueSpec[int]):
             + request.get_integer_input_mandatory(varprefix + "_seconds", 0)
         )
 
+    @override
     def mask(self, value: int) -> int:
         return value
 
+    @override
     def value_to_html(self, value: int) -> ValueSpecText:
         if value == 0:
             return _("no time")
         return SecondsRenderer.detailed_str(value)
 
+    @override
     def value_to_json(self, value: int) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> int:
         return json_value
 
+    @override
     def validate_datatype(self, value: int, varprefix: str) -> None:
         if not isinstance(value, int):
             raise MKUserError(
@@ -512,9 +527,11 @@ class Age(ValueSpec[int]):
                 % {"value": value, "type": type_name(value)},
             )
 
+    @override
     def _validate_value(self, value: int, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
+    @override
     def transform_value(self, value: int) -> int:
         return self._bounds.transform_value(value)
 
@@ -554,9 +571,11 @@ class TimeSpan(ValueSpec[float]):
         )
         self._cssclass = [] if cssclass is None else [cssclass]
 
+    @override
     def canonical_value(self) -> float:
         return self._bounds.lower(0)
 
+    @override
     def render_input(self, varprefix: str, value: float) -> None:
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
@@ -593,6 +612,7 @@ class TimeSpan(ValueSpec[float]):
 
         html.close_div()
 
+    @override
     def from_html_vars(self, varprefix: str) -> float:
         # TODO: Validate for correct numbers!
         return (
@@ -603,9 +623,11 @@ class TimeSpan(ValueSpec[float]):
             + request.get_integer_input_mandatory(varprefix + "_milliseconds", 0) / 1000.0
         )
 
+    @override
     def mask(self, value: float) -> float:
         return value
 
+    @override
     def value_to_html(self, value: float) -> ValueSpecText:
         if value == 0:
             return _("no time (zero)")
@@ -614,12 +636,15 @@ class TimeSpan(ValueSpec[float]):
             f" {round(frac * 1000)} ms" if frac else ""
         )
 
+    @override
     def value_to_json(self, value: float) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> float:
         return json_value
 
+    @override
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if not isinstance(value, float):
             raise MKUserError(
@@ -628,9 +653,11 @@ class TimeSpan(ValueSpec[float]):
                 % {"value": value, "type": type_name(value)},
             )
 
+    @override
     def _validate_value(self, value: float, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
+    @override
     def transform_value(self, value: float) -> float:
         return self._bounds.transform_value(value)
 
@@ -712,9 +739,11 @@ class Integer(ValueSpec[int]):
         )
         self._display_format = display_format
 
+    @override
     def canonical_value(self) -> int:
         return self._bounds.lower(0)
 
+    @override
     def render_input(self, varprefix: str, value: int | None) -> None:
         # This is needed for displaying the "empty field" when using Integer valuespecs in
         # ListOfStrings()
@@ -728,21 +757,27 @@ class Integer(ValueSpec[int]):
     def _render_value(self, value: int) -> str:
         return self._display_format % value
 
+    @override
     def from_html_vars(self, varprefix: str) -> int:
         return request.get_integer_input_mandatory(varprefix)
 
+    @override
     def mask(self, value: int) -> int:
         return value
 
+    @override
     def value_to_html(self, value: int) -> ValueSpecText:
         return self._renderer.format_text(self._render_value(value))
 
+    @override
     def value_to_json(self, value: int) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> int:
         return int(json_value)
 
+    @override
     def validate_datatype(self, value: int, varprefix: str) -> None:
         if isinstance(value, numbers.Integral):
             return
@@ -752,6 +787,7 @@ class Integer(ValueSpec[int]):
             % {"value": value, "type": type_name(value)},
         )
 
+    @override
     def _validate_value(self, value: int, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
@@ -769,6 +805,7 @@ class Filesize(Integer):
                 return exp, int(value / count)  # fixed: true-division
         raise ValueError("Invalid value: %r" % value)
 
+    @override
     def render_input(self, varprefix: str, value: int | None) -> None:
         # The value type is only Optional to be compatible with the base class
         if value is None:
@@ -779,19 +816,23 @@ class Filesize(Integer):
         choices: Choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]
         html.dropdown(varprefix + "_unit", choices, deflt=str(exp))
 
+    @override
     def from_html_vars(self, varprefix: str) -> int:
         return int(
             request.get_float_input_mandatory(varprefix + "_size")
             * (1024 ** request.get_integer_input_mandatory(varprefix + "_unit"))
         )
 
+    @override
     def value_to_html(self, value: int) -> ValueSpecText:
         exp, count = self.get_exponent(value)
         return f"{count} {self._names[exp]}"
 
+    @override
     def value_to_json(self, value: int) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> int:
         return json_value
 
@@ -871,6 +912,7 @@ class LegacyDataSize(Integer):
         # but quite different in rendering / UX currently.
         return (u := sorted_units[-1]), f"{value / u.value!r}"
 
+    @override
     def render_input(self, varprefix: str, value: int | None) -> None:
         # This is utterly inconsistent with what TimeSpan does :-(
 
@@ -883,19 +925,23 @@ class LegacyDataSize(Integer):
         choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
         html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
 
+    @override
     def from_html_vars(self, varprefix: str) -> int:
         return int(
             request.get_float_input_mandatory(varprefix + "_size")
             * (request.get_integer_input_mandatory(varprefix + "_unit"))
         )
 
+    @override
     def value_to_html(self, value: int) -> ValueSpecText:
         selected_unit, scaled_value = self._scale_value(value)
         return f"{scaled_value} {selected_unit.name}"
 
+    @override
     def value_to_json(self, value: int) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> int:
         return json_value
 
@@ -958,12 +1004,15 @@ class TextInput(ValueSpec[str]):
         self._placeholder = placeholder
         self._autocomplete = autocomplete
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def canonical_value(self) -> str:
         return ""
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
@@ -993,20 +1042,24 @@ class TextInput(ValueSpec[str]):
             return placeholder_size
         return self._size
 
+    @override
     def mask(self, value: str) -> str:
         return value
 
+    @override
     def value_to_html(self, value: str) -> ValueSpecText:
         if not value:
             return self._empty_text
         return value
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         value = request.get_str_input_mandatory(varprefix, "")
         if self._strip and value:
             value = value.strip()
         return value
 
+    @override
     def validate_datatype(self, value: str, varprefix: str) -> None:
         if not isinstance(value, str):
             raise MKUserError(
@@ -1015,6 +1068,7 @@ class TextInput(ValueSpec[str]):
                 % {"type": type_name(value)},
             )
 
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         if self._forbidden_chars:
             for c in self._forbidden_chars:
@@ -1044,9 +1098,11 @@ class TextInput(ValueSpec[str]):
                 % {"maxlen": self._maxlen},
             )
 
+    @override
     def value_to_json(self, value: str) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> str:
         return json_value
 
@@ -1058,12 +1114,14 @@ TextUnicode = TextInput  # alias added in 2.1.0 for compatibility
 class UUID(TextInput):
     """Documentation for UUID"""
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         value = request.get_str_input_mandatory(varprefix, "")
         if not value:
             value = str(uuid.uuid4())
         return value
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         html.hidden_field(varprefix, value, add_var=True)
 
@@ -1239,6 +1297,7 @@ class RegExp(TextInput):
         self._mingroups = mingroups
         self._maxgroups = maxgroups
 
+    @override
     def help(self) -> str | HTML | None:
         help_text: list[str | HTML] = []
 
@@ -1300,6 +1359,7 @@ class RegExp(TextInput):
 
         return " ".join(classes)
 
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         super()._validate_value(value, varprefix)
 
@@ -1416,6 +1476,7 @@ class EmailAddress(TextInput):
         )
         self._make_clickable = make_clickable
 
+    @override
     def value_to_html(self, value: str) -> ValueSpecText:
         if not value:
             return super().value_to_html(value)
@@ -1627,6 +1688,7 @@ class HostAddress(TextInput):
         self._allow_ipv4_address = allow_ipv4_address
         self._allow_ipv6_address = allow_ipv6_address
 
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         if value and self._allow_host_name and self._is_valid_host_name(value):
             return
@@ -1782,6 +1844,7 @@ class Url(TextInput):
         self._show_as_link = show_as_link
         self._link_target = target
 
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         if value is None:
             raise TypeError(value)
@@ -1803,12 +1866,14 @@ class Url(TextInput):
         if not is_allowed_url(value, cross_domain=True, schemes=self._allowed_schemes):
             raise MKUserError(varprefix, _("Invalid URL given"))
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
         if value and "://" not in value:
             value = self._default_scheme + "://" + value
         return value
 
+    @override
     def value_to_html(self, value: str) -> ValueSpecText:
         if not any(value.startswith(scheme + "://") for scheme in self._allowed_schemes):
             value = self._default_scheme + "://" + value
@@ -1891,6 +1956,7 @@ def HTTPSUrl(
 
 
 class CheckmkVersionInput(TextInput):
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         try:
             Version.from_str(value)
@@ -1958,11 +2024,13 @@ class TextAreaUnicode(TextInput):
         self._minrows = minrows  # Minimum number of initial rows when "auto"
         self._monospaced = monospaced  # select TT font
 
+    @override
     def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
             return HTMLWriter.render_pre(value, class_="ve_textarea")
         return value.replace("\n", "<br>")
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
@@ -1996,6 +2064,7 @@ class TextAreaUnicode(TextInput):
         )
 
     # Overridden because we do not want to strip() here and remove '\r'
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         text = request.get_str_input_mandatory(varprefix, "").replace("\r", "")
         if text and not text.endswith("\n"):
@@ -2059,9 +2128,11 @@ class Filename(TextInput):
         self._default_path = default
         self._trans_func = trans_func
 
+    @override
     def canonical_value(self) -> str:
         return self._default_path
 
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         # The transformation function only changes the value for validation. This is
         # usually a function which is later also used within the code which uses
@@ -2129,6 +2200,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         self._split_on_paste = split_on_paste
         self._split_separators = split_separators
 
+    @override
     def help(self) -> str | HTML | None:
         help_texts = [
             super().help(),
@@ -2148,9 +2220,11 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
 
         return " ".join("%s" % t for t in help_texts if t)
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def render_input(self, varprefix: str, value: Sequence[str]) -> None:
         # Form already submitted?
         if request.has_var(varprefix + "_0"):
@@ -2193,9 +2267,11 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             )
         )
 
+    @override
     def canonical_value(self) -> Sequence[str]:
         return []
 
+    @override
     def value_to_html(self, value: Sequence[str]) -> ValueSpecText:
         if not value:
             return self._empty_text
@@ -2208,6 +2284,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             return HTMLWriter.render_table(HTML.empty().join(s))
         return HTML.without_escaping(", ").join(self._valuespec.value_to_html(v) for v in value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> Sequence[str]:
         list_prefix = varprefix + "_"
         return [
@@ -2219,6 +2296,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             and value.strip()
         ]
 
+    @override
     def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
@@ -2229,6 +2307,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
+    @override
     def _validate_value(self, value: Sequence[str], varprefix: str) -> None:
         if len(value) == 0 and not self._allow_empty:
             msg = self._empty_text or _("Please specify at least one value")
@@ -2244,18 +2323,23 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         for nr, s in enumerate(value):
             self._valuespec.validate_value(s, varprefix + "_%d" % nr)
 
+    @override
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    @override
     def mask(self, value: Sequence[str]) -> Sequence[str]:
         return [self._valuespec.mask(e) for e in value]
 
+    @override
     def value_to_json(self, value: Sequence[str]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> Sequence[str]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
+    @override
     def transform_value(self, value: Sequence[str]) -> Sequence[str]:
         return [self._valuespec.transform_value(v) for v in value]
 
@@ -2345,9 +2429,11 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         self._add_icon = add_icon
         self._ignore_complain = ignore_complain
 
+    @override
     def help(self) -> str | HTML | None:
         return " ".join(str(t) for t in [super().help(), self._valuespec.help()] if t)
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
@@ -2357,6 +2443,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
     # of entry, while beginning with 1 (this makes visual
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
+    @override
     def render_input(self, varprefix: str, value: ListOfModel[T]) -> None:
         html.open_div(class_=["valuespec_listof", self._style.value])
 
@@ -2559,9 +2646,11 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
         )
 
+    @override
     def canonical_value(self) -> ListOfModel[T]:
         return []
 
+    @override
     def value_to_html(self, value: ListOfModel[T]) -> ValueSpecText:
         if self._totext:
             if "%d" in self._totext:
@@ -2589,6 +2678,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             n += 1
         return indexes
 
+    @override
     def from_html_vars(self, varprefix: str) -> ListOfModel[T]:
         indexes = self.get_indexes(varprefix)
         value = []
@@ -2598,6 +2688,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             value.append(val)
         return value
 
+    @override
     def validate_datatype(self, value: ListOfModel[T], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
@@ -2606,24 +2697,30 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
+    @override
     def _validate_value(self, value: ListOfModel[T], varprefix: str) -> None:
         if not self._allow_empty and len(value) == 0:
             raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n + 1))
 
+    @override
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    @override
     def mask(self, value: ListOfModel[T]) -> ListOfModel[T]:
         return [self._valuespec.mask(e) for e in value]
 
+    @override
     def value_to_json(self, value: ListOfModel[T]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> ListOfModel[T]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
+    @override
     def transform_value(self, value: ListOfModel[T]) -> ListOfModel[T]:
         return [self._valuespec.transform_value(v) for v in value]
 
@@ -2680,6 +2777,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         self._delete_style = delete_style  # or "filter"
         self._allow_empty = allow_empty
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
@@ -2689,6 +2787,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
         )
 
+    @override
     def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
@@ -2779,12 +2878,15 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         self.del_button(varprefix, ident)
         html.close_td()
 
+    @override
     def canonical_value(self) -> ListOfMultipleModel:
         return {}
 
+    @override
     def mask(self, value: ListOfMultipleModel) -> ListOfMultipleModel:
         return {ident: self._choice_dict[ident].mask(val) for ident, val in value.items()}
 
+    @override
     def value_to_html(self, value: ListOfMultipleModel) -> ValueSpecText:
         table_content = HTML.empty()
         for ident, val in value.items():
@@ -2794,15 +2896,18 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             )
         return HTMLWriter.render_table(table_content)
 
+    @override
     def value_to_json(self, value: ListOfMultipleModel) -> JSONValue:
         return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> ListOfMultipleModel:
         return {
             ident: self._choice_dict[ident].value_from_json(val)
             for ident, val in json_value.items()
         }
 
+    @override
     def from_html_vars(self, varprefix: str) -> ListOfMultipleModel:
         value: dict[str, Any] = {}
         active = request.get_str_input_mandatory("%s_active" % varprefix, "").strip()
@@ -2814,6 +2919,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             value[ident] = vs.from_html_vars(varprefix + "_" + ident)
         return value
 
+    @override
     def validate_datatype(self, value: ListOfMultipleModel, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
@@ -2822,6 +2928,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + "_" + ident)
 
+    @override
     def _validate_value(self, value: ListOfMultipleModel, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You must specify at least one element."))
@@ -2869,31 +2976,39 @@ class Float(ValueSpec[float]):
         self._decimal_separator = decimal_separator
         self._allow_int = allow_int
 
+    @override
     def canonical_value(self) -> float:
         return self._bounds.lower(0.0)
 
+    @override
     def render_input(self, varprefix: str, value: float) -> None:
         self._renderer.render_input(varprefix, self._render_value(value))
 
     def _render_value(self, value: float) -> str:
         return self._display_format % savefloat(value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> float:
         return request.get_float_input_mandatory(varprefix)
 
+    @override
     def mask(self, value: float) -> float:
         return value
 
+    @override
     def value_to_html(self, value: float) -> ValueSpecText:
         txt = self._renderer.format_text(self._render_value(value))
         return txt.replace(".", self._decimal_separator)
 
+    @override
     def value_to_json(self, value: float) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> float:
         return json_value
 
+    @override
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if isinstance(value, float):
             return
@@ -2909,6 +3024,7 @@ class Float(ValueSpec[float]):
             },
         )
 
+    @override
     def _validate_value(self, value: float, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
@@ -2949,9 +3065,11 @@ class Percentage(Float):
             validate=validate,
         )
 
+    @override
     def value_to_html(self, value: float) -> ValueSpecText:
         return (self._display_format + "%%") % value
 
+    @override
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if self._allow_int:
             if not isinstance(value, int | float):
@@ -2989,27 +3107,35 @@ class Checkbox(ValueSpec[bool]):
         self._false_label = false_label if false_label is not None else _("off")
         self._onclick = onclick
 
+    @override
     def canonical_value(self) -> bool:
         return False
 
+    @override
     def render_input(self, varprefix: str, value: bool) -> None:
         html.checkbox(varprefix, value, label=self._label, onclick=self._onclick)
 
+    @override
     def mask(self, value: bool) -> bool:
         return value
 
+    @override
     def value_to_html(self, value: bool) -> ValueSpecText:
         return self._true_label if value else self._false_label
 
+    @override
     def value_to_json(self, value: bool) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> bool:
         return json_value
 
+    @override
     def from_html_vars(self, varprefix: str) -> bool:
         return bool(request.var(varprefix))
 
+    @override
     def validate_datatype(self, value: bool, varprefix: str) -> None:
         if not isinstance(value, bool):
             raise MKUserError(
@@ -3099,6 +3225,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
         self._deprecated_choices = deprecated_choices
         self._html_attrs: HTMLTagAttributes = {} if html_attrs is None else html_attrs
 
+    @override
     def allow_empty(self) -> bool:
         return self._read_only or self._no_preselect_title is None
 
@@ -3107,12 +3234,14 @@ class DropdownChoice[T](ValueSpec[T | None]):
         pre = [] if self._no_preselect_title is None else [(None, self._no_preselect_title)]
         return pre + list(result)
 
+    @override
     def canonical_value(self) -> T | None:
         choices = self.choices()
         if len(choices) > 0:
             return choices[0][0]
         return None
 
+    @override
     def render_input(self, varprefix: str, value: T | None) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
@@ -3165,6 +3294,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
             **self._html_attrs,
         )
 
+    @override
     def validate_datatype(self, value: T | None, varprefix: str) -> None:
         if (
             any(isinstance(value, type(choice[0])) for choice in self.choices())
@@ -3184,9 +3314,11 @@ class DropdownChoice[T](ValueSpec[T | None]):
             return tmpl % {"value": value}
         return tmpl % (value,) if "%s" in tmpl or "%r" in tmpl else tmpl
 
+    @override
     def mask(self, value: T | None) -> T | None:
         return value
 
+    @override
     def value_to_html(self, value: T | None) -> ValueSpecText:
         for val, title in self.choices():
             if value == val:
@@ -3195,12 +3327,15 @@ class DropdownChoice[T](ValueSpec[T | None]):
                 return title
         return self._get_invalid_choice_text(self._invalid_choice_title, value)
 
+    @override
     def value_to_json(self, value: T | None) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> T | None:
         return json_value
 
+    @override
     def from_html_vars(self, varprefix: str) -> T | None:
         choices = self.choices()
 
@@ -3238,6 +3373,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
     def option_id(val: object) -> str:
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
+    @override
     def _validate_value(self, value: T | None, varprefix: str) -> None:
         if self._no_preselect_title is not None and value is None:
             raise MKUserError(varprefix, _("Please make a selection"))
@@ -3313,9 +3449,11 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         )
         self._cssclass = cssclass
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         return request.get_str_input_mandatory(varprefix, "")
 
+    @override
     def validate_datatype(self, value: str | None, varprefix: str) -> None:
         if not isinstance(value, str):
             raise MKUserError(
@@ -3324,13 +3462,16 @@ class AjaxDropdownChoice(DropdownChoice[str]):
                 % {"type": type_name(value)},
             )
 
+    @override
     def _validate_value(self, value: str | None, varprefix: str) -> None:
         if value and self._regex and not self._regex.match(value):
             raise MKUserError(varprefix, self._regex_error)
 
+    @override
     def value_to_html(self, value: str | None) -> ValueSpecText:
         return super().value_to_html(value) if self.choices() else str(value)
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
             html.write_text_permissive(self._label)
@@ -3393,6 +3534,7 @@ class MonitoredHostname(AjaxDropdownChoice):
             validate=_validate_hostname if validate is None else validate,
         )
 
+    @override
     def value_to_html(self, value: str | None) -> ValueSpecText:
         if value is None:
             return ""
@@ -3449,6 +3591,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
     def _choices_from_value(self, value: str | None) -> Choices:
         raise NotImplementedError
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
@@ -3713,15 +3856,18 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
         self._show_title_of_choices = show_title_of_choices
 
+    @override
     def allow_empty(self) -> bool:
         return self._no_preselect_title is None
 
     def choices(self) -> Sequence[CascadingDropdownCleanChoice]:
         return list(itertools.chain(self._preselected, self._choices()))
 
+    @override
     def canonical_value(self) -> CascadingDropdownChoiceValue:
         return self._result_from_fallback_choice("canonical_value")
 
+    @override
     def default_value(self) -> CascadingDropdownChoiceValue:
         if isinstance(self._default_value, Sentinel):
             return self._result_from_fallback_choice("default_value")
@@ -3751,6 +3897,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
         return value, vs
 
+    @override
     def render_input(
         self,
         varprefix: str,
@@ -3891,6 +4038,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             return CascadingDropdownChoiceWithValue(ident, title, vs, value, index)
         return CascadingDropdownChoiceWithoutValue(ident, title, index)
 
+    @override
     def value_to_html(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         choice = self._choice_from_value(value)
         if isinstance(choice, CascadingDropdownChoiceWithoutValue):
@@ -3924,12 +4072,14 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             + rendered_value
         )
 
+    @override
     def value_to_json(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         choice = self._choice_from_value(value)
         if isinstance(choice, CascadingDropdownChoiceWithoutValue):
             return choice.ident
         return [choice.ident, choice.vs.value_to_json(choice.value)]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
         if isinstance(json_value, list):
             value: CascadingDropdownChoiceValue = (json_value[0], json_value[1])
@@ -3942,12 +4092,14 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         # no value, just a ident:
         return json_value
 
+    @override
     def mask(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
         choice = self._choice_from_value(value)
         if isinstance(choice, CascadingDropdownChoiceWithoutValue):
             return choice.ident
         return choice.ident, choice.vs.mask(choice.value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> CascadingDropdownChoiceValue:
         choices = self.choices()
 
@@ -3963,12 +4115,14 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             return value
         return value, vs.from_html_vars(varprefix + "_%d" % sel)
 
+    @override
     def validate_datatype(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
         choice = self._choice_from_value(value, varprefix)
         if isinstance(choice, CascadingDropdownChoiceWithoutValue):
             return
         choice.vs.validate_datatype(choice.value, varprefix + "_%d" % choice.index_)
 
+    @override
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
         if self._no_preselect_title is not None and value is None:
             raise MKUserError(varprefix + "_sel", _("Please make a selection"))
@@ -3985,12 +4139,14 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             varprefix + "_sel", _("Value %(value)r is not allowed here.") % {"value": value}
         )
 
+    @override
     def transform_value(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
         choice = self._choice_from_value(value)
         if isinstance(choice, CascadingDropdownChoiceWithoutValue):
             return choice.ident
         return (choice.ident, choice.vs.transform_value(choice.value))
 
+    @override
     def has_show_more(self) -> bool:
         return any(vs.has_show_more() for _name, _title, vs in self.choices() if vs is not None)
 
@@ -4053,6 +4209,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         )
         self._elements: Sequence[ListChoiceChoice] = []
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
@@ -4074,6 +4231,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def get_elements(self) -> Sequence[ListChoiceChoice]:
         raise NotImplementedError
 
+    @override
     def canonical_value(self) -> ListChoiceModel:
         return []
 
@@ -4095,6 +4253,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         html.close_tr()
         html.close_table()
 
+    @override
     def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
         self.load_elements()
         if not self._elements:
@@ -4106,9 +4265,11 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
+    @override
     def mask(self, value: ListChoiceModel) -> ListChoiceModel:
         return value
 
+    @override
     def value_to_html(self, value: ListChoiceModel) -> ValueSpecText:
         if not value:
             return self._empty_text
@@ -4123,6 +4284,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
             HTMLWriter.render_tr(HTMLWriter.render_td(HTMLWriter.render_br().join(texts)))
         )
 
+    @override
     def from_html_vars(self, varprefix: str) -> ListChoiceModel:
         self.load_elements()
         return [
@@ -4131,12 +4293,15 @@ class ListChoice(ValueSpec[ListChoiceModel]):
             if html.get_checkbox("%s_%d" % (varprefix, nr))
         ]  #
 
+    @override
     def value_to_json(self, value: ListChoiceModel) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> ListChoiceModel:
         return json_value
 
+    @override
     def validate_datatype(self, value: ListChoiceModel, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
@@ -4144,6 +4309,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
                 _("The data type must be list, but is %(type)s") % {"type": type_name(value)},
             )
 
+    @override
     def _validate_value(self, value: ListChoiceModel, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You have to select at least one element."))
@@ -4234,6 +4400,7 @@ class DualListChoice(ListChoice):
             else _("%%d locked elements")
         )
 
+    @override
     def render_input(
         self,
         varprefix: str,
@@ -4340,11 +4507,13 @@ class DualListChoice(ListChoice):
             )
         )
 
+    @override
     def _value_is_invalid(self, value: ListChoiceChoiceIdent) -> bool:
         all_elements = [k for k, v in self._elements]
         all_elements.extend(self._locked_choices)
         return all(value != val for val in all_elements)
 
+    @override
     def from_html_vars(self, varprefix: str) -> ListChoiceModel:
         self.load_elements()
         value: list = []
@@ -4421,12 +4590,14 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
         self._explicit = explicit
         self._otherlabel = otherlabel if otherlabel is not None else _("Other")
 
+    @override
     def canonical_value(self) -> Any:
         return self._explicit.canonical_value()
 
     def value_is_explicit(self, value: Any) -> bool:
         return value not in [c[0] for c in self.choices()]
 
+    @override
     def render_input(self, varprefix: str, value: Any) -> None:
         defval = "other"
         options: list[tuple[str | None, str]] = []
@@ -4459,12 +4630,14 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
         self._explicit.render_input(varprefix + "_ex", input_value)
         html.close_span()
 
+    @override
     def value_to_html(self, value: Any) -> ValueSpecText:
         for val, title in self.choices():
             if val == value:
                 return title
         return self._explicit.value_to_html(value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> Any:
         choices = self.choices()
         sel = request.var(varprefix)
@@ -4476,10 +4649,12 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
                 return val
         return choices[0][0]  # can only happen if user garbled URL
 
+    @override
     def _validate_value(self, value: Any, varprefix: str) -> None:
         if self.value_is_explicit(value):
             self._explicit.validate_value(value, varprefix)
 
+    @override
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         for val, _title in self.choices():
             if val == value:
@@ -4606,15 +4781,18 @@ class RelativeDate(OptionalDropdownChoice[int]):
             validate=validate,
         )
 
+    @override
     def canonical_value(self) -> int | None:
         return self.default_value()
 
+    @override
     def render_input(self, varprefix: str, value: int | None) -> None:
         if not isinstance(value, int | float):
             raise TypeError(value)
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
+    @override
     def value_to_html(self, value: int | None) -> ValueSpecText:
         if not isinstance(value, int | float):
             raise TypeError(value)
@@ -4630,10 +4808,12 @@ class RelativeDate(OptionalDropdownChoice[int]):
             return choices[reldays][1]
         return _("in %(reldays)d days") % {"reldays": reldays}
 
+    @override
     def from_html_vars(self, varprefix: str) -> int:
         reldays = super().from_html_vars(varprefix)
         return _today() + reldays * seconds_per_day
 
+    @override
     def validate_datatype(self, value: int | None, varprefix: str) -> None:
         if not isinstance(value, int | float):
             raise MKUserError(varprefix, _("Date must be a number value"))
@@ -4679,9 +4859,11 @@ class AbsoluteDate(ValueSpec[None | float]):
         self._none_means_empty = none_means_empty
         self._submit_form_name = submit_form_name
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def default_value(self) -> float | None:
         # TODO: Remove the copy-n-paste with ValueSpec.
         if callable(self._default_value):
@@ -4701,6 +4883,7 @@ class AbsoluteDate(ValueSpec[None | float]):
             return time.time()
         return _today()
 
+    @override
     def canonical_value(self) -> float | None:
         return self.default_value()  # TODO: Hmmm...
 
@@ -4712,6 +4895,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         lt = time.localtime(value)
         return lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, lt.tm_min, lt.tm_sec
 
+    @override
     def render_input(
         self,
         varprefix: str,
@@ -4779,22 +4963,28 @@ class AbsoluteDate(ValueSpec[None | float]):
                         submit=self._submit_form_name,
                     )
 
+    @override
     def set_focus(self, varprefix: str) -> None:
         html.set_focus(varprefix + "_year")
 
+    @override
     def mask(self, value: float | None) -> float | None:
         return value
 
+    @override
     def value_to_html(self, value: float | None) -> ValueSpecText:
         return time.strftime(self._format, time.localtime(value))
 
+    @override
     def value_to_json(self, value: float | None) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> float | None:
         return json_value
 
     # TODO: allow_empty is a *very* bad idea typing-wise! We are poisoned by Optional... :-P
+    @override
     def from_html_vars(self, varprefix: str) -> float | None:
         parts = []
         entries = [
@@ -4862,6 +5052,7 @@ class AbsoluteDate(ValueSpec[None | float]):
             )
         )
 
+    @override
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         if value is None and self._allow_empty:
             return
@@ -4872,6 +5063,7 @@ class AbsoluteDate(ValueSpec[None | float]):
                 % {"type": type_name(value)},
             )
 
+    @override
     def _validate_value(self, value: float | None, varprefix: str) -> None:
         if (not self._allow_empty and value is None) or (
             value is not None and (value < 0 or int(value) > (2**31 - 1))
@@ -4908,26 +5100,32 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         self._allow_empty = allow_empty
         self._placeholder = ("%02d:%02d" % placeholder_value) if placeholder_value else None
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def canonical_value(self) -> TimeofdayValue:
         if self._allow_empty:
             return None
         return (0, 0)
 
+    @override
     def render_input(self, varprefix: str, value: TimeofdayValue) -> None:
         text = ("%02d:%02d" % value) if value else ""
         html.text_input(varprefix, text, size=5, placeholder=self._placeholder)
 
+    @override
     def mask(self, value: TimeofdayValue) -> TimeofdayValue:
         return value
 
+    @override
     def value_to_html(self, value: TimeofdayValue) -> ValueSpecText:
         if value is None:
             return ""
         return "%02d:%02d" % value
 
+    @override
     def from_html_vars(self, varprefix: str) -> TimeofdayValue:
         # Fully specified
         text = request.get_str_input_mandatory(varprefix, "").strip()
@@ -4949,6 +5147,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                 % {"text": text},
             )
 
+    @override
     def validate_datatype(self, value: TimeofdayValue, varprefix: str) -> None:
         if self._allow_empty and value is None:
             return
@@ -4974,6 +5173,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                     % {"type": type_name(x)},
                 )
 
+    @override
     def _validate_value(self, value: TimeofdayValue, varprefix: str) -> None:
         if not self._allow_empty and value is None:
             raise MKUserError(varprefix, _("Please enter a time."))
@@ -4992,9 +5192,11 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
 
+    @override
     def value_to_json(self, value: TimeofdayValue) -> JSONValue:
         return None if value is None else [value[0], value[1]]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> tuple[Any, Any]:
         return (json_value[0], json_value[1])
 
@@ -5021,14 +5223,17 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True, placeholder_value=(24, 0)),
         )
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def canonical_value(self) -> TimeofdayRangeValue:
         if self._allow_empty:
             return None
         return (0, 0), (24, 0)
 
+    @override
     def render_input(self, varprefix: str, value: TimeofdayRangeValue) -> None:
         self._bounds[0].render_input(varprefix + "_from", value[0] if value is not None else None)
         html.nbsp()
@@ -5036,9 +5241,11 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
+    @override
     def mask(self, value: TimeofdayRangeValue) -> TimeofdayRangeValue:
         return value
 
+    @override
     def value_to_html(self, value: TimeofdayRangeValue) -> ValueSpecText:
         if value is None:
             return ""
@@ -5047,6 +5254,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
             self._bounds[0].value_to_html(value[0]) + "-" + self._bounds[1].value_to_html(value[1])
         )
 
+    @override
     def from_html_vars(self, varprefix: str) -> TimeofdayRangeValue:
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
         until_value = self._bounds[1].from_html_vars(varprefix + "_until")
@@ -5061,6 +5269,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
             return None
         return (from_value, until_value)
 
+    @override
     def validate_datatype(self, value: TimeofdayRangeValue, varprefix: str) -> None:
         if self._allow_empty and value is None:
             return
@@ -5081,6 +5290,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         self._bounds[0].validate_datatype(value[0], varprefix + "_from")
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
 
+    @override
     def _validate_value(self, value: TimeofdayRangeValue, varprefix: str) -> None:
         if value is None:
             if self._allow_empty:
@@ -5095,6 +5305,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
                 _("The <i>from</i> time must not be later then the <i>until</i> time."),
             )
 
+    @override
     def value_to_json(self, value: TimeofdayRangeValue) -> JSONValue:
         if value is None:
             return None
@@ -5103,6 +5314,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
             self._bounds[1].value_to_json(value[1]),
         ]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> TimeofdayRangeValue:
         if json_value is None:
             return None
@@ -5295,6 +5507,7 @@ class Timerange(CascadingDropdown):
                 ]
             )
 
+    @override
     def value_to_html(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         for ident, title, _vs in self._get_graph_timeranges():
             if value == ident:
@@ -5305,11 +5518,13 @@ class Timerange(CascadingDropdown):
 
         return super().value_to_html(value)
 
+    @override
     def value_to_json(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         if isinstance(value, int):  # Handle default graph_timeranges
             return super().value_to_json(("age", value))
         return super().value_to_json(value)
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
         value = super().value_from_json(json_value)
         # Handle default graph_timeranges
@@ -5598,9 +5813,11 @@ class Optional[T](ValueSpec[None | T]):
         self._sameline = sameline
         self._indent = indent
 
+    @override
     def canonical_value(self) -> T | None:
         return None
 
+    @override
     def render_input(self, varprefix: str, value: T | None) -> None:
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
@@ -5645,39 +5862,48 @@ class Optional[T](ValueSpec[None | T]):
             return _(" Ignore this option")
         return _(" Activate this option")
 
+    @override
     def value_to_html(self, value: T | None) -> ValueSpecText:
         if value is None:
             return self._none_label
         return self._valuespec.value_to_html(value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> T | None:
         checkbox_checked = html.get_checkbox(varprefix + "_use") is True  # not None or False
         if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         return None
 
+    @override
     def validate_datatype(self, value: T | None, varprefix: str) -> None:
         if value is not None:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
+    @override
     def _validate_value(self, value: T | None, varprefix: str) -> None:
         if value is not None:
             self._valuespec.validate_value(value, varprefix + "_value")
 
+    @override
     def mask(self, value: T | None) -> T | None:
         return value if value is None else self._valuespec.mask(value)
 
+    @override
     def transform_value(self, value: T | None) -> T | None:
         return value if value is None else self._valuespec.transform_value(value)
 
+    @override
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    @override
     def value_to_json(self, value: T | None) -> JSONValue:
         if value is None:
             return None
         return self._valuespec.value_to_json(value)
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> T | None:
         if json_value is None:
             return None
@@ -5732,6 +5958,7 @@ class Alternative(ValueSpec[AlternativeModel]):
 
         return None
 
+    @override
     def render_input(self, varprefix: str, value: AlternativeModel) -> None:
         mvs = self._matching_alternative(value)
         options: list[tuple[str | None, str]] = []
@@ -5781,13 +6008,16 @@ class Alternative(ValueSpec[AlternativeModel]):
             html.close_tr()
             html.close_table()
 
+    @override
     def set_focus(self, varprefix: str) -> None:
         # TODO: Set focus to currently active option
         pass
 
+    @override
     def canonical_value(self) -> AlternativeModel:
         return self._elements[0].canonical_value()
 
+    @override
     def default_value(self) -> AlternativeModel:
         if callable(self._default_value):
             try:
@@ -5801,12 +6031,14 @@ class Alternative(ValueSpec[AlternativeModel]):
             return self._elements[0].default_value()
         return value
 
+    @override
     def mask(self, value: AlternativeModel) -> AlternativeModel:
         vs = self._matching_alternative(value)
         if vs is None:
             raise ValueError(_("Invalid value: %(value)s") % {"value": value})
         return vs.mask(value)
 
+    @override
     def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
         vs = self._matching_alternative(value)
         if vs:
@@ -5816,12 +6048,14 @@ class Alternative(ValueSpec[AlternativeModel]):
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
+    @override
     def value_to_json(self, value: AlternativeModel) -> JSONValue:
         vs = self._matching_alternative(value)
         if vs is None:
             raise ValueError(_("Invalid value: %(value)s") % {"value": value})
         return vs.value_to_json(value)
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> AlternativeModel:
         # FIXME: This is wrong! value_to_json transforms tuples to lists. json_value could
         # contain a list that should be a tuple at ANY level. So we would need to run
@@ -5829,11 +6063,13 @@ class Alternative(ValueSpec[AlternativeModel]):
         # inside json_value here. An example ruleset is "ESX Multipath Count".
         return json_value
 
+    @override
     def from_html_vars(self, varprefix: str) -> AlternativeModel:
         nr = request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
 
+    @override
     def validate_datatype(self, value: AlternativeModel, varprefix: str) -> None:
         for vs in self._elements:
             try:
@@ -5846,6 +6082,7 @@ class Alternative(ValueSpec[AlternativeModel]):
             _("The data type of the value does not match any of the allowed alternatives."),
         )
 
+    @override
     def _validate_value(self, value: AlternativeModel, varprefix: str) -> None:
         vs = self._matching_alternative(value)
         for nr, v in enumerate(self._elements):
@@ -5857,6 +6094,7 @@ class Alternative(ValueSpec[AlternativeModel]):
             _("The data type of the value does not match any of the allowed alternatives."),
         )
 
+    @override
     def transform_value(self, value: AlternativeModel) -> AlternativeModel:
         vs = self._matching_alternative(value)
         if not vs:
@@ -5891,15 +6129,19 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         self._separator = separator  # in case of float
         self._title_br = title_br
 
+    @override
     def allow_empty(self) -> bool:
         return all(vs.allow_empty() for vs in self._elements)
 
+    @override
     def canonical_value(self) -> TT:
         return tuple(x.canonical_value() for x in self._elements)  # type: ignore[return-value]
 
+    @override
     def default_value(self) -> TT:
         return tuple(x.default_value() for x in self._elements)  # type: ignore[return-value]
 
+    @override
     def render_input(self, varprefix: str, value: Any) -> None:
         if self._orientation != "float":
             html.open_table(class_=["valuespec_tuple", self._orientation])
@@ -5957,6 +6199,7 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         if self._orientation != "float":
             html.close_table()
 
+    @override
     def set_focus(self, varprefix: str) -> None:
         self._elements[0].set_focus(varprefix + "_0")
 
@@ -5964,27 +6207,34 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         for idx, element in enumerate(self._elements):
             yield idx, element, value[idx]
 
+    @override
     def mask(self, value: TT) -> TT:
         return tuple(el.mask(val) for _, el, val in self._iter_value(value))  # type: ignore[return-value]
 
+    @override
     def value_to_html(self, value: TT) -> ValueSpecText:
         return HTML.without_escaping(", ").join(
             el.value_to_html(val) for _, el, val in self._iter_value(value)
         )
 
+    @override
     def value_to_json(self, value: TT) -> JSONValue:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> TT:
         return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))  # type: ignore[return-value]
 
+    @override
     def from_html_vars(self, varprefix: str) -> TT:
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))  # type: ignore[return-value]
 
+    @override
     def _validate_value(self, value: TT, varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
             el.validate_value(val, f"{varprefix}_{idx}")
 
+    @override
     def validate_datatype(self, value: TT, varprefix: str) -> None:
         if not isinstance(value, tuple):
             raise MKUserError(
@@ -6001,6 +6251,7 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         for idx, el, val in self._iter_value(value):
             el.validate_datatype(val, f"{varprefix}_{idx}")
 
+    @override
     def transform_value(self, value: TT) -> TT:
         if not isinstance(value, tuple):
             raise TypeError(f"Tuple.transform_value() got a non-tuple: {value!r}")
@@ -6105,6 +6356,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         self._render_input(varprefix, value, "form")
 
     # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
+    @override
     def render_input(self, varprefix: str, value: DictionaryModel | None) -> None:
         self._render_input(varprefix, value, self._render)
 
@@ -6338,11 +6590,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
             vs.render_input(vp, value.get(param, vs.default_value()))
             html.close_div()
 
+    @override
     def set_focus(self, varprefix: str) -> None:
         first_element = next(iter(self._get_elements()), None)
         if first_element:
             first_element[1].set_focus(varprefix + "_p_" + first_element[0])
 
+    @override
     def canonical_value(self) -> DictionaryModel:
         return {
             name: vs.canonical_value()
@@ -6350,6 +6604,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if name in self._required_keys or not self._optional_keys
         }
 
+    @override
     def default_value(self) -> DictionaryModel:
         return {
             name: vs.default_value()
@@ -6357,11 +6612,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if name in self._required_keys or not self._optional_keys or name in self._default_keys
         }
 
+    @override
     def mask(self, value: DictionaryModel) -> DictionaryModel:
         return {
             param: vs.mask(value[param]) for param, vs in self._get_elements() if param in value
         }
 
+    @override
     def value_to_html(self, value: DictionaryModel) -> ValueSpecText:
         value = self.migrate(value)
         if not value:
@@ -6389,6 +6646,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 )
         return HTMLWriter.render_table(s)
 
+    @override
     def value_to_json(self, value: DictionaryModel) -> JSONValue:
         return {
             param: vs.value_to_json(value[param])
@@ -6396,6 +6654,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in value
         }
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> DictionaryModel:
         return {
             param: vs.value_from_json(json_value[param])
@@ -6403,6 +6662,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in json_value
         }
 
+    @override
     def from_html_vars(self, varprefix: str) -> DictionaryModel:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
@@ -6414,6 +6674,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             )
         }
 
+    @override
     def validate_datatype(self, value: DictionaryModel, varprefix: str) -> None:
         value = self.migrate(value)
 
@@ -6449,6 +6710,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                     % {"key": param, "allowed_keys": ", ".join(allowed_keys)},
                 )
 
+    @override
     def _validate_value(self, value: DictionaryModel, varprefix: str) -> None:
         value = self.migrate(value)
 
@@ -6460,6 +6722,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                     varprefix, _("The entry %(title)s is missing") % {"title": vs.title()}
                 )
 
+    @override
     def transform_value(self, value: DictionaryModel) -> DictionaryModel:
         if not isinstance(value, dict):
             raise TypeError(f"Dictionary.transform_value() got a non-dict: {value!r}")
@@ -6473,6 +6736,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             **{param: value[param] for param in self._ignored_keys if param in value},  #
         }
 
+    @override
     def has_show_more(self) -> bool:
         return bool(self._show_more_keys) or any(
             vs.has_show_more() for _param, vs in self._get_elements()
@@ -6522,12 +6786,14 @@ class ElementSelection(ValueSpec[None | str]):
     def get_elements(self) -> Mapping[str, str]:
         raise NotImplementedError
 
+    @override
     def canonical_value(self) -> str | None:
         self.load_elements()
         if self._elements:
             return list(self._elements.keys())[0]
         return None
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         self.load_elements()
         if len(self._elements) == 0:
@@ -6537,18 +6803,23 @@ class ElementSelection(ValueSpec[None | str]):
                 html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
+    @override
     def mask(self, value: str | None) -> str | None:
         return value
 
+    @override
     def value_to_json(self, value: str | None) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> str | None:
         return json_value
 
+    @override
     def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix)
 
+    @override
     def _validate_value(self, value: str | None, varprefix: str) -> None:
         self.load_elements()
         if len(self._elements) == 0:
@@ -6559,6 +6830,7 @@ class ElementSelection(ValueSpec[None | str]):
                 _("%(value)s is not an existing element in this selection.") % {"value": value},
             )
 
+    @override
     def validate_datatype(self, value: str | None, varprefix: str) -> None:
         self.load_elements()
         # When no elements exists the default value is None and e.g. in wato.mode_edit_rule()
@@ -6577,15 +6849,19 @@ class ElementSelection(ValueSpec[None | str]):
 
 
 class AutoTimestamp(FixedValue[float]):
+    @override
     def canonical_value(self) -> float:
         return time.time()
 
+    @override
     def from_html_vars(self, varprefix: str) -> float:
         return time.time()
 
+    @override
     def value_to_html(self, value: float) -> ValueSpecText:
         return time.strftime("%F %T", time.localtime(value))
 
+    @override
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if not isinstance(value, int | float):
             raise MKUserError(varprefix, _("Invalid data type of timestamp: must be int or float."))
@@ -6608,6 +6884,7 @@ class Foldable[T](ValueSpec[T]):
         self._valuespec = valuespec
         self._title_function = title_function
 
+    @override
     def render_input(self, varprefix: str, value: T) -> None:
         with foldable_container(
             treename="valuespec_foldable",
@@ -6633,39 +6910,51 @@ class Foldable[T](ValueSpec[T]):
             return title
         return _("(no title)")
 
+    @override
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)
 
+    @override
     def canonical_value(self) -> T:
         return self._valuespec.canonical_value()
 
+    @override
     def default_value(self) -> T:
         return self._valuespec.default_value()
 
+    @override
     def mask(self, value: T) -> T:
         return self._valuespec.mask(value)
 
+    @override
     def value_to_html(self, value: T) -> ValueSpecText:
         return self._valuespec.value_to_html(value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> T:
         return self._valuespec.from_html_vars(varprefix)
 
+    @override
     def value_to_json(self, value: T) -> JSONValue:
         return self._valuespec.value_to_json(value)
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> T:
         return self._valuespec.value_from_json(json_value)
 
+    @override
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_datatype(value, varprefix)
 
+    @override
     def _validate_value(self, value: T, varprefix: str) -> None:
         self._valuespec.validate_value(value, varprefix)
 
+    @override
     def transform_value(self, value: T) -> T:
         return self._valuespec.transform_value(value)
 
+    @override
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
@@ -6717,56 +7006,72 @@ class Transform[T](ValueSpec[T]):
         self.to_valuespec: Final = to_valuespec or forth or (lambda v: v)
         self.from_valuespec: Final = from_valuespec or back or (lambda v: v)
 
+    @override
     def allow_empty(self) -> bool:
         return self._valuespec.allow_empty()
 
+    @override
     def title(self) -> str | None:
         if self._title:
             return self._title
         return self._valuespec.title()
 
+    @override
     def help(self) -> str | HTML | None:
         transform_help = super().help()
         if transform_help:
             return transform_help
         return self._valuespec.help()
 
+    @override
     def render_input(self, varprefix: str, value: Any) -> None:
         self._valuespec.render_input(varprefix, self.to_valuespec(value))
 
+    @override
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)
 
+    @override
     def canonical_value(self) -> Any:
         return self.from_valuespec(self._valuespec.canonical_value())
 
+    @override
     def default_value(self) -> Any:
         return self.from_valuespec(self._valuespec.default_value())
 
+    @override
     def mask(self, value: Any) -> Any:
         return self.from_valuespec(self._valuespec.mask(self.to_valuespec(value)))
 
+    @override
     def value_to_html(self, value: Any) -> ValueSpecText:
         return self._valuespec.value_to_html(self.to_valuespec(value))
 
+    @override
     def from_html_vars(self, varprefix: str) -> Any:
         return self.from_valuespec(self._valuespec.from_html_vars(varprefix))
 
+    @override
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_datatype(self.to_valuespec(value), varprefix)
 
+    @override
     def _validate_value(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_value(self.to_valuespec(value), varprefix)
 
+    @override
     def transform_value(self, value: Any) -> Any:
         return self.from_valuespec(self._valuespec.transform_value(self.to_valuespec(value)))
 
+    @override
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    @override
     def value_to_json(self, value: Any) -> JSONValue:
         return self._valuespec.value_to_json(self.to_valuespec(value))
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> Any:
         return self.from_valuespec(self._valuespec.value_from_json(json_value))
 
@@ -6881,6 +7186,7 @@ class LDAPDistinguishedName(TextInput):
         )
         self.enforce_suffix = enforce_suffix
 
+    @override
     def _validate_value(self, value: str, varprefix: str) -> None:
         super()._validate_value(value, varprefix)
 
@@ -6983,6 +7289,7 @@ class Password(TextInput):
             validate=validate,
         )
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is None:
             value = ""
@@ -7017,16 +7324,19 @@ class Password(TextInput):
                 )
             )
 
+    @override
     def mask(self, value: str | None) -> str:
         # Note: This intentionally returns the same output if value is None,
         #       in order to not reveal any information about the (empty) password.
         return "******"
 
+    @override
     def value_to_html(self, value: str | None) -> ValueSpecText:
         if value is None:
             return _("none")
         return "******"
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
         if value or not self._encrypt_value:
@@ -7095,6 +7405,7 @@ class PasswordSpec(Password):
             validate=validate,
         )
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         super().render_input(varprefix, value)
         if not value:
@@ -7137,12 +7448,15 @@ class FileUpload(ValueSpec[FileUploadModel]):
         self._allow_empty_content = allow_empty_content
         self._allowed_mime_types = mime_types
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def canonical_value(self) -> FileUploadModel:
         return None if self._allow_empty else b""
 
+    @override
     def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _("Please select a file."))
@@ -7174,21 +7488,27 @@ class FileUpload(ValueSpec[FileUploadModel]):
         if self._allowed_mime_types is not None and mime not in self._allowed_mime_types:
             raise MKUserError(varprefix, _("Invalid file type."))
 
+    @override
     def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         html.upload_file(varprefix)
 
+    @override
     def mask(self, value: FileUploadModel) -> FileUploadModel:
         return value
 
+    @override
     def from_html_vars(self, varprefix: str) -> FileUploadModel:
         return request.uploaded_file(varprefix)
 
+    @override
     def value_to_json(self, value: FileUploadModel) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> FileUploadModel:
         return json_value
 
+    @override
     def value_to_html(self, value: FileUploadModel) -> ValueSpecText:
         match value:
             case (str(file_name), str(_), bytes(_)):
@@ -7228,6 +7548,7 @@ class ImageUpload(FileUpload):
             mime_types=mime_types,
         )
 
+    @override
     def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         if isinstance(value, str):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
@@ -7252,6 +7573,7 @@ class ImageUpload(FileUpload):
         else:
             super().render_input(varprefix, value)
 
+    @override
     def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
         super()._validate_value(value, varprefix)
         if not value:
@@ -7324,6 +7646,7 @@ class UploadOrPasteTextFile(Alternative):
             validate=validate,
         )
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         value: Final[UploadedFile] = super().from_html_vars(varprefix)
         # We validate the value here, because we want to validate the user input,
@@ -7429,15 +7752,18 @@ class Labels(ValueSpec[LabelsModel]):
         self._max_labels = max_labels
         self._object_type = object_type
 
+    @override
     def help(self) -> str | HTML | None:
         h = super().help()
         return escaping.escape_to_html_permissive(
             ("" if h is None else f"{h!s} ") + label_help_text(), escape_links=False
         )
 
+    @override
     def canonical_value(self) -> LabelsModel:
         return {}
 
+    @override
     def from_html_vars(self, varprefix: str) -> LabelsModel:
         value = request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
@@ -7448,6 +7774,7 @@ class Labels(ValueSpec[LabelsModel]):
         except ValueError as e:
             raise MKUserError(varprefix, "%s" % e)
 
+    @override
     def _validate_value(self, value: LabelsModel, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
@@ -7472,9 +7799,11 @@ class Labels(ValueSpec[LabelsModel]):
                     % {"label_value": k, "type": type(v), "expected_type": str},
                 )
 
+    @override
     def mask(self, value: LabelsModel) -> LabelsModel:
         return value
 
+    @override
     def value_to_html(self, value: LabelsModel) -> ValueSpecText:
         label_sources: LabelSources = (
             dict.fromkeys(value, self._label_source.value) if self._label_source else {}
@@ -7487,6 +7816,7 @@ class Labels(ValueSpec[LabelsModel]):
             request=request,
         )
 
+    @override
     def render_input(self, varprefix: str, value: LabelsModel) -> None:
         html.help(self.help())
         label_type = "host_label" if "host_label" in varprefix else "service_label"
@@ -7504,9 +7834,11 @@ class Labels(ValueSpec[LabelsModel]):
             data_attrs=data_attrs,
         )
 
+    @override
     def value_to_json(self, value: LabelsModel) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> LabelsModel:
         return json_value
 
@@ -7565,6 +7897,7 @@ class AndOrNotDropdown(DropdownChoice):
     def _varprefixes(self, varprefix: str) -> tuple[str, str]:
         return (varprefix + "_bool", varprefix + "_vs")
 
+    @override
     def render_input(self, varprefix: str, value: AndOrNotDropdownValue | None) -> None:
         varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
         value = value if value else self._default_value
@@ -7580,12 +7913,14 @@ class AndOrNotDropdown(DropdownChoice):
 
         self._valuespec.render_input(varprefix_vs, value[1])
 
+    @override
     def from_html_vars(self, varprefix: str) -> AndOrNotDropdownValue | None:
         varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
         bool_val: AndOrNotLiteral = super().from_html_vars(varprefix_bool)  # type: ignore[assignment]
         vs_val = self._valuespec.from_html_vars(varprefix_vs)
         return (bool_val, vs_val)
 
+    @override
     def validate_datatype(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
         if value is None:
             return
@@ -7599,6 +7934,7 @@ class AndOrNotDropdown(DropdownChoice):
         if callable(vs_validate_datatype):
             vs_validate_datatype(value[1], varprefix_vs)
 
+    @override
     def _validate_value(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
         if value is None:
             return
@@ -7691,6 +8027,7 @@ class LabelGroup(ListOf):
     def del_label(self) -> str:
         return _("Remove this label")
 
+    @override
     def render_input(
         self,
         varprefix: str,
@@ -7700,6 +8037,7 @@ class LabelGroup(ListOf):
         super().render_input(varprefix, value)
         html.close_div()
 
+    @override
     def _del_button(self, vp: str, nr: str) -> None:
         choices_or_label: DropdownChoices | str = (
             self._first_element_choices or self._first_element_label or self._choices
@@ -7712,6 +8050,7 @@ class LabelGroup(ListOf):
             "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
         )
 
+    @override
     def title(self) -> str | None:
         if self._title:
             return self._title
@@ -7749,9 +8088,11 @@ class LabelGroups(LabelGroup):
         )
 
     @property
+    @override
     def del_label(self) -> str:
         return _("Remove this label group")
 
+    @override
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
         if request.has_var(varprefix + "_count"):
             value = self.from_html_vars(varprefix)
@@ -7770,6 +8111,7 @@ class LabelGroups(LabelGroup):
                 label_group.append(("and", ""))
         return value
 
+    @override
     def from_html_vars(self, varprefix: str) -> ListOfAndOrNotDropdownValue:
         return parse_label_groups_from_http_vars(varprefix, dict(request.itervars(varprefix)))
 
@@ -7801,6 +8143,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             "empty",
         ]
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
@@ -7864,6 +8207,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             return value
         return {"icon": DynamicIconName("empty") if value is None else value, "emblem": None}
 
+    @override
     def render_input(self, varprefix: str, value: IconSelectorModel) -> None:
         icon: str | None
         emblem: str | None
@@ -7992,9 +8336,11 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         html.close_div()
 
+    @override
     def canonical_value(self) -> IconSelectorModel:
         return None
 
+    @override
     def from_html_vars(self, varprefix: str) -> IconSelectorModel:
         icon = DynamicIconName(i) if (i := self._from_html_vars(varprefix)) is not None else i
         if not self._with_emblem:
@@ -8012,18 +8358,23 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             return None
         return icon
 
+    @override
     def mask(self, value: IconSelectorModel) -> IconSelectorModel:
         return value
 
+    @override
     def value_to_html(self, value: IconSelectorModel) -> ValueSpecText:
         return self._render_icon(self._transform_icon_str(value)["icon"])
 
+    @override
     def value_to_json(self, value: Any) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> IconSelectorModel:
         return json_value
 
+    @override
     def validate_datatype(self, value: IconSelectorModel, varprefix: str) -> None:
         if value is not None and self._with_emblem and not isinstance(value, str | dict):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
@@ -8044,6 +8395,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 % {"type": type(icon_dict["emblem"])},
             )
 
+    @override
     def _validate_value(self, value: IconSelectorModel, varprefix: str) -> None:
         icon_dict = self._transform_icon_str(value)
 
@@ -8140,9 +8492,11 @@ class Color(ValueSpec[None | str]):
         self._on_change = on_change
         self._allow_empty = allow_empty
 
+    @override
     def allow_empty(self) -> bool:
         return self._allow_empty
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if not value:
             value = "#FFFFFF"
@@ -8165,33 +8519,41 @@ class Color(ValueSpec[None | str]):
             onclose=self._on_change,
         )
 
+    @override
     def mask(self, value: str | None) -> str | None:
         return value
 
+    @override
     def canonical_value(self) -> str | None:
         return None
 
+    @override
     def from_html_vars(self, varprefix: str) -> str | None:
         color = request.var(varprefix + "_value")
         if color == "":
             return None
         return color
 
+    @override
     def value_to_html(self, value: str | None) -> ValueSpecText:
         return "" if value is None else value
 
+    @override
     def value_to_json(self, value: str | None) -> JSONValue:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> str | None:
         return json_value
 
+    @override
     def validate_datatype(self, value: str | None, varprefix: str) -> None:
         if value is not None and not isinstance(value, str):
             raise MKUserError(
                 varprefix, _("The type is %(type)s, but should be str") % {"type": type(value)}
             )
 
+    @override
     def _validate_value(self, value: str | None, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select a color."))
@@ -8251,6 +8613,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
     when the form is saved.
     """
 
+    @override
     def render_input(self, varprefix: str, value: SSHKeyPairValue | None) -> None:
         if value:
             html.write_text_permissive(
@@ -8260,27 +8623,33 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         else:
             html.write_text_permissive(_("Key pair will be generated when you save."))
 
+    @override
     def canonical_value(self) -> SSHKeyPairValue | None:
         return None
 
+    @override
     def mask(self, value: SSHKeyPairValue | None) -> SSHKeyPairValue | None:
         return ("******", value[1]) if value is not None else None
 
+    @override
     def value_to_html(self, value: SSHKeyPairValue | None) -> ValueSpecText:
         if value is None:
             return ""
         return self._get_key_fingerprint(value)
 
+    @override
     def value_to_json(self, value: SSHKeyPairValue | None) -> JSONValue:
         if value is None:
             return []
         return [value[0], value[1]]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> SSHKeyPairValue | None:
         if json_value == []:
             return None
         return (json_value[0], json_value[1])
 
+    @override
     def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
         if request.has_var(varprefix):
             return self._decode_key_from_url(request.get_ascii_input_mandatory(varprefix))
@@ -8387,6 +8756,7 @@ class _CAInput(ValueSpec[_CAInputModel]):
         self.address = HostAddress()
         self.port = NetworkPort(title=None)
 
+    @override
     def render_input(self, varprefix: str, value: _CAInputModel) -> None:
         address, port, content = value or ("", 443, b"")
 
@@ -8401,15 +8771,19 @@ class _CAInput(ValueSpec[_CAInputModel]):
         html.div(None, id_=varprefix + "_status")
         html.text_area(varprefix, content.decode("ascii"), cols=80, readonly="")
 
+    @override
     def canonical_value(self) -> _CAInputModel:
         return None
 
+    @override
     def mask(self, value: _CAInputModel) -> _CAInputModel:
         return value
 
+    @override
     def value_to_json(self, value: _CAInputModel) -> JSONValue:
         return None if value is None else [value[0], value[1], value[2].decode("ascii")]
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> _CAInputModel:
         return (
             None
@@ -8417,6 +8791,7 @@ class _CAInput(ValueSpec[_CAInputModel]):
             else (json_value[0], json_value[1], json_value[2].encode("ascii"))
         )
 
+    @override
     def from_html_vars(self, varprefix: str) -> _CAInputModel:
         address = self.address.from_html_vars(varprefix + "_address")
         port = self.port.from_html_vars(varprefix + "_port")
@@ -8478,6 +8853,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
             "fingerprint": cert.show_fingerprint(),
         }
 
+    @override
     def _validate_value(self, value: Any, varprefix: str) -> None:
         # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
         try:
@@ -8486,6 +8862,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
         except Exception as e:
             raise MKUserError(varprefix, _("Invalid certificate file: %(e)s") % {"e": e})
 
+    @override
     def value_to_html(self, value: Any) -> ValueSpecText:
         # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
         cert_info = self._analyse_cert(
@@ -8755,6 +9132,7 @@ class RuleComment(TextAreaUnicode):
             cols=80,
         )
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         html.open_div(style="white-space: nowrap;")
 
@@ -8829,6 +9207,7 @@ class DatePicker(ValueSpec[str]):
             validate=validate,
         )
 
+    @override
     def render_input(self, varprefix: str, value: str) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
@@ -8842,21 +9221,27 @@ class DatePicker(ValueSpec[str]):
             onchange=self._onchange or "",
         )
 
+    @override
     def canonical_value(self) -> str:
         return ""
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         return request.get_str_input_mandatory(varprefix)
 
+    @override
     def mask(self, value: str) -> str:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> str:
         return json_value
 
+    @override
     def value_to_json[T](self, value: T) -> JSONValue:
         return value
 
+    @override
     def validate_value(self, value: str, varprefix: str) -> None:
         try:
             dateutil.parser.isoparse(value)
@@ -8883,6 +9268,7 @@ class TimePicker(ValueSpec[str]):
             validate=validate,
         )
 
+    @override
     def render_input(self, varprefix: str, value: str) -> None:
         data: dict[str, str] = {
             "mode": "time",
@@ -8897,21 +9283,27 @@ class TimePicker(ValueSpec[str]):
             onchange=self._onchange or "",
         )
 
+    @override
     def canonical_value(self) -> str:
         return ""
 
+    @override
     def from_html_vars(self, varprefix: str) -> str:
         return request.get_str_input_mandatory(varprefix)
 
+    @override
     def mask(self, value: str) -> str:
         return value
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> str:
         return json_value
 
+    @override
     def value_to_json[T](self, value: T) -> JSONValue:
         return value
 
+    @override
     def validate_value(self, value: str, varprefix: str) -> None:
         try:
             time.strptime(value, "%H:%M")

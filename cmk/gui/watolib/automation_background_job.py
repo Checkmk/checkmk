@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 """Execute an automation call in a background job running on a remote site."""
@@ -15,6 +14,7 @@ import uuid
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel
 
@@ -73,9 +73,11 @@ class AutomationCheckmkAutomationStartRequest:
 class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutomationStartRequest]):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "checkmk-remote-automation-start"
 
+    @override
     def get_request(
         self, config: Config, request: Request
     ) -> AutomationCheckmkAutomationStartRequest:
@@ -86,6 +88,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
         )
 
+    @override
     def execute(self, request: AutomationCheckmkAutomationStartRequest) -> str:
         automation_id = str(uuid.uuid4())
         job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{request.api_request.command}-{automation_id}"
@@ -143,9 +146,11 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
 
+    @override
     def command_name(self) -> str:
         return "checkmk-remote-automation-get-status"
 
+    @override
     def get_request(self, config: Config, request: Request) -> str:
         return ast.literal_eval(request.get_ascii_input_mandatory("request"))
 
@@ -153,6 +158,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     def _load_result(path: Path) -> str:
         return store.load_text_from_file(path)
 
+    @override
     def execute(self, api_request: str) -> RemoteAutomationGetStatusResponseRaw:
         job_id = api_request
         job = CheckmkAutomationBackgroundJob(job_id)
@@ -169,6 +175,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     job_prefix = "automation-"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Checkmk automation")
 

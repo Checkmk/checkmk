@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterable
 from functools import partial
+from typing import override
 
 from cmk.gui import query_filters
 from cmk.gui.config import active_config
@@ -311,6 +310,7 @@ class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
             query_filter=query_filters.OptEventEffectiveContactgroupQuery(),
         )
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {}
 
@@ -341,6 +341,7 @@ class FilterECServiceLevelRange(Filter):
         choices = sorted(active_config.mkeventd_service_levels[:])
         return [("", "")] + [(str(x[0]), f"{x[0]} - {x[1]}") for x in choices]
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         choices = dict(self._options())
         yield Dropdown(
@@ -354,6 +355,7 @@ class FilterECServiceLevelRange(Filter):
             label="To",
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # NOTE: We need this special case only because our construction of the
         # disjunction is broken. We should really have a Livestatus Query DSL...
@@ -385,12 +387,14 @@ class FilterECServiceLevelRange(Filter):
 
         return filtered_rows
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if not value.get(self.lower_bound_varname) and not value.get(self.upper_bound_varname):
             return ""
 
         return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
+    @override
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
         if self.ident in context:
             yield "%s_custom_variables" % self.info

@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import abc
 from collections.abc import Collection, Iterator, Sequence
+from typing import override
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
@@ -97,6 +97,7 @@ class ModeGroups(WatoMode, abc.ABC):
         super().__init__(edition)
         self._groups = self._load_groups()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -150,6 +151,7 @@ class ModeGroups(WatoMode, abc.ABC):
             inpage_search=PageMenuSearch(),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             request.del_var("_transid")
@@ -223,6 +225,7 @@ class ModeGroups(WatoMode, abc.ABC):
         table.cell(_("Name"), name)
         table.cell(_("Alias"), group["alias"])
 
+    @override
     def page(self, config: Config) -> None:
         if not self._groups:
             self._page_no_groups()
@@ -256,6 +259,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
         super().__init__(edition)
 
+    @override
     def _from_vars(self) -> None:
         edit_group = request.get_ascii_input("edit")  # missing -> new group
         self._name = GroupName(edit_group) if edit_group else None
@@ -283,6 +287,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def _determine_additional_group_data(self) -> None:
         pass
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -328,11 +333,13 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def _show_extra_page_elements(self) -> None:
         pass
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Group"), breadcrumb, form_name="group", button_name="_save"
         )
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("group", method="POST"):
             forms.header(_("Properties"))
@@ -362,23 +369,29 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
 class ModeHostgroups(ModeGroups):
     @property
+    @override
     def type_name(self) -> GroupType:
         return "host"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "host_groups"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
+    @override
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_host_group_information()
 
+    @override
     def title(self) -> str:
         return _("Host groups")
 
+    @override
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Service groups"),
@@ -386,6 +399,7 @@ class ModeHostgroups(ModeGroups):
             item=make_simple_link(folder_preserving_link(request, [("mode", "service_groups")])),
         )
 
+    @override
     def _rules_url(self) -> str:
         return folder_preserving_link(
             request, [("mode", "edit_ruleset"), ("varname", "host_groups")]
@@ -394,23 +408,29 @@ class ModeHostgroups(ModeGroups):
 
 class ModeServicegroups(ModeGroups):
     @property
+    @override
     def type_name(self) -> GroupType:
         return "service"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "service_groups"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
+    @override
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_service_group_information()
 
+    @override
     def title(self) -> str:
         return _("Service groups")
 
+    @override
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Host groups"),
@@ -418,6 +438,7 @@ class ModeServicegroups(ModeGroups):
             item=make_simple_link(folder_preserving_link(request, [("mode", "host_groups")])),
         )
 
+    @override
     def _rules_url(self) -> str:
         return folder_preserving_link(
             request, [("mode", "edit_ruleset"), ("varname", "service_groups")]
@@ -426,25 +447,31 @@ class ModeServicegroups(ModeGroups):
 
 class ModeContactgroups(ModeGroups):
     @property
+    @override
     def type_name(self) -> GroupType:
         return "contact"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "contact_groups"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
+    @override
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_contact_group_information()
 
+    @override
     def title(self) -> str:
         # TODO: Move to constructor (incl. _collect_additional_data)
         self._members: dict[GroupName, list[tuple[UserId, str]]] = {}
         return _("Contact groups")
 
+    @override
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Users"),
@@ -452,12 +479,14 @@ class ModeContactgroups(ModeGroups):
             item=make_simple_link(folder_preserving_link(request, [("mode", "users")])),
         )
 
+    @override
     def _rules_url(self) -> str:
         return folder_preserving_link(
             request,
             [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")],
         )
 
+    @override
     def _collect_additional_data(self) -> None:
         users = userdb.load_users()
         self._members = {}
@@ -466,6 +495,7 @@ class ModeContactgroups(ModeGroups):
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user_spec.get("alias", userid)))
 
+    @override
     def _show_row_cells(
         self, nr: int, table: Table, name: GroupName, group: GroupSpec, config: Config
     ) -> None:
@@ -488,24 +518,30 @@ class ModeContactgroups(ModeGroups):
 
 class ModeEditServicegroup(ABCModeEditGroup):
     @property
+    @override
     def type_name(self) -> GroupType:
         return "service"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_service_group"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeServicegroups
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
+    @override
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_service_group_information()
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add service group")
@@ -514,24 +550,30 @@ class ModeEditServicegroup(ABCModeEditGroup):
 
 class ModeEditHostgroup(ABCModeEditGroup):
     @property
+    @override
     def type_name(self) -> GroupType:
         return "host"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_host_group"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeHostgroups
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
+    @override
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_host_group_information()
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add host group")
@@ -540,29 +582,36 @@ class ModeEditHostgroup(ABCModeEditGroup):
 
 class ModeEditContactgroup(ABCModeEditGroup):
     @property
+    @override
     def type_name(self) -> GroupType:
         return "contact"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_contact_group"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeContactgroups
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
+    @override
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_contact_group_information()
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add contact group")
         return _("Edit contact group")
 
+    @override
     def _determine_additional_group_data(self) -> None:
         super()._determine_additional_group_data()
 
@@ -581,6 +630,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             if permitted_maps:
                 self.group["nagvis_maps"] = permitted_maps
 
+    @override
     def _show_extra_page_elements(self) -> None:
         super()._show_extra_page_elements()
 

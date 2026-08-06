@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, override
 
 import cmk.ccc.plugin_registry
 from cmk.gui.logged_in import LoggedInUser, user
@@ -92,6 +91,7 @@ class Painter[T]:
 
 
 class ExperimentalPainterRegistry(cmk.ccc.plugin_registry.Registry[Painter]):
+    @override
     def plugin_name(self, instance: Painter[object]) -> str:
         return instance.ident
 

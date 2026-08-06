@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
@@ -27,15 +26,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from types import ModuleType
-from typing import (
-    Any,
-    AnyStr,
-    assert_never,
-    Final,
-    Literal,
-    NamedTuple,
-    overload,
-)
+from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, override
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -208,15 +199,19 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
         # know about, rendering all services of the host stale (CMK-33390).
         self.skipped_services: Final[Sequence[ConfiguredService]] = skipped
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(services={list(self._data.values())!r})"
 
+    @override
     def __getitem__(self, key: ServiceID) -> ConfiguredService:
         return self._data[key]
 
+    @override
     def __len__(self) -> int:
         return len(self._data)
 
+    @override
     def __iter__(self) -> Iterator[ServiceID]:
         return iter(self._data)
 
@@ -247,6 +242,7 @@ class IgnoredActiveServices(Container[ServiceName]):
         self._config_cache = config_cache
         self._host_name = host_name
 
+    @override
     def __contains__(self, service_name: object) -> bool:
         if not isinstance(service_name, ServiceName):
             return False
@@ -673,23 +669,27 @@ class SetFolderPathAbstract:
 
 
 class SetFolderPathList(SetFolderPathAbstract, list):
+    @override
     def __iadd__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         super().__iadd__(new_hosts)
         return self
 
+    @override
     def extend(self, new_hosts: Iterable[str]) -> None:
         self._set_folder_paths(new_hosts)
         super().extend(new_hosts)
 
     # Probably unused
+    @override
     def __add__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return SetFolderPathList(super().__add__(new_hosts))
 
     # Probably unused
+    @override
     def append(self, new_host: str) -> None:
         self._set_folder_paths([new_host])
         super().append(new_host)
@@ -698,11 +698,13 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 # TODO: This whole class must die!
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
+    @override
     def update(self, new_hosts):  # type: ignore[override]
         self._set_folder_paths(new_hosts)
         return super().update(new_hosts)
 
     # Probably unused
+    @override
     def __setitem__(self, cluster_name: Any, value: Any) -> Any:
         self._set_folder_paths([cluster_name])
         return super().__setitem__(cluster_name, value)

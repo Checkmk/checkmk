@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Provide an interface to the automation helper"""
 
 import logging
 from collections.abc import Sequence
-from typing import assert_never, Final
+from typing import assert_never, Final, override
 
 import requests
 
@@ -41,6 +39,7 @@ class HelperExecutor(AutomationExecutor):
     _SOCKET_PATH = paths.omd_root.joinpath(AUTOMATION_HELPER_SOCKET_RELATIVE_PATH)
     _BASE_URL: Final = AUTOMATION_HELPER_BASE_URL
 
+    @override
     def execute(
         self,
         command: AutomationID,
@@ -93,6 +92,7 @@ class HelperExecutor(AutomationExecutor):
             case _:
                 assert_never(response_data.serialized_result_or_error_code)
 
+    @override
     def command_description(
         self,
         command: AutomationID,

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -345,8 +344,8 @@ class PainterOptionTimestampFormat(PainterOption):
     def __init__(self) -> None:
         super().__init__(ident="ts_format")
 
-    @override
     @property
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Timestamp format"),
@@ -454,23 +453,29 @@ def _paint_day(timestamp: int) -> CellSpec:
 
 class PainterSiteIcon(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "site_icon"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Site icon")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return ""
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "site"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if row.get("site") and self.config.use_siteicons:
             return None, HTMLWriter.render_img(
@@ -481,39 +486,49 @@ class PainterSiteIcon(Painter):
 
 class PainterSitenamePlain(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sitename_plain"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Site ID")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Site")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "site"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["site"])
 
 
 class PainterSitealias(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sitealias"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Site alias")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, self.config.sites[row["site"]]["alias"])
 
@@ -573,49 +588,62 @@ def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) ->
 
 class PainterServiceState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["center"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_has_been_checked", "service_state"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "svcstate"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_service_state_short(row, config=self.config)
 
 
 class PainterSvcPluginOutput(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_plugin_output"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Summary")
 
+    @override
     def list_title(self, cell: Cell) -> str:
         return _("Summary (previously named: Status details or plug-in output)")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_plugin_output", "service_custom_variables", "service_check_command"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "svcoutput"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_stalified(
             row,
@@ -631,20 +659,25 @@ class PainterSvcPluginOutput(Painter):
 
 class PainterSvcLongPluginOutput(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_long_plugin_output"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Details")
 
+    @override
     def list_title(self, cell: Cell) -> str:
         return _("Details (previously named: long output)")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_long_plugin_output", "service_custom_variables"]
 
     @property
+    @override
     def parameters(self) -> Dictionary:
         return Dictionary(
             elements=[
@@ -663,6 +696,7 @@ class PainterSvcLongPluginOutput(Painter):
             ]
         )
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
@@ -711,46 +745,58 @@ class PainterSvcLongPluginOutput(Painter):
 
 class PainterSvcPerfData(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_perf_data"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service metrics (source code)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Metrics")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_stalified(row, row["service_perf_data"], self.config.staleness_threshold)
 
 
 class PainterSvcMetrics(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_metrics"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service metrics")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Metrics")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command", "service_perf_data"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["show_internal_graph_and_metric_ids"]
 
     @property
+    @override
     def printable(self) -> bool:
         return False
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"], debug=self.config.debug
@@ -833,19 +879,24 @@ class PainterSvcPerfVal(Painter):
     _num = 0
 
     @property
+    @override
     def ident(self) -> str:
         return "svc_perf_val%02d" % self._num
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service metrics - value number %(nr)2d") % {"nr": self._num}
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Val. %(nr)d") % {"nr": self._num}
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_stalified(
             row, get_perfdata_nth_value(row, self._num - 1), self.config.staleness_threshold
@@ -894,57 +945,72 @@ class PainterSvcPerfVal10(PainterSvcPerfVal):
 
 class PainterSvcCheckCommand(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_command"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service check command")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check command")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["service_check_command"])
 
 
 class PainterSvcCheckCommandExpanded(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_command_expanded"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service check command expanded")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check command expanded")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command_expanded"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["service_check_command_expanded"])
 
 
 class PainterSvcNotesURL(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_notes_url"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Notes (URL) for services")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_address", "service_notes_url"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         raw_url = row.get("service_notes_url")
         if not raw_url:
@@ -957,111 +1023,140 @@ class PainterSvcNotesURL(Painter):
 
 class PainterSvcContacts(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_contacts"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service contacts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contacts")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_contacts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, ", ".join(row["service_contacts"]))
 
 
 class PainterSvcContactGroups(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_contact_groups"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service contact groups")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contact groups")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_contact_groups"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, ", ".join(row["service_contact_groups"]))
 
 
 class PainterServiceDescription(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_description"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Service")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_description"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "svcdescr"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["service_description"])
 
 
 class PainterServiceDisplayName(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_display_name"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service alternative display name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Display name")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_display_name"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "svcdispname"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["service_display_name"])
 
 
 class PainterSvcStateAge(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_state_age"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Age of the current service state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Age")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_has_been_checked", "service_last_state_change"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "stateage"
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["service_last_state_change"],
@@ -1096,23 +1191,29 @@ def _paint_checked(
 
 class PainterSvcCheckAge(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_age"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time since the last check of the service")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Checked")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_has_been_checked", "service_last_check", "service_cached_at"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_checked(
             "service",
@@ -1125,23 +1226,29 @@ class PainterSvcCheckAge(Painter):
 
 class PainterSvcCheckCacheInfo(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_cache_info"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Cached agent data")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Cached")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_last_check", "service_cached_at", "service_cache_interval"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not row["service_cached_at"]:
             return "", ""
@@ -1150,19 +1257,24 @@ class PainterSvcCheckCacheInfo(Painter):
 
 class PainterSvcNextCheck(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_next_check"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of the next scheduled service check")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Next check")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_next_check"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_future_time(
             row["service_next_check"],
@@ -1173,19 +1285,24 @@ class PainterSvcNextCheck(Painter):
 
 class PainterSvcLastTimeOk(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_last_time_ok"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Last time the service was OK")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Last OK")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_last_time_ok", "service_has_been_checked"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age_or_never(
             row["service_last_time_ok"],
@@ -1198,19 +1315,24 @@ class PainterSvcLastTimeOk(Painter):
 
 class PainterSvcNextNotification(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_next_notification"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of the next service notification")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Next notification")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_next_notification"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_future_time(
             row["service_next_notification"],
@@ -1249,42 +1371,53 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
 
 class PainterSvcNotificationPostponementReason(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_notification_postponement_reason"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Notification postponement reason")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notif. postponed")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_notification_postponement_reason"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_notification_postponement_reason("service", row)
 
 
 class PainterSvcLastNotification(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_last_notification"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of the last service notification")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("last notification")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_last_notification"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["service_last_notification"],
@@ -1297,19 +1430,24 @@ class PainterSvcLastNotification(Painter):
 
 class PainterSvcNotificationNumber(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_notification_number"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service notification number")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("N#")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_current_notification_number"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         # Keep in sync with HACK in cmk/base/events.py
         current: str = str(row["service_current_notification_number"])
@@ -1318,114 +1456,144 @@ class PainterSvcNotificationNumber(Painter):
 
 class PainterSvcCheckLatency(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_latency"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service check latency")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Latency")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_latency"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", approx_age(row["service_latency"]))
 
 
 class PainterSvcCheckDuration(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_duration"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service check duration")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Duration")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_execution_time"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", approx_age(row["service_execution_time"]))
 
 
 class PainterSvcAttempt(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_attempt"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Current check attempt")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Att.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_current_attempt", "service_max_check_attempts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
 
 
 class PainterSvcNormalInterval(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_normal_interval"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service normal check interval")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check int.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_interval"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("number", approx_age(row["service_check_interval"] * 60.0))
 
 
 class PainterSvcRetryInterval(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_retry_interval"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service retry check interval")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Retry")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_retry_interval"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("number", approx_age(row["service_retry_interval"] * 60.0))
 
 
 class PainterSvcCheckInterval(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_interval"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service normal/retry check interval")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Interval")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_interval", "service_retry_interval"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
@@ -1439,171 +1607,216 @@ class PainterSvcCheckInterval(Painter):
 
 class PainterSvcCheckType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service check type")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
 
 
 class PainterSvcInDowntime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_in_downtime"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Currently in downtime")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Dt.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_scheduled_downtime_depth"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
 
 
 class PainterSvcInNotifper(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_in_notifper"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("In notification period")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("in notif. p.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_in_notification_period"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "service_in_notification_period", False)
 
 
 class PainterSvcNotifper(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_notifper"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service notification period")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("notif.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_notification_period"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["service_notification_period"])
 
 
 class PainterSvcCheckPeriod(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_check_period"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service check period")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("check.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_period"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["service_check_period"])
 
 
 class PainterSvcFlapping(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_flapping"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service is flapping")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Flap")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_is_flapping"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "service_is_flapping", True)
 
 
 class PainterSvcNotificationsEnabled(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_notifications_enabled"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service notifications enabled")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notif.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_notifications_enabled"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "service_notifications_enabled", False)
 
 
 class PainterSvcIsActive(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_is_active"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service is active")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Active")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_active_checks_enabled"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "service_active_checks_enabled", False)
 
 
 class PainterSvcGroupMemberlist(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_group_memberlist"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service groups the service is member of")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Groups")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_groups"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         links = []
 
@@ -1619,28 +1832,35 @@ class PainterSvcGroupMemberlist(Painter):
             links.append(link)
         return "", HTML.without_escaping(", ").join(links)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         return ", ".join(row["service_groups"])
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         return row["service_groups"]
 
 
 class PainterCheckManpage(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "check_manpage"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Check manual (for Checkmk based checks)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Manual")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         command = row["service_check_command"]
 
@@ -1693,38 +1913,48 @@ def _paint_comments(prefix: str, row: Row) -> CellSpec:
 
 class PainterSvcComments(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_comments"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service Comments")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Comments")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_comments_with_info"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_comments("service_", row)
 
 
 class PainterSvcAcknowledged(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_acknowledged"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service problem acknowledged")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Ack")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_acknowledged"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "service_acknowledged", False)
 
@@ -1780,38 +2010,48 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
 
 class PainterSvcCustomNotes(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_custom_notes"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Custom services notes")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notes")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_address", "service_description", "service_plugin_output"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_custom_notes("service", row, config=self.config)
 
 
 class PainterSvcStaleness(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_staleness"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service staleness value")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Staleness")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_staleness"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", "%0.2f" % row.get("service_staleness", 0))
 
@@ -1824,23 +2064,29 @@ def _paint_is_stale(row: Row, staleness_threshold: float) -> CellSpec:
 
 class PainterSvcIsStale(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_is_stale"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service is stale")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Stale")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_staleness"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "svc_staleness"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_is_stale(row, self.config.staleness_threshold)
 
@@ -1876,36 +2122,46 @@ def _export_custom_vars(what: str, row: Row, blacklist: list | None = None) -> s
 
 class PainterServiceCustomVariables(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_custom_vars"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service custom attributes")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variables"]
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> tuple[tuple[str, str], ...]:
         return tuple(row["service_custom_variables"].items())
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_custom_vars("service", row)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         return _export_custom_vars("service", row)
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         return _export_custom_vars("service", row)
 
 
 class ABCPainterCustomVariable(Painter, abc.ABC):
+    @override
     def title(self, cell: Cell) -> str:
         return self._dynamic_title(cell.painter_parameters())
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self._dynamic_title(cell.painter_parameters())
 
+    @override
     def export_title(self, cell: Cell) -> str:
         if (params := cell.painter_parameters()) is None:
             return self.ident
@@ -1922,6 +2178,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         except KeyError:
             return self._default_title
 
+    @override
     def list_title(self, cell: Cell) -> str:
         return self._default_title
 
@@ -1940,6 +2197,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         raise NotImplementedError
 
     @property
+    @override
     def parameters(self) -> Dictionary:
         return Dictionary(
             elements=[
@@ -1955,6 +2213,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
             optional_keys=[],
         )
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
@@ -1963,21 +2222,26 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
 
 class PainterServiceCustomVariable(ABCPainterCustomVariable):
     @property
+    @override
     def ident(self) -> str:
         return "service_custom_variable"
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variable_names", "service_custom_variable_values"]
 
     @property
+    @override
     def _default_title(self) -> str:
         return _("Service custom attribute")
 
     @property
+    @override
     def _object_type(self) -> str:
         return "service"
 
+    @override
     def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for ident, attr_spec in self.config.custom_service_attributes.items():
@@ -1987,13 +2251,16 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
 
 class PainterHostCustomVariable(ABCPainterCustomVariable):
     @property
+    @override
     def ident(self) -> str:
         return "host_custom_variable"
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> str | tuple[str, ...]:
         if (parameters := cell.painter_parameters()) is None:
             return ""
@@ -2008,13 +2275,16 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
         return row["host_custom_variable_values"][index]
 
     @property
+    @override
     def _default_title(self) -> str:
         return _("Host custom attribute")
 
     @property
+    @override
     def _object_type(self) -> str:
         return "host"
 
+    @override
     def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for attr_spec in self.config.wato_host_attrs:
@@ -2037,68 +2307,86 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
 
 class PainterHostState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["center"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_state"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "hoststate"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_host_state_short(row, config=self.config)
 
 
 class PainterHostStateOnechar(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_state_onechar"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host state (first character)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("S.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_state"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "hoststate"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_host_state_short(row, short=True, config=self.config)
 
 
 class PainterHostPluginOutput(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_plugin_output"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Summary")
 
+    @override
     def list_title(self, cell: Cell) -> str:
         return _("Summary (previously named: Status details or plug-in output)")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_plugin_output", "host_custom_variables"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
@@ -2113,76 +2401,96 @@ class PainterHostPluginOutput(Painter):
 
 class PainterHostPerfData(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_perf_data"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host metrics")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Metrics")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_perf_data"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["host_perf_data"])
 
 
 class PainterHostCheckCommand(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_command"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host check command")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check command")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_check_command"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["host_check_command"])
 
 
 class PainterHostCheckCommandExpanded(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_command_expanded"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host check command expanded")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check command expanded")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_check_command_expanded"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["host_check_command_expanded"])
 
 
 class PainterHostNotesURL(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_notes_url"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Notes (URL) for hosts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_address", "host_notes_url"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         raw_url = row.get("host_notes_url")
         if not raw_url:
@@ -2195,23 +2503,29 @@ class PainterHostNotesURL(Painter):
 
 class PainterHostStateAge(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_state_age"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Age of the current host state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Age")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_last_state_change"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["host_last_state_change"],
@@ -2224,23 +2538,29 @@ class PainterHostStateAge(Painter):
 
 class PainterHostCheckAge(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_age"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time since the last check of the host")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Checked")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_last_check"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_checked(
             "host",
@@ -2253,19 +2573,24 @@ class PainterHostCheckAge(Painter):
 
 class PainterHostNextCheck(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_next_check"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of the next scheduled host check")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Next check")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_next_check"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_future_time(
             row["host_next_check"],
@@ -2276,19 +2601,24 @@ class PainterHostNextCheck(Painter):
 
 class PainterHostNextNotification(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_next_notification"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of the next host notification")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Next notification")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_next_notification"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_future_time(
             row["host_next_notification"],
@@ -2299,42 +2629,53 @@ class PainterHostNextNotification(Painter):
 
 class PainterHostNotificationPostponementReason(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_notification_postponement_reason"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Notification postponement reason")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notif. postponed")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_notification_postponement_reason"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_notification_postponement_reason("host", row)
 
 
 class PainterHostLastNotification(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_last_notification"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of the last host notification")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("last notification")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_last_notification"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["host_last_notification"],
@@ -2347,114 +2688,144 @@ class PainterHostLastNotification(Painter):
 
 class PainterHostCheckLatency(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_latency"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host check latency")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Latency")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_latency"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", approx_age(row["host_latency"]))
 
 
 class PainterHostCheckDuration(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_duration"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host check duration")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Duration")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_execution_time"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", approx_age(row["host_execution_time"]))
 
 
 class PainterHostAttempt(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_attempt"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Current host check attempt")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Att.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_current_attempt", "host_max_check_attempts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
 
 
 class PainterHostNormalInterval(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_normal_interval"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Normal check interval")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check int.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_check_interval"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, approx_age(row["host_check_interval"] * 60.0))
 
 
 class PainterHostRetryInterval(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_retry_interval"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Retry check interval")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Retry")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_retry_interval"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, approx_age(row["host_retry_interval"] * 60.0))
 
 
 class PainterHostCheckInterval(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_interval"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Normal/retry check interval")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Interval")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_check_interval", "host_retry_interval"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
@@ -2468,156 +2839,197 @@ class PainterHostCheckInterval(Painter):
 
 class PainterHostCheckType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_check_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host check type")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_check_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
 
 
 class PainterHostInNotifper(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_in_notifper"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host in notif. period")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("in notif. p.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_in_notification_period"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "host_in_notification_period", False)
 
 
 class PainterHostNotifper(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_notifper"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host notification period")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("notif.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_notification_period"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["host_notification_period"])
 
 
 class PainterHostNotificationNumber(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_notification_number"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host notification number")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("N#")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_current_notification_number"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", str(row["host_current_notification_number"]))
 
 
 class PainterHostFlapping(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_flapping"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host is flapping")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Flap")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_is_flapping"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "host_is_flapping", True)
 
 
 class PainterHostIsActive(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_is_active"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host is active")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Active")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_active_checks_enabled"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "host_active_checks_enabled", False)
 
 
 class PainterHostNotificationsEnabled(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_notifications_enabled"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host notifications enabled")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notif.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_notifications_enabled"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "host_notifications_enabled", False)
 
 
 class PainterHostBlack(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_black"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host name, red background if down or unreachable (deprecated)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Host")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["site", "host_name", "host_state"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "site_host"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         state = row["host_state"]
         if state != 0:
@@ -2627,23 +3039,29 @@ class PainterHostBlack(Painter):
 
 class PainterHostWithState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_with_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host name, marked red if down (deprecated)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Host")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["site", "host_name", "host_state", "host_has_been_checked"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "site_host"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         state = row["host_state"] if row["host_has_been_checked"] else "p"
         if state != 0:
@@ -2653,24 +3071,30 @@ class PainterHostWithState(Painter):
 
 class PainterHost(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Host")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "site_host"
 
     @property
+    @override
     def parameters(self) -> Dictionary:
         elements: DictionaryElements = [
             (
@@ -2694,6 +3118,7 @@ class PainterHost(Painter):
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
@@ -2726,95 +3151,120 @@ class PainterHost(Painter):
 
 class PainterAlias(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "alias"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host alias")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_alias"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["host_alias"])
 
 
 class PainterHostAddress(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_address"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host address (primary)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("IP address")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_address"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["host_address"])
 
 
 class PainterHostIpv4Address(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_ipv4_address"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host address (IPv4)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("IPv4 address")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_custom_var("host", "ADDRESS_4", row)
 
 
 class PainterHostIpv6Address(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_ipv6_address"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host address (IPv6)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("IPv6 address")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_custom_var("host", "ADDRESS_6", row)
 
 
 class PainterHostAddresses(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_addresses"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host addresses (IPv4/IPv6)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("IP addresses")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_address", "host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         custom_vars = dict(
             zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
@@ -2834,19 +3284,24 @@ class PainterHostAddresses(Painter):
 
 class PainterHostAddressesAdditional(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_addresses_additional"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host addresses (additional)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Add. addresses")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         custom_vars = dict(
             zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
@@ -2866,38 +3321,48 @@ class PainterHostAddressesAdditional(Painter):
 
 class PainterHostAddressFamily(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_address_family"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host address family (primary)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Address family")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
 class PainterHostAddressFamilies(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_address_families"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host address families")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Address families")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         custom_vars = dict(
             zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
@@ -2931,66 +3396,84 @@ def paint_host_count(id_: int | None, count: int) -> CellSpec:
 
 class PainterNumServices(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_services"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return ""
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, str(row["host_num_services"]))
 
 
 class PainterNumServicesOk(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_services_ok"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state OK")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("OK")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_ok"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(0, row["host_num_services_ok"])
 
 
 class PainterNumProblems(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_problems"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of problems")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Prob.")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(
             "s",
@@ -3002,88 +3485,112 @@ class PainterNumProblems(Painter):
 
 class PainterNumServicesWarn(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_services_warn"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state WARN")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Wa")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_warn"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(1, row["host_num_services_warn"])
 
 
 class PainterNumServicesCrit(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_services_crit"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state CRIT")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Cr")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_crit"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(2, row["host_num_services_crit"])
 
 
 class PainterNumServicesUnknown(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_services_unknown"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state UNKNOWN")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Un")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_unknown"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(3, row["host_num_services_unknown"])
 
 
 class PainterNumServicesPending(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "num_services_pending"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state PENDING")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_pending"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count("p", row["host_num_services_pending"])
 
@@ -3124,20 +3631,25 @@ def _paint_service_list(row: Row, columnname: str, *, renderer: RenderLink) -> C
 
 class PainterHostServices(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_services"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Services colored according to state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Services")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_services_with_state"]
 
     @property
+    @override
     def parameters(self) -> Dictionary:
         choices: ListChoiceChoices = [
             (0, _("OK")),
@@ -3164,6 +3676,7 @@ class PainterHostServices(Painter):
 
         return Dictionary(elements=elements, title=_("Options"))
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
@@ -3187,72 +3700,91 @@ class PainterHostServices(Painter):
 
 class PainterHostParents(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_parents"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host's parents")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Parents")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_parents"]
 
     @property
+    @override
     def use_painter_link(self) -> bool:
         return False  # This painter adds individual links for the single hosts
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_host_list(row["site"], row["host_parents"], request=self.request)
 
 
 class PainterHostChilds(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_childs"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host's children")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("children")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_childs"]
 
     @property
+    @override
     def use_painter_link(self) -> bool:
         return False  # This painter adds individual links for the single hosts
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_host_list(row["site"], row["host_childs"], request=self.request)
 
 
 class PainterHostGroupMemberlist(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_group_memberlist"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host groups the host is member of")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Groups")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_groups"]
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> tuple[str, ...]:
         return tuple(row["host_groups"])
 
     @property
+    @override
     def use_painter_link(self) -> bool:
         return False  # This painter adds individual links for the single hosts
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         links = []
         for group in row["host_groups"]:
@@ -3267,165 +3799,208 @@ class PainterHostGroupMemberlist(Painter):
             links.append(link)
         return "", HTML.without_escaping(", ").join(links)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         return ", ".join(row["host_groups"])
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         return row["host_groups"]
 
 
 class PainterHostContacts(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_contacts"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host contacts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contacts")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_contacts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, ", ".join(row["host_contacts"]))
 
 
 class PainterHostContactGroups(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_contact_groups"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host contact groups")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contact groups")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_contact_groups"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, ", ".join(row["host_contact_groups"]))
 
 
 class PainterHostCustomNotes(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_custom_notes"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Custom host notes")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Notes")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_address", "host_plugin_output"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_custom_notes("hosts", row, config=self.config)
 
 
 class PainterHostComments(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_comments"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host comments")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Comments")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_comments_with_info"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_comments("host_", row)
 
 
 class PainterHostInDowntime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_in_downtime"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host in downtime")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Downtime")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_scheduled_downtime_depth"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
 
 
 class PainterHostAcknowledged(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_acknowledged"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host problem acknowledged")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Ack")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_acknowledged"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "host_acknowledged", False)
 
 
 class PainterHostStaleness(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_staleness"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host staleness value")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Staleness")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_staleness"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", "%0.2f" % row.get("host_staleness", 0))
 
 
 class PainterHostIsStale(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_is_stale"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host is stale")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Stale")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_staleness"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "svc_staleness"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_is_stale(row, self.config.staleness_threshold)
 
@@ -3443,25 +4018,32 @@ class PainterHostCustomVariables(Painter):
     ]
 
     @property
+    @override
     def ident(self) -> str:
         return "host_custom_vars"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host custom attributes")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variables"]
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> tuple[tuple[str, str], ...]:
         return tuple(row["host_custom_variables"].items())
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_custom_vars("host", row, self.BLACKLIST)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         return _export_custom_vars("host", row, self.BLACKLIST)
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         return _export_custom_vars("host", row, self.BLACKLIST)
 
@@ -3522,19 +4104,24 @@ def _paint_discovery_output(
 
 class PainterServiceDiscoveryState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_discovery_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service discovery: State")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["discovery_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_discovery_output(
             "discovery_state", row, renderer=self.url_renderer, theme=self.theme
@@ -3543,19 +4130,24 @@ class PainterServiceDiscoveryState(Painter):
 
 class PainterServiceDiscoveryCheck(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_discovery_check"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service discovery: Check type")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["discovery_state", "discovery_check", "discovery_service"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_discovery_output(
             "discovery_check", row, renderer=self.url_renderer, theme=self.theme
@@ -3564,19 +4156,24 @@ class PainterServiceDiscoveryCheck(Painter):
 
 class PainterServiceDiscoveryService(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_discovery_service"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service discovery: Service name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Service name")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["discovery_state", "discovery_check", "discovery_service"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_discovery_output(
             "discovery_service", row, renderer=self.url_renderer, theme=self.theme
@@ -3592,19 +4189,24 @@ class PainterServiceDiscoveryService(Painter):
 #
 class PainterHostgroupHosts(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hostgroup_hosts"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Hosts colored according to state (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Hosts")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_members_with_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         divs = []
         for host, state, checked in row["hostgroup_members_with_state"]:
@@ -3624,255 +4226,324 @@ class PainterHostgroupHosts(Painter):
 
 class PainterHgNumServices(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_services"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return ""
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, str(row["hostgroup_num_services"]))
 
 
 class PainterHgNumServicesOk(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_services_ok"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state OK (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("O")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_ok"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(0, row["hostgroup_num_services_ok"])
 
 
 class PainterHgNumServicesWarn(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_services_warn"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state WARN (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("W")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_warn"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(1, row["hostgroup_num_services_warn"])
 
 
 class PainterHgNumServicesCrit(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_services_crit"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state CRIT (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("C")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_crit"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(2, row["hostgroup_num_services_crit"])
 
 
 class PainterHgNumServicesUnknown(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_services_unknown"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state UNKNOWN (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("U")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_unknown"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(3, row["hostgroup_num_services_unknown"])
 
 
 class PainterHgNumServicesPending(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_services_pending"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state PENDING (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("P")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_pending"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count("p", row["hostgroup_num_services_pending"])
 
 
 class PainterHgNumHostsUp(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_hosts_up"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of hosts in state UP (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Up")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_up"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_host_count(0, row["hostgroup_num_hosts_up"])
 
 
 class PainterHgNumHostsDown(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_hosts_down"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of hosts in state DOWN (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Dw")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_down"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_host_count(1, row["hostgroup_num_hosts_down"])
 
 
 class PainterHgNumHostsUnreach(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_hosts_unreach"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of hosts in state UNREACH (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Un")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_unreach"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
 
 
 class PainterHgNumHostsPending(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_num_hosts_pending"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of hosts in state PENDING (host group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_pending"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_host_count(None, row["hostgroup_num_hosts_pending"])
 
 
 class PainterHgName(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_name"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host group name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Name")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["hostgroup_name"])
 
 
 class PainterHgAlias(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "hg_alias"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host group alias")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_alias"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["hostgroup_alias"])
 
@@ -3887,19 +4558,24 @@ class PainterHgAlias(Painter):
 
 class PainterSgServices(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_services"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Services colored according to state (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Services")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_members_with_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_service_list(
             row, "servicegroup_members_with_state", renderer=self.url_renderer
@@ -3908,152 +4584,192 @@ class PainterSgServices(Painter):
 
 class PainterSgNumServices(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_num_services"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return ""
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, str(row["servicegroup_num_services"]))
 
 
 class PainterSgNumServicesOk(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_num_services_ok"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state OK (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("O")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_ok"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(0, row["servicegroup_num_services_ok"])
 
 
 class PainterSgNumServicesWarn(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_num_services_warn"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state WARN (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("W")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_warn"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(1, row["servicegroup_num_services_warn"])
 
 
 class PainterSgNumServicesCrit(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_num_services_crit"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state CRIT (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("C")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_crit"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(2, row["servicegroup_num_services_crit"])
 
 
 class PainterSgNumServicesUnknown(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_num_services_unknown"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state UNKNOWN (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("U")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_unknown"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(3, row["servicegroup_num_services_unknown"])
 
 
 class PainterSgNumServicesPending(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_num_services_pending"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Number of services in state PENDING (service group)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("P")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_pending"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count("p", row["servicegroup_num_services_pending"])
 
 
 class PainterSgName(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_name"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service group name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Name")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["servicegroup_name"])
 
 
 class PainterSgAlias(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "sg_alias"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service group alias")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_alias"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["servicegroup_alias"])
 
@@ -4068,54 +4784,68 @@ class PainterSgAlias(Painter):
 
 class PainterCommentId(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_id"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment ID")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("ID")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_id"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, str(row["comment_id"]))
 
 
 class PainterCommentAuthor(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_author"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment author")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Author")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_author"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["comment_author"])
 
 
 class PainterCommentComment(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_comment"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment text")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_comment"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
@@ -4130,42 +4860,53 @@ class PainterCommentComment(Painter):
 
 class PainterCommentWhat(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_what"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment type (host/service)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
 
 
 class PainterCommentTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment entry time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Time")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_entry_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["comment_entry_time"],
@@ -4178,23 +4919,29 @@ class PainterCommentTime(Painter):
 
 class PainterCommentExpires(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_expires"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment expiry time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Expires")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_expire_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["comment_expire_time"],
@@ -4208,19 +4955,24 @@ class PainterCommentExpires(Painter):
 
 class PainterCommentEntryType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "comment_entry_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment entry type (user/downtime/flapping/ack)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("E.Type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["comment_entry_type", "host_name", "service_description"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         t = row["comment_entry_type"]
         linkview = None
@@ -4262,57 +5014,72 @@ class PainterCommentEntryType(Painter):
 
 class PainterDowntimeId(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_id"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime ID")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("ID")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_id"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, "%d" % row["downtime_id"])
 
 
 class PainterDowntimeAuthor(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_author"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime author")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Author")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_author"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["downtime_author"])
 
 
 class PainterDowntimeComment(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_comment"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime comment")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Comment")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_comment"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
@@ -4327,99 +5094,125 @@ class PainterDowntimeComment(Painter):
 
 class PainterDowntimeFixed(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_fixed"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime start mode")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Mode")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_fixed"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
 
 
 class PainterDowntimeOrigin(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_origin"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime origin")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Origin")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_origin"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
 
 
 class PainterDowntimeWhat(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_what"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime for host/service")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("for")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_is_service"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["downtime_is_service"] and _("Service") or _("Host"))
 
 
 class PainterDowntimeType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime active or pending")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("act/pend")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["is_pending"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (None, row["is_pending"] == 0 and _("active") or _("pending"))
 
 
 class PainterDowntimeEntryTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_entry_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime entry time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Entry")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_entry_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["downtime_entry_time"],
@@ -4432,23 +5225,29 @@ class PainterDowntimeEntryTime(Painter):
 
 class PainterDowntimeStartTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_start_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime start time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Start")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_start_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["downtime_start_time"],
@@ -4462,23 +5261,29 @@ class PainterDowntimeStartTime(Painter):
 
 class PainterDowntimeEndTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_end_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime end time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("End")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_end_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["downtime_end_time"],
@@ -4492,19 +5297,24 @@ class PainterDowntimeEndTime(Painter):
 
 class PainterDowntimeDuration(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "downtime_duration"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Downtime duration (if flexible)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Flex. duration")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["downtime_duration", "downtime_fixed"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if row["downtime_fixed"] == 0:
             return "number", "%02d:%02d:00" % divmod(int(row["downtime_duration"] / 60.0), 60)
@@ -4521,13 +5331,16 @@ class PainterDowntimeDuration(Painter):
 
 class PainterLogDetailsHistory(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_details_history"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: Details")
 
     @property
+    @override
     def columns(self) -> list[ColumnName]:
         return [
             "log_long_plugin_output",
@@ -4537,6 +5350,7 @@ class PainterLogDetailsHistory(Painter):
         ]
 
     @property
+    @override
     def parameters(self) -> Dictionary:
         return Dictionary(
             elements=[
@@ -4555,6 +5369,7 @@ class PainterLogDetailsHistory(Painter):
             ],
         )
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
@@ -4614,38 +5429,48 @@ class PainterLogDetailsHistory(Painter):
 
 class PainterLogMessage(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_message"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: complete message")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Message")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_message"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["log_message"])
 
 
 class PainterLogPluginOutput(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_plugin_output"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: Summary")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Summary")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_plugin_output", "log_type", "log_state_type", "log_comment"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if output := self._decode_item(row, column="log_plugin_output"):
             return "", format_plugin_output(
@@ -4678,19 +5503,24 @@ class PainterLogPluginOutput(Painter):
 
 class PainterLogWhat(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_what"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: host or service")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Host/Service")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         lt = row["log_type"]
         if "HOST" in lt:
@@ -4702,57 +5532,72 @@ class PainterLogWhat(Painter):
 
 class PainterLogAttempt(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_attempt"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: number of check attempt")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Att.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_attempt"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", str(row["log_attempt"]))
 
 
 class PainterLogStateType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_state_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _('Log: state type (DEPRECATED: Use "state information")')
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_state_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["log_state_type"])
 
 
 class PainterLogStateInfo(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_state_info"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: State information")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State info")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_state_info", "log_state_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         info = row["log_state_info"]
 
@@ -4765,38 +5610,48 @@ class PainterLogStateInfo(Painter):
 
 class PainterLogType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: event")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Event")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("nowrap", row["log_type"])
 
 
 class PainterLogContactName(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_contact_name"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: contact name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contact")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_contact_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         target_view_name = self.url_renderer.get_filename(
             filename="contactnotifications",
@@ -4819,38 +5674,48 @@ class PainterLogContactName(Painter):
 
 class PainterLogCommand(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_command"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: command/plug-in")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Command")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_command_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("nowrap", row["log_command_name"])
 
 
 class PainterLogIcon(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_icon"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: event icon")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return ""
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         img: StaticIcon | None = None
         log_type = row["log_type"]
@@ -4948,38 +5813,48 @@ class PainterLogIcon(Painter):
 
 class PainterLogOptions(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_options"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: informational part of message")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Info")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_options"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["log_options"])
 
 
 class PainterLogComment(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_comment"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: comment")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Comment")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_options"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         msg = row["log_options"]
         if ";" in msg:
@@ -4991,23 +5866,29 @@ class PainterLogComment(Painter):
 
 class PainterLogTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: entry time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Time")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["log_time"],
@@ -5020,63 +5901,80 @@ class PainterLogTime(Painter):
 
 class PainterLogLineno(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_lineno"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: line number in log file")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Line")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_lineno"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("number", str(row["log_lineno"]))
 
 
 class PainterLogDate(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_date"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: day of entry")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Date")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_time"]
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> str:
         return str(_paint_day(row["log_time"])[1])
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_day(row["log_time"])
 
 
 class PainterLogState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "log_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Log: state of host/service at log time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["center"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_state", "log_state_type", "log_service_description", "log_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         state = row["log_state"]
 
@@ -5102,110 +6000,140 @@ class PainterLogState(Painter):
 
 class PainterAlertStatsOk(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "alert_stats_ok"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Alert statistics: Number of recoveries")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("OK")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_ok"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", str(row["log_alerts_ok"]))
 
 
 class PainterAlertStatsWarn(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "alert_stats_warn"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Alert statistics: Number of warnings")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("WARN")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_warn"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(1, row["log_alerts_warn"])
 
 
 class PainterAlertStatsCrit(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "alert_stats_crit"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Alert statistics: Number of critical alerts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("CRIT")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_crit"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(2, row["log_alerts_crit"])
 
 
 class PainterAlertStatsUnknown(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "alert_stats_unknown"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Alert statistics: Number of unknown alerts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("UNKN")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_unknown"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count(3, row["log_alerts_unknown"])
 
 
 class PainterAlertStatsProblem(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "alert_stats_problem"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Alert statistics: Number of problem alerts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Problems")
 
+    @override
     def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_problem"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_svc_count("s", row["log_alerts_problem"])
 
@@ -5217,23 +6145,29 @@ class PainterAlertStatsProblem(Painter):
 
 class PainterHostTags(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_tags"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host tags")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self.title(cell)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_tags"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "host"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", render_tag_groups(
             get_tag_groups(row, "host"), "host", with_links=True, request=self.request
@@ -5246,6 +6180,7 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
     def object_type(self) -> str:
         raise NotImplementedError
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         entries = self._get_entries(row)
         return "", HTMLWriter.render_br().join(
@@ -5281,47 +6216,59 @@ def _aux_tag_titles(tag_config: TagConfig) -> dict[str, str]:
 
 class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
     @property
+    @override
     def object_type(self) -> str:
         return "host"
 
     @property
+    @override
     def ident(self) -> str:
         return "host_tags_with_titles"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host tags (with titles)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self.title(cell)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_tags"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "host"
 
 
 class PainterServiceTags(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_tags"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service tags")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self.title(cell)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_tags"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "service_tags"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", render_tag_groups(
             get_tag_groups(row, "service"), "service", with_links=True, request=self.request
@@ -5330,50 +6277,63 @@ class PainterServiceTags(Painter):
 
 class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
     @property
+    @override
     def object_type(self) -> str:
         return "service"
 
     @property
+    @override
     def ident(self) -> str:
         return "service_tags_with_titles"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service tags (with titles)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self.title(cell)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_tags"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "service_tags"
 
 
 class PainterHostLabels(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_labels"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host labels")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self.title(cell)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_labels", "host_label_sources"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "host_labels"
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> Labels:
         return get_labels(row, "host")
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", render_labels(
             self._compute_data(row, cell, user),
@@ -5383,38 +6343,48 @@ class PainterHostLabels(Painter):
             request=self.request,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> Labels:
         return self._compute_data(row, cell, user)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         return format_labels_for_csv_export(self._compute_data(row, cell, user))
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> Labels:
         return self._compute_data(row, cell, user)
 
 
 class PainterServiceLabels(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_labels"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service labels")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self.title(cell)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_labels", "service_label_sources"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "service_labels"
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> Labels:
         return get_labels(row, "service")
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", render_labels(
             self._compute_data(row, cell, user),
@@ -5424,31 +6394,39 @@ class PainterServiceLabels(Painter):
             request=self.request,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> Labels:
         return self._compute_data(row, cell, user)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         return format_labels_for_csv_export(self._compute_data(row, cell, user))
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> Labels:
         return self._compute_data(row, cell, user)
 
 
 class PainterHostDockerNode(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_docker_node"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Docker node")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Node")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_labels", "host_label_sources"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         """We use the information stored in output of docker_container_status
         here. It's the most trusted source of the current node the container is
@@ -5492,15 +6470,19 @@ def _get_docker_container_status_outputs() -> dict[str, str]:
 
 class AbstractColumnSpecificMetric(Painter):
     @property
+    @override
     def ident(self) -> str:
         raise NotImplementedError
 
+    @override
     def title(self, cell: Cell) -> str:
         return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
+    @override
     def list_title(self, cell: Cell) -> str:
         return _("Metric")
 
@@ -5518,10 +6500,12 @@ class AbstractColumnSpecificMetric(Painter):
             return _("Metric not found")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         raise NotImplementedError
 
     @property
+    @override
     def parameters(self) -> Dictionary:
         return Dictionary(
             elements=[
@@ -5582,13 +6566,16 @@ class AbstractColumnSpecificMetric(Painter):
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):
     @property
+    @override
     def ident(self) -> str:
         return "host_specific_metric"
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_perf_data", "host_check_command"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         perf_data_entries = row["host_perf_data"]
         check_command = row["host_check_command"]
@@ -5597,13 +6584,16 @@ class PainterHostSpecificMetric(AbstractColumnSpecificMetric):
 
 class PainterServiceSpecificMetric(AbstractColumnSpecificMetric):
     @property
+    @override
     def ident(self) -> str:
         return "service_specific_metric"
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data", "service_check_command"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         perf_data_entries = row["service_perf_data"]
         check_command = row["service_check_command"]
@@ -5639,13 +6629,16 @@ class _PainterHostKubernetes(Painter):
     """
 
     @property
+    @override
     def ident(self) -> str:
         return f"host_kubernetes_{self._kubernetes_object_type}"
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_labels", "host_name", "site"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         labels = row.get("host_labels", {})
         if labels.get("cmk/kubernetes/object") != self._kubernetes_object_type:
@@ -5681,9 +6674,11 @@ class PainterHostKubernetesCluster(_PainterHostKubernetes):
     _kubernetes_object_type = "cluster"
     _constraints = ["cluster"]
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Kubernetes cluster")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Cluster")
 
@@ -5692,9 +6687,11 @@ class PainterHostKubernetesNamespace(_PainterHostKubernetes):
     _kubernetes_object_type = "namespace"
     _constraints = ["namespace", "cluster-host", "cluster"]
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Kubernetes Namespace")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Namespace")
 
@@ -5703,9 +6700,11 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _kubernetes_object_type = "deployment"
     _constraints = ["deployment", "namespace", "cluster-host", "cluster"]
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Kubernetes deployment")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Deployment")
 
@@ -5714,9 +6713,11 @@ class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
     _kubernetes_object_type = "daemonset"
     _constraints = ["daemonset", "namespace", "cluster-host", "cluster"]
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Kubernetes DaemonSet")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("DaemonSet")
 
@@ -5725,9 +6726,11 @@ class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
     _kubernetes_object_type = "statefulset"
     _constraints = ["statefulset", "namespace", "cluster-host", "cluster"]
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Kubernetes StatefulSet")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("StatefulSet")
 
@@ -5736,8 +6739,10 @@ class PainterHostKubernetesNode(_PainterHostKubernetes):
     _kubernetes_object_type = "node"
     _constraints = ["node", "cluster"]
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Kubernetes node")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Node")

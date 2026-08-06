@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -29,17 +28,21 @@ def register(snapin_registry: SnapinRegistry) -> None:
 
 class SidebarSnapinAggregationGroupList(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "biaggr_groups"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("BI aggregation groups")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("A direct link to all groups of BI aggregations")
 
+    @override
     def show(self, config: Config) -> None:
         if len(aggregation_group_choices()):
             html.open_ul()
@@ -50,17 +53,21 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
 class SidebarSnapinAggregationGroupTree(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "biaggr_groups_tree"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("BI aggregation groups tree")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("A direct link to all groups of BI aggregations organized as tree")
 
+    @override
     def show(self, config: Config) -> None:
         tree: dict[str, dict[str, Any]] = {}
         for group in get_aggregation_group_trees():

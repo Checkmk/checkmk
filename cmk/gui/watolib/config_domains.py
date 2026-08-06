@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import contextlib
 import logging
@@ -147,6 +146,7 @@ class ConfigDomainCore(ABCConfigDomain):
             tuple(self._get_global_config_var_names()), debug=active_config.debug
         )
 
+    @override
     @classmethod
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
         # The incremental activate only works, if all changes use the hosts_to_update option
@@ -210,6 +210,7 @@ class ConfigDomainGUI(ABCConfigDomain):
     def default_globals(self) -> GlobalSettings:
         return get_default_config()
 
+    @override
     @classmethod
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
         setting = SerializedSettings()
@@ -592,6 +593,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.OMD
 
+    @override
     @classmethod
     def hint(cls) -> HTML:
         return HTML.without_escaping(
@@ -608,6 +610,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     def default_globals(self) -> GlobalSettings:
         return self._from_omd_config(self._load_site_config())
 
+    @override
     def save(
         self,
         settings: GlobalSettings,
@@ -907,6 +910,7 @@ def omd_config_change_job_entry_point(
 class OMDConfigChangeBackgroundJob(BackgroundJob):
     job_prefix = "omd-config-change"
 
+    @override
     @classmethod
     def gui_title(cls) -> str:
         return _("Apply OMD config changes")

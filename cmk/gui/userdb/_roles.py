@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from dataclasses import dataclass, field
 from typing import override
 
@@ -73,6 +71,7 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
         return cfg
 
     # TODO: Why is this not implemented by overriding validate()?
+    @override
     def read_file_and_validate(self) -> None:
         for role in self.load_for_reading().values():
             if not role["builtin"] and role["basedon"] in builtin_role_ids:

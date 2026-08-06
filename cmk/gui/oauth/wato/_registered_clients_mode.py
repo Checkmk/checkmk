@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection
+from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -39,16 +39,20 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeRegisteredOAuthClients(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "oauth_registered_clients"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
+    @override
     def title(self) -> str:
         return _("Registered OAuth clients")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         topics = [
             PageMenuTopic(
@@ -84,6 +88,7 @@ class ModeRegisteredOAuthClients(WatoMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
@@ -108,6 +113,7 @@ class ModeRegisteredOAuthClients(WatoMode):
 
         return redirect(self.mode_url())
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("bulk_delete_form", method="POST"):
             with table_element("oauth_registered_clients", limit=config.table_row_limit) as table:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
@@ -11,7 +10,7 @@ import copy
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from typing import Literal
+from typing import Literal, override
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
@@ -397,13 +396,16 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
 
 class PainterServiceGraphs(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_graphs"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service graphs with time range previews")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return [
             "host_name",
@@ -414,18 +416,22 @@ class PainterServiceGraphs(Painter):
         ]
 
     @property
+    @override
     def printable(self) -> str:
         return "time_graph"
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return ["graph_render_options"]
 
     @property
+    @override
     def parameters(self) -> MigrateNotUpdated:
         return cmk_time_graph_params()
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
@@ -447,41 +453,51 @@ class PainterServiceGraphs(Painter):
             render_with_engine=True,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError
 
 
 class PainterHostGraphs(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_graphs"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host graphs with time range previews")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
+    @override
     def printable(self) -> str:
         return "time_graph"
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return ["graph_render_options"]
 
     @property
+    @override
     def parameters(self) -> MigrateNotUpdated:
         return cmk_time_graph_params()
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
@@ -505,12 +521,15 @@ class PainterHostGraphs(Painter):
             require_historic_metrics="service_description" not in row,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError
 
@@ -534,13 +553,16 @@ class PainterOptionPNPTimerange(PainterOption):
 
 class PainterSvcPnpgraph(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_pnpgraph"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service graphs")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return [
             "host_name",
@@ -551,18 +573,22 @@ class PainterSvcPnpgraph(Painter):
         ]
 
     @property
+    @override
     def printable(self) -> str:
         return "time_graph"
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return ["show_internal_graph_and_metric_ids"]
 
     @property
+    @override
     def parameters(self) -> Transform:
         return cmk_time_graph_params()
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
@@ -583,44 +609,55 @@ class PainterSvcPnpgraph(Painter):
             render_with_engine=True,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError
 
 
 class PainterHostPnpgraph(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_pnpgraph"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host graph")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Graph")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
+    @override
     def printable(self) -> str:
         return "time_graph"
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return []
 
     @property
+    @override
     def parameters(self) -> Transform:
         return cmk_time_graph_params()
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
@@ -640,12 +677,15 @@ class PainterHostPnpgraph(Painter):
             ].get_time_series_fetcher(),
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError
 

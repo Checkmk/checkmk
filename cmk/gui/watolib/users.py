@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast, Literal
+from typing import cast, Literal, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
@@ -561,6 +559,7 @@ class UserFeatures:
 
 
 class UserFeaturesRegistry(Registry[UserFeatures]):
+    @override
     def plugin_name(self, instance: UserFeatures) -> str:
         return str(instance.edition)
 

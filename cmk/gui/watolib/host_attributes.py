@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -19,7 +18,7 @@ import functools
 import re
 from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Final, Literal, NotRequired, TypedDict
+from typing import Any, Final, Literal, NotRequired, override, TypedDict
 
 from marshmallow import fields
 
@@ -246,6 +245,7 @@ class HostAttributeTopic:
 
 
 class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeTopic]):
+    @override
     def plugin_name(self, instance: HostAttributeTopic) -> str:
         return instance.ident
 
@@ -535,9 +535,11 @@ class ABCHostAttribute(abc.ABC):
 class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribute]]):
     _index = 0
 
+    @override
     def plugin_name(self, instance: type[ABCHostAttribute]) -> str:
         return instance().name()
 
+    @override
     def registration_hook(self, instance: type[ABCHostAttribute]) -> None:
         """Add missing sort indizes
 
@@ -778,11 +780,13 @@ class _HashableCustomHostAttrs:
     def __init__(self, host_attrs: Sequence[CustomHostAttrSpec]) -> None:
         self.host_attrs = host_attrs
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _HashableCustomHostAttrs):
             return False
         return self.host_attrs == other.host_attrs
 
+    @override
     def __hash__(self) -> int:
         return hash(tuple(tuple(x.items()) for x in self.host_attrs))
 
@@ -811,11 +815,13 @@ class _HashableTagGroupsByTopic:
     def __init__(self, tag_groups_by_topic: Sequence[tuple[str, Sequence[TagGroup]]]) -> None:
         self.tag_groups_by_topic = tag_groups_by_topic
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _HashableTagGroupsByTopic):
             return False
         return hash(self) == hash(other)
 
+    @override
     def __hash__(self) -> int:
         return hash(_make_hashable_object(self.tag_groups_by_topic))
 
@@ -934,22 +940,26 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
     def _size(self) -> int:
         return 25
 
+    @override
     def paint(self, value: str, hostname: HostName) -> tuple[str, str | HTML]:
         if not value:
             return "", ""
         return "", value
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is None:
             value = ""
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
+    @override
     def from_html_vars(self, varprefix: str) -> str | None:
         value = request.get_str_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()
 
+    @override
     def validate_input(self, value: str | None, varprefix: str) -> None:
         if self.is_mandatory() and not value:
             raise MKUserError(
@@ -963,12 +973,14 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
                 % {"title": self.title()},
             )
 
+    @override
     def filter_matches(self, crit: str, value: str | None, hostname: HostName) -> bool:
         if value is None:  # Host does not have this attribute
             value = ""
 
         return host_attribute_matches(crit, value)
 
+    @override
     def default_value(self) -> str:
         return ""
 
@@ -983,26 +995,33 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def form_spec(self) -> FormSpec:
         raise NotImplementedError
 
+    @override
     def title(self) -> str:
         title = self.valuespec().title()
         assert title is not None
         return title
 
+    @override
     def help(self) -> str | HTML | None:
         return self.valuespec().help()
 
+    @override
     def default_value(self) -> Any:
         return self.valuespec().default_value()
 
+    @override
     def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
         return "", self.valuespec().value_to_html(value)
 
+    @override
     def render_input(self, varprefix: str, value: Any) -> None:
         self.valuespec().render_input(varprefix + self.name(), value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> Any:
         return self.valuespec().from_html_vars(varprefix + self.name())
 
+    @override
     def validate_input(self, value: Any, varprefix: str) -> None:
         vs = self.valuespec()
         prefix = varprefix + self.name()
@@ -1017,11 +1036,13 @@ class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):
     systems (e.g. during an import of a host database from
     another system)."""
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
             html.write_text_permissive(value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix + "attr_" + self.name())
 
@@ -1030,9 +1051,11 @@ class ABCHostAttributeNagiosText(ABCHostAttributeText):
     """A text attribute that is stored in a Nagios custom macro"""
 
     @abc.abstractmethod
+    @override
     def nagios_name(self) -> str:
         raise NotImplementedError
 
+    @override
     def to_nagios(self, value: str) -> str | None:
         if value:
             return value
@@ -1051,12 +1074,15 @@ class ABCHostAttributeEnum(ABCHostAttribute):
     def _enumlist(self) -> Sequence[tuple[str, str]]:
         raise NotImplementedError
 
+    @override
     def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
         return "", dict(self._enumlist).get(value, self.default_value())
 
+    @override
     def render_input(self, varprefix: str, value: str) -> None:
         html.dropdown(varprefix + "attr_" + self.name(), self._enumlist, value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix + "attr_" + self.name(), self.default_value())
 
@@ -1064,6 +1090,7 @@ class ABCHostAttributeEnum(ABCHostAttribute):
 class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     @property
     @abc.abstractmethod
+    @override
     def is_checkbox_tag(self) -> bool:
         raise NotImplementedError
 
@@ -1072,17 +1099,21 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     def _tag_group(self) -> TagGroup:
         raise NotImplementedError
 
+    @override
     def name(self) -> str:
         return "tag_%s" % self._tag_group.id
 
     @property
+    @override
     def is_tag_attribute(self) -> bool:
         return True
 
+    @override
     def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return self._tag_group.id in ["criticality", "networking", "piggyback"]
 
@@ -1090,6 +1121,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
     """A selection dropdown for a host tag"""
 
+    @override
     def valuespec(self) -> ValueSpec:
         # Since encode_value=False is set it is not possible to use empty tag
         # ID selections (Value: "None"). Transform that back and forth to make
@@ -1107,6 +1139,7 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: None if s == "" else s,
         )
 
+    @override
     def form_spec(self) -> SingleChoiceExtended:
         choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
         return SingleChoiceExtended(
@@ -1124,10 +1157,12 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
         )
 
     @property
+    @override
     def is_checkbox_tag(self) -> bool:
         return False
 
     @property
+    @override
     def is_tag_attribute(self) -> bool:
         return True
 
@@ -1145,6 +1180,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             onclick="cmk.wato.fix_visibility();",
         )
 
+    @override
     def valuespec(self) -> Transform:
         return Transform(
             valuespec=self._valuespec(),
@@ -1152,6 +1188,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: self._tag_value() if s is True else None,
         )
 
+    @override
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return TransformDataForLegacyFormatOrRecomposeFunction(
             wrapped_form_spec=BooleanChoice(
@@ -1167,15 +1204,18 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
         )
 
     @property
+    @override
     def is_checkbox_tag(self) -> bool:
         return True
 
+    @override
     def render_input(self, varprefix: str, value: TagID | None) -> None:
         self._valuespec().render_input(varprefix + self.name(), bool(value))
 
     def _tag_value(self) -> TagID | None:
         return self._tag_group.get_tag_choices()[0][0]
 
+    @override
     def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         if not value:
             return {}
@@ -1184,15 +1224,18 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
 
 class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
     @abc.abstractmethod
+    @override
     def nagios_name(self) -> str:
         raise NotImplementedError
 
+    @override
     def to_nagios(self, value: str) -> str | None:
         rendered = self.valuespec().value_to_html(value)
         if rendered:
             return str(rendered)
         return None
 
+    @override
     def is_explicit(self) -> bool:
         return True
 

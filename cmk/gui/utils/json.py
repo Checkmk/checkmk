@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 # Module `json` shadows a Python standard-library module
 
 import json
+from typing import override
 
 from cmk.utils.jsontype import JsonSerializable
 
@@ -21,6 +21,7 @@ class CustomObjectJSONEncoder(json.JSONEncoder):
         json.dumps(obj, cls=CustomObjectJSONEncoder)
     """
 
+    @override
     def default(self, obj: object) -> JsonSerializable:
         if hasattr(obj, "to_json") and callable(obj.to_json):
             return obj.to_json()

@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import base64
 from collections.abc import Collection, Sequence
 from datetime import datetime
+from typing import override
 
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
@@ -52,16 +52,20 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeUserMigrate(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "user_migrate"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["user_migrate"]
 
+    @override
     def title(self) -> str:
         return _("Migrate users to another connection")
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_setup(), self.title())
         breadcrumb.insert(
@@ -74,6 +78,7 @@ class ModeUserMigrate(WatoMode):
         )
         return breadcrumb
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -135,6 +140,7 @@ class ModeUserMigrate(WatoMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def page(self, config: Config) -> None:
         if request.var("selection"):
             self._show_form_page(get_user_attributes(config.wato_user_attrs))
@@ -173,6 +179,7 @@ class ModeUserMigrate(WatoMode):
             _("Back to users page"),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 

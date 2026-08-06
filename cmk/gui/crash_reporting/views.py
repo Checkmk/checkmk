@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import json
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import cmk.livestatus_client as livestatus
 from cmk.crash import read_occurrences
@@ -64,26 +63,32 @@ from .helpers import local_files_involved_in_crash
 
 class DataSourceCrashReports(DataSourceLivestatus):
     @property
+    @override
     def ident(self) -> str:
         return "crash_reports"
 
     @property
+    @override
     def title(self) -> str:
         return _("Crash reports")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["crash"]
 
     @property
+    @override
     def keys(self) -> list[str]:
         return ["crash_id"]
 
     @property
+    @override
     def id_keys(self) -> list[str]:
         return ["crash_id"]
 
     @property
+    @override
     def table(self) -> RowTableLivestatus:
         return CrashReportsRowTable()
 
@@ -93,6 +98,7 @@ class CrashReportsRowTable(RowTableLivestatus):
         super().__init__("crashreports")
 
     # TODO: Handle headers / all_active_filters, limit, ...
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -199,19 +205,24 @@ class CrashReportsRowTable(RowTableLivestatus):
 
 class PainterCrashIdent(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_ident"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash ident")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("ID")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_id"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         url = makeuri_contextless(
             self.request,
@@ -226,38 +237,48 @@ class PainterCrashIdent(Painter):
 
 class PainterCrashType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash type")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return None, row["crash_type"]
 
 
 class PainterCrashSource(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_source"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash source")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Source")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_exc_traceback"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
@@ -271,23 +292,29 @@ class PainterCrashSource(Painter):
 
 class PainterCrashTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash time")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Time")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["crash_time"],
@@ -300,38 +327,48 @@ class PainterCrashTime(Painter):
 
 class PainterCrashVersion(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_version"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash Checkmk version")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Version")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_version"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return None, row["crash_version"]
 
 
 class PainterCrashException(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_exception"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash exception")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Exc.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_exc_type", "crash_exc_value"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not user.may("general.see_crash_reports"):
             return None, _("Insufficient permissions to view exception details.")
@@ -427,19 +464,24 @@ CommandDeleteCrashReports = Command(
 
 class PainterCrashHost(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_host"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash host")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Host")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_host"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not row.get("crash_host"):
             return None, ""
@@ -458,57 +500,72 @@ class PainterCrashHost(Painter):
 
 class PainterCrashItem(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_item"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash service item")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Item")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_item"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return None, row.get("crash_item", "")
 
 
 class PainterCrashCheckType(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_check_type"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash check type")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Check")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_check_type"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return None, row.get("crash_check_type", "")
 
 
 class PainterCrashServiceName(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "crash_service_name"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Crash service name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Service")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_service_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not row.get("crash_service_name"):
             return None, ""

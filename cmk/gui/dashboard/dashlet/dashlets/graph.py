@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
@@ -12,7 +11,7 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal, NotRequired
+from typing import Any, Literal, NotRequired, override
 
 import cmk.livestatus_client as livestatus
 from cmk.ccc.hostaddress import HostName
@@ -106,10 +105,12 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         }
         super().__init__(**kwargs_with_defaults)
 
+    @override
     def _validate_value(self, value: str | None, varprefix: str) -> None:
         if not value or value == self._MARKER_DEPRECATED_CHOICE:
             raise MKUserError(varprefix, _("Please select a graph."))
 
+    @override
     def _choices_from_value(self, value: str | None) -> Choices:
         if not value:
             return list(self.choices())
@@ -131,6 +132,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             )
         ]
 
+    @override
     def render_input(self, varprefix: str, value: str | None) -> None:
         return super().render_input(
             varprefix,
@@ -140,17 +142,21 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
 
 class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](Dashlet[T]):
     @classmethod
+    @override
     def has_context(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=60, height=21))
 
     @classmethod
+    @override
     def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
         return ResponsiveLayoutConstraints.large_default()
 
+    @override
     def infos(self) -> SingleInfos:
         return ["host", "service"]
 
@@ -251,6 +257,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
             raise self._resolve_exception
         return self._cached_recipes
 
+    @override
     def default_display_title(self) -> str:
         self._resolve_graph()
         if self._cached_recipes:
@@ -269,25 +276,31 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
+    @override
     def type_name(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
 
     @classmethod
+    @override
     def title(cls):
         return _("Time series graph")
 
     @classmethod
+    @override
     def description(cls):
         return _("Displays a time series graph of a host or service.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 20
 
     @classmethod
+    @override
     def single_infos(cls) -> SingleInfos:
         return ["host", "service"]
 
+    @override
     def build_graph_specification(self, context: VisualContext) -> TemplateGraphSpecification:
         single_context = get_singlecontext_vars(context, self.single_infos())
         host = single_context.get("host")
@@ -342,6 +355,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             destination=GraphDestinations.dashlet,
         )
 
+    @override
     def discover_graphs(
         self, *, debug: bool, user_permissions: UserPermissions
     ) -> DiscoveredGraphs:
@@ -350,6 +364,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             raise self._resolve_exception
         return discover_template_graphs(graph_specification, debug=debug)
 
+    @override
     def _get_additional_macros(self) -> Mapping[str, str]:
         if (graph_specification := self.graph_specification()) is None:
             return {}
@@ -358,6 +373,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         return {"$SITE$": site} if site else {}
 
     @classmethod
+    @override
     def get_additional_macro_names(cls) -> Iterable[str]:
         yield "$SITE$"
 

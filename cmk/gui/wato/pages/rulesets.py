@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -20,15 +19,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from dataclasses import dataclass
 from enum import auto, Enum
 from pprint import pformat
-from typing import (
-    Any,
-    cast,
-    Final,
-    Literal,
-    NamedTuple,
-    overload,
-    TypedDict,
-)
+from typing import Any, cast, Final, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
@@ -294,6 +285,7 @@ class ABCRulesetMode(WatoMode):
     """
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
@@ -309,6 +301,7 @@ class ABCRulesetMode(WatoMode):
     def _set_title_help_and_doc_reference(self) -> None:
         raise NotImplementedError
 
+    @override
     def _from_vars(self) -> None:
         #  Explicitly hide deprecated rulesets by default
         if not request.has_var("search_p_ruleset_deprecated"):
@@ -356,9 +349,11 @@ class ABCRulesetMode(WatoMode):
     def _rulesets(self) -> RulesetCollection:
         raise NotImplementedError
 
+    @override
     def title(self) -> str:
         return self._title
 
+    @override
     def page(self, config: Config) -> None:
         if self._help:
             html.help(self._help)
@@ -454,9 +449,11 @@ class ABCRulesetMode(WatoMode):
 
 class ModeRuleSearch(ABCRulesetMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "rule_search"
 
+    @override
     def _get_page_type(self, search_options: dict[str, str]) -> PageType:
         if _is_deprecated_rulesets_page(search_options):
             return PageType.DeprecatedRulesets
@@ -469,6 +466,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
         return PageType.RuleSearch
 
+    @override
     def _rulesets(self) -> RulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
         if self._group_name == "static":
@@ -481,6 +479,7 @@ class ModeRuleSearch(ABCRulesetMode):
             )
         return all_rulesets
 
+    @override
     def _set_title_help_and_doc_reference(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
             self._title = _("Rule search: Deprecated rule sets")
@@ -519,6 +518,7 @@ class ModeRuleSearch(ABCRulesetMode):
         else:
             raise NotImplementedError
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -571,6 +571,7 @@ class ModeRuleSearch(ABCRulesetMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
 
+    @override
     def page(self, config: Config) -> None:
         if self._page_type is PageType.RuleSearch and not request.has_var("filled_in"):
             search_form(
@@ -579,6 +580,7 @@ class ModeRuleSearch(ABCRulesetMode):
             )
         super().page(config)
 
+    @override
     def action(self, config: Config) -> HTTPRedirect:
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
         return redirect(makeuri(request, []))
@@ -685,6 +687,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     """Lists rulesets in a ruleset group"""
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "rulesets"
 
@@ -697,14 +700,17 @@ class ModeRulesetGroup(ABCRulesetMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def _from_vars(self) -> None:
         super()._from_vars()
         if not self._group_name:
             raise MKUserError(None, _("The mandatory group name is missing"))
 
+    @override
     def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode"""
         if self._group_name is None:
@@ -723,13 +729,16 @@ class ModeRulesetGroup(ABCRulesetMode):
         )
         yield from main_module.additional_breadcrumb_items()
 
+    @override
     def _breadcrumb_url(self) -> str:
         assert self._group_name is not None
         return self.mode_url(group=self._group_name)
 
+    @override
     def _get_page_type(self, search_options: dict[str, str]) -> PageType:
         return PageType.RulesetGroup
 
+    @override
     def _rulesets(self) -> RulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
         if self._group_name == "static":
@@ -742,6 +751,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             )
         return all_rulesets
 
+    @override
     def _set_title_help_and_doc_reference(self) -> None:
         if self._group_name is None:
             raise MKGeneralException("Group name is not set")
@@ -751,6 +761,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             rulegroup.doc_references if isinstance(rulegroup, RulespecGroup) else {}
         )
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -889,13 +900,16 @@ class ModeEditRuleset(WatoMode):
     related_page_menu_hooks: list[Callable[[str], Iterator[PageMenuEntry]]] = []
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_ruleset"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    @override
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
         if not may_edit_ruleset(self._name):
@@ -904,6 +918,7 @@ class ModeEditRuleset(WatoMode):
             self._host.permissions.need_permission("read", user)
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRulesetGroup
 
@@ -916,9 +931,11 @@ class ModeEditRuleset(WatoMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         # To be able to calculate the breadcrumb with the ModeRulesetGroup as parent, we need to
         # ensure that the group identity is available.
@@ -931,6 +948,7 @@ class ModeEditRuleset(WatoMode):
         store = PredefinedConditionStore()
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading(), user)
 
+    @override
     def _from_vars(self) -> None:
         tree = folder_tree()
         self._folder = folder_from_request(
@@ -1039,9 +1057,11 @@ class ModeEditRuleset(WatoMode):
         with contextlib.suppress(KeyError):
             self._just_edited_rule = ruleset.get_rule_by_id(rule_id)
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(varname=self._name)
 
+    @override
     def title(self) -> str:
         assert self._rulespec.title is not None
         title = self._rulespec.title
@@ -1057,6 +1077,7 @@ class ModeEditRuleset(WatoMode):
 
         return title
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -1189,6 +1210,7 @@ class ModeEditRuleset(WatoMode):
                 is_suggested=True,
             )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         back_url = self.mode_url(
             varname=self._name,
@@ -1243,6 +1265,7 @@ class ModeEditRuleset(WatoMode):
         rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
         return redirect(back_url)
 
+    @override
     def page(self, config: Config) -> None:
         if not config.wato_hide_varnames:
             display_varname = (
@@ -1768,14 +1791,17 @@ class ModeEditRuleset(WatoMode):
 
 class ModeRuleSearchForm(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "rule_search_form"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRuleSearch
 
@@ -1783,11 +1809,13 @@ class ModeRuleSearchForm(WatoMode):
         self.back_mode = request.get_ascii_input_mandatory("back_mode", "rulesets")
         super().__init__(edition)
 
+    @override
     def title(self) -> str:
         if self.search_options:
             return _("Refine search")
         return _("Search rule sets and rules")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Search"),
@@ -1809,6 +1837,7 @@ class ModeRuleSearchForm(WatoMode):
         )
         return menu
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("rule_search", method="POST"):
             html.hidden_field("mode", self.back_mode, add_var=True)
@@ -1818,6 +1847,7 @@ class ModeRuleSearchForm(WatoMode):
 
             html.hidden_fields()
 
+    @override
     def _from_vars(self) -> None:
         if request.var("_reset_search"):
             request.del_vars("search_")
@@ -2195,18 +2225,22 @@ class ABCEditRuleMode(WatoMode):
                 raise MKGeneralException(_("Unknown render mode %(other)s") % {"other": other})
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    @override
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this rule set."))
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditRuleset
 
+    @override
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_RULE_SPEC_NAME)
 
@@ -2269,9 +2303,11 @@ class ABCEditRuleMode(WatoMode):
         self._orig_rule = self._rule
         self._rule = self._orig_rule.clone(preserve_id=True)
 
+    @override
     def title(self) -> str:
         return _("Edit rule: %(title)s") % {"title": self._rulespec.title}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Rule"),
@@ -2318,6 +2354,7 @@ class ABCEditRuleMode(WatoMode):
             )
         return None
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         # Let the ModeRulesetGroup know the group we are currently editing
         with request.stashed_vars():
@@ -2380,6 +2417,7 @@ class ABCEditRuleMode(WatoMode):
             get_rule_conditions_from_catalog_value(disk_value),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -2489,6 +2527,7 @@ class ABCEditRuleMode(WatoMode):
             "folder": self._folder.alias_path(),
         }
 
+    @override
     def page(self, config: Config) -> None:
         call_hooks("rmk_ruleset_banner", self._ruleset.name)
 
@@ -2991,6 +3030,7 @@ class VSExplicitConditions(Transform):
         if value and value.startswith("!"):
             raise MKUserError(varprefix, _('It\'s not allowed to use a leading "!" here.'))
 
+    @override
     def value_to_html(self, value: RuleConditions) -> ValueSpecText:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
@@ -3325,6 +3365,7 @@ class RuleConditionRenderer:
 
 class ModeEditRule(ABCEditRuleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_rule"
 
@@ -3333,6 +3374,7 @@ class ModeEditRule(ABCEditRuleMode):
         request.set_var(cls.VAR_RULE_ID, rule_id)
         request.set_var(cls.VAR_RULE_SPEC_NAME, rule_spec_name)
 
+    @override
     def _save_rule(
         self, *, pprint_value: bool, debug: bool, pending_changes: PendingChanges
     ) -> None:
@@ -3340,36 +3382,44 @@ class ModeEditRule(ABCEditRuleMode):
         self._ruleset.edit_rule(self._orig_rule, self._rule, pending_changes=pending_changes)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
+    @override
     def _check_folder_permissions(self) -> None:
         self._folder.permissions.need_permission("write", user)
 
 
 class ModeCloneRule(ABCEditRuleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "clone_rule"
 
+    @override
     def title(self) -> str:
         return _("Copy rule: %(title)s") % {"title": self._rulespec.title}
 
+    @override
     def _set_rule(self) -> None:
         super()._set_rule()
         self._rule = self._orig_rule.clone(preserve_id=False)
 
+    @override
     def _save_rule(
         self, *, pprint_value: bool, debug: bool, pending_changes: PendingChanges
     ) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule, pending_changes=pending_changes)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
+    @override
     def _check_folder_permissions(self) -> None:
         pass
 
+    @override
     def _remove_from_orig_folder(
         self, *, pprint_value: bool, debug: bool, pending_changes: PendingChanges
     ) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
 
+    @override
     def _page_form_quick_setup_warning(self) -> None:
         if is_locked_by_quick_setup(self._orig_rule.locked_by):
             quick_setup_duplication_warning(self._orig_rule.locked_by, "rule")
@@ -3377,12 +3427,15 @@ class ModeCloneRule(ABCEditRuleMode):
 
 class ModeNewRule(ABCEditRuleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "new_rule"
 
+    @override
     def title(self) -> str:
         return _("Add rule: %(title)s") % {"title": self._rulespec.title}
 
+    @override
     def _set_folder(self, tree: FolderTree) -> None:
         if request.has_var("_new_dflt_rule"):
             # Start creating a new rule with default selections (root folder)
@@ -3456,6 +3509,7 @@ class ModeNewRule(ABCEditRuleMode):
                     _("Unknown render mode %(render_mode)s") % {"render_mode": render_mode}
                 )
 
+    @override
     def _set_rule(self) -> None:
         host_name_conditions: HostOrServiceConditions | None = None
         service_description_conditions: HostOrServiceConditions | None = None
@@ -3492,6 +3546,7 @@ class ModeNewRule(ABCEditRuleMode):
             )
         )
 
+    @override
     def _save_rule(
         self, *, pprint_value: bool, debug: bool, pending_changes: PendingChanges
     ) -> None:
@@ -3501,9 +3556,11 @@ class ModeNewRule(ABCEditRuleMode):
             index, self._folder, self._rule, pending_changes=pending_changes
         )
 
+    @override
     def _check_folder_permissions(self) -> None:
         pass
 
+    @override
     def _success_message(self) -> str:
         return _('Created new rule in rule set "%(ruleset)s" in folder "%(folder)s"') % {
             "ruleset": self._ruleset.title(),
@@ -3513,20 +3570,25 @@ class ModeNewRule(ABCEditRuleMode):
 
 class ModeExportRule(ABCEditRuleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "export_rule"
 
+    @override
     def title(self) -> str:
         return _("Rule representation: %(title)s") % {"title": self._rulespec.title}
 
+    @override
     def _save_rule(
         self, *, pprint_value: bool, debug: bool, pending_changes: PendingChanges
     ) -> None:
         pass
 
+    @override
     def _check_folder_permissions(self) -> None:
         self._folder.permissions.need_permission("write", user)
 
+    @override
     def page(self, config: Config) -> None:
         try:
             rule_config: object = get_visitor(
@@ -3557,6 +3619,7 @@ class ModeExportRule(ABCEditRuleMode):
                 onclick=f"cmk.utils.copy_dom_element_content_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg)})",
             )
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=list(self._page_menu_dropdowns()),
@@ -3603,6 +3666,7 @@ def _get_rule_render_mode() -> RenderMode:
 
 
 class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield MatchItem(
             title=_("Unknown rule sets"),
@@ -3616,31 +3680,38 @@ class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
         )
 
     @staticmethod
+    @override
     def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True
 
 
 class ModeUnknownRulesets(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "unknown_rulesets"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         request.set_var("group", "monconf")
         return ModeRulesetGroup
 
+    @override
     def title(self) -> str:
         return _("Unknown rule sets")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -3824,6 +3895,7 @@ class ModeUnknownRulesets(WatoMode):
             HTMLWriter.render_tt(pformat(rulespec["condition"]).replace("\n", "<br>")),
         )
 
+    @override
     def page(self, config: Config) -> None:
         unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
             debug=config.debug
@@ -3950,6 +4022,7 @@ class ModeUnknownRulesets(WatoMode):
 
         return None
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 

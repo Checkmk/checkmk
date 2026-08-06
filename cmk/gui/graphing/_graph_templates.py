@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 
@@ -11,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, Self
+from typing import Literal, override, Self
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
@@ -312,13 +311,16 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     destination: str | None = None
 
     @staticmethod
+    @override
     def graph_type_name() -> Literal["template"]:
         return "template"
 
     @classmethod
+    @override
     def add_visual_type(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
 
+    @override
     def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         return [
             fetch_graph_row(
@@ -383,6 +385,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         )
 
     @tracer.instrument("graphing.TemplateGraphSpecification.recipes")
+    @override
     def recipes(
         self,
         env: GraphEnvironment,

@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
 import re
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from math import ceil
+from typing import override
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -101,6 +101,7 @@ class WMITable:
             for row in rows:
                 self.add_row(row)
 
+    @override
     def __repr__(self) -> str:
         key_field = None
         if self.__key_index is not None:
@@ -112,11 +113,13 @@ class WMITable:
 
         return f"{self.__class__.__name__}({self.__name!r}, {headers!r}, {key_field!r}, {self.__timestamp!r}, {self.__frequency!r}, {self.__rows!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
         return False
 
+    @override
     def __ne__(self, other: object) -> bool:
         return not self == other
 

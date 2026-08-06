@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 
@@ -41,6 +40,7 @@ class CommandGroup(abc.ABC):
 
 
 class CommandGroupRegistry(Registry[type[CommandGroup]]):
+    @override
     def plugin_name(self, instance: type[CommandGroup]) -> str:
         return instance().ident
 

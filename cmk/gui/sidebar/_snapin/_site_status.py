@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import json
+from typing import override
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites, user_sites
@@ -26,24 +25,29 @@ from ._helpers import begin_footnote_links, end_footnote_links, link, render_lin
 
 class SiteStatus(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "sitestatus"
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Site status")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "Connection state of each site and button for enabling "
             "and disabling the site connection"
         )
 
+    @override
     def show(self, config: Config) -> None:
         html.open_table(cellspacing="0", class_="sitestate")
 
@@ -117,9 +121,11 @@ class SiteStatus(SidebarSnapin):
         end_footnote_links()
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[RoleName]:
         return ["user", "admin"]
 
+    @override
     def page_handlers(self) -> PageHandlers:
         return {
             "switch_site": self._ajax_switch_site,

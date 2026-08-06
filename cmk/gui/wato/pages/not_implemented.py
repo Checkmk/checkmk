@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection
+from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
@@ -21,15 +21,19 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeNotImplemented(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return ""
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    @override
     def title(self) -> str:
         return _("Error")
 
+    @override
     def page(self, config: Config) -> None:
         html.show_error(_("This module has not yet been implemented."))

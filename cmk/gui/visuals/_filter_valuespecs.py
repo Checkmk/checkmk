@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 
 import json
@@ -81,20 +80,25 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         self._filter = filter_registry[name]
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
+    @override
     def title(self) -> str:
         return self._filter.title
 
+    @override
     def canonical_value(self) -> FilterHTTPVariables:
         return {}
 
+    @override
     def render_input(self, varprefix: str, value: FilterHTTPVariables) -> None:
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter, value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> FilterHTTPVariables:
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 
+    @override
     def validate_datatype(self, value: FilterHTTPVariables, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
@@ -103,18 +107,23 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
                 % {"type": type(value)},
             )
 
+    @override
     def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
 
+    @override
     def mask(self, value: FilterHTTPVariables) -> FilterHTTPVariables:
         return value
 
+    @override
     def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
         raise NotImplementedError  # FIXME! Violates LSP!
 
+    @override
     def value_to_json(self, value: FilterHTTPVariables) -> JSONValue:
         raise NotImplementedError  # FIXME! Violates LSP!
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> FilterHTTPVariables:
         raise NotImplementedError  # FIXME! Violates LSP!
 
@@ -202,6 +211,7 @@ class VisualFilterList(ListOfMultiple):
             delete_style="filter",
         )
 
+    @override
     def from_html_vars(self, varprefix: str) -> VisualContext:
         context = super().from_html_vars(varprefix)
         for values in context.values():
@@ -216,6 +226,7 @@ class VisualFilterList(ListOfMultiple):
     def filter_items(self) -> ItemsView[str, Filter]:
         return self._filters.items()
 
+    @override
     def has_show_more(self) -> bool:
         return all(vs.is_show_more for _key, vs in self.filter_items())
 
@@ -248,6 +259,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
     def filter_list_id(varprefix: str) -> str:
         return "%s_popup_filter_list" % varprefix
 
+    @override
     def _show_add_elements(self, varprefix: str) -> None:
         filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
         filter_list_selected_id = filter_list_id + "_selected"

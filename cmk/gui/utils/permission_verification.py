@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Endpoint permission system
 
 The endpoint permission system, currently active for REST API endpoints and potentially extendable
@@ -25,7 +23,7 @@ from __future__ import annotations
 import abc
 import itertools
 from collections.abc import Iterable, Sequence
-from typing import Protocol
+from typing import override, Protocol
 
 
 class UserLike(Protocol):
@@ -76,18 +74,22 @@ class Optional(BasePerm):
     def __init__(self, perm: BasePerm) -> None:
         self.perm = perm
 
+    @override
     def __repr__(self) -> str:
         return f"{self.perm}?"
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         """Verify that the permission might be there or not.
 
         It's okay if we don't have the permission, so we accept it all the time."""
         return True
 
+    @override
     def iter_perms(self) -> Iterable[Perm]:
         return self.perm.iter_perms()
 
+    @override
     def __contains__(self, item: object) -> bool:
         return isinstance(item, str) and item in self.perm
 
@@ -102,12 +104,15 @@ class MultiPerm(BasePerm, abc.ABC):
     def __init__(self, perms: list[BasePerm]) -> None:
         self.perms = perms
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}([{', '.join([repr(o) for o in self.perms])})"
 
+    @override
     def iter_perms(self) -> Iterable[Perm]:
         return itertools.chain(*[perm.iter_perms() for perm in self.perms])
 
+    @override
     def __contains__(self, item: object) -> bool:
         return isinstance(item, str) and any(item in perm for perm in self.perms)
 
@@ -118,6 +123,7 @@ class NoPerm(BasePerm):
     This permission can never be true.
     """
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         """(Unsuccessfully) verify that the user fulfils the requirements.
 
@@ -125,9 +131,11 @@ class NoPerm(BasePerm):
         """
         return False
 
+    @override
     def iter_perms(self) -> Iterable[Perm]:
         return iter([])
 
+    @override
     def __contains__(self, item: object) -> bool:
         return False
 
@@ -138,18 +146,22 @@ class Perm(BasePerm):
     def __init__(self, name: str) -> None:
         self.name = name
 
+    @override
     def __repr__(self) -> str:
         return f"{{{self.name}}}"
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         """Verify if the user fulfils the requirements.
 
         This method asks the user object if it has said permission."""
         return user.has_permission(self.name)
 
+    @override
     def iter_perms(self) -> Iterable[Perm]:
         return iter([self])
 
+    @override
     def __contains__(self, item: object) -> bool:
         return item == self.name
 
@@ -189,6 +201,7 @@ class AllPerm(MultiPerm):
 
     """
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         """Verify if the user fulfils the requirements.
 
@@ -225,6 +238,7 @@ class AnyPerm(MultiPerm):
 
     """
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         """Verify if the user fulfils the requirements.
 
@@ -260,15 +274,19 @@ class DynamicRuntimePerm(BasePerm):
     ) -> None:
         self.description = description
 
+    @override
     def __repr__(self) -> str:
         return f"DynamicRuntimePerm({self.description!r})"
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         return True
 
+    @override
     def iter_perms(self) -> Iterable[Perm]:
         return []
 
+    @override
     def __contains__(self, item: object) -> bool:
         return isinstance(item, str)
 
@@ -283,15 +301,19 @@ class PrefixPerm(BasePerm):
     def __init__(self, prefix: str) -> None:
         self.prefix = prefix
 
+    @override
     def __repr__(self) -> str:
         return f"{self.prefix}.*"
 
+    @override
     def has_permission(self, user: UserLike) -> bool:
         return True
 
+    @override
     def iter_perms(self) -> Iterable[Perm]:
         return []
 
+    @override
     def __contains__(self, item: object) -> bool:
         """Check if the given permission is within this prefix."""
         return isinstance(item, str) and item.startswith(self.prefix + ".")

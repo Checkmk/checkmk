@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -212,6 +211,7 @@ class WatoMultiConfigFile[D: Mapping](WatoConfigFile[D]):
 
 
 class ConfigFileRegistry(Registry[WatoConfigFile]):
+    @override
     def plugin_name(self, instance: WatoConfigFile) -> str:
         return instance.name
 

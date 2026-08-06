@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
+from typing import override
 
 from cmk.base.config import LoadingResult
 from cmk.ccc.site import SiteId
@@ -139,6 +138,7 @@ def _anonymize_socket(
 
 
 class SitesSteps(AnonymizeStep):
+    @override
     def run(
         self,
         anon_interface: AnonInterface,

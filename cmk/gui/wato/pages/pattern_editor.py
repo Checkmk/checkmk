@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Mode for trying out the logwatch patterns"""
 
 import re
 from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import override
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -86,17 +86,21 @@ def register(
 
 class ModePatternEditor(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "pattern_editor"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["pattern_editor"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditRuleset
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         # The ModeEditRuleset.breadcrumb_item does not know anything about the fact that this mode
         # is a child of the logwatch_rules ruleset. It can not construct the correct link to the
@@ -109,6 +113,7 @@ class ModePatternEditor(WatoMode):
             request.del_var("service")
             return super().breadcrumb()
 
+    @override
     def _from_vars(self) -> None:
         try:
             self._hostname = HostName(self._vs_host().from_html_vars("host"))
@@ -135,6 +140,7 @@ class ModePatternEditor(WatoMode):
     def title_pattern_analyzer() -> str:
         return _("Log file pattern analyzer")
 
+    @override
     def title(self) -> str:
         if not self._hostname and not self._item:
             return self.title_pattern_analyzer()
@@ -147,6 +153,7 @@ class ModePatternEditor(WatoMode):
             "hostname": self._hostname,
         }
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -189,6 +196,7 @@ class ModePatternEditor(WatoMode):
                 ),
             )
 
+    @override
     def page(self, config: Config) -> None:
         html.help(
             _(
@@ -416,6 +424,7 @@ class ModePatternEditor(WatoMode):
 
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         title = ModePatternEditor.title_pattern_analyzer()
         yield MatchItem(
@@ -430,9 +439,11 @@ class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
         )
 
     @staticmethod
+    @override
     def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True

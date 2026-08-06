@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -12,7 +11,7 @@ import datetime as dt
 import re
 from collections.abc import Mapping, Sequence
 from ipaddress import IPv4Network
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal, override, Self
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
 from pydantic import AfterValidator, model_validator, PlainSerializer, WithJsonSchema
@@ -119,6 +118,7 @@ class HostContactGroupResponseModel(HostContactGroupRequestModel):
     recurse_perms: bool = api_field(description=_CONTACT_GROUP_RECURSE_PERMS_DESC)
 
     @classmethod
+    @override
     def from_internal(cls, value: HostContactGroupSpec) -> "HostContactGroupResponseModel":
         return cls(
             groups=value["groups"],

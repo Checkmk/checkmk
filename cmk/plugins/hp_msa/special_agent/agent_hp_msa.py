@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """agent_hp_msa
@@ -18,6 +17,7 @@ import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Sequence
 from html.parser import HTMLParser
+from typing import override
 from urllib.parse import urljoin
 
 import requests
@@ -111,11 +111,13 @@ def store_property(prop: list[str]) -> None:
 
 
 class HTMLObjectParser(HTMLParser):
+    @override
     def feed(self, data: str) -> None:
         self.current_object_key: list[str | None] | None = None
         self.current_property: list[str | None] | None = None
         HTMLParser.feed(self, data)
 
+    @override
     def handle_starttag(self, tag: str, attrs: Sequence[tuple[str, str | None]]) -> None:
         if tag == "object":
             keys = dict(attrs)
@@ -125,6 +127,7 @@ class HTMLObjectParser(HTMLParser):
             if self.current_object_key:
                 self.current_property = self.current_object_key + [keys["name"]]
 
+    @override
     def handle_endtag(self, tag: str) -> None:
         if tag in ["property", "object"]:
             if self.current_property:
@@ -133,6 +136,7 @@ class HTMLObjectParser(HTMLParser):
             if tag == "object":
                 self.current_object_key = None
 
+    @override
     def handle_data(self, data: str) -> None:
         if self.current_property:
             self.current_property.append(data.replace("\n", "").replace("\r", ""))

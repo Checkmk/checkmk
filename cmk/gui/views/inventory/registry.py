@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 
 import abc
 from collections.abc import Callable, Sequence
-from typing import Protocol, TypedDict, TypeVar
+from typing import override, Protocol, TypedDict, TypeVar
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.inventory.filters import (
@@ -35,6 +34,7 @@ from cmk.inventory.structured_data import SDValue
 class _Comparable(Protocol):
     # TODO This protocol can also be used in cmk.inventory.structured_data.py
     @abc.abstractmethod
+    @override
     def __eq__(self, other: object) -> bool: ...
 
     @abc.abstractmethod
@@ -86,6 +86,7 @@ class InvPaintFunction(TypedDict):
 
 
 class InvPaintFunctions(Registry[InvPaintFunction]):
+    @override
     def plugin_name(self, instance: InvPaintFunction) -> str:
         return instance["name"]
 

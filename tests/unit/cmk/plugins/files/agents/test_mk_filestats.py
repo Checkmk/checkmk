@@ -18,10 +18,9 @@ import pytest
 
 from cmk.plugins.files.agents import mk_filestats
 
-# override decorator is only available in Python 3.12+
-try:
+if sys.version_info >= (3, 12):  # noqa: UP036
     from typing import override
-except ImportError:
+else:
 
     def override(func):
         return func

@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, StrEnum
-from typing import Any
+from typing import Any, override
 
 from pydantic import BaseModel
 
@@ -81,6 +80,7 @@ class RenameHostHook:
 
 
 class RenameHostHookRegistry(Registry[RenameHostHook]):
+    @override
     def plugin_name(self, instance: RenameHostHook) -> str:
         return instance.title
 
@@ -98,6 +98,7 @@ class RenameHostInRuleValue:
 
 
 class RenameHostInRuleValueRegistry(Registry[RenameHostInRuleValue]):
+    @override
     def plugin_name(self, instance: RenameHostInRuleValue) -> str:
         return instance.ruleset_name
 
@@ -604,9 +605,11 @@ class _RenameHostsUUIDLinkRequest(BaseModel):
 
 
 class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkRequest]):
+    @override
     def command_name(self) -> str:
         return "rename-hosts-uuid-link"
 
+    @override
     def execute(self, api_request: _RenameHostsUUIDLinkRequest) -> int:
         return len(
             UUIDLinkManager(
@@ -617,6 +620,7 @@ class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkReques
             ).rename(api_request.renamings)
         )
 
+    @override
     def get_request(self, config: Config, request: Request) -> _RenameHostsUUIDLinkRequest:
         return _RenameHostsUUIDLinkRequest(renamings=json.loads(request.get_request()["renamings"]))
 
@@ -625,6 +629,7 @@ class RenameHostsBackgroundJob(BackgroundJob):
     job_prefix = "rename-hosts"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Host renaming")
 
@@ -637,6 +642,7 @@ class RenameHostsBackgroundJob(BackgroundJob):
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
 
+    @override
     def _back_url(self) -> str:
         return makeuri(request, [])
 
@@ -646,6 +652,7 @@ class RenameHostBackgroundJob(RenameHostsBackgroundJob):
         super().__init__()
         self._host = host
 
+    @override
     def _back_url(self) -> str:
         return self._host.folder().url(request)
 

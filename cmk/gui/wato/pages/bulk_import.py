@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """The bulk import for hosts can be used to import multiple new hosts into a
@@ -20,7 +19,7 @@ import uuid
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, override, TextIO
 
 import cmk.gui.pages
 from cmk.ccc import store
@@ -382,14 +381,17 @@ class CSVBulkImport:
 
 class ModeBulkImport(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bulk_import"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
@@ -401,9 +403,11 @@ class ModeBulkImport(WatoMode):
     def _upload_tmp_path(self) -> Path:
         return cmk.utils.paths.tmp_dir / "host-import"
 
+    @override
     def title(self) -> str:
         return _("Bulk import of hosts")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.has_var("file_id"):
             return make_simple_form_page_menu(
@@ -446,6 +450,7 @@ class ModeBulkImport(WatoMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -665,6 +670,7 @@ class ModeBulkImport(WatoMode):
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()
 
+    @override
     def page(self, config: Config) -> None:
         if not request.has_var("file_id"):
             self._upload_form()

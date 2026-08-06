@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import active_config
@@ -24,6 +23,7 @@ from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
 
 
 class PainterRegistry(Registry[type[Painter]]):
+    @override
     def plugin_name(self, instance: type[Painter]) -> str:
         return instance(
             config=active_config,

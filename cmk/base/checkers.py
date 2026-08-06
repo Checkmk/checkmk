@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -20,7 +19,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, override
 
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
@@ -330,6 +329,7 @@ class SpecialAgentFetcher(FetcherFunction):
         self.secrets: Final = secrets
         self.is_cmc: Final = is_cmc
 
+    @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
@@ -406,6 +406,7 @@ class CMKFetcher(FetcherFunction):
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
 
+    @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
@@ -530,6 +531,7 @@ class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
     ) -> None:
         self._sections = sections
 
+    @override
     def __getitem__(self, __key: SectionName) -> SectionPlugin:
         plugin = self._sections.get(__key)
         return (
@@ -542,9 +544,11 @@ class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
             )
         )
 
+    @override
     def __iter__(self) -> Iterator[SectionName]:
         return iter(self._sections)
 
+    @override
     def __len__(self) -> int:
         return len(self._sections)
 
@@ -578,6 +582,7 @@ class HostLabelPluginMapper(Mapping[SectionName, HostLabelPlugin]):
         self._discovery_config: Final = discovery_config
         self._sections = sections
 
+    @override
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
         plugin = self._sections.get(__key)
         return (
@@ -589,9 +594,11 @@ class HostLabelPluginMapper(Mapping[SectionName, HostLabelPlugin]):
             else HostLabelPlugin.trivial()
         )
 
+    @override
     def __iter__(self) -> Iterator[SectionName]:
         return iter(self._sections)
 
+    @override
     def __len__(self) -> int:
         return len(self._sections)
 
@@ -613,6 +620,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         self.rtc_package: Final = rtc_package
         self.check_plugins: Final = check_plugins
 
+    @override
     def __getitem__(self, __key: CheckPluginName) -> CheckerPlugin:
         plugin = agent_based_register.get_check_plugin(__key, self.check_plugins)
         if plugin is None:
@@ -659,9 +667,11 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
             discovery_ruleset_name=plugin.discovery_ruleset_name,
         )
 
+    @override
     def __iter__(self) -> Iterator[CheckPluginName]:
         return iter(self.check_plugins)
 
+    @override
     def __len__(self) -> int:
         return len(self.check_plugins)
 
@@ -1204,6 +1214,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         self._discovery_config: Final = discovery_config
         self._check_plugins: Final = check_plugins
 
+    @override
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plug-ins and
         # discovery are declared together in the check API.
@@ -1237,9 +1248,11 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             ),
         )
 
+    @override
     def __iter__(self) -> Iterator[CheckPluginName]:
         return iter(self._check_plugins)
 
+    @override
     def __len__(self) -> int:
         return len(self._check_plugins)
 

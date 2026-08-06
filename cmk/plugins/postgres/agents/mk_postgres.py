@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -79,6 +78,14 @@ import subprocess
 import sys
 import tempfile
 
+if sys.version_info >= (3, 12):  # noqa: UP036
+    from typing import override
+else:
+
+    def override(func):
+        return func
+
+
 try:
     from collections.abc import Callable, Iterable, Sequence
     from typing import Any
@@ -126,6 +133,7 @@ UTF_8_NEWLINE_CHARS = re.compile(r"[\n\r\u2028\u000B\u0085\u2028\u2029]+")  # fm
 
 
 class OSNotImplementedError(NotImplementedError):
+    @override
     def __str__(self):
         # type: () -> str
         return "The OS type ({}) is not yet implemented.".format(platform.system())
@@ -464,6 +472,7 @@ def _sanitize_sql_query(out):
 
 
 class PostgresWin(PostgresBase):
+    @override
     def run_sql_as_db_user(
         self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
     ):
@@ -530,6 +539,7 @@ class PostgresWin(PostgresBase):
         # type: () -> Iterable[str]
         yield from cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk())
 
+    @override
     def get_psql_binary_path(self):
         # type: () -> str
         """This method returns the system specific psql interface binary as callable string"""
@@ -574,10 +584,12 @@ class PostgresWin(PostgresBase):
 
         raise OSError("Could not determine %s bin and its path." % self.psql_binary_name)
 
+    @override
     def get_psql_binary_dirname(self):
         # type: () -> str
         return self.psql_binary_path.rsplit("\\", 1)[0]
 
+    @override
     def get_instances(self):
         # type: () -> str
         """Gets all instances"""
@@ -600,6 +612,7 @@ class PostgresWin(PostgresBase):
                 out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
 
+    @override
     def get_stats(self, databases):
         # type: (list[str]) -> str
         """Get the stats"""
@@ -632,6 +645,7 @@ class PostgresWin(PostgresBase):
 
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
+    @override
     def get_version_and_connection_time(self):
         # type: () -> tuple[str, str]
         """Get the pg version and the time for the query connection"""
@@ -643,6 +657,7 @@ class PostgresWin(PostgresBase):
         diff = time.time() - start_time
         return out, "%.3f" % diff
 
+    @override
     def get_bloat(self, databases, numeric_version):
         # type: (list[Any], float) -> str
         """Get the db bloats"""
@@ -814,6 +829,7 @@ class PostgresLinux(PostgresBase):
         proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
         return _sanitize_sql_query(proc.communicate()[0])
 
+    @override
     def run_sql_as_db_user(
         self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
     ):
@@ -833,6 +849,7 @@ class PostgresLinux(PostgresBase):
                 rows_only=rows_only,
             )
 
+    @override
     def get_psql_binary_path(self):
         # type: () -> str
         """If possible, do not use the binary from PATH directly. This could lead to a generic
@@ -863,6 +880,7 @@ class PostgresLinux(PostgresBase):
 
         return out.strip()
 
+    @override
     def get_psql_binary_dirname(self):
         # type: () -> str
         return self.psql_binary_path.rsplit("/", 1)[0]
@@ -882,6 +900,7 @@ class PostgresLinux(PostgresBase):
             and (proc_sensitive_filter(proc) or self._matches_main(proc))
         ]
 
+    @override
     def get_instances(self):
         # type: () -> str
 
@@ -900,6 +919,7 @@ class PostgresLinux(PostgresBase):
         out = "\n".join(procs)
         return out.rstrip()
 
+    @override
     def get_query_duration(self, numeric_version):
         # type: (float) -> str
         # Previously part of simple_queries
@@ -930,6 +950,7 @@ class PostgresLinux(PostgresBase):
             querytime_sql_cmd, rows_only=False, extra_args="-P footer=off"
         )
 
+    @override
     def get_stats(self, databases):
         # type: (list[str]) -> str
         sql_cmd_lastvacuum = (
@@ -958,6 +979,7 @@ class PostgresLinux(PostgresBase):
 
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
+    @override
     def get_version_and_connection_time(self):
         # type: () -> tuple[str, str]
         cmd = "SELECT version() AS v"
@@ -971,6 +993,7 @@ class PostgresLinux(PostgresBase):
 
         return out, "%.3f" % real
 
+    @override
     def get_bloat(self, databases, numeric_version):
         # type: (list[Any], float) -> str
         # Bloat index and tables
@@ -1160,24 +1183,29 @@ class Helpers:
 
 class WindowsHelpers(Helpers):
     @staticmethod
+    @override
     def get_default_postgres_user():
         return "postgres"
 
     @staticmethod
+    @override
     def get_default_path():
         return "c:\\ProgramData\\checkmk\\agent\\config"
 
     @staticmethod
+    @override
     def get_conf_sep():
         return "|"
 
     @staticmethod
+    @override
     def get_default_db_name():
         return "data"
 
 
 class LinuxHelpers(Helpers):
     @staticmethod
+    @override
     def get_default_postgres_user():
         for user_id in ("pgsql", "postgres"):
             try:
@@ -1193,14 +1221,17 @@ class LinuxHelpers(Helpers):
         return "postgres"
 
     @staticmethod
+    @override
     def get_default_path():
         return "/etc/check_mk"
 
     @staticmethod
+    @override
     def get_conf_sep():
         return ":"
 
     @staticmethod
+    @override
     def get_default_db_name():
         return "main"
 

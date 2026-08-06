@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -1517,13 +1516,16 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
 
 class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
     @classmethod
+    @override
     def ident(cls) -> str:
         return "ec_sample_rule_pack"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 50
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         ec.save_rule_packs(
             [ec.default_rule_pack([])],
@@ -1760,16 +1762,20 @@ def _get_rule_stats_from_ec() -> Mapping[str, int]:
 
 class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_rule_packs"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
+    @override
     def title(self) -> str:
         return _("Event Console rule packs")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -1850,6 +1856,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             ],
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())
@@ -1991,6 +1998,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             answer["rules"], pretty_print=pretty_print, path=self._paths.rule_pack_dir.value
         )
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         rep_mode = replication_mode()
@@ -2290,14 +2298,17 @@ def _deref[T](x: T | Callable[[], T]) -> T:
 
 class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_rules"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
@@ -2310,19 +2321,24 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(rule_pack=self._rule_pack_id)
 
+    @override
     def _from_vars(self) -> None:
         self._rule_pack_id = request.get_ascii_input_mandatory("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
 
+    @override
     def title(self) -> str:
         return _("Rule pack %(title)s") % {"title": self._rule_pack["title"]}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -2384,6 +2400,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             ],
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -2485,6 +2502,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             )
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         search_expression = self._search_expression()
@@ -2762,17 +2780,21 @@ def _add_change_for_sites(
 
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_edit_rule_pack"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
+    @override
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)  # missing -> new rule pack
         self._new = self._edit_nr < 0
@@ -2788,6 +2810,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add rule pack")
@@ -2795,6 +2818,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             "rule_pack_id": self._rule_packs[self._edit_nr]["id"]
         }
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Rule pack"), breadcrumb, form_name="rule_pack", button_name="_save"
@@ -2814,6 +2838,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         )
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rule_packs"))
@@ -2879,6 +2904,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             )
         return redirect(mode_url("mkeventd_rule_packs"))
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         with html.form_context("rule_pack"):
@@ -2897,17 +2923,21 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
 class ModeEventConsoleEditRule(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_edit_rule"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRules
 
+    @override
     def _from_vars(self) -> None:
         if request.has_var("rule_pack"):
             self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(request.var("rule_pack"))
@@ -2946,6 +2976,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             except IndexError:
                 raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add rule")
@@ -2953,6 +2984,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             "rule_id": list(self._rule_pack["rules"])[self._edit_nr]["id"]
         }
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Rule"), breadcrumb, form_name="rule", button_name="_save"
@@ -2972,6 +3004,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         )
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
@@ -3093,6 +3126,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             LivestatusClient(sites.live()).command(ECResetCounters(rule["id"]), omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         with html.form_context("rule"):
@@ -3107,20 +3141,25 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
 class ModeEventConsoleStatus(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_status"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
+    @override
     def title(self) -> str:
         return _("Local server status")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -3138,6 +3177,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not user.may("mkeventd.switchmode"):
             return None
@@ -3157,6 +3197,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         flash(_("Switched to %(new_mode)s mode") % {"new_mode": new_mode})
         return None
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
 
@@ -3223,14 +3264,17 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
 
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_config"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
@@ -3241,6 +3285,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._current_settings = dict(load_configuration_settings())
 
     @staticmethod
+    @override
     def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
         return [
             g
@@ -3255,6 +3300,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             )
         ]
 
+    @override
     def title(self) -> str:
         if self._search:
             return html_escape(
@@ -3262,6 +3308,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             )
         return _("Event Console configuration")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -3281,6 +3328,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         )
 
     # TODO: Consolidate with ModeEditGlobals.action()
+    @override
     def action(self, config: Config) -> ActionResult:
         varname = request.var("_varname")
         action = request.var("_action")
@@ -3322,9 +3370,11 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return redirect(mode_url("mkeventd_config"))
 
     @property
+    @override
     def edit_mode_name(self) -> str:
         return "mkeventd_edit_configvar"
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         self._show_configuration_variables(config)
@@ -3354,14 +3404,17 @@ ConfigVariableGroupEventConsoleSNMP = ConfigVariableGroup(
 
 class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_edit_configvar"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleSettings
 
@@ -3369,15 +3422,19 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         super().__init__(edition)
         self._need_restart = None
 
+    @override
     def title(self) -> str:
         return _("Event Console configuration")
 
+    @override
     def _affected_sites(self) -> list[SiteId]:
         return _get_event_console_sync_sites()
 
+    @override
     def _back_url(self) -> str:
         return ModeEventConsoleSettings.mode_url()
 
+    @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
         return make_global_settings_context(self._edition, omd_site(), config)
 
@@ -3410,20 +3467,25 @@ class MIBInfo:
 
 class ModeEventConsoleMIBs(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_mibs"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
+    @override
     def title(self) -> str:
         return _("SNMP MIBs for trap translation")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -3481,6 +3543,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -3526,6 +3589,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         } | {self._paths.local_mibs_dir.value / filename}:
             path.unlink(missing_ok=True)
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         for mib_path, title, deletable in self._mib_dirs():
@@ -3614,20 +3678,25 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
 class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "mkeventd_upload_mibs"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleMIBs
 
+    @override
     def title(self) -> str:
         return _("Upload SNMP MIBs")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("MIBs"),
@@ -3651,6 +3720,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         )
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -3815,6 +3885,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             msg += "<br>\n".join(errors)
         return msg
 
+    @override
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         html.h3(_("Upload MIB file"))
@@ -3971,38 +4042,47 @@ SwitchSlaveReplicationPermission = Permission(
 
 class MainModuleEventConsole(ABCMainModule):
     @property
+    @override
     def mode_or_url(self) -> str:
         return "mkeventd_rule_packs"
 
     @property
+    @override
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property
+    @override
     def title(self) -> str:
         return _("Event Console")
 
     @property
+    @override
     def icon(self) -> StaticIcon | DynamicIcon:
         return StaticIcon(IconNames.event_console)
 
     @property
+    @override
     def permission(self) -> None | str:
         return "mkeventd.edit"
 
     @property
+    @override
     def description(self) -> str:
         return _("Manage event classification and correlation rules for the Event Console")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 20
 
     @property
+    @override
     def enabled(self) -> bool:
         return active_config.mkeventd_enabled
 
     @property
+    @override
     def is_show_more(self) -> bool:
         return True
 
@@ -4986,22 +5066,27 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
 
 class MainModuleEventConsoleRules(ABCMainModule):
     @property
+    @override
     def enabled(self) -> bool:
         return False
 
     @property
+    @override
     def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "eventconsole")
 
     @property
+    @override
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property
+    @override
     def title(self) -> str:
         return _("Event Console rules")
 
     @property
+    @override
     def icon(self) -> StaticIcon | DynamicIcon:
         return StaticIcon(
             IconNames.event_console,
@@ -5009,22 +5094,27 @@ class MainModuleEventConsoleRules(ABCMainModule):
         )
 
     @property
+    @override
     def permission(self) -> None | str:
         return "rulesets"
 
     @property
+    @override
     def description(self) -> str:
         return _("Host and service rules related to the Event Console")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 40
 
     @property
+    @override
     def is_show_more(self) -> bool:
         return True
 
     @classmethod
+    @override
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         yield BreadcrumbItem(
             title="Event Console rule packs",
@@ -5039,14 +5129,17 @@ class MainModuleEventConsoleRules(ABCMainModule):
 
 class RulespecGroupEventConsole(RulespecGroup):
     @property
+    @override
     def name(self) -> str:
         return "eventconsole"
 
     @property
+    @override
     def title(self) -> str:
         return _("Event Console rules")
 
     @property
+    @override
     def help(self) -> str:
         return _("Host and service rules related to the Event Console")
 
@@ -5399,6 +5492,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         super().__init__(name, provider="setup")
         self._rule_pack_loader = rule_pack_loader
 
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         for rule_pack in self._iter_rulepacks():
             rule_pack_title = rule_pack["title"]
@@ -5450,12 +5544,14 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         )
 
     @staticmethod
+    @override
     def is_affected_by_change(change_action_name: str) -> bool:
         # rule packs: new-rule-pack, edit-rule-pack, ...
         # rules within rule packs: new-rule, edit-rule, ...
         return "rule" in change_action_name
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return False
 

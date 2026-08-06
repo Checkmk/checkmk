@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import functools
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.user import UserId
 from cmk.gui.hooks import request_memoize
@@ -73,6 +72,7 @@ class _UserSelection(DropdownChoice[UserId]):
             default_value=default_value,
         )
 
+    @override
     def value_to_html(self, value: Any) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 

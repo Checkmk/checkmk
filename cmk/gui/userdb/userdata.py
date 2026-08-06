@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
 from datetime import datetime
-from typing import Any, ClassVar, Literal, Self
+from typing import Any, ClassVar, Literal, override, Self
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -37,9 +36,11 @@ class _MissingValueSentinel:
     None.
     """
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, _MissingValueSentinel)
 
+    @override
     def __hash__(self) -> int:
         return hash(type(self))
 
@@ -122,9 +123,11 @@ class CustomAttributes:
         self.configured_custom_user_attributes[name].valuespec().validate_value(value, "ua_" + name)
         self.attributes[name] = value
 
+    @override
     def __repr__(self) -> str:
         return f"{self.attributes}"
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, CustomAttributes):
             return NotImplemented

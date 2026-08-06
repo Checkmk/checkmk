@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
@@ -29,6 +28,7 @@ class BuiltinDashboardExtender:
 
 
 class BuiltinDashboardExtenderRegistry(Registry[BuiltinDashboardExtender]):
+    @override
     def plugin_name(self, instance: BuiltinDashboardExtender) -> str:
         return instance.ident
 

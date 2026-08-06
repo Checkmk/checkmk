@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from pydantic import BaseModel
 
@@ -49,6 +49,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
     job_prefix = "autodiscovery"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Auto-discovery")
 

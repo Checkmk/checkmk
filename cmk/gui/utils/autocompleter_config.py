@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """
 AutocompleterConfig is used to transport data from python via html, javascript
 and ajax back to python.
@@ -15,7 +13,7 @@ endpoint.
 """
 
 from collections.abc import Collection, Mapping
-from typing import Literal
+from typing import Literal, override
 
 AutocompleterParams = Mapping[str, str | int | float | bool | Collection[str]]
 AutocompleterConfigJson = Mapping[
@@ -103,6 +101,7 @@ class ContextAutocompleterConfig(AutocompleterConfig):
         self._show_independent_of_context = show_independent_of_context
 
     @property
+    @override
     def params(self) -> AutocompleterParams:
         return {"show_independent_of_context": self._show_independent_of_context, **super().params}
 
@@ -137,5 +136,6 @@ class GroupAutocompleterConfig(AutocompleterConfig):
         self._group_type = group_type
 
     @property
+    @override
     def params(self) -> AutocompleterParams:
         return {"group_type": self._group_type, **super().params}

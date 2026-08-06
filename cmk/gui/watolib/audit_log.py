@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
@@ -15,7 +14,7 @@ import re
 import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, NamedTuple, override, TypedDict
 
 import cmk.gui.watolib.git
 from cmk.ccc.user import UserId
@@ -89,10 +88,12 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             return raw
 
     @staticmethod
+    @override
     def _serialize(entry: AuditLogStore.Entry) -> object:
         return AuditLogStore.Entry.serialize(entry)
 
     @staticmethod
+    @override
     def _deserialize(raw: object) -> AuditLogStore.Entry:
         return AuditLogStore.Entry.deserialize(raw)
 
@@ -113,6 +114,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 
         self._path.rename(newpath)
 
+    @override
     def read(self, options: AuditLogFilter | None = None) -> Sequence[AuditLogStore.Entry]:
         entries = super().read()
 

@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.site import url_prefix
 from cmk.gui.breadcrumb import Breadcrumb
@@ -44,25 +43,31 @@ def _nagvis_page_url(nagvis_url: str) -> str:
 
 class NagVisMaps(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "nagvis_maps"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("NagVis maps")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("List of available NagVis maps")
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return False
 
+    @override
     def show(self, config: Config) -> None:
         html.div(_("Loading maps..."), class_="loading")
         html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
 
+    @override
     def page_handlers(self) -> PageHandlers:
         return {
             "ajax_nagvis_maps_snapin": self._ajax_show_nagvis_maps_snapin,

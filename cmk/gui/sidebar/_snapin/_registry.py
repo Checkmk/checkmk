@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, Self
+from typing import Literal, override, Self
 
 from pydantic import BaseModel
 
@@ -33,9 +32,11 @@ from ._permission_section import PERMISSION_SECTION_SIDEBAR_SNAPINS
 class SnapinRegistry(Registry[type[SidebarSnapin]]):
     """The management object for all available plugins."""
 
+    @override
     def plugin_name(self, instance: type[SidebarSnapin]) -> str:
         return instance.type_name()
 
+    @override
     def registration_hook(self, instance: type[SidebarSnapin]) -> None:
         permission_registry.register(
             Permission(
@@ -109,6 +110,7 @@ class CustomSnapinsConfig(pagetypes.OverridableConfig):
 
 class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
     @classmethod
+    @override
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         _model = CustomSnapinsModel.model_validate(page_dict)
         return cls(
@@ -134,6 +136,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
             )
         )
 
+    @override
     def serialize(self) -> dict[str, object]:
         return CustomSnapinsModel(
             name=self.config.name,
@@ -159,18 +162,22 @@ class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
         ).model_dump()
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "custom_snapin"
 
     @classmethod
+    @override
     def type_icon(cls) -> StaticIcon | DynamicIcon:
         return StaticIcon(IconNames.custom_snapin)
 
     @classmethod
+    @override
     def type_is_show_more(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def phrase(cls, phrase: pagetypes.PagetypePhrase) -> str:
         return {
             "title": _("Custom sidebar element"),
@@ -183,6 +190,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod
+    @override
     def parameters(
         cls, mode: pagetypes.PageMode, user_permissions: UserPermissions
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
@@ -225,6 +233,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
         return choices
 
     @classmethod
+    @override
     def reserved_unique_ids(cls) -> list[str]:
         return list(snapin_registry)
 

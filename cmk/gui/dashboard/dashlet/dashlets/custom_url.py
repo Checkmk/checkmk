@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet, RelativeLayoutConstraints, WidgetSize
 from cmk.gui.dashboard.type_defs import DashletConfig
@@ -18,21 +18,26 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
     """Dashlet that displays a custom webpage"""
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "url"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Custom URL")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Displays the content of a custom website.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 80
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=30, height=10))

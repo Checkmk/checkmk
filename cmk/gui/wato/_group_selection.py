@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk.gui.groups import GroupSpecs
 from cmk.gui.hooks import request_memoize
@@ -44,6 +43,7 @@ class _GroupSelection(ElementSelection):
         self._choices = choices
         self._no_selection = no_selection
 
+    @override
     def get_elements(self) -> dict[str, str]:
         elements = list(self._choices())
         if self._no_selection:

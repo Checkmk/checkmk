@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -175,6 +174,7 @@ class ABCGlobalSettingsMode(WatoMode):
         self._global_settings: GlobalSettings = {}
         self._current_settings: dict[str, Any] = {}
 
+    @override
     def _from_vars(self) -> None:
         self._search = get_search_expression()
         self._show_only_modified = (
@@ -411,6 +411,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         context = self.make_global_settings_context(active_config)
         self._value_model: ValueSpec | FormSpec[Any] = self._config_variable.value_model(context)
 
+    @override
     def _from_vars(self) -> None:
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
@@ -434,6 +435,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             return user.may("wato.add_or_modify_executables")
         return True
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Setting"), breadcrumb, form_name="value_editor", button_name="_save"
@@ -463,6 +465,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -623,6 +626,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             return
         html.write_text_permissive(self._value_model.value_to_html(value))
 
+    @override
     def page(self, config: Config) -> None:
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
@@ -687,10 +691,12 @@ class ABCEditGlobalSettingMode(WatoMode):
 
 class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "globalvars"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
@@ -705,11 +711,13 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         self._current_settings = dict(load_configuration_settings())
         self._page_menu_dropdowns_postprocess = page_menu_dropdowns_postprocess
 
+    @override
     def title(self) -> str:
         if self._search:
             return _("Global settings matching '%(search)s'") % {"search": self._search}
         return _("Global settings")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
 
@@ -744,6 +752,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             item=make_simple_link("wato.py?mode=sites"),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -791,6 +800,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("globalvars"))
 
+    @override
     def page(self, config: Config) -> None:
         self._show_configuration_variables(config)
 
@@ -806,23 +816,29 @@ class DefaultModeEditGlobals(ModeEditGlobals):
 
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_configvar"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditGlobals
 
+    @override
     def title(self) -> str:
         return _("Edit global setting")
 
+    @override
     def _affected_sites(self) -> Sequence[SiteId] | None:
         return None  # All sites
 
+    @override
     def _back_url(self) -> str:
         return ModeEditGlobals.mode_url()
 
@@ -833,6 +849,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return DefaultModeEditGlobals
 
@@ -884,6 +901,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
             match_texts=[title, ident],
         )
 
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         mode = self._create_mode()
         yield from (
@@ -899,10 +917,12 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         )
 
     @staticmethod
+    @override
     def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True
 

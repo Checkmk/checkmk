@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import assert_never
+from typing import assert_never, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing.v1 import graphs as graphs_v1
@@ -87,6 +85,7 @@ def parse_unit_from_api(unit_from_api: metrics_v1.Unit) -> ConvertibleUnitSpecif
 
 
 class MetricsFromAPI(Registry[RegisteredMetric]):
+    @override
     def plugin_name(self, instance: RegisteredMetric) -> str:
         return instance.name
 
@@ -105,6 +104,7 @@ type PerfometerFromAPI = (
 
 
 class PerfometersFromAPI(Registry[PerfometerFromAPI]):
+    @override
     def plugin_name(self, instance: PerfometerFromAPI) -> str:
         return instance.name
 
@@ -121,6 +121,7 @@ type GraphFromAPI = (
 
 
 class GraphsFromAPI(Registry[GraphFromAPI]):
+    @override
     def plugin_name(self, instance: GraphFromAPI) -> str:
         return instance.name
 

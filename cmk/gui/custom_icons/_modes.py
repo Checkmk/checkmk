@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import os
 from collections.abc import Collection, Mapping
-from typing import Any
+from typing import Any, override
 
 import cmk.utils.paths
 from cmk.gui.config import active_config, Config
@@ -48,13 +47,16 @@ def validate_icon(value: FileUploadModel, varprefix: str) -> None:
 
 class ModeIcons(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "icons"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["icons"]
 
+    @override
     def title(self) -> str:
         return _("Custom icons")
 
@@ -89,6 +91,7 @@ class ModeIcons(WatoMode):
             ],
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -122,6 +125,7 @@ class ModeIcons(WatoMode):
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _("Unable to upload icon: %(e)s") % {"e": e})
 
+    @override
     def page(self, config: Config) -> None:
         html.p(
             _(

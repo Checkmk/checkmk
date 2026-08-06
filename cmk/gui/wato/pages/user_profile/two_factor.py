@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -1202,6 +1201,7 @@ class JsonPage(Page, abc.ABC):
             response.set_data(str(e))
 
     @abc.abstractmethod
+    @override
     def page(self, ctx: PageContext) -> JsonSerializable:
         """Override this to implement the page functionality"""
         raise NotImplementedError
@@ -1318,6 +1318,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
 
 
 class UserLoginTwoFactor(Page):
+    @override
     def handle_page(self, ctx: PageContext) -> None:
         """Override to handle both HTML and JSON responses"""
         if ctx.request.has_var("_totp_code") or ctx.request.has_var("_backup_code"):

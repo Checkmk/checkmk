@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="explicit-any"
 
 import json
 import logging
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -566,6 +565,7 @@ class AnonHostsStorage(StandardHostsStorage):
         super().__init__()
         self.anon_interface = anon_interface
 
+    @override
     def _write(
         self,
         hosts_mk_file_path: Path,
@@ -584,6 +584,7 @@ class AnonHostsStorage(StandardHostsStorage):
             anon_hosts_mk_file_path, _anonymize(self.anon_interface, data), value_formatter
         )
 
+    @override
     def _read(self, file_path: Path) -> str:
         raise NotImplementedError
 
@@ -593,6 +594,7 @@ class AnonFolderAttributesStorage(StandardWATOInfoStorage):
         super().__init__()
         self.anon_interface = anon_interface
 
+    @override
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         folders_path = str(file_path).removeprefix(str(wato_root_dir())).removesuffix(".wato")
         anon_folders_path = self.anon_interface.get_folder_path(folders_path)
@@ -601,11 +603,13 @@ class AnonFolderAttributesStorage(StandardWATOInfoStorage):
         )
         super().write(anon_wato_file_path, _anonymize_folder_attributes(self.anon_interface, data))
 
+    @override
     def read(self, file_path: Path) -> WATOFolderInfo:
         raise NotImplementedError
 
 
 class HostsSteps(AnonymizeStep):
+    @override
     def run(
         self,
         anon_interface: AnonInterface,

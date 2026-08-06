@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 # [[[usr:/home]]]
@@ -24,6 +23,7 @@ import enum
 import time
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from typing import override
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -78,10 +78,12 @@ class Quota(abc.ABC):
 @dataclasses.dataclass(frozen=True)
 class BlockQuota(Quota):
     @staticmethod
+    @override
     def human_readable(v: float) -> str:
         return render.bytes(v)
 
     @staticmethod
+    @override
     def exceeded_name() -> str:
         return "space"
 
@@ -89,10 +91,12 @@ class BlockQuota(Quota):
 @dataclasses.dataclass(frozen=True)
 class FileQuota(Quota):
     @staticmethod
+    @override
     def human_readable(v: float) -> str:
         return "%d" % v
 
     @staticmethod
+    @override
     def exceeded_name() -> str:
         return "file"
 

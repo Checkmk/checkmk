@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterator
+from typing import override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
@@ -28,25 +27,31 @@ from cmk.livestatus_client import (
 
 class SidebarSnapinEventConsole(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "mkeventd_performance"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Event Console performance")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Monitor the performance of the Event Console")
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[RoleName]:
         return ["admin"]
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
+    @override
     def show(self, config: Config) -> None:
         only_sites = snapin_site_choice("mkeventd_performance", get_event_console_site_choices())
 

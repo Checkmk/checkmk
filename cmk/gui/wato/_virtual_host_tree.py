@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Collection, Sequence
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
-from typing import TypedDict
+from typing import override, TypedDict
 
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
@@ -42,6 +41,7 @@ class Tree(TypedDict, total=False):
 
 class VirtualHostTree(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "tag_tree"
 
@@ -71,10 +71,12 @@ class VirtualHostTree(SidebarSnapin):
         user.save_file("virtual_host_tree", {"tree": self._current_tree_id, "cwd": self._cwds})
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Virtual host tree")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "This snap-in shows tree views of your hosts based on their tag "
@@ -82,6 +84,7 @@ class VirtualHostTree(SidebarSnapin):
             "global settings of the graphical user interface (GUI)."
         )
 
+    @override
     def show(self, config: Config) -> None:
         self._load(config.virtual_host_trees)
         if not config.virtual_host_trees:
@@ -570,6 +573,7 @@ function virtual_host_tree_enter(path)
         # No empty entry found -> get default (i.e. first entry)
         return tag_group.tags[0].id, tag_group.tags[0].title
 
+    @override
     def page_handlers(self) -> PageHandlers:
         return {
             "sidebar_ajax_tag_tree": self._ajax_tag_tree,
@@ -598,5 +602,6 @@ function virtual_host_tree_enter(path)
         response.set_data("OK")
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True

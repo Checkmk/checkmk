@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Callable, Iterable
-from typing import Literal
+from typing import Literal, override
 
 import cmk.livestatus_client as livestatus
 from cmk.gui import query_filters, sites
@@ -61,15 +60,19 @@ class AjaxDropdownFilter(Filter):
             group=group,
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.column]}
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         dropdown = DynamicDropdown(
             id=self.query_filter.request_vars[0],
@@ -89,6 +92,7 @@ class AjaxDropdownFilter(Filter):
         else:
             yield dropdown
 
+    @override
     def validate_value(self, value: FilterHTTPVariables) -> None:
         if self._validate_value:
             htmlvar = self.htmlvars[0]
@@ -128,6 +132,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             group=group,
         )
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         varname = self.htmlvars[0]
         value = row.get(self.group_type + "group_name")
@@ -140,6 +145,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             return s
         return {}
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         # TODO: This should be part of the general options query
         if current_value := value.get(self.query_filter.request_vars[0]):

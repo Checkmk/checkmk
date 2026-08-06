@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
 from collections.abc import Callable, Mapping
-from typing import Literal, NotRequired, TypedDict
+from typing import Literal, NotRequired, override, TypedDict
 
 from cmk.utils.password_store import (  # astrein: disable=cmk-module-layer-violation
     extract_formspec_password,
@@ -55,6 +54,7 @@ class EnvironmentProxyConfig:
     def serialize(self) -> str:
         return self.SERIALIZED
 
+    @override
     def __eq__(self, o: object) -> bool:
         return isinstance(o, EnvironmentProxyConfig)
 
@@ -71,6 +71,7 @@ class NoProxyConfig:
     def serialize(self) -> str:
         return self.SERIALIZED
 
+    @override
     def __eq__(self, o: object) -> bool:
         return isinstance(o, NoProxyConfig)
 
@@ -88,9 +89,11 @@ class ExplicitProxyConfig:
     def serialize(self) -> str:
         return self._url
 
+    @override
     def __eq__(self, o: object) -> bool:
         return isinstance(o, ExplicitProxyConfig) and self._url == o._url
 
+    @override
     def __repr__(self) -> str:
         return f"ExplicitProxyConfig(url='{self._url}')"
 

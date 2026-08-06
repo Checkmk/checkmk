@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -17,7 +16,7 @@ import re
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from html import unescape
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
@@ -738,12 +737,15 @@ class JoinCell(Cell):
 
         self.join_value = join_value
 
+    @override
     def title(self, use_short: bool = True) -> str:
         return self._custom_title or self.join_value
 
+    @override
     def tooltip_title(self) -> str:
         return self.title()
 
+    @override
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
         return f"{self._painter_name}.{serv_painter}"
@@ -757,6 +759,7 @@ class EmptyCell(Cell):
     def __init__(self) -> None:
         super().__init__(None, None, None, UserPermissions({}, {}, {}, []))
 
+    @override
     def render(
         self,
         row: Row,
@@ -765,6 +768,7 @@ class EmptyCell(Cell):
     ) -> tuple[str, str]:
         return "", ""
 
+    @override
     def paint(
         self,
         row: Row,
@@ -808,19 +812,24 @@ class PainterAdapter(Painter):
         self._painter = painter
 
     @property
+    @override
     def ident(self) -> str:
         return self._painter.ident
 
+    @override
     def title(self, cell: Cell) -> str:
         return str(self._painter.title)
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return str(self._painter.short_title)
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return self._painter.columns
 
+    @override
     def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
         # TODO: the dynamic columns/derive functionality is added, once we migrate painters using it
         if self._painter.dynamic_columns is None or (params := cell.painter_parameters()) is None:
@@ -828,13 +837,16 @@ class PainterAdapter(Painter):
         return list(self._painter.dynamic_columns(params))
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         """Returns a list of painter option names that affect this painter"""
         return self._painter.painter_options or []
 
+    @override
     def title_classes(self) -> list[str]:
         return self._painter.title_classes or []
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         config = PainterConfiguration(
             parameters=cell.painter_parameters(), columns=self._painter.columns

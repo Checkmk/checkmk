@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -13,7 +12,7 @@
 
 import abc
 import copy
-from typing import Any
+from typing import Any, override
 
 from cmk.bi.actions import (
     BICallARuleAction,
@@ -283,6 +282,7 @@ class ABCBIConfigSearch(ABCBISearch):
 
 
 class BIConfigSearchRegistry(plugin_registry.Registry[type[ABCBIConfigSearch]]):
+    @override
     def plugin_name(self, instance: type[ABCBIConfigSearch]) -> str:
         return instance.kind()
 
@@ -332,6 +332,7 @@ def _bi_host_choice_vs(title):
 
 class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
         return (
             cls.kind(),
@@ -344,12 +345,14 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
         )
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return FixedValue(value="")
 
 
 class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
         return (cls.kind(), _("Create nodes based on a host search"), cls.valuespec())
 
@@ -372,6 +375,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
         return {"type": "child_with", "conditions": value[1]}
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return Dictionary(
             elements=[
@@ -450,10 +454,12 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
 
 class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
         return (cls.kind(), _("Create nodes based on a service search"), cls.valuespec())
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return Dictionary(
             title=_("Conditions"),
@@ -499,10 +505,12 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
 
 class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
         return (cls.kind(), _("No search, specify list of arguments"), cls.valuespec())
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return Dictionary(
             elements=[
@@ -561,6 +569,7 @@ class ABCBIConfigAction(ABCBIAction):
 
 
 class BIConfigActionRegistry(plugin_registry.Registry[type[ABCBIConfigAction]]):
+    @override
     def plugin_name(self, instance: type[ABCBIConfigAction]) -> str:
         return instance.kind()
 
@@ -570,10 +579,12 @@ bi_config_action_registry = BIConfigActionRegistry()
 
 class BIConfigCallARuleAction(BICallARuleAction, ABCBIConfigAction):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("Call a rule"), cls.valuespec())
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             if value.get("rule_id") is None:
@@ -683,10 +694,12 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
 
 class BIConfigStateOfHostAction(BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of a host"), cls.valuespec())
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return Dictionary(
             help=_(
@@ -714,10 +727,12 @@ class BIConfigStateOfHostAction(BIStateOfHostAction, ABCBIConfigAction):
 
 class BIConfigStateOfServiceAction(BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of a service"), cls.valuespec())
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return Dictionary(
             help=_("Will create child nodes representing the state of services."),
@@ -747,10 +762,12 @@ class BIConfigStateOfServiceAction(BIStateOfServiceAction, ABCBIConfigAction):
 
 class BIConfigStateOfRemainingServicesAction(BIStateOfRemainingServicesAction, ABCBIConfigAction):
     @classmethod
+    @override
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of remaining services"), cls.valuespec())
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         return Dictionary(
             help=_(
@@ -805,6 +822,7 @@ class ABCBIConfigAggregationFunction(ABCBIAggregationFunction):
 class BIConfigAggregationFunctionRegistry(
     plugin_registry.Registry[type[ABCBIConfigAggregationFunction]]
 ):
+    @override
     def plugin_name(self, instance: type[ABCBIConfigAggregationFunction]) -> str:
         return instance.kind()
 
@@ -813,6 +831,7 @@ bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
 
 
 class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggregationFunction):
+    @override
     def __str__(self) -> str:
         return _("Best state, %(count)d nodes, restrict to %(restrict_state)s") % {
             "count": self.count,
@@ -820,10 +839,12 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
         }
 
     @classmethod
+    @override
     def title(cls):
         return _("Best - take best of all node states")
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             return value["count"], value["restrict_state"]
@@ -859,6 +880,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
 
 
 class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAggregationFunction):
+    @override
     def __str__(self) -> str:
         return _("Worst state, %(count)d nodes, restrict to %(restrict_state)s") % {
             "count": self.count,
@@ -866,10 +888,12 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
         }
 
     @classmethod
+    @override
     def title(cls):
         return _("Worst - take worst of all node states")
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             return value["count"], value["restrict_state"]
@@ -908,6 +932,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
 class BIConfigAggregationFunctionCountOK(
     BIAggregationFunctionCountOK, ABCBIConfigAggregationFunction
 ):
+    @override
     def __str__(self) -> str:
         info = []
         for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:
@@ -924,10 +949,12 @@ class BIConfigAggregationFunctionCountOK(
         return ",".join(info)
 
     @classmethod
+    @override
     def title(cls):
         return _("Count the number of nodes in state OK")
 
     @classmethod
+    @override
     def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             result = []

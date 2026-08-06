@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Check_MK base specific code of the crash reporting"""
@@ -14,7 +13,7 @@ import json
 import traceback
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, override, TypedDict
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -134,6 +133,7 @@ class CrashReportWithAgentOutput[T](ABCCrashReport[T]):
         super().__init__(crash_report_base_path=crash_report_base_path, crash_info=crash_info)
         self.agent_output = agent_output
 
+    @override
     def _serialize_attributes(self) -> dict:
         """Serialize object type specific attributes for transport"""
         attributes = super()._serialize_attributes()
@@ -152,6 +152,7 @@ class SectionDetails(TypedDict):
 
 class SectionCrashReport(CrashReportWithAgentOutput[SectionDetails]):
     @staticmethod
+    @override
     def type() -> Literal["section"]:
         return "section"
 
@@ -172,6 +173,7 @@ class CheckDetails(TypedDict):
 
 class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
     @staticmethod
+    @override
     def type() -> Literal["check"]:
         return "check"
 

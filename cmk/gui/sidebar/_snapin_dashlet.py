@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import contextlib
 from collections.abc import Iterator
 from typing import override
@@ -29,25 +27,31 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
     """Dashlet that displays a sidebar snap-in"""
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "snapin"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Sidebar element")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Allows you to use a sidebar element in the dashboard.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 55
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=28, height=20))
 
+    @override
     def default_display_title(self) -> str:
         return all_snapins(
             UserPermissions.from_config(active_config, permission_registry),

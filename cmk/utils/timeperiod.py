@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import Final, NewType, NotRequired, TypedDict, TypeGuard
+from typing import Final, NewType, NotRequired, override, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
@@ -158,12 +157,15 @@ class TimeperiodActiveCoreLookup(Mapping[str, bool]):
         self.__core_response = response
         return self.__core_response
 
+    @override
     def __getitem__(self, key: str) -> bool:
         return self._core_response.__getitem__(key)
 
+    @override
     def __iter__(self) -> Iterator[str]:
         return iter(self._core_response)
 
+    @override
     def __len__(self) -> int:
         return len(self._core_response)
 

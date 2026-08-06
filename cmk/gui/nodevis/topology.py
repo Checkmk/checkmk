@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
@@ -378,6 +377,7 @@ class ABCTopologyPage(Page):
 
 class ParentChildTopologyPage(ABCTopologyPage):
     @classmethod
+    @override
     def visual_spec(cls) -> Visual:
         return {
             "owner": UserId.builtin(),
@@ -400,6 +400,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
         }
 
     @classmethod
+    @override
     def get_default_overlays_config(cls) -> OverlaysConfig:
         return OverlaysConfig(
             available_layers=[ParentChildDataGenerator.ident],
@@ -412,6 +413,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
         )
 
     @classmethod
+    @override
     def _get_page_menu_entries(cls) -> list[PageMenuEntry]:
         return [
             get_toggle_layout_designer_page_menu_entry(),
@@ -420,6 +422,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
 
 class NetworkTopologyPage(ABCTopologyPage):
     @classmethod
+    @override
     def visual_spec(cls) -> Visual:
         return {
             "owner": UserId.builtin(),
@@ -442,6 +445,7 @@ class NetworkTopologyPage(ABCTopologyPage):
         }
 
     @classmethod
+    @override
     def get_default_overlays_config(cls) -> OverlaysConfig:
         layer_ids = _get_dynamic_layer_ids()
         return OverlaysConfig(
@@ -450,6 +454,7 @@ class NetworkTopologyPage(ABCTopologyPage):
         )
 
     @classmethod
+    @override
     def _get_page_menu_entries(cls) -> list[PageMenuEntry]:
         return [
             get_toggle_layout_designer_page_menu_entry(),
@@ -458,6 +463,7 @@ class NetworkTopologyPage(ABCTopologyPage):
 
 
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
+    @override
     def _get_context(self, page_name: str) -> dict:
         _view, show_filters = _get_topology_context_and_filters()
         return {f.ident: {} for f in show_filters if f.available()}
@@ -638,12 +644,15 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
     ident = "parent_child"
     _node_extra_info: dict[str, Any] = {}
 
+    @override
     def unique_id(self) -> str:
         return "parent_child"
 
+    @override
     def name(self) -> str:
         return _("Parent / Child")
 
+    @override
     def get_node_specific_info(self, node: TopologyNode) -> dict[str, Any]:
         extra_info = self._node_extra_info.get(node.id)
         if extra_info is None:
@@ -670,6 +679,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
         }
         return state_map.get(extra_info["state"], 3)
 
+    @override
     def _create_mesh(self, root_nodes: set[str]) -> None:
         mesh_depth_border_nodes = self._grow_to_mesh_depth(root_nodes)
         parent_border_nodes = self._growth_to_parents()
@@ -689,6 +699,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
             parent_border_nodes.update(self._process_nodes(missing_parents))
         return parent_border_nodes
 
+    @override
     def _fetch_data(self, node_ids: set[str]) -> TopologyNodes:
         response: TopologyNodes = {}
         hostname_filters = []
@@ -743,6 +754,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
             )
         return response
 
+    @override
     def _postprocess_mesh(self) -> None:
         """The depth of parent/child nodes is specified by the parent/child relationship,
         instead of the growth depth"""
@@ -877,12 +889,15 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         )
         super().__init__(network_data_ids, topology_configuration, data_folder, add_data_root_node)
 
+    @override
     def unique_id(self) -> str:
         return _dynamic_network_data_id(self._data_type)
 
+    @override
     def name(self) -> str:
         return self._data_type.title()
 
+    @override
     def get_node_specific_info(self, node: TopologyNode) -> dict[str, Any]:
         extra_info = self._node_extra_info.get(node.id)
         result: dict[str, Any] = {}
@@ -934,6 +949,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
     ) -> None:
         self._link_metadata.setdefault((source_id, target_id), {}).update(metadata)
 
+    @override
     def _fetch_data(self, node_ids: set[str]) -> TopologyNodes:
         response: TopologyNodes = {}
         for node_id in node_ids:
@@ -955,6 +971,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                 response[node_id] = topology_node
         return response
 
+    @override
     def _postprocess_mesh(self) -> None:
         if not self._topology_nodes:
             return
@@ -1519,6 +1536,7 @@ def _compute_mesh_links(topology: Topology) -> list[TopologyLink]:
 
 
 class TopologyLayerRegistry(cmk.ccc.plugin_registry.Registry[type[ABCTopologyNodeDataGenerator]]):
+    @override
     def plugin_name(self, instance: type[ABCTopologyNodeDataGenerator]) -> str:
         return instance.ident
 

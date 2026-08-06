@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import json
 from collections.abc import Sequence
+from typing import override
 
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
@@ -46,9 +45,11 @@ def remove_tls_registration(
 
 
 class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
+    @override
     def command_name(self) -> str:
         return "remove-tls-registration"
 
+    @override
     def get_request(self, config: Config, request: Request) -> Sequence[HostName]:
         value = json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
         if not isinstance(value, list):
@@ -66,6 +67,7 @@ class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
             )
         return valid_hostnames
 
+    @override
     def execute(self, api_request: Sequence[HostName]) -> None:
         _remove_tls_registration(api_request)
 

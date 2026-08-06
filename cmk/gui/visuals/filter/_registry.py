@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Mapping
+from typing import override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
@@ -19,6 +18,7 @@ class FilterRegistry(Registry[Filter]):
         super().__init__()
         self.htmlvars_to_filter: dict[str, FilterName] = {}
 
+    @override
     def registration_hook(self, instance: Filter) -> None:
         # Know Exceptions, to this rule
         # siteopt is indistinguishable from site with the difference it
@@ -55,6 +55,7 @@ class FilterRegistry(Registry[Filter]):
         self.htmlvars_to_filter.update(htmlvars_to_filter)
         return
 
+    @override
     def plugin_name(self, instance: Filter) -> str:
         return instance.ident
 

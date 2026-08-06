@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Setup can be set into read only mode manually using this mode"""
 
 import time
 from collections.abc import Collection
+from typing import override
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
@@ -61,6 +61,7 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class _ReadOnlyFormSpecAdapter(FormSpecAdapter[ReadOnlySpec, Catalog]):
+    @override
     def form_spec(self) -> Catalog:
         return Catalog(
             elements={
@@ -137,6 +138,7 @@ class _ReadOnlyFormSpecAdapter(FormSpecAdapter[ReadOnlySpec, Catalog]):
             },
         )
 
+    @override
     def from_form_spec(self, data: object) -> ReadOnlySpec:
         assert isinstance(data, dict)
         topic = data[_TOPIC]
@@ -146,6 +148,7 @@ class _ReadOnlyFormSpecAdapter(FormSpecAdapter[ReadOnlySpec, Catalog]):
             message=topic["message"],
         )
 
+    @override
     def to_form_spec(self, model: ReadOnlySpec) -> RawDiskData:
         return RawDiskData(
             {
@@ -192,6 +195,7 @@ def _enabled_to_form_spec(enabled: bool | tuple[float, float]) -> tuple[str, obj
 
 class ModeManageReadOnly(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "read_only"
 
@@ -200,17 +204,21 @@ class ModeManageReadOnly(WatoMode):
         return "_read_only"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["set_read_only"]
 
+    @override
     def title(self) -> str:
         return _("Read-only mode for configuration")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Mode"), breadcrumb, form_name="read_only", button_name="_save"
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -231,6 +239,7 @@ class ModeManageReadOnly(WatoMode):
             pprint_value=pprint_value,
         )
 
+    @override
     def page(self, config: Config) -> None:
         html.p(
             _(

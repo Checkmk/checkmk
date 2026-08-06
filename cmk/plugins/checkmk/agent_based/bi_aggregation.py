@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import ast
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, TypedDict
+from typing import Any, override, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -58,6 +57,7 @@ class AggregationError:
     details: str
     affects_state: bool
 
+    @override
     def __str__(self) -> str:
         return f"{self.details} {state_markers[int(self.state)]}{' [affects state]' if self.affects_state else ''}"
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -21,7 +20,7 @@ from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from socket import AddressFamily
-from typing import Any, assert_never, Final, IO, Literal
+from typing import Any, assert_never, Final, IO, Literal, override
 
 from cmk.base import config
 from cmk.base.config import (
@@ -123,9 +122,11 @@ class NagiosCore(MonitoringCore):
         self.nagios_core_config: Final = nagios_core_config
 
     @classmethod
+    @override
     def name(cls) -> Literal["nagios"]:
         return "nagios"
 
+    @override
     def _create_config(
         self,
         config_creation_context: ConfigCreationContext,

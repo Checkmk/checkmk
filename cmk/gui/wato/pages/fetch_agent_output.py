@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -304,6 +303,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
 
 class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
+    @override
     def get_request(self, config: Config, request: Request) -> FetchAgentOutputRequest:
         user.need_permission("wato.download_agent_output")
 
@@ -322,9 +322,11 @@ class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._start_fetch() to execute the background job on a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "fetch-agent-output-start"
 
+    @override
     def execute(self, api_request: FetchAgentOutputRequest) -> None:
         start_fetch_agent_job(api_request)
 
@@ -360,9 +362,11 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "fetch-agent-output-get-status"
 
+    @override
     def execute(self, api_request: FetchAgentOutputRequest) -> dict:
         return dict(get_fetch_agent_job_status(api_request))
 
@@ -402,6 +406,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         return cls(api_request.host.site_id(), api_request.host.name(), api_request.agent_type)
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Fetch agent output")
 
@@ -494,6 +499,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
 
 class PageDownloadAgentOutput(AgentOutputPage):
+    @override
     def page(self, ctx: PageContext) -> None:
         self._handle_http_request(ctx.config)
 
@@ -530,9 +536,11 @@ class PageDownloadAgentOutput(AgentOutputPage):
 
 
 class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
+    @override
     def command_name(self) -> str:
         return "fetch-agent-output-get-file"
 
+    @override
     def execute(self, api_request: FetchAgentOutputRequest) -> bytes:
         return get_fetch_agent_output_file(api_request)
 

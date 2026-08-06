@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Abstractions for recording pending configuration changes."""
 
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import override
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -107,6 +106,7 @@ class PendingChangesStore:
 class NoopPendingChangesStore(PendingChangesStore):
     """A :class:`PendingChangesStore` that discards everything."""
 
+    @override
     def append(self, site_id: SiteId, entry: ChangeSpec) -> None:
         return None
 

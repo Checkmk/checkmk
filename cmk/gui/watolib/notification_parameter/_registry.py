@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable
+from typing import override
 
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.ccc.i18n import _
@@ -51,9 +51,11 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
 
     register_form_spec_plugin: RegisterPluginCallback | None = None
 
+    @override
     def plugin_name(self, instance: NotificationParameter | NotificationParameters) -> str:
         return instance.ident if isinstance(instance, NotificationParameter) else instance.name
 
+    @override
     def registration_hook(self, instance: NotificationParameter | NotificationParameters) -> None:
         plugin = instance
         if isinstance(plugin, NotificationParameters):

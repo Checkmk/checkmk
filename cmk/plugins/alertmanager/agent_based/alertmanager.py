@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Alertmanager Check"""
 
 import json
 from enum import StrEnum
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple, override, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -41,6 +39,7 @@ class Severity(StrEnum):
     NA = "not_applicable"
 
     @classmethod
+    @override
     def _missing_(cls, value: object) -> "Severity":
         return Severity.NA
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Handling of non-required fields in the REST API.
 
@@ -21,7 +20,7 @@ to remove the `ApiOmitted` values from the response body.
 """
 
 import types
-from typing import Any, cast, ClassVar, Literal, NoReturn, Self, TypeAliasType
+from typing import Any, cast, ClassVar, Literal, NoReturn, override, Self, TypeAliasType
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import CoreSchema, PydanticOmit
@@ -61,6 +60,7 @@ class ApiOmitted:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}"
 

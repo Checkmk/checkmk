@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Mode for showing the certificates."""
@@ -13,6 +12,7 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+from typing import override
 
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.hash import HashAlgorithm
@@ -118,17 +118,21 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeCertificateOverview(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "certificate_overview"
 
+    @override
     def title(self) -> str:
         return _("Certificate overview")
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         # Todo: should change to "certificate.view" once we have a permission for this
         return []
 
+    @override
     def page(self, config: Config) -> None:
         html.div(
             HTML.without_escaping(
@@ -158,6 +162,7 @@ class ModeCertificateOverview(WatoMode):
             if path.exists()
         ]
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[

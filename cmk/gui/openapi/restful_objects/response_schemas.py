@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 
 import logging
+from typing import override
 
 from marshmallow import Schema
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
@@ -295,6 +295,7 @@ class TypeSchemas(dict[str, type[Schema]]):
     """This automatically creates entries with the default value."""
 
     # not cleanly overriding. Accept it for the legacy framework
+    @override
     def get(self, key: str, default: type[Schema] | None = None) -> type[Schema]:  # type: ignore[override]
         return self[key]
 

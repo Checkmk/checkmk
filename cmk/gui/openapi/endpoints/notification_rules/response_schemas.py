@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
-from typing import Any, cast, get_args
+from typing import Any, cast, get_args, override
 
 from marshmallow import post_dump
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
@@ -220,6 +219,7 @@ class TagGroupSelectorOutput(OneOfSchema):
     }
     type_field_remove = False
 
+    @override
     def get_obj_type(self, obj):
         operator = obj.get("operator")
         if operator in self.type_schemas:
@@ -236,6 +236,7 @@ class TagTypeSelectorOutput(OneOfSchema):
     }
     type_field_remove = False
 
+    @override
     def get_obj_type(self, obj):
         tag_type = obj.get("tag_type")
         if tag_type in self.type_schemas:
@@ -1107,6 +1108,7 @@ class PluginBase(BaseSchema):
         description="The plug-in name and configuration parameters defined.",
     )
 
+    @override
     def dump(self, obj: dict[str, Any], *args: Any, **kwargs: Any) -> Mapping:
         if obj["plugin_params"]["plugin_name"] not in get_builtin_plugin_names():
             return obj

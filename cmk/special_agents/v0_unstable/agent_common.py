@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Common module for stuff every special agent should use
 Current responsibilities include:
@@ -22,7 +21,7 @@ import sys
 import traceback
 from collections.abc import Callable, Sequence
 from types import GeneratorType
-from typing import Any
+from typing import Any, override
 
 import urllib3
 
@@ -89,6 +88,7 @@ class ConditionalPiggybackSection(SectionManager):
         if self.set_piggyback:
             self.append(f"<<<<{hostname}>>>>")
 
+    @override
     def __exit__(self, *exc_info: object) -> None:
         if self.set_piggyback:
             self.append("<<<<>>>>")

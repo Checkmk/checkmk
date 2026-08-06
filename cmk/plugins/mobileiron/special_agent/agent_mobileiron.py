@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -24,7 +23,7 @@ import re
 import sys
 from collections import defaultdict, UserDict
 from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
-from typing import Any, Final
+from typing import Any, Final, override
 from urllib.parse import urljoin
 
 import requests
@@ -84,6 +83,7 @@ class HostnameDict(UserDict):
         self._keys_seen: dict[str, itertools.count] = defaultdict(itertools.count)
         super().__init__()
 
+    @override
     def __setitem__(self, key: str, value: Mapping) -> None:
         key = _sanitize_hostname(key)
         if (current_count := next(self._keys_seen[key])) >= 1:

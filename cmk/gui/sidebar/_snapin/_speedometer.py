@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import json
+from typing import override
 
 from cmk.gui import sites
 from cmk.gui.config import Config
@@ -22,14 +21,17 @@ from ._helpers import snapin_width
 
 class Speedometer(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "speedometer"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Service Speed-O-Meter")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "A gadget that shows your current service check rate in relation to "
@@ -38,6 +40,7 @@ class Speedometer(SidebarSnapin):
             "the rate that is desired."
         )
 
+    @override
     def show(self, config: Config) -> None:
         html.open_div(class_="speedometer")
         html.img(theme.detect_icon_path("speedometer", ""), id_="speedometerbg")
@@ -47,9 +50,11 @@ class Speedometer(SidebarSnapin):
         html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[RoleName]:
         return ["admin"]
 
+    @override
     def page_handlers(self) -> PageHandlers:
         return {
             "sidebar_ajax_speedometer": self._ajax_speedometer,

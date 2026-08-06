@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
 import multiprocessing
 import os
 import subprocess
 from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import override
 
 import requests
 import urllib3
@@ -112,12 +111,15 @@ def register(ac_test_registry: ACTestRegistry) -> None:
 
 
 class ACTestPersistentConnections(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Persistent connections")
 
+    @override
     def help(self) -> str:
         return _(
             "Persistent connections may be a configuration to improve the performance of the GUI, "
@@ -131,10 +133,12 @@ class ACTestPersistentConnections(ACTest):
             "requests will be blocked by existing and possibly idle connections."
         )
 
+    @override
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
         return len(active_config.sites) > 1
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield from (
             self._check_site(site_id, active_config.sites[site_id])
@@ -175,12 +179,15 @@ class ACTestPersistentConnections(ACTest):
 
 
 class ACTestLiveproxyd(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Use Livestatus proxy daemon")
 
+    @override
     def help(self) -> str:
         return _(
             "The Livestatus proxy daemon is available with all commercial editions and improves"
@@ -189,10 +196,12 @@ class ACTestLiveproxyd(ACTest):
             " decrease resource usage."
         )
 
+    @override
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
         return len(active_config.sites) > 1
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         yield from (
             self._check_site(site_id, active_config.sites) for site_id in active_config.sites
@@ -224,12 +233,15 @@ class ACTestLiveproxyd(ACTest):
 
 
 class ACTestLivestatusUsage(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Livestatus usage")
 
+    @override
     def help(self) -> str:
         # astrein: disable=localization-named-placeholder
         return _(
@@ -245,9 +257,11 @@ class ACTestLivestatusUsage(ACTest):
             "the clients to check whether or not you can reduce the usage somehow.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         site_status = local_connection.query_row(
@@ -296,12 +310,15 @@ class ACTestLivestatusUsage(ACTest):
 
 
 class ACTestTmpfs(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Temporary file system mounted")
 
+    @override
     def help(self) -> str:
         return _(
             "<p>By default, each Checkmk site has its own temporary file system "
@@ -311,9 +328,11 @@ class ACTestTmpfs(ACTest):
             "way, because it may reduce the overall performance of Checkmk.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if self._tmpfs_mounted(site_id):
             yield ACSingleResult(
@@ -349,12 +368,15 @@ class ACTestTmpfs(ACTest):
 
 
 class ACTestLivestatusSecured(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Livestatus encryption")
 
+    @override
     def help(self) -> str:
         return _(
             "<p>In distributed setups, Livestatus is used to transport the status information "
@@ -366,10 +388,12 @@ class ACTestLivestatusSecured(ACTest):
             '<a href="werk.py?werk=7017">Werk #7017</a> for further information.</p>'
         )
 
+    @override
     def is_relevant(self) -> bool:
         cfg = ConfigDomainOMD().default_globals()
         return bool(cfg["site_livestatus_tcp"])
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
@@ -389,12 +413,15 @@ class ACTestLivestatusSecured(ACTest):
 
 
 class ACTestNumberOfUsers(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Number of users")
 
+    @override
     def help(self) -> str:
         return _(
             "<p>Having a large number of users configured in Checkmk may decrease the "
@@ -404,9 +431,11 @@ class ACTestNumberOfUsers(ACTest):
             "decrease the sync scope to get a smaller number of users.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         users = userdb.load_users()
         num_users = len(users)
@@ -431,12 +460,15 @@ class ACTestNumberOfUsers(ACTest):
 
 
 class ACTestHTTPSecured(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Secure GUI (HTTP)")
 
+    @override
     def help(self) -> str:
         return (
             _(
@@ -453,9 +485,11 @@ class ACTestHTTPSecured(ACTest):
             )
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if request.is_ssl_request:
             yield ACSingleResult(
@@ -472,12 +506,15 @@ class ACTestHTTPSecured(ACTest):
 
 
 class ACTestOldDefaultCredentials(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Default credentials")
 
+    @override
     def help(self) -> str:
         return _(
             "In versions prior to version 1.4.0 the first administrative user of the "
@@ -486,9 +523,11 @@ class ACTestOldDefaultCredentials(ACTest):
             "It is highly recommended to change this password."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return userdb.user_exists(UserId("omdadmin"))
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if (
             htpasswd.HtpasswdUserConnector(
@@ -523,12 +562,15 @@ class ACTestOldDefaultCredentials(ACTest):
 
 
 class ACTestBackupConfigured(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.reliability
 
+    @override
     def title(self) -> str:
         return _("Backup configured")
 
+    @override
     def help(self) -> str:
         return _(
             "A reliable backup ensures that your monitoring "
@@ -541,9 +583,11 @@ class ACTestBackupConfigured(ACTest):
             "consistent state."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         n_configured_jobs = len(BackupConfig.load().jobs)
         if n_configured_jobs:
@@ -562,12 +606,15 @@ class ACTestBackupConfigured(ACTest):
 
 
 class ACTestBackupNotEncryptedConfigured(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Encrypt backups")
 
+    @override
     def help(self) -> str:
         return _(
             "Please check whether or not your backups are stored securely. In "
@@ -576,9 +623,11 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
             "some cases it may be a good idea to store the backup encrypted."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         for job in BackupConfig.load().jobs.values():
             if job.is_encrypted():
@@ -596,12 +645,15 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
 
 class ACTestEscapeHTMLDisabled(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Escape HTML globally enabled")
 
+    @override
     def help(self) -> str:
         return _(
             "By default, for security reasons, the GUI does not interpret any HTML "
@@ -616,9 +668,11 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "which your browser interprets."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if not self._get_effective_global_setting(site_id, config, "escape_plugin_output"):
             yield ACSingleResult(
@@ -677,12 +731,15 @@ class ABCACApacheTest(ACTest, abc.ABC):
 
 
 class ACTestApacheNumberOfProcesses(ABCACApacheTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Apache number of processes")
 
+    @override
     def help(self) -> str:
         return _(
             "<p>The Apache has a number of maximum processes it may start in case of high "
@@ -701,9 +758,11 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         process_limit = self._get_maximum_number_of_processes()
         average_process_size = self._get_average_process_size()
@@ -773,12 +832,15 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
 
 class ACTestApacheProcessUsage(ABCACApacheTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Apache process usage")
 
+    @override
     def help(self) -> str:
         return _(
             "The Apache has a number maximum processes it can start in case of high "
@@ -788,9 +850,11 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
             "would result in a slow GUI."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         total_slots = self._get_maximum_number_of_processes()
         open_slots = self._get_number_of_idle_processes()
@@ -817,12 +881,15 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
 
 class ACTestCheckMKHelperUsage(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Checkmk helper usage")
 
+    @override
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
@@ -846,9 +913,11 @@ class ACTestCheckMKHelperUsage(ACTest):
             "a lot of Checkmk helper processes configured.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
@@ -880,12 +949,15 @@ class ACTestCheckMKHelperUsage(ACTest):
 
 
 class ACTestCheckMKFetcherUsage(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Checkmk fetcher usage")
 
+    @override
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
@@ -908,9 +980,11 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "a lot of Checkmk helper processes configured.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
@@ -956,12 +1030,15 @@ class ACTestCheckMKFetcherUsage(ACTest):
 
 
 class ACTestCheckMKCheckerUsage(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Checkmk checker usage")
 
+    @override
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
@@ -985,9 +1062,11 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "a lot of Checkmk helper processes configured.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
@@ -1033,12 +1112,15 @@ class ACTestCheckMKCheckerUsage(ACTest):
 
 
 class ACTestGenericCheckHelperUsage(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Check helper usage")
 
+    @override
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
@@ -1055,9 +1137,11 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
@@ -1093,12 +1177,15 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
 
 class ACTestSizeOfExtensions(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Size of extensions")
 
+    @override
     def help(self) -> str:
         return _(
             "<p>In distributed setups it is possible to synchronize the "
@@ -1109,6 +1196,7 @@ class ACTestSizeOfExtensions(ACTest):
             "all the extensions.</p>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return has_distributed_setup_remote_sites(active_config.sites) and self._replicates_mkps(
             active_config.sites
@@ -1120,6 +1208,7 @@ class ACTestSizeOfExtensions(ACTest):
             for site in distributed_setup_remote_sites(site_configs).values()
         )
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()
         state = ACResultState.CRIT if size > 100 * 1024 * 1024 else ACResultState.OK
@@ -1138,12 +1227,15 @@ class ACTestSizeOfExtensions(ACTest):
 
 
 class ACTestBrokenGUIExtension(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Broken GUI extensions")
 
+    @override
     def help(self) -> str:
         return _(
             "Since 1.6.0i1 broken GUI extensions don't block the whole GUI initialization anymore. "
@@ -1151,9 +1243,11 @@ class ACTestBrokenGUIExtension(ACTest):
             "the errors are displayed here."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         from cmk.gui.legacy_plugins import get_failed_plugins
 
@@ -1176,12 +1270,15 @@ class ACTestBrokenGUIExtension(ACTest):
 
 
 class ACTestESXDatasources(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("The Checkmk agent is queried via the ESX data source program")
 
+    @override
     def help(self) -> str:
         return _(
             "The Checkmk agent is queried via the data source program for ESX systems. This option will be deleted in a future release. Please configure the host to contact the Checkmk agent and the configured data source programs instead."
@@ -1195,9 +1292,11 @@ class ACTestESXDatasources(ACTest):
         ruleset = collection.get(RuleGroup.SpecialAgents("vsphere"))
         return ruleset.get_rules()
 
+    @override
     def is_relevant(self) -> bool:
         return bool(self._get_rules())
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
@@ -1220,12 +1319,15 @@ class ACTestESXDatasources(ACTest):
 
 
 class ACTestDeprecatedRuleSets(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated rule sets")
 
+    @override
     def help(self) -> str:
         return _(
             "These rule sets are configured in your site, but marked as deprecated. They still"
@@ -1234,9 +1336,11 @@ class ACTestDeprecatedRuleSets(ACTest):
             " you with further information on what to do specifically."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         unknown_check_parameter_rule_sets = [
             f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"
@@ -1266,12 +1370,15 @@ class ACTestDeprecatedRuleSets(ACTest):
 
 
 class ACTestUnknownCheckParameterRuleSets(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Unknown check parameter rule sets")
 
+    @override
     def help(self) -> str:
         return _(
             "These rule sets are configured in your site, but not used by any check plug-in."
@@ -1286,9 +1393,11 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
             "</ol>"
         )
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if rule_sets := find_unknown_check_parameter_rule_sets(debug=active_config.debug).result:
             for rule_set in rule_sets:
@@ -1312,12 +1421,15 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
 
 
 class ACTestDeprecatedV1CheckPlugins(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated check plug-ins (v1)")
 
+    @override
     def help(self) -> str:
         return _(
             "The check plug-in API for plug-ins in <tt>%(plugins_dir)s</tt> is removed."
@@ -1343,9 +1455,11 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
         except FileNotFoundError:
             return ()
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if plugin_files := self._get_files():
             for plugin_filepath in plugin_files:
@@ -1368,12 +1482,15 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
 
 
 class ACTestDeprecatedCheckPlugins(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated check plug-ins (legacy)")
 
+    @override
     def help(self) -> str:
         return _(
             "The check plug-in API for plug-ins in <tt>%(plugins_dir)s</tt> is deprecated."
@@ -1395,9 +1512,11 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         except FileNotFoundError:
             return []
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1420,12 +1539,15 @@ class ACTestDeprecatedCheckPlugins(ACTest):
 
 
 class ACTestDeprecatedInventoryPlugins(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated HW/SW inventory plug-ins")
 
+    @override
     def help(self) -> str:
         return _(
             "The old inventory plug-in API has been removed in Checkmk version 2.2."
@@ -1439,9 +1561,11 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         except FileNotFoundError:
             return []
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1464,12 +1588,15 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
 
 
 class ACTestDeprecatedCheckManpages(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated check manual pages")
 
+    @override
     def help(self) -> str:
         return _(
             "Check manual pages in <tt>'%(manpages_dir)s'</tt> are marked as "
@@ -1483,9 +1610,11 @@ class ACTestDeprecatedCheckManpages(ACTest):
         except FileNotFoundError:
             return []
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1515,12 +1644,15 @@ def _walk(folder: Path) -> Iterator[Path]:
 
 
 class ACTestDeprecatedGUIExtensions(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated GUI extensions")
 
+    @override
     def help(self) -> str:
         return _(
             "GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated'"
@@ -1534,9 +1666,11 @@ class ACTestDeprecatedGUIExtensions(ACTest):
         except FileNotFoundError:
             return []
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1602,12 +1736,15 @@ def _compute_deprecation_result_of_views_plugin(
 
 
 class ACTestDeprecatedLegacyGUIExtensions(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated legacy GUI extensions")
 
+    @override
     def help(self) -> str:
         return _(
             "Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as 'deprecated'"
@@ -1621,9 +1758,11 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
         except FileNotFoundError:
             return []
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1684,12 +1823,15 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
 
 
 class ACTestDeprecatedPNPTemplates(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
+    @override
     def title(self) -> str:
         return _("Deprecated PNP templates")
 
+    @override
     def help(self) -> str:
         return _(
             "PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated'"
@@ -1703,9 +1845,11 @@ class ACTestDeprecatedPNPTemplates(ACTest):
         except FileNotFoundError:
             return []
 
+    @override
     def is_relevant(self) -> bool:
         return True
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1736,20 +1880,25 @@ def _site_is_using_livestatus_proxy(site_id: SiteId) -> bool:
 
 
 class ACTestUnexpectedAllowedIPRanges(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Restricted address mismatch")
 
+    @override
     def help(self) -> str:
         return _(
             "This check returns CRIT if the parameter <b>State in case of restricted address mismatch</b> in the rule set <b>Checkmk agent installation auditing</b> is configured and differs from states <b>WARN</b> (default) or <b>CRIT</b>. With the above setting you can overwrite the default service state. This will help you to reduce above warnings during the update process of your Checkmk sites and agents. We recommend to set this option only for the affected hosts as long as you monitor agents older than Checkmk 2.0. After updating them, you should change this setting back to its original value. Background: With IP access lists you can control which servers are allowed to talk to these agents. Thus it's a security issue and should not be disabled or set to <b>OK</b> permanently."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return bool(self._get_rules())
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         rules = self._get_rules()
         if not rules:
@@ -1782,12 +1931,15 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
 
 class ACTestCheckMKCheckerNumber(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.performance
 
+    @override
     def title(self) -> str:
         return _("Checkmk checker count")
 
+    @override
     def help(self) -> str:
         return _(
             "The Checkmk Micro Core uses Checkmk checker processes to process the results "
@@ -1797,9 +1949,11 @@ class ACTestCheckMKCheckerNumber(ACTest):
             "the amount of context switches."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         try:
             num_cpu = multiprocessing.cpu_count()
@@ -1844,18 +1998,22 @@ DANGEROUS_PERMISSIONS: frozenset[str] = frozenset(
 
 
 class ACTestAutomationUserSecret(ACTest):
+    @override
     def category(self) -> str:
         return ACTestCategories.security
 
+    @override
     def title(self) -> str:
         return _("Stored secrets for automation users")
 
+    @override
     def help(self) -> str:
         return _(
             "With 2.4.0 (Werk #17344) it was made optional to store the secret of an automation user. "
             "We do not recommend to store the secret for automation users with high privileges."
         )
 
+    @override
     def is_relevant(self) -> bool:
         return not is_distributed_setup_remote_site(active_config.sites)
 
@@ -1874,6 +2032,7 @@ class ACTestAutomationUserSecret(ACTest):
             )
         }
 
+    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         flagged_users = self.get_flagged_users(
             UserPermissions.from_config(config, permission_registry),

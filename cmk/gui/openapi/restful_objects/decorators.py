@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -25,7 +24,7 @@ import json
 import logging
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from typing import Any, Final, TypeVar
+from typing import Any, Final, override, TypeVar
 
 from marshmallow import Schema, ValidationError
 from werkzeug.http import parse_options_header
@@ -417,6 +416,7 @@ class Endpoint:
         the request has been done, everything is forgotten again."""
         self._used_permissions.add(permission)
 
+    @override
     def __repr__(self) -> str:
         return f"<Endpoint {self.func.__module__}:{self.func.__name__}>"
 

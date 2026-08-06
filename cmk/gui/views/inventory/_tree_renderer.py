@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 
 import abc
@@ -11,7 +10,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Literal
+from typing import Literal, override
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -265,6 +264,7 @@ class _MinType:
     def __le__(self, other: object) -> bool:
         return True
 
+    @override
     def __eq__(self, other: object) -> bool:
         return self is other
 

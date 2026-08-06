@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -16,7 +15,7 @@ import re
 import time
 from collections.abc import Collection, Mapping, Sequence
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple, Protocol
+from typing import Any, cast, NamedTuple, override, Protocol
 
 from flask import has_request_context
 
@@ -976,6 +975,7 @@ class SiteManagement:
 
 
 class SiteManagementRegistry(Registry[SiteManagement]):
+    @override
     def plugin_name(self, instance: SiteManagement) -> str:
         return "site_management"
 

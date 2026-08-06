@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 """Provides the user with hints about his setup. Performs different
@@ -21,7 +20,7 @@ import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Any, assert_never, Literal, Self, TypedDict
+from typing import Any, assert_never, Literal, override, Self, TypedDict
 
 import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
@@ -106,6 +105,7 @@ class ACTestResult:
             path=None if (p := repr_data.get("path")) is None else Path(p),
         )
 
+    @override
     def __repr__(self) -> str:
         return repr(
             {
@@ -228,6 +228,7 @@ class ACTest:
 
 
 class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):
+    @override
     def plugin_name(self, instance: type[ACTest]) -> str:
         return instance.__name__
 
@@ -242,9 +243,11 @@ class _TCheckAnalyzeConfig(TypedDict):
 
 
 class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
+    @override
     def command_name(self) -> str:
         return "check-analyze-config"
 
+    @override
     def get_request(self, config: Config, request: Request) -> _TCheckAnalyzeConfig:
         raw_categories = request.get_request().get("categories")
         return _TCheckAnalyzeConfig(
@@ -253,6 +256,7 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
             categories=json.loads(raw_categories) if raw_categories else None,
         )
 
+    @override
     def execute(self, api_request: _TCheckAnalyzeConfig) -> list[ACTestResult]:
         categories = api_request["categories"]
         results: list[ACTestResult] = []

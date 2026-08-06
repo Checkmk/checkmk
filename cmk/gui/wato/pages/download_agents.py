@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Simple download page for the built-in agents and plugins"""
@@ -14,6 +13,7 @@ import os
 from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping, Sequence
 from functools import cached_property
 from pathlib import Path
+from typing import override
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -112,9 +112,11 @@ class ABCModeDownloadAgents(WatoMode):
     related_page_menu_hook: Callable[[], Iterator[PageMenuEntry]] = lambda: iter([])
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["download_agents"]
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -179,6 +181,7 @@ class ABCModeDownloadAgents(WatoMode):
             "/windows/plugins/.gitattributes",
         }
 
+    @override
     def page(self, config: Config) -> None:
         html.open_div(class_="rulesets")
 
@@ -250,15 +253,19 @@ class ABCModeDownloadAgents(WatoMode):
 
 class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     @classmethod
+    @override
     def name(cls) -> str:
         return "download_agents"
 
+    @override
     def title(self) -> str:
         return _("Other operating systems")
 
+    @override
     def _packed_agents(self) -> list[str]:
         return []
 
+    @override
     def _walk_base_dirs(self) -> list[str]:
         return [
             str(cmk.utils.paths.agents_dir),
@@ -272,6 +279,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             *(str(p) for p in _plugin_family_agent_dirs()),
         ]
 
+    @override
     def _exclude_file_glob_patterns(self) -> list[str]:
         return [
             "*.rpm",
@@ -286,6 +294,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     def _title_map(self) -> Mapping[str, str]:
         return {str(p): t for p, t in _plugin_family_agent_titles()}
 
+    @override
     def _title_for_root(self, root: str, relpath: str) -> str:
         # Files of a plugin family live in their own agents directory outside the
         # share tree; title their section by the family instead of the generic
@@ -295,6 +304,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         except KeyError:
             return super()._title_for_root(root, relpath)
 
+    @override
     def _exclude_paths(self) -> set[str]:
         exclude = super()._exclude_paths()
         exclude.add("/cfg_examples/systemd")
@@ -313,15 +323,19 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
 
 class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
     @classmethod
+    @override
     def name(cls) -> str:
         return "download_agents_windows"
 
+    @override
     def title(self) -> str:
         return _("Windows files")
 
+    @override
     def _packed_agents(self) -> list[str]:
         return [str(agent.packed_agent_path_windows_msi())]
 
+    @override
     def _walk_base_dirs(self) -> list[str]:
         return [
             str(cmk.utils.paths.agents_dir / "windows"),
@@ -331,18 +345,23 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
 
 class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     @classmethod
+    @override
     def name(cls) -> str:
         return "download_agents_linux"
 
+    @override
     def title(self) -> str:
         return _("Linux, Solaris, AIX files")
 
+    @override
     def _packed_agents(self) -> list[str]:
         return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
 
+    @override
     def _walk_base_dirs(self) -> list[str]:
         return [str(cmk.utils.paths.agents_dir)]
 
+    @override
     def _exclude_file_glob_patterns(self) -> list[str]:
         return [
             "*.hpux",
@@ -356,6 +375,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
             "*robotmk/windows*",
         ]
 
+    @override
     def _exclude_paths(self) -> set[str]:
         exclude = super()._exclude_paths()
         exclude.add("/z_os")
@@ -378,6 +398,7 @@ class PageDownloadAgentPlugin(Page):
     directories before serving to prevent reading arbitrary files.
     """
 
+    @override
     def page(self, ctx: PageContext) -> None:
         user.need_permission("wato.download_agents")
 

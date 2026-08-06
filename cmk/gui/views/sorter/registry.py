@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import active_config, Config
@@ -25,6 +24,7 @@ from .host_tag_sorters import host_tag_config_based_sorters
 
 
 class SorterRegistry(Registry[Sorter]):
+    @override
     def plugin_name(self, instance: Sorter) -> str:
         return instance.ident
 

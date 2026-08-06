@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -19,7 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, override, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
@@ -193,6 +192,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
     def __init__(self) -> None:
         super().__init__(StorageFormat.STANDARD)
 
+    @override
     def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
@@ -250,6 +250,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
         # final
         store.save_text_to_file(file_path, host_storage_fileheader() + out.getvalue())
 
+    @override
     def _read(self, file_path: Path) -> str:
         return store.load_text_from_file(file_path)
 
@@ -258,6 +259,7 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
     def __init__(self) -> None:
         super().__init__(StorageFormat.PICKLE)
 
+    @override
     def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
@@ -265,6 +267,7 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
         with pickle_store.locked():
             pickle_store.write_obj(asdict(data))
 
+    @override
     def _read(self, file_path: Path) -> HostsData:
         return store.ObjectStore(
             file_path, serializer=store.PickleSerializer[HostsData]()
@@ -275,11 +278,13 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
     def __init__(self) -> None:
         super().__init__(StorageFormat.RAW)
 
+    @override
     def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
         store.save_text_to_file(file_path, value_formatter(data))
 
+    @override
     def _read(self, file_path: Path) -> HostsData:
         return store.load_object_from_file(file_path, default={})
 
@@ -350,12 +355,14 @@ class ABCHostsStorageLoader[THostsReadData](abc.ABC):
 
 
 class StandardStorageLoader(ABCHostsStorageLoader[str]):
+    @override
     def apply(self, data: str, global_dict: dict[str, Any]) -> bool:
         exec(data, global_dict, global_dict)  # nosec B102 # BNS:aee528
         return True
 
 
 class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
+    @override
     def file_valid(self, file_path: Path) -> bool:
         # The experimental file must not be older than the corresponding hosts.mk
         # The file is also invalid if no matching hosts.mk file exists
@@ -368,6 +375,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             <= self._storage.add_file_extension(file_path).stat().st_mtime
         )
 
+    @override
     def apply(self, data: HostsData, global_dict: dict[str, Any]) -> bool:
         """Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict"""
 
@@ -436,6 +444,7 @@ class StorageFormat(enum.Enum):
     PICKLE = "pickle"
     RAW = "raw"
 
+    @override
     def __str__(self) -> str:
         return str(self.value)
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
 from typing import override
 
@@ -43,6 +41,7 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
     def get_context(self, page_name: str) -> VisualContext:
         return self._get_context(page_name)
 
+    @override
     def _get_context(self, page_name: str) -> VisualContext:
         # Obtain the visual filters and the view context
         view_name = page_name

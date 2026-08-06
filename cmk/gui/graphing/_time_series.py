@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable, Iterator, Sequence
 from statistics import fmean
+from typing import override
 
 
 def rrd_timestamps(*, start: int, end: int, step: int) -> list[int]:
@@ -109,9 +108,11 @@ class TimeSeries:
             zip(rrd_timestamps(start=self.start, end=self.end, step=self.step), self.values)
         )
 
+    @override
     def __repr__(self) -> str:
         return f"TimeSeries(start={self.start}, end={self.end}, step={self.step}, values={self.values})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TimeSeries):
             return NotImplemented

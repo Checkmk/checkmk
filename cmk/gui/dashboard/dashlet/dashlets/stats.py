@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 import abc
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from cmk.gui import sites, visuals
 from cmk.gui.dashboard.type_defs import DashletConfig
@@ -198,49 +197,60 @@ class StatsDashletConfig(DashletConfig): ...
 
 class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "hoststats"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Host statistics")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Displays statistics about host states as a hexagon and a table.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 45
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(
             initial_size=WidgetSize(width=30, height=18), is_resizable=False
         )
 
+    @override
     def infos(self) -> SingleInfos:
         return ["host"]
 
 
 class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "servicestats"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Service statistics")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Displays statistics about service states as a hexagon and a table.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 50
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(
             initial_size=WidgetSize(width=30, height=18), is_resizable=False
@@ -249,27 +259,33 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
 
 class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "eventstats"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Event statistics")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Displays statistics about events as a hexagon and a table.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 55
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(
             initial_size=WidgetSize(width=30, height=18), is_resizable=False
         )
 
+    @override
     def infos(self) -> SingleInfos:
         return ["host", "event"]
 
@@ -368,20 +384,24 @@ class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.AB
 
 class HostStatsDashletDataGenerator(StatsDashletDataGenerator[HostStats]):
     @classmethod
+    @override
     def _livestatus_table(cls) -> str:
         return "hosts"
 
     @classmethod
+    @override
     def _view_name(cls) -> str:
         return "searchhost"
 
     @classmethod
+    @override
     def _named_stats(cls, stats: Sequence[int]) -> HostStats:
         if not stats:
             return HostStats(0, 0, 0, 0)
         return HostStats(*stats)
 
     @classmethod
+    @override
     def _stats_query(cls) -> str:
         return (
             "GET hosts\n"
@@ -406,20 +426,24 @@ class HostStatsDashletDataGenerator(StatsDashletDataGenerator[HostStats]):
 
 class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator[ServiceStats]):
     @classmethod
+    @override
     def _livestatus_table(cls) -> str:
         return "services"
 
     @classmethod
+    @override
     def _view_name(cls) -> str:
         return "searchsvc"
 
     @classmethod
+    @override
     def _named_stats(cls, stats: Sequence[int]) -> ServiceStats:
         if not stats:
             return ServiceStats(0, 0, 0, 0, 0, 0)
         return ServiceStats(*stats)
 
     @classmethod
+    @override
     def _stats_query(cls) -> str:
         return (
             "GET services\n"
@@ -467,14 +491,17 @@ class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator[ServiceStats]):
 
 class EventStatsDashletDataGenerator(StatsDashletDataGenerator[EventStats]):
     @classmethod
+    @override
     def _livestatus_table(cls) -> str:
         return "eventconsoleevents"
 
     @classmethod
+    @override
     def _view_name(cls) -> str:
         return "ec_events"
 
     @classmethod
+    @override
     def _general_url_vars(cls, context: VisualContext) -> HTTPVariables:
         return [
             ("view_name", cls._view_name()),
@@ -483,12 +510,14 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator[EventStats]):
         ]
 
     @classmethod
+    @override
     def _named_stats(cls, stats: Sequence[int]) -> EventStats:
         if not stats:
             return EventStats(0, 0, 0, 0)
         return EventStats(*stats)
 
     @classmethod
+    @override
     def _stats_query(cls) -> str:
         # In case the user is not allowed to see unrelated events
         ec_filters = ""

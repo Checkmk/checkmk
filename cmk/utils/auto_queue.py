@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from cmk.ccc.hostaddress import HostName
 
@@ -27,6 +25,7 @@ class AutoQueue(Iterable[HostName]):
     def __len__(self) -> int:
         return len(self._ls())
 
+    @override
     def __iter__(self) -> Iterator[HostName]:
         return (HostName(f.name) for f in self._ls()).__iter__()
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -138,6 +137,7 @@ class LoggedInUser:
         self._bi_assumptions: dict[tuple[str, str] | tuple[str, str, str], int] = {}
         self._tableoptions: dict[str, dict[str, Any]] = {}
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.id!r}>"
 

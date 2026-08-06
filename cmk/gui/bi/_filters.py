@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import re
 import warnings
 from collections.abc import Iterable, Sequence
+from typing import override
 
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.gui import query_filters
@@ -125,9 +124,11 @@ class _FilterAggrGroup(Filter):
             link_columns=[self.column],
         )
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         choices = {
             "": "",
@@ -139,12 +140,14 @@ class _FilterAggrGroup(Filter):
             choices=choices,
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         if group := value.get(self.htmlvars[0], ""):
             return [row for row in rows if row[self.column] == group]
         return rows
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
@@ -161,15 +164,18 @@ class _FilterAggrGroupTree(Filter):
             link_columns=[self.column],
         )
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.htmlvars[0],
             choices=self._options(),
         )
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
@@ -205,9 +211,11 @@ class _BIFrozenAggregations(Filter):
             link_columns=[],
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield Checkbox(
             id=self.htmlvars[0],
@@ -220,6 +228,7 @@ class _BIFrozenAggregations(Filter):
             default_value=True,
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         if self.ident not in context:
             return rows
@@ -267,15 +276,19 @@ class BITextFilter(Filter):
             link_columns=[self.column],
         )
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[0])
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
         val = values.get(self.htmlvars[0])
@@ -316,21 +329,25 @@ class _FilterAggrHosts(Filter):
             ),
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[1])
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1])
 
     def find_host(self, host: str, hostlist: Sequence[tuple[str, str]]) -> bool:
         return any((h == host for _s, h in hostlist))
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {
             "aggr_host_host": row["host_name"],
             "aggr_host_site": row["site"],
         }
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
         if val := values.get(self.htmlvars[1]):
@@ -355,13 +372,16 @@ class _FilterAggrService(Filter):
             ),
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[1], label=_("Host") + ": ")
         yield TextInput(id=self.htmlvars[2], label=_("Service") + ": ")
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {
             "site": row["site"],
@@ -391,12 +411,14 @@ class BIStatusFilter(Filter):
             link_columns=[],
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
     def _filter_used(self, value: FilterHTTPVariables) -> FilterHeader:
         return value.get(self.prefix + "_filled", "")
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield Hidden(id=self.prefix + "_filled", value="1")
         yield HorizontalGroup(
@@ -419,6 +441,7 @@ class BIStatusFilter(Filter):
                 default_value=True,
             )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         if not self._filter_used(value):

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Coordinates the collection and packing of snapshots"""
 
 from __future__ import annotations
@@ -15,6 +13,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import override
 
 import cmk.utils.paths
 from cmk import trace
@@ -105,6 +104,7 @@ def _clone_site_config_directory(
 
 
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
+    @override
     def prepare_snapshot_files(self) -> None:
         """Collect the files to be synchronized for all sites
 
@@ -237,6 +237,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         with multiprocessing.pool.ThreadPool(processes=num_threads) as copy_pool:
             copy_pool.starmap(_clone_site_config_directory, clone_args)
 
+    @override
     def get_generic_components(self) -> list[ReplicationPath]:
         # Replication paths whose ident matches a registered `SnapshotFileCreator` are
         # assembled per site (see `prepare_snapshot_files`), not copied 1:1 from the central
@@ -247,6 +248,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         creator_idents = set(snapshot_file_creator_registry)
         return [p for p in replication_path_registry.values() if p.ident not in creator_idents]
 
+    @override
     def get_site_components(
         self, snapshot_settings: SnapshotSettings
     ) -> tuple[list[ReplicationPath], list[ReplicationPath]]:

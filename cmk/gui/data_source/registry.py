@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 import hashlib
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.type_defs import Row
@@ -16,6 +15,7 @@ from .base import ABCDataSource
 
 
 class DataSourceRegistry(Registry[type[ABCDataSource]]):
+    @override
     def plugin_name(self, instance: type[ABCDataSource]) -> str:
         return instance().ident
 

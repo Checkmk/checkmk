@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import re
 from collections.abc import Collection, Hashable, Mapping
-from typing import Any, Protocol
+from typing import Any, override, Protocol
 
 from marshmallow import fields, ValidationError
 from marshmallow.types import StrSequenceOrSet
@@ -126,6 +125,7 @@ The maximum length is 3.
         "minimum": "{value!r} is smaller than the minimum ({minimum}).",
     }
 
+    @override
     def _deserialize(
         self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
     ) -> object:
@@ -191,6 +191,7 @@ class Integer(OpenAPIAttributes, fields.Integer):
         "minimum": "{value!r} is smaller than the minimum ({minimum}).",
     }
 
+    @override
     def _deserialize(
         self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
     ) -> int | None:
@@ -326,6 +327,7 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
         super().__init__(*args, **kwargs)
         self.context = context or {}
 
+    @override
     def _deserialize(
         self,
         value: object,
@@ -358,6 +360,7 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
         "minLength": "At least one entry is required",
     }
 
+    @override
     def _deserialize(
         self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
     ) -> list:

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 """Predefine conditions that can be used in the Setup rule editor"""
 
 from collections.abc import Collection
+from typing import override
 
 from cmk.ccc.version import Edition
 from cmk.gui import userdb
@@ -53,14 +53,17 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class DummyRulespecGroup(RulespecGroup):
     @property
+    @override
     def name(self) -> str:
         return "dummy"
 
     @property
+    @override
     def title(self) -> str:
         return "Dummy"
 
     @property
+    @override
     def help(self) -> str:
         return "Dummy"
 
@@ -85,28 +88,35 @@ def vs_conditions(folder_choices: DropdownChoices) -> Transform:
 
 
 class PredefinedConditionModeType(SimpleModeType[PredefinedConditionSpec]):
+    @override
     def type_name(self) -> str:
         return "predefined_condition"
 
+    @override
     def name_singular(self) -> str:
         return _("predefined condition")
 
+    @override
     def is_site_specific(self) -> bool:
         return False
 
+    @override
     def can_be_disabled(self) -> bool:
         return False
 
+    @override
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return [ConfigDomainCore()]
 
 
 class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "predefined_conditions"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
@@ -118,12 +128,15 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         )
         self._contact_groups = load_contact_group_information()
 
+    @override
     def title(self) -> str:
         return _("Predefined conditions")
 
+    @override
     def _table_title(self) -> str:
         return _("Predefined conditions")
 
+    @override
     def _validate_deletion(
         self, ident: str, entry: PredefinedConditionSpec, *, debug: bool
     ) -> None:
@@ -138,6 +151,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
                 % {"name": self._mode_type.name_singular(), "url": self._search_url(ident)},
             )
 
+    @override
     def page(self, config: Config) -> None:
         html.p(
             _(
@@ -149,6 +163,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         )
         super().page(config)
 
+    @override
     def _show_action_cell(
         self,
         nr: int,
@@ -175,6 +190,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
             ],
         )
 
+    @override
     def _show_entry_cells(self, table: Table, ident: str, entry: PredefinedConditionSpec) -> None:
         tree = folder_tree()
 
@@ -219,14 +235,17 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
 
 class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_predefined_condition"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePredefinedConditions
 
@@ -237,6 +256,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             store=PredefinedConditionStore(),
         )
 
+    @override
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_predefined_conditions"):
             admin_element: list[ValueSpec] = [
@@ -297,6 +317,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             ),
         ]
 
+    @override
     def _save(
         self,
         entries: dict[str, PredefinedConditionSpec],

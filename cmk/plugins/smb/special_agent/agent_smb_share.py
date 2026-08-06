@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="import-untyped"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
@@ -22,7 +21,7 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, UTC
 from fnmatch import fnmatch
-from typing import NamedTuple, Protocol
+from typing import NamedTuple, override, Protocol
 
 from smb.base import NotConnectedError, ProtocolError, SharedFile
 from smb.smb_structs import OperationFailure
@@ -61,12 +60,14 @@ class File(NamedTuple):
     path: str
     file: SharedFile
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, File):
             return NotImplemented
 
         return self.path == other.path
 
+    @override
     def __hash__(self) -> int:
         return hash(self.path)
 

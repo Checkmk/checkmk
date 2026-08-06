@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import typing
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, override
 
 from cmk.bi import storage
 from cmk.bi.computer import BIAggregationFilter
@@ -75,35 +74,43 @@ _FREEZE_AGGREGATION_BUTTON_VARNAME: Final = "_freeze_aggregations"
 
 class DataSourceBIAggregations(ABCDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "bi_aggregations"
 
     @property
+    @override
     def title(self) -> str:
         return _("BI aggregations")
 
     @property
+    @override
     def table(self) -> RowTable:
         return _RowTableBIAggregations()
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["aggr", "aggr_group"]
 
     @property
+    @override
     def unsupported_columns(self) -> list[ColumnName]:
         return ["site"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
 class _RowTableBIAggregations(RowTable):
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -123,31 +130,38 @@ class _RowTableBIAggregations(RowTable):
 
 class DataSourceBIHostAggregations(ABCDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "bi_host_aggregations"
 
     @property
+    @override
     def title(self) -> str:
         return _("BI aggregations affected by one host")
 
     @property
+    @override
     def table(self) -> RowTable:
         return _RowTableBIHostAggregations()
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["aggr", "host", "aggr_group"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
 class _RowTableBIHostAggregations(RowTable):
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -169,31 +183,38 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
     is used to join the host table rather then the affected host"""
 
     @property
+    @override
     def ident(self) -> str:
         return "bi_hostname_aggregations"
 
     @property
+    @override
     def title(self) -> str:
         return _("BI host name aggregations")
 
     @property
+    @override
     def table(self) -> RowTable:
         return _RowTableBIHostnameAggregations()
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["aggr", "host", "aggr_group"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
 class _RowTableBIHostnameAggregations(RowTable):
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -214,31 +235,38 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
     """The same but with group information"""
 
     @property
+    @override
     def ident(self) -> str:
         return "bi_hostnamebygroup_aggregations"
 
     @property
+    @override
     def title(self) -> str:
         return _("BI aggregations for hosts by host groups")
 
     @property
+    @override
     def table(self) -> RowTable:
         return _RowTableBIHostnameByGroupAggregations()
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["aggr", "host", "hostgroup", "aggr_group"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
 class _RowTableBIHostnameByGroupAggregations(RowTable):
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -352,20 +380,25 @@ def _compute_bi_aggregation_filter(
 
 class PainterAggrIcons(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_icons"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Links")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group", "aggr_name", "aggr_effective_state", "aggr_compiled_aggregation"]
 
     @property
+    @override
     def printable(self) -> bool:
         return False
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         single_url = "view.py?" + urlencode_vars(
             [
@@ -443,32 +476,40 @@ class PainterAggrIcons(Painter):
 
 class PainterAggrInDowntime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_in_downtime"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("In downtime")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
 
 
 class PainterAggrAcknowledged(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_acknowledged"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Acknowledged")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
@@ -487,19 +528,24 @@ def _paint_aggr_state_short(
 
 class PainterAggrState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregated state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_state_short(
             row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"]
@@ -508,114 +554,144 @@ class PainterAggrState(Painter):
 
 class PainterAggrStateNum(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_state_num"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregated state (number)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", str(row["aggr_effective_state"]["state"]))
 
 
 class PainterAggrRealState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_real_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregated real state (never assumed)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("R.State")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_state"])
 
 
 class PainterAggrAssumedState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_assumed_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregated assumed state")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Assumed")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_assumed_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
 class PainterAggrGroup(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_group"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregation group")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Group")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", HTML.with_escaping(row["aggr_group"])
 
 
 class PainterAggrName(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_name"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregation name")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Aggregation")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_name"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", escape_attribute(row["aggr_name"])
 
 
 class PainterAggrOutput(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_output"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregation status output")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Output")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_output"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["aggr_output"])
 
@@ -635,38 +711,48 @@ def _paint_aggr_hosts(
 
 class PainterAggrHosts(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_hosts"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregation: affected hosts")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Hosts")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_hosts(row, "aggr_host", request=self.request)
 
 
 class PainterAggrHostsServices(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_hosts_services"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregation: affected hosts (link to host page)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Hosts")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_hosts(row, "host", request=self.request)
 
@@ -800,23 +886,29 @@ def _paint_aggregated_tree_state(
 
 class PainterAggrTreestate(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_treestate"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Complete tree")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Tree")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggregated_tree_state(
             row,
@@ -824,35 +916,44 @@ class PainterAggrTreestate(Painter):
             escape_plugin_output=self.config.escape_plugin_output,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_treestate_frozen_diff"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Difference between frozen and live aggregation")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Difference between frozen and live aggregation")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts", "aggr_compiled_aggregation"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["aggr_expand", "aggr_onlydiff", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
         if frozen_info is None:
@@ -865,12 +966,15 @@ class PainterAggrTreestateFrozenDiff(Painter):
             show_frozen_difference=True,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
 
@@ -976,19 +1080,24 @@ def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiled
 
 class PainterAggrTreestateBoxed(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "aggr_treestate_boxed"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Aggregation: simplistic boxed layout")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Tree")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggregated_tree_state(
             row,
@@ -997,12 +1106,15 @@ class PainterAggrTreestateBoxed(Painter):
             force_renderer_cls=FoldableTreeRendererBoxes,
         )
 
+    @override
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
+    @override
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
 
@@ -1103,14 +1215,17 @@ PermissionFreezeAggregation = permission_registry.register(
 
 class CommandGroupAggregations(CommandGroup):
     @property
+    @override
     def ident(self) -> str:
         return "aggregations"
 
     @property
+    @override
     def title(self) -> str:
         return _("Aggregations")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 10
 

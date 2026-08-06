@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
+from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -47,6 +47,7 @@ class _CheckTypeHostSelection(DualListChoice):
     def __init__(self, title: str) -> None:
         super().__init__(rows=25, title=title)
 
+    @override
     def get_elements(self) -> Sequence[ListChoiceChoice]:
         try:
             checks = get_check_information_cached(debug=active_config.debug)
@@ -64,6 +65,7 @@ class _CheckTypeMgmtSelection(DualListChoice):
     def __init__(self, title: str) -> None:
         super().__init__(rows=25, title=title)
 
+    @override
     def get_elements(self) -> Sequence[ListChoiceChoice]:
         try:
             checks = get_check_information_cached(debug=active_config.debug)

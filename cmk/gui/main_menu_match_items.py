@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Callable, Iterable
-from typing import Literal
+from typing import Literal, override
 
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItem, MatchItems
@@ -28,6 +26,7 @@ class MatchItemGeneratorMainMenu(ABCMatchItemGenerator):
         self._topic_generator = topic_generator
         self._topic = topic
 
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield from (
             MatchItem(
@@ -50,9 +49,11 @@ class MatchItemGeneratorMainMenu(ABCMatchItemGenerator):
         )
 
     @staticmethod
+    @override
     def is_affected_by_change(change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True

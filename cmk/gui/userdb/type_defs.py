@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 
 class RelayState(NamedTuple):
@@ -14,5 +12,6 @@ class RelayState(NamedTuple):
     target_url: str
     connection_id: str
 
+    @override
     def __str__(self) -> str:
         return f"{self.connection_id},{self.target_url}"

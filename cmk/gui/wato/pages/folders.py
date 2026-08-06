@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -159,6 +158,7 @@ class FolderMenuEntry:
 
 
 class FolderMenuEntryRegistry(Registry[FolderMenuEntry]):
+    @override
     def plugin_name(self, instance: FolderMenuEntry) -> str:
         return instance.ident
 
@@ -182,6 +182,7 @@ class FolderBulkAction:
 
 
 class FolderBulkActionRegistry(Registry[FolderBulkAction]):
+    @override
     def plugin_name(self, instance: FolderBulkAction) -> str:
         return instance.request_var
 

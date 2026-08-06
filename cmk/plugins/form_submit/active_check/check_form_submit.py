@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
@@ -32,7 +31,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, override
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -245,6 +244,7 @@ class FormParser(html.parser.HTMLParser):
     def error(self, message: str) -> None:
         raise AssertionError(message)
 
+    @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attrs_dict = dict(attrs)
 
@@ -263,6 +263,7 @@ class FormParser(html.parser.HTMLParser):
             else:
                 debug("Ignoring form field without name %r" % attrs_dict, self.debug_enabled)
 
+    @override
     def handle_endtag(self, tag: str) -> None:
         if tag == "form":
             self.current_form = None

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
+from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.groups import GroupType
@@ -22,6 +21,7 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
     @abc.abstractmethod
     def _group_type_ident(self) -> str: ...
 
+    @override
     def show(self, config: Config) -> None:
         group_type = self._group_type_ident()
 
@@ -42,39 +42,48 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
             html.close_ul()
 
     @classmethod
+    @override
     def refresh_on_restart(cls) -> bool:
         return True
 
 
 class HostGroups(GroupSnapin):
+    @override
     def _group_type_ident(self) -> str:
         return "hostgroup"
 
     @staticmethod
+    @override
     def type_name() -> str:
         return "hostgroups"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Host groups")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Directs links to all host groups")
 
 
 class ServiceGroups(GroupSnapin):
+    @override
     def _group_type_ident(self) -> str:
         return "servicegroup"
 
     @staticmethod
+    @override
     def type_name() -> str:
         return "servicegroups"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Service groups")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Direct links to all service groups")

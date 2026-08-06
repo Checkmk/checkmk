@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 
 import datetime as dt
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal, override, Self
 
 from pydantic import AwareDatetime, FutureDatetime
 
@@ -48,6 +47,7 @@ class DashboardTokenModel(DashboardTokenMetadata):
     token_id: str = api_field(description="The unique identifier of the dashboard token.")
 
     @classmethod
+    @override
     def from_internal(cls, token: AuthToken) -> Self:
         base = DashboardTokenMetadata.from_internal(token)
         return cls(

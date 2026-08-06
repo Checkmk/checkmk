@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Background job for replicating user profiles to remote sites"""
 
@@ -195,6 +194,7 @@ class ProfileReplicationBackgroundJob(BackgroundJob):
     job_prefix = "profile-replication"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Profile replication")
 

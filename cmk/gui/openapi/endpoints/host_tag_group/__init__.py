@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-def"
 
 """Host tag groups
@@ -19,7 +18,7 @@ You can find an introduction to hosts including host tags and host tag groups in
 """
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from cmk import fields
 from cmk.ccc.regex import REGEX_ID
@@ -88,6 +87,7 @@ class HostTagGroupName(fields.String):
         "should_exist": "Host tag group missing: {name!r}",
     }
 
+    @override
     def _validate(self, value):
         super()._validate(value)
 

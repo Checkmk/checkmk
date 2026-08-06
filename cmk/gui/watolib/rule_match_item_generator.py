@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -32,6 +32,7 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
             return _("Deprecated rule sets")
         return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
+    @override
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         allow_list = get_rulespec_allow_list()
         for group in self._rulespec_registry.get_all_groups():
@@ -51,9 +52,11 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
                 )
 
     @staticmethod
+    @override
     def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property
+    @override
     def is_localization_dependent(self) -> bool:
         return True

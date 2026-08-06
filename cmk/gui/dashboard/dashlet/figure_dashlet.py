@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
+from typing import override
 
 from cmk.gui.type_defs import SingleInfos
 
@@ -22,24 +21,30 @@ class ABCFigureDashlet[T: DashletConfig](Dashlet[T], abc.ABC):
     """
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "figure_dashlet"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 95
 
+    @override
     def infos(self) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod
+    @override
     def single_infos(cls) -> SingleInfos:
         return []
 
     @classmethod
+    @override
     def has_context(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=56, height=40))

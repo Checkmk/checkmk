@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """This module allows the creation of large numbers of random hosts
@@ -11,6 +10,7 @@ for test and development."""
 
 import random
 from collections.abc import Collection
+from typing import override
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
@@ -45,25 +45,31 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeRandomHosts(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "random_hosts"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "random_hosts"]
 
+    @override
     def title(self) -> str:
         return _("Add random hosts")
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Hosts"), breadcrumb, form_name="random", button_name="_save", save_title=_("Start!")
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         folder = folder_from_request(
             folder_tree(), request.var("folder"), request.get_ascii_input("host")
@@ -95,6 +101,7 @@ class ModeRandomHosts(WatoMode):
         flash(_("Added %(created)d random hosts.") % {"created": created})
         return redirect(mode_url("folder", folder=folder.path()))
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("random"):
             forms.header(_("Add random hosts"))

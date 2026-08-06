@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from logging import Logger
+from typing import override
 
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
@@ -14,6 +13,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateUseNewServiceDescription(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         global_settings = load_configuration_settings(full_config=True)
         updated_global_settings = dict(global_settings).copy()

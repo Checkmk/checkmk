@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 
 import copy
-from typing import cast, TypeVar
+from typing import cast, override, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -117,18 +116,22 @@ def copy_view_into_dashlet(
 
 class ABCViewDashlet(IFrameDashlet[VT]):
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 10
 
     @classmethod
+    @override
     def has_context(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=40, height=20))
 
     @classmethod
+    @override
     def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
         return ResponsiveLayoutConstraints.large_default()
 
@@ -141,14 +144,17 @@ class EmbeddedViewDashlet(ABCViewDashlet[EmbeddedViewDashletConfig]):
     """Dashlet that displays a Checkmk view"""
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "embedded_view"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("View")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Copies a view to a dashboard element")
 
@@ -157,17 +163,21 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
     """Dashlet that displays a Checkmk view"""
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "view"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("View")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Copies a view to a dashboard element")
 
+    @override
     def infos(self) -> SingleInfos:
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
@@ -228,14 +238,17 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
     """Dashlet that displays a Checkmk view without embedding it's definition into the dashboard"""
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "linked_view"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Link existing view")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Displays the content of a view")
 
@@ -254,9 +267,11 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
 
         return view_spec
 
+    @override
     def default_display_title(self) -> str:
         return visuals.visual_title("view", self._get_view_spec(), self.context)
 
+    @override
     def infos(self) -> SingleInfos:
         try:
             return self._get_infos_from_view_spec(self._get_view_spec())

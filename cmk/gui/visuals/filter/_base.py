@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
 import re
 from collections.abc import Callable, Iterable
 from enum import Enum
-from typing import Literal
+from typing import Literal, override
 
 from cmk.gui import query_filters
 from cmk.gui.htmllib.html import html
@@ -195,6 +193,7 @@ class FilterOption(Filter):
             group=group,
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield RadioButton(
             id=self.query_filter.request_vars[0],
@@ -202,9 +201,11 @@ class FilterOption(Filter):
             default_value=str(self.query_filter.ignore),
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return self.query_filter.filter_table(context, rows)
@@ -251,6 +252,7 @@ class FilterNumberRange(Filter):  # type is int
             group=group,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -268,6 +270,7 @@ class FilterNumberRange(Filter):  # type is int
         if self.unit:
             html.write_text_permissive(" %s " % self.unit)
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         unit = f" {self.unit} " if self.unit else None
         yield HorizontalGroup(
@@ -285,12 +288,15 @@ class FilterNumberRange(Filter):  # type is int
             ]
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
+    @override
     def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the request context."""
         return recover_pre_2_1_range_filter_request_vars(self.query_filter)
@@ -322,6 +328,7 @@ class FilterTime(Filter):
             group=group,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -343,6 +350,7 @@ class FilterTime(Filter):
             html.close_tr()
         html.close_table()
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         for what, what_label in [("from", _("From")), ("until", _("Until"))]:
             var_prefix = self.ident + "_" + what
@@ -360,12 +368,15 @@ class FilterTime(Filter):
                 ]
             )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
+    @override
     def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the request context."""
         return recover_pre_2_1_range_filter_request_vars(self.query_filter)
@@ -405,6 +416,7 @@ class InputTextFilter(Filter):
         )
         self._show_heading = show_heading
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         text_input = TextInput(id=self.query_filter.request_vars[0])
         if self.query_filter.negateable:
@@ -420,17 +432,21 @@ class InputTextFilter(Filter):
         else:
             yield text_input
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.query_filter.column]}
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         if self._show_heading:
             return value.get(self.query_filter.request_vars[0])
         return None
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
@@ -458,12 +474,15 @@ class CheckboxRowFilter(Filter):
         )
         self.query_filter = query_filter
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield CheckboxGroup(choices=dict(self.query_filter.options))
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
@@ -495,6 +514,7 @@ class DualListFilter(Filter):
             group=group,
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         choices = dict(self._options(self.info))
         if not choices:
@@ -511,11 +531,13 @@ class DualListFilter(Filter):
                 label=_("negate"),
             )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
 
 class RegexFilter(InputTextFilter):
+    @override
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
         validate_regex(value.get(htmlvar, ""), htmlvar)

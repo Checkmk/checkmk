@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -208,17 +207,21 @@ class ModeDiscovery(WatoMode):
     """
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "inventory"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
+    @override
     def _from_vars(self) -> None:
         self._host = folder_from_request(
             folder_tree(), request.var("folder"), request.get_ascii_input("host")
@@ -250,9 +253,11 @@ class ModeDiscovery(WatoMode):
             ignore_errors=True,
         )
 
+    @override
     def title(self) -> str:
         return _("Services of host %(host)s") % {"host": self._host.name()}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return service_page_menu(breadcrumb, self._host, self._options)
 
@@ -299,12 +304,15 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
 class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
     """Fetch the service discovery background job snapshot on a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "service-discovery-job-snapshot"
 
+    @override
     def get_request(self, config: Config, request: Request) -> HostName:
         return request.get_validated_type_input_mandatory(HostName, "hostname")
 
+    @override
     def execute(self, api_request: HostName) -> str:
         job = ServiceDiscoveryBackgroundJob(api_request)
         job_snapshot = asdict(job.get_status_snapshot())
@@ -317,9 +325,11 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
 class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscoveryRequest]):
     """Is called by _get_check_table() to execute the background job on a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "service-discovery-job"
 
+    @override
     def get_request(self, config: Config, request: Request) -> _AutomationServiceDiscoveryRequest:
         host_name = request.get_validated_type_input_mandatory(HostName, "host_name")
         options = json.loads(request.get_ascii_input_mandatory("options"))
@@ -353,6 +363,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
             )
         host.permissions.need_permission("read", user)
 
+    @override
     def execute(self, api_request: _AutomationServiceDiscoveryRequest) -> str:
         central_version = cmk_version_of_remote_automation_source(request)
         return execute_discovery_job(

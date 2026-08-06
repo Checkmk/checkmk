@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Base classes and registry for automation results.
 
 Provides the abstract result type, the serialization wrapper, and the global
@@ -16,7 +14,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import astuple, dataclass
-from typing import TypeVar
+from typing import override, TypeVar
 
 from cmk.ccc import version as cmk_version
 from cmk.ccc.plugin_registry import Registry
@@ -28,6 +26,7 @@ DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
+    @override
     def plugin_name(self, instance: type[ABCAutomationResult]) -> AutomationID:
         return instance.automation_call()
 

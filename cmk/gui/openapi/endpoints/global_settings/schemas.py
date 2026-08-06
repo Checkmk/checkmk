@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
 import typing
+from typing import override
 
 from marshmallow import ValidationError
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
@@ -21,6 +21,7 @@ class GlobalSettingsOneOfSchema(OneOfSchema):
     type_field_remove = False
     type_field = "type"
 
+    @override
     def get_obj_type(self, obj: dict[str, typing.Any]) -> str:
         if isinstance(obj, dict):
             if self.type_field not in obj:

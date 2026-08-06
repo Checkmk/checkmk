@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection, Mapping, Sequence
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, override
 
 import cmk.livestatus_client as livestatus
 from cmk.ccc.site import SiteId
@@ -66,26 +65,32 @@ def group_by_state(
 
 class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "tactical_overview"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Overview")
 
     @classmethod
+    @override
     def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("The total number of hosts and service with and without problems")
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
     @classmethod
+    @override
     def vs_parameters(cls) -> list[tuple[str, ValueSpec]]:
         return [
             (
@@ -164,6 +169,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         ]
 
     @classmethod
+    @override
     def parameters(cls) -> CustomSnapinParamsConfig:
         return CustomSnapinParamsConfig(
             show_stale=True,
@@ -176,6 +182,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             ],
         )
 
+    @override
     def show(self, config: Config) -> None:
         self._show_rows(config.staleness_threshold, config.mkeventd_enabled)
         self._show_failed_notifications()

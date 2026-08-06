@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, override
 
 from ._graph_metric_expressions import GraphConsolidationFunction
 from ._graph_specification import (
@@ -33,12 +31,15 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     mark_requested_end_time: bool = False
 
     @staticmethod
+    @override
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
+    @override
     def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         return []
 
+    @override
     def recipes(
         self,
         env: GraphEnvironment,

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """The commands the monitoring pages may offer on a host or service.
 
 The monitor domain owns this registry so the monitoring pages describe their
@@ -15,7 +13,7 @@ commands automatically, so the monitoring pages see them without importing it.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.logged_in import LoggedInUser
@@ -42,6 +40,7 @@ class MonitorCommand:
 
 
 class MonitorCommandRegistry(Registry[MonitorCommand]):
+    @override
     def plugin_name(self, instance: MonitorCommand) -> str:
         return instance.ident
 

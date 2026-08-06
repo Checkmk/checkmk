@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Sequence
-from typing import TypedDict
+from typing import override, TypedDict
 
 from cmk.gui import userdb
 from cmk.gui.logged_in import LoggedInUser, user
@@ -32,6 +30,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
             spec_class=PredefinedConditionSpec,
         )
 
+    @override
     def filter_usable_entries(
         self, entries: dict[str, PredefinedConditionSpec], acting_user: LoggedInUser
     ) -> dict[str, PredefinedConditionSpec]:
@@ -47,6 +46,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
         )
         return conditions
 
+    @override
     def filter_editable_entries(
         self, entries: dict[str, PredefinedConditionSpec], acting_user: LoggedInUser
     ) -> dict[str, PredefinedConditionSpec]:

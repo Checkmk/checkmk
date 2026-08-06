@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
@@ -105,6 +104,13 @@ import re
 import shlex
 import sys
 import time
+
+if sys.version_info >= (3, 12):  # noqa: UP036
+    from typing import override
+else:
+
+    def override(func):
+        return func
 
 
 def ensure_str(s):
@@ -340,6 +346,7 @@ class AbstractNumericFilter:
 
 
 class SizeFilter(AbstractNumericFilter):
+    @override
     def matches(self, filestat):
         """apply AbstractNumericFilter ti file size"""
         size = filestat.size
@@ -351,6 +358,7 @@ class SizeFilter(AbstractNumericFilter):
 
 
 class AgeFilter(AbstractNumericFilter):
+    @override
     def matches(self, filestat):
         """apply AbstractNumericFilter ti file age"""
         age = filestat.age
@@ -374,6 +382,7 @@ class RegexFilter:
 
 
 class InverseRegexFilter(RegexFilter):
+    @override
     def matches(self, file_path):
         return not self._regex.match(file_path)
 

@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import override, Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import (
@@ -104,6 +102,7 @@ class EngineGraphDispatcher:
 
 
 class EngineGraphDispatcherRegistry(Registry[EngineGraphDispatcher]):
+    @override
     def plugin_name(self, instance: EngineGraphDispatcher) -> str:
         return instance.kind
 

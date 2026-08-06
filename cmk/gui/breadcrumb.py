@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Breadcrumb processing
 
@@ -14,7 +13,7 @@ Cares about rendering the breadcrumb which is shown at the top of all pages
 from __future__ import annotations
 
 from collections.abc import Iterable, MutableSequence
-from typing import NamedTuple, overload
+from typing import NamedTuple, overload, override
 
 import cmk.gui.htmllib.html
 from cmk.gui.utils.html import HTML
@@ -36,6 +35,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
         super().__init__()
         self._items: list[BreadcrumbItem] = list(items) if items else []
 
+    @override
     def __len__(self) -> int:
         return len(self._items)
 
@@ -45,6 +45,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     @overload
     def __getitem__(self, index: slice[int, int, int]) -> MutableSequence[BreadcrumbItem]: ...
 
+    @override
     def __getitem__(self, index: int | slice) -> BreadcrumbItem | MutableSequence[BreadcrumbItem]:
         return self._items[index]
 
@@ -54,6 +55,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     @overload
     def __setitem__(self, index: slice[int, int, int], value: Iterable[BreadcrumbItem]) -> None: ...
 
+    @override
     def __setitem__(
         self, index: int | slice, value: BreadcrumbItem | Iterable[BreadcrumbItem]
     ) -> None:
@@ -65,12 +67,14 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     @overload
     def __delitem__(self, index: slice[int, int, int]) -> None: ...
 
+    @override
     def __delitem__(self, index: int | slice) -> None:
         if isinstance(index, int):
             self._items.pop(index)
         else:
             del self._items[index]
 
+    @override
     def insert(self, index: int, value: BreadcrumbItem) -> None:
         self._items.insert(index, value)
 

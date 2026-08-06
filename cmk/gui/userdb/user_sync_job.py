@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import traceback
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from logging import Logger
+from typing import override
 
 from pydantic import BaseModel
 
@@ -133,12 +132,14 @@ class UserSyncBackgroundJob(BackgroundJob):
     job_prefix = "user_sync"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("User synchronization")
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
 
+    @override
     def _back_url(self) -> str:
         return makeuri_contextless(request, [("mode", "users")], filename="wato.py")
 

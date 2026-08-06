@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui.dashboard.dashlet.base import (
     Dashlet,
@@ -24,26 +24,32 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     """Dashlet that displays a static text"""
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "nodata"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Static text")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Displays a static text to the user.")
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 100
 
     @classmethod
+    @override
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=30, height=18))
 
     @classmethod
+    @override
     def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
         # same as default, but allow minimum height of 1 for all breakpoints
         default = ResponsiveLayoutConstraints()

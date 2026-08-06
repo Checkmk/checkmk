@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 
 # Computes for a scheduling entry the last/next time that this entry
 # should have run or will be run. Such a scheduling entry is specified
@@ -14,6 +13,7 @@
 import abc
 import datetime
 import time
+from typing import override
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, MONTHLY, rrule, WEEKLY
@@ -61,10 +61,12 @@ class DaySchedule(Schedule):
         self._rule = rrule(DAILY, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
 
     @property
+    @override
     def rule(self) -> rrule:
         return self._rule
 
     @property
+    @override
     def delta(self) -> relativedelta:
         return relativedelta(days=-1)
 
@@ -83,10 +85,12 @@ class WeekSchedule(Schedule):
         )
 
     @property
+    @override
     def rule(self) -> rrule:
         return self._rule
 
     @property
+    @override
     def delta(self) -> relativedelta:
         return relativedelta(weeks=-1)
 
@@ -105,10 +109,12 @@ class StartMonthSchedule(Schedule):
         )
 
     @property
+    @override
     def rule(self) -> rrule:
         return self._rule
 
     @property
+    @override
     def delta(self) -> relativedelta:
         return relativedelta(months=-2)
 
@@ -128,10 +134,12 @@ class EndMonthSchedule(Schedule):
         )
 
     @property
+    @override
     def rule(self) -> rrule:
         return self._rule
 
     @property
+    @override
     def delta(self) -> relativedelta:
         return relativedelta(months=-2)
 

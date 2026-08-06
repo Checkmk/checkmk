@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
 from collections.abc import Iterable, Sequence
+from typing import override
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
@@ -29,6 +28,7 @@ from cmk.livestatus_client import LivestatusResponse, OnlySites
 
 class ABCDataSourceInventory(ABCDataSource):
     @property
+    @override
     def ignore_limit(self) -> bool:
         return True
 
@@ -44,6 +44,7 @@ class ABCRowTable(RowTable):
         self._info_names = info_names
         self._add_host_columns = add_host_columns
 
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -110,6 +111,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status", "host_childs"])
         self._inventory_path = inventory_path
 
+    @override
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         if not (self._info_names and (info_name := self._info_names[0])):
             return
@@ -152,6 +154,7 @@ class RowTableInventoryHistory(ABCRowTable):
         super().__init__(["invhist"], [])
         self._inventory_path = None
 
+    @override
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
         history, corrupted_history_files = get_history(
@@ -180,25 +183,31 @@ class RowTableInventoryHistory(ABCRowTable):
 
 class DataSourceInventoryHistory(ABCDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "invhist"
 
     @property
+    @override
     def title(self) -> str:
         return _("HW/SW inventory history")
 
     @property
+    @override
     def table(self) -> RowTable:
         return RowTableInventoryHistory()
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["host", "invhist"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["host_name", "invhist_time"]

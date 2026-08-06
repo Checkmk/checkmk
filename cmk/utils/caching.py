@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Managing in-memory caches through the execution time of cmk"""
@@ -14,7 +13,7 @@ import collections
 import itertools
 import sys
 from collections.abc import Callable, Iterator
-from typing import Any
+from typing import Any, override
 
 
 class CacheManager:
@@ -89,6 +88,7 @@ class DictCache(dict):
     def set_not_populated(self) -> None:
         self._populated = False
 
+    @override
     def clear(self) -> None:
         super().clear()
         self.set_not_populated()

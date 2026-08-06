@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Keep track of form and input parameter validation issues during page processing
 
 Errors that appear e.g. while parsing and validating HTTP request parameters before rendering the
@@ -13,6 +11,7 @@ page.
 """
 
 from collections.abc import Iterator, Mapping
+from typing import override
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
@@ -28,12 +27,15 @@ class UserErrors(Mapping[str | None, str]):
     def __bool__(self) -> bool:
         return bool(self._errors)
 
+    @override
     def __getitem__(self, key: str | None) -> str:
         return self._errors.__getitem__(key)
 
+    @override
     def __iter__(self) -> Iterator[str | None]:
         return self._errors.__iter__()
 
+    @override
     def __len__(self) -> int:
         return len(self._errors)
 

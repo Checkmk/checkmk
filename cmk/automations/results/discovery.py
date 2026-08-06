@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Service discovery and autochecks results.
 
 Groups all types that revolve around discovering services/host-labels and
@@ -17,7 +15,7 @@ import json
 from ast import literal_eval
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import asdict, dataclass
-from typing import Self
+from typing import override, Self
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -106,14 +104,17 @@ class ServiceDiscoveryResult(ABCAutomationResult):
     ) -> Mapping[HostName, DiscoveryReport]:
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
+    @override
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return SerializedResult(repr(self._to_dict(for_cmk_version)))
 
     @classmethod
+    @override
     def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryResult:
         return cls(cls._from_dict(literal_eval(serialized_result)))
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("service-discovery")
 
@@ -134,6 +135,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     source_results: Sequence[SourceResult]
     config_warnings: Sequence[str]
 
+    @override
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         # Before 3.0.0b1 source_results was a Mapping keyed by source ident. The
         # ident is no longer available here; emit synthetic keys so an older peer's
@@ -167,6 +169,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
         )
 
     @classmethod
+    @override
     def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryPreviewResult:
         raw = literal_eval(serialized_result)
         return cls(
@@ -197,6 +200,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
         )
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("service-discovery-preview")
 
@@ -206,6 +210,7 @@ result_type_registry.register(ServiceDiscoveryPreviewResult)
 
 class SpecialAgentDiscoveryPreviewResult(ServiceDiscoveryPreviewResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("special-agent-discovery-preview")
 
@@ -229,17 +234,20 @@ class AutodiscoveryResult(ABCAutomationResult):
     ) -> Mapping[HostName, DiscoveryReport]:
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
+    @override
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return SerializedResult(
             repr((self._hosts_to_dict(for_cmk_version), self.changes_activated))
         )
 
     @classmethod
+    @override
     def deserialize(cls, serialized_result: SerializedResult) -> Self:
         hosts, changes_activated = literal_eval(serialized_result)
         return cls(cls._hosts_from_dict(hosts), changes_activated)
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("autodiscovery")
 
@@ -250,6 +258,7 @@ result_type_registry.register(AutodiscoveryResult)
 @dataclass
 class SetAutochecksV2Result(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("set-autochecks-v2")
 
@@ -300,6 +309,7 @@ class SetAutochecksInput:
 @dataclass
 class UpdateHostLabelsResult(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("update-host-labels")
 

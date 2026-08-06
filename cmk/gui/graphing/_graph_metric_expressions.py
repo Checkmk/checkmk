@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
@@ -15,7 +14,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
-from typing import Annotated, assert_never, final, Literal
+from typing import Annotated, assert_never, final, Literal, override
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 
@@ -242,6 +241,7 @@ class QueryDataKey:
     consolidation_function: ConsolidationFunction
     attribute_filter: Mapping[str, object]
 
+    @override
     def __hash__(self) -> int:
         # The filter mapping is unhashable, so identity comes from its canonical serialization.
         return hash(
@@ -434,6 +434,7 @@ class GraphMetricExpression(BaseModel, ABC, frozen=True):
 
 
 class GraphMetricExpressionRegistry(Registry[type[GraphMetricExpression]]):
+    @override
     def plugin_name(self, instance: type[GraphMetricExpression]) -> str:
         return instance.expression_name()
 
@@ -456,15 +457,18 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
     value: float
 
     @staticmethod
+    @override
     def expression_name() -> Literal["constant"]:
         return "constant"
 
+    @override
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
     ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield from ()
 
+    @override
     def compute_augmented_time_series(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -496,15 +500,18 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
 
 class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
     @staticmethod
+    @override
     def expression_name() -> Literal["constant_na"]:
         return "constant_na"
 
+    @override
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
     ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield from ()
 
+    @override
     def compute_augmented_time_series(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -574,15 +581,18 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
     ] = []
 
     @staticmethod
+    @override
     def expression_name() -> Literal["operator"]:
         return "operator"
 
+    @override
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
     ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield from (k for o in self.operands for k in o.keys(registered_metrics))
 
+    @override
     def compute_augmented_time_series(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -625,9 +635,11 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
     scale: float
 
     @staticmethod
+    @override
     def expression_name() -> Literal["rrd"]:
         return "rrd"
 
+    @override
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -641,6 +653,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
             self.scale,
         )
 
+    @override
     def compute_augmented_time_series(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],

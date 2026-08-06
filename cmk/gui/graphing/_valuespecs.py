@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -328,6 +327,7 @@ class ValuesWithUnits(CascadingDropdown):
             validate=validate_value_elements,
         )
 
+    @override
     def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
         super().render_input(varprefix, value)
         root_prefix = varprefix[: varprefix.find(self._vs_name)]
@@ -345,6 +345,7 @@ class _UnitChoice:
     symbol: str
     vs_type: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
 
+    @override
     def __hash__(self) -> int:
         return hash(self.id)
 
@@ -509,12 +510,14 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         }
         super().__init__(**kwargs_with_defaults)
 
+    @override
     def _validate_value(self, value: str | None, varprefix: str) -> None:
         if value == "":
             raise MKUserError(varprefix, self._regex_error)
         # dropdown allows empty values by default
         super()._validate_value(value, varprefix)
 
+    @override
     def _choices_from_value(self, value: str | None) -> Choices:
         if value is None:
             return list(self.choices())

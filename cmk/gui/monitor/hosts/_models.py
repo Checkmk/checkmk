@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """
 Define domain models.
 
@@ -16,7 +14,7 @@ logic.
 import dataclasses
 import datetime as dt
 import enum
-from typing import assert_never, Literal, NewType
+from typing import assert_never, Literal, NewType, override
 
 from cmk.ruleset_matcher.labels import LabelSource
 
@@ -148,6 +146,7 @@ class HostSort:
     column: HostSortColumn
     direction: HostSortDirection
 
+    @override
     def __str__(self) -> str:
         return f"{self.column.value}:{self.direction.value}"
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -17,7 +16,7 @@ import pprint
 from collections.abc import Callable, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal, TypedDict
+from typing import Any, Final, Literal, override, TypedDict
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
@@ -221,6 +220,7 @@ def get_always_activate_domains() -> Sequence[ABCConfigDomain]:
 
 
 class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[ABCConfigDomain]):
+    @override
     def plugin_name(self, instance: ABCConfigDomain) -> str:
         return instance.ident()
 
@@ -283,6 +283,7 @@ class ConfigVariableGroup:
 
 
 class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariableGroup]):
+    @override
     def plugin_name(self, instance: ConfigVariableGroup) -> str:
         return instance.ident()
 
@@ -412,6 +413,7 @@ class ConfigVariable:
 
 
 class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariable]):
+    @override
     def plugin_name(self, instance: ConfigVariable) -> str:
         return instance.ident()
 

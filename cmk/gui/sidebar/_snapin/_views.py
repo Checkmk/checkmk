@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import pprint
 from collections.abc import Callable
+from typing import override
 
 from cmk.ccc.user import UserId
 from cmk.gui import pagetypes
@@ -64,17 +63,21 @@ def register(
 
 class Views(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "views"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Views")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Links to global views and dashboards")
 
+    @override
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",

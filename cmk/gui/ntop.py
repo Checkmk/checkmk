@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """ntop integration interface for generic GUI code.
 
 The real implementation lives in cmk.gui.nonfree.pro.ntop and is registered at
@@ -49,21 +47,27 @@ class NtopConnectionInterface(ABC):
 class NtopConnectionStub(NtopConnectionInterface):
     """Null implementation for editions without ntop."""
 
+    @override
     def get_connection(self) -> None:
         return None
 
+    @override
     def is_available(self) -> bool:
         return False
 
+    @override
     def is_active(self) -> bool:
         return False
 
+    @override
     def is_configured(self) -> bool:
         return False
 
+    @override
     def get_misconfiguration_reason(self) -> str:
         return _("ntopng integration is only available in CEE")
 
+    @override
     def use_host_filter(self) -> bool:
         return True
 

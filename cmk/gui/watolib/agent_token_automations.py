@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Automations that issue agent download / registration tokens on a remote site.
 
 Token stores are per-site (`paths.var_dir / "token.store"`) and are not replicated.
@@ -14,7 +12,7 @@ where it will later be redeemed.
 """
 
 import datetime as dt
-from typing import Annotated, Self
+from typing import Annotated, override, Self
 
 from dateutil.relativedelta import relativedelta
 from pydantic import AwareDatetime, BaseModel, PlainValidator
@@ -76,14 +74,17 @@ class TokenCreateResponse(BaseModel):
 
 
 class AutomationAgentDownloadTokenCreate(AutomationCommand[AgentDownloadTokenCreateRequest]):
+    @override
     def command_name(self) -> str:
         return "agent-download-token-create"
 
+    @override
     def get_request(self, config: Config, request: Request) -> AgentDownloadTokenCreateRequest:
         return AgentDownloadTokenCreateRequest.model_validate_json(
             request.get_str_input_mandatory("request")
         )
 
+    @override
     def execute(self, api_request: AgentDownloadTokenCreateRequest) -> dict[str, object]:
         now = dt.datetime.now(dt.UTC)
         token = get_token_store().issue(
@@ -102,14 +103,17 @@ class AutomationAgentDownloadTokenCreate(AutomationCommand[AgentDownloadTokenCre
 class AutomationAgentRegistrationTokenCreate(
     AutomationCommand[AgentRegistrationTokenCreateRequest]
 ):
+    @override
     def command_name(self) -> str:
         return "agent-registration-token-create"
 
+    @override
     def get_request(self, config: Config, request: Request) -> AgentRegistrationTokenCreateRequest:
         return AgentRegistrationTokenCreateRequest.model_validate_json(
             request.get_str_input_mandatory("request")
         )
 
+    @override
     def execute(self, api_request: AgentRegistrationTokenCreateRequest) -> dict[str, object]:
         now = dt.datetime.now(dt.UTC)
         token = get_token_store().issue(

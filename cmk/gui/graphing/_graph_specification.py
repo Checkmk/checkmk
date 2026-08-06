@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Annotated, final, Literal
+from typing import Annotated, final, Literal, override
 
 from pydantic import (
     BaseModel,
@@ -206,6 +205,7 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
 
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
+    @override
     def plugin_name(self, instance: type[GraphSpecification]) -> str:
         return instance.graph_type_name()
 

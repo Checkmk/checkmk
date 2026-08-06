@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from dataclasses import asdict, dataclass
+from typing import override
 
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import urlencode_vars
@@ -47,6 +46,7 @@ class MethodInline(PopupMethod):
         self._content: str = content
 
     @property
+    @override
     def content(self) -> str:
         return self._content
 

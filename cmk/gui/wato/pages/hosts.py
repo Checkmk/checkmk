@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -202,6 +201,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     VAR_HOST: Final = "host"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
@@ -213,6 +213,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
         super().__init__(edition)
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Host"), breadcrumb)
         menu.dropdowns.insert(
@@ -364,6 +365,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         }
 
     # TODO: Extract cluster specific parts from this method
+    @override
     def page(self, config: Config) -> None:
         # Show outcome of host validation. Do not validate new hosts
         errors = None
@@ -577,13 +579,16 @@ class ABCHostMode(WatoMode, abc.ABC):
 # the edit_host mode is called.
 class ModeEditHost(ABCHostMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_host"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
+    @override
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
         self._host.permissions.need_permission("read", user)
@@ -597,9 +602,11 @@ class ModeEditHost(ABCHostMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(host=self._host.name())
 
@@ -611,6 +618,7 @@ class ModeEditHost(ABCHostMode):
     def host(self) -> Host:
         return self._host
 
+    @override
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
         folder = folder_from_request(folder_tree(), request.var("folder"), hostname)
@@ -618,13 +626,16 @@ class ModeEditHost(ABCHostMode):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
         return folder.load_host(hostname)
 
+    @override
     def title(self) -> str:
         return _("Properties of host") + " " + self._host.name()
 
+    @override
     def page(self, config: Config) -> None:
         super().page(config)
         UpdateDnsCacheLoadingContainer.include_catch_link_script()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -652,6 +663,7 @@ class ModeEditHost(ABCHostMode):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         tree = folder_tree()
         folder = folder_from_request(
@@ -763,6 +775,7 @@ class ModeEditHost(ABCHostMode):
             "use_dns_cache",
         )
 
+    @override
     def _vs_host_name(self) -> FixedValue:
         return FixedValue(
             value=self._host.name(),
@@ -947,9 +960,11 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
 
 class CreateHostMode(ABCHostMode):
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
+    @override
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
         if self._mode == "clone" and not user.may("wato.clone_hosts"):
@@ -970,6 +985,7 @@ class CreateHostMode(ABCHostMode):
     def _verify_host_type(cls, host: Host) -> None:
         raise NotImplementedError
 
+    @override
     def _from_vars(self) -> None:
         if request.var("clone"):
             self._mode = "clone"
@@ -978,6 +994,7 @@ class CreateHostMode(ABCHostMode):
         else:
             self._mode = "new"
 
+    @override
     def _init_host(self) -> Host:
         self._clone_source: Host | None = None
         clone_source_name = request.get_ascii_input("clone")
@@ -1011,6 +1028,7 @@ class CreateHostMode(ABCHostMode):
         self._verify_host_type(host)
         return host
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.transaction_valid():
             return redirect(mode_url("folder"))
@@ -1084,6 +1102,7 @@ class CreateHostMode(ABCHostMode):
 
         return redirect(mode_url("edit_host", folder=folder.path(), host=self._host.name()))
 
+    @override
     def _page_form_quick_setup_warning(self) -> None:
         if (
             self._clone_source
@@ -1092,6 +1111,7 @@ class CreateHostMode(ABCHostMode):
         ):
             quick_setup_duplication_warning(locked_by, "host")
 
+    @override
     def _vs_host_name(self) -> ValueSpec:
         return Hostname(
             title=_("Host name"),
@@ -1100,15 +1120,18 @@ class CreateHostMode(ABCHostMode):
 
 class ModeCreateHost(CreateHostMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "newhost"
 
+    @override
     def title(self) -> str:
         if self._mode == "clone":
             return _("Create clone of %(host_name)s") % {"host_name": self._host.name()}
         return _("Add host")
 
     @classmethod
+    @override
     def _init_new_host_object(cls) -> Host:
         try:
             host_name = strip_hostname_whitespace_chars(
@@ -1148,10 +1171,12 @@ class ModeCreateHost(CreateHostMode):
         )
 
     @classmethod
+    @override
     def _host_type_name(cls) -> str:
         return "host"
 
     @classmethod
+    @override
     def _verify_host_type(cls, host: Host) -> None:
         if host.is_cluster():
             raise MKGeneralException(_("Can not clone a cluster host as regular host"))
@@ -1159,18 +1184,22 @@ class ModeCreateHost(CreateHostMode):
 
 class ModeCreateCluster(CreateHostMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "newcluster"
 
+    @override
     def _is_cluster(self) -> bool:
         return True
 
+    @override
     def title(self) -> str:
         if self._mode == "clone":
             return _("Create clone of %(host_name)s") % {"host_name": self._host.name()}
         return _("Create cluster")
 
     @classmethod
+    @override
     def _init_new_host_object(cls) -> Host:
         try:
             host_name = strip_hostname_whitespace_chars(
@@ -1187,10 +1216,12 @@ class ModeCreateCluster(CreateHostMode):
         )
 
     @classmethod
+    @override
     def _host_type_name(cls) -> str:
         return "cluster"
 
     @classmethod
+    @override
     def _verify_host_type(cls, host: Host) -> None:
         if not host.is_cluster():
             raise MKGeneralException(_("Can not clone a regular host as cluster host"))

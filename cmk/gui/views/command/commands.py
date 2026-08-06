@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
@@ -11,7 +10,7 @@
 import time
 from collections.abc import Iterable, Sequence
 from datetime import datetime
-from typing import Literal, Protocol
+from typing import Literal, override, Protocol
 
 import cmk.ccc.version as cmk_version
 from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
@@ -141,14 +140,17 @@ def register_permissions(
 
 class CommandGroupVarious(CommandGroup):
     @property
+    @override
     def ident(self) -> str:
         return "various"
 
     @property
+    @override
     def title(self) -> str:
         return _("Various Commands")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 20
 
@@ -625,14 +627,17 @@ PermissionActionFakeChecks = Permission(
 
 class CommandGroupFakeCheck(CommandGroup):
     @property
+    @override
     def ident(self) -> str:
         return "fake_check"
 
     @property
+    @override
     def title(self) -> str:
         return _("Fake check results")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 15
 
@@ -903,14 +908,17 @@ PermissionActionAcknowledge = Permission(
 
 class CommandGroupAcknowledge(CommandGroup):
     @property
+    @override
     def ident(self) -> str:
         return "acknowledge"
 
     @property
+    @override
     def title(self) -> str:
         return _("Acknowledge")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 5
 
@@ -1421,14 +1429,17 @@ def hosts_user_can_see(users_sites: list[SiteId] | None = None) -> Sequence[str]
 
 class CommandGroupDowntimes(CommandGroup):
     @property
+    @override
     def ident(self) -> str:
         return "downtimes"
 
     @property
+    @override
     def title(self) -> str:
         return _("Schedule downtimes")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 10
 
@@ -1488,6 +1499,7 @@ class CommandScheduleDowntimes(Command):
             ).confirm_dialog_additions,
         )
 
+    @override
     def user_confirm_options(
         self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
     ) -> list[tuple[str, str]]:

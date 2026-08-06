@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -12,7 +11,7 @@
 
 import socket
 from collections.abc import Collection, Iterable, Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -93,14 +92,17 @@ class HostRenamingException(MKGeneralException):
 
 class ModeBulkRenameHost(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bulk_rename_host"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
@@ -110,9 +112,11 @@ class ModeBulkRenameHost(WatoMode):
         if not user.may("wato.rename_hosts"):
             raise MKGeneralException(_("You don't have the right to rename hosts"))
 
+    @override
     def title(self) -> str:
         return _("Bulk renaming of hosts")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Hosts"),
@@ -140,6 +144,7 @@ class ModeBulkRenameHost(WatoMode):
 
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -337,6 +342,7 @@ class ModeBulkRenameHost(WatoMode):
             return hostname
         return None
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("bulk_rename_host", method="POST"):
             self._vs_renaming_config().render_input("", {})
@@ -452,17 +458,21 @@ def _confirm(html_title: str, message: str | HTML) -> bool | None:
 
 class ModeRenameHost(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "rename_host"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
+    @override
     def _from_vars(self) -> None:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
@@ -477,12 +487,14 @@ class ModeRenameHost(WatoMode):
         self._host = folder.load_host(host_name)
         self._host.permissions.need_permission("write", user)
 
+    @override
     def title(self) -> str:
         return _("Rename %(host_type)s %(host_name)s") % {
             "host_type": _("Cluster") if self._host.is_cluster() else _("Host"),
             "host_name": self._host.name(),
         }
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Host"),
@@ -523,6 +535,7 @@ class ModeRenameHost(WatoMode):
 
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         renamed_host_site = self._host.site_id()
         if ActivateChanges.get_pending_changes_info(list(config.sites)).has_changes():
@@ -592,6 +605,7 @@ class ModeRenameHost(WatoMode):
         validate_host_uniqueness(tree, varname, host_name)
         Hostname().validate_value(host_name, varname)
 
+    @override
     def page(self, config: Config) -> None:
         html.help(
             _(

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 
 """This module handles the manual pages of Checkmk checks
 
@@ -24,7 +23,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 import cmk.ccc.debug
 from cmk.ccc import tty
@@ -674,6 +673,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
 
+    @override
     def _get_value(self) -> str:
         return "".join(self._buffer)
 
@@ -689,17 +689,21 @@ class ConsoleManPageRenderer(ManPageRenderer):
         """
         return re.sub("(?<!{){", self._tty_color, re.sub("(?<!})}", tty.normal + color, line))
 
+    @override
     def _print_header(self) -> None:
         pass
 
+    @override
     def _print_manpage_title(self, title: str) -> None:
         self._print_splitline(
             self._title_color_left, "%-25s" % self.name, self._title_color_right, title
         )
 
+    @override
     def _print_info_line(self, left: str, right: str) -> None:
         self._print_splitline(self._header_color_left, left, self._header_color_right, right)
 
+    @override
     def _print_subheader(self, line: str) -> None:
         self._print_empty_line()
         self._buffer.append(
@@ -713,6 +717,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             + "\n"
         )
 
+    @override
     def _print_line(self, line: str, *, color: str | None = None, no_markup: bool = False) -> None:
         if color is None:
             color = self._normal_color
@@ -736,6 +741,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._buffer.append(" " * (self.__width - 1 - len(left) - self._print_len(right)))
         self._buffer.append(tty.normal + "\n")
 
+    @override
     def _print_empty_line(self) -> None:
         self._print_line("", color=tty.colorset(7, 4))
 
@@ -796,6 +802,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             line += " " * (width - printlen)
         return line
 
+    @override
     def _print_textbody(self, text: str) -> None:
         wrapped = self._wrap_text(text, self.__width - 2)
         color = tty.colorset(7, 4)
@@ -808,9 +815,11 @@ class NowikiManPageRenderer(ManPageRenderer):
         super().__init__(man_page)
         self.__output = StringIO()
 
+    @override
     def _get_value(self) -> str:
         return self.__output.getvalue()
 
+    @override
     def _print_header(self) -> None:
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
@@ -819,28 +828,36 @@ class NowikiManPageRenderer(ManPageRenderer):
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
+    @override
     def _print_manpage_title(self, title: str) -> None:
         self.__output.write(f"<b>{title}</b>\n")
 
+    @override
     def _print_info_line(self, left: str, right: str) -> None:
         self.__output.write(f"<tr><td>{left}</td><td>{right}</td></tr>\n")
 
+    @override
     def _print_subheader(self, line: str) -> None:
         self.__output.write(f"H2:{line}\n")
 
+    @override
     def _print_line(self, line: str, *, color: str | None = None, no_markup: bool = False) -> None:
         content = line if no_markup else _apply_markup(line)
         self.__output.write(f"{content}\n")
 
+    @override
     def _print_begin_splitlines(self) -> None:
         self.__output.write("<table>\n")
 
+    @override
     def _print_end_splitlines(self) -> None:
         self.__output.write("</table>\n")
 
+    @override
     def _print_empty_line(self) -> None:
         self.__output.write("\n")
 
+    @override
     def _print_textbody(self, text: str) -> None:
         self.__output.write(f"{_apply_markup(text)}\n")
 

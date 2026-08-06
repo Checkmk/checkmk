@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, TypeGuard
+from typing import Any, Literal, override, TypeGuard
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -220,6 +219,7 @@ def _ec_pagetype_topic() -> BuiltinPagetypeTopic:
 
 
 class RowTableEC(RowTableLivestatus):
+    @override
     def query(
         self,
         datasource: ABCDataSource,
@@ -342,68 +342,84 @@ PermissionECSeeInTacticalOverview = Permission(
 
 class DataSourceECEvents(ABCDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "mkeventd_events"
 
     @property
+    @override
     def title(self) -> str:
         return _("Event Console: current events")
 
     @property
+    @override
     def table(self) -> RowTableEC:
         return RowTableEC("eventconsoleevents")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["event", "host"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name", "event_id"]
 
     @property
+    @override
     def auth_domain(self) -> str:
         return "ec"
 
     @property
+    @override
     def time_filters(self) -> list[ColumnName]:
         return ["event_first"]
 
 
 class DataSourceECEventHistory(ABCDataSource):
     @property
+    @override
     def ident(self) -> str:
         return "mkeventd_history"
 
     @property
+    @override
     def title(self) -> str:
         return _("Event Console: event history")
 
     @property
+    @override
     def table(self) -> RowTableEC:
         return RowTableEC("eventconsolehistory")
 
     @property
+    @override
     def infos(self) -> SingleInfos:
         return ["history", "event", "host"]
 
     @property
+    @override
     def keys(self) -> list[ColumnName]:
         return []
 
     @property
+    @override
     def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name", "event_id", "history_line"]
 
     @property
+    @override
     def auth_domain(self) -> str:
         return "ec"
 
     @property
+    @override
     def time_filters(self) -> list[ColumnName]:
         return ["history_time"]
 
@@ -421,23 +437,29 @@ class DataSourceECEventHistory(ABCDataSource):
 
 class PainterSvcServicelevel(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "svc_servicelevel"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service service level")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Service level")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variable_names", "service_custom_variable_values"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "servicelevel"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_custom_var(
             "service",
@@ -449,23 +471,29 @@ class PainterSvcServicelevel(Painter):
 
 class PainterHostServicelevel(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_servicelevel"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host service level")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Service level")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     @property
+    @override
     def sorter(self) -> SorterName:
         return "servicelevel"
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_custom_var(
             "host",
@@ -477,57 +505,72 @@ class PainterHostServicelevel(Painter):
 
 class PainterEventId(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_id"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("ID of the event")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("ID")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_id"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("number", str(row["event_id"]))
 
 
 class PainterEventCount(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_count"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Count (number of recent occurrences)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Cnt.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_count"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("number", str(row["event_count"]))
 
 
 class PainterEventText(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_text"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Text/Message of the event")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Message")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_text"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", HTML.without_escaping(
             escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
@@ -536,19 +579,24 @@ class PainterEventText(Painter):
 
 class PainterEventMatchGroups(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_match_groups"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Match groups")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Match")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_match_groups"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         groups = row["event_match_groups"]
         if groups:
@@ -561,23 +609,29 @@ class PainterEventMatchGroups(Painter):
 
 class PainterEventFirst(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_first"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of first occurrence of this serial")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("First")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_first"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["event_first"],
@@ -590,23 +644,29 @@ class PainterEventFirst(Painter):
 
 class PainterEventLast(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_last"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of last occurrence")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Last")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_last"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["event_last"],
@@ -619,38 +679,48 @@ class PainterEventLast(Painter):
 
 class PainterEventComment(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_comment"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Comment to the event")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Comment")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_comment"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["event_comment"])
 
 
 class PainterEventSl(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_sl"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service-level")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Level")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_sl"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         sl_txt = dict(self.config.mkeventd_service_levels).get(
             row["event_sl"], str(row["event_sl"])
@@ -660,23 +730,29 @@ class PainterEventSl(Painter):
 
 class PainterEventHost(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_host"
 
+    @override
     def title(self, cell: "Cell") -> str:
         return _("Host name")
 
+    @override
     def short_title(self, cell: "Cell") -> str:
         return _("Host")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_host", "host_name"]
 
     @property
+    @override
     def use_painter_link(self) -> bool:
         return False
 
+    @override
     def render(self, row: Row, cell: "Cell", user: LoggedInUser) -> CellSpec:
         event_host: HostAddress = row["event_host"]
         host_name = row.get("host_name", event_host)
@@ -715,114 +791,144 @@ def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell", *, request
 
 class PainterEventIpaddress(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_ipaddress"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Original IP address")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Orig. IP")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_ipaddress"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["event_ipaddress"])
 
 
 class PainterEventHostInDowntime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_host_in_downtime"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host in downtime during event creation")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Dt.")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_host_in_downtime"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_nagiosflag(row, "event_host_in_downtime", True)
 
 
 class PainterEventOwner(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_owner"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Owner of event")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Owner")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_owner"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["event_owner"])
 
 
 class PainterEventContact(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_contact"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Contact person")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contact")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_contact"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["event_contact"])
 
 
 class PainterEventApplication(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_application"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Application / Syslog-Tag")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Application")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_application"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["event_application"])
 
 
 class PainterEventPid(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_pid"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Process ID")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("PID")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_pid"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", "%s" % row["event_pid"])
 
@@ -836,57 +942,72 @@ def _deref[T](x: T | Callable[[], T]) -> T:
 
 class PainterEventPriority(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_priority"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Syslog-Priority")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Prio")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_priority"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", dict(_deref(syslog_priorities))[row["event_priority"]])
 
 
 class PainterEventFacility(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_facility"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Syslog-Facility")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Facility")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_facility"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", dict(_deref(syslog_facilities))[row["event_facility"]])
 
 
 class PainterEventRuleId(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_rule_id"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Rule-ID")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Rule")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_rule_id"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         rule_id = row["event_rule_id"]
         if user.may("mkeventd.edit"):
@@ -897,19 +1018,24 @@ class PainterEventRuleId(Painter):
 
 class PainterEventState(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_state"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("State (severity) of event")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_state"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         state = row["event_state"]
         name = short_service_state_name(state, "")
@@ -920,19 +1046,24 @@ class PainterEventState(Painter):
 
 class PainterEventPhase(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_phase"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Phase of event (open, counting, etc.)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Phase")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_phase"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", phase_names.get(row["event_phase"], ""))
 
@@ -1034,65 +1165,82 @@ def _is_linked_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[LinkedVi
 
 class PainterEventIcons(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_icons"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Event icons")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Icons")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_phase", "event_host_in_downtime"]
 
     @property
+    @override
     def printable(self) -> bool:
         return False
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_event_icons(row, request=self.request, theme=self.theme)
 
 
 class PainterEventHistoryIcons(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_history_icons"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Event history icons")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Icons")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_phase", "event_host_in_downtime"]
 
     @property
+    @override
     def printable(self) -> bool:
         return False
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_event_icons(row, history=True, request=self.request, theme=self.theme)
 
 
 class PainterEventContactGroups(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_contact_groups"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Contact groups defined in rule")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Rule contact groups")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["event_contact_groups"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         cgs = row.get("event_contact_groups")
         if cgs is None:
@@ -1104,16 +1252,20 @@ class PainterEventContactGroups(Painter):
 
 class PainterEventEffectiveContactGroups(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "event_effective_contact_groups"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Contact groups effective (host or rule contact groups)")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Contact groups")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return [
             "event_contact_groups",
@@ -1121,6 +1273,7 @@ class PainterEventEffectiveContactGroups(Painter):
             "host_contact_groups",
         ]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if row["event_contact_groups_precedence"] == "host":
             cgs = row["host_contact_groups"]
@@ -1139,42 +1292,53 @@ class PainterEventEffectiveContactGroups(Painter):
 
 class PainterHistoryLine(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "history_line"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Line number in log file")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Line")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["history_line"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("number", "%s" % row["history_line"])
 
 
 class PainterHistoryTime(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "history_time"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Time of entry in log file")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Time")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["history_time"]
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["history_time"],
@@ -1187,19 +1351,24 @@ class PainterHistoryTime(Painter):
 
 class PainterHistoryWhat(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "history_what"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Type of event action")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Action")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["history_what"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         what = row["history_what"]
         return "", HTMLWriter.render_span(what, title=str(action_whats[what]))
@@ -1207,54 +1376,68 @@ class PainterHistoryWhat(Painter):
 
 class PainterHistoryWhatExplained(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "history_what_explained"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Explanation for event action")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["history_what"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", str(action_whats[row["history_what"]]))
 
 
 class PainterHistoryWho(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "history_who"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("User who performed action")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Who")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["history_who"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["history_who"])
 
 
 class PainterHistoryAddinfo(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "history_addinfo"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Additional information")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Info")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return ["history_addinfo"]
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["history_addinfo"])
 
@@ -1297,6 +1480,7 @@ PermissionECUpdateContact = Permission(
 
 
 class ECCommand(Command):
+    @override
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML.with_escaping(
             _("Affected %(event_label)s: %(count)s")
@@ -1310,6 +1494,7 @@ class ECCommand(Command):
             }
         )
 
+    @override
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         assert isinstance(command, LivestatusCommand)
         LivestatusClient(sites.live()).command(command, site)

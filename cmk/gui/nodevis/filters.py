@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import override
 
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Row
@@ -47,9 +47,11 @@ class FilterRange(Filter):
     def range_config(self):
         return self._filter_range_config
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self._filter_range_config.column: row[self._filter_range_config.column]}
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield Slider(
             id=self._filter_range_config.column,

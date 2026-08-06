@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Mapping
 from enum import Enum
+from typing import override
 
 from cmk.agent_based.v2 import all_of, any_of, contains, startswith, StringTable
 
@@ -25,6 +24,7 @@ class TceHealthStatus(SNMPEnum):
     faulted = "5"
 
     @classmethod
+    @override
     def good_value(cls) -> "TceHealthStatus":
         return cls.normal
 
@@ -36,6 +36,7 @@ class PowerSupplyState(SNMPEnum):
     uninstalled = "4"
 
     @classmethod
+    @override
     def good_value(cls) -> "PowerSupplyState":
         return cls.online
 
@@ -48,6 +49,7 @@ class FanStatus(SNMPEnum):
     unknown = "9"
 
     @classmethod
+    @override
     def good_value(cls) -> "FanStatus":
         return cls.ok
 
@@ -59,6 +61,7 @@ class LeoSystemState(SNMPEnum):
     faulted = "4"
 
     @classmethod
+    @override
     def good_value(cls) -> "LeoSystemState":
         return cls.normal
 
@@ -69,6 +72,7 @@ class LeoPowerSupplyState(SNMPEnum):
     faulted = "3"
 
     @classmethod
+    @override
     def good_value(cls) -> "LeoPowerSupplyState":
         return cls.online
 
@@ -79,6 +83,7 @@ class LeoFanStatus(SNMPEnum):
     failure = "3"
 
     @classmethod
+    @override
     def good_value(cls) -> "LeoFanStatus":
         return cls.ok
 

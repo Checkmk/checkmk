@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.query_filters import AllLabelGroupsQuery
@@ -38,6 +36,7 @@ class HorizontalGroup(BaseComponent):
         if not self.components:
             raise ValueError("Must contain at least one component")
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         self.components[0].render_html(filter_id, current_values)
         for component in self.components[1:]:
@@ -63,6 +62,7 @@ class Dropdown(BaseComponent):
                 f"Default value {self.default_value!r} is not in the choices: {self.choices!r}"
             )
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         if self.label:
             html.write_text_permissive(self.label)
@@ -83,6 +83,7 @@ class DynamicDropdown(BaseComponent):
     autocompleter: AutocompleterConfig
     has_validation: bool = False
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         current_value = current_values.get(self.id, "")
         choices = [(current_value, current_value)] if current_value else []
@@ -109,6 +110,7 @@ class Checkbox(BaseComponent):
     label: str
     default_value: bool = False
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         current_value = bool(current_values.get(self.id, self.default_value))
         html.checkbox(self.id, deflt=current_value, label=self.label)
@@ -132,6 +134,7 @@ class CheckboxGroup(BaseComponent):
         if not self.choices:
             raise ValueError("Choices must not be empty")
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
         if self.label:
@@ -150,6 +153,7 @@ class TextInput(BaseComponent):
     suffix: str | None = None
     """Suffix to be placed directly after the input field, e.g. a unit like 'ms' or '%'"""
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         if self.label:
             html.write_text_permissive(self.label)
@@ -185,6 +189,7 @@ class MultiselectWithFreeText(BaseComponent):
         if not self.separator:
             raise ValueError("Separator must not be empty")
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         if self.label:
             html.write_text_permissive(self.label)
@@ -207,6 +212,7 @@ class RadioButton(BaseComponent):
                 f"Default value {self.default_value!r} is not in the choices: {self.choices!r}"
             )
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         pick = current_values.get(self.id, self.default_value)
         html.begin_radio_group(horizontal=True)
@@ -241,6 +247,7 @@ class Slider(BaseComponent):
             if value % self.step != 0:
                 raise ValueError(f"{name} value {value} must be divisible by step {self.step}")
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         filter_value = str(current_values.get(self.id))
         actual_value = filter_value if filter_value.isnumeric() else self.default_value
@@ -275,6 +282,7 @@ class StaticText(BaseComponent):
     component_type: Literal["static_text"] = "static_text"
     text: str
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         html.write_text_permissive(self.text)
 
@@ -285,6 +293,7 @@ class Hidden(BaseComponent):
     id: str
     value: str
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         html.hidden_field(self.id, self.value, add_var=True)
 
@@ -300,6 +309,7 @@ class DualList(BaseComponent):
         if not self.choices:
             raise ValueError("Choices must not be empty")
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         choices = [(name, folder) for name, folder in self.choices.items()]
         selected = current_values.get(self.id, "").split("|")
@@ -314,6 +324,7 @@ class LabelGroupFilterComponent(BaseComponent):
     id: str
     object_type: Literal["host", "service"]
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         LabelGroups(object_type=self.object_type).render_input(
             self.id,
@@ -335,6 +346,7 @@ class TagFilterComponent(BaseComponent):
         if not self.variable_prefix:
             raise ValueError("Variable prefix must not be empty")
 
+    @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         operators: Choices = [
             ("is", "="),

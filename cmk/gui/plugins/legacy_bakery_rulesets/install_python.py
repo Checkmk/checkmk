@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -20,14 +20,17 @@ from cmk.ruleset_matcher.definition import RuleGroup
 
 class RulespecGroupMonitoringAgentsWindowsModules(RulespecSubGroup):
     @property
+    @override
     def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringAgents
 
     @property
+    @override
     def sub_group_name(self) -> str:
         return "windows_modules"
 
     @property
+    @override
     def title(self) -> str:
         return _("Windows Modules")  # and Custom files in the future
 

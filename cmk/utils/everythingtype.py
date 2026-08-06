@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Container
-from typing import Final
+from typing import Final, override
 
 __all__ = ["EVERYTHING"]
 
 
 class _Everything(Container):
+    @override
     def __contains__(self, __other: object) -> bool:
         return True
 

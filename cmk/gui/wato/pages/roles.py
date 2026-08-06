@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Manage roles and permissions
@@ -18,6 +17,7 @@ configuration of all roles.
 """
 
 from collections.abc import Collection
+from typing import override
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -88,16 +88,20 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeRoles(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "roles"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
+    @override
     def title(self) -> str:
         return _("Roles & permissions")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -126,6 +130,7 @@ class ModeRoles(WatoMode):
         menu.add_doc_reference(_("Users, roles and permissions"), DocReference.WATO_USER)
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())
@@ -170,6 +175,7 @@ class ModeRoles(WatoMode):
 
         return redirect(self.mode_url())
 
+    @override
     def page(self, config: Config) -> None:
         with table_element("roles", limit=config.table_row_limit) as table:
             users = userdb.load_users()
@@ -245,14 +251,17 @@ class ModeRoles(WatoMode):
 
 class ModeRoleTwoFactor(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "enforce_two_factor_on_role"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
@@ -260,13 +269,16 @@ class ModeRoleTwoFactor(WatoMode):
         super().__init__(edition)
         load_dynamic_permissions()
 
+    @override
     def _from_vars(self) -> None:
         self._role_id = RoleID(request.get_ascii_input_mandatory("edit"))
         self._role: UserRole = userroles.get_role(self._role_id)
 
+    @override
     def title(self) -> str:
         return _("Enforce two-factor on %(role_id)s role") % {"role_id": self._role_id}
 
+    @override
     def page(self, config: Config) -> None:
         request.get_ascii_input_mandatory("two_factor_enforce")
         confirm_url = makeactionuri(request, transactions, [("_action", "confirm")])
@@ -294,6 +306,7 @@ class ModeRoleTwoFactor(WatoMode):
             confirm_text=_("Confirm"),
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
         if request.var("_action") != "confirm":
@@ -333,14 +346,17 @@ class ModeRoleTwoFactor(WatoMode):
 
 class ModeEditRole(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_role"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
@@ -351,13 +367,16 @@ class ModeEditRole(WatoMode):
         # views)
         load_dynamic_permissions()
 
+    @override
     def _from_vars(self) -> None:
         self._role_id = RoleID(request.get_ascii_input_mandatory("edit"))
         self._role: UserRole = userroles.get_role(self._role_id)
 
+    @override
     def title(self) -> str:
         return _("Edit role %(role_id)s") % {"role_id": self._role_id}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Role"), breadcrumb, form_name="role", button_name="_save"
@@ -365,6 +384,7 @@ class ModeEditRole(WatoMode):
         menu.inpage_search = PageMenuSearch()
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -428,6 +448,7 @@ class ModeEditRole(WatoMode):
         )
         return url
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context(
             "role",
@@ -545,23 +566,29 @@ class ModeEditRole(WatoMode):
 
 class ModeRoleMatrix(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "role_matrix"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
+    @override
     def title(self) -> str:
         return _("Permission matrix")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(breadcrumb=breadcrumb, inpage_search=PageMenuSearch())
 
+    @override
     def page(self, config: Config) -> None:
         for section in permission_section_registry.get_sorted_sections():
             with table_element(

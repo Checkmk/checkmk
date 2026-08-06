@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -13,7 +12,7 @@ from __future__ import annotations
 import urllib.parse
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Self, TypedDict
+from typing import override, Self, TypedDict
 
 from cmk.ccc.user import UserId
 from cmk.gui import pagetypes
@@ -65,6 +64,7 @@ class BookmarkListConfig(pagetypes.OverridableConfig):
 
 class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
     @classmethod
+    @override
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         deserialized = BookmarkListModel.model_validate(page_dict)
         return cls(
@@ -80,6 +80,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
             )
         )
 
+    @override
     def serialize(self) -> dict[str, object]:
         return BookmarkListModel(
             name=self.config.name,
@@ -93,14 +94,17 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
         ).model_dump()
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "bookmark_list"
 
     @classmethod
+    @override
     def type_icon(cls) -> StaticIcon | DynamicIcon:
         return StaticIcon(IconNames.bookmark_list)
 
     @classmethod
+    @override
     def phrase(cls, phrase: pagetypes.PagetypePhrase) -> str:
         return {
             "title": _("Bookmark list"),
@@ -113,6 +117,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod
+    @override
     def parameters(
         cls, mode: pagetypes.PageMode, user_permissions: UserPermissions
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
@@ -285,20 +290,24 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
 
 class Bookmarks(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "bookmarks"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Bookmarks")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "A simple and yet practical snap-in allowing to create "
             "bookmarks to views and other content in the main frame"
         )
 
+    @override
     def show(self, config: Config) -> None:
         for topic, bookmarks in self._get_bookmarks_by_topic(
             UserPermissions.from_config(config, permission_registry)
@@ -395,6 +404,7 @@ class Bookmarks(SidebarSnapin):
                     url = "../" + url
         return url
 
+    @override
     def page_handlers(self) -> dict[str, Callable[[PageContext], None]]:
         return {
             "add_bookmark": self._ajax_add_bookmark,

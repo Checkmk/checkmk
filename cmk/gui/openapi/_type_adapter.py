@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="misc"
 
 from functools import lru_cache
+from typing import override
 
 from pydantic import ConfigDict, TypeAdapter
 
@@ -21,9 +21,11 @@ class _HashableArgs[T]:
         self.type = type_
         self.config = config
 
+    @override
     def __hash__(self) -> int:
         return hash((self.type, str(self.config)))
 
+    @override
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, _HashableArgs)

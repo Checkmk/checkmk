@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Managing the available automation calls"""
@@ -11,6 +10,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
+from typing import override
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
@@ -45,6 +45,7 @@ class AutomationCommand[T](ABC):
 
 
 class AutomationCommandRegistry(cmk.ccc.plugin_registry.Registry[type[AutomationCommand]]):
+    @override
     def plugin_name(self, instance: type[AutomationCommand]) -> str:
         return instance().command_name()
 
@@ -53,9 +54,11 @@ automation_command_registry = AutomationCommandRegistry()
 
 
 class AutomationPing(AutomationCommand[None]):
+    @override
     def command_name(self) -> str:
         return "ping"
 
+    @override
     def get_request(self, config: Config, request: Request) -> None:
         return None
 
@@ -76,6 +79,7 @@ class AutomationPing(AutomationCommand[None]):
 
         return self._parse_omd_status(result.stdout)
 
+    @override
     def execute(self, _unused_request: None) -> dict[str, str | OMDStatus]:
         return {
             "version": cmk_version.__version__,
@@ -86,11 +90,14 @@ class AutomationPing(AutomationCommand[None]):
 
 
 class AutomationGetAgentReceiverPort(AutomationCommand[None]):
+    @override
     def command_name(self) -> str:
         return "get-agent-receiver-port"
 
+    @override
     def get_request(self, config: Config, request: Request) -> None:
         return None
 
+    @override
     def execute(self, _unused_request: None) -> int:
         return get_agent_receiver_port(paths.omd_root)

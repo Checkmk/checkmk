@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
-from typing import Literal
+from typing import Literal, override
 
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.type_defs import DashletConfig
@@ -28,6 +26,7 @@ from .model.widget import BaseWidgetRequest
 
 @api_model
 class ComputeWidgetTitleWidgetRequest(BaseWidgetRequest):
+    @override
     def to_internal(self) -> DashletConfig:
         return self._to_internal_without_layout()
 

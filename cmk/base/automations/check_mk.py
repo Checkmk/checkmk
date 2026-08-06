@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
@@ -31,7 +30,7 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass, fields
 from itertools import chain, islice
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import cmk.base.parent_scan
 import cmk.ccc.cleanup
@@ -2407,6 +2406,7 @@ class AutomationDeleteHosts(ABCDeleteHosts):
         self._execute(args)
         return DeleteHostsResult()
 
+    @override
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
         tree_path = inv_paths.inventory_tree(hostname)
@@ -2430,6 +2430,7 @@ class AutomationDeleteHosts(ABCDeleteHosts):
             str(status_data_tree.legacy),
         ]
 
+    @override
     def _delete_host_files(self, hostname: HostName) -> None:
         """
         The inventory_archive as well as the performance data is kept
@@ -2462,6 +2463,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
         self._execute(args)
         return DeleteHostsKnownRemoteResult()
 
+    @override
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
             f"{precompiled_hostchecks_dir / hostname}",
@@ -2472,6 +2474,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
             f"{var_dir}/persisted/{hostname}",
         ]
 
+    @override
     def _delete_host_files(self, hostname: HostName) -> None:
         """
         The following locations are skipped on local sites for hosts only known
@@ -2575,11 +2578,13 @@ class AutomationRestart:
 
 
 class AutomationReload(AutomationRestart):
+    @override
     def _mode(self, monitoring_core: Literal["nagios", "cmc"]) -> CoreAction:
         if self._check_plugins_have_changed(monitoring_core):
             return CoreAction.RESTART
         return CoreAction.RELOAD
 
+    @override
     def execute(
         self,
         app: CheckmkBaseApp,

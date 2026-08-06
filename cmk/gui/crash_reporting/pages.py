@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
@@ -527,6 +526,7 @@ class ABCReportRenderer(abc.ABC):
 
 
 class ReportRendererRegistry(Registry[type[ABCReportRenderer]]):
+    @override
     def plugin_name(self, instance: type[ABCReportRenderer]) -> str:
         return instance.type()
 
@@ -536,15 +536,18 @@ report_renderer_registry = ReportRendererRegistry()
 
 class ReportRendererGeneric(ABCReportRenderer):
     @classmethod
+    @override
     def type(cls) -> str:
         return "generic"
 
+    @override
     def page_menu_entries_related_monitoring(
         self, crash_info: AggregatedCrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
         # We don't want to produce anything here
         yield from ()
 
+    @override
     def show_details(self, crash_info: AggregatedCrashInfo, row: CrashReportRow) -> None:
         if not crash_info["details"]:
             return
@@ -561,15 +564,18 @@ class ReportRendererGeneric(ABCReportRenderer):
 
 class ReportRendererSection(ABCReportRenderer):
     @classmethod
+    @override
     def type(cls) -> str:
         return "section"
 
+    @override
     def page_menu_entries_related_monitoring(
         self, crash_info: AggregatedCrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
         # We don't want to produce anything here
         yield from ()
 
+    @override
     def show_details(self, crash_info: AggregatedCrashInfo, row: CrashReportRow) -> None:
         self._show_crashed_section_details(crash_info)
         _show_agent_output(row)
@@ -606,9 +612,11 @@ class ReportRendererSection(ABCReportRenderer):
 
 class ReportRendererCheck(ABCReportRenderer):
     @classmethod
+    @override
     def type(cls) -> str:
         return "check"
 
+    @override
     def page_menu_entries_related_monitoring(
         self, crash_info: AggregatedCrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
@@ -650,6 +658,7 @@ class ReportRendererCheck(ABCReportRenderer):
             item=make_simple_link(service_url),
         )
 
+    @override
     def show_details(self, crash_info: AggregatedCrashInfo, row: CrashReportRow) -> None:
         self._show_crashed_check_details(crash_info)
         _show_agent_output(row)
@@ -707,15 +716,18 @@ class ReportRendererCheck(ABCReportRenderer):
 
 class ReportRendererGUI(ABCReportRenderer):
     @classmethod
+    @override
     def type(cls) -> str:
         return "gui"
 
+    @override
     def page_menu_entries_related_monitoring(
         self, crash_info: AggregatedCrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
         """Produces nothing"""
         yield from ()
 
+    @override
     def show_details(self, crash_info: AggregatedCrashInfo, row: CrashReportRow) -> None:
         if not (details := crash_info.get("details")):
             return

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import socket
 from pathlib import Path
 from typing import override
@@ -45,6 +43,7 @@ class _LocalConnectionPool(HTTPConnectionPool):
         self._connection = _LocalConnection(socket_path)
 
     # TODO: Why does `@override` not work here?
+    @override
     def _new_conn(self) -> _LocalConnection:
         return self._connection
 

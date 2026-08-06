@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -21,7 +20,7 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
-from typing import assert_never, Literal
+from typing import assert_never, Literal, override
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
@@ -1444,6 +1443,7 @@ class FilterMigration(abc.ABC):
 class FilterMigrationScale(FilterMigration):
     prefix: Literal["M"]
 
+    @override
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
@@ -1457,6 +1457,7 @@ class FilterMigrationScale(FilterMigration):
 class FilterMigrationTime(FilterMigration):
     prefix: Literal["d"]
 
+    @override
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
@@ -1472,6 +1473,7 @@ class FilterMigrationTime(FilterMigration):
 class FilterMigrationChoice(FilterMigration):
     choices: Sequence[int | float | str]
 
+    @override
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus
         match filter_vars.get(self.name):
@@ -1496,6 +1498,7 @@ class FilterMigrationChoice(FilterMigration):
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBool(FilterMigration):
+    @override
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAvailable
         match filter_vars.get(self.name):
@@ -1515,6 +1518,7 @@ class FilterMigrationBool(FilterMigration):
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBoolIs(FilterMigration):
+    @override
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvBool
         match filter_vars.get(f"is_{self.name}"):

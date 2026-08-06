@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
+from typing import override
 
 from cmk.ccc.site import SiteId
 from cmk.gui import site_config, sites, user_sites
@@ -44,17 +44,21 @@ from ._helpers import write_snapin_exception
 
 class MasterControlSnapin(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "master_control"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Master control")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Buttons for globally switching states such as enabling checks and notifications")
 
+    @override
     def show(self, config: Config) -> None:
         items = self._core_toggles()
         sites.update_site_states_from_dead_sites()
@@ -91,6 +95,7 @@ class MasterControlSnapin(SidebarSnapin):
                     write_snapin_exception(e)
 
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return True
 
@@ -187,9 +192,11 @@ class MasterControlSnapin(SidebarSnapin):
         html.close_table()
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[str]:
         return ["admin"]
 
+    @override
     def page_handlers(self) -> PageHandlers:
         return {
             "switch_master_state": self._ajax_switch_masterstate,

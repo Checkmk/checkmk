@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import re
 from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
@@ -344,6 +342,7 @@ class IPAddressFilter(Filter):
             group=group,
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield TextInput(
             id=self.query_filter.request_vars[0],
@@ -354,12 +353,15 @@ class IPAddressFilter(Filter):
             default_value="yes",
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.query_filter.request_vars[0]: row["host_address"]}
 
+    @override
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.query_filter.request_vars[0])
 
@@ -715,6 +717,7 @@ class _FilterHostgroupProblems(CheckboxRowFilter):
             ),
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield CheckboxGroup(
             choices=dict(self.svc_problems),
@@ -1329,6 +1332,7 @@ class FilterLogContactName(InputTextFilter):
     """Special filter class to correctly filter the column contact_name from the log table. This
     list contains comma-separated contact names (user ids), but it is of type string."""
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if current_value := value.get(self.htmlvars[0]):
             new_value = dict(value.items())
@@ -1363,6 +1367,7 @@ class _FilterLogState(CheckboxRowFilter):
             ),
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield CheckboxGroup(
             choices=dict(self.host_states),
@@ -1395,15 +1400,18 @@ class TagFilter(Filter):
             group=group,
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield TagFilterComponent(
             display_rows=self.query_filter.count,
             variable_prefix=self.query_filter.var_prefix,
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
@@ -1423,6 +1431,7 @@ class _FilterHostAuxTags(Filter):
             is_show_more=True,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -1440,6 +1449,7 @@ class _FilterHostAuxTags(Filter):
             html.checkbox(negate_varname, bool(value.get(negate_varname)), label=_("negate"))
             html.close_nobr()
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
@@ -1461,6 +1471,7 @@ class _FilterHostAuxTags(Filter):
         # Sort the choices by their label
         return dict(sorted(aux_tag_choices.items(), key=lambda x: x[1]))
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
@@ -1482,15 +1493,18 @@ class LabelGroupFilter(Filter):
             link_columns=[],
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield LabelGroupFilterComponent(
             id=self.query_filter.ident,
             object_type=self.query_filter.object_type,
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    @override
     def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
@@ -1597,6 +1611,7 @@ class CustomAttributeFilter(Filter):
     def value_varname(self, ident: str) -> str:
         return "%s_value" % ident
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.name_varname(self.ident),
@@ -1611,6 +1626,7 @@ class CustomAttributeFilter(Filter):
         choices.update(self._custom_attribute_choices())
         return choices
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if not value.get(self.name_varname(self.ident)):
             return ""
@@ -1626,6 +1642,7 @@ class CustomAttributeFilter(Filter):
         val = value[self.value_varname(self.ident)]
         return f"Filter: {self.info}_custom_variables ~~ {livestatus.lqencode(attribute_id.upper())} ^{livestatus.lqencode(val)}\n"
 
+    @override
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.value_varname(self.ident)
         validate_regex(value.get(htmlvar, ""), htmlvar)
@@ -1748,6 +1765,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             group=group,
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield StaticText(
             text=_(
@@ -1756,6 +1774,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             )
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return (
             f"Filter: service_description ~~ Site ({'|'.join(self._connected_sites_to_pids())}) statistics$"
@@ -1763,12 +1782,14 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             else ""
         )
 
+    @override
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
         if self._should_apply(context):
             yield "host_name"
             yield "service_description"
             yield "long_plugin_output"
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         if not self._should_apply(context):
             return rows

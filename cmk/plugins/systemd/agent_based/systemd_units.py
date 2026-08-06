@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import re
 from collections import defaultdict
@@ -12,7 +11,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Any, NamedTuple, Self
+from typing import Any, NamedTuple, override, Self
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -153,6 +152,7 @@ def _parse_sentinel_int(raw: str | None) -> int | None:
 class Memory:
     bytes: int
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Memory):
             raise NotImplementedError("Cannot compare Memory with other types")

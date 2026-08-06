@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import os
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 from uuid import uuid4, uuid5
 
 from cmk.ccc import store
@@ -184,6 +183,7 @@ def get_default_notification_rule() -> EventRule:
 
 
 class SampleConfigGeneratorGroups(SampleConfigGeneratorABCGroups):
+    @override
     def _all_group_spec(self) -> GroupSpec:
         return {
             "alias": "Everything",
@@ -192,13 +192,16 @@ class SampleConfigGeneratorGroups(SampleConfigGeneratorABCGroups):
 
 class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @classmethod
+    @override
     def ident(cls) -> str:
         return "basic_wato_config"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 11
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         save_global_settings(self._initial_global_settings(), skip_cse_edition_check=True)
 
@@ -244,13 +247,16 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
 class ConfigGeneratorLocalSiteConnection(SampleConfigGenerator):
     @classmethod
+    @override
     def ident(cls) -> str:
         return "create_local_site_connection"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 20
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         site_mgmt = site_management_registry["site_management"]
         site_mgmt.save_sites(
@@ -308,13 +314,16 @@ class ConfigGeneratorBuiltinHostLabels(SampleConfigGenerator):
     """
 
     @classmethod
+    @override
     def ident(cls) -> str:
         return "builtin_host_labels"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 25
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         update_builtin_host_labels(
             builtin_host_labels_file, {BuiltinLabelsKey.SITE: str(omd_site())}
@@ -326,13 +335,16 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
     find to execute it only for new created sites."""
 
     @classmethod
+    @override
     def ident(cls) -> str:
         return "acknowledge_initial_werks"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 40
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         werks.acknowledge_all_werks(check_permission=False)
 
@@ -345,13 +357,16 @@ class ConfigGeneratorInitialAdminUser(SampleConfigGenerator):
     """
 
     @classmethod
+    @override
     def ident(cls) -> str:
         return "create_initial_admin_user"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 55
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         pw_hash = Htpasswd(htpasswd_file).get_hash(UserId("cmkadmin"))
         if pw_hash is None:
@@ -392,13 +407,16 @@ class ConfigGeneratorRegistrationUser(SampleConfigGenerator):
     alias = "Check_MK Agent Registration - used for agent registration"
 
     @classmethod
+    @override
     def ident(cls) -> str:
         return "create_registration_automation_user"
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 60
 
+    @override
     def generate(self, tree: FolderTree) -> None:
         create_cmk_automation_user(
             name=self.name,

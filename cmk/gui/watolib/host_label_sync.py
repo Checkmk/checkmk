@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 """Synchronize discovered host labels from remote site to central site"""
@@ -19,7 +18,7 @@ from dataclasses import asdict, dataclass
 from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import cmk.utils.paths
 from cmk.ccc import store
@@ -320,9 +319,11 @@ def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEnt
 class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
     """Called by execute_site_sync to perform the sync with a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "discovered-host-label-sync"
 
+    @override
     def get_request(self, config: Config, request: Request) -> SiteRequest:
         ascii_input = request.get_ascii_input("request")
         if ascii_input is None:
@@ -331,6 +332,7 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
             )
         return SiteRequest.deserialize(ast.literal_eval(ascii_input))
 
+    @override
     def execute(self, api_request: SiteRequest) -> dict[str, Any]:
         if api_request.enforce_host:
             try:

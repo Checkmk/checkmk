@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 
 import abc
 import logging
 from collections import defaultdict
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import IO, Literal
+from typing import IO, Literal, override
 
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import CertificateSigningRequest as x509CertificateSigningRequest
@@ -95,9 +94,11 @@ class BrokerCertificateSync(abc.ABC):
 
 
 class DefaultBrokerCertificateSync(BrokerCertificateSync):
+    @override
     def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
         return broker_certs_created(site_id)
 
+    @override
     def get_site_to_sync(
         self, myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
     ) -> Mapping[str, Sequence[tuple[SiteId, SiteConfiguration]]]:
@@ -107,12 +108,14 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
                 required_certificates["provider"].append((site_id, settings))
         return required_certificates
 
+    @override
     def load_or_create_customer_ca(
         self, customer: str
     ) -> PersistedCertificateWithPrivateKey | None:
         # Only relevant for editions with different customers
         return None
 
+    @override
     def create_broker_certificates(
         self,
         automation_config: RemoteAutomationConfig,
@@ -152,6 +155,7 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
             messaging.multisite_cert_file(paths.omd_root, automation_config.site_id)
         ).write(remote_broker_certs.cert)
 
+    @override
     def update_trusted_cas(self) -> None:
         # Only relevant for editions with different customers
         pass
@@ -258,6 +262,7 @@ def trigger_remote_certs_creation(
 
 
 class BrokerCertificateSyncRegistry(Registry[BrokerCertificateSync]):
+    @override
     def plugin_name(self, instance: BrokerCertificateSync) -> str:
         return "broker_certificate_sync"
 
@@ -332,9 +337,11 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
             )
         )
 
+    @override
     def command_name(self) -> str:
         return "store-broker-certs"
 
+    @override
     def get_request(self, config: Config, request: Request) -> StoreBrokerCertificatesData:
         request_certificates = _request.get_str_input_mandatory("certificates")
         request_site = _request.get_str_input_mandatory("site_id")
@@ -343,6 +350,7 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
             central_site=SiteId(request_site),
         )
 
+    @override
     def execute(self, api_request: StoreBrokerCertificatesData) -> bool:
         trusted_cas_store = MessagingTrustedCAs(messaging.trusted_cas_file(paths.omd_root))
         SiteBrokerCertificate(
@@ -370,12 +378,15 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
 
 
 class AutomationCreateBrokerCertificates(AutomationCommand[None]):
+    @override
     def command_name(self) -> str:
         return "create-broker-certs"
 
+    @override
     def get_request(self, config: Config, request: Request) -> None:
         pass
 
+    @override
     def execute(self, api_request: None) -> BrokerCertsCSR:
         private_key = _create_message_broker_certs().private_key
         return {"csr": _create_csr(private_key).csr.public_bytes(Encoding.PEM)}

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Main-navigation configuration and rendering entry point.
 
 Provides the :class:`MainNavigation` dataclass that bundles the values
@@ -26,6 +24,7 @@ then dispatches via the registered callable.
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
@@ -127,6 +126,7 @@ class MainNavigationRendererRegistry(Registry[MainNavigationRenderer]):
     :mod:`cmk.gui.main_modules` populates it once at startup.
     """
 
+    @override
     def plugin_name(self, instance: MainNavigationRenderer) -> str:
         return _RENDERER_KEY
 

@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
+
+from typing import override
 
 import cmk.utils.paths
 from cmk.gui import ifaceoper
@@ -46,14 +47,17 @@ def register(
 
 class RulespecGroupInventory(RulespecGroup):
     @property
+    @override
     def name(self) -> str:
         return "inventory"
 
     @property
+    @override
     def title(self) -> str:
         return _("HW/SW inventory")
 
     @property
+    @override
     def help(self) -> str:
         return _("Configuration of the Checkmk hardware- and software inventory system")
 

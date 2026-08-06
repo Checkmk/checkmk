@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterable, Mapping
 from typing import Annotated, Literal, override, Self
 
@@ -101,6 +99,7 @@ class EmbeddedViewContent(BaseWidgetContent):
             single_infos=self.restricted_to_single,
         )
 
+    @override
     def iter_validation_errors(
         self,
         location: tuple[str | int, ...],

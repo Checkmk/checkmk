@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.dashboard import get_permitted_dashboards
@@ -19,17 +19,21 @@ from ._helpers import footnotelinks, make_main_menu, show_main_menu, VisualItem,
 
 class Dashboards(SidebarSnapin):
     @staticmethod
+    @override
     def type_name() -> str:
         return "dashboards"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Dashboards")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Links to all dashboards")
 
+    @override
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="dashboards",

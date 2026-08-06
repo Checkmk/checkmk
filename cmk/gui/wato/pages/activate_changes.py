@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -144,10 +143,12 @@ def _extract_snapshot(snapshot_file: str) -> None:
 
 class ModeRevertChanges(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "revert_changes"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["discard"]
 
@@ -156,9 +157,11 @@ class ModeRevertChanges(WatoMode):
         self._changes = activate_changes.ActivateChanges()
         self._changes.load(list(activation_sites(active_config.sites)))
 
+    @override
     def title(self) -> str:
         return _("Revert changes")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -206,6 +209,7 @@ class ModeRevertChanges(WatoMode):
             and bool(file_to_restore)
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if request.var("_action") != "discard":
             return None
@@ -278,6 +282,7 @@ class ModeRevertChanges(WatoMode):
         flash(_("Reverting pending changes. Reload this page to see the current status."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", ModeActivateChanges.name())]))
 
+    @override
     def page(self, config: Config) -> None:
         if not self._changes.has_changes():
             html.open_div(class_="wato")
@@ -386,10 +391,12 @@ class ModeActivateChanges(WatoMode):
     VAR_SPECIAL_AGENT_NAME = "special_agent_name"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "changelog"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
@@ -403,9 +410,11 @@ class ModeActivateChanges(WatoMode):
         )
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 
+    @override
     def title(self) -> str:
         return _("Activate pending changes")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         self._select_sites_with_pending_changes(config.sites)
         return PageMenu(
@@ -572,6 +581,7 @@ class ModeActivateChanges(WatoMode):
             and self._license_allows_activation()
         )
 
+    @override
     def page(self, config: Config) -> None:
         self._quick_setup_activation_msg()
         self._activation_msg()
@@ -1120,9 +1130,11 @@ class PageAjaxActivationState(AjaxPage):
 
 
 class AutomationActivateChanges(AutomationCommand[DomainRequests]):
+    @override
     def command_name(self) -> str:
         return "activate-changes"
 
+    @override
     def get_request(self, config: Config, request: Request) -> DomainRequests:
         verify_remote_site_config(
             config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
@@ -1133,6 +1145,7 @@ class AutomationActivateChanges(AutomationCommand[DomainRequests]):
         except SyntaxError:
             raise MKAutomationException(_("Invalid request: %(domains)r") % {"domains": domains})
 
+    @override
     def execute(self, api_request: DomainRequests) -> ConfigWarnings:
         timeout_manager.enable_timeout(500)
         try:

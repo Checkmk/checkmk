@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Sequence
+from typing import override
 
 from cmk.gui.display_options import display_options
 from cmk.gui.graphing import metrics_from_api, perfometers_from_api
@@ -27,16 +26,20 @@ from .base import Perfometer
 
 class PainterPerfometer(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "perfometer"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service Perf-O-Meter")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Perf-O-Meter")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return [
             "service_staleness",
@@ -48,9 +51,11 @@ class PainterPerfometer(Painter):
         ]
 
     @property
+    @override
     def printable(self) -> bool | str:
         return "perfometer"
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         """Used for CSV/JSON/Python exports."""
         try:
@@ -62,6 +67,7 @@ class PainterPerfometer(Painter):
             return ""
         return title or ""
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         classes = ["perfometer"]
         if is_stale(row, self.config.staleness_threshold):

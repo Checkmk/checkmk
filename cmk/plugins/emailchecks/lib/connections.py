@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="possibly-undefined"
@@ -26,7 +25,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from email.message import Message as POPIMAPMessage
-from typing import assert_never, final, Literal, Self, TypedDict, TypeGuard
+from typing import assert_never, final, Literal, override, Self, TypedDict, TypeGuard
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -150,9 +149,11 @@ class EWS(_Connection):
         self._account = _make_account(primary_smtp_address, server, auth, no_cert_check, timeout)
         self._selected_folder = self._account.inbox
 
+    @override
     def _connect(self) -> None:
         pass
 
+    @override
     def _disconnect(self) -> None:
         self._account.protocol.close()
 
@@ -332,10 +333,12 @@ class GraphApi(_Connection):
             initial_refresh_token=self.auth.initial_refresh_token,
         )
 
+    @override
     def _connect(self) -> None:
         with self._build_api_client() as _client:
             pass
 
+    @override
     def _disconnect(self) -> None:
         pass
 
@@ -501,9 +504,11 @@ class SMTP(_Connection):
     tls: bool
     auth: BasicAuth | None
 
+    @override
     def _connect(self) -> None:
         pass
 
+    @override
     def _disconnect(self) -> None:
         pass
 
@@ -568,10 +573,12 @@ class POP3(_Connection):
         )
         self._auth = auth
 
+    @override
     def _connect(self) -> None:
         verified_result(self._pop3.user(self._auth.username))
         verified_result(self._pop3.pass_(self._auth.password))
 
+    @override
     def _disconnect(self) -> None:
         verified_result(self._pop3.quit())
 
@@ -605,10 +612,12 @@ class IMAP(_Connection):
         )
         self._auth = auth
 
+    @override
     def _connect(self) -> None:
         verified_result(self._imap.login(self._auth.username, self._auth.password))
         verified_result(self._imap.select("INBOX", readonly=False))
 
+    @override
     def _disconnect(self) -> None:
         with suppress(imaplib.IMAP4_SSL.error, imaplib.IMAP4.error):
             verified_result(self._imap.close())

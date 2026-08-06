@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 
 import logging
@@ -12,7 +11,7 @@ import signal
 from collections.abc import Callable, Mapping, Sequence
 from multiprocessing.synchronize import Event
 from pathlib import Path
-from typing import Self
+from typing import override, Self
 
 from pydantic import BaseModel
 
@@ -84,6 +83,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         self.crash_report_callback = crash_report_callback
         self.task_name = "publishing on queue 'payload'"
 
+    @override
     def run(self) -> None:
         self.logger.info("Starting: %(task_name)s", {"task_name": self.task_name})
         signal.signal(

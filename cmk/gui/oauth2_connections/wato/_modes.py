@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import uuid
 from collections.abc import Collection, Mapping
 from dataclasses import asdict
@@ -412,51 +410,65 @@ def get_authority_mapping() -> Mapping[str, str]:
 
 
 class OAuth2ModeType(SimpleModeType[OAuth2Connection]):
+    @override
     def type_name(self) -> str:
         return "oauth2_connection"
 
+    @override
     def name_singular(self) -> str:
         return _("OAuth2 connection")
 
+    @override
     def is_site_specific(self) -> bool:
         return False
 
+    @override
     def can_be_disabled(self) -> bool:
         return False
 
+    @override
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return [ConfigDomainCore()]
 
 
 class MicrosoftEntraIdModeType(SimpleModeType[OAuth2Connection]):
+    @override
     def type_name(self) -> str:
         return "microsoft_entra_id_connection"
 
+    @override
     def name_singular(self) -> str:
         return _("Microsoft Entra ID connection")
 
+    @override
     def is_site_specific(self) -> bool:
         return False
 
+    @override
     def can_be_disabled(self) -> bool:
         return False
 
+    @override
     def edit_mode_name(self) -> str:
         return "edit_microsoft_entra_id_connection"
 
+    @override
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return [ConfigDomainCore()]
 
 
 class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "oauth2_connections"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["general.oauth2_connections", "passwords"]
 
+    @override
     def _table_title(self) -> str:
         return self.title()
 
@@ -473,9 +485,11 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             store=OAuth2ConnectionsConfigFile(),
         )
 
+    @override
     def title(self) -> str:
         return _("OAuth2 connections")
 
+    @override
     def page(self, config: Config) -> None:
         self._show_table(
             self._filter_for_connector_type(
@@ -484,6 +498,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             table_row_limit=config.table_row_limit,
         )
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -531,12 +546,14 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             if entry["connector_type"] == self._connector_type()
         }
 
+    @override
     def _show_entry_cells(self, table: Table, ident: str, entry: OAuth2Connection) -> None:
         table.cell(_("Title"), entry["title"])
         if self._connector_type() is None:
             table.cell(_("Connector type"), entry["connector_type"])
         table.cell(_("ID"), ident)
 
+    @override
     def _delete_confirm_message(self) -> str:
         return " ".join(
             [

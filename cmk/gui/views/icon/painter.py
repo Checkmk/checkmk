@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import override
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -43,26 +42,33 @@ from .entries import (
 
 class PainterServiceIcons(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "service_icons"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Service icons")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Icons")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return iconpainter_columns("service", toplevel=None)
 
     @property
+    @override
     def printable(self) -> bool:
         return False
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_icons(
             "service",
@@ -72,6 +78,7 @@ class PainterServiceIcons(Painter):
             ),
         )
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[DynamicIcon]:
         return [
             _handle_icon(i.icon_name)
@@ -81,32 +88,40 @@ class PainterServiceIcons(Painter):
             if isinstance(i, IconEntry)
         ]
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 
 
 class PainterHostIcons(Painter):
     @property
+    @override
     def ident(self) -> str:
         return "host_icons"
 
+    @override
     def title(self, cell: Cell) -> str:
         return _("Host icons")
 
+    @override
     def short_title(self, cell: Cell) -> str:
         return _("Icons")
 
     @property
+    @override
     def columns(self) -> Sequence[ColumnName]:
         return iconpainter_columns("host", toplevel=None)
 
     @property
+    @override
     def printable(self) -> bool:
         return False
 
+    @override
     def group_by(self, row: Row, cell: Cell) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
+    @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_icons(
             "host",
@@ -116,6 +131,7 @@ class PainterHostIcons(Painter):
             ),
         )
 
+    @override
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[DynamicIcon]:
         return [
             _handle_icon(i.icon_name)
@@ -125,6 +141,7 @@ class PainterHostIcons(Painter):
             if isinstance(i, IconEntry)
         ]
 
+    @override
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError
 

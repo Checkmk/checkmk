@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -12,7 +11,7 @@ import glob
 import hashlib
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
@@ -201,6 +200,7 @@ class TopologyQueryIdentifier:
     def identifier(self) -> tuple[str, ...]:
         return self._identifier
 
+    @override
     def __hash__(self) -> int:
         hash_object = hashlib.sha256("#".join(self._identifier).encode("utf-8"))
         return int(hash_object.hexdigest(), 16)
@@ -292,10 +292,12 @@ class TopologyLink:
     target: str
     config: dict[str, Any] = field(default_factory=dict)
 
+    @override
     def __hash__(self) -> int:
         tokens = tuple(sorted([self.source, self.target]))
         return ("%s_%s" % tokens).__hash__()
 
+    @override
     def __eq__(self, other: object) -> bool:
         return hash(self) == hash(other)
 

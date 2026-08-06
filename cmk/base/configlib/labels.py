@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import dataclasses
 from collections.abc import Callable, Mapping, Sequence
+from typing import override
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.labels import ABCLabelConfig, Labels
@@ -23,6 +22,7 @@ class LabelConfig(ABCLabelConfig):
     host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
 
+    @override
     def host_labels(self, host_name: HostName, /) -> Labels:
         """Returns the configured labels for a host"""
         return self.matcher.get_host_values_merged(
@@ -32,6 +32,7 @@ class LabelConfig(ABCLabelConfig):
             lambda _: {},
         )
 
+    @override
     def service_labels(
         self,
         host_name: HostName,

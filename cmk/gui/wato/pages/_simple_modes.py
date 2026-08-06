@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """These modes implement a complete set of modes for managing a set of standard objects
@@ -20,7 +19,7 @@ import abc
 import copy
 import json
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import omd_site, SiteId
@@ -242,6 +241,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             "_action", _("The action '%(action)s' is not implemented") % {"action": action}
         )
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -276,6 +276,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     def _new_button_label(self) -> str:
         return _("Add %(name)s") % {"name": self._mode_type.name_singular()}
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.transaction_valid():
             return None
@@ -330,6 +331,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     def _delete_confirm_message(self) -> str:
         return ""
 
+    @override
     def page(self, config: Config) -> None:
         self._show_table(
             self._store.filter_editable_entries(self._store.load_for_reading(), user),
@@ -440,6 +442,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     def entry(self) -> T:
         return self._entry
 
+    @override
     def _from_vars(self, ident_var: str = "ident") -> None:
         ident = request.get_ascii_input(ident_var)
         if ident is not None:
@@ -483,6 +486,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         # This is only relevant when rendering with form specs
         return cast(T, {})
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add %(name)s") % {"name": self._mode_type.name_singular()}
@@ -491,6 +495,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             "title": self._entry["title"],
         }
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Actions"), breadcrumb, form_name="edit", button_name="_save"
@@ -806,6 +811,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         # No typing support from form specs here, so we need to cast
         self._entry = cast(T, config)
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -876,6 +882,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     ) -> None:
         self._store.save(entries, pprint_value=pprint_value)
 
+    @override
     def page(self, config: Config, form_name: str = "edit") -> None:
         with html.form_context(form_name, method="POST"):
             self._page_form_quick_setup_warning()

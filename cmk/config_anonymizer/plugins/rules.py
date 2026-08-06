@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import logging
 import re
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from typing import override
 
 from cmk.base.config import AutochecksConfigurer, LoadingResult
 from cmk.base.configlib.servicename import (
@@ -443,6 +442,7 @@ def _prepare_anonymized_service_descriptions(
 
 
 class RulesStep(AnonymizeStep):
+    @override
     def run(
         self,
         anon_interface: AnonInterface,

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -14,7 +13,7 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
-from typing import cast, Literal, NamedTuple, overload, TypedDict
+from typing import cast, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -159,10 +158,12 @@ def has_customer(
 
 class ModeUsers(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "users"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
@@ -172,14 +173,17 @@ class ModeUsers(WatoMode):
         self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
         self._can_create_and_delete_users = edition != Edition.CLOUD
 
+    @override
     def title(self) -> str:
         return _("Users")
 
+    @override
     def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
         # Since we are in the users mode, we don't need to add the
         # "Users" topic to the breadcrumb. Else we get "Users > Users"
         return ()
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         topics = (
             [
@@ -325,6 +329,7 @@ class ModeUsers(WatoMode):
                 item=make_simple_link(folder_preserving_link(request, [("mode", "saml_config")])),
             )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -485,6 +490,7 @@ class ModeUsers(WatoMode):
                 msg_type="warning",
             )
 
+    @override
     def page(self, config: Config) -> None:
         if not self._job_snapshot.exists:
             # Skip if snapshot doesnt exists
@@ -845,14 +851,17 @@ def _get_user_role_links(
 # TODO: Refactor action / page to use less hand crafted logic (valuespecs instead?)
 class ModeEditUser(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_user"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeUsers
 
@@ -865,9 +874,11 @@ class ModeEditUser(WatoMode):
     def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
+    @override
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
+    @override
     def _breadcrumb_url(self) -> str:
         assert self._user_id is not None
         return self.mode_url(edit=self._user_id)
@@ -886,6 +897,7 @@ class ModeEditUser(WatoMode):
 
         self._can_edit_users = edition != Edition.CLOUD
 
+    @override
     def _from_vars(self) -> None:
         # TODO: Should we turn the both fields below into UserId | None?
         try:
@@ -925,11 +937,13 @@ class ModeEditUser(WatoMode):
             self._user.get("connector"), get_user_attributes(active_config.wato_user_attrs)
         )
 
+    @override
     def title(self) -> str:
         if self._is_new_user:
             return _("Add user")
         return _("Edit user %(user_id)s") % {"user_id": self._user_id}
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("User"), breadcrumb, form_name="user", button_name="_save"
@@ -996,6 +1010,7 @@ class ModeEditUser(WatoMode):
                 ),
             )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -1229,6 +1244,7 @@ class ModeEditUser(WatoMode):
                 role for role in self._roles if html.get_checkbox("role_" + role)
             ]
 
+    @override
     def page(self, config: Config) -> None:
         # Let exceptions from loading notification scripts happen now
         load_notification_scripts()

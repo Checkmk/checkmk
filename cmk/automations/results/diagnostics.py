@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Host connectivity and diagnostics results.
 
 Groups all "probe/diagnose a host" automations.
@@ -18,7 +16,7 @@ from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import Literal, Self
+from typing import Literal, override, Self
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -55,10 +53,12 @@ class ScanParentsResult(ABCAutomationResult):
     results: Sequence[GatewayResult]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("scan-parents")
 
     @classmethod
+    @override
     def deserialize(cls, serialized_result: SerializedResult) -> ScanParentsResult:
         (serialized_results,) = literal_eval(serialized_result)
         results = [
@@ -202,9 +202,11 @@ class DiagSpecialAgentResult(ABCAutomationResult):
     results: Sequence[SpecialAgentResult]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("diag-special-agent")
 
+    @override
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return SerializedResult(
             json.dumps(
@@ -215,6 +217,7 @@ class DiagSpecialAgentResult(ABCAutomationResult):
         )
 
     @classmethod
+    @override
     def deserialize(cls, serialized_result: SerializedResult) -> DiagSpecialAgentResult:
         if not serialized_result:
             return cls(results=[])
@@ -265,6 +268,7 @@ class DiagCmkAgentResult(ABCAutomationResult):
     response: str
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("diag-cmk-agent")
 
@@ -339,6 +343,7 @@ class DiagSnmpResult(ABCAutomationResult):
     response: str
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("diag-snmp")
 
@@ -352,6 +357,7 @@ class DiagHostResult(ABCAutomationResult):
     response: str
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("diag-host")
 
@@ -365,6 +371,7 @@ class PingHostResult(ABCAutomationResult):
     response: str
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("ping-host")
 
@@ -407,6 +414,7 @@ class CreateDiagnosticsDumpResult(ABCAutomationResult):
     tarfile_created: bool
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("create-diagnostics-dump")
 
@@ -421,6 +429,7 @@ class CreateDiagnosticsDumpV2Result(ABCAutomationResult):
     tarfile_created: bool
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("create-diagnostics-dump-v2")
 

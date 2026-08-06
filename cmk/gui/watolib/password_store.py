@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import subprocess
@@ -31,6 +30,7 @@ class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
             spec_class=PasswordConfig,
         )
 
+    @override
     def filter_usable_entries(
         self, entries: dict[str, PasswordConfig], acting_user: LoggedInUser
     ) -> dict[str, PasswordConfig]:
@@ -46,6 +46,7 @@ class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
         )
         return passwords
 
+    @override
     def filter_editable_entries(
         self, entries: dict[str, PasswordConfig], acting_user: LoggedInUser
     ) -> dict[str, PasswordConfig]:

@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Dynamic host tag painters and sorters based on the site configuration"""
 
 from collections.abc import Sequence
+from typing import override
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -23,11 +22,13 @@ class HashableTagGroups:
     def __init__(self, tag_groups: Sequence[TagGroup]) -> None:
         self.tag_groups = tag_groups
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, HashableTagGroups):
             return False
         return hash(self) == hash(other)
 
+    @override
     def __hash__(self) -> int:
         return hash(tuple(self.tag_groups))
 

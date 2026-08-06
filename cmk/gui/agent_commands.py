@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, overload
+from typing import Any, overload, override
 from urllib.parse import urlparse
 
 from cmk.ccc.hostaddress import HostName
@@ -196,6 +195,7 @@ class AgentCommands:
 
 
 class AgentCommandsRegistry(Registry[AgentCommands]):
+    @override
     def plugin_name(self, instance: AgentCommands) -> str:
         return "agent_commands"
 

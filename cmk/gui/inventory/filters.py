@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
+from typing import override
 
 from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
@@ -80,6 +80,7 @@ class FilterInvBool(FilterOption):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
@@ -127,6 +128,7 @@ class _FilterNumberRange(Filter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -182,6 +184,7 @@ class _FilterNumberRange(Filter):
 
         html.close_table()
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         unit_choices = {n: c.unit for n, c in self._unit_choices.items()}
 
@@ -234,6 +237,7 @@ class _FilterNumberRange(Filter):
             ),
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         from_var, until_var = self._get_bounds(context.get(self.ident, {}))
         return (
@@ -242,6 +246,7 @@ class _FilterNumberRange(Filter):
             else [row for row in rows if self._filter_row(row, self.ident, (from_var, until_var))]
         )
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return any(b is not None for b in self._get_bounds(value))
 
@@ -319,6 +324,7 @@ class FilterInvText(InputTextFilter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
@@ -400,6 +406,7 @@ class FilterInvTextWithSortKey(Filter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -412,6 +419,7 @@ class FilterInvTextWithSortKey(Filter):
             self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield HorizontalGroup(
             components=[
@@ -420,9 +428,11 @@ class FilterInvTextWithSortKey(Filter):
             ]
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
@@ -451,6 +461,7 @@ class FilterInvChoice(FilterOption):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
@@ -588,6 +599,7 @@ class FilterInvtableTextWithSortKey(Filter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -597,6 +609,7 @@ class FilterInvtableTextWithSortKey(Filter):
         html.write_text_permissive(_("To:"))
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield HorizontalGroup(
             components=[
@@ -605,6 +618,7 @@ class FilterInvtableTextWithSortKey(Filter):
             ]
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
@@ -625,6 +639,7 @@ class FilterInvtableDualChoice(Filter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         if not self._choices:
             html.write_text_permissive(_("There are no elements for selection."))
@@ -691,15 +706,18 @@ class FilterInvtableDualChoice(Filter):
             add_var=True,
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         if self._choices:
             yield DualList(id=self._html_var, choices=dict(self._choices))
         else:
             yield StaticText(text=_("There are no elements for selection."))
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         if selection := [
             v
@@ -747,6 +765,7 @@ class FilterInvtableVersion(Filter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -756,6 +775,7 @@ class FilterInvtableVersion(Filter):
         html.write_text_permissive(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield HorizontalGroup(
             components=[
@@ -770,6 +790,7 @@ class FilterInvtableVersion(Filter):
             ]
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
@@ -854,9 +875,11 @@ class FilterInvtableInterfaceType(DualListFilter):
             group=FilterGroup.INVENTORY,
         )
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.query_filter.ident, {})
         selection = self.query_filter.selection(value)
@@ -881,6 +904,7 @@ class FilterHasInv(FilterOption):
             group=FilterGroup.HOST_HAS,
         )
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
@@ -905,9 +929,11 @@ class FilterInvHasSoftwarePackage(Filter):
             group=FilterGroup.HOST_HAS,
         )
 
+    @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self._varprefix + "name"))
 
+    @override
     def display(self, value: FilterHTTPVariables) -> None:
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
@@ -947,6 +973,7 @@ class FilterInvHasSoftwarePackage(Filter):
             label=_("Negate: find hosts <b>not</b> having this package"),
         )
 
+    @override
     def components(self) -> Iterable[FilterComponent]:
         yield TextInput(id=self._varprefix + "name")
         yield RadioButton(
@@ -975,6 +1002,7 @@ class FilterInvHasSoftwarePackage(Filter):
             default_value=False,
         )
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         name: str | re.Pattern = value.get(self._varprefix + "name", "")

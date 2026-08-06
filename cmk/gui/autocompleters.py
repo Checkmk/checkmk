@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Autocompleter infrastructure: registry, AJAX handler, and page registration."""
@@ -22,6 +21,7 @@ AutocompleterFunc = Callable[[Config, str, dict[str, object]], Choices]
 
 
 class AutocompleterRegistry(Registry[AutocompleterFunc]):
+    @override
     def plugin_name(self, instance: AutocompleterFunc) -> str:
         return instance._ident  # type: ignore[attr-defined, no-any-return]
 

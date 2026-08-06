@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import re
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.permissions import permission_registry
@@ -17,6 +16,7 @@ from .group import command_group_registry
 
 
 class CommandRegistry(Registry[Command]):
+    @override
     def plugin_name(self, instance: Command) -> str:
         return instance.ident
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Mange custom attributes of users and hosts"""
@@ -12,6 +11,7 @@ import abc
 import re
 from collections.abc import Collection, Iterable, Sequence
 from datetime import datetime
+from typing import override
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -90,6 +90,7 @@ def custom_attr_types() -> Choices:
 
 # TODO: Refactor to be valuespec based
 class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
+    @override
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
@@ -153,9 +154,11 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
         html.checkbox("show_in_table", self._attr["show_in_table"] or False, label=label)
 
     @abc.abstractmethod
+    @override
     def title(self) -> str:
         raise NotImplementedError
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Attribute"), breadcrumb, form_name="attr", button_name="_save"
@@ -167,6 +170,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
     def _add_extra_form_sections(self) -> None:
         pass
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return None
@@ -262,6 +266,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
         return redirect(mode_url(self._type + "_attrs"))
 
+    @override
     def page(self, config: Config) -> None:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         with html.form_context("attr"):
@@ -317,26 +322,32 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
 class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_user_attr"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCustomUserAttrs
 
     @property
+    @override
     def _type(self) -> str:
         return "user"
 
     @property
+    @override
     def _attrs(self) -> list[CustomUserAttrSpec]:
         return self._all_attrs["user"]
 
     @property
+    @override
     def _topics(self) -> Choices:
         return [
             ("ident", _("Identity")),
@@ -346,6 +357,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
         ]
 
     @property
+    @override
     def _default_value(self) -> CustomUserAttrSpec:
         return CustomUserAttrSpec(
             {
@@ -361,15 +373,18 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
         )
 
     @property
+    @override
     def _macro_help(self) -> str:
         return _(
             "The attribute can be added to the contact definition in order to use it for notifications."
         )
 
     @property
+    @override
     def _macro_label(self) -> str:
         return _("Make this variable available in notifications")
 
+    @override
     def _update_config(
         self,
         tree: FolderTree,
@@ -379,6 +394,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
     ) -> None:
         update_user_custom_attrs(get_user_attributes(custom_attributes), datetime.now())
 
+    @override
     def _show_in_table_option(self) -> None:
         self._render_table_option(
             _("Show in user table"),
@@ -390,9 +406,11 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
             ),
         )
 
+    @override
     def _add_extra_attrs_from_html_vars(self) -> None:
         self._attr["user_editable"] = html.get_checkbox("user_editable")
 
+    @override
     def _add_extra_form_sections(self) -> None:
         forms.section(_("Editable by users"))
         html.help(_("It is possible to let users edit their custom attributes."))
@@ -402,6 +420,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
             label=_("Users can change this attribute in their personal settings"),
         )
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add user attribute")
@@ -410,30 +429,37 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
 
 class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_host_attr"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCustomHostAttrs
 
     @property
+    @override
     def _type(self) -> str:
         return "host"
 
     @property
+    @override
     def _attrs(self) -> list[CustomHostAttrSpec]:
         return self._all_attrs["host"]
 
     @property
+    @override
     def _topics(self) -> Choices:
         return host_attribute_topic_registry.get_choices()
 
     @property
+    @override
     def _default_value(self) -> CustomHostAttrSpec:
         return CustomHostAttrSpec(
             {
@@ -448,6 +474,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
         )
 
     @property
+    @override
     def _macro_help(self) -> str:
         return _(
             "The attribute can be added to the host definition in order to use it as custom host attribute "
@@ -457,11 +484,13 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
         )
 
     @property
+    @override
     def _macro_label(self) -> str:
         return _(
             "Make this custom attribute available to check commands, notifications and the status GUI"
         )
 
+    @override
     def _update_config(
         self,
         tree: FolderTree,
@@ -471,6 +500,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
     ) -> None:
         update_host_custom_attrs(tree, custom_attributes, pprint_value=pprint_value)
 
+    @override
     def _show_in_table_option(self) -> None:
         self._render_table_option(
             _("Show in host tables"),
@@ -482,6 +512,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
             ),
         )
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add host attribute")
@@ -506,6 +537,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
     def _attrs(self) -> list[T_CustomAttrSpec]: ...
 
     @abc.abstractmethod
+    @override
     def title(self) -> str:
         raise NotImplementedError
 
@@ -515,6 +547,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
     ) -> None:
         raise NotImplementedError
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -560,6 +593,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         raise NotImplementedError
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             request.del_var("_transid")
@@ -602,6 +636,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
         )
         return redirect(self.mode_url())
 
+    @override
     def page(self, config: Config) -> None:
         if not self._attrs:
             html.div(_("No custom attributes are defined yet."), class_="info")
@@ -634,21 +669,26 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
 
 class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "user_attrs"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @property
+    @override
     def _type(self) -> str:
         return "user"
 
     @property
+    @override
     def _attrs(self) -> list[CustomUserAttrSpec]:
         return self._all_attrs["user"]
 
+    @override
     def _update_config(
         self,
         tree: FolderTree,
@@ -658,9 +698,11 @@ class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
     ) -> None:
         update_user_custom_attrs(get_user_attributes(custom_attributes), datetime.now())
 
+    @override
     def title(self) -> str:
         return _("Custom user attributes")
 
+    @override
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Users"),
@@ -677,21 +719,26 @@ class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
 
 class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     @classmethod
+    @override
     def name(cls) -> str:
         return "host_attrs"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @property
+    @override
     def _type(self) -> str:
         return "host"
 
     @property
+    @override
     def _attrs(self) -> list[CustomHostAttrSpec]:
         return self._all_attrs["host"]
 
+    @override
     def _update_config(
         self,
         tree: FolderTree,
@@ -701,12 +748,14 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     ) -> None:
         update_host_custom_attrs(tree, custom_attributes, pprint_value=pprint_value)
 
+    @override
     def title(self) -> str:
         return _("Custom host attributes")
 
     def get_attributes(self) -> list[CustomHostAttrSpec]:
         return self._attrs
 
+    @override
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Hosts"),

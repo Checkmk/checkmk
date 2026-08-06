@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 """Mode for searching hosts"""
 
 from collections.abc import Collection
+from typing import override
 
 from cmk.ccc.version import Edition
 from cmk.gui import forms
@@ -36,14 +36,17 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeSearch(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "search"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
@@ -53,6 +56,7 @@ class ModeSearch(WatoMode):
             folder_tree(), request.var("folder"), request.get_ascii_input("host")
         )
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Search"),
@@ -64,9 +68,11 @@ class ModeSearch(WatoMode):
             save_is_enabled=True,
         )
 
+    @override
     def title(self) -> str:
         return _("Search for hosts below %(folder_title)s") % {"folder_title": self._folder.title()}
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -107,6 +113,7 @@ class ModeSearch(WatoMode):
 
         return list(search_vars.items())
 
+    @override
     def page(self, config: Config) -> None:
         html.help(
             _(

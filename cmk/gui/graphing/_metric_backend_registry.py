@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import override, Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.resulttype import Result
@@ -60,6 +58,7 @@ class MetricBackend:
 
 
 class MetricBackendRegistry(Registry[MetricBackend]):
+    @override
     def plugin_name(self, instance: MetricBackend) -> str:
         return METRIC_BACKEND_KEY
 

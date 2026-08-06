@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 """Execute cmk automation commands via subprocess"""
 
 import logging
 import os
 import subprocess
 from collections.abc import Sequence
+from typing import override
 
 from cmk import trace
 from cmk.automations.backends._base import (
@@ -25,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class SubprocessExecutor(AutomationExecutor):
+    @override
     def execute(
         self,
         command: AutomationID,
@@ -64,6 +64,7 @@ class SubprocessExecutor(AutomationExecutor):
             error=completed_process.stderr,
         )
 
+    @override
     def command_description(
         self,
         command: AutomationID,

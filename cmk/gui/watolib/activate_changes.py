@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
@@ -44,7 +43,7 @@ from html import unescape
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, assert_never, Final, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Final, Literal, NamedTuple, override, TypedDict
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
@@ -3024,6 +3023,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     housekeeping_max_count = 20
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Activate changes scheduler")
 
@@ -3633,15 +3633,18 @@ class AutomationGetConfigSyncState(AutomationCommand[list[ReplicationPath]]):
     and ensures that nothing is changed between the two config sync steps.
     """
 
+    @override
     def command_name(self) -> str:
         return "get-config-sync-state"
 
+    @override
     def get_request(self, config: Config, request: Request) -> list[ReplicationPath]:
         return [
             ReplicationPath.deserialize(e)
             for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
         ]
 
+    @override
     def execute(self, api_request: list[ReplicationPath]) -> GetConfigSyncStateResponse:
         with store.lock_checkmk_configuration(configuration_lockfile):
             file_infos = _get_config_sync_file_infos(api_request, base_dir=cmk.utils.paths.omd_root)
@@ -3811,9 +3814,11 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
     been made between the two sync steps (get-config-sync-state and this autmoation).
     """
 
+    @override
     def command_name(self) -> str:
         return "receive-config-sync"
 
+    @override
     def get_request(self, config: Config, request: Request) -> ReceiveConfigSyncRequest:
         site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
         verify_remote_site_config(config.sites, site_id)
@@ -3828,6 +3833,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             get_user_attributes(config.wato_user_attrs),
         )
 
+    @override
     def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
         with ExitStack() as stack:
             # Enter the lock via the stack, so that the timing of the (potentially long
@@ -4280,6 +4286,7 @@ class ActivationFeatures:
 
 
 class ActivationFeaturesRegistry(Registry[ActivationFeatures]):
+    @override
     def plugin_name(self, instance: ActivationFeatures) -> str:
         return str(instance.edition)
 

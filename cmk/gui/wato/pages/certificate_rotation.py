@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 from dateutil.relativedelta import relativedelta
 
@@ -49,9 +48,11 @@ class CertificateRotationParameters:
 
 
 class AutomationStageSiteCACertificateRotation(AutomationCommand[CertificateRotationParameters]):
+    @override
     def command_name(self) -> str:
         return "stage-site-ca-certificate-rotation"
 
+    @override
     def execute(self, api_request: CertificateRotationParameters) -> str:
         site_ca = _stage_site_ca_certificate_rotation(
             site_id=api_request.site_id,
@@ -60,6 +61,7 @@ class AutomationStageSiteCACertificateRotation(AutomationCommand[CertificateRota
         )
         return site_ca.root_ca.certificate.dump_pem().bytes.decode("utf-8")
 
+    @override
     def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
         return CertificateRotationParameters.from_request(config, request)
 
@@ -74,9 +76,11 @@ def _stage_site_ca_certificate_rotation(site_id: str, expiry: int, key_size: int
 
 
 class AutomationFinalizeSiteCACertificateRotation(AutomationCommand[CertificateRotationParameters]):
+    @override
     def command_name(self) -> str:
         return "finalize-site-ca-certificate-rotation"
 
+    @override
     def execute(self, api_request: CertificateRotationParameters) -> str:
         return self._finalize_site_ca_certificate_rotation(
             site_id=SiteId(api_request.site_id),
@@ -85,6 +89,7 @@ class AutomationFinalizeSiteCACertificateRotation(AutomationCommand[CertificateR
             key_size=api_request.key_size,
         )
 
+    @override
     def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
         return CertificateRotationParameters.from_request(config, request)
 
@@ -133,9 +138,11 @@ class AutomationFinalizeSiteCACertificateRotation(AutomationCommand[CertificateR
 
 
 class AutomationSiteCertificateRotation(AutomationCommand[CertificateRotationParameters]):
+    @override
     def command_name(self) -> str:
         return "site-certificate-rotation"
 
+    @override
     def execute(self, api_request: CertificateRotationParameters) -> str:
         try:
             self.rotate_local_site_certificate(
@@ -150,6 +157,7 @@ class AutomationSiteCertificateRotation(AutomationCommand[CertificateRotationPar
 
         return "success"
 
+    @override
     def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
         return CertificateRotationParameters.from_request(config, request)
 

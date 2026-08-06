@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
+
+from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -54,12 +55,15 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
 
 class TemperatureUnitUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "temperature_unit"
 
+    @override
     def topic(self) -> str:
         return "personal"
 
+    @override
     def valuespec(self) -> Alternative:
         return Alternative(
             title=_("Temperature unit"),
@@ -107,12 +111,15 @@ class TemperatureUnitUserAttribute(UserAttribute):
 
 class ForceAuthUserUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "force_authuser"
 
+    @override
     def topic(self) -> str:
         return "personal"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Visibility of hosts/services"),
@@ -124,18 +131,22 @@ class ForceAuthUserUserAttribute(UserAttribute):
             ),
         )
 
+    @override
     def permission(self) -> None | str:
         return "general.see_all"
 
 
 class DisableNotificationsUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "disable_notifications"
 
+    @override
     def topic(self) -> str:
         return "personal"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return MigrateNotUpdated(
             valuespec=Dictionary(
@@ -171,21 +182,26 @@ class DisableNotificationsUserAttribute(UserAttribute):
             migrate=lambda x: {} if x is None else x,
         )
 
+    @override
     def permission(self) -> None | str:
         return "general.disable_notifications"
 
+    @override
     def domain(self) -> str:
         return "check_mk"
 
 
 class StartURLUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "start_url"
 
+    @override
     def topic(self) -> str:
         return "personal"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return MigrateNotUpdated(
             valuespec=Alternative(
@@ -243,6 +259,7 @@ class StartURLUserAttribute(UserAttribute):
             migrate=lambda v: None if v == "" else v,
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
@@ -260,12 +277,15 @@ def validate_start_url(value: str, varprefix: str) -> None:
 
 class UIThemeUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "ui_theme"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("User interface theme"),
@@ -283,18 +303,22 @@ class UIThemeUserAttribute(UserAttribute):
             ],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class UISidebarPosition(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "ui_sidebar_position"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Sidebar position"),
@@ -302,18 +326,22 @@ class UISidebarPosition(UserAttribute):
             choices=[(None, _("Right")), ("left", _("Left"))],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class UIIconTitle(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "nav_hide_icons_title"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Navigation bar icons"),
@@ -329,12 +357,15 @@ class UIIconTitle(UserAttribute):
 
 class UIIconPlacement(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "icons_per_item"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Mega menu icons"),
@@ -348,18 +379,22 @@ class UIIconPlacement(UserAttribute):
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "show_mode"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("Show more / Show less"),
@@ -385,18 +420,22 @@ class UIBasicAdvancedToggle(UserAttribute):
             ],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class ContextualHelpIcon(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "contextual_help_icon"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Contextual help icon"),
@@ -404,18 +443,22 @@ class ContextualHelpIcon(UserAttribute):
             choices=[(None, _("Show icon")), ("hide_icon", _("Hide icon"))],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class ChangesSlideoutDisabled(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "navbar_changes_action"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Default behavior for 'Changes'"),
@@ -430,18 +473,22 @@ class ChangesSlideoutDisabled(UserAttribute):
             ],
         )
 
+    @override
     def user_editable(self) -> bool:
         return user.may("wato.activate")
 
 
 class StartOfWeekUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "start_of_week"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Start of week in calendar"),
@@ -458,18 +505,22 @@ class StartOfWeekUserAttribute(UserAttribute):
             ],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class GraphDefaultTimeRangeUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "graph_default_time_range"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("Global time picker default range"),
@@ -509,18 +560,22 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
             ],
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 
 
 class GraphDefaultRefreshTimeUserAttribute(UserAttribute):
     @classmethod
+    @override
     def name(cls) -> str:
         return "graph_default_refresh_time"
 
+    @override
     def topic(self) -> str:
         return "interface"
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Global time picker default refresh time"),
@@ -540,6 +595,7 @@ class GraphDefaultRefreshTimeUserAttribute(UserAttribute):
             invalid_choice="replace",
         )
 
+    @override
     def domain(self) -> str:
         return "multisite"
 

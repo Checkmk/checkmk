@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import contextlib
 import logging
 import time
 from collections.abc import Generator, Sequence
+from typing import override
 
 from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 from watchdog.observers.inotify import InotifyObserver
@@ -70,18 +69,22 @@ class _AutomationWatcherHandler(PatternMatchingEventHandler):
         patterns_ = list(patterns) if patterns else None
         super().__init__(patterns=patterns_, ignore_directories=ignore_directories)
 
+    @override
     def on_moved(self, event: FileSystemEvent) -> None:
         self._store_last_detected_change(time.time())
         self._log_handled_event(event)
 
+    @override
     def on_created(self, event: FileSystemEvent) -> None:
         self._store_last_detected_change(time.time())
         self._log_handled_event(event)
 
+    @override
     def on_modified(self, event: FileSystemEvent) -> None:
         self._store_last_detected_change(time.time())
         self._log_handled_event(event)
 
+    @override
     def on_deleted(self, event: FileSystemEvent) -> None:
         self._store_last_detected_change(time.time())
         self._log_handled_event(event)

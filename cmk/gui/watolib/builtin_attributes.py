@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -108,58 +107,75 @@ from . import openapi_fields
 
 class HostAttributeAlias(ABCHostAttributeNagiosText):
     @property
+    @override
     def _size(self) -> int:
         return 64
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return True
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 10
 
+    @override
     def name(self) -> str:
         return "alias"
 
+    @override
     def nagios_name(self) -> str:
         return "alias"
 
+    @override
     def is_explicit(self) -> bool:
         return True
 
+    @override
     def title(self) -> str:
         return _("Alias")
 
+    @override
     def help(self) -> str:
         return _("Add a comment or describe this host")
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def openapi_field(self) -> Field:
         return fields.String(description=self.help())
 
 
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 30
 
+    @override
     def name(self) -> str:
         return "ipaddress"
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def depends_on_tags(self) -> list[str]:
         return ["ip-v4"]
 
+    @override
     def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("IPv4 address"),
@@ -181,6 +197,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             allow_ipv6_address=False,
         )
 
+    @override
     def form_spec(self) -> String:
         return create_host_address(
             title=Title("IPv4 address"),
@@ -202,6 +219,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             allow_ipv6_address=False,
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.String(
             description="An IPv4 address.",
@@ -215,22 +233,28 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
 
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 40
 
+    @override
     def name(self) -> str:
         return "ipv6address"
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def depends_on_tags(self) -> list[str]:
         return ["ip-v6"]
 
+    @override
     def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("IPv6 address"),
@@ -251,6 +275,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             allow_ipv4_address=False,
         )
 
+    @override
     def form_spec(self) -> String:
         return create_host_address(
             title=Title("IPv6 address"),
@@ -271,6 +296,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             allow_ipv4_address=False,
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.String(
             description="An IPv6 address.",
@@ -284,28 +310,36 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
 
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 50
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return True
 
+    @override
     def name(self) -> str:
         return "additional_ipv4addresses"
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def depends_on_tags(self) -> list[str]:
         return ["ip-v4"]
 
+    @override
     def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
@@ -319,6 +353,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
             ),
         )
 
+    @override
     def form_spec(self) -> List:
         return List[str](
             title=Title("Additional IPv4 addresses"),
@@ -329,6 +364,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
             element_template=create_host_address(allow_empty=False, allow_ipv6_address=False),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.List(
             fields.String(
@@ -344,28 +380,36 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
 
 class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 60
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return True
 
+    @override
     def name(self) -> str:
         return "additional_ipv6addresses"
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def depends_on_tags(self) -> list[str]:
         return ["ip-v6"]
 
+    @override
     def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
@@ -379,6 +423,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
             ),
         )
 
+    @override
     def form_spec(self) -> List:
         return List[str](
             title=Title("Additional IPv6 addresses"),
@@ -389,6 +434,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
             element_template=create_host_address(allow_empty=False, allow_ipv4_address=False),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.List(
             fields.String(
@@ -404,25 +450,32 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 70
 
+    @override
     def name(self) -> str:
         return "snmp_community"
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def depends_on_tags(self) -> list[str]:
         return ["snmp"]
 
+    @override
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             help=_(
@@ -436,6 +489,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             default_value=None,
         )
 
+    @override
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             help_text=Help(
@@ -449,6 +503,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             default_value="community",
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Nested(
             openapi_fields.SNMPCredentials,
@@ -462,25 +517,32 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
 
 
 class HostAttributeParents(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "parents"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 80
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return True
 
+    @override
     def show_in_table(self) -> bool:
         return True
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return ListOfStrings(
             valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
@@ -498,6 +560,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             orientation="horizontal",
         )
 
+    @override
     def form_spec(self) -> FSListOfStrings:
         return FSListOfStrings(
             title=Title("Parents"),
@@ -514,26 +577,32 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             string_spec=MonitoredHost(title=Title("Host")),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.List(
             openapi_fields.HostField(should_exist=True, skip_validation_on_view=True),
             description="A list of parents of this host.",
         )
 
+    @override
     def is_visible(self, for_what: str, new: bool) -> bool:
         return for_what != "cluster"
 
+    @override
     def to_nagios(self, value: str) -> str | None:
         if value:
             return ",".join(value)
         return None
 
+    @override
     def nagios_name(self) -> str:
         return "parents"
 
+    @override
     def is_explicit(self) -> bool:
         return True
 
+    @override
     def paint(self, value: str, hostname: HostName) -> tuple[str, HTML]:
         parts = [
             HTMLWriter.render_a(
@@ -543,6 +612,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         ]
         return "", HTML.without_escaping(", ").join(parts)
 
+    @override
     def filter_matches(self, crit: list, value: list, hostname: HostName) -> bool:
         return any(item in value for item in crit)
 
@@ -591,34 +661,44 @@ def _get_criticality_choices() -> Sequence[tuple[TagID | None, str]]:
 
 
 class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "network_scan"
 
+    @override
     def may_edit(self) -> bool:
         return user.may("wato.manage_hosts")
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 90
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def show_in_host_search(self) -> bool:
         return False
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def valuespec(self) -> ValueSpec:
         # The form preselects the acting user for "run_as"
         return self._valuespec(lambda: user.id if user.id is not None else DEF_VALUE)
@@ -648,6 +728,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             default_text=_("Not configured."),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Nested(
             openapi_fields.NetworkScan,
@@ -866,43 +947,55 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
 
 class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "network_scan_result"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 100
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def show_in_host_search(self) -> bool:
         return False
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def editable(self) -> bool:
         return False
 
+    @override
     def openapi_editable(self) -> bool:
         return False
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Nested(
             openapi_fields.NetworkScanResult,
             description="Read only access to the network scan result",
         )
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=[
@@ -976,22 +1069,28 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
 
 
 class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "management_address"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 120
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("Address"),
@@ -1003,6 +1102,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
             allow_empty=False,
         )
 
+    @override
     def form_spec(self) -> String:
         return create_host_address(
             title=Title("Address"),
@@ -1014,6 +1114,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
             allow_empty=False,
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.String(
             description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
@@ -1028,22 +1129,28 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
 
 class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "management_protocol"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 110
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Protocol"),
@@ -1056,6 +1163,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
             ],
         )
 
+    @override
     def form_spec(self) -> SingleChoiceExtended:
         return SingleChoiceExtended(
             title=Title("Protocol"),
@@ -1076,39 +1184,48 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
             ],
         )
 
+    @override
     def openapi_field(self) -> Field:
         return openapi_fields.HostAttributeManagementBoardField()
 
 
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "management_snmp_community"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 130
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             default_value=None,
             allow_none=True,
         )
 
+    @override
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             default_value=None,
             allow_none=True,
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Nested(
             openapi_fields.SNMPCredentials,
@@ -1151,28 +1268,35 @@ class IPMICredentials(Alternative):
 
 
 class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "management_ipmi_credentials"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 140
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return IPMICredentials(
             title=_("IPMI credentials"),
             default_value=None,
         )
 
+    @override
     def form_spec(self) -> OptionalChoice:
         return OptionalChoice(
             title=Title("Explicit credentials"),
@@ -1180,6 +1304,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             parameter_form=create_ipmi_parameters(),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Nested(
             openapi_fields.IPMIParameters,
@@ -1190,25 +1315,31 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
 
 
 class HostAttributeSite(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "site"
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return not (
             has_distributed_setup_remote_sites(config.sites)
             or is_distributed_setup_remote_site(config.sites)
         )
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 20
 
+    @override
     def show_in_table(self) -> bool:
         return True
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
@@ -1221,6 +1352,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             return SiteId("")
         return omd_site()
 
+    @override
     def valuespec(self) -> ValueSpec:
         return SetupSiteChoice(
             title=_("Monitored on site"),
@@ -1235,6 +1367,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             ),
         )
 
+    @override
     def form_spec(self) -> SingleChoiceExtended[str]:
         return create_setup_site_choice(
             title=Title("Monitored on site"),
@@ -1252,12 +1385,14 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             ),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return openapi_fields.SiteField(
             description="The site that should monitor this host.",
             presence="might_not_exist_on_view",
         )
 
+    @override
     def get_tag_groups(self, value: Literal[False] | None | str) -> Mapping[TagGroupID, TagID]:
         # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
         # a "False" value instead of "" on remote sites. May be removed with 2.1.
@@ -1271,37 +1406,48 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
 
 class HostAttributeLockedBy(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "locked_by"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 160
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return True
 
+    @override
     def show_on_create(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def show_in_host_search(self) -> bool:
         return True
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def editable(self) -> bool:
         return False
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=LockedByValuespec(),
@@ -1309,6 +1455,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
             from_valuespec=list,
         )
 
+    @override
     def openapi_field(self) -> fields.Field:
         return fields.Nested(
             openapi_fields.LockedBy,
@@ -1318,6 +1465,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
             ),
         )
 
+    @override
     def filter_matches(
         self,
         crit: list[str],
@@ -1350,6 +1498,7 @@ class LockedByValuespec(Tuple):
             ),
         )
 
+    @override
     def value_to_html(self, value: tuple[Any, ...]) -> ValueSpecText:
         if not value or not value[1] or not value[2]:
             return _("Not locked")
@@ -1357,37 +1506,48 @@ class LockedByValuespec(Tuple):
 
 
 class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "locked_attributes"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 170
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return True
 
+    @override
     def show_on_create(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def show_in_host_search(self) -> bool:
         return False
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def editable(self) -> bool:
         return False
 
+    @override
     def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=DropdownChoice(choices=_host_attribute_choices),
@@ -1395,6 +1555,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
             text_if_empty=_("Not locked"),
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.List(
             fields.String(),
@@ -1416,40 +1577,52 @@ def _host_attribute_choices() -> Choices:
 
 
 class HostAttributeMetaData(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "meta_data"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 155
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return True
 
+    @override
     def show_on_create(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def show_in_host_search(self) -> bool:
         return False
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def editable(self) -> bool:
         return False
 
+    @override
     def openapi_editable(self) -> bool:
         return False
 
+    @override
     def valuespec(self) -> ValueSpec:
         # The form preselects the acting user for "created_by"
         return self._valuespec(lambda: user.id)
@@ -1502,6 +1675,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
             optional_keys=[],
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Nested(
             openapi_fields.MetaData, description="Read only access to configured metadata."
@@ -1509,40 +1683,52 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
 
 
 class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "inventory_failed"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 200
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return False
 
+    @override
     def show_on_create(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def show_in_host_search(self) -> bool:
         return False
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def editable(self) -> bool:
         return False
 
+    @override
     def openapi_editable(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Discovery failed"),
@@ -1550,6 +1736,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
             default_value=False,
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Boolean(
             example=False,
@@ -1565,40 +1752,52 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
 
 
 class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "waiting_for_discovery"
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 210
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_form(self) -> bool:
         return False
 
+    @override
     def show_on_create(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return False
 
+    @override
     def show_in_host_search(self) -> bool:
         return False
 
+    @override
     def show_inherited_value(self) -> bool:
         return False
 
+    @override
     def editable(self) -> bool:
         return False
 
+    @override
     def openapi_editable(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Waiting for discovery"),
@@ -1606,6 +1805,7 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
             default_value=False,
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Boolean(
             example=False,
@@ -1621,19 +1821,24 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
 
 
 class HostAttributeLabels(ABCHostAttributeValueSpec):
+    @override
     def name(self) -> str:
         return "labels"
 
+    @override
     def title(self) -> str:
         return _("Labels")
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 190
 
+    @override
     def help(self) -> str:
         return _(
             "Labels allow you to flexibly group your hosts in order to "
@@ -1644,12 +1849,15 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
             "validation on the labels you use."
         )
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def valuespec(self) -> ValueSpec:
         return Labels(
             world=Labels.World.CONFIG,
@@ -1657,6 +1865,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
             object_type="host",
         )
 
+    @override
     def form_spec(self) -> fs_labels.Labels:
         return fs_labels.Labels(
             world=fs_labels.World.CONFIG,
@@ -1664,6 +1873,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
             object_type="host",
         )
 
+    @override
     def openapi_field(self) -> Field:
         return fields.Dict(
             description=self.help(),
@@ -1675,6 +1885,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         if ":" in data:
             raise ValidationError(f"Invalid label key: {data!r}")
 
+    @override
     def filter_matches(
         self, crit: Mapping[str, str], value: Mapping[str, str], hostname: HostName
     ) -> bool:

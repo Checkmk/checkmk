@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import traceback
+from typing import override
 
 import cmk.livestatus_client as livestatus
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -45,14 +44,17 @@ class QuicksearchSnapin(SidebarSnapin):
         super().__init__()
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "search"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Quick search")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "Interactive search field for direct access to monitoring instances (hosts, services, "
@@ -62,6 +64,7 @@ class QuicksearchSnapin(SidebarSnapin):
             "Service label"
         )
 
+    @override
     def show(self, config: Config) -> None:
         id_ = "mk_side_search_field"
         html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
@@ -76,6 +79,7 @@ class QuicksearchSnapin(SidebarSnapin):
         html.div("", id_="mk_side_clear")
         html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
 
+    @override
     def page_handlers(self) -> PageHandlers:
         return {
             "ajax_search": self._ajax_search,

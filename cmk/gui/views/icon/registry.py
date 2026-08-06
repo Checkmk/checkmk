@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
@@ -16,9 +16,11 @@ from .config_icons import config_based_icons, update_builtin_icons_from_config
 
 
 class IconRegistry(Registry[Icon]):
+    @override
     def plugin_name(self, instance: Icon) -> str:
         return instance.ident
 
+    @override
     def registration_hook(self, instance: Icon) -> None:
         ident = self.plugin_name(instance)
         declare_permission(

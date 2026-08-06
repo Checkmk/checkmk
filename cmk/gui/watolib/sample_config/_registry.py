@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import abc
+from typing import override
 
 import cmk.ccc.plugin_registry
 from cmk.gui.watolib.hosts_and_folders import FolderTree
@@ -30,6 +29,7 @@ class SampleConfigGenerator(abc.ABC):
 
 
 class SampleConfigGeneratorRegistry(cmk.ccc.plugin_registry.Registry[type[SampleConfigGenerator]]):
+    @override
     def plugin_name(self, instance: type[SampleConfigGenerator]) -> str:
         return instance.ident()
 

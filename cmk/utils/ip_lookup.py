@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 
 from __future__ import annotations
@@ -23,7 +22,7 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import assert_never, Final, Literal, Protocol
+from typing import assert_never, Final, Literal, override, Protocol
 
 import cmk.ccc.debug
 import cmk.utils.paths
@@ -427,9 +426,11 @@ class IPLookupCache:
         finally:
             self._persist_on_update = old_persist_flag
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._cache!r})"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return other == self._cache
 

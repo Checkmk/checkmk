@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 import copy
 import re
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import cmk.ccc.version as cmk_version
 from cmk import fields
@@ -352,22 +351,28 @@ class HostAttributeContactGroups(ABCHostAttribute):
         self._contactgroups: GroupSpecs | None = None
         self._loaded_at: int | None = None
 
+    @override
     def name(self) -> str:
         return "contactgroups"
 
+    @override
     def title(self) -> str:
         return _("Permissions")
 
+    @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     @classmethod
+    @override
     def sort_index(cls) -> int:
         return 25
 
+    @override
     def is_show_more(self, config: Config) -> bool:
         return True
 
+    @override
     def help(self) -> str:
         url = makeuri_contextless(
             request,
@@ -382,12 +387,15 @@ class HostAttributeContactGroups(ABCHostAttribute):
             "<a href='%(url)s'>rules</a>."
         ) % {"url": url}
 
+    @override
     def show_in_table(self) -> bool:
         return False
 
+    @override
     def show_in_folder(self) -> bool:
         return True
 
+    @override
     def default_value(self) -> HostContactGroupSpec:
         return HostContactGroupSpec(
             {
@@ -399,6 +407,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             }
         )
 
+    @override
     def paint(self, value: HostContactGroupSpec, hostname: HostName) -> tuple[str, str | HTML]:
         texts: list[HTML] = []
         self.load_data()
@@ -426,6 +435,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             )
         return "", result
 
+    @override
     def render_input(self, varprefix: str, value: HostContactGroupSpec) -> None:
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
@@ -497,6 +507,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         self._loaded_at = id(html)
         self._contactgroups = load_contact_group_information()
 
+    @override
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         self.load_data()
 
@@ -510,6 +521,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             "recurse_use": html.get_checkbox(varprefix + self.name() + "_recurse_use"),
         }
 
+    @override
     def filter_matches(
         self, crit: HostContactGroupSpec, value: HostContactGroupSpec, hostname: HostName
     ) -> bool:
@@ -528,12 +540,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
         )
         return DualListChoice(choices=cg_choices, rows=20, size=100)
 
+    @override
     def validate_input(self, value: HostContactGroupSpec, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(self.name(), "Unknown format.")
         self.load_data()
         self._vs_contactgroups().validate_value(value.get("groups", []), varprefix)
 
+    @override
     def openapi_field(self) -> fields.Nested:
         return fields.Nested(
             HostContactGroup,

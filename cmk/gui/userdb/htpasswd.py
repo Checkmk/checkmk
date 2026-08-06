@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 from collections.abc import Sequence
+from typing import override
 
 import cmk.utils.paths
 from cmk.ccc.user import UserId
@@ -56,18 +55,22 @@ def hash_password(password: Password) -> password_hashing.PasswordHash:
 
 class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
     @classmethod
+    @override
     def type(cls) -> str:
         return ConnectorType.HTPASSWD
 
     @property
+    @override
     def id(self) -> str:
         return "htpasswd"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Apache local password file (htpasswd)")
 
     @classmethod
+    @override
     def short_title(cls) -> str:
         return _("htpasswd")
 
@@ -79,9 +82,11 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
     # USERDB API METHODS
     #
 
+    @override
     def is_enabled(self) -> bool:
         return True
 
+    @override
     def check_credentials(
         self,
         user_id: UserId,
@@ -102,6 +107,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
             return False
         return user_id
 
+    @override
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During
         # loading we created entries for all admin users we know. Other

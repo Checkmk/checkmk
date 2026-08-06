@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
@@ -13,7 +12,7 @@ to hosts and that is the basis of the rules."""
 
 import abc
 from collections.abc import Collection, Sequence
-from typing import cast
+from typing import cast, override
 
 import cmk.ruleset_matcher.tags
 from cmk.ccc.exceptions import MKGeneralException
@@ -143,16 +142,20 @@ class ABCTagMode(WatoMode, abc.ABC):
 
 class ModeTags(ABCTagMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "tags"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
+    @override
     def title(self) -> str:
         return _("Tag groups")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -206,6 +209,7 @@ class ModeTags(ABCTagMode):
         menu.add_doc_reference(_("Host tags"), DocReference.HOST_TAGS)
         return menu
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(makeuri(request, []))
@@ -340,6 +344,7 @@ class ModeTags(ABCTagMode):
         )
         return None
 
+    @override
     def page(self, config: Config) -> None:
         if not self._tag_config.tag_groups and not self._tag_config.get_aux_tags():
             TileMenuRenderer(
@@ -514,6 +519,7 @@ class ModeTags(ABCTagMode):
 
 class ABCEditTagMode(ABCTagMode, abc.ABC):
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
@@ -579,20 +585,25 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
 
 class ModeTagUsage(ABCTagMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "tag_usage"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
+    @override
     def title(self) -> str:
         return _("Tag usage")
 
+    @override
     def page(self, config: Config) -> None:
         pending_changes = _pending_changes(
             config.sites,
@@ -773,10 +784,12 @@ class ModeTagUsage(ABCTagMode):
 
 class ModeEditAuxtag(ABCEditTagMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_auxtag"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
@@ -791,22 +804,26 @@ class ModeEditAuxtag(ABCEditTagMode):
             assert self._id is not None
             self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(TagID(self._id))
 
+    @override
     def _get_id(self) -> str | None:
         if not request.has_var("edit"):
             return None
 
         return request.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add auxiliary tag")
         return _("Edit auxiliary tag")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Tag"), breadcrumb, form_name="aux_tag", button_name="_save"
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("tags"))
@@ -841,6 +858,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         return redirect(mode_url("tags"))
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("aux_tag"):
             self._valuespec().render_input("aux_tag", dict(self._aux_tag.to_config()))
@@ -861,10 +879,12 @@ class ModeEditAuxtag(ABCEditTagMode):
 
 class ModeEditTagGroup(ABCEditTagMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_tag"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
@@ -889,19 +909,23 @@ class ModeEditTagGroup(ABCEditTagMode):
             else tg
         )
 
+    @override
     def _get_id(self) -> str | None:
         return request.var("edit", request.var("tag_id"))
 
+    @override
     def title(self) -> str:
         if self._new:
             return _("Add tag group")
         return _("Edit tag group")
 
+    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Tag group"), breadcrumb, form_name="tag_group", button_name="_save"
         )
 
+    @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -988,6 +1012,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         return redirect(mode_url("tags"))
 
+    @override
     def page(self, config: Config) -> None:
         with html.form_context("tag_group", method="POST"):
             self._valuespec().render_input("tag_group", dict(self._tag_group.get_dict_format()))

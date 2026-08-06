@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -16,7 +15,7 @@ import re
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Final, Literal
+from typing import Any, cast, Final, Literal, override
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -133,18 +132,21 @@ class RulespecBaseGroup(abc.ABC):
 class RulespecGroup(RulespecBaseGroup):
     @property
     @abc.abstractmethod
+    @override
     def name(self) -> str:
         """Unique internal key of this group"""
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
+    @override
     def title(self) -> str:
         """Human readable title of this group"""
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
+    @override
     def help(self) -> str:
         """Helpful description of this group"""
         raise NotImplementedError
@@ -155,6 +157,7 @@ class RulespecGroup(RulespecBaseGroup):
         return {}
 
     @property
+    @override
     def choice_title(self) -> str:
         return self.title
 
@@ -173,14 +176,17 @@ class RulespecSubGroup(RulespecBaseGroup, abc.ABC):
         raise NotImplementedError
 
     @property
+    @override
     def name(self) -> str:
         return f"{self.main_group().name}/{self.sub_group_name}"
 
     @property
+    @override
     def choice_title(self) -> str:
         return "&nbsp;&nbsp;⌙ %s" % self.title
 
     @property
+    @override
     def help(self) -> None:
         return None  # Sub groups currently have no help text
 
@@ -191,9 +197,11 @@ class RulespecGroupRegistry(cmk.ccc.plugin_registry.Registry[type[RulespecBaseGr
         self._main_groups: list[type[RulespecGroup]] = []
         self._sub_groups_by_main_group: dict[type[RulespecGroup], list[type[RulespecSubGroup]]] = {}
 
+    @override
     def plugin_name(self, instance: type[RulespecBaseGroup]) -> str:
         return instance().name
 
+    @override
     def registration_hook(self, instance: type[RulespecBaseGroup]) -> None:
         if issubclass(instance, RulespecSubGroup):
             sub_inst = instance()
@@ -852,14 +860,17 @@ def _get_manual_check_parameter_rulespec_instance(
 
 class RulespecGroupEnforcedServices(RulespecGroup):
     @property
+    @override
     def name(self) -> str:
         return "static"
 
     @property
+    @override
     def title(self) -> str:
         return _("Enforced services")
 
     @property
+    @override
     def help(self) -> str:
         return _(
             "Rules to set up [wato_services#enforced_services|enforced services]. Services set "
@@ -1247,6 +1258,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
         super().__init__()
         self._group_registry = group_registry
 
+    @override
     def plugin_name(self, instance: Rulespec) -> str:
         return instance.name
 
@@ -1268,6 +1280,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
         group registry does not know whether a group is registered for it"""
         return list({gc.group_name for gc in self.values()})
 
+    @override
     def register(self, instance: Any) -> Any:
         if _registration_should_be_skipped(instance):
             _log_ignored_local_registration(instance.name)
@@ -1314,6 +1327,7 @@ class CheckTypeGroupSelection(ElementSelection):
         )
         self._checkgroup = checkgroup
 
+    @override
     def get_elements(self) -> Mapping[str, str]:
         checks = get_check_information_cached(debug=active_config.debug)
         return {
@@ -1322,6 +1336,7 @@ class CheckTypeGroupSelection(ElementSelection):
             if c.get("group") == self._checkgroup
         }
 
+    @override
     def value_to_html(self, value: str | None) -> ValueSpecText:
         return HTMLWriter.render_tt(value)
 
@@ -1341,10 +1356,12 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         )
         self._enclosed_valuespec = valuespec
 
+    @override
     def default_value(self) -> dict[str, Any]:
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 
+    @override
     def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         # The display mode differs when the valuespec is activated
         vars_copy = dict(request.itervars())
@@ -1382,9 +1399,11 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             )
             self._enclosed_valuespec.render_input(varprefix, value)
 
+    @override
     def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)
 
+    @override
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         if request.var(self.tp_current_mode) == "1":
             # Fetch the timespecific settings
@@ -1398,13 +1417,16 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         # Fetch the data from the enclosed valuespec
         return self._enclosed_valuespec.from_html_vars(varprefix)
 
+    @override
     def canonical_value(self) -> dict[str, Any]:
         return self._enclosed_valuespec.canonical_value()
 
+    @override
     def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
         super()._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
+    @override
     def validate_datatype(self, value: dict[str, Any], varprefix: str) -> None:
         super().validate_datatype(value, varprefix)
         self._get_used_valuespec(value).validate_datatype(value, varprefix)
@@ -1468,15 +1490,19 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             self._get_timeperiod_valuespec() if self.is_active(value) else self._enclosed_valuespec
         )
 
+    @override
     def mask(self, value: dict[str, Any]) -> dict[str, Any]:
         return self._get_used_valuespec(value).mask(value)
 
+    @override
     def transform_value(self, value: dict[str, Any]) -> dict[str, Any]:
         return self._get_used_valuespec(value).transform_value(value)
 
+    @override
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return self._get_used_valuespec(value).value_to_json(value)
 
+    @override
     def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         return self._get_used_valuespec(json_value).value_from_json(json_value)
 

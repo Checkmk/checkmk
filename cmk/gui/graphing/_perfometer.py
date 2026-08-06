@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-override"
 # mypy: disable-error-code="possibly-undefined"
 
 import abc
@@ -12,7 +11,7 @@ import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import repeat
-from typing import assert_never, Self
+from typing import assert_never, override, Self
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
@@ -546,9 +545,11 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         self.themed_perfometer_bg_color = themed_perfometer_bg_color
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "perfometer"
 
+    @override
     def get_stack(self, temperature_unit: TemperatureUnit) -> MetricRendererStack:
         if projections := _project_segments(
             _make_projection(
@@ -572,6 +573,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
             return [projections]
         return []
 
+    @override
     def get_label(self, temperature_unit: TemperatureUnit) -> str:
         if (
             first_result := evaluate_quantity(
@@ -600,6 +602,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
             )
         )
 
+    @override
     def get_sort_value(self) -> float:
         return sum(
             result.ok.value
@@ -632,9 +635,11 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
         self.themed_perfometer_bg_color = themed_perfometer_bg_color
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "bidirectional"
 
+    @override
     def get_stack(self, temperature_unit: TemperatureUnit) -> MetricRendererStack:
         projections = []
 
@@ -682,6 +687,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         return [projections] if projections else []
 
+    @override
     def get_label(self, temperature_unit: TemperatureUnit) -> str:
         labels = []
 
@@ -697,6 +703,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         return " / ".join(labels)
 
+    @override
     def get_sort_value(self) -> float:
         return max(
             [
@@ -723,9 +730,11 @@ class MetricometerRendererStacked(MetricometerRenderer):
         self.translated_metrics = translated_metrics
 
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "stacked"
 
+    @override
     def get_stack(self, temperature_unit: TemperatureUnit) -> MetricRendererStack:
         projections: list[Sequence[tuple[float, str]]] = []
 
@@ -741,6 +750,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
         return projections if projections else []
 
+    @override
     def get_label(self, temperature_unit: TemperatureUnit) -> str:
         labels = []
 
@@ -756,6 +766,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
         return " / ".join(labels)
 
+    @override
     def get_sort_value(self) -> float:
         return _get_renderer(
             self.registered_metrics, self.perfometer.upper, self.translated_metrics

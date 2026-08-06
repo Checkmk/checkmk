@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override"
-
 import base64
 import datetime as dt
 import ipaddress
@@ -300,6 +298,7 @@ class _TimerangeGraph(_BaseTimerangeValue):
 
         raise ValueError("The selected graph timerange does not exist.")
 
+    @override
     def to_internal(self) -> TimerangeValue:
         return self.duration
 

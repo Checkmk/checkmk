@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="explicit-override"
 
 """Host/service introspection and rule-matching results.
 
@@ -15,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import override, TypedDict
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -51,6 +50,7 @@ class AnalyseServiceResult(ABCAutomationResult):
     labels: Labels
     label_sources: LabelSources
 
+    @override
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1"):
             return self._default_serialize()
@@ -62,6 +62,7 @@ class AnalyseServiceResult(ABCAutomationResult):
         return SerializedResult(repr((previous_serialized,)))
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("analyse-service")
 
@@ -74,6 +75,7 @@ class GetServicesLabelsResult(ABCAutomationResult):
     labels: Mapping[ServiceName, Labels]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("get-services-labels")
 
@@ -86,6 +88,7 @@ class GetServiceNameResult(ABCAutomationResult):
     service_name: str
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("get-service-name")
 
@@ -99,6 +102,7 @@ class AnalyseHostResult(ABCAutomationResult):
     label_sources: LabelSources
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("analyse-host")
 
@@ -111,6 +115,7 @@ class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-host-rule-matches")
 
@@ -123,6 +128,7 @@ class AnalyzeServiceRuleMatchesResult(ABCAutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-service-rule-matches")
 
@@ -135,6 +141,7 @@ class AnalyzeHostRuleEffectivenessResult(ABCAutomationResult):
     results: dict[str, bool]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-host-rule-effectiveness")
 
@@ -148,6 +155,7 @@ class ActiveCheckResult(ABCAutomationResult):
     output: ServiceDetails
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("active-check")
 
@@ -160,6 +168,7 @@ class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
     result: Sequence[str]
 
     @staticmethod
+    @override
     def automation_call() -> AutomationID:
         return AutomationID("find-unknown-check-parameter-rule-sets")
 

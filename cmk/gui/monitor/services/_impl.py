@@ -100,6 +100,7 @@ class LiveStatusHostServicesRepository:
                 Services.host_state,
                 Services.host_acknowledged,
                 Services.host_scheduled_downtime_depth,
+                Services.contact_groups,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -125,6 +126,7 @@ class LiveStatusHostServicesRepository:
             host_state=HostState(row["host_state"]),
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
+            contact_groups=list(row["contact_groups"]),
         )
 
     def count_total(self, hostname: str) -> int:

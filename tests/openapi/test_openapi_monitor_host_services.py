@@ -643,6 +643,7 @@ class TestMonitorServiceOverview:
                     "host_state": 0,
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
+                    "contact_groups": ["all"],
                 }
             ],
         )
@@ -669,6 +670,7 @@ class TestMonitorServiceOverview:
         assert resp.json["modes"] == []
         assert resp.json["host_alias"] == _HOST_ALIAS
         assert resp.json["host_state"] == "UP"
+        assert resp.json["contact_groups"] == ["all"]
         assert resp.json["legacy_host_status_link"] == (
             f"view.py?view_name=hoststatus&site={_SITE_ID}&host={_HOSTNAME}"
         )
@@ -722,6 +724,7 @@ class TestMonitorServiceOverview:
                     "host_state": 0,
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
+                    "contact_groups": ["all"],
                     **columns,
                 }
             ],
@@ -802,7 +805,7 @@ _HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state plugin_output last_check last_state_change acknowledged "
     "scheduled_downtime_depth notifications_enabled host_alias host_state host_acknowledged "
-    "host_scheduled_downtime_depth"
+    "host_scheduled_downtime_depth contact_groups"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"

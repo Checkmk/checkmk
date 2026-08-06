@@ -74,6 +74,10 @@ class ServiceOverviewResponse:
         ),
         example="wato.py?mode=object_parameters&host=web-server-01&service=CPU+utilization",
     )
+    contact_groups: list[str] = api_field(
+        description="Contact groups responsible for this service",
+        example=["all"],
+    )
 
     @classmethod
     def from_domain(cls, service: ServiceOverview, *, may_see_parameters: bool) -> Self:
@@ -91,6 +95,7 @@ class ServiceOverviewResponse:
             legacy_service_parameters_link=(
                 service_parameters_link(service) if may_see_parameters else None
             ),
+            contact_groups=service.contact_groups,
         )
 
 

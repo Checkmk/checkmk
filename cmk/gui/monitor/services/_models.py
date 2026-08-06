@@ -70,6 +70,7 @@ class ServiceOverview(Service):
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
+    contact_groups: list[str]
 
     @property
     def host_state_label(self) -> HostStateLabel:

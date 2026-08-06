@@ -36,7 +36,7 @@ const visible = defineModel<boolean>({ required: false, default: true })
     >
       <CmkMultitoneIcon
         :name="visible ? 'eye' : 'eye-crossed-out'"
-        :primary-color="{ custom: 'var(--color-mist-grey-60)' }"
+        primary-color="font"
         aria-hidden="true"
       />
     </button>

@@ -9,6 +9,7 @@ from cmk.graphing.v1 import translations
 from cmk.graphing_engine import MetricName
 from cmk.gui.graphing._engine_perfdata import RawPerformanceData, RawPerformanceValue
 from cmk.gui.graphing._engine_translations import (
+    map_metric_names,
     rrd_originals,
     RRDOriginal,
     translate_metric_names,
@@ -44,6 +45,45 @@ def _raw(values: Mapping[str, RawPerformanceValue]) -> RawPerformanceData:
 
 def _original(name: str, scale: float) -> RRDOriginal:
     return RRDOriginal(metric_name=MetricName(name), scale=scale)
+
+
+def test_map_metric_names_pairs_raw_names_with_their_canonical_names() -> None:
+    # A set of canonical names cannot say which raw column produced which name; the mapping can. A
+    # raw name no translation renames is its own canonical name, so no raw name is dropped.
+    assert dict(
+        map_metric_names(
+            _CHECK_COMMAND,
+            [MetricName("old"), MetricName("untouched")],
+            _registered({"old": translations.RenameTo("new")}),
+        )
+    ) == {MetricName("old"): MetricName("new"), MetricName("untouched"): MetricName("untouched")}
+
+
+def test_two_raw_names_sharing_a_canonical_name_keep_their_own_entries() -> None:
+    # The case the frozenset cannot express at all: it reports one name where two columns exist, so
+    # a caller reading it back has no way to tell which of them it may ask an RRD for.
+    assert dict(
+        map_metric_names(
+            _CHECK_COMMAND,
+            [MetricName("if_in_octets"), MetricName("if_out_octets")],
+            _registered({"~if_.*_octets": translations.RenameTo("if_octets")}),
+        )
+    ) == {
+        MetricName("if_in_octets"): MetricName("if_octets"),
+        MetricName("if_out_octets"): MetricName("if_octets"),
+    }
+
+
+def test_a_scaling_translation_leaves_the_name_alone() -> None:
+    # A translation that only scales is still a translation, and a caller that resolves a name
+    # through the mapping has to get the raw name back rather than nothing.
+    assert dict(
+        map_metric_names(
+            _CHECK_COMMAND,
+            [MetricName("mem")],
+            _registered({"mem": translations.ScaleBy(1024)}),
+        )
+    ) == {MetricName("mem"): MetricName("mem")}
 
 
 def test_metric_names_are_reported_under_their_canonical_name() -> None:

@@ -179,18 +179,28 @@ def rrd_originals(
     ]
 
 
+def map_metric_names(
+    check_command: str,
+    raw_metric_names: Sequence[MetricName],
+    registered_translations: Sequence[translations_v1.Translation],
+) -> Mapping[MetricName, MetricName]:
+    specs = _specs_for_command(check_command, registered_translations)
+    mapping: dict[MetricName, MetricName] = {}
+    for raw_metric_name in raw_metric_names:
+        prefix, bare_name = _split_predict_prefix(raw_metric_name)
+        name, _scale = _find_name_and_scale(MetricName(bare_name), specs)
+        mapping[raw_metric_name] = MetricName(f"{prefix}{name}")
+    return mapping
+
+
 def translate_metric_names(
     check_command: str,
     raw_metric_names: Sequence[MetricName],
     registered_translations: Sequence[translations_v1.Translation],
 ) -> frozenset[MetricName]:
-    specs = _specs_for_command(check_command, registered_translations)
-    names: set[MetricName] = set()
-    for metric_name in raw_metric_names:
-        prefix, bare_name = _split_predict_prefix(metric_name)
-        name, _scale = _find_name_and_scale(MetricName(bare_name), specs)
-        names.add(MetricName(f"{prefix}{name}"))
-    return frozenset(names)
+    return frozenset(
+        map_metric_names(check_command, raw_metric_names, registered_translations).values()
+    )
 
 
 def _scaled(value: float | None, scale: float) -> float | None:

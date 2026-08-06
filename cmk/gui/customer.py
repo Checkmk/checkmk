@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from typing import Any, override
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
@@ -38,7 +37,7 @@ class ABCCustomerAPI(ABC):
 
     @classmethod
     @abstractmethod
-    def get_customer_id(cls, the_object: Mapping[str, Any]) -> CustomerIdOrGlobal: ...
+    def get_customer_id(cls, the_object: Mapping[str, object]) -> CustomerIdOrGlobal: ...
 
     @classmethod
     @abstractmethod
@@ -54,7 +53,7 @@ class ABCCustomerAPI(ABC):
 
     @classmethod
     @abstractmethod
-    def get_customer_name(cls, the_object: Mapping[str, Any]) -> str: ...
+    def get_customer_name(cls, the_object: Mapping[str, object]) -> str: ...
 
     @classmethod
     @abstractmethod
@@ -110,7 +109,7 @@ class CustomerAPIStub(ABCCustomerAPI):
 
     @classmethod
     @override
-    def get_customer_id(cls, the_object: Mapping[str, Any]) -> CustomerIdOrGlobal:
+    def get_customer_id(cls, the_object: Mapping[str, object]) -> CustomerIdOrGlobal:
         return SCOPE_GLOBAL
 
     @classmethod
@@ -130,7 +129,7 @@ class CustomerAPIStub(ABCCustomerAPI):
 
     @classmethod
     @override
-    def get_customer_name(cls, the_object: Mapping[str, Any]) -> str:
+    def get_customer_name(cls, the_object: Mapping[str, object]) -> str:
         return ""
 
     @classmethod

@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import datetime
 from collections.abc import Collection, Mapping
 from numbers import Number
-from typing import Any, Final
+from typing import Final
 from xml.dom.minidom import Document, parseString
 from xml.parsers.expat import ExpatError
 
@@ -17,11 +15,11 @@ _LIST_ITEM_NAME: Final = "item"
 _FALLBACK_TAG_NAME: Final = "key"
 
 
-def dict_to_document(data: Mapping[str, Any]) -> Document:
+def dict_to_document(data: Mapping[str, object]) -> Document:
     return parseString(_render(_ROOT_TAG_NAME, data))
 
 
-def _render(tag: str, value: Any, attrs: str = "") -> str:
+def _render(tag: str, value: object, attrs: str = "") -> str:
     if isinstance(value, Mapping):
         rendered = "".join(_render(*_preprocess(k, v)) for k, v in value.items())
         return f"<{tag} {attrs}>{rendered}</{tag}>"
@@ -33,7 +31,7 @@ def _render(tag: str, value: Any, attrs: str = "") -> str:
     return _render_atomic_value(tag, value, attrs)
 
 
-def _render_atomic_value(tag: str, value: Any, attrs: str) -> str:
+def _render_atomic_value(tag: str, value: object, attrs: str) -> str:
     match value:
         case str(val):
             return f"<{tag}{attrs}>{_escape_xml(val)}</{tag}>"
@@ -47,7 +45,7 @@ def _render_atomic_value(tag: str, value: Any, attrs: str) -> str:
             return f"<{tag}{attrs}>{value}</{tag}>"
 
 
-def _preprocess(tag: str, value: Any) -> tuple[str, Any, str]:
+def _preprocess(tag: str, value: object) -> tuple[str, object, str]:
     tag_ = _escape_xml(tag).replace(" ", "_")
     xml_type = _get_xml_type(value)
 
@@ -67,7 +65,7 @@ def _escape_xml(value: str) -> str:
     )
 
 
-def _get_xml_type(value: Any) -> str:
+def _get_xml_type(value: object) -> str:
     if value is None:
         return "null"
     if isinstance(value, bool):

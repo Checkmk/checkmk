@@ -151,7 +151,13 @@ const { refreshTick } = useGlobalRefresh()
 watch(refreshTick, () => data.refetch())
 watch(
   () => mode,
-  () => data.refetch()
+  (newMode) => {
+    if (newMode === 'edit') {
+      hiddenMetricNames.value = []
+      hiddenLineNames.value = []
+    }
+    data.refetch()
+  }
 )
 
 type Tab = 'appearance' | 'metrics'
@@ -188,6 +194,7 @@ async function save(): Promise<void> {
     )
     return
   }
+
   if (etag === null) {
     saveError.value = _t(
       'The graph was loaded without a version identifier — reload the page before saving.'

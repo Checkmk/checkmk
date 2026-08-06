@@ -80,7 +80,7 @@ SECTIONS: Sequence[SectionOptions] = (
     SectionOptions(
         section="locks",
         title=Title("Locks"),
-        mode="synchronous",
+        mode="asynchronous",
     ),
     SectionOptions(
         section="logswitches",
@@ -137,7 +137,7 @@ SECTIONS: Sequence[SectionOptions] = (
             "I/O stats bytes' or 'Create additional service for I/O stats requests' "
             "in 'Oracle performance discovery'."
         ),
-        mode="asynchronous",
+        mode="disabled",
     ),
     SectionOptions(
         section="jobs",

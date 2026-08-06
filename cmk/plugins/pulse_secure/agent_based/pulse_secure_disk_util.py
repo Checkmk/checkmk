@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -18,14 +18,15 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.pulse_secure import lib as pulse_secure
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 Section = Mapping[str, int]
 
 METRIC_PULSE_SECURE_DISK = "disk_utilization"
 
 
-class PulseSecureDiskUtilParams(TypedDict, total=False):
-    upper_levels: tuple[float, float]
+class PulseSecureDiskUtilParams(TypedDict):
+    upper_levels: SimpleLevelsConfigModel[float]
 
 
 def parse_pulse_secure_disk_util(string_table: StringTable) -> Section | None:
@@ -45,7 +46,7 @@ def check_pulse_secure_disk_util(
 
     yield from check_levels(
         section[METRIC_PULSE_SECURE_DISK],
-        levels_upper=params.get("upper_levels"),
+        levels_upper=params["upper_levels"],
         metric_name=METRIC_PULSE_SECURE_DISK,
         render_func=render.percent,
         label="Percentage of disk space used",
@@ -69,5 +70,5 @@ check_plugin_pulse_secure_disk_util = CheckPlugin(
     discovery_function=discover_pulse_secure_disk_util,
     check_function=check_pulse_secure_disk_util,
     check_ruleset_name="pulse_secure_disk_util",
-    check_default_parameters={"upper_levels": (80.0, 90.0)},
+    check_default_parameters=PulseSecureDiskUtilParams(upper_levels=("fixed", (80.0, 90.0))),
 )

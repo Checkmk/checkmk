@@ -15,7 +15,7 @@ from cmk.plugins.pulse_secure.agent_based.pulse_secure_disk_util import (
     PulseSecureDiskUtilParams,
 )
 
-PARAMS = PulseSecureDiskUtilParams(upper_levels=(80.0, 90.0))
+PARAMS = PulseSecureDiskUtilParams(upper_levels=("fixed", (80.0, 90.0)))
 
 
 @pytest.mark.parametrize(
@@ -69,14 +69,4 @@ def test_check_pulse_secure_disk(utilization: str, expected_result: Result) -> N
     assert list(check_pulse_secure_disk_util(PARAMS, parsed)) == [
         expected_result,
         Metric("disk_utilization", float(utilization), levels=(80.0, 90.0)),
-    ]
-
-
-def test_check_without_configured_levels() -> None:
-    parsed = parse_pulse_secure_disk_util([["7"]])
-    assert parsed is not None
-
-    assert list(check_pulse_secure_disk_util(PulseSecureDiskUtilParams(), parsed)) == [
-        Result(state=State.OK, summary="Percentage of disk space used: 7.00%"),
-        Metric("disk_utilization", 7.0),
     ]

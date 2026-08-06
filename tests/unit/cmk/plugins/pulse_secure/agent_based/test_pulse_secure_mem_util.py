@@ -15,7 +15,9 @@ from cmk.plugins.pulse_secure.agent_based.pulse_secure_mem_util import (
     PulseSecureMemUtilParams,
 )
 
-PARAMS = PulseSecureMemUtilParams(mem_used_percent=(90, 95), swap_used_percent=(5, 101))
+PARAMS = PulseSecureMemUtilParams(
+    mem_used_percent=("fixed", (90.0, 95.0)), swap_used_percent=("fixed", (5.0, 101.0))
+)
 
 
 @pytest.mark.parametrize(
@@ -56,16 +58,4 @@ def test_check_pulse_secure_mem_above_the_warn_levels() -> None:
         Metric("mem_used_percent", 92.0, levels=(90.0, 95.0)),
         Result(state=State.WARN, summary="Swap used: 7.00% (warn/crit at 5.00%/101.00%)"),
         Metric("swap_used_percent", 7.0, levels=(5.0, 101.0)),
-    ]
-
-
-def test_check_without_configured_levels() -> None:
-    parsed = parse_pulse_secure_mem([["8", "0"]])
-    assert parsed is not None
-
-    assert list(check_pulse_secure_mem(PulseSecureMemUtilParams(), parsed)) == [
-        Result(state=State.OK, summary="RAM used: 8.00%"),
-        Metric("mem_used_percent", 8.0),
-        Result(state=State.OK, summary="Swap used: 0%"),
-        Metric("swap_used_percent", 0.0),
     ]

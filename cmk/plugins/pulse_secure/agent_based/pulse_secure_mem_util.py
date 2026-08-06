@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -18,15 +18,16 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.pulse_secure import lib as pulse_secure
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 Section = Mapping[str, int]
 
 _METRIC_KEYS = ("mem_used_percent", "swap_used_percent")
 
 
-class PulseSecureMemUtilParams(TypedDict, total=False):
-    mem_used_percent: tuple[float, float]
-    swap_used_percent: tuple[float, float]
+class PulseSecureMemUtilParams(TypedDict):
+    mem_used_percent: SimpleLevelsConfigModel[float]
+    swap_used_percent: SimpleLevelsConfigModel[float]
 
 
 def parse_pulse_secure_mem(string_table: StringTable) -> Section | None:
@@ -45,7 +46,7 @@ def check_pulse_secure_mem(params: PulseSecureMemUtilParams, section: Section) -
     if "mem_used_percent" in section:
         yield from check_levels(
             section["mem_used_percent"],
-            levels_upper=params.get("mem_used_percent"),
+            levels_upper=params["mem_used_percent"],
             metric_name="mem_used_percent",
             render_func=render.percent,
             label="RAM used",
@@ -53,7 +54,7 @@ def check_pulse_secure_mem(params: PulseSecureMemUtilParams, section: Section) -
     if "swap_used_percent" in section:
         yield from check_levels(
             section["swap_used_percent"],
-            levels_upper=params.get("swap_used_percent"),
+            levels_upper=params["swap_used_percent"],
             metric_name="swap_used_percent",
             render_func=render.percent,
             label="Swap used",
@@ -77,8 +78,8 @@ check_plugin_pulse_secure_mem_util = CheckPlugin(
     discovery_function=discover_pulse_secure_mem_util,
     check_function=check_pulse_secure_mem,
     check_ruleset_name="pulse_secure_mem_util",
-    check_default_parameters={
-        "mem_used_percent": (90, 95),
-        "swap_used_percent": (5, 101),
-    },
+    check_default_parameters=PulseSecureMemUtilParams(
+        mem_used_percent=("fixed", (90.0, 95.0)),
+        swap_used_percent=("fixed", (5.0, 101.0)),
+    ),
 )

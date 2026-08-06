@@ -6526,7 +6526,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('pulse_secure_disk_util', [])
 
 checkgroup_parameters['pulse_secure_disk_util'] = [
-{'id': 'd27da454-8de1-486f-b76d-2464ef2d2479', 'value': {'upper_levels': (80.0, 90.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd27da454-8de1-486f-b76d-2464ef2d2479', 'value': {'upper_levels': ('fixed', (80.0, 90.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['pulse_secure_disk_util']
 
 
@@ -13803,7 +13803,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('pulse_secure_disk_util', [])
 
 static_checks['pulse_secure_disk_util'] = [
-{'id': '43b9c4a6-f065-4f08-a26b-537a2f19727d', 'value': ('pulse_secure_disk_util', None, {'upper_levels': (80.0, 90.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '43b9c4a6-f065-4f08-a26b-537a2f19727d', 'value': ('pulse_secure_disk_util', None, {'upper_levels': ('fixed', (80.0, 90.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['pulse_secure_disk_util']
 
 

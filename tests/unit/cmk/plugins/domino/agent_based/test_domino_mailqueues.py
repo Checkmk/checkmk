@@ -18,7 +18,7 @@ from cmk.plugins.domino.agent_based.domino_mailqueues import (
 # lnDeadMail, lnWaitingMail, lnMailHold, lnMailTotalPending, InMailWaitingforDNS
 STRING_TABLE: StringTable = [["1", "4711", "815", "1", "12"]]
 
-PARAMS = DominoMailqueuesParams(queue_length=(300, 350))
+PARAMS = DominoMailqueuesParams(queue_length=("fixed", (300, 350)))
 
 
 @pytest.mark.parametrize(
@@ -95,16 +95,6 @@ def test_check_domino_mailqueues(item: str, expected_result: Result, expected_va
     assert list(check_domino_mailqueues(item, PARAMS, parsed)) == [
         expected_result,
         Metric("mails", expected_value, levels=(300.0, 350.0)),
-    ]
-
-
-def test_check_without_configured_levels() -> None:
-    """queue_length is optional, and the check must then report the count without levels."""
-    parsed = parse_domino_mailqueues(STRING_TABLE)
-
-    assert list(check_domino_mailqueues("lnWaitingMail", DominoMailqueuesParams(), parsed)) == [
-        Result(state=State.OK, summary="Waiting mails: 4711"),
-        Metric("mails", 4711.0),
     ]
 
 

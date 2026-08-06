@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.domino.lib import DETECT
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 MAILQUEUES_LABEL = (
     ("lnDeadMail", "Dead mails"),
@@ -29,8 +30,8 @@ MAILQUEUES_LABEL = (
 Section = Mapping[str, tuple[str, int]]
 
 
-class DominoMailqueuesParams(TypedDict, total=False):
-    queue_length: tuple[int, int]
+class DominoMailqueuesParams(TypedDict):
+    queue_length: SimpleLevelsConfigModel[int]
 
 
 def parse_domino_mailqueues(string_table: StringTable) -> Section:
@@ -51,7 +52,7 @@ def check_domino_mailqueues(
     label, value = data
     yield from check_levels(
         value,
-        levels_upper=params.get("queue_length"),
+        levels_upper=params["queue_length"],
         metric_name="mails",
         render_func=lambda d: "%d" % int(d),
         label=label,
@@ -79,5 +80,5 @@ check_plugin_domino_mailqueues = CheckPlugin(
     discovery_function=discover_domino_mailqueues,
     check_function=check_domino_mailqueues,
     check_ruleset_name="domino_mailqueues",
-    check_default_parameters={"queue_length": (300, 350)},
+    check_default_parameters=DominoMailqueuesParams(queue_length=("fixed", (300, 350))),
 )

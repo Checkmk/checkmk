@@ -3205,7 +3205,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('domino_mailqueues', [])
 
 checkgroup_parameters['domino_mailqueues'] = [
-{'id': 'ba2fe135-9cf1-4d95-92f8-e9ee0b89e9a3', 'value': {'queue_length': (300, 350)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ba2fe135-9cf1-4d95-92f8-e9ee0b89e9a3', 'value': {'queue_length': ('fixed', (300, 350))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['domino_mailqueues']
 
 
@@ -10680,7 +10680,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('domino_mailqueues', [])
 
 static_checks['domino_mailqueues'] = [
-{'id': '4c58701d-2bd2-438d-b90a-6ddbe0e5b211', 'value': ('domino_mailqueues', 'lnDeadMail', {'queue_length': (300, 350)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '4c58701d-2bd2-438d-b90a-6ddbe0e5b211', 'value': ('domino_mailqueues', 'lnDeadMail', {'queue_length': ('fixed', (300, 350))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['domino_mailqueues']
 
 

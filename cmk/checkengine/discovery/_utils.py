@@ -64,7 +64,7 @@ class DiscoverySettings:
             add_new_services=flags["add_new_services"],
             remove_vanished_services=flags["remove_vanished_services"],
             update_changed_service_labels=flags["update_changed_service_labels"],
-            update_changed_service_parameters=flags["update_changed_service_parameters"],
+            update_changed_service_parameters=flags.get("update_changed_service_parameters", False),
         )
 
     def to_automation_arg(self) -> str:

@@ -494,12 +494,15 @@ class Rulespec:
 
     @property
     def title(self) -> str | None:
-        try:
-            spec_title = localize_or_none(self.form_spec.title, translate_to_current_language)
-        except FormSpecNotImplementedError:
-            spec_title = self.valuespec.title()
+        if self._title:
+            plain_title: str | None = self._title()
+        else:
+            try:
+                # Instantiating the value model is expensive, only use as fallback
+                plain_title = localize_or_none(self.form_spec.title, translate_to_current_language)
+            except FormSpecNotImplementedError:
+                plain_title = self.valuespec.title()
 
-        plain_title = self._title() if self._title else spec_title
         if plain_title is None:
             return None
         if self._is_deprecated:

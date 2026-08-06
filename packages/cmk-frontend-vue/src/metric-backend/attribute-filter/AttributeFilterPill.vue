@@ -29,6 +29,7 @@ const props = withDefaults(
     condition: Condition
     querySuggestions: QuerySuggestionsFn
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
+    suggestionRevision?: number
     operators?: Operator[] | undefined
     ariaLabel?: string | undefined
     removable?: boolean
@@ -36,6 +37,7 @@ const props = withDefaults(
     tabFocusable?: boolean
   }>(),
   {
+    suggestionRevision: 0,
     operators: () => [...STRING_OPERATORS, ...EXISTENCE_OPERATORS],
     removable: false,
     editing: false,
@@ -59,10 +61,18 @@ const emit = defineEmits<{
 const fullLabel = computed(() => pillLabel(props.condition))
 const showValue = computed(() => operatorTakesValue(props.condition.operator))
 
-const valueOptions = computed(() => ({
-  type: 'callback-filtered' as const,
-  querySuggestions: (query: string) => props.queryValueSuggestions(props.condition, query)
-}))
+// Reading the revision yields a fresh options identity on each bump, so CmkSuggestions re-queries.
+const keyOptions = computed(() => {
+  void props.suggestionRevision
+  return { type: 'callback-filtered' as const, querySuggestions: props.querySuggestions }
+})
+const valueOptions = computed(() => {
+  void props.suggestionRevision
+  return {
+    type: 'callback-filtered' as const,
+    querySuggestions: (query: string) => props.queryValueSuggestions(props.condition, query)
+  }
+})
 
 const attributeKindEmpty = computed(() => props.condition.attributeKind === null)
 const keyEmpty = computed(() => !props.condition.key)
@@ -291,7 +301,7 @@ defineExpose({
           ref="keyDropdownRef"
           floating
           :model-value="condition.key || null"
-          :options="{ type: 'callback-filtered', querySuggestions }"
+          :options="keyOptions"
           :label="_t('Attribute key')"
           :input-hint="_t('Attribute key')"
           :required="validationVisible"

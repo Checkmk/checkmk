@@ -15,7 +15,6 @@ import {
   type Suggestion,
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
-import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
 import FormValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { randomId } from 'cmk-ui-library/lib/randomId'
@@ -68,7 +67,13 @@ const filterModel = ref<AttributeFilterModel>(
 attributeFilter.value = toAttributeFilter(filterModel.value)
 const validationMessages = ref<string[]>([])
 
-const { querySuggestions, resolveKind: resolveAttributeKind } = useAttributeKeySuggestions(() =>
+const {
+  querySuggestions,
+  resolveKind: resolveAttributeKind,
+  cachedSuggestions,
+  suggestionRevision,
+  clearCache: clearSuggestionCache
+} = useAttributeKeySuggestions(() =>
   buildAutocompleteContext(filterModel.value, {
     metricName: props.metricName,
     staticResourceAttributeKeys: props.staticResourceAttributeKeys
@@ -87,6 +92,8 @@ watch(
   () => props.metricName,
   () => {
     filterModel.value = []
+    // Suggestions are scoped to the metric, so the previous metric's cache is stale.
+    clearSuggestionCache()
   }
 )
 
@@ -110,10 +117,7 @@ function suggestionsWithoutEcho(
   )
 }
 
-async function queryValueSuggestions(
-  condition: Condition,
-  query: string
-): Promise<Response | ErrorResponse> {
+async function queryValueSuggestions(condition: Condition, query: string): Promise<Response> {
   // Always offer the typed text as a free-text entry, even when the backend cannot help.
   const userEntry: Suggestion[] = query ? [{ name: query, title: untranslated(query) }] : []
   if (condition.attributeKind === null || !condition.key) {
@@ -137,8 +141,8 @@ async function queryValueSuggestions(
       }
     }
   }
-  const response = await fetchSuggestions(autocompleter, query)
-  if (response instanceof ErrorResponse) {
+  const response = cachedSuggestions(autocompleter, query)
+  if (!response || response instanceof ErrorResponse) {
     return new Response(userEntry)
   }
   return new Response([...userEntry, ...suggestionsWithoutEcho(response.choices, query)])
@@ -186,6 +190,7 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
           :operators="props.operators"
           :query-suggestions="querySuggestions"
           :query-value-suggestions="queryValueSuggestions"
+          :suggestion-revision="suggestionRevision"
           :resolve-attribute-kind="resolveAttributeKind"
           :aria-label="_t('Attributes')"
         />

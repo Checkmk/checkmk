@@ -6,7 +6,7 @@
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/vue'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import { HttpResponse, http } from 'msw'
+import { HttpResponse, delay, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { defineComponent, ref } from 'vue'
 
@@ -112,9 +112,7 @@ async function openKeyFilter(): Promise<HTMLElement> {
 async function selectKey(query: string, key: string): Promise<void> {
   const filterInput = await openKeyFilter()
   await userEvent.type(filterInput, query)
-  // Wait out the debounce before clicking; un-keyed <li>s mean a mid-re-render click misses.
-  await screen.findByRole('option', { name: query })
-  await userEvent.click(screen.getByRole('option', { name: key }))
+  await userEvent.click(await screen.findByRole('option', { name: key }))
 }
 
 async function openValueFilter(): Promise<HTMLElement> {
@@ -165,11 +163,7 @@ test('removing a pill removes it and leaves the other pills untouched', async ()
 test('a key with no value keeps the emitted filter empty', async () => {
   const model = renderAttributes()
 
-  const filterInput = await openKeyFilter()
-  await userEvent.type(filterInput, 'service')
-  // Wait for the debounce to settle: un-keyed <li>s mean clicking mid-re-render hits the wrong option.
-  await screen.findByRole('option', { name: 'service' })
-  await userEvent.click(screen.getByRole('option', { name: 'service.name' }))
+  await selectKey('service', 'service.name')
 
   // The key is set, but with no value the condition is invalid, so the filter stays empty.
   await waitFor(() => {
@@ -189,23 +183,19 @@ test.each([true, false])('allowOr=%s shows the OR connector only when enabled', 
 })
 
 test.each([
-  { when: 'offers no choices', failValueAutocompleter: false },
-  { when: 'errors', failValueAutocompleter: true }
+  { when: 'offers no choices', respond: () => undefined },
+  { when: 'errors', respond: () => new HttpResponse(null, { status: 500 }) },
+  { when: 'hangs', respond: () => delay('infinite') }
 ])(
   'a typed value stays selectable and commits when the value backend $when (CMK-37726)',
-  async ({ failValueAutocompleter }) => {
-    // A 500 makes cmkFetch log an expected console.info; silence it so vitest-fail-on-console
-    // does not flag it (harmless no-op in the other case).
+  async ({ respond }) => {
+    // The 500 makes cmkFetch log an expected console.info; silence it for vitest-fail-on-console.
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
-    if (failValueAutocompleter) {
-      server.use(
-        http.post(`${API_BASE}/objects/autocomplete/:ident`, ({ params }) =>
-          params.ident === VALUE_IDENTS.resource
-            ? new HttpResponse(null, { status: 500 })
-            : undefined
-        )
+    server.use(
+      http.post(`${API_BASE}/objects/autocomplete/:ident`, ({ params }) =>
+        params.ident === VALUE_IDENTS.resource ? respond() : undefined
       )
-    }
+    )
     const model = renderAttributes()
 
     await selectKey('service', 'service.name')
@@ -234,6 +224,37 @@ test('a typed value is offered even when the attribute kind is unresolved (CMK-3
   await userEvent.type(valueInput, 'web')
 
   expect(await screen.findByRole('option', { name: 'web' })).toBeInTheDocument()
+})
+
+test('late value-backend suggestions merge in after the free-text echo (CMK-37726)', async () => {
+  let releaseValues: () => void = () => {}
+  const valuesGate = new Promise<void>((resolve) => {
+    releaseValues = resolve
+  })
+  server.use(
+    http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {
+      if (params.ident !== VALUE_IDENTS.resource) {
+        return undefined
+      }
+      const { value: query } = (await request.json()) as { value: string }
+      await valuesGate
+      const values = ['web-server', 'web-proxy'].filter((value) => value.includes(query))
+      return HttpResponse.json({ choices: values.map((value) => ({ id: value, value })) })
+    })
+  )
+  renderAttributes()
+
+  await selectKey('service', 'service.name')
+  const valueInput = await openValueFilter()
+  await userEvent.type(valueInput, 'web')
+
+  expect(await screen.findByRole('option', { name: 'web' })).toBeInTheDocument()
+  expect(screen.queryByRole('option', { name: 'web-server' })).toBeNull()
+
+  releaseValues()
+  expect(await screen.findByRole('option', { name: 'web-server' })).toBeInTheDocument()
+  expect(screen.getByRole('option', { name: 'web-proxy' })).toBeInTheDocument()
+  expect(screen.getByRole('option', { name: 'web' })).toBeInTheDocument()
 })
 
 test('initializes the pills from a provided attribute filter, including exists', () => {

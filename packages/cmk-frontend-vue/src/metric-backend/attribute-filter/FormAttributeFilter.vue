@@ -31,12 +31,13 @@ const props = withDefaults(
   defineProps<{
     querySuggestions: QuerySuggestionsFn
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
+    suggestionRevision?: number
     resolveAttributeKind?: ((key: string) => AttributeKind) | undefined
     operators?: Operator[] | undefined
     allowOr?: boolean
     ariaLabel?: string | undefined
   }>(),
-  { resolveAttributeKind: undefined, operators: undefined, allowOr: true }
+  { suggestionRevision: 0, resolveAttributeKind: undefined, operators: undefined, allowOr: true }
 )
 
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
@@ -388,6 +389,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
               :operators="operators"
               :query-suggestions="querySuggestions"
               :query-value-suggestions="queryValueSuggestions"
+              :suggestion-revision="suggestionRevision"
               removable
               :editing="condition.id === editingId"
               :tab-focusable="isEntered(group)"
@@ -430,6 +432,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
           :operators="operators"
           :query-suggestions="querySuggestions"
           :query-value-suggestions="queryValueSuggestions"
+          :suggestion-revision="suggestionRevision"
           removable
           :editing="group.conditions[0]!.id === editingId"
           @remove="removeCondition(group.conditions[0]!)"
@@ -465,6 +468,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
         :operators="operators"
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
+        :suggestion-revision="suggestionRevision"
         removable
         :editing="condition.id === editingId"
         @remove="removeCondition(condition)"

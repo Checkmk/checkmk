@@ -15,6 +15,7 @@ import type { QuerySuggestionsFn } from 'cmk-ui-library/components/CmkSuggestion
 import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { type Ref, ref } from 'vue'
 
 import { ATTRIBUTE_KIND_ORDER, KEY_IDENTS } from './attributeFilterAdapter'
 import type { AttributeKindKey, AutoCompleteContext } from './attributeFilterAdapter'
@@ -27,8 +28,42 @@ import type { AttributeKindKey, AutoCompleteContext } from './attributeFilterAda
 export function useAttributeKeySuggestions(buildContext: () => AutoCompleteContext): {
   querySuggestions: QuerySuggestionsFn
   resolveKind: (key: string) => AttributeKindKey | null
+  cachedSuggestions: (
+    autocompleter: Autocompleter,
+    query: string
+  ) => Response | ErrorResponse | undefined
+  suggestionRevision: Ref<number>
+  clearCache: () => void
 } {
   const { _t } = usei18n()
+
+  const suggestionCache = new Map<string, Response | ErrorResponse>()
+  const inflightSuggestions = new Set<string>()
+  const suggestionRevision = ref(0)
+
+  function cachedSuggestions(
+    autocompleter: Autocompleter,
+    query: string
+  ): Response | ErrorResponse | undefined {
+    const key = `${JSON.stringify(autocompleter)}\n${query}`
+    const cached = suggestionCache.get(key)
+    if (cached) {
+      return cached
+    }
+    if (!inflightSuggestions.has(key)) {
+      inflightSuggestions.add(key)
+      void fetchSuggestions(autocompleter, query).then((response) => {
+        suggestionCache.set(key, response)
+        inflightSuggestions.delete(key)
+        suggestionRevision.value += 1
+      })
+    }
+    return undefined
+  }
+
+  function clearCache(): void {
+    suggestionCache.clear()
+  }
 
   const sectionTitles: Record<AttributeKindKey, TranslatedString> = {
     resource: _t('Resource'),
@@ -49,20 +84,14 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
     }
   }
 
-  async function querySuggestions(query: string): Promise<Response | ErrorResponse> {
-    // The three key autocompleters are independent, so fetch them concurrently.
-    const responses = await Promise.all(
-      ATTRIBUTE_KIND_ORDER.map((attributeKind) => {
-        const autocompleter: Autocompleter = {
-          fetch_method: 'rest_autocomplete',
-          data: { ident: KEY_IDENTS[attributeKind], params: { context: buildContext() } }
-        }
-        return fetchSuggestions(autocompleter, query)
-      })
-    )
+  async function querySuggestions(query: string): Promise<Response> {
     const sections: Section[] = []
-    ATTRIBUTE_KIND_ORDER.forEach((attributeKind, index) => {
-      const response = responses[index]
+    ATTRIBUTE_KIND_ORDER.forEach((attributeKind) => {
+      const autocompleter: Autocompleter = {
+        fetch_method: 'rest_autocomplete',
+        data: { ident: KEY_IDENTS[attributeKind], params: { context: buildContext() } }
+      }
+      const response = cachedSuggestions(autocompleter, query)
       if (!response || response instanceof ErrorResponse) {
         return
       }
@@ -95,5 +124,5 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
     return kinds?.size === 1 ? [...kinds][0]! : null
   }
 
-  return { querySuggestions, resolveKind }
+  return { querySuggestions, resolveKind, cachedSuggestions, suggestionRevision, clearCache }
 }

@@ -77,7 +77,12 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof FormAttributeFilter,
-  'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeKind' | 'ariaLabel'
+  | 'modelValue'
+  | 'querySuggestions'
+  | 'queryValueSuggestions'
+  | 'suggestionRevision'
+  | 'resolveAttributeKind'
+  | 'ariaLabel'
 > & { preset: ListPropDef<PresetName>; operators: MultiSelectPropDef<Operator> }
 </script>
 
@@ -195,7 +200,12 @@ async function queryValueSuggestions(
 
 const propState = new PanelStateCreator<
   typeof FormAttributeFilter,
-  'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeKind' | 'ariaLabel'
+  | 'modelValue'
+  | 'querySuggestions'
+  | 'queryValueSuggestions'
+  | 'suggestionRevision'
+  | 'resolveAttributeKind'
+  | 'ariaLabel'
 >().createRef(panelConfig)
 
 function clonePreset(name: PresetName): AttributeFilterModel {

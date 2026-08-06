@@ -19,7 +19,6 @@ import type { ConsolidationFunction } from '@/metric-backend/consolidation/types
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
-  HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
   fractionBelowGroupBy,
   fractionBetweenGroupBy,
   groupFractionBelowThresholdToWire,
@@ -318,7 +317,6 @@ const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLe
           <FormGroupBy
             v-model="groupBy"
             input-type="histogram"
-            :allowed-functions="HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS"
             :query-suggestions="groupByQuerySuggestions"
             :resolve-level="groupByResolveLevel"
           />

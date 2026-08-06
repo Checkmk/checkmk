@@ -7,20 +7,7 @@ import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/graph
 import { randomId } from 'cmk-ui-library/lib/randomId'
 
 import { DEFAULT_QUANTILE } from '../histogram-params'
-import { type GroupByFunction, type GroupByModel, type GroupKey, isKeyValid } from './types'
-
-/**
- * The groupings "preserve histograms" can be paired with.
- *
- * "percentile by", "fraction below by" and "fraction between by" have fused wire
- * consolidations, histogram_preserve_quantile, histogram_preserve_fraction_below and
- * histogram_preserve_fraction_between.
- */
-export const HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS: readonly GroupByFunction[] = [
-  'percentile',
-  'fraction_below',
-  'fraction_between'
-]
+import { type GroupByModel, type GroupKey, isKeyValid } from './types'
 
 /**
  * The "percentile by" clause a stored histogram_preserve_quantile describes, or a fresh

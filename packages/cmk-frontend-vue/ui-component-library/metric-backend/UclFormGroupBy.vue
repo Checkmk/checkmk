@@ -61,7 +61,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof FormGroupBy,
-  'modelValue' | 'querySuggestions' | 'resolveLevel' | 'ariaLabel' | 'allowedFunctions'
+  'modelValue' | 'querySuggestions' | 'resolveLevel' | 'ariaLabel'
 > & {
   preset: ListPropDef<PresetName>
   inputType: ListPropDef<GroupByInputType>
@@ -152,7 +152,7 @@ function resolveLevel(key: string): GroupLevel | null {
 
 const propState = new PanelStateCreator<
   typeof FormGroupBy,
-  'modelValue' | 'querySuggestions' | 'resolveLevel' | 'ariaLabel' | 'allowedFunctions'
+  'modelValue' | 'querySuggestions' | 'resolveLevel' | 'ariaLabel'
 >().createRef(panelConfig)
 
 function clonePreset(name: PresetName): GroupByModel {

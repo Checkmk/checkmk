@@ -8,9 +8,9 @@ import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/mon
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { computed, onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostRef, HostServiceEntry } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
@@ -23,6 +23,7 @@ import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { HostServicesApi } from './api/services'
 import { useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
+import ServiceSlideIn from './components/ServiceSlideIn.vue'
 import { HostServicesService } from './services/HostServicesService'
 
 const { _t } = usei18n()
@@ -61,6 +62,24 @@ provide(MONITORING_SERVICE, hostServicesService)
 
 function rowKey(row: HostServiceEntry): string {
   return row.name
+}
+
+const hostRef: HostRef = { name: props.host, site_id: props.site }
+
+const slideInService = ref<HostServiceEntry | null>(null)
+
+function openSlideIn(service: HostServiceEntry): void {
+  if (slideInService.value === null) {
+    hostServicesService.beginAutoPause()
+  }
+  slideInService.value = service
+}
+
+function closeSlideIn(): void {
+  if (slideInService.value !== null) {
+    hostServicesService.endAutoPause()
+  }
+  slideInService.value = null
 }
 </script>
 
@@ -107,7 +126,7 @@ function rowKey(row: HostServiceEntry): string {
       @update:filter-state="hostServicesService.onColumnFiltersUpdate($event)"
     >
       <template #row="{ row }">
-        <HostServicesRow :row="row" />
+        <HostServicesRow :row="row" @open="openSlideIn" />
       </template>
       <template #empty-state>
         <MonitoringEmptyState
@@ -116,6 +135,7 @@ function rowKey(row: HostServiceEntry): string {
         />
       </template>
     </MonitoringTable>
+    <ServiceSlideIn :service="slideInService" :host="hostRef" @close="closeSlideIn" />
   </div>
 </template>
 

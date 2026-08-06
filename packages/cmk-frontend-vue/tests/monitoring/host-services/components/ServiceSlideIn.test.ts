@@ -1,0 +1,117 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import userEvent from '@testing-library/user-event'
+import { render, screen } from '@testing-library/vue'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import ServiceSlideIn from '@/monitoring/host-services/components/ServiceSlideIn.vue'
+import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+
+const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
+
+function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
+  return {
+    name: 'CPU load',
+    state: 'OK',
+    summary: 'OK - load average: 0.10, 0.05, 0.01',
+    last_check: '2026-07-13T11:38:30Z',
+    last_state_change: '2026-07-13T11:39:00Z',
+    ...overrides
+  }
+}
+
+function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview {
+  return {
+    name: 'CPU load',
+    host_name: HOST.name,
+    site_id: HOST.site_id,
+    state: 'OK',
+    modes: [],
+    host_alias: 'Web Server',
+    host_state: 'UP',
+    host_modes: [],
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01',
+    legacy_service_status_link:
+      'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
+    legacy_service_parameters_link:
+      'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load',
+    contact_groups: ['all'],
+    summary: 'OK - load average: 0.10, 0.05, 0.01',
+    long_output: '',
+    last_check: '2026-07-13T11:38:30Z',
+    last_state_change: '2026-07-13T11:39:00Z',
+    current_attempt: 1,
+    max_check_attempts: 3,
+    next_check: '2026-07-13T11:40:00Z',
+    ...overrides
+  }
+}
+
+describe('ServiceSlideIn', () => {
+  beforeEach(() => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview(),
+      error: undefined,
+      response: new Response()
+    } as never)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('stays closed while no service is selected', () => {
+    render(ServiceSlideIn, { props: { service: null, host: HOST } })
+
+    expect(screen.queryByText('Service details')).not.toBeInTheDocument()
+  })
+
+  it('shows the overview of the selected service once it is loaded', async () => {
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+    expect(await screen.findByText('CPU load')).toBeInTheDocument()
+  })
+
+  it('requests the overview for the selected service of this host', async () => {
+    render(ServiceSlideIn, { props: { service: makeService({ name: 'Memory' }), host: HOST } })
+
+    await screen.findByText('Service details')
+
+    expect(client.GET).toHaveBeenCalledWith('/monitor/hosts/{hostname}/service', {
+      params: {
+        path: { hostname: 'web-server-01' },
+        query: { site_id: 'local', service_name: 'Memory' }
+      }
+    })
+  })
+
+  it('reloads the overview when another service is picked while the panel is open', async () => {
+    const { rerender } = render(ServiceSlideIn, {
+      props: { service: makeService(), host: HOST }
+    })
+    await screen.findByText('Service details')
+
+    await rerender({ service: makeService({ name: 'Memory' }), host: HOST })
+
+    expect(client.GET).toHaveBeenLastCalledWith('/monitor/hosts/{hostname}/service', {
+      params: {
+        path: { hostname: 'web-server-01' },
+        query: { site_id: 'local', service_name: 'Memory' }
+      }
+    })
+  })
+
+  it('emits close when the close button is used', async () => {
+    const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    await screen.findByText('Service details')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(emitted()['close']).toHaveLength(1)
+  })
+})

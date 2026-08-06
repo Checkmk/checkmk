@@ -14,6 +14,10 @@ import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 const props = defineProps<{ row: HostServiceEntry }>()
 
+const emit = defineEmits<{
+  (event: 'open', service: HostServiceEntry): void
+}>()
+
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
 function hasColumn(columnId: string): boolean {
@@ -26,7 +30,13 @@ const lastStateChange = computed(() => formatTimestamp(props.row.last_state_chan
 
 <template>
   <StateCell v-if="hasColumn('state')" column-id="state" kind="service" :state="row.state" />
-  <StringCell v-if="hasColumn('name')" column-id="name" :value="row.name" />
+  <StringCell
+    v-if="hasColumn('name')"
+    column-id="name"
+    :value="row.name"
+    :button="true"
+    @click="emit('open', row)"
+  />
   <StringCell v-if="hasColumn('summary')" column-id="summary" :value="row.summary" />
   <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
   <StringCell

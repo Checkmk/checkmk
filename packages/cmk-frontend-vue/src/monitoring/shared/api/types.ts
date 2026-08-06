@@ -19,6 +19,8 @@ export type HostServiceEntry = components['schemas']['HostServiceEntry']
 
 export type HostOverview = components['schemas']['HostOverviewResponse']
 
+export type ServiceOverview = components['schemas']['ServiceOverviewResponse']
+
 export type HostMode = components['schemas']['ModeInfo']
 
 export type ActionMenuItem = components['schemas']['ActionMenuItem']
@@ -26,6 +28,11 @@ export type ActionMenuItem = components['schemas']['ActionMenuItem']
 export interface HostRef {
   site_id: string
   name: string
+}
+
+export interface ServiceRef {
+  host: HostRef
+  description: string
 }
 
 export type HostState = components['schemas']['HostState']

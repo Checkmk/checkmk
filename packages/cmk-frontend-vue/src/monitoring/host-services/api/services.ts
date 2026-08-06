@@ -6,7 +6,12 @@
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { MonitoringApi, type MonitoringQueryParams } from '@/monitoring/shared/api/MonitoringApi'
-import type { HostRef, HostServicesResponse } from '@/monitoring/shared/api/types'
+import type {
+  HostRef,
+  HostServicesResponse,
+  ServiceOverview,
+  ServiceRef
+} from '@/monitoring/shared/api/types'
 
 export class HostServicesApi extends MonitoringApi {
   public async fetchServices(
@@ -23,6 +28,17 @@ export class HostServicesApi extends MonitoringApi {
         },
         body: this.buildRequestBody(params),
         ...(signal && { signal })
+      })
+    )
+  }
+
+  public async fetchServiceOverview(service: ServiceRef): Promise<ServiceOverview> {
+    return unwrap(
+      await client.GET('/monitor/hosts/{hostname}/service', {
+        params: {
+          path: { hostname: service.host.name },
+          query: { site_id: service.host.site_id, service_name: service.description }
+        }
       })
     )
   }

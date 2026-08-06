@@ -159,6 +159,26 @@ def test_unwanted_command_is_excluded() -> None:
     assert _idents(_commands(source), {"action.test"}, ["acknowledge"]) == []
 
 
+def test_permitted_actions_includes_action_granted_general_act() -> None:
+    source = _LegacySource([_LegacyCommand(ident="acknowledge")])
+
+    permitted = _commands(source).permitted_actions(
+        cast(LoggedInUser, _StubUser({"general.act", "action.test"})), "host", ["acknowledge"]
+    )
+
+    assert [command.ident for command in permitted] == ["acknowledge"]
+
+
+def test_permitted_actions_excluded_without_general_act() -> None:
+    source = _LegacySource([_LegacyCommand(ident="acknowledge")])
+
+    permitted = _commands(source).permitted_actions(
+        cast(LoggedInUser, _StubUser({"action.test"})), "host", ["acknowledge"]
+    )
+
+    assert permitted == []
+
+
 def test_prominent_commands_come_first() -> None:
     source = _LegacySource(
         [

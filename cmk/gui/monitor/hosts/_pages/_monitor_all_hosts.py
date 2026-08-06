@@ -32,13 +32,12 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.all_hosts import (
     Edition,
+    MonitoringAction,
     MonitoringAllHostsApp,
     MonitoringPageLinkButton,
     RowAction,
 )
 from cmk.utils import paths
-
-from .._actions import PermittedHostActions
 
 _PAGE_TITLE = _("All hosts (experimental)")
 
@@ -130,9 +129,14 @@ class MonitorAllHostsPage(Page):
                     user_id=str(user.id),
                     site=str(omd_site()),
                     edition=Edition(edition(paths.omd_root).short),
-                    actions=PermittedHostActions(
-                        self._commands, user, _SUPPORTED_ACTIONS
-                    ).as_models(),
+                    actions=[
+                        MonitoringAction(
+                            ident=command.ident, title=str(command.title), icon=command.icon
+                        )
+                        for command in self._commands.permitted_actions(
+                            user, "host", _SUPPORTED_ACTIONS
+                        )
+                    ],
                     row_actions=_row_actions(ctx.config),
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     legacy_view_button=MonitoringPageLinkButton(

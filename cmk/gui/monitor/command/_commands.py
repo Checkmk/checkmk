@@ -55,6 +55,17 @@ class MonitorCommands:
         ]
         return sorted(commands, key=lambda command: 0 if command.is_prominent else 1)
 
+    def permitted_actions(
+        self,
+        user: LoggedInUser,
+        object_type: MonitorObjectType,
+        idents: Iterable[str],
+    ) -> list[MonitorCommand]:
+        """Like permitted_for, but also requires the general permission to act at all."""
+        if not user.may("general.act"):
+            return []
+        return self.permitted_for(user, object_type, idents)
+
     def _available(self) -> dict[str, MonitorCommand]:
         # Natively registered commands win, so this domain can supersede a legacy one.
         commands = {command.ident: command for command in self._legacy_commands()}

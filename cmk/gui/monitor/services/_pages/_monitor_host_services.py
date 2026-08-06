@@ -13,6 +13,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
+from cmk.gui.monitor.command import MonitorCommands
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
@@ -20,12 +21,24 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.host_services import (
+    MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
 )
 
+_SUPPORTED_ACTIONS: tuple[str, ...] = ("schedule_downtimes",)
+
 
 class MonitorHostServicesPage(Page):
+    def __init__(self, commands: MonitorCommands) -> None:
+        self._commands = commands
+
+    def _permitted_actions(self) -> list[MonitoringAction]:
+        return [
+            MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            for command in self._commands.permitted_actions(user, "service", _SUPPORTED_ACTIONS)
+        ]
+
     @override
     def page(self, ctx: PageContext) -> None:
         hostname = ctx.request.get_validated_type_input_mandatory(HostName, "host")
@@ -59,6 +72,7 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     host=hostname,
                     site=site_id,
+                    actions=self._permitted_actions(),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

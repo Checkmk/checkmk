@@ -506,6 +506,7 @@ class SiteManagement:
                 parameter_form=SingleChoiceExtended[str](
                     title=Title("LDAP connection"),
                     elements=ldap_elements,
+                    no_elements_text=Message("No connection available"),
                 ),
             ),
         ]
@@ -528,6 +529,7 @@ class SiteManagement:
                                 parameter_form=SingleChoiceExtended[str](
                                     title=Title("SAML connection"),
                                     elements=saml_elements,
+                                    no_elements_text=Message("No connection available"),
                                 ),
                             ),
                             "metadata_endpoint": DictElement(

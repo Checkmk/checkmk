@@ -7,9 +7,9 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -26,13 +26,14 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.aruba.lib import DETECT_2930M
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-class PSUWattageParams(TypedDict, total=False):
-    levels_abs_upper: tuple[float, float]
-    levels_abs_lower: tuple[float, float]
-    levels_perc_upper: tuple[float, float]
-    levels_perc_lower: tuple[float, float]
+class PSUWattageParams(TypedDict):
+    levels_abs_upper: SimpleLevelsConfigModel[float]
+    levels_abs_lower: SimpleLevelsConfigModel[float]
+    levels_perc_upper: SimpleLevelsConfigModel[float]
+    levels_perc_lower: SimpleLevelsConfigModel[float]
 
 
 default_psu_temperature_parameters = TempParamDict(
@@ -41,10 +42,10 @@ default_psu_temperature_parameters = TempParamDict(
 )
 
 default_psu_wattage_parameters = PSUWattageParams(
-    levels_abs_upper=(500.0, 600.0),
-    levels_abs_lower=(0.0, 0.0),
-    levels_perc_upper=(80.0, 90.0),
-    levels_perc_lower=(0.0, 0.0),
+    levels_abs_upper=("fixed", (500.0, 600.0)),
+    levels_abs_lower=("fixed", (0.0, 0.0)),
+    levels_perc_upper=("fixed", (80.0, 90.0)),
+    levels_perc_lower=("fixed", (0.0, 0.0)),
 )
 
 
@@ -225,20 +226,20 @@ def check_aruba_psu_wattage(
     if not (psu := section.get(item)):
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=psu.wattage_curr,
-        levels_upper=params.get("levels_abs_upper"),
-        levels_lower=params.get("levels_abs_lower"),
+        levels_upper=params["levels_abs_upper"],
+        levels_lower=params["levels_abs_lower"],
         metric_name="power",
         label="Wattage",
         render_func=lambda x: f"{x:.2f}W",
     )
 
     if psu.wattage_max > 0:
-        yield from check_levels_v1(
+        yield from check_levels(
             value=psu.wattage_curr / psu.wattage_max * 100.0,
-            levels_upper=params.get("levels_perc_upper"),
-            levels_lower=params.get("levels_perc_lower"),
+            levels_upper=params["levels_perc_upper"],
+            levels_lower=params["levels_perc_lower"],
             metric_name=None,
             label="Wattage",
             render_func=render.percent,

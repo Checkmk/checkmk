@@ -35,7 +35,7 @@ def main() -> int:
 
     ctx = GerritRunContext(
         hostname=args.hostname,
-        ttl=TTLCache(version=args.version_cache),
+        ttl=TTLCache(version=int(args.version_cache)),
         collectors=Collectors(version=GerritVersion(api_url=api_url, auth=auth)),
     )
 

@@ -159,6 +159,7 @@ def test_fetch_graph_data_comprehensive_graph(
                 # rather than by what the scalar would resolve to.
                 "title": "m",
                 "value": -100.0,
+                "unit": unit,
                 "color": "#FFFFFF",
             }
         ],

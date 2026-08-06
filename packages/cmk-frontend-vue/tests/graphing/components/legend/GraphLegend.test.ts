@@ -14,6 +14,13 @@ import GraphLegend from '@/graphing/components/legend/GraphLegend.vue'
 
 // A single-sample bucket so every consolidation (min/max/avg) resolves to the same value,
 // matching the fixture already used in TimeSeriesGraph/render/stacked.test.ts.
+const LINE_UNIT: HorizontalLine['unit'] = {
+  notation: 'decimal',
+  symbol: '%',
+  precision: { type: 'auto', digits: 2 },
+  convertible: true
+}
+
 function makeBucket(value: number): M4Bucket {
   return {
     startTime: 0,
@@ -151,17 +158,19 @@ test('a hidden metric keeps its entry, with its toggle showing it is off', () =>
   expect(screen.getByRole('button', { name: 'Memory' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('horizontal lines render with their title and value', () => {
+test('horizontal lines render their value with their unit, as metric values are', () => {
   const line: HorizontalLine = {
     name: 'scalar_of(warning,rrd_metric(h/svc/util))',
     title: 'Warning',
     value: 80,
+    unit: LINE_UNIT,
     color: '#ffaa00'
   }
   render(GraphLegend, { props: { metrics: [CPU], horizontalLines: [line] } })
   expect(screen.getByText('Warning')).toBeInTheDocument()
   const warningRow = screen.getByText('Warning').closest('tr')!
-  expect(warningRow).toHaveTextContent('80')
+  // Not the bare '80': a threshold is read against the metric it bounds, so it carries its unit.
+  expect(warningRow).toHaveTextContent(/80\s*%/)
 })
 
 test('clicking a horizontal line eye emits update:hiddenLineNames with that name added', async () => {
@@ -169,6 +178,7 @@ test('clicking a horizontal line eye emits update:hiddenLineNames with that name
     name: 'scalar_of(warning,rrd_metric(h/svc/util))',
     title: 'Warning',
     value: 80,
+    unit: LINE_UNIT,
     color: '#ffaa00'
   }
   const { emitted } = render(GraphLegend, {
@@ -186,6 +196,7 @@ test('clicking a hidden horizontal line eye emits update:hiddenLineNames with th
     name: 'scalar_of(warning,rrd_metric(h/svc/util))',
     title: 'Warning',
     value: 80,
+    unit: LINE_UNIT,
     color: '#ffaa00'
   }
   const { emitted } = render(GraphLegend, {
@@ -257,6 +268,7 @@ test('marks header and horizontal-line rows as padded once the metrics table ove
     name: 'scalar_of(warning,rrd_metric(h/svc/util))',
     title: 'Warning',
     value: 80,
+    unit: LINE_UNIT,
     color: '#ffaa00'
   }
   const { container } = render(GraphLegend, {

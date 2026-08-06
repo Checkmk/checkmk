@@ -18,8 +18,27 @@ const plotWidth = 200
 // scale rather than coincidentally echoing the input value.
 const yScale = ((value: number) => 200 - value) as unknown as ScaleLinear<number, number>
 
-const WARN: HorizontalLine = { name: 'warn', title: 'Warning', value: 30, color: '#ffa500' }
-const CRIT: HorizontalLine = { name: 'crit', title: 'Critical', value: 70, color: '#ff0000' }
+const LINE_UNIT: HorizontalLine['unit'] = {
+  notation: 'decimal',
+  symbol: '%',
+  precision: { type: 'auto', digits: 2 },
+  convertible: true
+}
+
+const WARN: HorizontalLine = {
+  name: 'warn',
+  title: 'Warning',
+  value: 30,
+  unit: LINE_UNIT,
+  color: '#ffa500'
+}
+const CRIT: HorizontalLine = {
+  name: 'crit',
+  title: 'Critical',
+  value: 70,
+  unit: LINE_UNIT,
+  color: '#ff0000'
+}
 
 function makeContextGroup(): SVGGElement {
   return document.createElementNS(SVG_NS, 'g') as SVGGElement

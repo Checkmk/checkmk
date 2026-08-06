@@ -19,6 +19,7 @@ import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
 import {
   type MetricStats,
   metricStats as computeMetricStats,
+  horizontalLineValue,
   metricsInGraphTopToBottomOrder,
   withNameToggled
 } from './legendUtils'
@@ -275,7 +276,7 @@ watch(
           <td></td>
           <td></td>
           <td class="graphing-graph-legend__stat">
-            {{ line.value }}
+            {{ horizontalLineValue(line) }}
           </td>
         </tr>
       </tbody>

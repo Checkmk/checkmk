@@ -5,7 +5,7 @@
  */
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 
-import type { Metric } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
 
 export interface MetricStats {
   min: string
@@ -45,6 +45,12 @@ export function metricStats(metric: Metric): MetricStats {
     max: isFinite(max) ? fmt(max) : 'n/a',
     last: last !== null && isFinite(last) ? fmt(last) : 'n/a'
   }
+}
+
+/** The line's value rendered with its own unit, as the metric stats are. */
+export function horizontalLineValue(line: HorizontalLine): string {
+  const { formatter } = userSpecificUnit(line.unit, 'celsius')
+  return formatter.render(line.value)
 }
 
 export function metricsInGraphTopToBottomOrder(metrics: Metric[]): Metric[] {

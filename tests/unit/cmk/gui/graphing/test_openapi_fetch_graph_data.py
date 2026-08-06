@@ -43,7 +43,11 @@ from cmk.gui.graphing._engine_dispatch import (
 from cmk.gui.graphing._engine_rrd import FetchDiagnostics, QueryLimitReached
 from cmk.gui.graphing._engine_template_graphs import _EvaluateTemplateGraphs
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
-from cmk.gui.graphing.openapi._serialize import api_consolidation_to_engine, evaluated_to_response
+from cmk.gui.graphing.openapi._serialize import (
+    api_consolidation_to_engine,
+    evaluated_to_response,
+    unit_to_api_unit_format,
+)
 from cmk.gui.graphing.openapi.fetch_graph_data import fetch_graph_data_v1
 from cmk.gui.graphing.openapi.models import ApiTimeRange, GraphFetchRequest
 from cmk.gui.openapi.utils import ProblemException
@@ -289,6 +293,9 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     # show/hide toggle keys on, which is no label a user should read.
     assert horizontal_line.title == "Warning"
     assert (horizontal_line.value, horizontal_line.color) == (80.0, "#ffcc00")
+    # The legend renders the value with the unit of the metric the line bounds, as it does a
+    # metric's own values - without it the raw number is all it can show.
+    assert horizontal_line.unit == unit_to_api_unit_format(unit)
 
 
 def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() -> None:

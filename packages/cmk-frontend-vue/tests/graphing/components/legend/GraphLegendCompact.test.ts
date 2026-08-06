@@ -8,6 +8,13 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 import GraphLegendCompact from '@/graphing/components/legend/GraphLegendCompact.vue'
 
+const LINE_UNIT: HorizontalLine['unit'] = {
+  notation: 'decimal',
+  symbol: '%',
+  precision: { type: 'auto', digits: 2 },
+  convertible: true
+}
+
 const UNIT: Metric['metadata']['unit'] = {
   notation: 'decimal',
   symbol: '',
@@ -37,6 +44,7 @@ const WARN_LINE: HorizontalLine = {
   name: 'scalar_of(warning,rrd_metric(h/svc/util))',
   title: 'Warn',
   value: 80,
+  unit: LINE_UNIT,
   color: '#ffaa00'
 }
 

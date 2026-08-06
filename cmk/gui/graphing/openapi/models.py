@@ -117,6 +117,9 @@ class ApiHorizontalLine:
         example="Warning",
     )
     value: float = api_field(description="The horizontal line value.", example=80.0)
+    unit: ApiUnitFormat = api_field(
+        description="The unit the line value is rendered with - that of the metric it bounds."
+    )
     color: str = api_field(description="The horizontal line color.", example="#ffcc00")
 
 

@@ -100,6 +100,7 @@ def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine
             name=rule.id,
             title=rule.attributes.title,
             value=-rule.value if rule.inverse else rule.value,
+            unit=unit_to_api_unit_format(rule.attributes.unit),
             color=rule.attributes.color,
         )
         for rule in evaluated.rules

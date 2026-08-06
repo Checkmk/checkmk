@@ -30,8 +30,8 @@ class BINodeGeneratorSerialized(TypedDict):
 
 
 class BINodeGenerator(ABCBINodeGenerator):
-    @override
     @classmethod
+    @override
     def schema(cls) -> type["BINodeGeneratorSchema"]:
         return BINodeGeneratorSchema
 

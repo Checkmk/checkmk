@@ -311,13 +311,13 @@ class LazySequence(Sequence):
     def _items(self) -> list[Schema]:
         return self._compute_items()
 
-    @override
     @overload
+    @override
     def __getitem__(self, i: int) -> Schema:
         return self._items[i]
 
-    @override
     @overload
+    @override
     def __getitem__(self, i: slice) -> Sequence[Schema]:
         return self._items[i]
 

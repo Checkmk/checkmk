@@ -43,8 +43,8 @@ def _pid_file(omd_root: Path) -> Path:
 
 
 class JobSchedulerCrashReport(ABCCrashReport[None]):
-    @override
     @classmethod
+    @override
     def type(cls) -> str:
         return "ui-job-scheduler"
 

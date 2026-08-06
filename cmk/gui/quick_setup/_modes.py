@@ -530,8 +530,8 @@ class ABCMainModuleQuickSetup(ABCMainModule, ABC):
     def rule_group_type(self) -> RuleGroupType:
         pass
 
-    @override
     @classmethod
+    @override
     def main_menu_search_terms(cls) -> Sequence[str]:
         return ["microsoft"]
 

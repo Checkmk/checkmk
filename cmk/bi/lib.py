@@ -245,8 +245,8 @@ class BIAggregationComputationOptions(ABCWithSchema):
         )
         self.freeze_aggregations = computation_config.get("freeze_aggregations", False)
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
         return BIAggregationComputationOptionsSchema
 
@@ -298,8 +298,8 @@ class BIAggregationGroups(ABCWithSchema):
     def combined_groups(self) -> set[str]:
         return set(self.names + ["/".join(path) for path in self.paths])
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIAggregationGroupsSchema]:
         return BIAggregationGroupsSchema
 
@@ -332,8 +332,8 @@ class BIParams(ABCWithSchema):
         # Note: The BIParams may get additional options
         # Like keywords which are passed down the tree, without being explicit set for a rule
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIParamsSchema]:
         return BIParamsSchema
 

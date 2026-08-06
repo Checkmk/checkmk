@@ -504,8 +504,8 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
             (instance.name() for instance in instances.instances()),
         )
 
-    @override
     @classmethod
+    @override
     def parameters(
         cls, mode: PageMode, user_permissions: UserPermissions
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
@@ -541,8 +541,8 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
             ),
         ]
 
-    @override
     @classmethod
+    @override
     def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
@@ -1812,8 +1812,8 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
                 ),
             )
 
-    @override
     @classmethod
+    @override
     def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
@@ -1936,8 +1936,8 @@ class PageRenderer[T_PageRendererConfig: PageRendererConfig](
 
     # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
-    @override
     @classmethod
+    @override
     def parameters(
         cls, mode: PageMode, user_permissions: UserPermissions
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
@@ -2006,8 +2006,8 @@ class PageRenderer[T_PageRendererConfig: PageRendererConfig](
 
         return parameters
 
-    @override
     @classmethod
+    @override
     def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
@@ -2300,8 +2300,8 @@ def _default_pagetype_topics() -> Sequence[BuiltinPagetypeTopic]:
 
 
 class PagetypeTopics(Overridable[PagetypeTopicConfig]):
-    @override
     @classmethod
+    @override
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         deserialized = PagetypeTopicModel.model_validate(page_dict)
         return cls(
@@ -2334,18 +2334,18 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             hide=self.config.hide,
         ).model_dump()
 
-    @override
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "pagetype_topic"
 
-    @override
     @classmethod
+    @override
     def type_icon(cls) -> StaticIcon | DynamicIcon:
         return StaticIcon(IconNames.pagetype_topic)
 
-    @override
     @classmethod
+    @override
     def phrase(cls, phrase: PagetypePhrase) -> str:
         return {
             "title": _("Topic"),
@@ -2356,8 +2356,8 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "new": _("Add topic"),
         }.get(phrase, Base.phrase(phrase))
 
-    @override
     @classmethod
+    @override
     def parameters(
         cls, mode: PageMode, user_permissions: UserPermissions
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
@@ -2416,8 +2416,8 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
         table.cell(_("Nr. of items"), str(self.max_entries()))
         table.cell(_("Sort index"), str(self.config.sort_index))
 
-    @override
     @classmethod
+    @override
     def builtin_pages(cls) -> Mapping[str, PagetypeTopicConfig]:
         return {
             name: PagetypeTopicConfig(
@@ -2463,8 +2463,8 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             raise MKGeneralException(_("Cannot find fallback topic 'Other'"))
         return instances.find_page(topic_id, user_permissions) or other_page
 
-    @override
     @classmethod
+    @override
     def reserved_unique_ids(cls) -> list[str]:
         return [cls.default_topic()]
 

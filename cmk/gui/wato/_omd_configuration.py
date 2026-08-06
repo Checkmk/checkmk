@@ -150,8 +150,8 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return "diskspace"
 
@@ -277,8 +277,8 @@ class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return "apache"
 
@@ -403,8 +403,8 @@ class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return "rrdcached"
 

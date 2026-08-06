@@ -274,8 +274,8 @@ class PainterOptionRefresh(PainterOption):
     def __init__(self) -> None:
         super().__init__(ident="refresh")
 
-    @override
     @property
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Refresh interval"),
@@ -289,8 +289,8 @@ class PainterOptionNumColumns(PainterOption):
     def __init__(self) -> None:
         super().__init__(ident="num_columns")
 
-    @override
     @property
+    @override
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Entries per row"),

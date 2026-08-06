@@ -107,8 +107,8 @@ def reload_agent_receiver() -> None:
 
 
 class ConfigDomainCore(ABCConfigDomain):
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.CORE
 
@@ -146,8 +146,8 @@ class ConfigDomainCore(ABCConfigDomain):
             tuple(self._get_global_config_var_names()), debug=active_config.debug
         )
 
-    @override
     @classmethod
+    @override
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
         # The incremental activate only works, if all changes use the hosts_to_update option
         hosts_to_update: set[HostName] = set()
@@ -163,8 +163,8 @@ class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.GUI
 
@@ -210,8 +210,8 @@ class ConfigDomainGUI(ABCConfigDomain):
     def default_globals(self) -> GlobalSettings:
         return get_default_config()
 
-    @override
     @classmethod
+    @override
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
         setting = SerializedSettings()
         for s in settings:
@@ -235,8 +235,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.CA_CERTIFICATES
 
@@ -456,8 +456,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
 
 class ConfigDomainSiteCertificate(ABCConfigDomain):
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.SITE_CERTIFICATE
 
@@ -588,13 +588,13 @@ class ConfigDomainOMD(ABCConfigDomain):
         super().__init__()
         self._logger: logging.Logger = logger.getChild("config.omd")
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.OMD
 
-    @override
     @classmethod
+    @override
     def hint(cls) -> HTML:
         return HTML.without_escaping(
             _(
@@ -910,8 +910,8 @@ def omd_config_change_job_entry_point(
 class OMDConfigChangeBackgroundJob(BackgroundJob):
     job_prefix = "omd-config-change"
 
-    @override
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Apply OMD config changes")
 

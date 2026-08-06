@@ -54,8 +54,8 @@ class ConfigDomainReleaseFlags(ABCConfigDomain):
 
     always_activate = True
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return RELEASE_FLAGS_CONFIG_ID
 

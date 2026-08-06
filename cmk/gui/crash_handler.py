@@ -53,13 +53,13 @@ class GUIDetails(RequestDetails, DashletDetails):
 
 
 class GUICrashReport(ABCCrashReport[GUIDetails]):
-    @override
     @classmethod
+    @override
     def type(cls) -> str:
         return "gui"
 
-    @override
     @classmethod
+    @override
     def make_crash_info(
         cls, version_info: VersionInfo, details: GUIDetails
     ) -> CrashInfo[GUIDetails]:

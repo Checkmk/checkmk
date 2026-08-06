@@ -215,13 +215,13 @@ class EmptySearchMetadata(SearchMetadata): ...
 
 @bi_search_registry.register
 class BIEmptySearch(ABCBISearch):
-    @override
     @classmethod
+    @override
     def kind(cls) -> SearchKind:
         return "empty"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIEmptySearchSchema]:
         return BIEmptySearchSchema
 
@@ -280,13 +280,13 @@ class HostSearchMetadata(SearchMetadata):
 
 @bi_search_registry.register
 class BIHostSearch(ABCBISearch):
-    @override
     @classmethod
+    @override
     def kind(cls) -> SearchKind:
         return "host_search"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIHostSearchSchema]:
         return BIHostSearchSchema
 
@@ -525,13 +525,13 @@ class ServiceSearchMetadata(SearchMetadata):
 
 @bi_search_registry.register
 class BIServiceSearch(ABCBISearch):
-    @override
     @classmethod
+    @override
     def kind(cls) -> SearchKind:
         return "service_search"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIServiceSearchSchema]:
         return BIServiceSearchSchema
 
@@ -614,8 +614,8 @@ class FixedArgsSearchMetadata(SearchMetadata):
 
 @bi_search_registry.register
 class BIFixedArgumentsSearch(ABCBISearch):
-    @override
     @classmethod
+    @override
     def kind(cls) -> SearchKind:
         return "fixed_arguments"
 
@@ -626,8 +626,8 @@ class BIFixedArgumentsSearch(ABCBISearch):
             "arguments": self.arguments,
         }
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIFixedArgumentsSearchSchema]:
         return BIFixedArgumentsSearchSchema
 

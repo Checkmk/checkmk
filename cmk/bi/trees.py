@@ -106,8 +106,8 @@ class CompiledAggrTree(TypedDict):
 
 
 class BICompiledLeaf(ABCBICompiledNode):
-    @override
     @classmethod
+    @override
     def kind(cls) -> CompiledNodeKind:
         return "leaf"
 
@@ -336,8 +336,8 @@ class BICompiledLeafSchema(Schema):
 
 
 class BICompiledRule(ABCBICompiledNode):
-    @override
     @classmethod
+    @override
     def kind(cls) -> CompiledNodeKind:
         return "rule"
 
@@ -563,8 +563,8 @@ class BICompiledRuleSchema(Schema):
 class BIRemainingResult(ABCBICompiledNode):
     # The BIRemainingResult lacks a serializable schema, since it is resolved into
     # BICompiledLeaf(s) during the compilation
-    @override
     @classmethod
+    @override
     def kind(cls) -> CompiledNodeKind:
         return "remaining"
 

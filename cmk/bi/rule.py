@@ -161,8 +161,8 @@ class BIRule(ABCBIRule, ABCWithSchema):
         bi_rule_result.properties.title = replace_macros(bi_rule_result.properties.title, macros)
         return bi_rule_result
 
-    @override
     @classmethod
+    @override
     def create_tree_from_schema(cls, schema_config: dict[str, Any]) -> BICompiledRule:
         rule_id = schema_config["id"]
         pack_id = schema_config["pack_id"]

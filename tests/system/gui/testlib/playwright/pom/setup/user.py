@@ -29,8 +29,8 @@ class BaseUserPage(CmkPage):
 
     page_title: str = ""
 
-    @override
     @abstractmethod
+    @override
     def navigate(self) -> None:
         pass
 

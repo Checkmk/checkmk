@@ -47,13 +47,13 @@ class BICallARuleActionSerialized(ActionSerialized):
 
 @bi_action_registry.register
 class BICallARuleAction(ABCBIAction, ABCWithSchema):
-    @override
     @classmethod
+    @override
     def kind(cls) -> ActionKind:
         return "call_a_rule"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BICallARuleActionSchema]:
         return BICallARuleActionSchema
 
@@ -121,13 +121,13 @@ class BIStateOfHostActionSerialized(ActionSerialized):
 
 @bi_action_registry.register
 class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
-    @override
     @classmethod
+    @override
     def kind(cls) -> ActionKind:
         return "state_of_host"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIStateOfHostActionSchema]:
         return BIStateOfHostActionSchema
 
@@ -188,13 +188,13 @@ class BIStateOfServiceActionSerialized(ActionSerialized):
 
 @bi_action_registry.register
 class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
-    @override
     @classmethod
+    @override
     def kind(cls) -> ActionKind:
         return "state_of_service"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIStateOfServiceActionSchema]:
         return BIStateOfServiceActionSchema
 
@@ -275,13 +275,13 @@ class BIStateOfRemainingServicesActionSerialized(ActionSerialized):
 
 @bi_action_registry.register
 class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
-    @override
     @classmethod
+    @override
     def kind(cls) -> ActionKind:
         return "state_of_remaining_services"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIStateOfRemainingServicesActionSchema]:
         return BIStateOfRemainingServicesActionSchema
 

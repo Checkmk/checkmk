@@ -103,79 +103,79 @@ class ABCCustomerAPI(ABC):
 
 
 class CustomerAPIStub(ABCCustomerAPI):
-    @override
     @classmethod
+    @override
     def get_sites_of_customer(cls, customer_id: CustomerId) -> SiteConfigurations:
         return SiteConfigurations({})
 
-    @override
     @classmethod
+    @override
     def get_customer_id(cls, the_object: Mapping[str, Any]) -> CustomerIdOrGlobal:
         return SCOPE_GLOBAL
 
-    @override
     @classmethod
+    @override
     def is_global(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return True
 
-    @override
     @classmethod
+    @override
     def customer_group_sites(cls, group: GroupSpec) -> Sequence[SiteId] | None:
         return None
 
-    @override
     @classmethod
+    @override
     def get_customer_name_by_id(cls, customer_id: CustomerIdOrGlobal) -> str:
         return str(customer_id)
 
-    @override
     @classmethod
+    @override
     def get_customer_name(cls, the_object: Mapping[str, Any]) -> str:
         return ""
 
-    @override
     @classmethod
+    @override
     def vs_customer(
         cls, deflt: CustomerId | None = None, with_global: bool = True
     ) -> DropdownChoice:
         return DropdownChoice(choices=[])
 
-    @override
     @classmethod
+    @override
     def default_customer_id(cls) -> CustomerId:
         return ""
 
-    @override
     @classmethod
+    @override
     def customer_choice_element(
         cls, deflt: CustomerId | None = None, with_global: bool = True
     ) -> list[tuple[str, ValueSpec]]:
         return []
 
-    @override
     @classmethod
+    @override
     def customer_choice_form_spec(
         cls, deflt: CustomerId | None = None, with_global: bool = True
     ) -> list[tuple[str, FormSpec]]:
         return []
 
-    @override
     @classmethod
+    @override
     def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return False
 
-    @override
     @classmethod
+    @override
     def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return False
 
-    @override
     @classmethod
+    @override
     def customer_collection(cls) -> list[CustomerIdOrGlobal]:
         return []
 
-    @override
     @classmethod
+    @override
     def set_customer_for_user(cls, user: UserSpec, customer_id: CustomerId | None) -> None:
         pass
 

@@ -46,8 +46,8 @@ ConfigVariableGroupProductUsageAnalytics = ConfigVariableGroup(
 class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
     always_activate = True
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return PRODUCT_USAGE_ANALYTICS_CONFIG_ID
 

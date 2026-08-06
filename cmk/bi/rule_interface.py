@@ -36,8 +36,8 @@ class BIRuleProperties(ABCWithSchema):
         self.docu_url = properties_config["docu_url"]
         self.icon = properties_config["icon"]
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type["BIRulePropertiesSchema"]:
         return BIRulePropertiesSchema
 
@@ -62,8 +62,8 @@ class BIRuleComputationOptions(ABCWithSchema):
         super().__init__()
         self.disabled = computation_config["disabled"]
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIRuleComputationOptionsSchema]:
         return BIRuleComputationOptionsSchema
 
@@ -92,9 +92,9 @@ class ABCBIRule(ABCWithSchema):
     def title(self) -> str:
         raise NotImplementedError
 
-    @override
     @classmethod
     @abstractmethod
+    @override
     def schema(cls) -> type[Schema]:
         raise NotImplementedError
 

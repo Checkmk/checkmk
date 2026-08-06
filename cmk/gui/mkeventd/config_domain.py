@@ -27,13 +27,13 @@ class ConfigDomainEventConsole(ABCConfigDomain):
     needs_activation = True
     in_global_settings = False
 
-    @override
     @classmethod
+    @override
     def ident(cls) -> ConfigDomainName:
         return EVENT_CONSOLE
 
-    @override
     @classmethod
+    @override
     def enabled(cls) -> bool:
         return active_config.mkeventd_enabled
 

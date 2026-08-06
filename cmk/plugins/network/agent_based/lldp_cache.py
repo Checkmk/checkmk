@@ -38,8 +38,8 @@ class ChassisIdSubType(Enum):
     NETWORK_ADDRESS = "5"
     UNKNOWN = "unknown"
 
-    @override
     @classmethod
+    @override
     def _missing_(cls, value: object) -> "ChassisIdSubType":
         return cls.UNKNOWN
 
@@ -50,8 +50,8 @@ class IfType(Enum):
     NETWORK_ADDRESS_7 = "7"
     UNKNOWN = "unknown"
 
-    @override
     @classmethod
+    @override
     def _missing_(cls, value: object) -> "IfType":
         return cls.UNKNOWN
 

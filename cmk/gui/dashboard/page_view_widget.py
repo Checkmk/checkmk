@@ -297,8 +297,8 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     raw_debug: str | None
     is_preview: bool
 
-    @override
     @classmethod
+    @override
     def from_request(cls, request: Request) -> Self:
         try:
             return cls.model_validate(

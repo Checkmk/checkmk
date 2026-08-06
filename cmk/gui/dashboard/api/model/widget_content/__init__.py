@@ -56,8 +56,8 @@ class NotSupportedContent(BaseWidgetContent):
     def internal_type(cls) -> str:
         raise ValueError("NotSupportedContent does not have an internal type.")
 
-    @override
     @model_validator(mode="after")
+    @override
     def _validate(self) -> Self:
         # error during create/update requests, this also overwrites the version check
         raise ValueError("Cannot use unsupported content type.")

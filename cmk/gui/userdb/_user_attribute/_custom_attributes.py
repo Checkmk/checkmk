@@ -56,8 +56,8 @@ class GenericUserAttribute(UserAttribute):
     def domain(self) -> str:
         return self._domain
 
-    @override
     @classmethod
+    @override
     def is_custom(cls) -> bool:
         return False
 
@@ -80,8 +80,8 @@ def config_based_custom_user_attributes(
             _show_in_table = attr.get("show_in_table") or False
             _add_custom_macro = attr.get("add_custom_macro") or False
 
-            @override
             @classmethod
+            @override
             def name(cls) -> str:
                 return cls._name
 
@@ -103,8 +103,8 @@ def config_based_custom_user_attributes(
                     from_config=True,
                 )
 
-            @override
             @classmethod
+            @override
             def is_custom(cls) -> bool:
                 return True
 

@@ -52,13 +52,13 @@ class BIAggregationFunctionBestSerialized(AggregationFunctionSerialized):
 
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionBest(ABCBIAggregationFunction):
-    @override
     @classmethod
+    @override
     def kind(cls) -> AggregationFunctionKind:
         return "best"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIAggregationFunctionBestSchema]:
         return BIAggregationFunctionBestSchema
 
@@ -118,13 +118,13 @@ class BIAggregationFunctionWorstSerialized(AggregationFunctionSerialized):
 
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionWorst(ABCBIAggregationFunction):
-    @override
     @classmethod
+    @override
     def kind(cls) -> AggregationFunctionKind:
         return "worst"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIAggregationFunctionWorstSchema]:
         return BIAggregationFunctionWorstSchema
 
@@ -183,13 +183,13 @@ class BIAggregationFunctionCountOKSerialized(AggregationFunctionSerialized):
 
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
-    @override
     @classmethod
+    @override
     def kind(cls) -> AggregationFunctionKind:
         return "count_ok"
 
-    @override
     @classmethod
+    @override
     def schema(cls) -> type[BIAggregationFunctionCountOKSchema]:
         return BIAggregationFunctionCountOKSchema
 

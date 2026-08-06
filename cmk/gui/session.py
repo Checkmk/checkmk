@@ -532,8 +532,8 @@ class FileBasedSession(SessionInterface):
         }
         userdb.save_custom_attr(userid, "last_login", last_login_info)
 
-    @override
     @tracer.instrument("FileBasedSession.open_session")
+    @override
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
@@ -556,8 +556,8 @@ class FileBasedSession(SessionInterface):
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
     # deferred to a later date.
-    @override
     @tracer.instrument("FileBasedSession.save_session")
+    @override
     def save_session(  # type: ignore[override]
         self, app: Flask, session: CheckmkFileBasedSession, response: flask.Response
     ) -> None:

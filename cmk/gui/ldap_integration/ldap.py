@@ -703,8 +703,8 @@ class LDAPConnectionValuespec(Dictionary):
 
 
 class ModeLDAPConfig(WatoMode):
-    @override
     @classmethod
+    @override
     def name(cls) -> str:
         return "ldap_config"
 

@@ -147,8 +147,8 @@ def test_dump_response_annotated_union_uses_annotation() -> None:
 class _DummyPermissionValidator(PermissionValidator):
     """Doesn't enable permission tracking, thus not requiring a GUI context."""
 
-    @override
     @contextlib.contextmanager
+    @override
     def track_permissions(self) -> Iterator[None]:
         yield None
 

@@ -25,8 +25,8 @@ from cmk.utils.security_event import (
 
 
 class PiggybackHubCrashReport(ABCCrashReport[None]):
-    @override
     @classmethod
+    @override
     def type(cls) -> Literal["piggyback-hub"]:
         return "piggyback-hub"
 

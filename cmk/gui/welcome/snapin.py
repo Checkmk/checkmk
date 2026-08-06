@@ -22,36 +22,36 @@ def register(snapin_registry: SnapinRegistry) -> None:
 
 
 class SidebarWelcomeSnapin(SidebarSnapin):
-    @override
     @staticmethod
+    @override
     def type_name() -> str:
         return "a_welcome"
 
-    @override
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Welcome to Checkmk")
 
-    @override
     @classmethod
+    @override
     def description(cls) -> str:
         return _(
             "Stay on track with a quick overview of your setup progress. "
             "The sidebar keeps everything in view, right where you need it."
         )
 
-    @override
     @classmethod
+    @override
     def refresh_regularly(cls) -> bool:
         return False
 
-    @override
     @classmethod
+    @override
     def may_see(cls, user_permissions: UserPermissions) -> bool:
         return all(user.may(perm) for perm in WELCOME_PERMISSIONS)
 
-    @override
     @classmethod
+    @override
     def included_in_default_sidebar(cls) -> bool:
         """Only include welcome snapin for users created in 2.5+.
 

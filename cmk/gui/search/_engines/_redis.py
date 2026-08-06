@@ -551,8 +551,8 @@ def _process_update_requests(
 class SearchIndexBackgroundJob(BackgroundJob):
     job_prefix = "search_index"
 
-    @override
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Search index")
 

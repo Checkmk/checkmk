@@ -34,8 +34,8 @@ class BaseNotificationPage(QuickSetupPage):
 
     page_title = ""
 
-    @override
     @abstractmethod
+    @override
     def navigate(self) -> None:
         pass
 

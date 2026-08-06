@@ -6,7 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { HttpResponse, http } from 'msw'
+import { HttpResponse, delay, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { describe, expect, test } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
@@ -40,9 +40,12 @@ function mockNamesWithTypes(choices: Choice[], warning: string | null = null): v
   )
 }
 
-function renderFormMetricNameAutocompleter(initialName: string | null = null) {
+function renderFormMetricNameAutocompleter(
+  initialName: string | null = null,
+  initialTypes: string[] = []
+) {
   const metricName = ref<string | null>(initialName)
-  const metricTypes = ref<string[]>([])
+  const metricTypes = ref<string[]>(initialTypes)
   const wrapper = defineComponent({
     setup() {
       return () =>
@@ -120,6 +123,26 @@ describe('FormMetricNameAutocompleter', () => {
     // Loading a saved form is a distinct path: the dropdown re-queries the preset value on
     // mount to resolve and render its type(s) on the closed button.
     expect(await screen.findByTitle('cpu (gauge)')).toBeInTheDocument()
+  })
+
+  test('shows a saved metric immediately while the backend is unresponsive (CMK-37726)', async () => {
+    server.use(http.post(METRIC_NAMES_URL, () => delay('infinite')))
+    renderFormMetricNameAutocompleter('cpu', ['gauge'])
+
+    expect(await screen.findByTitle('cpu (gauge)')).toBeInTheDocument()
+  })
+
+  test('offers the typed metric immediately while the backend is unresponsive (CMK-37726)', async () => {
+    server.use(http.post(METRIC_NAMES_URL, () => delay('infinite')))
+    const user = userEvent.setup()
+    renderFormMetricNameAutocompleter()
+
+    await user.click(screen.getByRole('combobox', { name: 'Metric name' }))
+    const input = screen.getByRole('textbox', { name: 'filter' })
+    await user.click(input)
+    await user.keyboard('my_metric')
+
+    expect(await screen.findByText('my_metric')).toBeInTheDocument()
   })
 
   test('the clear button removes the selected metric and its types', async () => {

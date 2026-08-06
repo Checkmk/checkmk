@@ -9,13 +9,14 @@ import {
   ErrorResponse,
   Response,
   type Suggestion,
-  WarningResponse
+  WarningResponse,
+  flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
 import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch'
 import type { CmkError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { nextTick, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import DropdownClearButton from './DropdownClearButton.vue'
 
@@ -63,9 +64,22 @@ function resolveMetricTypes(): void {
   }
 }
 
-async function querySuggestions(
+const suggestionCache = new Map<string, Response | WarningResponse | ErrorResponse>()
+const inflightSuggestions = new Set<string>()
+const suggestionRevision = ref(0)
+
+function metricNameEcho(query: string): Suggestion[] {
+  if (!query) {
+    return []
+  }
+  const types =
+    metricTypesByName.get(query) ?? (query === metricName.value ? metricTypes.value : [])
+  return [{ name: query, title: untranslated(formatTitle({ name: query, types })) }]
+}
+
+async function fetchMetricNames(
   query: string
-): Promise<ErrorResponse | WarningResponse | Response> {
+): Promise<Response | WarningResponse | ErrorResponse> {
   let result: MetricNamesResponse
   try {
     const response = await fetchRestAPIDeprecated(METRIC_NAMES_API, 'POST', { value: query })
@@ -74,28 +88,66 @@ async function querySuggestions(
   } catch (e: unknown) {
     return new ErrorResponse((e as CmkError)?.message || _t('Unknown error'))
   }
-
   const suggestions: Suggestion[] = []
   for (const choice of result.choices) {
     metricTypesByName.set(choice.name, choice.types)
     suggestions.push({ name: choice.name, title: untranslated(formatTitle(choice)) })
   }
-
-  // CmkDropdown re-queries for the current selection on mount and on change, so this
-  // resolves the type of a preset (e.g. saved) metric name once it becomes known.
-  resolveMetricTypes()
-
   if (result.warning) {
     return new WarningResponse(result.warning, suggestions)
   }
   return new Response(suggestions)
 }
 
+function cachedMetricNames(query: string): Response | WarningResponse | ErrorResponse | undefined {
+  const cached = suggestionCache.get(query)
+  if (cached) {
+    return cached
+  }
+  if (!inflightSuggestions.has(query)) {
+    inflightSuggestions.add(query)
+    void fetchMetricNames(query).then((response) => {
+      suggestionCache.set(query, response)
+      inflightSuggestions.delete(query)
+      if (!(response instanceof ErrorResponse)) {
+        resolveMetricTypes()
+      }
+      suggestionRevision.value += 1
+    })
+  }
+  return undefined
+}
+
+async function querySuggestions(
+  query: string
+): Promise<Response | WarningResponse | ErrorResponse> {
+  const echo = metricNameEcho(query)
+  const cached = cachedMetricNames(query)
+  if (!cached) {
+    return new Response(echo)
+  }
+  if (cached instanceof ErrorResponse) {
+    // Keep our own echo rather than surfacing the backend error.
+    return echo.length > 0 ? new Response(echo) : cached
+  }
+  const backend = flattenSuggestions(cached.choices)
+  const merged = [
+    ...echo.filter((entry) => !backend.some((suggestion) => suggestion.name === entry.name)),
+    ...backend
+  ]
+  if (cached instanceof WarningResponse) {
+    return new WarningResponse(cached.warning, merged)
+  }
+  return new Response(merged)
+}
+
 watch(metricName, resolveMetricTypes)
 
-// Keep a stable reference: an inline object literal would change identity on every render
-// and retrigger CmkDropdown's/CmkSuggestions' suggestion watchers.
-const dropdownOptions = { type: 'callback-filtered' as const, querySuggestions }
+// Reading the revision yields a fresh options identity on each settle, so CmkDropdown re-queries.
+const dropdownOptions = computed(() => {
+  void suggestionRevision.value
+  return { type: 'callback-filtered' as const, querySuggestions }
+})
 
 const dropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('dropdownRef')
 

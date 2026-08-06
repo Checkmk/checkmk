@@ -187,6 +187,19 @@ class GraphsDiscoverResponse:
 
 
 @api_model
+class MetricNameMappingResponse:
+    metric_names: dict[str, str] = api_field(
+        description=(
+            "The canonical metric name each of the service's raw perf-data names is known by, "
+            "keyed by the raw name. A name no plug-in renames maps to itself, so every name the "
+            "service reports has an entry. Empty when the host or service is not monitored, or "
+            "when it reports no perf data at all."
+        ),
+        example={"wait": "io_wait", "user": "user"},
+    )
+
+
+@api_model
 class GraphFetchRequest:
     internal: Annotated[Mapping[str, object], Json] = api_field(
         description="The self-contained graph definition needed to recompute the data, as JSON.",

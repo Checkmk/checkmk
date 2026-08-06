@@ -184,6 +184,7 @@ CmkEndpointName = Literal[
     "cmk/show_dashboard_responsive_grid",
     "cmk/sign",
     "cmk/start",
+    "cmk/translate_metric_names",
     "cmk/host_config",
     "cmk/folder_config",
     "cmk/global_config",

@@ -14,6 +14,7 @@ from .fetch_context_menu import ENDPOINT_FETCH_CONTEXT_MENU
 from .fetch_graph_data import ENDPOINT_FETCH_GRAPH_DATA
 from .get_graph_pin import ENDPOINT_GET_GRAPH_PIN
 from .set_graph_pin import ENDPOINT_SET_GRAPH_PIN
+from .translate_metric_names import ENDPOINT_TRANSLATE_METRIC_NAMES
 
 
 def register(
@@ -29,3 +30,4 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_ADD_TO_CONTAINER)
     versioned_endpoint_registry.register(ENDPOINT_ADD_TO_VISUAL)
     versioned_endpoint_registry.register(ENDPOINT_EXPORT)
+    versioned_endpoint_registry.register(ENDPOINT_TRANSLATE_METRIC_NAMES)

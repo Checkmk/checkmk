@@ -1326,6 +1326,24 @@ class GraphClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def translate_metric_names(
+        self,
+        hostname: str,
+        service_description: str,
+        site: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/translate_metric_names/invoke",
+            body={
+                "hostname": hostname,
+                "service_description": service_description,
+                "site": site,
+            },
+            expect_ok=expect_ok,
+        )
+
     def fetch_context_menu(self, add_type: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",

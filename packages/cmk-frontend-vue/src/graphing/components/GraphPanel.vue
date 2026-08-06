@@ -269,6 +269,14 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
 </template>
 
 <style scoped lang="scss">
+// Transparent and borderless by default.
+// A context (e.g. the graph icon hover; _graphs.scss) defines these css variables and by that
+// handles background and border color of the panel.
+.graphing-graph-panel {
+  background-color: var(--cmk-graph-panel-bg, transparent);
+  border: var(--cmk-graph-panel-border, none);
+}
+
 .graphing-graph-panel__header {
   margin-bottom: var(--spacing-double);
 }

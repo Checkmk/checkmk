@@ -32,6 +32,7 @@ def render_engine_graph_group(
     show_consolidation: bool = True,
     show_legend: bool = True,
     interaction: Interaction = _DEFAULT_INTERACTION,
+    multi_column: bool = False,
 ) -> HTML:
     """Render the graph-engine (Vue) 'cmk-graph-group' for a host/service's template graphs.
 
@@ -71,5 +72,7 @@ def render_engine_graph_group(
         "graphs": vue_graphs,
         "show_consolidation": show_consolidation,
         "show_legend": show_legend,
+        # Only the hover preview flows its many graphs into columns; everywhere else stacks.
+        "layout": "wrap" if multi_column else "column",
     }
     return HTMLWriter.render_vue_component("cmk-graph-group", data)

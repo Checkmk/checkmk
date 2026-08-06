@@ -845,6 +845,7 @@ def host_service_graph_popup_cmk(
             show_graph_time=False,
             show_consolidation=False,
             show_legend=False,
+            multi_column=True,
             debug=env.debug,
         )
     )

@@ -24,8 +24,13 @@ div#hover_menu div.graph {
    background the legacy popup carried on div.graph. */
 /* stylelint-disable-next-line selector-id-pattern */
 div#hover_menu div.cmk_graph_hover {
-  background-color: $bg-color-secondary;
-  border: 1px solid $ux-theme-5;
+  /* CSS variables defined here for consumption within the Vue graphing components. In case of the
+     hover graphs each GraphPanel calls them for background and border color. */
+  --cmk-graph-panel-bg: #{$bg-color-secondary};
+  --cmk-graph-panel-border: 1px solid #{$ux-theme-5};
+
+  width: max-content;
+  max-width: 90vw;
 }
 
 div.graph_container {

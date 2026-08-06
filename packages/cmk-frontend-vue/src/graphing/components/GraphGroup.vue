@@ -44,13 +44,17 @@ const props = withDefaults(
     figure_height?: number
     show_consolidation?: boolean
     show_legend?: boolean
+    // 'column' stacks the panels vertically (the default)
+    // 'wrap' flows the fixed-width panels into as many columns as the container allows
+    layout?: 'column' | 'wrap'
   }>(),
   {
     combination_mode: null,
     figure_width: 800,
     figure_height: 300,
     show_consolidation: true,
-    show_legend: true
+    show_legend: true,
+    layout: 'column'
   }
 )
 
@@ -128,7 +132,11 @@ const definitionCount = computed(() => props.graphs.length)
 </script>
 
 <template>
-  <div class="graphing-graph-group" :aria-busy="isInitialLoad">
+  <div
+    class="graphing-graph-group"
+    :class="`graphing-graph-group--${layout}`"
+    :aria-busy="isInitialLoad"
+  >
     <!-- Until the delay elapses no branch matches and no panels exist yet, leaving the area blank. -->
     <template v-if="showSkeletons">
       <CmkVisuallyHidden :text="_t('Loading graphs…')" live="polite" />
@@ -189,8 +197,19 @@ const definitionCount = computed(() => props.graphs.length)
 <style scoped lang="scss">
 .graphing-graph-group {
   display: flex;
+}
+
+.graphing-graph-group--column {
   flex-direction: column;
   gap: calc(var(--spacing) * 4);
+}
+
+// Fixed-width panels flow left-to-right and wrap into columns as the container width allows.
+// A tight gap keeps the multi-column grid compact (matching the legacy per-graph 2px margins).
+.graphing-graph-group--wrap {
+  flex-flow: row wrap;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .graphing-graph-group__panel {

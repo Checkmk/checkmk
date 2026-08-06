@@ -9,6 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.pulse_secure.agent_based import pulse_secure_users
+from cmk.plugins.pulse_secure.agent_based.pulse_secure_users import Params
 
 
 @pytest.mark.parametrize(
@@ -33,7 +34,7 @@ def test_parse_pulse_secure_users(
 def test_check_pulse_secure_users() -> None:
     assert list(
         pulse_secure_users.check_pulse_secure_users(
-            {"upper_number_of_users": None},
+            Params(upper_number_of_users=("no_levels", None)),
             {"n_users": 172},
         )
     ) == [
@@ -54,7 +55,7 @@ def test_check_pulse_secure_users() -> None:
 def test_cluster_check_pulse_secure_users() -> None:
     assert list(
         pulse_secure_users.cluster_check_pulse_secure_users(
-            {"upper_number_of_users": None},
+            Params(upper_number_of_users=("no_levels", None)),
             {"node1": {"n_users": 20}, "node2": {"n_users": 30}},
         )
     ) == [

@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Generator, Mapping, Sequence
-from typing import Any
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     clusterize,
     Metric,
@@ -20,6 +18,12 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.pulse_secure import lib as pulse_secure
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+
+class Params(TypedDict):
+    upper_number_of_users: SimpleLevelsConfigModel[int]
+
 
 Section = Mapping[str, int]
 CheckOutput = Generator[Result | Metric]
@@ -54,8 +58,8 @@ def discover_pulse_secure_users(section: Section) -> Generator[Service]:
         yield Service()
 
 
-def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> CheckOutput:
-    yield from check_levels_v1(
+def check_pulse_secure_users(params: Params, section: Section) -> CheckOutput:
+    yield from check_levels(
         section["n_users"],
         metric_name="current_users",
         levels_upper=params["upper_number_of_users"],
@@ -65,7 +69,7 @@ def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> Che
 
 
 def cluster_check_pulse_secure_users(
-    params: Mapping[str, Any],
+    params: Params,
     section: Mapping[str, Section | None],
 ) -> CheckOutput:
     n_users_total = 0
@@ -78,12 +82,12 @@ def cluster_check_pulse_secure_users(
         yield from clusterize.make_node_notice_results(
             node_name,
             check_pulse_secure_users(
-                {"upper_number_of_users": None},
+                Params(upper_number_of_users=("no_levels", None)),
                 section_node,
             ),
         )
 
-    yield from check_levels_v1(
+    yield from check_levels(
         n_users_total,
         metric_name="current_users",
         levels_upper=params["upper_number_of_users"],
@@ -96,9 +100,7 @@ check_plugin_pulse_secure_users = CheckPlugin(
     name="pulse_secure_users",
     service_name="Pulse Secure users",
     discovery_function=discover_pulse_secure_users,
-    check_default_parameters={
-        "upper_number_of_users": None,
-    },
+    check_default_parameters=Params(upper_number_of_users=("no_levels", None)),
     check_ruleset_name="pulse_secure_users",
     check_function=check_pulse_secure_users,
     cluster_check_function=cluster_check_pulse_secure_users,

@@ -6544,7 +6544,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('pulse_secure_users', [])
 
 checkgroup_parameters['pulse_secure_users'] = [
-{'id': 'a3bbdec3-bad5-48b3-bf50-980aa2074a3e', 'value': {'upper_number_of_users': None}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'a3bbdec3-bad5-48b3-bf50-980aa2074a3e', 'value': {'upper_number_of_users': ('no_levels', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['pulse_secure_users']
 
 
@@ -13821,7 +13821,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('pulse_secure_users', [])
 
 static_checks['pulse_secure_users'] = [
-{'id': '2a47589c-2c17-47b9-942e-671c22748700', 'value': ('pulse_secure_users', None, {'upper_number_of_users': None}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2a47589c-2c17-47b9-942e-671c22748700', 'value': ('pulse_secure_users', None, {'upper_number_of_users': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['pulse_secure_users']
 
 

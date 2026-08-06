@@ -10,34 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Percentage, Tuple
-
-
-def _parameter_valuespec_pulse_secure_users() -> Dictionary:
-    return Dictionary(
-        title=_("Number of signed-in web users"),
-        elements=[
-            (
-                "upper_number_of_users",
-                SimpleLevels(
-                    title=_("Upper levels for number of signed-in web users"),
-                    spec=Integer,
-                ),
-            )
-        ],
-        optional_keys=False,
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="pulse_secure_users",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_pulse_secure_users,
-        title=lambda: _("Pulse Secure users"),
-    )
-)
+from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
 def _parameter_valuespec_pulse_secure_disk_util() -> Dictionary:

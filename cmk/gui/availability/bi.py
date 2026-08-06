@@ -21,7 +21,7 @@ from cmk.bi.lib import (
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.data_source import query_livestatus
 from cmk.gui.i18n import _
@@ -60,7 +60,6 @@ from .type_defs import (
 BIAggregationGroupTitle = str
 BIAggregationTitle = str
 BITreeState = Any
-BITimelineEntry = Any
 
 
 DEFAULT_MAX_TIME_RANGE = 31 * 24 * 60 * 60  # One month
@@ -83,7 +82,7 @@ class TimelineContainer:
         self.host_service_info: set[tuple[HostName, ServiceName]] = set()
 
         # Computed data
-        self.timeline: list[BITimelineEntry] = []
+        self.timeline: list[AVSpan] = []
         self.states: AVBITimelineStates = {}
 
         # Can be optional after computation
@@ -170,6 +169,36 @@ def split_time_range(
         start += interval
 
 
+def _bi_span_from_statehist_row(row: LivestatusRow) -> AVSpan:
+    """Turn one raw statehist row into an AVSpan.
+
+    The columns are the ones queried in get_bi_leaf_history(), prepended by the site.
+    The statehist table does not provide the remaining AVSpan fields, so they are set
+    explicitly here: they are not consumed anywhere on these rows (the BI aggregate
+    recomputation only looks at state, log_output, in_downtime and in_service_period)
+    and the timeline entries built later in create_bi_timeline_entry() compute them
+    from scratch with exactly these values.
+    """
+    site, host_name, service_description, from_time, until_time = row[:5]
+    log_output, state, in_downtime, in_service_period = row[5:]
+    return {
+        "site": SiteId(site),
+        "host_name": HostName(host_name),
+        "service_description": service_description,
+        "from": from_time,
+        "until": until_time,
+        "log_output": log_output,
+        "state": state,
+        "in_downtime": in_downtime,
+        "in_service_period": in_service_period,
+        "duration": until_time - from_time,
+        "host_down": 0,
+        "in_host_downtime": 0,
+        "in_notification_period": 1,
+        "is_flapping": 0,
+    }
+
+
 def get_bi_leaf_history(
     aggr_rows: Rows,
     time_range: AVTimeRange,
@@ -236,12 +265,11 @@ def get_bi_leaf_history(
     if not data:
         return [], [], has_reached_logrow_limit
 
-    columns = ["site"] + columns
-    rows = [dict(zip(columns, row)) for row in data]
+    spans = [_bi_span_from_statehist_row(row) for row in data]
 
     # Reclassify base data due to annotations
-    rows = reclassify_bi_rows(rows, annotations)
-    merged_rows_by_id = get_bi_merged_rows_by_id(rows)
+    spans = reclassify_bi_rows(spans, annotations)
+    merged_rows_by_id = get_bi_merged_rows_by_id(spans)
 
     # Now comes the tricky part: recompute the state of the aggregate
     # for each step in the state history and construct a timeline from
@@ -250,10 +278,10 @@ def get_bi_leaf_history(
     # in the statehist table
 
     # First partition the rows into sequences with equal start time
-    phases: dict[int, dict[tuple[HostName, ServiceName], Row]] = {}
+    phases: dict[int, AVBIPhaseData] = {}
     for id_, merged_rows in merged_rows_by_id.items():
-        for row in merged_rows:
-            phases.setdefault(row["from"], {})[id_] = row
+        for span in merged_rows:
+            phases.setdefault(span["from"], {})[id_] = span
 
     # Convert phases to sorted list
     sorted_times = sorted(phases.keys())
@@ -264,8 +292,10 @@ def get_bi_leaf_history(
     return phases_list, timeline_containers, has_reached_logrow_limit
 
 
-def get_bi_merged_rows_by_id(rows: list[Row]) -> dict[tuple[HostName, ServiceName], list[Row]]:
-    by_id: dict[tuple[HostName, ServiceName], list[Row]] = {}
+def get_bi_merged_rows_by_id(
+    rows: list[AVSpan],
+) -> dict[tuple[HostName, ServiceName], list[AVSpan]]:
+    by_id: dict[tuple[HostName, ServiceName], list[AVSpan]] = {}
     for row in rows:
         id_ = (row["host_name"], row["service_description"])
         by_id.setdefault(id_, [])
@@ -274,7 +304,7 @@ def get_bi_merged_rows_by_id(rows: list[Row]) -> dict[tuple[HostName, ServiceNam
     for id_, service_rows in by_id.items():
         by_id[id_] = sorted(service_rows, key=lambda x: x["from"])
 
-    merged_rows_by_id: dict[tuple[HostName, ServiceName], list[Row]] = {id_: [] for id_ in by_id}
+    merged_rows_by_id: dict[tuple[HostName, ServiceName], list[AVSpan]] = {id_: [] for id_ in by_id}
     for id_, service_rows in by_id.items():
         for service_row in service_rows:
             if not merged_rows_by_id[id_] or (
@@ -286,6 +316,8 @@ def get_bi_merged_rows_by_id(rows: list[Row]) -> dict[tuple[HostName, ServiceNam
             ):
                 merged_rows_by_id[id_].append(service_row)
             else:
+                # "duration" is deliberately left alone: it is not consumed on these
+                # rows, see _bi_span_from_statehist_row().
                 merged_rows_by_id[id_][-1]["until"] = service_row["until"]
     return merged_rows_by_id
 
@@ -485,18 +517,18 @@ def create_bi_timeline_entry(
     from_time: AVTimeStamp,
     until_time: AVTimeStamp,
     node_compute_result: NodeComputeResult,
-) -> BITimelineEntry:
+) -> AVSpan:
     return {
         "state": node_compute_result.state,
         "log_output": node_compute_result.output,
         "from": int(from_time),
         "until": int(until_time),
         "site": omd_site(),
-        "host_name": aggr_group,
+        "host_name": HostName(aggr_group),
         "service_description": tree["title"],
         "in_notification_period": 1,
-        "in_service_period": node_compute_result.in_service_period,
-        "in_downtime": node_compute_result.in_downtime,
+        "in_service_period": int(node_compute_result.in_service_period),
+        "in_downtime": int(node_compute_result.in_downtime),
         "in_host_downtime": 0,
         "host_down": 0,
         "is_flapping": 0,
@@ -517,7 +549,7 @@ def _compute_node_result_bundle(
         state: int | None = state_output[0]
 
         # Create an entry for hosts that are not explicitly referenced in the timeline container.
-        hosts.setdefault(site_host, (0, "", False, False))
+        hosts.setdefault(site_host, (0, "", 0, False))
         if service:
             if state == -1:
                 # Ignore pending services
@@ -588,11 +620,11 @@ def _compute_status_info(
     return status_info
 
 
-def reclassify_bi_rows(rows: Rows, annotations: AVAnnotations) -> Rows:
+def reclassify_bi_rows(rows: list[AVSpan], annotations: AVAnnotations) -> list[AVSpan]:
     if not annotations:
         return rows
 
-    new_rows: Rows = []
+    new_rows: list[AVSpan] = []
     for row in rows:
         site = row["site"]
         host_name = row["host_name"]

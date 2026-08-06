@@ -7,7 +7,15 @@ from livestatus import LivestatusRow
 
 from cmk.bi.lib import NodeComputeResult
 from cmk.bi.trees import CompiledAggrTree
-from cmk.gui.availability.bi import _limit_reached_for_any_site, create_bi_timeline_entry
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+from cmk.gui.availability.bi import (
+    _bi_span_from_statehist_row,
+    _limit_reached_for_any_site,
+    create_bi_timeline_entry,
+    reclassify_bi_rows,
+)
+from cmk.gui.availability.type_defs import AVSpan
 
 
 def _rows_for_site(site: str, count: int) -> list[LivestatusRow]:
@@ -65,3 +73,35 @@ def test_create_bi_timeline_entry_site_id_is_not_empty() -> None:
         ),
     )
     assert result["site"] != "", "site_id must not be empty in BI timeline entries"
+
+
+def test_bi_span_from_statehist_row_sets_all_required_avspan_fields() -> None:
+    span = _bi_span_from_statehist_row(
+        LivestatusRow(["site1", "host1", "Svc", 1000, 2500, "OK - all good", 0, 0, 1])
+    )
+    assert set(AVSpan.__required_keys__) <= set(span)
+    assert span["duration"] == 1500
+    assert span["host_down"] == 0
+    assert span["in_host_downtime"] == 0
+    assert span["in_notification_period"] == 1
+    assert span["is_flapping"] == 0
+
+
+def test_reclassify_bi_rows_splits_span_on_downtime_annotation() -> None:
+    span = _bi_span_from_statehist_row(
+        LivestatusRow(["site1", "host1", "Svc", 1000, 2000, "OK", 0, 0, 1])
+    )
+    new_spans = reclassify_bi_rows(
+        [span],
+        {
+            (SiteId("site1"), HostName("host1"), "Svc"): [
+                {"from": 1200, "until": 1500, "downtime": True}
+            ]
+        },
+    )
+    assert [(s["from"], s["until"], s["in_downtime"]) for s in new_spans] == [
+        (1000, 1200, 0),
+        (1200, 1500, 1),
+        (1500, 2000, 0),
+    ]
+    assert all(s["duration"] == s["until"] - s["from"] for s in new_spans)

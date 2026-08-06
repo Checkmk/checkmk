@@ -10,7 +10,6 @@ from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import TimerangeValue, ValueSpec
 from cmk.gui.view_utils import CSSClass
@@ -213,9 +212,10 @@ class AVLayoutTable(TypedDict):
     summary: NotRequired[AVRowCells]
 
 
-AVBIPhaseData = dict[tuple[HostName, ServiceName], Row]
+AVBIPhaseData = dict[tuple[HostName, ServiceName], AVSpan]
 AVBIPhases = list[tuple[int, AVBIPhaseData]]
-AVBITimelineState = tuple[int, str, bool, bool]  # state, output, in_downtime, in_service_period
+# state, output, downtime depth, in_service_period
+AVBITimelineState = tuple[int | None, str, int, bool]
 AVBITimelineStates = dict[tuple[SiteId, HostName, ServiceName], AVBITimelineState]
 AVLevels = tuple[float, float]
 

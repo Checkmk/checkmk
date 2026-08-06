@@ -28,21 +28,7 @@ from cmk.livestatus_client import (
     QuerySpecification,
 )
 
-from .annotations import (
-    reclassify_config_by_annotation as reclassify_config_by_annotation,
-)
-from .annotations import (
-    reclassify_history_by_annotation as reclassify_history_by_annotation,
-)
-from .annotations import (
-    reclassify_history_by_annotations as reclassify_history_by_annotations,
-)
-from .annotations import (
-    reclassify_times_by_annotation as reclassify_times_by_annotation,
-)
-from .annotations import (
-    ReclassifyConfig as ReclassifyConfig,
-)
+from .annotations import reclassify_history_by_annotations
 from .options import get_outage_statistic_options
 from .type_defs import (
     AVAnnotationKey,

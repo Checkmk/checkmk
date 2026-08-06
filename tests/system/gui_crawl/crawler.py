@@ -184,7 +184,16 @@ class Crawler:
             "text/plain",
             "text/csv",
         }
-        self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {}
+        self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {
+            # bulk_rename_host always links to the "rename-hosts" job details page, even though
+            # the crawler never actually runs that job, so the link legitimately errors.
+            "bulk_rename_host job never ran during crawl": [
+                "wato.py?back_url=wato.py%3Ffolder%3D%26mode%3Dbulk_rename_host&job_id=rename-hosts&mode=background_job_details",
+                "wato.py?back_url=wato.py%3Ffolder%3D%26kiosk%3Dtrue%26mode%3Dbulk_rename_host&job_id=rename-hosts&mode=background_job_details",
+                "index.py?kiosk=true&start_url=wato.py%3Fback_url%3Dwato.py%253Ffolder%253D%2526mode%253Dbulk_rename_host%26job_id%3Drename-hosts%26mode%3Dbackground_job_details",
+                "index.py?kiosk=true&start_url=wato.py%3Fback_url%3Dwato.py%253Ffolder%253D%2526kiosk%253Dtrue%2526mode%253Dbulk_rename_host%26job_id%3Drename-hosts%26mode%3Dbackground_job_details",
+            ],
+        }
         # limit minimum value to 0.
         self._max_urls = max(0, max_urls)
         self._todos = deque([Url(self.site.internal_url)])

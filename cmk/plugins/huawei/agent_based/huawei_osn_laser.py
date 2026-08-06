@@ -5,8 +5,8 @@
 
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -18,13 +18,14 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.huawei.lib import DETECT_HUAWEI_OSN
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 # The dBm should not get too low. So we check only for lower levels
 
 
 class HuaweiOsnLaserParams(TypedDict, total=False):
-    levels_low_in: tuple[int, int]
-    levels_low_out: tuple[int, int]
+    levels_low_in: SimpleLevelsConfigModel[int]
+    levels_low_out: SimpleLevelsConfigModel[int]
 
 
 def discover_huawei_osn_laser(section: StringTable) -> DiscoveryResult:
@@ -43,7 +44,7 @@ def check_huawei_osn_laser(
             # In
             yield from check_levels(
                 dbm_in,
-                levels_lower=params.get("levels_low_in"),
+                levels_lower=params.get("levels_low_in", ("no_levels", None)),
                 metric_name="input_signal_power_dBm",
                 label="In",
                 render_func=lambda v: f"{v:.1f} dBm",
@@ -52,7 +53,7 @@ def check_huawei_osn_laser(
             # And out
             yield from check_levels(
                 dbm_out,
-                levels_lower=params.get("levels_low_out"),
+                levels_lower=params.get("levels_low_out", ("no_levels", None)),
                 metric_name="output_signal_power_dBm",
                 label="Out",
                 render_func=lambda v: f"{v:.1f} dBm",
@@ -88,8 +89,8 @@ check_plugin_huawei_osn_laser = CheckPlugin(
     discovery_function=discover_huawei_osn_laser,
     check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
-    check_default_parameters={
-        "levels_low_in": (-160, -180),
-        "levels_low_out": (-35, -40),
-    },
+    check_default_parameters=HuaweiOsnLaserParams(
+        levels_low_in=("fixed", (-160, -180)),
+        levels_low_out=("fixed", (-35, -40)),
+    ),
 )

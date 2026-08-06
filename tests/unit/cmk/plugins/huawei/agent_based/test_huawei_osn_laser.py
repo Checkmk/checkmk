@@ -10,7 +10,9 @@ from cmk.plugins.huawei.agent_based.huawei_osn_laser import HuaweiOsnLaserParams
 # item, laser output in 0.1 dBm, laser input in 0.1 dBm, FEC before, FEC after
 STRING_TABLE: StringTable = [["1", "-300", "-1200", "1e-9", "1e-12"]]
 
-PARAMS = HuaweiOsnLaserParams(levels_low_in=(-160, -180), levels_low_out=(-35, -40))
+PARAMS = HuaweiOsnLaserParams(
+    levels_low_in=("fixed", (-160, -180)), levels_low_out=("fixed", (-35, -40))
+)
 
 
 def test_parse_keeps_the_string_table() -> None:

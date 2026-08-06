@@ -11,7 +11,6 @@ from typing import Any, TypeVar
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import (
     CascadingSingleChoiceExtended,
-    LegacyValueSpec,
     SingleChoiceEditable,
 )
 from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
@@ -130,17 +129,12 @@ def create_host_attributes_selection(
             if exclude_host_attributes is not None and attr.name() in exclude_host_attributes:
                 continue
 
-            try:
-                form_spec = attr.form_spec()
-            except NotImplementedError:
-                form_spec = LegacyValueSpec.wrap(attr.valuespec())
-
             attribute_choices.append(
                 CascadingSingleChoiceElementExtended(
                     name=attr.name(),
                     title=Title("%(topic_title)s: %(title)s")
                     % {"topic_title": topic_title, "title": attr.title()},
-                    parameter_form=form_spec,
+                    parameter_form=attr.form_spec(),
                 )
             )
 

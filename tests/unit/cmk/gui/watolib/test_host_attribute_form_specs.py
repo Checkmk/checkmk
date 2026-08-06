@@ -85,11 +85,9 @@ def test_host_attribute_round_trip_default_value() -> None:
     for name, attr in _all_value_spec_attributes().items():
         value_spec_results[name] = _validate_value_spec_default_value(attr)
 
-        try:
-            form_spec = attr.form_spec()
-        except NotImplementedError:
-            continue
-        form_spec_results[name] = _validate_form_spec_default_value(form_spec, attr.default_value())
+        form_spec_results[name] = _validate_form_spec_default_value(
+            attr.form_spec(), attr.default_value()
+        )
 
     _assert_round_trips("ValueSpec", value_spec_results)
     _assert_round_trips("FormSpec", form_spec_results, skip=_FORM_SPEC_DEFAULT_MISMATCHES)

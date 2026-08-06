@@ -31,6 +31,7 @@ from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-modu
 from cmk.fields import String
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -994,7 +995,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         raise NotImplementedError
 
     def form_spec(self) -> FormSpec:
-        raise NotImplementedError
+        return LegacyValueSpec.wrap(self.valuespec())
 
     @override
     def title(self) -> str:

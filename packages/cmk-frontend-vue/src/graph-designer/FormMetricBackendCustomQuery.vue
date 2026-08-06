@@ -36,6 +36,7 @@ import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
   HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
   fractionBelowGroupBy,
+  fractionBetweenGroupBy,
   percentileGroupBy
 } from '@/metric-backend/group-by/wire'
 
@@ -133,18 +134,28 @@ const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
 // The draft the widget edits, not a view of the stored value: an empty pill (a key the
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the consolidation would drop it again the moment it appears.
-const groupBy = ref<GroupByModel>(
-  consolidation.value.function === 'histogram_preserve_fraction_below'
-    ? fractionBelowGroupBy({
-        threshold: consolidation.value.threshold ?? 0,
-        group_by: consolidation.value.group_by
+const groupBy = ref<GroupByModel>(storedGroupBy())
+
+function storedGroupBy(): GroupByModel {
+  const stored = consolidation.value
+  switch (stored.function) {
+    case 'histogram_preserve_fraction_below':
+      return fractionBelowGroupBy({
+        threshold: stored.threshold ?? 0,
+        group_by: stored.group_by
       })
-    : percentileGroupBy(
-        consolidation.value.function === 'histogram_preserve_quantile'
-          ? consolidation.value
-          : undefined
-      )
-)
+    case 'histogram_preserve_fraction_between':
+      return fractionBetweenGroupBy({
+        lower_threshold: stored.lower_threshold ?? 0,
+        upper_threshold: stored.upper_threshold ?? 0,
+        group_by: stored.group_by
+      })
+    case 'histogram_preserve_quantile':
+      return percentileGroupBy(stored)
+    default:
+      return percentileGroupBy()
+  }
+}
 
 function rebuildConsolidation(consolidationFunction: ConsolidationFunction | null): void {
   consolidation.value = buildConsolidationFunction(

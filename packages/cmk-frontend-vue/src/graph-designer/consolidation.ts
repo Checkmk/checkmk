@@ -10,6 +10,8 @@ import type { ConsolidationFunction } from '@/metric-backend/consolidation/types
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
   groupFractionBelowThresholdToWire,
+  groupFractionLowerThresholdToWire,
+  groupFractionUpperThresholdToWire,
   groupKeysToWire,
   groupPercentileToWire,
   percentileGroupBy
@@ -29,14 +31,14 @@ export function consolidationFunctionFromWire(
     case 'sum':
       return { type: 'sum', function: wire.function }
     case 'histogram':
-      // histogram_preserve_quantile and histogram_preserve_fraction_below name a
-      // consolidation and a grouping at once. The picker holds the "preserve histograms"
-      // half, the group-by clause the other.
+      // The histogram_preserve_* functions name a consolidation and a grouping at once.
+      // The picker holds the "preserve histograms" half, the group-by clause the other.
       return {
         type: 'histogram',
         function:
           wire.function === 'histogram_preserve_quantile' ||
-          wire.function === 'histogram_preserve_fraction_below'
+          wire.function === 'histogram_preserve_fraction_below' ||
+          wire.function === 'histogram_preserve_fraction_between'
             ? 'histogram_preserve'
             : wire.function
       }
@@ -146,6 +148,16 @@ export function buildConsolidationFunction(
             lookback_seconds: lookbackSeconds,
             percentile: 0,
             threshold: groupFractionBelowThresholdToWire(groupBy),
+            group_by: groupKeysToWire(groupBy.keys)
+          }
+        case 'fraction_between':
+          return {
+            type: 'histogram',
+            function: 'histogram_preserve_fraction_between',
+            lookback_seconds: lookbackSeconds,
+            percentile: 0,
+            lower_threshold: groupFractionLowerThresholdToWire(groupBy),
+            upper_threshold: groupFractionUpperThresholdToWire(groupBy),
             group_by: groupKeysToWire(groupBy.keys)
           }
         default:

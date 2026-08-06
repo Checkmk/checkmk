@@ -146,7 +146,8 @@
             "histogram_fraction_below",
             "histogram_fraction_between",
             "histogram_preserve_quantile",
-            "histogram_preserve_fraction_below"
+            "histogram_preserve_fraction_below",
+            "histogram_preserve_fraction_between"
           ]
         },
         "lookback_seconds": { "type": "number" },

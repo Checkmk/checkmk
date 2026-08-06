@@ -218,6 +218,15 @@ class HistogramPreserveFractionBelow:
     type_: Literal["histogram_preserve_fraction_below"] = "histogram_preserve_fraction_below"
 
 
+@dataclass(frozen=True, kw_only=True)
+class HistogramPreserveFractionBetween:
+    lookback_seconds: float
+    lower_threshold: float
+    upper_threshold: float
+    group_by: tuple[GraphLineGroupByKey, ...]
+    type_: Literal["histogram_preserve_fraction_between"] = "histogram_preserve_fraction_between"
+
+
 type ConsolidationFunction = (
     GaugeLast
     | GaugeMax
@@ -236,6 +245,7 @@ type ConsolidationFunction = (
     | HistogramFractionBetween
     | HistogramPreserveQuantile
     | HistogramPreserveFractionBelow
+    | HistogramPreserveFractionBetween
 )
 
 

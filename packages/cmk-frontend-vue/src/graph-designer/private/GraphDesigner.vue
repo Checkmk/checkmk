@@ -873,6 +873,22 @@ function consolidationEquals(a: WireConsolidationFunction, b: WireConsolidationF
         )
       )
     }
+    case 'histogram_preserve_fraction_between': {
+      const aGroupBy = a.group_by ?? []
+      const bGroupBy =
+        b.function === 'histogram_preserve_fraction_between' ? (b.group_by ?? []) : undefined
+      return (
+        b.function === 'histogram_preserve_fraction_between' &&
+        a.lookback_seconds === b.lookback_seconds &&
+        a.lower_threshold === b.lower_threshold &&
+        a.upper_threshold === b.upper_threshold &&
+        bGroupBy !== undefined &&
+        aGroupBy.length === bGroupBy.length &&
+        aGroupBy.every(
+          (key, index) => key.kind === bGroupBy[index]?.kind && key.key === bGroupBy[index]?.key
+        )
+      )
+    }
     default:
       staticAssertNever(a)
       return false

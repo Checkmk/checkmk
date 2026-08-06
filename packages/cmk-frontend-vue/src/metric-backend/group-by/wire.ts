@@ -12,12 +12,14 @@ import { type GroupByFunction, type GroupByModel, type GroupKey, isKeyValid } fr
 /**
  * The groupings "preserve histograms" can be paired with.
  *
- * "percentile by" and "fraction below by" have fused wire consolidations,
- * histogram_preserve_quantile and histogram_preserve_fraction_below.
+ * "percentile by", "fraction below by" and "fraction between by" have fused wire
+ * consolidations, histogram_preserve_quantile, histogram_preserve_fraction_below and
+ * histogram_preserve_fraction_between.
  */
 export const HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS: readonly GroupByFunction[] = [
   'percentile',
-  'fraction_below'
+  'fraction_below',
+  'fraction_between'
 ]
 
 /**
@@ -58,6 +60,36 @@ export function fractionBelowGroupBy(stored?: {
 
 export function groupFractionBelowThresholdToWire(groupBy: GroupByModel): number {
   return groupBy.params.fractionBelowThreshold ?? 0
+}
+
+/**
+ * The "fraction between by" clause a stored histogram_preserve_fraction_between describes,
+ * or a fresh one when nothing is stored yet.
+ */
+export function fractionBetweenGroupBy(stored?: {
+  lower_threshold: number
+  upper_threshold: number
+  group_by?: readonly ConsolidationGroupByKey[] | undefined
+}): GroupByModel {
+  return {
+    function: 'fraction_between',
+    params:
+      stored === undefined
+        ? {}
+        : {
+            fractionLowerThreshold: stored.lower_threshold,
+            fractionUpperThreshold: stored.upper_threshold
+          },
+    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({ id: randomId(), level: kind, key }))
+  }
+}
+
+export function groupFractionLowerThresholdToWire(groupBy: GroupByModel): number {
+  return groupBy.params.fractionLowerThreshold ?? 0
+}
+
+export function groupFractionUpperThresholdToWire(groupBy: GroupByModel): number {
+  return groupBy.params.fractionUpperThreshold ?? 0
 }
 
 export function groupKeysToWire(keys: readonly GroupKey[]): ConsolidationGroupByKey[] {

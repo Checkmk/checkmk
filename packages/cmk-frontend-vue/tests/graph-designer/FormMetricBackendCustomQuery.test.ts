@@ -52,5 +52,6 @@ test('a preserve histograms line offers the groupings that pair with it', async 
   await waitFor(() => {
     expect(screen.getByRole('option', { name: 'percentile by' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'fraction below by' })).toBeVisible()
+    expect(screen.getByRole('option', { name: 'fraction between by' })).toBeVisible()
   })
 })

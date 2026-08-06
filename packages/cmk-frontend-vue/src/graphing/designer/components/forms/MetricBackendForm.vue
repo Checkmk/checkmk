@@ -21,7 +21,10 @@ import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
   HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
   fractionBelowGroupBy,
+  fractionBetweenGroupBy,
   groupFractionBelowThresholdToWire,
+  groupFractionLowerThresholdToWire,
+  groupFractionUpperThresholdToWire,
   groupKeysToWire,
   groupPercentileToWire,
   percentileGroupBy
@@ -75,6 +78,14 @@ function toStored(
             type: 'histogram_preserve_fraction_below',
             lookback_seconds: lookbackSeconds,
             threshold: groupFractionBelowThresholdToWire(groupBy),
+            group_by: groupKeysToWire(groupBy.keys)
+          }
+        case 'fraction_between':
+          return {
+            type: 'histogram_preserve_fraction_between',
+            lookback_seconds: lookbackSeconds,
+            lower_threshold: groupFractionLowerThresholdToWire(groupBy),
+            upper_threshold: groupFractionUpperThresholdToWire(groupBy),
             group_by: groupKeysToWire(groupBy.keys)
           }
         default:
@@ -145,6 +156,7 @@ function toPicker(consolidation: Consolidation): ConsolidationFunction {
       return { type: 'histogram', function: consolidation.type }
     case 'histogram_preserve_quantile':
     case 'histogram_preserve_fraction_below':
+    case 'histogram_preserve_fraction_between':
       return { type: 'histogram', function: 'histogram_preserve' }
   }
 }
@@ -238,15 +250,21 @@ const showGroupBy = computed<boolean>(
 // The draft the widget edits, not a view of the stored value: an empty pill (a key the
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the store would drop it again the moment it appears.
-const groupBy = ref<GroupByModel>(
-  item.consolidation_function.type === 'histogram_preserve_fraction_below'
-    ? fractionBelowGroupBy(item.consolidation_function)
-    : percentileGroupBy(
-        item.consolidation_function.type === 'histogram_preserve_quantile'
-          ? item.consolidation_function
-          : undefined
-      )
-)
+const groupBy = ref<GroupByModel>(storedGroupBy())
+
+function storedGroupBy(): GroupByModel {
+  const stored = item.consolidation_function
+  switch (stored.type) {
+    case 'histogram_preserve_fraction_below':
+      return fractionBelowGroupBy(stored)
+    case 'histogram_preserve_fraction_between':
+      return fractionBetweenGroupBy(stored)
+    case 'histogram_preserve_quantile':
+      return percentileGroupBy(stored)
+    default:
+      return percentileGroupBy()
+  }
+}
 
 watch(groupBy, () => storeCurrentWith({}))
 

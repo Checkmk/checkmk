@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Self
+from typing import Final, Self
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
@@ -36,6 +36,8 @@ from ._engine_dispatch import (
 from ._engine_plugins import registered_translations
 from ._engine_rrd import EngineRRDFetchData
 from ._from_api import GraphFromAPI
+
+TEMPLATE_KIND: Final = "template"
 
 
 def _assert_uniform_unit(graph: Graph) -> None:
@@ -71,7 +73,7 @@ def build_template_graphs(
     graphs = build_matched_graphs(
         localizer=translate_to_current_language,
         fetch_metric_names=fetch_metric_names,
-        kind="template",
+        kind=TEMPLATE_KIND,
         registered_graphs=registered_graphs,
         registered_metrics=registered_metrics,
         graph_name=specification.graph_id,
@@ -124,7 +126,7 @@ def template_graph_dispatcher(codec: GraphCodec) -> EngineGraphDispatcher:
     # The codec is the edition's, not this kind's: every graph of an edition is read with all of
     # its quantities, so a definition holding one another kind introduced still round-trips.
     return EngineGraphDispatcher(
-        kind="template",
+        kind=TEMPLATE_KIND,
         codec=codec,
         make_evaluate=_EvaluateTemplateGraphs.make,
     )

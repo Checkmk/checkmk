@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.i18n import _
-from cmk.gui.openapi.framework.model._api_field import api_field
-from cmk.gui.openapi.framework.model._api_model import api_model
+from cmk.gui.openapi.framework.model import api_field, api_model
 
-from .._models import ServiceOverview
-from ._urls import host_view_link, service_view_link
+from .._models import Service, ServiceOverview
+from ._urls import host_view_link, service_view_link, service_view_link_by_id
+
+# NOTE: named with a "Service" prefix (unlike the shape-identical hosts ``ModeInfo``) because the
+# OpenAPI spec registers component schemas by class name across every endpoint family; an
+# unprefixed name would collide with the hosts model.
 
 
 @api_model
@@ -46,6 +49,36 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 icon_name="notif_disabled",
                 link=service_view_link("service", service),
                 title=_("Notifications are disabled for this service"),
+            )
+        )
+    return modes
+
+
+def build_service_modes_by_id(
+    service: Service, *, hostname: str, site_id: str
+) -> list[ServiceModeInfo]:
+    modes: list[ServiceModeInfo] = []
+    if service.in_downtime:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="downtime",
+                link=service_view_link_by_id(
+                    "downtimes_of_service",
+                    site_id=site_id,
+                    hostname=hostname,
+                    service_name=service.name,
+                ),
+                title=_("In scheduled downtime"),
+            )
+        )
+    if service.acknowledged:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="ack",
+                link=service_view_link_by_id(
+                    "service", site_id=site_id, hostname=hostname, service_name=service.name
+                ),
+                title=_("Problem acknowledged"),
             )
         )
     return modes

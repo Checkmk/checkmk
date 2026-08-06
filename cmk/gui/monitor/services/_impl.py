@@ -61,6 +61,8 @@ class LiveStatusHostServicesRepository:
                 Services.host_name,
                 Services.state,
                 Services.plugin_output,
+                Services.acknowledged,
+                Services.scheduled_downtime_depth,
                 Services.last_check,
                 Services.last_state_change,
             ],
@@ -74,6 +76,8 @@ class LiveStatusHostServicesRepository:
                     Service(
                         name=row["description"],
                         state=ServiceState(row["state"]),
+                        acknowledged=bool(row["acknowledged"]),
+                        in_downtime=row["scheduled_downtime_depth"] > 0,
                         summary=row["plugin_output"],
                         last_check=(
                             dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC)

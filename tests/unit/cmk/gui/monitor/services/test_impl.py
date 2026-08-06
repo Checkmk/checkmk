@@ -19,7 +19,10 @@ from cmk.livestatus_client.testing import expect_single_query
 # return an empty result. This lets us assert on the exact query text without also needing to
 # supply full row data for every column the query touches.
 _UNKNOWN_HOSTNAME = "foo-server-01"
-_SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"
+_SERVICES_COLUMNS = (
+    "description host_name state plugin_output acknowledged scheduled_downtime_depth "
+    "last_check last_state_change"
+)
 _DEFAULT_ORDER_BY = "OrderBy: description asc"
 
 

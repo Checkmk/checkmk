@@ -11,6 +11,7 @@ import { computed, inject } from 'vue'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
@@ -48,6 +49,7 @@ const lastStateChange = computed(() => formatTimestamp(props.row.last_state_chan
     @update:model-value="toggleSelected"
   />
   <StateCell v-if="hasColumn('state')" column-id="state" kind="service" :state="row.state" />
+  <ModesCell v-if="hasColumn('modes')" column-id="modes" :modes="row.modes ?? []" />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"

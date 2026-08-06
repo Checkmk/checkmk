@@ -41,6 +41,7 @@ from .._models import (
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
 from ._filters import parse_as_livestatus_filter, ServiceFilterNode
+from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
@@ -71,15 +72,25 @@ class HostServiceEntry:
         description="Timestamp of the host's last state change",
         example="2026-07-13T11:39:00Z",
     )
+    modes: list[ServiceModeInfo] | ApiOmitted = api_field(
+        description=(
+            "Active service modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
+            "icons. Empty when the service is in none of these modes."
+        ),
+        example=[],
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
-    def from_domain(cls, service: Service) -> Self:
+    def from_domain(cls, service: Service, *, hostname: str, site_id: str) -> Self:
         return cls(
             name=service.name,
             state=service.state_label,
             summary=service.summary,
             last_check=service.last_check,
             last_state_change=service.last_state_change,
+            modes=build_service_modes_by_id(service, hostname=hostname, site_id=site_id)
+            or ApiOmitted(),
         )
 
 
@@ -214,7 +225,10 @@ def _handle_list_services(
         matched_service_count = total_service_count
 
     return HostServicesResponse(
-        services=[HostServiceEntry.from_domain(service) for service in services],
+        services=[
+            HostServiceEntry.from_domain(service, hostname=hostname, site_id=site_id)
+            for service in services
+        ],
         meta=HostServicesPageMeta(
             hostname=hostname,
             site_id=site_id,

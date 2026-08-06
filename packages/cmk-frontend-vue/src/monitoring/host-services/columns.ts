@@ -13,7 +13,7 @@ import type { HostServiceEntry } from '@/monitoring/shared/api/types'
  * horizontally.
  */
 export function buildHostServicesColumnPinning(): ColumnPinningState {
-  return { left: ['select', 'state', 'name'] }
+  return { left: ['select', 'state', 'modes', 'name'] }
 }
 
 export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
@@ -37,6 +37,14 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       minSize: 74,
       maxSize: 100,
       meta: { justify: 'center' }
+    },
+    {
+      accessorKey: 'modes',
+      header: _t('Mode'),
+      enableSorting: false,
+      minSize: 80,
+      maxSize: 80,
+      meta: { justify: 'left' }
     },
     {
       accessorKey: 'name',

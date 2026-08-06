@@ -18,6 +18,19 @@ def service_view_link(view_name: str, service: ServiceOverview) -> str:
     )
 
 
+def service_view_link_by_id(
+    view_name: str, *, site_id: str, hostname: str, service_name: str
+) -> str:
+    return "view.py?" + urlencode(
+        [
+            ("view_name", view_name),
+            ("site", site_id),
+            ("host", hostname),
+            ("service", service_name),
+        ]
+    )
+
+
 def service_parameters_link(service: ServiceOverview) -> str:
     return "wato.py?" + urlencode(
         [

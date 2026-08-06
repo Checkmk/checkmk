@@ -52,8 +52,9 @@ test('renders service name and summary in their cells', () => {
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
+  // select, state, modes, name, summary, last_check, last_state_change
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(6)
+  expect(tds).toHaveLength(7)
 })
 
 test('renders the two timestamps as formatted date-time strings', () => {
@@ -62,8 +63,8 @@ test('renders the two timestamps as formatted date-time strings', () => {
   const cellText = (td: Element): string =>
     (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(cellText(tds[4]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
   expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+  expect(cellText(tds[6]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
 })
 
 test('dashes out the last check of a service that has never been checked', () => {
@@ -72,7 +73,7 @@ test('dashes out the last check of a service that has never been checked', () =>
   const cellText = (td: Element): string =>
     (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(cellText(tds[4]!)).toBe('–')
+  expect(cellText(tds[5]!)).toBe('–')
 })
 
 test('renders the state badge with success color for state OK', () => {

@@ -132,6 +132,8 @@ class TestMonitorHostServicesFilters:
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -215,6 +217,8 @@ class TestMonitorHostServicesFilters:
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -324,6 +328,8 @@ class TestMonitorHostServices:
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                 }
@@ -395,6 +401,8 @@ class TestMonitorHostServices:
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "plugin_output": "",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": 0,
                     "last_state_change": time.time(),
                 }
@@ -512,6 +520,8 @@ class TestMonitorHostServices:
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -572,6 +582,8 @@ class TestMonitorHostServicessLimitPermissions:
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -632,6 +644,8 @@ class TestMonitorHostServicessLimitPermissions:
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -992,5 +1006,8 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "max_check_attempts next_check tags labels label_sources"
 )
 _LIMIT = 1000
-_SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"
+_SERVICES_COLUMNS = (
+    "description host_name state plugin_output acknowledged scheduled_downtime_depth "
+    "last_check last_state_change"
+)
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"

@@ -93,6 +93,14 @@ ADMIN_USER: Final[str] = "cmkadmin"
 AUTOMATION_USER: Final[str] = "not_automation"
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
 
+# Output markers identifying an 'omd restore' that aborted because the restored site is
+# unlicensed and therefore refuses to update its core configuration. Both have to be present:
+# any other reason for a failing core configuration update must not be tolerated.
+_UNLICENSED_CORE_CONFIG_ABORT: Final[tuple[str, ...]] = (
+    "License verification failed: 'Activate changes' is blocked",
+    "Could not update core configuration. Aborting.",
+)
+
 
 @dataclass
 class TracingConfig:
@@ -2197,7 +2205,28 @@ class SiteFactory:
         logger.debug("Reused site %s", site.id)
         return site
 
-    def restore_site_from_backup(self, backup_path: Path, name: str, reuse: bool = False) -> Site:
+    def restore_site_from_backup(
+        self,
+        backup_path: Path,
+        name: str,
+        reuse: bool = False,
+        expect_license_error: bool = False,
+    ) -> Site:
+        """Restore a site from a backup.
+
+        Args:
+            expect_license_error:
+                Tolerate `omd restore` aborting while updating the core configuration of the
+                restored site because that site is unlicensed. This is the fate of every backup
+                of a licensed site: the license verification response stored in the backup
+                eventually stops verifying, and once the unlicensed grace period is over the
+                site blocks 'Activate changes' - including the `cmk -U` that `omd restore` runs
+                to finalize the site.
+
+                The site returned in that case is *stopped* and its core configuration is out of
+                date: an unlicensed site cannot start its core either. The caller has to license
+                it (see `license_site`), update the core configuration and start it.
+        """
         self._base_ident = ""
         site = self._site_obj(name)
 
@@ -2229,9 +2258,21 @@ class SiteFactory:
             check=False,
         )
 
-        assert completed_process.returncode == 0, (
-            f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
-        )
+        if completed_process.returncode != 0:
+            assert expect_license_error and all(
+                marker in completed_process.stdout for marker in _UNLICENSED_CORE_CONFIG_ABORT
+            ), f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
+            logger.warning(
+                "Site '%s' was restored, but 'omd restore' could not update its core "
+                "configuration because the site is unlicensed. Returning the stopped site; it "
+                "has to be licensed before it can be used.",
+                name,
+            )
+            # 'omd restore' aborted before it could register the site with the system apache.
+            # Without that, the site is not reachable via HTTP once it is started.
+            _ = run(["omd", "update-apache-config", name], sudo=True)
+            restart_httpd()
+            return self.get_existing_site(site.id, start=False)
 
         site = self.get_existing_site(site.id)
         site.start()

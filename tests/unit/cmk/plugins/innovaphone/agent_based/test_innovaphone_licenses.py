@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.innovaphone_licenses import check_innovaphone_licenses
+from cmk.plugins.innovaphone.agent_based.innovaphone_licenses import check_innovaphone_licenses
 
 
 def test_check_innovaphone_licenses_metric_boundaries() -> None:

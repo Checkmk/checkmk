@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Ref, computed, ref } from 'vue'
 
@@ -188,44 +189,45 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
         />
 
         <div
-          v-if="dataTimeRange && !anyMetricShown"
-          class="graphing-graph-panel__empty-state"
-          :style="{ height: `${figureHeight}px` }"
+          class="graphing-graph-panel__plot"
+          :class="{ 'graphing-graph-panel__plot--inert': !anyMetricShown }"
         >
-          {{ _t('All metrics are hidden') }}
+          <TimeSeriesGraph
+            :time_range="viewTimeRange"
+            :metrics="visibleMetrics"
+            :horizontal_lines="visibleHorizontalLines"
+            :value-range="viewValueRange"
+            :zoom-mode="zoomMode"
+            :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
+            :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
+            :min-value-range="null"
+            :inspecting="inspectionActive"
+            :pan-enabled="interaction.panning === 'enabled'"
+            :zoom-enabled="interaction.zoom === 'enabled'"
+            :pin-enabled="interaction.pin === 'enabled'"
+            :options="{
+              header: { title: title ?? null, show_graph_time: false },
+              name: title ?? '',
+              x_axis: null,
+              y_axis: yAxis,
+              font_size_pt: 10
+            }"
+            :highlighted-metric-name="highlightedMetricName"
+            :pin-time="pinTime"
+            @zoom="onZoom"
+            @pan="onPan"
+            @reset="onReset"
+            @pin-create="onPinCreate"
+            @pin-action="clearPin"
+          />
+          <CmkAlertBox
+            v-if="dataTimeRange && !anyMetricShown"
+            class="graphing-graph-panel__empty-state"
+            variant="info"
+          >
+            {{ _t('All metrics are hidden') }}
+          </CmkAlertBox>
         </div>
-
-        <!-- No `v-else-if` guard: the frame range always resolves, so a panel with nothing to
-             plot draws its axes rather than leaving the area blank. -->
-        <TimeSeriesGraph
-          v-else
-          :time_range="viewTimeRange"
-          :metrics="visibleMetrics"
-          :horizontal_lines="visibleHorizontalLines"
-          :value-range="viewValueRange"
-          :zoom-mode="zoomMode"
-          :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
-          :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
-          :min-value-range="null"
-          :inspecting="inspectionActive"
-          :pan-enabled="interaction.panning === 'enabled'"
-          :zoom-enabled="interaction.zoom === 'enabled'"
-          :pin-enabled="interaction.pin === 'enabled'"
-          :options="{
-            header: { title: title ?? null, show_graph_time: false },
-            name: title ?? '',
-            x_axis: null,
-            y_axis: yAxis,
-            font_size_pt: 10
-          }"
-          :highlighted-metric-name="highlightedMetricName"
-          :pin-time="pinTime"
-          @zoom="onZoom"
-          @pan="onPan"
-          @reset="onReset"
-          @pin-create="onPinCreate"
-          @pin-action="clearPin"
-        />
 
         <!--
           The brush spans the full figure width; its plot track mirrors the renderer's
@@ -304,13 +306,21 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
   margin-top: calc(var(--spacing) * 2);
 }
 
+.graphing-graph-panel__plot {
+  position: relative;
+}
+
+.graphing-graph-panel__plot--inert {
+  pointer-events: none;
+}
+
 .graphing-graph-panel__empty-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--font-color);
-  opacity: 0.5;
-  font-size: var(--font-size-small);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  margin: 0;
 }
 
 .graphing-graph-panel__legend {

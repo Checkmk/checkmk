@@ -127,6 +127,11 @@ function legendRowFor(metricTitle: string): HTMLElement {
   return screen.getByRole('row', { name: new RegExp(metricTitle) })
 }
 
+/** The element carrying the plot's interaction state, which the renderer is mounted into. */
+function plotWrapper(): HTMLElement {
+  return screen.getByTestId('time-series-graph').parentElement!
+}
+
 // The mocked pin is a module-level singleton, so it has to be cleared between tests.
 beforeEach(() => {
   vi.mocked(loadMenu).mockResolvedValue([])
@@ -541,7 +546,7 @@ test('leaving a legend row clears the highlight again', async () => {
   expect(screen.getByTestId('highlighted')).toBeEmptyDOMElement()
 })
 
-test('hiding every metric replaces the graph with an empty state', () => {
+test('hiding every metric keeps the frame and states why', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
@@ -554,7 +559,8 @@ test('hiding every metric replaces the graph with an empty state', () => {
   })
 
   expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
-  expect(screen.queryByTestId('time-series-graph')).not.toBeInTheDocument()
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+  expect(plotWrapper()).toHaveClass('graphing-graph-panel__plot--inert')
 })
 
 test('bringing one metric back clears the empty state', async () => {
@@ -573,6 +579,7 @@ test('bringing one metric back clears the empty state', async () => {
 
   expect(screen.queryByText('All metrics are hidden')).not.toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toHaveTextContent('CPU')
+  expect(plotWrapper()).not.toHaveClass('graphing-graph-panel__plot--inert')
 })
 
 // Without this the persisted pin is loaded but never drawn.
@@ -648,5 +655,5 @@ test('keeps the all-hidden message when data arrived but nothing is shown', () =
 
   // The empty frame must not swallow this case: hidden metrics are not the same as none.
   expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
-  expect(screen.queryByTestId('time-series-graph')).not.toBeInTheDocument()
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })

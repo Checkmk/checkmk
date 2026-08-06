@@ -3,12 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def savefloat(f: str) -> float:
@@ -24,37 +34,43 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def discover_innovaphone_licenses(string_table: StringTable) -> DiscoveryResult:
-    if string_table:
+def discover_innovaphone_licenses(section: StringTable) -> DiscoveryResult:
+    if section:
         yield Service()
 
 
-def check_innovaphone_licenses(_no_item, params, info):
-    if not info:
-        return None
-    total, used = map(savefloat, info[0])
+def check_innovaphone_licenses(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if not section:
+        return
+    total, used = map(savefloat, section[0])
     perc_used = (100.0 * used) / total if total else None
     warn, crit = params["levels"]
     utilization_message = f" ({perc_used:.0f}%)" if perc_used is not None else ""
     message = f"Used {used:.0f}/{total:.0f} Licences{utilization_message}"
     levels = f"Warning/ Critical at ({warn}/{crit})"
-    perf = [("licenses", used, None, None, 0, total)]
     if perc_used is None:
-        return 3, message, perf
-    if perc_used > crit:
-        return 2, message + levels, perf
-    if perc_used > warn:
-        return 1, message + levels, perf
-    return 0, message, perf
+        yield Result(state=State.UNKNOWN, summary=message)
+    elif perc_used > crit:
+        yield Result(state=State.CRIT, summary=message + levels)
+    elif perc_used > warn:
+        yield Result(state=State.WARN, summary=message + levels)
+    else:
+        yield Result(state=State.OK, summary=message)
+    yield Metric("licenses", used, boundaries=(0, total))
 
 
 def parse_innovaphone_licenses(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["innovaphone_licenses"] = LegacyCheckDefinition(
+agent_section_innovaphone_licenses = AgentSection(
     name="innovaphone_licenses",
     parse_function=parse_innovaphone_licenses,
+)
+
+
+check_plugin_innovaphone_licenses = CheckPlugin(
+    name="innovaphone_licenses",
     service_name="Licenses",
     discovery_function=discover_innovaphone_licenses,
     check_function=check_innovaphone_licenses,

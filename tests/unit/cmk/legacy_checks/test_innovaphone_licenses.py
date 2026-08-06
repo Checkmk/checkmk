@@ -3,22 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks.innovaphone_licenses import check_innovaphone_licenses
 
 
 def test_check_innovaphone_licenses_metric_boundaries() -> None:
-    _state, _message, perf = check_innovaphone_licenses(
-        None, {"levels": (90.0, 95.0)}, [["100", "50"]]
-    )
-    assert perf == [("licenses", 50.0, None, None, 0, 100.0)]
+    value = list(check_innovaphone_licenses({"levels": (90.0, 95.0)}, [["100", "50"]]))
+    expected = [
+        Result(state=State.OK, summary="Used 50/100 Licences (50%)"),
+        Metric("licenses", 50.0, boundaries=(0.0, 100.0)),
+    ]
+    assert value == expected
 
 
 def test_check_innovaphone_licenses_zero_total() -> None:
-    assert check_innovaphone_licenses(None, {"levels": (90.0, 95.0)}, [["0", "0"]]) == (
-        3,
-        "Used 0/0 Licences",
-        [("licenses", 0.0, None, None, 0, 0.0)],
-    )
+    value = list(check_innovaphone_licenses({"levels": (90.0, 95.0)}, [["0", "0"]]))
+    expected = [
+        Result(state=State.UNKNOWN, summary="Used 0/0 Licences"),
+        Metric("licenses", 0.0, boundaries=(0.0, 0.0)),
+    ]
+    assert value == expected

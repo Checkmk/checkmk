@@ -85,6 +85,14 @@ const FETCHED = {
   errors: []
 }
 
+// A failure as the REST layer really delivers one, so it travels `unwrap`'s own error path rather
+// than arriving as a hand-thrown Error: only that path decides what of a response reaches the user.
+const apiFailure = (status: number, title: string, detail: string) => ({
+  data: undefined,
+  error: { title, detail },
+  response: new Response(JSON.stringify({ title, detail }), { status })
+})
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
 
@@ -222,6 +230,36 @@ test('states a readable headline over the technical detail when fetching fails',
   // The pill is silent; the announcement comes from the group's own region.
   expect(notice()).not.toHaveAttribute('role')
   expect(screen.getByRole('alert')).toBeInTheDocument()
+})
+
+test('states a server failure by the category the response carries, never its status code', async () => {
+  postSpy.mockResolvedValue(
+    apiFailure(500, 'Internal Server Error', 'The graph backend raised while resolving the query.')
+  )
+  renderGroup()
+
+  await waitFor(() => expect(notice()).toBeInTheDocument())
+  expect(within(notice()!).getByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(
+    within(notice()!).getByText(
+      'Internal Server Error: The graph backend raised while resolving the query.'
+    )
+  ).toBeInTheDocument()
+  expect(notice()!.textContent).not.toMatch(/500|Traceback/)
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+})
+
+test('states a request failure by its own category, again without the status code', async () => {
+  postSpy.mockResolvedValue(apiFailure(404, 'Not Found', 'The requested graph does not exist.'))
+  renderGroup()
+
+  await waitFor(() => expect(notice()).toBeInTheDocument())
+  expect(within(notice()!).getByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(
+    within(notice()!).getByText('Not Found: The requested graph does not exist.')
+  ).toBeInTheDocument()
+  expect(notice()!.textContent).not.toMatch(/404|Traceback/)
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
 })
 
 test('retrying after a failure refetches both the graph and its overview', async () => {

@@ -286,6 +286,8 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
   flex: 0 0 auto;
   height: 0;
   overflow: visible;
+  position: relative;
+  z-index: 1;
 }
 
 .graphing-custom-graph-designer-app__content {

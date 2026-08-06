@@ -7,24 +7,54 @@ from collections.abc import Sequence
 
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.monitor.services._models import Service, ServiceFilter, ServiceSort
+from cmk.gui.monitor.services._exceptions import ServiceNotFoundError
+from cmk.gui.monitor.services._models import (
+    Service,
+    ServiceFilter,
+    ServiceOverview,
+    ServiceSort,
+)
 from cmk.gui.monitor.services._repositories import HostServicesRepository
 from cmk.gui.monitor.services._sorting import service_sorter
 
 KNOWN_HOSTNAME = "web-server-01"
+KNOWN_SITE_ID = "local"
 
 
 class ServiceFactory(DataclassFactory[Service]):
     __check_model__ = False
 
 
-def get_fake_host_services_repository(*, n_services: int) -> HostServicesRepository:
+class ServiceOverviewFactory(DataclassFactory[ServiceOverview]):
+    __check_model__ = False
+
+
+def get_fake_host_services_repository(
+    *, n_services: int, names: Sequence[str] | None = None
+) -> HostServicesRepository:
     class HostServicesFakeRepository:
         def __init__(self) -> None:
-            self._services = [ServiceFactory.build() for _ in range(n_services)]
+            self._services = [
+                ServiceFactory.build() if names is None else ServiceFactory.build(name=names[i])
+                for i in range(n_services)
+            ]
+            self._service_overviews = {
+                (KNOWN_SITE_ID, KNOWN_HOSTNAME, s.name): ServiceOverviewFactory.build(
+                    site_id=KNOWN_SITE_ID, host_name=KNOWN_HOSTNAME, name=s.name
+                )
+                for s in self._services
+            }
 
         def host_exists(self, hostname: str) -> bool:
             return hostname == KNOWN_HOSTNAME
+
+        def get_overview(
+            self, *, hostname: str, service_name: str, site_id: str
+        ) -> ServiceOverview:
+            try:
+                return self._service_overviews[(site_id, hostname, service_name)]
+            except KeyError:
+                raise ServiceNotFoundError("Service not found") from None
 
         def fetch(
             self,

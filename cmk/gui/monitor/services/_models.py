@@ -51,6 +51,12 @@ class Service:
                 assert_never(self.state)
 
 
+@dataclasses.dataclass(frozen=True)
+class ServiceOverview(Service):
+    host_name: str
+    site_id: str
+
+
 class ServiceSortColumn(enum.StrEnum):
     NAME = "name"
     STATE = "state"

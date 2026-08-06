@@ -8,6 +8,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 
 from ._family import MONITOR_SERVICES_FAMILY
 from ._list_host_services import ENDPOINT_LIST_HOST_SERVICES
+from ._service_overview import ENDPOINT_GET_SERVICE_OVERVIEW
 
 
 def register_endpoints(
@@ -17,3 +18,4 @@ def register_endpoints(
     endpoint_family_registry.register(MONITOR_SERVICES_FAMILY)
 
     versioned_endpoint_registry.register(ENDPOINT_LIST_HOST_SERVICES)
+    versioned_endpoint_registry.register(ENDPOINT_GET_SERVICE_OVERVIEW)

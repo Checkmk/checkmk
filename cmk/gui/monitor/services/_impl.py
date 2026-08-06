@@ -13,12 +13,21 @@ when instantiated.
 import datetime as dt
 from collections.abc import Mapping, Sequence
 
+from cmk.ccc.site import SiteId
 from cmk.livestatus_client import MultiSiteConnection
 from cmk.livestatus_client.expressions import And, NothingExpression, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
 
-from ._models import Service, ServiceFilter, ServiceSort, ServiceSortColumn, ServiceState
+from ._exceptions import ServiceNotFoundError
+from ._models import (
+    Service,
+    ServiceFilter,
+    ServiceOverview,
+    ServiceSort,
+    ServiceSortColumn,
+    ServiceState,
+)
 from ._sorting import service_sorter
 
 
@@ -73,6 +82,35 @@ class LiveStatusHostServicesRepository:
                 ],
                 key=service_sorter(sorters),
             )
+
+    def get_overview(self, *, hostname: str, service_name: str, site_id: str) -> ServiceOverview:
+        q = Query(
+            [
+                Services.description,
+                Services.host_name,
+                Services.state,
+                Services.plugin_output,
+                Services.last_check,
+                Services.last_state_change,
+            ],
+            And(Services.host_name == hostname, Services.description == service_name),
+        )
+        try:
+            row = q.fetchone(self._connection, True, only_site=SiteId(site_id))
+        except ValueError:
+            raise ServiceNotFoundError(
+                f"Service {service_name!r} of host {hostname!r} not found on site {site_id!r}"
+            ) from None
+
+        return ServiceOverview(
+            name=row["description"],
+            host_name=row["host_name"],
+            site_id=row["site"],
+            state=ServiceState(row["state"]),
+            summary=row["plugin_output"],
+            last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
+            last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
+        )
 
     def count_total(self, hostname: str) -> int:
         return self._count_services(hostname)

@@ -619,8 +619,100 @@ class TestMonitorHostServicessLimitPermissions:
         assert resp.json["meta"]["limit"] is None
 
 
+class TestMonitorServiceOverview:
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_returns_the_requested_service(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": _SERVICE_DESCRIPTION,
+                    "host_name": _HOSTNAME,
+                    "state": 1,
+                    "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
+                    "last_check": time.time(),
+                    "last_state_change": time.time(),
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICES_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+
+        assert resp.json["name"] == _SERVICE_DESCRIPTION
+        assert resp.json["host_name"] == _HOSTNAME
+        assert resp.json["site_id"] == _SITE_ID
+
+    def test_unknown_service_returns_404(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("services", [])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICES_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                "Filter: description = not-a-service",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name="not-a-service",
+                expect_ok=False,
+            )
+
+        assert resp.status_code == 404
+
+    def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
+        resp = clients.MonitorHosts.get_service_overview(
+            hostname=_HOSTNAME,
+            site_id="no-such-site",
+            service_name=_SERVICE_DESCRIPTION,
+            expect_ok=False,
+        )
+        assert resp.status_code == 400
+
+    def test_invalid_credentials(self, clients: ClientRegistry) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials("foouser", "barpassword")
+
+        resp = client.get_service_overview(
+            hostname=_HOSTNAME,
+            site_id=_SITE_ID,
+            service_name=_SERVICE_DESCRIPTION,
+            expect_ok=False,
+        )
+
+        assert resp.status_code == 401
+        assert "credentials" in resp.json["detail"]
+
+
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
+_SERVICE_DESCRIPTION = "CPU load"
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"

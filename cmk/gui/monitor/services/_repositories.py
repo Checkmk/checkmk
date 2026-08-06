@@ -13,12 +13,16 @@ they will return. This allows us to pass stubs when testing our applications.
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import Service, ServiceFilter, ServiceSort
+from ._models import Service, ServiceFilter, ServiceOverview, ServiceSort
 
 
 class HostServicesRepository(Protocol):
     def host_exists(self, hostname: str) -> bool:
         """Check whether the host exists in your environment."""
+        ...
+
+    def get_overview(self, *, hostname: str, service_name: str, site_id: str) -> ServiceOverview:
+        """Fetch the overview of a single service of a host."""
         ...
 
     def fetch(

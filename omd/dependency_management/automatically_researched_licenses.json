@@ -2095,6 +2095,7 @@
   "pkg:pypi/aiohttp@3.13.3": "Apache-2.0 AND MIT",
   "pkg:pypi/aiohttp@3.13.5": "Apache-2.0 AND MIT",
   "pkg:pypi/aiohttp@3.14.1": "Apache-2.0 AND MIT",
+  "pkg:pypi/aiohttp@3.14.3": "Apache-2.0 AND MIT",
   "pkg:pypi/altgraph@0.17": "MIT",
   "pkg:pypi/annotated-doc@0.0.4": "MIT",
   "pkg:pypi/anyio@4.12.1": "MIT",

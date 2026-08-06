@@ -106,12 +106,16 @@ class GerritRunContext:
 
 
 def run(ctx: GerritRunContext) -> int:
-    version_storage = Storage("gerrit_version", ctx.hostname)
-    version_cache = cache_ttl(version_storage, ttl=ctx.ttl.version)
-    collect_version = version_cache(ctx.collectors.version.collect)
-    _write_section(collect_version(), name="gerrit_version")
+    process_version_section(ctx)
 
     return 0
+
+
+def process_version_section(ctx: GerritRunContext) -> None:
+    storage = Storage("gerrit_version", ctx.hostname)
+    cache_wrapper = cache_ttl(storage, ttl=ctx.ttl.version)
+    data = cache_wrapper(ctx.collectors.version.collect)()
+    _write_section(data, name="gerrit_version")
 
 
 def _write_section(data: object, *, name: str) -> None:

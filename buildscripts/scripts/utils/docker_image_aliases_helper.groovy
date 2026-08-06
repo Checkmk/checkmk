@@ -30,6 +30,13 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     // So we handle both cases here, setting default value for @args manually
     def (args, body) = arg2 == null ? [[:], arg1] : [arg1, arg2];
 
+    // the reference repo dir is required for any git based interactions
+    def reference_repo_dir = cmd_output("""
+        if [ -f ${checkout_dir}/.git/objects/info/alternates ]; then \
+            dirname \$(cat ${checkout_dir}/.git/objects/info/alternates);\
+        fi
+    """);
+
     def image = args.image ?: docker_reference_image();
     def privileged = args.get("priviliged", false).asBoolean();
     def init = args.get("init", false).asBoolean();
@@ -44,7 +51,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         + (args.ulimit_nofile ? ["--ulimit nofile=${args.ulimit_nofile}:${args.ulimit_nofile}"] : [])
         + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
         + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
-        + (mount_reference_repo ? ["${mount_reference_repo_dir}"] : [])
+        + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
         + "--cpus=8"
         + "--memory=24g"
     ).join(" ");

@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -13,9 +13,9 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.huawei.agent_based.huawei_switch_mem import (
     check_huawei_switch_mem,
     discover_huawei_switch_mem,
+    Params,
     parse_huawei_switch_mem,
 )
-from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 STRING_TABLE: Sequence[StringTable] = [
     [
@@ -61,7 +61,7 @@ def test_discover_huawei_switch_mem() -> None:
     assert all(isinstance(s, Service) for s in result)
 
 
-PARAMS: Mapping[str, SimpleLevelsConfigModel[float]] = {"levels": ("fixed", (80.0, 90.0))}
+PARAMS = Params(levels=("fixed", (80.0, 90.0)))
 
 
 @pytest.mark.parametrize(
@@ -93,16 +93,6 @@ def test_check_huawei_switch_mem(item: str, expected_result: Result, expected_va
     assert list(check_huawei_switch_mem(item, PARAMS, parsed)) == [
         expected_result,
         Metric("mem_used_percent", expected_value, levels=(80.0, 90.0)),
-    ]
-
-
-def test_check_huawei_switch_mem_without_levels() -> None:
-    """levels is optional in the plugin, and the check then reports usage without them."""
-    parsed = parse_huawei_switch_mem(STRING_TABLE)
-
-    assert list(check_huawei_switch_mem("1", {}, parsed)) == [
-        Result(state=State.OK, summary="Usage: 22.00%"),
-        Metric("mem_used_percent", 22.0),
     ]
 
 

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -26,13 +27,15 @@ from cmk.plugins.huawei.lib import (
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
+class Params(TypedDict):
+    levels: SimpleLevelsConfigModel[float]
+
+
 def parse_huawei_switch_mem(string_table: Sequence[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table)
 
 
-def check_huawei_switch_mem(
-    item: str, params: Mapping[str, SimpleLevelsConfigModel[float]], section: Section
-) -> CheckResult:
+def check_huawei_switch_mem(item: str, params: Params, section: Section) -> CheckResult:
     if not (item_data := section.get(item)):
         return
 
@@ -46,7 +49,7 @@ def check_huawei_switch_mem(
 
     yield from check_levels(
         mem,
-        levels_upper=params.get("levels", ("no_levels", None)),
+        levels_upper=params["levels"],
         metric_name="mem_used_percent",
         render_func=render.percent,
         label="Usage",
@@ -80,7 +83,5 @@ check_plugin_huawei_switch_mem = CheckPlugin(
     discovery_function=discover_huawei_switch_mem,
     check_function=check_huawei_switch_mem,
     check_ruleset_name="memory_percentage_used_multiitem",
-    check_default_parameters={
-        "levels": ("fixed", (80.0, 90.0)),
-    },
+    check_default_parameters=Params(levels=("fixed", (80.0, 90.0))),
 )

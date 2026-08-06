@@ -23,7 +23,7 @@ from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 # The dBm should not get too low. So we check only for lower levels
 
 
-class HuaweiOsnLaserParams(TypedDict, total=False):
+class HuaweiOsnLaserParams(TypedDict):
     levels_low_in: SimpleLevelsConfigModel[int]
     levels_low_out: SimpleLevelsConfigModel[int]
 
@@ -44,7 +44,7 @@ def check_huawei_osn_laser(
             # In
             yield from check_levels(
                 dbm_in,
-                levels_lower=params.get("levels_low_in", ("no_levels", None)),
+                levels_lower=params["levels_low_in"],
                 metric_name="input_signal_power_dBm",
                 label="In",
                 render_func=lambda v: f"{v:.1f} dBm",
@@ -53,7 +53,7 @@ def check_huawei_osn_laser(
             # And out
             yield from check_levels(
                 dbm_out,
-                levels_lower=params.get("levels_low_out", ("no_levels", None)),
+                levels_lower=params["levels_low_out"],
                 metric_name="output_signal_power_dBm",
                 label="Out",
                 render_func=lambda v: f"{v:.1f} dBm",

@@ -56,18 +56,6 @@ def test_check_applies_the_lower_levels() -> None:
     ]
 
 
-def test_check_without_configured_levels() -> None:
-    assert list(
-        huawei_osn_laser.check_huawei_osn_laser("1", HuaweiOsnLaserParams(), STRING_TABLE)
-    ) == [
-        Result(state=State.OK, summary="In: -120.0 dBm"),
-        Metric("input_signal_power_dBm", -120.0),
-        Result(state=State.OK, summary="Out: -30.0 dBm"),
-        Metric("output_signal_power_dBm", -30.0),
-        Result(state=State.OK, summary="FEC Correction before/after: 1e-9/1e-12"),
-    ]
-
-
 def test_check_omits_fec_when_the_device_does_not_report_it() -> None:
     section: StringTable = [["1", "-300", "-1200", "", ""]]
 

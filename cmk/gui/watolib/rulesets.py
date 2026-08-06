@@ -1448,23 +1448,19 @@ class Rule:
         if not _match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
-        value_text = None
-        try:
-            value_text = str(self.ruleset.valuespec().value_to_html(self.value))
-        except Exception as e:
-            logger.exception("error searching ruleset %s", self.ruleset.title())
-            html.show_warning(
-                _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s")
-                % (self.ruleset.title(), self.folder.title(), self.to_config(), e)
-            )
-
-        if value_text is not None and not _match_search_expression(
-            search_options, "rule_value", value_text
+        if self.conditions.host_list and not _match_one_of_search_expression(
+            search_options, "rule_host_list", self.conditions.host_list[0]
         ):
             return False
 
-        if self.conditions.host_list and not _match_one_of_search_expression(
-            search_options, "rule_host_list", self.conditions.host_list[0]
+        value_text = (
+            self._value_text_for_search()
+            if "rule_value" in search_options or "fulltext" in search_options
+            else None
+        )
+
+        if value_text is not None and not _match_search_expression(
+            search_options, "rule_value", value_text
         ):
             return False
 
@@ -1554,6 +1550,17 @@ class Rule:
                         raise MKGeneralException(f"Unknown search condition: {search_condition}")
 
         return True
+
+    def _value_text_for_search(self) -> str | None:
+        try:
+            return str(self.ruleset.valuespec().value_to_html(self.value))
+        except Exception as e:
+            logger.exception("error searching ruleset %s", self.ruleset.title())
+            html.show_warning(
+                _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s")
+                % (self.ruleset.title(), self.folder.title(), self.to_config(), e)
+            )
+        return None
 
     def _get_search_folders(self, search_options: SearchOptions) -> list[str]:
         current_folder, do_recursion = search_options["rule_folder"]

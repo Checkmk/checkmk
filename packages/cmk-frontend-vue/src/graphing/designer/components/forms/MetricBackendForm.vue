@@ -20,6 +20,8 @@ import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
   HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
+  fractionBelowGroupBy,
+  groupFractionBelowThresholdToWire,
   groupKeysToWire,
   groupPercentileToWire,
   percentileGroupBy
@@ -66,6 +68,13 @@ function toStored(
             type: 'histogram_preserve_quantile',
             lookback_seconds: lookbackSeconds,
             percentile: groupPercentileToWire(groupBy),
+            group_by: groupKeysToWire(groupBy.keys)
+          }
+        case 'fraction_below':
+          return {
+            type: 'histogram_preserve_fraction_below',
+            lookback_seconds: lookbackSeconds,
+            threshold: groupFractionBelowThresholdToWire(groupBy),
             group_by: groupKeysToWire(groupBy.keys)
           }
         default:
@@ -135,6 +144,7 @@ function toPicker(consolidation: Consolidation): ConsolidationFunction {
     case 'histogram_fraction_between':
       return { type: 'histogram', function: consolidation.type }
     case 'histogram_preserve_quantile':
+    case 'histogram_preserve_fraction_below':
       return { type: 'histogram', function: 'histogram_preserve' }
   }
 }
@@ -229,11 +239,13 @@ const showGroupBy = computed<boolean>(
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the store would drop it again the moment it appears.
 const groupBy = ref<GroupByModel>(
-  percentileGroupBy(
-    item.consolidation_function.type === 'histogram_preserve_quantile'
-      ? item.consolidation_function
-      : undefined
-  )
+  item.consolidation_function.type === 'histogram_preserve_fraction_below'
+    ? fractionBelowGroupBy(item.consolidation_function)
+    : percentileGroupBy(
+        item.consolidation_function.type === 'histogram_preserve_quantile'
+          ? item.consolidation_function
+          : undefined
+      )
 )
 
 watch(groupBy, () => storeCurrentWith({}))

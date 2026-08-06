@@ -9,6 +9,7 @@ import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
+  groupFractionBelowThresholdToWire,
   groupKeysToWire,
   groupPercentileToWire,
   percentileGroupBy
@@ -28,12 +29,16 @@ export function consolidationFunctionFromWire(
     case 'sum':
       return { type: 'sum', function: wire.function }
     case 'histogram':
-      // histogram_preserve_quantile names a consolidation and a grouping at once. The
-      // picker holds the "preserve histograms" half, the group-by clause the other.
+      // histogram_preserve_quantile and histogram_preserve_fraction_below name a
+      // consolidation and a grouping at once. The picker holds the "preserve histograms"
+      // half, the group-by clause the other.
       return {
         type: 'histogram',
         function:
-          wire.function === 'histogram_preserve_quantile' ? 'histogram_preserve' : wire.function
+          wire.function === 'histogram_preserve_quantile' ||
+          wire.function === 'histogram_preserve_fraction_below'
+            ? 'histogram_preserve'
+            : wire.function
       }
     default:
       staticAssertNever(wire)
@@ -132,6 +137,15 @@ export function buildConsolidationFunction(
             function: 'histogram_preserve_quantile',
             lookback_seconds: lookbackSeconds,
             percentile: groupPercentileToWire(groupBy),
+            group_by: groupKeysToWire(groupBy.keys)
+          }
+        case 'fraction_below':
+          return {
+            type: 'histogram',
+            function: 'histogram_preserve_fraction_below',
+            lookback_seconds: lookbackSeconds,
+            percentile: 0,
+            threshold: groupFractionBelowThresholdToWire(groupBy),
             group_by: groupKeysToWire(groupBy.keys)
           }
         default:

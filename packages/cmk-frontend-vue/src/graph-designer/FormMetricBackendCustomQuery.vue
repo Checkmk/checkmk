@@ -35,6 +35,7 @@ import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
   HISTOGRAM_PRESERVE_GROUP_BY_FUNCTIONS,
+  fractionBelowGroupBy,
   percentileGroupBy
 } from '@/metric-backend/group-by/wire'
 
@@ -133,9 +134,16 @@ const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the consolidation would drop it again the moment it appears.
 const groupBy = ref<GroupByModel>(
-  percentileGroupBy(
-    consolidation.value.function === 'histogram_preserve_quantile' ? consolidation.value : undefined
-  )
+  consolidation.value.function === 'histogram_preserve_fraction_below'
+    ? fractionBelowGroupBy({
+        threshold: consolidation.value.threshold ?? 0,
+        group_by: consolidation.value.group_by
+      })
+    : percentileGroupBy(
+        consolidation.value.function === 'histogram_preserve_quantile'
+          ? consolidation.value
+          : undefined
+      )
 )
 
 function rebuildConsolidation(consolidationFunction: ConsolidationFunction | null): void {

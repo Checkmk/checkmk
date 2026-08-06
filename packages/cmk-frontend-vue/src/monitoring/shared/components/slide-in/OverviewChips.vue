@@ -27,7 +27,7 @@ const visibleItems = computed<TranslatedString[]>(
 </script>
 
 <template>
-  <div class="monitoring-host-overview-chips">
+  <div class="monitoring-overview-chips">
     <CmkTag v-for="item in visibleItems" :key="item" size="small" variant="fill" :content="item" />
     <CmkButton v-if="hasOverflow" size="small" variant="optional" @click="expanded = !expanded">
       {{ expanded ? _t('show less') : `+${items.length - limit}` }}
@@ -36,7 +36,7 @@ const visibleItems = computed<TranslatedString[]>(
 </template>
 
 <style scoped>
-.monitoring-host-overview-chips {
+.monitoring-overview-chips {
   display: flex;
   flex-flow: row wrap;
   gap: var(--dimension-3);

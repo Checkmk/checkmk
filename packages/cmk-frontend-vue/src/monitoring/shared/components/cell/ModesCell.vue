@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import HostModeIcons from '@/monitoring/shared/components/HostModeIcons.vue'
+import ModeIcons from '@/monitoring/shared/components/ModeIcons.vue'
 
 import type { HostMode } from '../../api/types'
 import BaseCell from './BaseCell.vue'
@@ -19,7 +19,7 @@ defineProps<{
 <template>
   <BaseCell :column-id="columnId">
     <template #default>
-      <HostModeIcons :modes="modes" />
+      <ModeIcons :modes="modes" />
     </template>
   </BaseCell>
 </template>

@@ -16,11 +16,11 @@ defineProps<{
 </script>
 
 <template>
-  <div class="monitoring-host-mode-icons">
+  <div class="monitoring-mode-icons">
     <a
       v-for="mode in modes"
       :key="mode.icon_name"
-      class="monitoring-host-mode-icons__link"
+      class="monitoring-mode-icons__link"
       :href="mode.link"
       :title="mode.title"
       target="_top"
@@ -31,14 +31,14 @@ defineProps<{
 </template>
 
 <style scoped>
-.monitoring-host-mode-icons {
+.monitoring-mode-icons {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-2);
 }
 
-.monitoring-host-mode-icons__link {
+.monitoring-mode-icons__link {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;

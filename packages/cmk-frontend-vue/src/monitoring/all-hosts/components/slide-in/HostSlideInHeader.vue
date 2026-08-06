@@ -4,15 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import { computed } from 'vue'
 
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
-import HostModeIcons from '@/monitoring/shared/components/HostModeIcons.vue'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
-import ActionButtons, {
-  type CellAction
-} from '@/monitoring/shared/components/cell/ActionButtons.vue'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
+import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -35,36 +32,15 @@ function onSelect(action: CellAction): void {
 </script>
 
 <template>
-  <div class="monitoring-host-slide-in-header">
-    <HostStateDisplay :state="host.state" />
-    <HostModeIcons v-if="host.modes?.length" :modes="host.modes" />
-    <CmkHeading type="h2" class="monitoring-host-slide-in-header__name">
-      {{ host.name }}
-    </CmkHeading>
-    <ActionButtons
-      v-if="loadActionMenu || actions.length > 0"
-      class="monitoring-host-slide-in-header__actions"
-      :actions="actions"
-      :max-visible="actions.length"
-      :load="loadActionMenu"
-      @select="onSelect"
-    />
-  </div>
+  <SlideInHeader
+    :title="host.name"
+    :modes="host.modes ?? []"
+    :actions="actions"
+    :load-action-menu="loadActionMenu"
+    @select="onSelect"
+  >
+    <template #state>
+      <HostStateDisplay :state="host.state" />
+    </template>
+  </SlideInHeader>
 </template>
-
-<style scoped>
-.monitoring-host-slide-in-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-host-slide-in-header__name {
-  margin: 0;
-}
-
-.monitoring-host-slide-in-header__actions {
-  margin-left: auto;
-}
-</style>

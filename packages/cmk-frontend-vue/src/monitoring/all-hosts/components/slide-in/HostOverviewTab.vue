@@ -11,9 +11,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
+import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
-import HostOverviewChips from './HostOverviewChips.vue'
 import HostOverviewLabels from './HostOverviewLabels.vue'
 
 const props = defineProps<{ data: HostOverview }>()
@@ -51,7 +52,7 @@ function timeSince(iso: string): string {
 
 <template>
   <div class="monitoring-host-overview-tab">
-    <dl class="monitoring-host-overview-tab__grid">
+    <OverviewDetailList>
       <dt>{{ _t('Host name') }}</dt>
       <dd>{{ data.name }}</dd>
 
@@ -63,11 +64,11 @@ function timeSince(iso: string): string {
 
       <dt>{{ _t('Folder') }}</dt>
       <dd>{{ data.folder ?? '—' }}</dd>
-    </dl>
+    </OverviewDetailList>
 
     <hr class="monitoring-host-overview-tab__divider" />
 
-    <dl class="monitoring-host-overview-tab__grid monitoring-host-overview-tab__grid--chips">
+    <OverviewDetailList align="start">
       <dt>{{ _t('Site') }}</dt>
       <dd>{{ data.site_alias }}</dd>
 
@@ -81,31 +82,31 @@ function timeSince(iso: string): string {
 
       <dt>{{ _t('Contact groups') }}</dt>
       <dd>
-        <HostOverviewChips :items="data.contact_groups" />
+        <OverviewChips :items="data.contact_groups" />
       </dd>
-    </dl>
+    </OverviewDetailList>
 
     <hr class="monitoring-host-overview-tab__divider" />
 
-    <dl class="monitoring-host-overview-tab__grid">
+    <OverviewDetailList>
       <dt>{{ _t('Last check') }}</dt>
       <dd>{{ formatTimestamp(data.last_check) }}</dd>
 
       <dt>{{ _t('Age') }}</dt>
       <dd>{{ timeSince(data.last_state_change) }}</dd>
-    </dl>
+    </OverviewDetailList>
 
-    <dl class="monitoring-host-overview-tab__grid monitoring-host-overview-tab__grid--chips">
+    <OverviewDetailList align="start">
       <dt>{{ _t('Tags') }}</dt>
       <dd>
-        <HostOverviewChips :items="tagChips" />
+        <OverviewChips :items="tagChips" />
       </dd>
 
       <dt>{{ _t('Labels') }}</dt>
       <dd>
         <HostOverviewLabels :labels="data.labels" />
       </dd>
-    </dl>
+    </OverviewDetailList>
 
     <section class="monitoring-host-overview-tab__section">
       <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
@@ -135,13 +136,6 @@ function timeSince(iso: string): string {
   background: var(--ux-theme-4);
 }
 
-.monitoring-host-overview-tab__grid {
-  display: grid;
-  grid-template-columns: minmax(120px, max-content) 1fr;
-  gap: var(--dimension-4) var(--spacing);
-  margin: 0;
-}
-
 .monitoring-host-overview-tab__section,
 .monitoring-host-overview-tab__relations {
   display: flex;
@@ -151,17 +145,5 @@ function timeSince(iso: string): string {
 
 .monitoring-host-overview-tab__relations-empty {
   color: var(--font-color-dimmed);
-}
-
-.monitoring-host-overview-tab__grid dt {
-  color: var(--font-color);
-}
-
-.monitoring-host-overview-tab__grid dd {
-  margin: 0;
-}
-
-.monitoring-host-overview-tab__grid--chips {
-  align-items: start;
 }
 </style>

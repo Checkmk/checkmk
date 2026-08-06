@@ -52,8 +52,13 @@ const spanOf = (start: Date, end: Date): EpochTimeRange => ({
   end: toEpochSeconds(end)
 })
 
-// Only the predefined ranges the graph time range picker offers, plus 'last_25_hours': the
-// stored default timerange of graph widgets ("25h") maps to it.
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled predefined time range: ${String(value)}`)
+}
+
+// Handles every `_Predefined` key (the exhaustive switch is enforced by `assertNever`, so a new
+// backend key fails the build here instead of silently falling back to a wrong window). Trailing
+// "last N …" windows end at "now"; the calendar ranges snap to local day/week/month/year edges.
 const computePredefined = (value: PreDefinedTimeRange, now: Date): EpochTimeRange => {
   const nowSeconds = toEpochSeconds(now)
   const today = startOfDay(now)
@@ -61,14 +66,24 @@ const computePredefined = (value: PreDefinedTimeRange, now: Date): EpochTimeRang
   const thisMonth = startOfMonth(now)
   const thisYear = startOfYear(now)
   switch (value) {
+    case 'last_4_hours':
+      return { start: nowSeconds - 4 * 3600, end: nowSeconds }
     case 'last_25_hours':
       return { start: nowSeconds - 25 * 3600, end: nowSeconds }
+    case 'last_8_days':
+      return { start: toEpochSeconds(addDays(now, -8)), end: nowSeconds }
+    case 'last_35_days':
+      return { start: toEpochSeconds(addDays(now, -35)), end: nowSeconds }
+    case 'last_400_days':
+      return { start: toEpochSeconds(addDays(now, -400)), end: nowSeconds }
     case 'today':
       return { start: toEpochSeconds(today), end: nowSeconds }
     case 'yesterday':
       return spanOf(addDays(today, -1), today)
     case '7_days_ago':
       return spanOf(addDays(today, -7), addDays(today, -6))
+    case '8_days_ago':
+      return spanOf(addDays(today, -8), addDays(today, -7))
     case 'this_week':
       return { start: toEpochSeconds(thisWeek), end: nowSeconds }
     case 'last_week':
@@ -83,9 +98,8 @@ const computePredefined = (value: PreDefinedTimeRange, now: Date): EpochTimeRang
       return { start: toEpochSeconds(thisYear), end: nowSeconds }
     case 'last_year':
       return spanOf(addYears(thisYear, -1), thisYear)
-    case 'last_4_hours':
     default:
-      return { start: nowSeconds - 4 * 3600, end: nowSeconds }
+      return assertNever(value)
   }
 }
 

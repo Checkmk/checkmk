@@ -36,11 +36,28 @@ export interface Age {
   seconds: number
 }
 
-const predefinedTimeranges: Partial<Record<PreDefinedTimeRange, TranslatedString>> = {
-  last_4_hours: _t('The last 4 hours'),
+// The keys to predefinedDurationSeconds and predefinedCalendarTitles combined are the complete set
+// of `_Predefined` keys from the API. The API's `_Predefined` keys are a mix of trailing durations
+// (predefinedDurationSeconds) and calendar-relative ranges (predefinedCalendarTitles).
+const predefinedDurationSeconds = {
+  last_4_hours: 4 * 60 * 60,
+  last_25_hours: 25 * 60 * 60,
+  last_8_days: 8 * 24 * 60 * 60,
+  last_35_days: 35 * 24 * 60 * 60,
+  last_400_days: 400 * 24 * 60 * 60
+} as const satisfies Partial<Record<PreDefinedTimeRange, number>>
+
+type PredefinedDurationKey = keyof typeof predefinedDurationSeconds
+type PredefinedCalendarKey = Exclude<PreDefinedTimeRange, PredefinedDurationKey>
+
+// Typing this as `Record<PredefinedCalendarKey, ...>` (not `Partial`) makes the two maps a
+// compiler-enforced partition of `_Predefined`: together they must cover exactly its keys, with no
+// overlap and none missing.
+const predefinedCalendarTitles: Record<PredefinedCalendarKey, TranslatedString> = {
   today: _t('Today'),
   yesterday: _t('Yesterday'),
   '7_days_ago': _t('7 days back (this day last week)'),
+  '8_days_ago': _t('8 days back'),
   this_week: _t('This week'),
   last_week: _t('Last week'),
   '2_weeks_ago': _t('2 weeks back'),
@@ -49,6 +66,11 @@ const predefinedTimeranges: Partial<Record<PreDefinedTimeRange, TranslatedString
   this_year: _t('This year'),
   last_year: _t('Last year')
 }
+
+const durationOptionName = (totalSeconds: number): string => `duration_${totalSeconds}`
+
+const isDurationPredefinedKey = (key: PreDefinedTimeRange): key is PredefinedDurationKey =>
+  key in predefinedDurationSeconds
 
 interface GraphTimerangeApiResult {
   title: string
@@ -88,19 +110,16 @@ async function loadApiDurationGraphTimeranges(): Promise<GraphTimerangeApiResult
 }
 
 const dropdownOptions = computed<Suggestion[]>(() => {
-  const predefinedTitles = new Set(Object.values(predefinedTimeranges).map((t) => t.toString()))
+  // The configurable duration ranges are the single source of truth for trailing duration ranges
+  // ("last N ...")
+  const durationRanges = apiDurationTimeranges.value.map((range) => ({
+    name: durationOptionName(range.extensions.total_seconds),
+    title: untranslated(range.title)
+  }))
 
-  // API duration entries that have no predefined counterpart
-  const extraApiRanges = apiDurationTimeranges.value
-    .filter((range) => !predefinedTitles.has(range.title))
-    .map((range) => ({
-      name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
-      title: untranslated(range.title)
-    }))
-
-  const predefinedRanges = Object.entries(predefinedTimeranges).map(([apiKey, title]) => ({
+  const predefinedRanges = Object.entries(predefinedCalendarTitles).map(([apiKey, title]) => ({
     name: apiKey,
-    title: title
+    title
   }))
 
   const customOptions = [
@@ -108,7 +127,7 @@ const dropdownOptions = computed<Suggestion[]>(() => {
     { name: customDateOptionName, title: customDateOptionTitle }
   ]
 
-  return [...extraApiRanges, ...predefinedRanges, ...customOptions]
+  return [...durationRanges, ...predefinedRanges, ...customOptions]
 })
 
 const customDuration: Ref<Age> = ref({
@@ -133,23 +152,18 @@ const customDurationDate = ref({
 
 function getDropdownOptionFromTimerange(timerange: GraphTimerange): string | null {
   switch (timerange.type) {
-    case 'duration': {
-      // If this duration matches a predefined entry (via API title), use the predefined name.
-      const matchingApi = apiDurationTimeranges.value.find(
-        (r) => r.extensions.total_seconds === timerange.duration
-      )
-      if (matchingApi) {
-        const predefinedEntry = Object.entries(predefinedTimeranges).find(
-          ([, title]) => title.toString() === matchingApi.title
-        )
-        if (predefinedEntry) {
-          return predefinedEntry[0]
-        }
+    case 'duration':
+      return timerange.duration === null ? null : durationOptionName(timerange.duration)
+    case 'predefined': {
+      if (timerange.predefined === null) {
+        return null
       }
-      return `duration_${timerange.duration}`
+      // A trailing-duration predefined key resolves to its matching duration option so that it maps
+      // onto the same dropdown entry as an equivalent configurable duration range.
+      return isDurationPredefinedKey(timerange.predefined)
+        ? durationOptionName(predefinedDurationSeconds[timerange.predefined])
+        : timerange.predefined
     }
-    case 'predefined':
-      return timerange.predefined
     case 'age':
       return customTimeOptionName
     case 'date':
@@ -189,7 +203,7 @@ watch(
     const selectedOption: string = selectedDropdownOption.value ?? ''
     if (selectedOption.startsWith('duration_')) {
       const range = apiDurationTimeranges.value.find(
-        (r) => `duration_${r.extensions.total_seconds?.toString() ?? '0'}` === selectedOption
+        (r) => durationOptionName(r.extensions.total_seconds) === selectedOption
       )
       if (range) {
         selectedTimerange.value = toPublicTimerange(range)
@@ -219,22 +233,15 @@ watch(
         predefined: null,
         age: null
       }
-    } else if (selectedOption in predefinedTimeranges) {
-      // If an API duration entry matches this predefined title, use the API version (API wins).
-      const predefinedTitle = predefinedTimeranges[selectedOption as PreDefinedTimeRange]
-      const matchingApi = predefinedTitle
-        ? apiDurationTimeranges.value.find((r) => r.title === predefinedTitle.toString())
-        : undefined
-      if (matchingApi) {
-        selectedTimerange.value = toPublicTimerange(matchingApi)
-      } else {
-        selectedTimerange.value = {
-          type: 'predefined',
-          predefined: selectedOption as PreDefinedTimeRange,
-          duration: null,
-          date_range: null,
-          age: null
-        }
+    } else if (selectedOption in predefinedCalendarTitles) {
+      // Only calendar-relative predefined ranges reach this branch; trailing durations are stored
+      // as duration timeranges above.
+      selectedTimerange.value = {
+        type: 'predefined',
+        predefined: selectedOption as PreDefinedTimeRange,
+        duration: null,
+        date_range: null,
+        age: null
       }
     }
   },

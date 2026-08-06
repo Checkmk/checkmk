@@ -3,62 +3,67 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsLinuxUnixAgent
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, ListChoice
 
+Title = _
 
-def _skippable_linux_agent_sections() -> dict[str, str]:
+
+def _skippable_linux_agent_sections() -> Mapping[str, str]:
     return {
         # The key must match the section exclude parameter in the checkmk_agent i.e. MK_SKIP_<key>
-        "areca": _("Raid controllers from Areca"),
-        "bonding_if": _("Bonding interfaces"),
-        "cfggen": _("Raid status of LSI controllers"),
-        "checkmk_agent_plugins": _("Inventory of all deployed agent plug-ins and their versions"),
-        "chrony": _("Chrony time synchronization"),
-        "cpu": _("CPU"),
-        "df": _("File systems usage"),
-        "diskstat": _("Diskstat"),
-        "dm_raid": _("Raid status of Linux Raid"),
-        "drbd": _("DRBD"),
-        "fileinfo": _("Fileinfo"),
-        "haproxy": _("Haproxy"),
-        "heartbeat": _("Heartbeat clusters"),
-        "corosync_latency": _("Corosync latency"),
-        "http_accelerator": _("HTTP accelerator statistics"),
-        "ipmisensors": _("Ipmisensors"),
-        "ipmitool": _("Ipmitool"),
-        "job": _("Monitored jobs"),
-        "kernel": _("Kernel"),
-        "labels": _("Host label"),
-        "libelle": _("Libelle Business Shadow"),
-        "lnx_if": _("Linux interfaces"),
-        "mailqueue": _("Mailqueue"),
-        "md": _("Raid status of Linux software"),
-        "megaraid": _("Raid status of LSI MegaRAID controller"),
-        "mem": _("Memory"),
-        "mounts": _("Mount options"),
-        "multipathing": _("Multipathing"),
-        "nfs_mounts": _("NFS mounts"),
-        "nvidia": _("Nvidia"),
-        "omd_cores": _("OMD monitoring cores"),
-        "omd": _("Status of OMD sites and Checkmk notification spooler"),
-        "openvpn": _("OpenVPN clients"),
-        "proxmox": _("Proxmox cluster"),
-        "ps": _("Running processes"),
-        "systemd": _("Systemd services"),
-        "tcp": _("TCP"),
-        "thermal": _("Thermal information"),
-        "three_ware_raid": _("Raid status of 3WARE disk controller"),
-        "timesynchronisation": _("NTP or timesyncd time synchronization"),
-        "uptime": _("UPTIME"),
-        "vbox_guest": _("VirtualBox Guests"),
-        "veritas": _("Veritas cluster server"),
-        "vswitch_bonding": _("Vswitch bonding"),
-        "zfs": _("ZFS file system usage"),
-        "zpool": _("Zpool status"),
+        "areca": Title("Raid controllers from Areca"),
+        "bonding_if": Title("Bonding interfaces"),
+        "cfggen": Title("Raid status of LSI controllers"),
+        "checkmk_agent_plugins": Title(
+            "Inventory of all deployed agent plug-ins and their versions"
+        ),
+        "chrony": Title("Chrony time synchronization"),
+        "corosync_latency": Title("Corosync latency"),
+        "cpu": Title("CPU"),
+        "df": Title("File systems usage"),
+        "diskstat": Title("Diskstat"),
+        "dm_raid": Title("Raid status of Linux Raid"),
+        "drbd": Title("DRBD"),
+        "fileinfo": Title("Fileinfo"),
+        "haproxy": Title("Haproxy"),
+        "heartbeat": Title("Heartbeat clusters"),
+        "http_accelerator": Title("HTTP accelerator statistics"),
+        "ipmisensors": Title("Ipmisensors"),
+        "ipmitool": Title("Ipmitool"),
+        "job": Title("Monitored jobs"),
+        "kernel": Title("Kernel"),
+        "labels": Title("Host label"),
+        "libelle": Title("Libelle Business Shadow"),
+        "lnx_if": Title("Linux interfaces"),
+        "mailqueue": Title("Mailqueue"),
+        "md": Title("Raid status of Linux software"),
+        "megaraid": Title("Raid status of LSI MegaRAID controller"),
+        "mem": Title("Memory"),
+        "mounts": Title("Mount options"),
+        "multipathing": Title("Multipathing"),
+        "nfs_mounts": Title("NFS mounts"),
+        "nvidia": Title("Nvidia"),
+        "omd_cores": Title("OMD monitoring cores"),
+        "omd": Title("Status of OMD sites and Checkmk notification spooler"),
+        "openvpn": Title("OpenVPN clients"),
+        "proxmox": Title("Proxmox cluster"),
+        "ps": Title("Running processes"),
+        "systemd": Title("Systemd services"),
+        "tcp": Title("TCP"),
+        "thermal": Title("Thermal information"),
+        "three_ware_raid": Title("Raid status of 3WARE disk controller"),
+        "timesynchronisation": Title("NTP or timesyncd time synchronization"),
+        "uptime": Title("UPTIME"),
+        "vbox_guest": Title("VirtualBox Guests"),
+        "veritas": Title("Veritas cluster server"),
+        "vswitch_bonding": Title("Vswitch bonding"),
+        "zfs": Title("ZFS file system usage"),
+        "zpool": Title("Zpool status"),
     }
 
 

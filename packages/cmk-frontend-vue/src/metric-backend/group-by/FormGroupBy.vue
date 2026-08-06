@@ -276,6 +276,7 @@ function canLeaveEdit(): boolean {
         <span class="metric-backend-form-group-by__segment">
           <CmkDropdown
             ref="functionDropdownRef"
+            floating
             :model-value="model.function"
             :options="functionOptions"
             :label="_t('Grouping function')"

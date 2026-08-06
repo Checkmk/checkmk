@@ -5,6 +5,8 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
@@ -107,6 +109,30 @@ test('the edit pane renders the edit slot and exposes the focus-nav markers, wit
   const custom = renderEditing({ scopeMarkerAttr: 'data-x-scope', itemMarkerAttr: 'data-x-item' })
   expect(custom.container.querySelector('[data-x-scope]')).not.toBeNull()
   expect(custom.container.querySelector('[data-af-scope]')).toBeNull()
+})
+
+test('a floating dropdown in the edit slot portals into the edit pane', async () => {
+  const host = defineComponent({
+    components: { InlineEditPill, CmkDropdown },
+    setup: () => ({
+      options: { type: 'fixed', suggestions: [{ name: 'a', title: 'Alpha' }] },
+      label: untranslated('Field')
+    }),
+    template: `
+      <InlineEditPill editing edit-aria-label="Edit"
+        scope-marker-attr="data-af-scope" item-marker-attr="data-af-item">
+        <template #edit><CmkDropdown floating :options="options" :label="label" /></template>
+      </InlineEditPill>
+    `
+  })
+  const { container } = render(host)
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'Field' }))
+
+  const list = await screen.findByRole('listbox')
+  expect(container.querySelector('[data-af-scope]')!.contains(list)).toBe(true)
+  // A non-floating list would sit in the pane too; leaving the control is what proves it floated.
+  expect(list.closest('.cmk-dropdown')).toBeNull()
 })
 
 test('Escape commits and returns focus to the collapsed pill', async () => {

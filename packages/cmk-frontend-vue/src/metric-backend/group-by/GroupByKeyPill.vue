@@ -122,6 +122,7 @@ defineExpose({
       >
         <CmkDropdown
           v-model="levelInput"
+          floating
           :options="levelOptions"
           :label="_t('Attribute level')"
           :input-hint="_t('Attribute level')"
@@ -133,6 +134,7 @@ defineExpose({
       >
         <CmkDropdown
           ref="keyDropdownRef"
+          floating
           :model-value="condition.key || null"
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"

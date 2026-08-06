@@ -275,6 +275,7 @@ defineExpose({
         <CmkDropdown
           ref="attributeKindDropdownRef"
           v-model="attributeKindInput"
+          floating
           :options="attributeKindOptions"
           :input-hint="_t('Attribute kind')"
           :label="_t('Attribute kind')"
@@ -288,6 +289,7 @@ defineExpose({
       >
         <CmkDropdown
           ref="keyDropdownRef"
+          floating
           :model-value="condition.key || null"
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"
@@ -307,6 +309,7 @@ defineExpose({
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
       >
         <CmkDropdown
+          floating
           :model-value="condition.operator"
           :options="operatorOptions"
           :label="_t('Attribute operator')"
@@ -325,6 +328,7 @@ defineExpose({
       >
         <CmkDropdown
           ref="valueDropdownRef"
+          floating
           :model-value="condition.value || null"
           :options="valueOptions"
           :label="_t('Attribute value')"

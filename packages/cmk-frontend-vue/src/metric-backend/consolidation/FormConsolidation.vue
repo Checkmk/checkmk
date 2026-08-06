@@ -225,6 +225,7 @@ const editAriaLabel = computed(
         <CmkDropdown
           v-else
           ref="functionDropdownRef"
+          floating
           :model-value="dropdownValue"
           :options="functionOptions"
           :label="_t('Consolidation function')"

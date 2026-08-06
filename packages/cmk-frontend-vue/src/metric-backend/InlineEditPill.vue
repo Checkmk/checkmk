@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { nextTick, useTemplateRef, watch } from 'vue'
 
 import useInlineEdit, { type InlineEditLeaveReason } from './useInlineEdit'
@@ -47,6 +48,10 @@ const emit = defineEmits<{
 
 const closedPillRef = useTemplateRef<HTMLElement>('closedPillRef')
 const editPaneRef = useTemplateRef<HTMLElement>('editPaneRef')
+
+// Keeps a slotted dropdown's suggestions inside the pane, so the outside-click commit and the Tab
+// trap below still count them as part of the pill.
+provideFloatingTarget(() => editPaneRef.value ?? undefined)
 
 // Escape returns focus to the collapsed pill; click-outside commits without moving focus.
 let returnFocusToClosedPill = false

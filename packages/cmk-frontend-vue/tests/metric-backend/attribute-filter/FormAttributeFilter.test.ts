@@ -292,6 +292,20 @@ test('picking the type after a no-hit key auto-opens the value dropdown', async 
   })
 })
 
+test('picking a suggestion leaves the pill in edit mode', async () => {
+  const { model } = renderForm(singlePill())
+  const pill = pillsInOrder()[0]!
+  await enterEditMode(pill)
+
+  await userEvent.click(within(pill).getByRole('combobox', { name: 'Attribute value' }))
+  await userEvent.type(screen.getByRole('textbox', { name: 'filter' }), 'prod')
+  await userEvent.click(await screen.findByRole('option', { name: 'prod' }))
+
+  await waitFor(() => expect(conditionsOf(model.value!)[0]).toMatchObject({ value: 'prod' }))
+  expect(within(pill).queryByRole('button', { name: /^Edit condition:/ })).toBeNull()
+  expect(within(pill).getByRole('combobox', { name: 'Attribute value' })).toBeVisible()
+})
+
 test('a newly added pill auto-opens the key dropdown', async () => {
   renderForm([])
   await userEvent.click(screen.getByRole('button', { name: 'Add condition' }))

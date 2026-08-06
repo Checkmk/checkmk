@@ -111,6 +111,7 @@ function clearMetricName(): void {
   <CmkDropdown
     ref="dropdownRef"
     v-model="metricName"
+    floating
     :options="dropdownOptions"
     :input-hint="placeholder"
     :label="untranslated(label || '')"

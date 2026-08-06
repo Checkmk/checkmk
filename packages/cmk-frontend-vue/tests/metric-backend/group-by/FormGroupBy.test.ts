@@ -121,6 +121,17 @@ test.each([
   }
 )
 
+test('picking a function leaves the group-by pill in edit mode', async () => {
+  const { model } = renderWidget({ function: 'avg', keys: [] }, 'float')
+  await openFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'count by' }))
+
+  await waitFor(() => expect(model.value.function).toBe('count'))
+  expect(screen.queryByRole('button', { name: /Edit group by/ })).toBeNull()
+  expect(screen.getByRole('combobox', { name: 'Grouping function' })).toBeVisible()
+})
+
 test('switching the input type resets a now-invalid function to the new default', async () => {
   const { model, type } = renderWidget({ function: 'avg' }, 'float')
 
@@ -211,6 +222,19 @@ test('picking a key applies key and inferred level in one mutation (also for a s
 
   await waitFor(() => expect(model.value.keys[1]!.key).toBe('http.route'))
   expect(model.value.keys[1]!.level).toBe('data_point')
+})
+
+test('picking a key leaves the group-key pill in edit mode', async () => {
+  const { model } = renderWidget({ function: 'avg', keys: [] }, 'float')
+  await openPill()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Add group key' }))
+  await waitFor(() => expect(model.value.keys).toHaveLength(1))
+  await selectKey('service.name')
+
+  await waitFor(() => expect(model.value.keys[0]!.key).toBe('service.name'))
+  expect(screen.queryByRole('button', { name: /Edit group key/ })).toBeNull()
+  expect(screen.getByRole('combobox', { name: 'Attribute key' })).toBeVisible()
 })
 
 test('entering edit with a single key opens that key pill for editing', async () => {

@@ -137,6 +137,17 @@ test('selecting a function updates the model and the chip', async () => {
   expect(chip()).toHaveTextContent('[sum]')
 })
 
+test('picking a function leaves the pill in edit mode', async () => {
+  const { model } = renderWidget({ type: 'sum', function: 'sum_rate' })
+  await openFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'Delta' }))
+
+  await waitFor(() => expect(model.value.function).toBe('sum_delta'))
+  expect(screen.queryByRole('button', { name: /Edit consolidation/ })).toBeNull()
+  expect(screen.getByRole('combobox', { name: 'Consolidation function' })).toBeVisible()
+})
+
 test('an ambiguous type groups functions under "Treat as <Type>"', async () => {
   renderWidget({ type: 'sum', function: 'sum_rate' }, ['sum', 'gauge'])
   await openFunctionDropdown()

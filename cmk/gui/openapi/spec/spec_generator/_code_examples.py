@@ -9,7 +9,6 @@ be referenced in the result of _build_code_templates.
 
 """
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
@@ -499,7 +498,7 @@ def _extract_example(parameters: Sequence[Mapping[str, object]]) -> Sequence[dic
     return out
 
 
-def format_nicely(value: Any, indent_level: int = 0) -> str:
+def format_nicely(value: object, indent_level: int = 0) -> str:
     if isinstance(value, dict):
         out = "{\n"
         indent_prefix = (indent_level + 1) * 4 * " "
@@ -687,7 +686,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:
+def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:  # type: ignore[explicit-any]
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

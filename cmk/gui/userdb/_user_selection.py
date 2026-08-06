@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import functools
 from collections.abc import Callable
-from typing import Any, override
+from typing import override
 
 from cmk.ccc.user import UserId
 from cmk.gui.hooks import request_memoize
@@ -73,7 +71,7 @@ class _UserSelection(DropdownChoice[UserId]):
         )
 
     @override
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: UserId | None) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 
 

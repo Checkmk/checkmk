@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, overload, override
+from typing import overload, override
 from urllib.parse import urlparse
 
 from cmk.ccc.hostaddress import HostName
@@ -236,7 +234,7 @@ def get_server_per_site(
 def get_server_per_site(
     active_config: Config,
     cls: type[ModeHostServerPerSite] | type[AgentDownloadServerPerSite],
-) -> Sequence[Any]:
+) -> Sequence[ModeHostServerPerSite | AgentDownloadServerPerSite]:
     return [
         cls(
             site_id=site_id,
@@ -298,7 +296,7 @@ def get_agent_slideout(
     unbaked_fallback_cls: type,
     version: str,
     baked_agents_available: bool,
-) -> Any:
+) -> SetupAgentSlideout | ModeHostAgentSlideout:
     commands = agent_commands_registry["agent_commands"]
     fallback = commands.unbaked_fallback(baked_agents_available, version)
     return agent_slideout_cls(

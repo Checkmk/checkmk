@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 import enum
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any, cast
+from typing import cast
 
 from pydantic import BaseModel
 
@@ -217,7 +216,7 @@ def get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormDat
 @dataclass
 class QuickSetupValidationError:
     message: str
-    replacement_value: Any
+    replacement_value: object
     location: Sequence[str] = field(default_factory=list)
 
 

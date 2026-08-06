@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import json
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -70,7 +67,7 @@ def show_filter_form(
 def _show_filter_form_buttons(
     varprefix: str,
     filter_list_id: str,
-    page_request_vars: Mapping[str, Any] | None,
+    page_request_vars: Mapping[str, object] | None,
     view_name: str,
     reset_ajax_page: str,
     context: VisualContext,

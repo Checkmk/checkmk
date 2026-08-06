@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
 
 """Configuration entities / Folder
@@ -12,7 +11,6 @@ These endpoints can be used to manipulate folders via the configuration entity A
 for more information see "Configuration entities" endpoints."""
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk import fields
 from cmk.gui.config import active_config
@@ -47,7 +45,7 @@ class FolderResponseCollection(DomainObjectCollection):
 
 
 @list_endpoint_decorator(ConfigEntityType.folder, FolderResponseCollection)
-def _list_folder(params: Mapping[str, Any]) -> Response:
+def _list_folder(params: Mapping[str, object]) -> Response:
     """List existing folder"""
     return serve_configuration_entity_list(
         make_folder_tree(active_config), ConfigEntityType.folder, params, user

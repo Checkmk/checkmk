@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping
-from typing import Any
 
 from cmk import fields
 from cmk.gui.http import ContentDispositionType, Response
@@ -38,7 +35,7 @@ OS_TYPE_RAW = {
     query_params=[OS_TYPE_RAW],
     family_name=AGENTS_FAMILY.name,
 )
-def download_agent(params: Mapping[str, Any]) -> Response:
+def download_agent(params: Mapping[str, object]) -> Response:
     """Download agents shipped with Checkmk"""
     os_type = params.get("os_type")
     response = Response()

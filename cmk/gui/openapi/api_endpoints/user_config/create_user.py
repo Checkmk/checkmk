@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any, cast
+from typing import cast
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import PasswordPolicy
@@ -59,7 +57,7 @@ def create_user_v1(api_context: ApiContext, body: CreateUserModel) -> ApiRespons
     username = UserId(body.username)
 
     # The interface options must be set for a new user, but we restrict the setting through the API
-    initial_attrs: dict[str, Any] = {"force_authuser": False}
+    initial_attrs: dict[str, object] = {"force_authuser": False}
     internal_attrs = api_to_internal_format(
         initial_attrs,
         body.to_internal_dict(),

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Miscellaneous
 
 This folder collects individual endpoints not fitting into the other endpoint folders.
@@ -12,7 +10,6 @@ This folder collects individual endpoints not fitting into the other endpoint fo
 
 import sys
 from collections.abc import Mapping
-from typing import Any
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site
@@ -31,7 +28,7 @@ from cmk.utils import paths
     method="get",
     response_schema=InstalledVersions,
 )
-def search(params: Mapping[str, Any]) -> Response:
+def search(params: Mapping[str, object]) -> Response:
     """Display some version information"""
     if request.args.get("fail"):
         raise Exception("This is an intentional failure.")

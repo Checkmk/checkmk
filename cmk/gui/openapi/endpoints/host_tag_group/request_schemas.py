@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 import re
-from typing import Any, override
+from typing import override
 
 from cmk import fields
 from cmk.ccc.regex import REGEX_ID
@@ -80,7 +79,7 @@ class HostTagGroupId(fields.String):
         "pattern": "Invalid tag ID: {value!r}. Only the characters a-z, A-Z, 0-9, _ and - are allowed.",
     }
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
     @override

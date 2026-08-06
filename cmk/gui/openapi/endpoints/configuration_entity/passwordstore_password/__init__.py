@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
 
 """Configuration entities / Passwordstore Password
@@ -13,7 +12,6 @@ configuration entity API, for more information see "Configuration entities"
 endpoints."""
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
@@ -48,7 +46,7 @@ class PasswordStorePasswordResponseCollection(DomainObjectCollection):
 @list_endpoint_decorator(
     ConfigEntityType.passwordstore_password, PasswordStorePasswordResponseCollection
 )
-def _list_passwordstore_passwords(params: Mapping[str, Any]) -> Response:
+def _list_passwordstore_passwords(params: Mapping[str, object]) -> Response:
     """List existing passwordstore passwords"""
     return serve_configuration_entity_list(
         None, ConfigEntityType.passwordstore_password, params, user=user

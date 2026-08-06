@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="explicit-any"
 
 """This module contains helpers to set comments for host and service."""
 
@@ -12,7 +11,6 @@ import time
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -64,7 +62,7 @@ class Comment:
         self.persistent = bool(self.persistent)
         self.entry_time = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(float(self.entry_time)))
 
-    def __iter__(self) -> Iterator[tuple[str, Any]]:
+    def __iter__(self) -> Iterator[tuple[str, object]]:
         for k, v in self.__dict__.items():
             if k == "service_description":
                 if self.is_service:

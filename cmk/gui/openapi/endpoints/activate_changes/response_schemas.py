@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any, Literal
+from typing import Literal
 
 from cmk import fields
 from cmk.gui import fields as gui_fields
@@ -31,7 +29,7 @@ STATUS_PER_SITE_EXAMPLE = [
 ]
 
 
-def activation_example(which: Literal["activation_run", "activation_status"]) -> dict[str, Any]:
+def activation_example(which: Literal["activation_run", "activation_status"]) -> dict[str, object]:
     example = {
         "changes": [
             {

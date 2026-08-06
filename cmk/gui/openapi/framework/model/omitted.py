@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Handling of non-required fields in the REST API.
 
 This module provides the `ApiOmitted` class, which is used to represent fields that were or will be
@@ -20,7 +18,7 @@ to remove the `ApiOmitted` values from the response body.
 """
 
 import types
-from typing import Any, cast, ClassVar, Literal, NoReturn, override, Self, TypeAliasType
+from typing import cast, ClassVar, Literal, NoReturn, override, Self, TypeAliasType
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import CoreSchema, PydanticOmit
@@ -44,7 +42,7 @@ class ApiOmitted:
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _source_type: type[Any], _handler: GetCoreSchemaHandler
+        cls, _source_type: type[object], _handler: GetCoreSchemaHandler
     ) -> CoreSchema:
         return is_instance_schema(cls)
 

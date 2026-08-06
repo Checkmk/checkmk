@@ -316,7 +316,8 @@ def test_status_reports_both_stash_files_instead_of_bailing_out(tmp_path: Path) 
     returncode, output = call_output("status", home=home, cwd=repo_path)
 
     assert returncode == 1
-    assert "exists next to the current werk ID files" in output
+    assert "two stash files" in output
+    assert "exists next to the current stash file" in output
 
 
 def test_status_exits_zero_when_there_is_nothing_to_report(tmp_path: Path) -> None:
@@ -341,6 +342,27 @@ def test_status_exits_zero_when_there_is_nothing_to_report(tmp_path: Path) -> No
     assert "✓ none found" in output
 
 
+def test_status_exits_zero_for_a_setup_that_is_not_migrated_yet(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(
+        repo_path,
+        project="cmk",
+        first_free=11_111,
+        werk_ids_server_url="http://127.0.0.1:1",
+    )
+    (home / ".cmk-werk-ids").write_text(json.dumps({"ids_by_project": {"cmk": [11_111]}}))
+
+    # 'werk new' still reserves from the legacy stash, so this is a warning, not an error
+    returncode, output = call_output("status", "--json", home=home, cwd=repo_path)
+
+    document = json.loads(output)
+    assert returncode == 0
+    assert document["setup"] == {"state": "legacy", "active_stash": "legacy_stash"}
+    assert [problem["severity"] for problem in document["problems"]] == ["warning"]
+
+
 def test_status_json_is_machine_readable(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -362,6 +384,7 @@ def test_status_json_is_machine_readable(tmp_path: Path) -> None:
     document = json.loads(output)
     assert returncode == 0
     assert document["schema_version"] == 1
+    assert document["setup"] == {"state": "server", "active_stash": "reserved_ids"}
     assert document["server"]["status"] == "unreachable"
     assert document["reserved_ids"]["count"] == 1
     assert document["reserved_ids"]["next_id"] == 11_111

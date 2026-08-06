@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -23,9 +23,34 @@ SERVER_NOT_CHECKED = "not_checked"
 SCHEMA_VERSION = 1
 
 
+class Item(StrEnum):
+    SERVER = "server"
+    SECRET = "secret"
+    RESERVED_IDS = "reserved_ids"
+    LEGACY_STASH = "legacy_stash"
+
+
 class Severity(StrEnum):
     ERROR = "error"
     WARNING = "warning"
+
+
+class SetupState(StrEnum):
+    # Which of the secret, the stash file and the legacy stash file exist decides which
+    # stash the tool reserves from. Every combination that is not the current setup gets
+    # its own state, so each one can be reported with the fix that actually applies.
+    SERVER = "server"
+    LEGACY = "legacy"
+    ORPHANED_LEGACY = "orphaned_legacy"
+    ORPHANED_STASH = "orphaned_stash"
+    CONFLICT = "conflict"
+    UNINITIALIZED = "uninitialized"
+
+
+@dataclass(frozen=True, kw_only=True)
+class SetupInfo:
+    state: SetupState
+    active_stash: Item | None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,7 +77,7 @@ class StashInfo:
 
 @dataclass(frozen=True, kw_only=True)
 class Problem:
-    item: str
+    item: Item
     severity: Severity
     problem: str
     fix: str = ""
@@ -60,6 +85,7 @@ class Problem:
 
 @dataclass(frozen=True, kw_only=True)
 class Status:
+    setup: SetupInfo
     server: ServerInfo
     secret: FileInfo
     reserved_ids: StashInfo
@@ -126,50 +152,102 @@ def _stash_info(path: Path, reserved: Sequence[WerkId]) -> StashInfo:
     )
 
 
-def _problems(
-    home: Path,
-    paths: Paths,
-    server_url: str,
-    server_status: ServerStatus | None,
-    reserved: Sequence[WerkId],
-    werk_exists: Callable[[WerkId], bool],
-) -> Iterator[Problem]:
-    # Only a legacy file next to the current ones is a problem: on its own it is the stash
-    # that is still in use.
-    if paths.legacy_stash_file.exists() and (
-        paths.secret_file.exists() or paths.stash_file.exists()
-    ):
-        yield Problem(
-            item="legacy_stash",
-            severity=Severity.ERROR,
-            problem="exists next to the current werk ID files",
-            # Deliberately not 'werk init': it needs the ID server, so it is no help in the
-            # state that made every other command bail out, and it carries over only the IDs
-            # of project 'cmk' before deleting the file, losing all the others.
-            fix="look at both stash files and merge them by hand",
-        )
+def _setup_state(paths: Paths) -> SetupState:
+    secret = paths.secret_file.exists()
+    stash = paths.stash_file.exists()
+    legacy = paths.legacy_stash_file.exists()
+    if stash and legacy:
+        return SetupState.CONFLICT
+    if legacy:
+        return SetupState.ORPHANED_LEGACY if secret else SetupState.LEGACY
+    if secret:
+        return SetupState.SERVER
+    return SetupState.ORPHANED_STASH if stash else SetupState.UNINITIALIZED
 
+
+def _active_stash(state: SetupState) -> Item | None:
+    # The stash the tool reserves from, mirroring Paths.active_stash_file. None means that
+    # no stash is in use: either there is none, or the tool cannot tell which one counts.
+    match state:
+        case SetupState.SERVER | SetupState.ORPHANED_LEGACY:
+            return Item.RESERVED_IDS
+        case SetupState.LEGACY:
+            return Item.LEGACY_STASH
+        case _:
+            return None
+
+
+# Exactly one problem per state, attached to the file it is about. The state decides which
+# files are expected to be there, so nothing else looks at their existence.
+_SETUP_PROBLEMS: Mapping[SetupState, Problem | None] = {
+    SetupState.SERVER: None,
+    # Nothing is broken in the legacy state: it is the setup from before the werk ID
+    # server, and 'werk new' keeps working as long as the file holds IDs.
+    SetupState.LEGACY: Problem(
+        item=Item.LEGACY_STASH,
+        severity=Severity.WARNING,
+        problem="still the stash in use, the werk ID server is not set up yet",
+        fix="werk init",
+    ),
+    SetupState.ORPHANED_LEGACY: Problem(
+        item=Item.LEGACY_STASH,
+        severity=Severity.WARNING,
+        problem="left over next to the secret, its IDs are not used any more",
+        fix="merge the IDs you still need into the stash by hand, then delete it",
+    ),
+    SetupState.ORPHANED_STASH: Problem(
+        item=Item.SECRET,
+        severity=Severity.ERROR,
+        problem="missing, so the reserved IDs are not used",
+        fix="werk init",
+    ),
+    SetupState.CONFLICT: Problem(
+        item=Item.LEGACY_STASH,
+        severity=Severity.ERROR,
+        problem="exists next to the current stash file, every other command bails out",
+        # Deliberately not 'werk init': it needs the ID server, so it is no help in the
+        # state that made every other command bail out, and it carries over only the IDs
+        # of project 'cmk' before deleting the file, losing all the others.
+        fix="look at both stash files and merge them by hand",
+    ),
+    SetupState.UNINITIALIZED: Problem(
+        item=Item.SECRET,
+        severity=Severity.ERROR,
+        problem="missing, no werk IDs are set up",
+        fix="werk init",
+    ),
+}
+
+
+def _setup_problems(state: SetupState) -> Iterator[Problem]:
+    if (problem := _SETUP_PROBLEMS[state]) is not None:
+        yield problem
+
+
+def _secret_problems(home: Path, paths: Paths) -> Iterator[Problem]:
     if not paths.secret_file.exists():
-        yield Problem(item="secret", severity=Severity.ERROR, problem="missing", fix="werk init")
-    elif _is_readable_by_others(secret_mode := _mode(paths.secret_file)):
+        return
+    if _is_readable_by_others(mode := _mode(paths.secret_file)):
         yield Problem(
-            item="secret",
+            item=Item.SECRET,
             severity=Severity.ERROR,
-            problem=f"readable by others ({secret_mode})",
+            problem=f"readable by others ({mode})",
             fix=f"chmod 600 {_replace_home(home, paths.secret_file)}",
         )
 
+
+def _server_problems(server_url: str, server_status: ServerStatus | None) -> Iterator[Problem]:
     match server_status:
         case ServerStatus.UNAUTHORIZED:
             yield Problem(
-                item="server",
+                item=Item.SERVER,
                 severity=Severity.ERROR,
                 problem="rejected your secret",
                 fix="werk init",
             )
         case ServerStatus.ERROR:
             yield Problem(
-                item="server",
+                item=Item.SERVER,
                 severity=Severity.ERROR,
                 problem="answered with an error",
                 fix=f"check {server_url}",
@@ -177,9 +255,16 @@ def _problems(
         case _:
             pass
 
+
+def _reserved_id_problems(
+    active_stash: Item,
+    reserved: Sequence[WerkId],
+    server_status: ServerStatus | None,
+    werk_exists: Callable[[WerkId], bool],
+) -> Iterator[Problem]:
     if not reserved and server_status is not ServerStatus.OK:
         yield Problem(
-            item="reserved_ids",
+            item=active_stash,
             severity=Severity.ERROR,
             problem="none reserved and the server is unavailable",
             fix="reconnect to the VPN, then 'werk new'",
@@ -188,7 +273,7 @@ def _problems(
     for werk_id in reserved:
         if werk_exists(werk_id):
             yield Problem(
-                item="reserved_ids",
+                item=active_stash,
                 severity=Severity.ERROR,
                 problem=f"werk {werk_id} already exists on disk",
                 fix=f"remove {werk_id} from the stash",
@@ -203,12 +288,19 @@ def collect_status(
     server_status: ServerStatus | None,
     werk_exists: Callable[[WerkId], bool],
 ) -> Status:
+    state = _setup_state(paths)
+    active_stash = _active_stash(state)
     stash_ids = _stash_ids(paths)
     legacy_ids = _legacy_stash_ids(paths)
-    # Without a secret the legacy file is the stash the tool still reserves from, so that
-    # is the one whose IDs are available.
-    reserved = stash_ids if paths.secret_file.exists() else legacy_ids
+    match active_stash:
+        case Item.RESERVED_IDS:
+            reserved = stash_ids
+        case Item.LEGACY_STASH:
+            reserved = legacy_ids
+        case _:
+            reserved = []
     return Status(
+        setup=SetupInfo(state=state, active_stash=active_stash),
         server=ServerInfo(
             url=server_url,
             status=SERVER_NOT_CHECKED if server_status is None else server_status.value,
@@ -216,20 +308,42 @@ def collect_status(
         secret=_file_info(paths.secret_file),
         reserved_ids=_stash_info(paths.stash_file, stash_ids),
         legacy_stash=_stash_info(paths.legacy_stash_file, legacy_ids),
-        problems=list(_problems(home, paths, server_url, server_status, reserved, werk_exists)),
+        problems=[
+            # The state decides which files are expected to be there, so the existence of
+            # each one is reported here and nowhere else.
+            *_setup_problems(state),
+            *_secret_problems(home, paths),
+            *_server_problems(server_url, server_status),
+            # Without a stash in use there are no IDs to judge, and the state above already
+            # says why.
+            *(
+                _reserved_id_problems(active_stash, reserved, server_status, werk_exists)
+                if active_stash is not None
+                else ()
+            ),
+        ],
     )
 
 
 def render_json(home: Path, status: Status) -> str:
     # Every section is emitted unconditionally, including the one the tables hide, so
     # consumers get a fixed shape and never have to probe for keys.
-    # Only the paths need `default`: everything else is a builtin already.
+    # Only the paths need `default`: the enums are strings already.
     return json.dumps(
         {"schema_version": SCHEMA_VERSION} | asdict(status),
         indent=2,
         default=lambda path: str(_replace_home(home, path)),
     )
 
+
+_SETUP_NOTES = {
+    SetupState.SERVER: "the werk ID server hands out IDs",
+    SetupState.LEGACY: "not migrated yet, IDs come from the legacy stash",
+    SetupState.ORPHANED_LEGACY: "migrated, but a legacy stash is left over",
+    SetupState.ORPHANED_STASH: "IDs are reserved, but the secret they belong to is gone",
+    SetupState.CONFLICT: "two stash files, the tool cannot tell which one counts",
+    SetupState.UNINITIALIZED: "nothing is set up yet",
+}
 
 _SERVER_NOTES = {
     SERVER_NOT_CHECKED: "not checked, no secret",
@@ -240,12 +354,11 @@ _SERVER_NOTES = {
 }
 
 _ITEM_LABELS = {
-    "server": "server",
-    "secret": "secret",
-    "reserved_ids": "reserved ids",
-    "legacy_stash": "legacy stash",
+    Item.SERVER: "server",
+    Item.SECRET: "secret",
+    Item.RESERVED_IDS: "reserved ids",
+    Item.LEGACY_STASH: "legacy stash",
 }
-
 
 _SEVERITY_MARKERS = {
     Severity.ERROR: "[red]✗[/]",
@@ -253,14 +366,43 @@ _SEVERITY_MARKERS = {
 }
 
 
-def _marker(state: bool) -> str:
-    return "[green]✓[/]" if state else "[red]✗[/]"
+_OK_MARKER = "[green]✓[/]"
+
+# A file that is not there and is not a problem either: nothing to report, but a ✓ would
+# read as "it is there".
+_ABSENT_MARKER = "[dim]-[/]"
+
+
+def _severity_marker(severities: Iterable[Severity]) -> str | None:
+    collected = set(severities)
+    if Severity.ERROR in collected:
+        return _SEVERITY_MARKERS[Severity.ERROR]
+    if Severity.WARNING in collected:
+        return _SEVERITY_MARKERS[Severity.WARNING]
+    return None
+
+
+def _item_marker(status: Status, item: Item, *, exists: bool = True) -> str:
+    severities = (problem.severity for problem in status.problems if problem.item == item)
+    return _severity_marker(severities) or (_OK_MARKER if exists else _ABSENT_MARKER)
+
+
+def _state_marker(state: SetupState) -> str:
+    # Only the state itself, so this row does not turn red for a problem that is about the
+    # server or a single reserved ID.
+    problem = _SETUP_PROBLEMS[state]
+    return _OK_MARKER if problem is None else _SEVERITY_MARKERS[problem.severity]
 
 
 def _reserved_summary(stash: StashInfo) -> str:
     if stash.next_id is None:
         return "no IDs reserved"
     return f"{stash.count} reserved, next {WerkId(stash.next_id)}"
+
+
+def _stash_detail(status: Status, stash: StashInfo, item: Item) -> str:
+    in_use = "in use" if status.setup.active_stash is item else "not in use"
+    return f"{_reserved_summary(stash)} ({in_use})"
 
 
 def _table(title: str, *columns: str) -> Table:
@@ -273,24 +415,33 @@ def _table(title: str, *columns: str) -> Table:
 
 def _werk_ids_table(home: Path, status: Status) -> Table:
     table = _table("WERK IDS", "ITEM", "DETAIL", "LOCATION", "MODE")
+    # The state is the row that explains the others: which files are expected to be there,
+    # and which stash the IDs come from.
     table.add_row(
-        _marker(status.server.status == ServerStatus.OK.value),
-        _ITEM_LABELS["server"],
+        _state_marker(status.setup.state),
+        "setup",
+        _SETUP_NOTES[status.setup.state],
+        "",
+        "",
+    )
+    table.add_row(
+        _item_marker(status, Item.SERVER),
+        _ITEM_LABELS[Item.SERVER],
         _SERVER_NOTES[status.server.status],
         status.server.url,
         "",
     )
     table.add_row(
-        _marker(status.secret.exists),
-        _ITEM_LABELS["secret"],
+        _item_marker(status, Item.SECRET, exists=status.secret.exists),
+        _ITEM_LABELS[Item.SECRET],
         "",
         str(_replace_home(home, status.secret.path)),
         status.secret.mode or "",
     )
     table.add_row(
-        _marker(status.reserved_ids.exists),
-        _ITEM_LABELS["reserved_ids"],
-        _reserved_summary(status.reserved_ids),
+        _item_marker(status, Item.RESERVED_IDS, exists=status.reserved_ids.exists),
+        _ITEM_LABELS[Item.RESERVED_IDS],
+        _stash_detail(status, status.reserved_ids, Item.RESERVED_IDS),
         str(_replace_home(home, status.reserved_ids.path)),
         status.reserved_ids.mode or "",
     )
@@ -298,9 +449,9 @@ def _werk_ids_table(home: Path, status: Status) -> Table:
     # be compared: it either still holds the IDs in use, or it clashes with the new files.
     if status.legacy_stash.exists:
         table.add_row(
-            _marker(not status.secret.exists),
-            _ITEM_LABELS["legacy_stash"],
-            _reserved_summary(status.legacy_stash),
+            _item_marker(status, Item.LEGACY_STASH),
+            _ITEM_LABELS[Item.LEGACY_STASH],
+            _stash_detail(status, status.legacy_stash, Item.LEGACY_STASH),
             str(_replace_home(home, status.legacy_stash.path)),
             status.legacy_stash.mode or "",
         )

@@ -66,7 +66,9 @@ def _verify_site(site_id: SiteId, site_config: SiteConfigurations) -> SiteConfig
     if (site := site_config.get(site_id)) is None:
         raise ValueError(f"Aborting, site {site_id} does not exist")
 
-    if ActivateChanges.get_number_of_pending_changes(sites=list(site_config), count_limit=1):
+    changes = ActivateChanges()
+    changes.load(sites=list(site_config), site_configs=site_config)
+    if changes.has_pending_changes():
         raise ValueError("Aborting, there are still pending changes to review")
 
     return site

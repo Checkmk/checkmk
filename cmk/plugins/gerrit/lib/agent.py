@@ -12,6 +12,7 @@ import dataclasses
 import json
 import sys
 from collections.abc import Sequence
+from typing import NewType
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gerrit.lib.cache import cache_ttl
@@ -35,7 +36,7 @@ def main() -> int:
 
     ctx = GerritRunContext(
         hostname=args.hostname,
-        ttl=TTLCache(version=args.version_cache),
+        ttl=TTLCache(version=int(args.version_cache)),
         collectors=Collectors(version=GerritVersion(api_url=api_url, auth=auth)),
     )
 
@@ -106,18 +107,34 @@ class GerritRunContext:
 
 
 def run(ctx: GerritRunContext) -> int:
-    version_storage = Storage(f"{AGENT}_version", ctx.hostname)
-    version_cache = cache_ttl(version_storage, ttl=ctx.ttl.version)
-    collect_version = version_cache(ctx.collectors.version.collect)
-    _write_section(collect_version(), name="gerrit_version")
+    process_version_section(ctx)
 
     return 0
 
 
-def _write_section(data: object, *, name: str) -> None:
-    section_payload = json.dumps(data, sort_keys=True)
-    sys.stdout.write(f"<<<{name}:sep(0)>>>\n")
-    sys.stdout.write(f"{section_payload}\n")
+def process_version_section(ctx: GerritRunContext) -> None:
+    name = "gerrit_version"
+    storage = Storage(name, ctx.hostname)
+    cache_wrapper = cache_ttl(storage, ttl=ctx.ttl.version)
+    data, ts = cache_wrapper(ctx.collectors.version.collect)()
+    cache_marker = build_cache_marker(ts=ts, ttl=ctx.ttl.version) if ts is not None else None
+    write_section(data, name=name, cache_marker=cache_marker)
+
+
+Marker = NewType("Marker", str)
+"""Marker indicates that a string is prefixed with a colon and can be added to a section header."""
+
+
+def build_cache_marker(ts: float, ttl: int) -> Marker:
+    return Marker(f":cached({int(ts)},{ttl})")
+
+
+def write_section(data: object, *, name: str, cache_marker: Marker | None = None) -> None:
+    header = f"{name}:sep(0){cache_marker or ''}"
+    content = json.dumps(data, sort_keys=True)
+
+    sys.stdout.write(f"<<<{header}>>>\n")
+    sys.stdout.write(f"{content}\n")
 
 
 if __name__ == "__main__":

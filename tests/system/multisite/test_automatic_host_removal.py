@@ -16,12 +16,12 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.xfail(
     condition=os.getenv("DISTRO") in ("almalinux-9", "almalinux-10"),
     reason="May fail on EL* systems, investigating.",
 )
+@pytest.mark.skip(reason="Flaky test. See CMK-37736")
 def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,

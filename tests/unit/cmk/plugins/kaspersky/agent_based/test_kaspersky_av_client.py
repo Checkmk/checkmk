@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -15,6 +15,7 @@ import time_machine
 
 from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.kaspersky.agent_based import kaspersky_av_client
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -91,5 +92,8 @@ def test_parse_kaspersky_av_client(
 def test_check_kaskpersky_av_client(
     section: kaspersky_av_client.Section, results: Sequence[Result]
 ) -> None:
-    test_params = {"signature_age": (2, 3), "fullscan_age": (2, 3)}
+    test_params: Mapping[str, SimpleLevelsConfigModel[float]] = {
+        "signature_age": ("fixed", (2.0, 3.0)),
+        "fullscan_age": ("fixed", (2.0, 3.0)),
+    }
     assert list(kaspersky_av_client.check_kaspersky_av_client(test_params, section)) == results

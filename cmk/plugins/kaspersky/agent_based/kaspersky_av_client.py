@@ -7,9 +7,9 @@ import time
 from collections.abc import Mapping
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
 class Section(TypedDict, total=False):
@@ -70,10 +71,10 @@ def discover_kaspersky_av_client(section: Section) -> DiscoveryResult:
 
 
 def check_kaspersky_av_client(
-    params: Mapping[str, tuple[float, float]], section: Section
+    params: Mapping[str, SimpleLevelsConfigModel[float]], section: Section
 ) -> CheckResult:
     """
-    >>> test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
+    >>> test_params = dict(signature_age=("fixed", (2.0, 3.0)), fullscan_age=("fixed", (2.0, 3.0)))
     >>> test_section = dict(fullscan_age=1.123, signature_age=1.123)
     >>> for result in check_kaspersky_av_client(test_params, test_section):
     ...     result
@@ -89,7 +90,7 @@ def check_kaspersky_av_client(
 
 def _check_age(
     section: Section,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, SimpleLevelsConfigModel[float]],
     key: Literal["signature_age", "fullscan_age"],
 ) -> CheckResult:
     label = "Last update of signatures" if key == "signature_age" else "Last fullscan"
@@ -97,7 +98,7 @@ def _check_age(
         yield Result(state=State.UNKNOWN, summary=f"{label} unkown")
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=age,
         levels_upper=params[key],
         label=label,
@@ -111,8 +112,8 @@ check_plugin_kaspersky_av_client = CheckPlugin(
     discovery_function=discover_kaspersky_av_client,
     check_function=check_kaspersky_av_client,
     check_default_parameters={
-        "signature_age": (86400, 7 * 86400),
-        "fullscan_age": (86400, 7 * 86400),
+        "signature_age": ("fixed", (86400.0, 7 * 86400.0)),
+        "fullscan_age": ("fixed", (86400.0, 7 * 86400.0)),
     },
     check_ruleset_name="kaspersky_av_client",
 )

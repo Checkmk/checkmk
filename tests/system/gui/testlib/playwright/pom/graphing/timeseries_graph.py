@@ -261,6 +261,14 @@ class ServiceGraphs:
     def panel(self, index: int = 0) -> GraphPanel:
         return GraphPanel(self.panels.nth(index), self.page, self._main_area)
 
+    @property
+    def skeletons(self) -> Locator:
+        """The placeholders standing in for the panels while the first fetch is pending.
+
+        Decorative and ``aria-hidden``, so no role query reaches them.
+        """
+        return self._main_area.locator(".graphing-graph-skeleton")
+
     def panel_count(self) -> int:
         # ``.count()`` does not auto-wait, so this is only correct once
         # ``wait_until_rendered`` has run. The group mounts every panel in one tick, so the

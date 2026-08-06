@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 
 from __future__ import annotations
 
@@ -14,7 +13,7 @@ import re
 import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple, override, TypedDict
+from typing import NamedTuple, override, TypedDict
 
 import cmk.gui.watolib.git
 from cmk.ccc.user import UserId
@@ -79,7 +78,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             return AuditLogStore.Entry(**raw)
 
         @staticmethod
-        def serialize(entry: AuditLogStore.Entry) -> dict[str, Any]:
+        def serialize(entry: AuditLogStore.Entry) -> dict[str, object]:
             raw = entry._asdict()
             raw["text"] = (
                 ("html", str(entry.text)) if isinstance(entry.text, HTML) else ("str", entry.text)

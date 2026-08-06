@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Certificates
 
 WARNING: Use at your own risk, not supported.
@@ -104,7 +102,7 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
     permissions_required=permissions.Perm("general.agent_pairing"),
     response_schema=X509PEM,
 )
-def root_cert(param: Mapping[str, Any]) -> Response:
+def root_cert(param: Mapping[str, object]) -> Response:
     """X.509 PEM-encoded root certificate"""
     if not _user_is_authorized():
         raise ProblemException(
@@ -132,7 +130,7 @@ def root_cert(param: Mapping[str, Any]) -> Response:
     response_schema=X509PEM,
     permissions_required=permissions.Perm("general.agent_pairing"),
 )
-def make_certificate(param: Mapping[str, Any]) -> Response:
+def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[explicit-any]
     """X.509 PEM-encoded Certificate Signing Requests (CSRs)"""
     if not _user_is_authorized():
         raise ProblemException(

@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from pprint import pformat
-from typing import Any, override
+from typing import override
 
 from pydantic import ValidationError
 
@@ -19,7 +17,7 @@ class ConfigValidationError(MKConfigError):
         self,
         which_file: str,
         pydantic_error: ValidationError,
-        original_data: Any,
+        original_data: object,
     ) -> None:
         self.which_file = which_file
         self.original_data = original_data

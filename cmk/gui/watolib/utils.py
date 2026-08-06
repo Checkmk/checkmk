@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import ast
 import base64
 from pathlib import Path
@@ -29,11 +27,11 @@ def multisite_dir() -> Path:
     return cmk.utils.paths.default_config_dir / "multisite.d/wato"
 
 
-def mk_repr(x: Any) -> bytes:
+def mk_repr(x: object) -> bytes:
     return base64.b64encode(repr(x).encode())
 
 
-def mk_eval(s: bytes | str) -> Any:
+def mk_eval(s: bytes | str) -> Any:  # type: ignore[explicit-any]
     try:
         return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:

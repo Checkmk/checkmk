@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Render Checkmk graphs as PNG images.
 This is needed for the graphs sent with mail notifications."""
 
@@ -12,7 +10,7 @@ import base64
 import itertools
 import time
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, override, TypedDict
+from typing import Literal, override, TypedDict
 
 import cmk.livestatus_client as livestatus
 from cmk import trace
@@ -168,7 +166,9 @@ def compute_image_graph_ranges(
     return compute_pdf_graph_ranges(width_mm, start_time, end_time)
 
 
-def graph_image_render_options(api_request: dict[str, Any] | None = None) -> GraphRenderOptions:
+def graph_image_render_options(
+    api_request: Mapping[str, object] | None = None,
+) -> GraphRenderOptions:
     graph_render_options = GraphRenderOptions(
         font_size=SizePT(8.0),
         resizable=False,
@@ -188,6 +188,8 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
     )
     # Enforce settings optionally setable via request
     if api_request and (render_opts := api_request.get("render_options")):
+        if not isinstance(render_opts, dict):
+            raise TypeError(f"render_options must be a dict, got {type(render_opts)}")
         graph_render_options = graph_render_options.model_copy(update=render_opts)
 
     return graph_render_options

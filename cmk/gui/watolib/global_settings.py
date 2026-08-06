@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable, Sequence
-from typing import Any
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
@@ -29,7 +26,7 @@ STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
 ) -> GlobalSettings:
-    settings: dict[str, Any] = {}
+    settings: dict[str, object] = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
             settings.update(domain.load_full_config())
@@ -60,7 +57,7 @@ def save_global_settings(
             if global_settings_config.is_activated(varname) or varname in current_global_settings
         }
 
-    per_domain: dict[str, dict[Any, Any]] = {}
+    per_domain: dict[str, dict[str, object]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable in config_variable_registry.values():
         domain = config_variable.primary_domain()

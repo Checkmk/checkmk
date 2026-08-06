@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
 
 """Configuration entities / OAuth2 connections API endpoints.
@@ -15,7 +14,6 @@ client generation.
 """
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
@@ -50,7 +48,7 @@ class Oauth2ConnectionResponseCollection(DomainObjectCollection):
 
 
 @list_endpoint_decorator(ConfigEntityType.oauth2_connection, Oauth2ConnectionResponseCollection)
-def _list_oauth2_connections(params: Mapping[str, Any]) -> Response:
+def _list_oauth2_connections(params: Mapping[str, object]) -> Response:
     """List OAuth2 configuration entities."""
     return serve_configuration_entity_list(
         None, ConfigEntityType.oauth2_connection, params, user=user
@@ -58,7 +56,7 @@ def _list_oauth2_connections(params: Mapping[str, Any]) -> Response:
 
 
 @get_endpoint_decorator(ConfigEntityType.oauth2_connection)
-def _get_oauth2_connection(params: Mapping[str, Any]) -> Response:
+def _get_oauth2_connection(params: Mapping[str, object]) -> Response:
     """Get an OAuth2 connection"""
     return serve_configuration_entity(ConfigEntityType.oauth2_connection, params, user)
 

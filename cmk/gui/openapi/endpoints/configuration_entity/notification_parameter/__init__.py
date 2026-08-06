@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
 
 """Configuration entities / Notification Parameter
@@ -12,7 +11,6 @@ These endpoints can be used to manipulate notification parameter via the configu
 entity API, for more information see "Configuration entities" endpoints."""
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
@@ -49,7 +47,7 @@ class NotificationParamResponseCollection(DomainObjectCollection):
 @list_endpoint_decorator(
     ConfigEntityType.notification_parameter, NotificationParamResponseCollection
 )
-def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
+def _list_notification_parameters(params: Mapping[str, object]) -> Response:
     """List existing notification parameters"""
     return serve_configuration_entity_list(
         None, ConfigEntityType.notification_parameter, params, user
@@ -57,7 +55,7 @@ def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
 
 
 @get_endpoint_decorator(ConfigEntityType.notification_parameter)
-def _get_notification_parameter(params: Mapping[str, Any]) -> Response:
+def _get_notification_parameter(params: Mapping[str, object]) -> Response:
     """Get a notification parameter"""
     return serve_configuration_entity(ConfigEntityType.notification_parameter, params, user)
 

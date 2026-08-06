@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import time
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from cmk.ccc import store
 from cmk.gui.i18n import _
@@ -95,8 +93,8 @@ class JobStatusStore:
 
         return data
 
-    def read_raw(self) -> dict[str, Any]:
-        status: dict[str, Any] = store.load_object_from_file(
+    def read_raw(self) -> dict[str, object]:
+        status: dict[str, object] = store.load_object_from_file(
             self._jobstatus_path, default={}, lock=True
         )
         return status

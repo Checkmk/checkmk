@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, cast, overload, override
+from typing import cast, overload, override
 
 import flask
 from flask import Flask
@@ -53,7 +52,7 @@ class _undefined:
     pass
 
 
-_Inst = dict[str, Any]
+_Inst = dict[str, object]
 
 
 class dict_property[T]:

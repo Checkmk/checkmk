@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
 
 """Configuration entities / Rule form spec
@@ -12,7 +11,6 @@ These endpoints can be used to manipulate rules via the configuration entity
 API, for more information see "Configuration entities" endpoints."""
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
@@ -50,13 +48,13 @@ class RuleFormSpecResponseCollection(DomainObjectCollection):
 
 
 @list_endpoint_decorator(ConfigEntityType.rule_form_spec, RuleFormSpecResponseCollection)
-def _list_rule_form_specs(params: Mapping[str, Any]) -> Response:
+def _list_rule_form_specs(params: Mapping[str, object]) -> Response:
     """List existing rules"""
     return serve_configuration_entity_list(None, ConfigEntityType.rule_form_spec, params, user=user)
 
 
 @get_endpoint_decorator(ConfigEntityType.rule_form_spec)
-def _get_rule_form_spec(params: Mapping[str, Any]) -> Response:
+def _get_rule_form_spec(params: Mapping[str, object]) -> Response:
     """Get a rule form spec parameter"""
     return serve_configuration_entity(ConfigEntityType.rule_form_spec, params, user)
 

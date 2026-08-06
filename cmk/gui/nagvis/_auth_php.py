@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # Creates a includable file for the needed programming languages.
 # It can be used to use the multisite permissions in other add-ons
 # for checking permissions.
@@ -37,8 +35,9 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 from cmk.ccc import store
 from cmk.gui.groups import GroupName
@@ -61,7 +60,7 @@ def _create_php_file(
     callee: _CalleeHooks,
     users: Users,
     role_permissions: dict[str, list[str]],
-    groups: dict[GroupName, Any],
+    groups: Mapping[GroupName, object],
 ) -> None:
     # Do not change Setup internal objects
     nagvis_users = copy.deepcopy(users)

@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Diagnostic tests for LDAP connections."""
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import cast
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -149,7 +147,7 @@ def _test_groups_to_roles(connection: LDAPUserConnector, address: str) -> tuple[
 
         # We have typing for active_plugins["groups_to_roles"], however it doesn't
         # take into account the old config mentioned below.
-        group_specs = cast(list[Any], value)
+        group_specs = cast(list[object], value)
 
         for group_spec in group_specs:
             if isinstance(group_spec, str):

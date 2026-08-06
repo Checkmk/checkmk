@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Common code for reading and offering notification scripts and alert handlers.
 
 # Example header of a notification script:
@@ -23,7 +21,7 @@ import contextlib
 import os
 import re
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TypedDict
 
 import cmk.utils.paths
 from cmk.gui.i18n import _u
@@ -52,16 +50,16 @@ def load_user_scripts(what: str) -> NotificationUserScripts:
     return scripts
 
 
-def _load_user_scripts_from(directory: Path) -> dict[str, Any]:
+def _load_user_scripts_from(directory: Path) -> NotificationUserScripts:
     adir = str(directory)
-    scripts: dict[str, Any] = {}
+    scripts: NotificationUserScripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
             if entry == ".f12":
                 continue
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
-                info = {"title": entry, "bulk": False}
+                info: UserScriptInfo = {"title": entry, "bulk": False}
                 try:
                     with Path(path).open(encoding="utf-8") as lines:
                         next(lines)

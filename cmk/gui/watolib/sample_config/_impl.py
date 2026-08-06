@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import os
 import uuid
 from datetime import datetime
-from typing import Any, override
+from typing import override
 from uuid import uuid4, uuid5
 
 from cmk.ccc import store
@@ -216,7 +214,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         notification_rules = [get_default_notification_rule()]
         NotificationRuleConfigFile().save(notification_rules, pprint_value=True)
 
-    def _initial_global_settings(self) -> dict[str, Any]:
+    def _initial_global_settings(self) -> dict[str, object]:
         return {
             **USE_NEW_DESCRIPTIONS_FOR_SETTING,
             "trusted_certificate_authorities": {

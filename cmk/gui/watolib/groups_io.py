@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast, Literal, NotRequired, override, TypedDict
+from typing import cast, Literal, NotRequired, override, TypedDict
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
@@ -183,7 +182,7 @@ class GroupsConfigFile(WatoMultiConfigFile[GroupConfigs]):
         )
 
     @staticmethod
-    def _group_spec_for_configs_file(groups_spec: dict[str, Any]) -> dict[str, Any]:
+    def _group_spec_for_configs_file(groups_spec: Mapping[str, object]) -> dict[str, object]:
         return {key: value for key, value in groups_spec.items() if key != "alias"}
 
     def save_group_configs(self, all_groups: AllGroupSpecs, pprint_value: bool) -> None:

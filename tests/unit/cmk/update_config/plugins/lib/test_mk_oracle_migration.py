@@ -26,7 +26,7 @@ def test_empty_body_has_no_instances() -> None:
 
 
 def test_empty_body_has_warning() -> None:
-    assert convert({}).warnings == ["No auth defined in legacy rule. Defaulting to Oracle wallet."]
+    assert "No auth defined in legacy rule. Defaulting to Oracle wallet." in convert({}).warnings
 
 
 def test_deploy_when_activated_true() -> None:
@@ -46,6 +46,25 @@ def test_sections_supported_keys_are_mapped() -> None:
 
     assert new_rule.warnings == ["No auth defined in legacy rule. Defaulting to Oracle wallet."]
     assert dump(new_rule.rule)["main"]["sections"] == {"instance": "synchronous"}
+
+
+def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
+    """A legacy rule without a 'sections' key was still baked with an explicit section
+    list, so the migration must materialise it instead of leaving the unified plugin to
+    apply its own defaults."""
+    new_rule = convert({"login": {"auth": "wallet"}})
+    sections = dump(new_rule.rule)["main"]["sections"]
+
+    assert new_rule.warnings == [
+        "'Sections' was not configured, so the selection the legacy bakery applied by "
+        "default has been written out explicitly. The new rule pins that selection "
+        "instead of deferring to the plugin later."
+    ]
+    assert sections["locks"] == "synchronous"
+    assert sections["iostats"] == "disabled"
+    assert "ts_quotas" not in sections
+    assert sections["asm_instance"] == "synchronous"
+    assert sections["tablespaces"] == "asynchronous"
 
 
 def test_sections_unsupported_keys_are_skipped_with_warning() -> None:
@@ -131,11 +150,12 @@ def test_unmappable_fields_ignored() -> None:
         "'Exclude some sections on certain instances' cannot be mapped. The new rule format only supports disabling sections globally."
         in new_rule.warnings
     )
-    assert dump(new_rule.rule) == {
-        "deploy": ("do_not_deploy", None),
-        "main": {"auth": {"auth_type": ("wallet", None)}, "connection": {}},
-        "instances": [],
-    }
+    dumped = dump(new_rule.rule)
+    assert dumped["deploy"] == ("do_not_deploy", None)
+    assert dumped["instances"] == []
+    assert set(dumped["main"]) == {"auth", "connection", "sections"}
+    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["main"]["connection"] == {}
 
 
 def test_discovery_not_mapped_when_nothing_defined() -> None:
@@ -235,7 +255,8 @@ def test_login_without_tnsalias_has_no_instance() -> None:
     new_rule = convert({"login": {"auth": "wallet"}})
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"] == {"auth": {"auth_type": ("wallet", None)}, "connection": {}}
+    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["main"]["connection"] == {}
 
     assert dumped["instances"] == []
 
@@ -244,7 +265,8 @@ def test_login_with_tnsalias_creates_no_instance() -> None:
     new_rule = convert({"login": {"auth": "wallet", "tnsalias": "myalias"}})
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"] == {"auth": {"auth_type": ("wallet", None)}, "connection": {}}
+    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["main"]["connection"] == {}
 
     assert dumped["instances"] == []
 
@@ -252,12 +274,13 @@ def test_login_with_tnsalias_creates_no_instance() -> None:
 def test_login_with_tnsalias_warns_that_it_could_not_be_migrated() -> None:
     new_rule = convert({"login": {"auth": "wallet", "tnsalias": "myalias"}})
 
-    assert new_rule.warnings == [
+    assert (
         "The TNS alias 'myalias' of the default login could not be migrated, because the "
         "unified plugin accepts a TNS alias for a single database only, not as a default for "
         "all of them. Monitored instances are now reached via the configured host and port. "
         "If the alias points somewhere else, add it as an entry under 'Databases to monitor'."
-    ]
+        in new_rule.warnings
+    )
 
 
 def test_login_tnsalias_does_not_affect_main_auth_and_connection() -> None:
@@ -266,10 +289,8 @@ def test_login_tnsalias_does_not_affect_main_auth_and_connection() -> None:
     )
     dumped = dump(new_rule.rule)
 
-    assert dumped["main"] == {
-        "auth": {"auth_type": ("wallet", None)},
-        "connection": {"host": "mydata.db", "port": 3635},
-    }
+    assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
+    assert dumped["main"]["connection"] == {"host": "mydata.db", "port": 3635}
 
     assert dumped["instances"] == []
 
@@ -466,7 +487,7 @@ def test_converts_two_instances_when_remote_instance_cannot_reference_login_exce
         }
     )
     assert len(dump(new_rule.rule)["instances"]) == 2
-    assert new_rule.warnings[0] == "Could not find login for ORCL remote instance."
+    assert "Could not find login for ORCL remote instance." in new_rule.warnings
 
 
 def test_main_asm_auth_mapped_when_login_asm_present_without_host_and_port() -> None:

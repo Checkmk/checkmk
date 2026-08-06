@@ -75,6 +75,31 @@ valid_sections: Final[frozenset[str]] = frozenset(
     }
 )
 
+# Mirrors `unix_default_section` in the legacy bakelet: what a rule without a 'sections'
+# key actually deployed.
+LEGACY_DEFAULT_SECTIONS: Final[Mapping[str, str | None]] = {
+    "instance": "sync",
+    "performance": "sync",
+    "systemparameter": "sync",
+    "processes": "sync",
+    "sessions": "sync",
+    "longactivesessions": "sync",
+    "logswitches": "sync",
+    "undostat": "sync",
+    "recovery_area": "sync",
+    "recovery_status": "sync",
+    "dataguard_stats": "sync",
+    "tablespaces": "async",
+    "rman": "async",
+    "jobs": "async",
+    "resumable": "async",
+    "locks": "sync",
+    "iostats": None,
+    "asm:instance": "sync",
+    "asm:processes": "sync",
+    "asm:asm_diskgroup": "async",
+}
+
 
 def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     warnings: list[str] = []
@@ -86,7 +111,15 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     cache_age = legacy.get("async_interval") or None
 
-    sections = _convert_sections(legacy["sections"], warnings) if legacy.get("sections") else None
+    if legacy_sections := legacy.get("sections"):
+        sections = _convert_sections(legacy_sections, warnings)
+    else:
+        sections = _convert_sections(LEGACY_DEFAULT_SECTIONS, warnings)
+        warnings.append(
+            "'Sections' was not configured, so the selection the legacy bakery applied by "
+            "default has been written out explicitly. The new rule pins that selection "
+            "instead of deferring to the plugin later."
+        )
 
     discovery = _convert_discovery(legacy.get("sids"))
 

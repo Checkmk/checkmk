@@ -15,26 +15,41 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.innovaphone.agent_based.innovaphone_licenses import (
     check_innovaphone_licenses,
     discover_innovaphone_licenses,
+    LicenseUsage,
     parse_innovaphone_licenses,
 )
 
-_SECTION: StringTable = [["100", "50"]]
+
+@pytest.mark.parametrize(
+    "string_table",
+    [
+        pytest.param([], id="empty payload"),
+        pytest.param([[]], id="empty nested payload"),
+        pytest.param([["not-a-number", "5"]], id="total a number"),
+        pytest.param([["10", "not-a-number"]], id="used not a number"),
+        pytest.param([["-1", "5"]], id="total negative"),
+        pytest.param([["10", "-1"]], id="used negative"),
+    ],
+)
+def test_parse_innovaphone_licenses_invalid_input(string_table: StringTable) -> None:
+    assert parse_innovaphone_licenses(string_table) is None
 
 
-def test_parse_innovaphone_licenses_keeps_string_table() -> None:
-    assert parse_innovaphone_licenses(_SECTION) == _SECTION
+@pytest.mark.parametrize(
+    "string_table, expected",
+    [
+        pytest.param([["10", "5"]], LicenseUsage(used=5, total=10), id="happy path"),
+        pytest.param([["0", "0"]], LicenseUsage(used=0, total=0), id="zero values"),
+        pytest.param([["5", "10"]], LicenseUsage(used=10, total=5), id="used > total"),
+    ],
+)
+def test_parse_innovaphone_licenses(string_table: StringTable, expected: LicenseUsage) -> None:
+    assert parse_innovaphone_licenses(string_table) == expected
 
 
 def test_discover_innovaphone_licenses() -> None:
-    assert list(discover_innovaphone_licenses(_SECTION)) == [Service()]
-
-
-def test_discover_innovaphone_licenses_no_data() -> None:
-    assert list(discover_innovaphone_licenses([])) == []
-
-
-def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
-    assert list(check_innovaphone_licenses({"levels": (90.0, 95.0)}, [])) == []
+    section = LicenseUsage(used=5, total=10)
+    assert list(discover_innovaphone_licenses(section)) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -42,7 +57,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
     [
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["0", "0"]],
+            LicenseUsage(used=0, total=0),
             [
                 Result(state=State.UNKNOWN, summary="Used 0/0 Licences"),
                 Metric("licenses", 0.0, boundaries=(0.0, 0.0)),
@@ -51,7 +66,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "0"]],
+            LicenseUsage(used=0, total=100),
             [
                 Result(state=State.OK, summary="Used 0/100 Licences (0%)"),
                 Metric("licenses", 0.0, boundaries=(0.0, 100.0)),
@@ -60,7 +75,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "50"]],
+            LicenseUsage(used=50, total=100),
             [
                 Result(state=State.OK, summary="Used 50/100 Licences (50%)"),
                 Metric("licenses", 50.0, boundaries=(0.0, 100.0)),
@@ -69,7 +84,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "90"]],
+            LicenseUsage(used=90, total=100),
             [
                 Result(state=State.OK, summary="Used 90/100 Licences (90%)"),
                 Metric("licenses", 90.0, boundaries=(0.0, 100.0)),
@@ -78,7 +93,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "92"]],
+            LicenseUsage(used=92, total=100),
             [
                 Result(
                     state=State.WARN,
@@ -90,7 +105,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "95"]],
+            LicenseUsage(used=95, total=100),
             [
                 Result(
                     state=State.WARN,
@@ -102,7 +117,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "96"]],
+            LicenseUsage(used=96, total=100),
             [
                 Result(
                     state=State.CRIT,
@@ -114,7 +129,7 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
         ),
         pytest.param(
             {"levels": (90.0, 95.0)},
-            [["100", "110"]],
+            LicenseUsage(used=110, total=100),
             [
                 Result(
                     state=State.CRIT,
@@ -127,6 +142,6 @@ def test_check_innovaphone_licenses_no_data_returns_nothing() -> None:
     ],
 )
 def test_check_innovaphone_licenses(
-    params: Mapping[str, Any], section: StringTable, expected: list[Result | Metric]
+    params: Mapping[str, Any], section: LicenseUsage, expected: list[Result | Metric]
 ) -> None:
     assert list(check_innovaphone_licenses(params, section)) == expected

@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -21,32 +22,40 @@ from cmk.agent_based.v2 import (
 )
 
 
-def savefloat(f: str) -> float:
-    """Tries to cast a string to an float and return it. In case this fails,
-    it returns 0.0.
+@dataclass(frozen=True, kw_only=True)
+class LicenseUsage:
+    used: int
+    total: int
 
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0.0 back from this function,
-    you can not know whether it is really 0.0 or something went wrong."""
-    try:
-        return float(f)
-    except (TypeError, ValueError):
-        return 0.0
+    def __post_init__(self) -> None:
+        if self.used < 0 or self.total < 0:
+            raise ValueError("Negative values are not allowed.")
 
-
-def discover_innovaphone_licenses(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
+    @property
+    def utilization(self) -> float | None:
+        return (100.0 * self.used) / self.total if self.total else None
 
 
-def check_innovaphone_licenses(params: Mapping[str, Any], section: StringTable) -> CheckResult:
-    if not section:
-        return
-    total, used = map(savefloat, section[0])
-    perc_used = (100.0 * used) / total if total else None
+def parse_innovaphone_licenses(string_table: StringTable) -> LicenseUsage | None:
+    match string_table:
+        case [[str(total), str(used)]] if total.isdigit() and used.isdigit():
+            try:
+                return LicenseUsage(used=int(used), total=int(total))
+            except ValueError:
+                return None
+        case _:
+            return None
+
+
+def discover_innovaphone_licenses(section: LicenseUsage) -> DiscoveryResult:
+    yield Service()
+
+
+def check_innovaphone_licenses(params: Mapping[str, Any], section: LicenseUsage) -> CheckResult:
+    perc_used = section.utilization
     warn, crit = params["levels"]
     utilization_message = f" ({perc_used:.0f}%)" if perc_used is not None else ""
-    message = f"Used {used:.0f}/{total:.0f} Licences{utilization_message}"
+    message = f"Used {section.used}/{section.total} Licences{utilization_message}"
     levels = f"Warning/ Critical at ({warn}/{crit})"
     if perc_used is None:
         yield Result(state=State.UNKNOWN, summary=message)
@@ -56,11 +65,7 @@ def check_innovaphone_licenses(params: Mapping[str, Any], section: StringTable) 
         yield Result(state=State.WARN, summary=message + levels)
     else:
         yield Result(state=State.OK, summary=message)
-    yield Metric("licenses", used, boundaries=(0, total))
-
-
-def parse_innovaphone_licenses(string_table: StringTable) -> StringTable:
-    return string_table
+    yield Metric("licenses", section.used, boundaries=(0, section.total))
 
 
 agent_section_innovaphone_licenses = AgentSection(

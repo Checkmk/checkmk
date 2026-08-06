@@ -5,15 +5,17 @@
 
 from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsLinuxUnixAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, ListChoice
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    MultipleChoice,
+    MultipleChoiceElement,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-Title = _
 
-
-def _skippable_linux_agent_sections() -> Mapping[str, str]:
+def _skippable_linux_agent_sections() -> Mapping[str, Title]:
     return {
         # The key must match the section exclude parameter in the checkmk_agent i.e. MK_SKIP_<key>
         "areca": Title("Raid controllers from Areca"),
@@ -67,15 +69,14 @@ def _skippable_linux_agent_sections() -> Mapping[str, str]:
     }
 
 
-def _valuespec_agent_config_agent_sections() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Disabled sections (Linux agent)"),
-        elements=[
-            (
-                "sections",
-                ListChoice(
-                    title=_("Disabled sections"),
-                    help=_(
+        title=Title("Disabled sections (Linux agent)"),
+        elements={
+            "sections": DictElement(
+                parameter_form=MultipleChoice(
+                    title=Title("Disabled sections"),
+                    help_text=Help(
                         "This option allows to skip specific sections of the Checkmk agent. "
                         "By default, all of the sections will be executed. "
                         "Selected sections will not be executed by the agent. "
@@ -83,18 +84,20 @@ def _valuespec_agent_config_agent_sections() -> Dictionary:
                         "of transferred data. However, it may result in the absence of the "
                         "associated Checkmk service or services."
                     ),
-                    choices=sorted(_skippable_linux_agent_sections().items(), key=lambda x: x[1]),
+                    elements=[
+                        MultipleChoiceElement(name=name, title=title)
+                        for name, title in _skippable_linux_agent_sections().items()
+                    ],
+                    show_toggle_all=True,
                 ),
             ),
-        ],
-        optional_keys=[],
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        name="agent_exclude_sections",
-        valuespec=_valuespec_agent_config_agent_sections,
-    )
+rule_spec_agent_exclude_sections = AgentConfig(
+    title=Title("Disabled sections (Linux agent)"),
+    name="agent_exclude_sections",
+    topic=Topic.LINUX,
+    parameter_form=_form_spec,
 )

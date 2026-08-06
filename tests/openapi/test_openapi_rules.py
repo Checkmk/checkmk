@@ -278,7 +278,9 @@ def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
-def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
+def test_create_rule_rejects_outdated_form_spec_value(clients: ClientRegistry) -> None:
+    # A form spec value in an outdated format is validated without migration
+    # (migrate_values=False) and therefore rejected instead of migrated silently (Werk 22104).
     ruleset = "diskstat_inventory"
     resp = clients.Rule.create(
         ruleset=ruleset,
@@ -289,6 +291,70 @@ def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(400)
+
+
+# A "Periodic service discovery" value using the ancient integer rediscovery mode (0). The
+# ruleset would migrate this to a full 'custom' settings dict. The REST API must not persist
+# such a migrated value silently (unlike the GUI, the client never sees the migration), so
+# it rejects the outdated format instead (Werk 22104).
+LEGACY_VALUE_RAW = """{
+    'check_interval': 120.0,
+    'severity_unmonitored': 1,
+    'severity_vanished': 0,
+    'severity_changed_service_labels': 0,
+    'severity_new_host_label': 1,
+    'inventory_rediscovery': {
+        'group_time': 900,
+        'excluded_time': [],
+        'activation': True,
+        'mode': 0,
+    },
+}"""
+
+
+def test_create_rule_rejects_outdated_legacy_value(clients: ClientRegistry) -> None:
+    # A legacy value that only passes validation after migration must be rejected on create,
+    # not persisted in migrated form (Werk 22104).
+    resp = clients.Rule.create(
+        ruleset="periodic_discovery",
+        folder="/",
+        properties={"description": "legacy mode", "disabled": False},
+        value_raw=LEGACY_VALUE_RAW,
+        conditions={},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+    ruleset = clients.Ruleset.get(ruleset_id="periodic_discovery")
+    assert ruleset.json["extensions"]["number_of_rules"] == 0
+
+
+def test_edit_rule_rejects_outdated_legacy_value(clients: ClientRegistry) -> None:
+    # Like test_create_rule_rejects_outdated_legacy_value, but for the edit (PUT) code path:
+    # editing a rule to a legacy value that only passes validation after migration must be
+    # rejected, and must leave the stored value untouched (Werk 22104).
+    created = clients.Rule.create(
+        ruleset="periodic_discovery",
+        folder="/",
+        properties={"description": "current value", "disabled": False},
+        value_raw=DEFAULT_VALUE_RAW,
+        conditions={},
+    )
+
+    resp = clients.Rule.edit(
+        rule_id=created.json["id"],
+        value_raw=LEGACY_VALUE_RAW,
+        properties={"description": "legacy mode", "disabled": False},
+        conditions={},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+    # The stored value must be unchanged: still the current-format value, not migrated.
+    rules_mk = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"
+    environ = load_mk_file(rules_mk, default={}, lock=False)
+    value = environ["periodic_discovery"][0]["value"]  # type: ignore[index]
+    assert "inventory_rediscovery" not in value
 
 
 def test_openapi_list_rules(

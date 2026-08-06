@@ -421,6 +421,7 @@ def test_flush_not_existing_host(execute: Execute) -> None:
 #   '----------------------------------------------------------------------'
 # TODO
 
+
 # .
 #   .--inventory-----------------------------------------------------------.
 #   |             _                      _                                 |
@@ -430,13 +431,17 @@ def test_flush_not_existing_host(execute: Execute) -> None:
 #   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
+def _assert_inventory_logs(stderr: str) -> None:
+    assert "Executing inventory plugins" not in stderr  # no debug message
+    assert "Create inventory or status data tree" in stderr
+    assert "May update inventory tree" in stderr
 
 
 def test_inventory_all_hosts(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0, on_failure(p)
-        assert "Executing inventory plugins" in p.stderr
+        _assert_inventory_logs(p.stderr)
         assert p.stdout == ""
 
 
@@ -444,7 +449,7 @@ def test_inventory_single_host(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0, on_failure(p)
-        assert "Executing inventory plugins" in p.stderr
+        _assert_inventory_logs(p.stderr)
         assert p.stdout == ""
 
 
@@ -452,7 +457,7 @@ def test_inventory_multiple_hosts(execute: Execute) -> None:
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host", "modes-test-host2"])
         assert p.returncode == 0, on_failure(p)
-        assert "Executing inventory plugins" in p.stderr
+        _assert_inventory_logs(p.stderr)
         assert p.stdout == ""
 
 

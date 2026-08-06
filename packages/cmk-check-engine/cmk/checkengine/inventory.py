@@ -313,7 +313,7 @@ def _collect_inventory_plugin_items(
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
-    logger.info("Executing inventory plugins")
+    logger.debug("Executing inventory plugins")
 
     class_mutex: dict[tuple[str, ...], str] = {}
     for plugin_name, inventory_plugin in inventory_plugins.items():

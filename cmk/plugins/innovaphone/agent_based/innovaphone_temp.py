@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import NewType
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -14,22 +16,28 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
+Celsius = NewType("Celsius", int)
 
-def discover_innovaphone_temp(section: StringTable) -> DiscoveryResult:
+
+def parse_innovaphone_temp(string_table: StringTable) -> Celsius | None:
+    match string_table:
+        case [[_, str(value)]] if value.removeprefix("-").isdigit():
+            return Celsius(int(value))
+        case _:
+            return None
+
+
+def discover_innovaphone_temp(section: Celsius) -> DiscoveryResult:
     yield Service(item="Ambient")
 
 
-def check_innovaphone_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+def check_innovaphone_temp(item: str, params: TempParamType, section: Celsius) -> CheckResult:
     yield from check_temperature(
-        int(section[0][1]),
+        section,
         params,
         unique_name=f"innovaphone_temp_{item}",
         value_store=get_value_store(),
     )
-
-
-def parse_innovaphone_temp(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_innovaphone_temp = AgentSection(

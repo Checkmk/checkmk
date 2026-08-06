@@ -8,21 +8,34 @@ import pytest
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.innovaphone.agent_based import innovaphone_temp as innovaphone_temp_module
 from cmk.plugins.innovaphone.agent_based.innovaphone_temp import (
+    Celsius,
     check_innovaphone_temp,
     discover_innovaphone_temp,
     parse_innovaphone_temp,
 )
 from cmk.plugins.lib.temperature import TempParamType
 
-_SECTION: StringTable = [["TEMP", "30"]]
+
+@pytest.mark.parametrize(
+    "string_table",
+    [
+        pytest.param([], id="empty payload"),
+        pytest.param([[]], id="empty nested payload"),
+        pytest.param([["", "not-a-number"]], id="not a number"),
+    ],
+)
+def test_parse_innovaphone_temp_empty_data(string_table: StringTable) -> None:
+    assert parse_innovaphone_temp(string_table) is None
 
 
-def test_parse_innovaphone_temp_keeps_string_table() -> None:
-    assert parse_innovaphone_temp(_SECTION) == _SECTION
+@pytest.mark.parametrize("temp", [-1, 0, 1])
+def test_parse_innovaphone_temp_success(temp: int) -> None:
+    assert parse_innovaphone_temp([["TEMP", str(temp)]]) == Celsius(temp)
 
 
 def test_discover_innovaphone_temp() -> None:
-    assert list(discover_innovaphone_temp(_SECTION)) == [Service(item="Ambient")]
+    section = Celsius(30)
+    assert list(discover_innovaphone_temp(section)) == [Service(item="Ambient")]
 
 
 @pytest.mark.parametrize(
@@ -30,7 +43,7 @@ def test_discover_innovaphone_temp() -> None:
     [
         pytest.param(
             {"levels": (45.0, 50.0)},
-            [["TEMP", "30"]],
+            Celsius(30),
             [
                 Metric("temp", 30.0, levels=(45.0, 50.0)),
                 Result(state=State.OK, summary="Temperature: 30 °C"),
@@ -43,7 +56,7 @@ def test_discover_innovaphone_temp() -> None:
         ),
         pytest.param(
             {"levels": (45.0, 50.0)},
-            [["TEMP", "47"]],
+            Celsius(47),
             [
                 Metric("temp", 47.0, levels=(45.0, 50.0)),
                 Result(
@@ -59,7 +72,7 @@ def test_discover_innovaphone_temp() -> None:
         ),
         pytest.param(
             {"levels": (45.0, 50.0)},
-            [["TEMP", "55"]],
+            Celsius(55),
             [
                 Metric("temp", 55.0, levels=(45.0, 50.0)),
                 Result(
@@ -77,7 +90,7 @@ def test_discover_innovaphone_temp() -> None:
 )
 def test_check_innovaphone_temp(
     params: TempParamType,
-    section: StringTable,
+    section: Celsius,
     expected: list[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

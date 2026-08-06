@@ -20,12 +20,20 @@ from typing import assert_never, Literal, NewType
 
 type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN"]
 
+type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
+
 
 class ServiceState(enum.IntEnum):
     OK = 0
     WARN = 1
     CRIT = 2
     UNKNOWN = 3
+
+
+class HostState(enum.IntEnum):
+    UP = 0
+    DOWN = 1
+    UNREACHABLE = 2
 
 
 @dataclasses.dataclass(frozen=True)
@@ -54,10 +62,26 @@ class Service:
 @dataclasses.dataclass(frozen=True)
 class ServiceOverview(Service):
     host_name: str
+    host_alias: str
+    host_state: HostState
+    host_acknowledged: bool
+    host_in_downtime: bool
     site_id: str
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
+
+    @property
+    def host_state_label(self) -> HostStateLabel:
+        match self.host_state:
+            case HostState.UP:
+                return "UP"
+            case HostState.DOWN:
+                return "DOWN"
+            case HostState.UNREACHABLE:
+                return "UNREACHABLE"
+            case _:
+                assert_never(self.host_state)
 
 
 class ServiceSortColumn(enum.StrEnum):

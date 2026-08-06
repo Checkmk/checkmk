@@ -7,7 +7,7 @@ from cmk.gui.openapi.framework.model._api_field import api_field
 from cmk.gui.openapi.framework.model._api_model import api_model
 
 from .._models import ServiceOverview
-from ._urls import service_view_link
+from ._urls import host_view_link, service_view_link
 
 
 @api_model
@@ -46,6 +46,28 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 icon_name="notif_disabled",
                 link=service_view_link("service", service),
                 title=_("Notifications are disabled for this service"),
+            )
+        )
+    return modes
+
+
+def build_host_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
+    """Modes of the host the service runs on, shown next to the host in the overview."""
+    modes: list[ServiceModeInfo] = []
+    if service.host_in_downtime:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="downtime",
+                link=host_view_link("downtimes_of_host", service),
+                title=_("Host is in scheduled downtime"),
+            )
+        )
+    if service.host_acknowledged:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="ack",
+                link=host_view_link("host", service),
+                title=_("Host problem acknowledged"),
             )
         )
     return modes

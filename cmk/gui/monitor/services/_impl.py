@@ -21,6 +21,7 @@ from cmk.livestatus_client.tables import Hosts, Services
 
 from ._exceptions import ServiceNotFoundError
 from ._models import (
+    HostState,
     Service,
     ServiceFilter,
     ServiceOverview,
@@ -95,6 +96,10 @@ class LiveStatusHostServicesRepository:
                 Services.acknowledged,
                 Services.scheduled_downtime_depth,
                 Services.notifications_enabled,
+                Services.host_alias,
+                Services.host_state,
+                Services.host_acknowledged,
+                Services.host_scheduled_downtime_depth,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -116,6 +121,10 @@ class LiveStatusHostServicesRepository:
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
+            host_alias=row["host_alias"],
+            host_state=HostState(row["host_state"]),
+            host_acknowledged=bool(row["host_acknowledged"]),
+            host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
         )
 
     def count_total(self, hostname: str) -> int:

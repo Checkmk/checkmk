@@ -639,6 +639,10 @@ class TestMonitorServiceOverview:
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
+                    "host_alias": _HOST_ALIAS,
+                    "host_state": 0,
+                    "host_acknowledged": 0,
+                    "host_scheduled_downtime_depth": 0,
                 }
             ],
         )
@@ -663,6 +667,14 @@ class TestMonitorServiceOverview:
         assert resp.json["site_id"] == _SITE_ID
         assert resp.json["state"] == "WARN"
         assert resp.json["modes"] == []
+        assert resp.json["host_alias"] == _HOST_ALIAS
+        assert resp.json["host_state"] == "UP"
+        assert resp.json["legacy_host_status_link"] == (
+            f"view.py?view_name=hoststatus&site={_SITE_ID}&host={_HOSTNAME}"
+        )
+        assert resp.json["legacy_service_status_link"] == (
+            f"view.py?view_name=service&site={_SITE_ID}&host={_HOSTNAME}&service=CPU+load"
+        )
 
     @pytest.mark.parametrize(
         "columns, expected_icons",
@@ -706,6 +718,10 @@ class TestMonitorServiceOverview:
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
+                    "host_alias": _HOST_ALIAS,
+                    "host_state": 0,
+                    "host_acknowledged": 0,
+                    "host_scheduled_downtime_depth": 0,
                     **columns,
                 }
             ],
@@ -782,9 +798,11 @@ class TestMonitorServiceOverview:
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"
+_HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state plugin_output last_check last_state_change acknowledged "
-    "scheduled_downtime_depth notifications_enabled"
+    "scheduled_downtime_depth notifications_enabled host_alias host_state host_acknowledged "
+    "host_scheduled_downtime_depth"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"

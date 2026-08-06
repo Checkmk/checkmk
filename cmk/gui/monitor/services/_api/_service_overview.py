@@ -8,6 +8,7 @@ from typing import Annotated, Self
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -26,10 +27,11 @@ from cmk.gui.utils import permission_verification as permissions
 
 from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusHostServicesRepository
-from .._models import ServiceOverview, ServiceStateLabel
+from .._models import HostStateLabel, ServiceOverview, ServiceStateLabel
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
-from ._modes import build_service_modes, ServiceModeInfo
+from ._modes import build_host_modes, build_service_modes, ServiceModeInfo
+from ._urls import host_view_link, service_parameters_link, service_view_link
 
 
 @api_model
@@ -48,15 +50,47 @@ class ServiceOverviewResponse:
         ),
         example=[],
     )
+    host_alias: str = api_field(description="Alias of the host", example="Web Server")
+    host_state: HostStateLabel = api_field(description="State of the host", example="UP")
+    host_modes: list[ServiceModeInfo] = api_field(
+        description=(
+            "Active modes of the host the service runs on, rendered as linked icons next to its "
+            "state. Empty when the host is in none of these modes."
+        ),
+        example=[],
+    )
+    legacy_host_status_link: str = api_field(
+        description="URL to the legacy host status view",
+        example="view.py?view_name=hoststatus&site=local&host=web-server-01",
+    )
+    legacy_service_status_link: str = api_field(
+        description="URL to the legacy service detail view",
+        example="view.py?view_name=service&site=local&host=web-server-01&service=CPU+utilization",
+    )
+    legacy_service_parameters_link: str | None = api_field(
+        description=(
+            "URL to the Setup page listing the parameters of this service. Null for users who may "
+            "not see rulesets."
+        ),
+        example="wato.py?mode=object_parameters&host=web-server-01&service=CPU+utilization",
+    )
 
     @classmethod
-    def from_domain(cls, service: ServiceOverview) -> Self:
+    def from_domain(cls, service: ServiceOverview, *, may_see_parameters: bool) -> Self:
         return cls(
             name=service.name,
             host_name=service.host_name,
             site_id=service.site_id,
             state=service.state_label,
             modes=build_service_modes(service),
+            host_alias=service.host_alias,
+            host_state=service.host_state_label,
+            host_modes=build_host_modes(service),
+            legacy_host_status_link=host_view_link("hoststatus", service),
+            legacy_service_status_link=service_view_link("service", service),
+            legacy_service_parameters_link=(
+                service_parameters_link(service) if may_see_parameters else None
+            ),
         )
 
 
@@ -73,6 +107,7 @@ def get_service_overview(
         str,
         QueryParam(description="The service name", example="CPU utilization"),
     ],
+    api_context: ApiContext,
 ) -> ServiceOverviewResponse:
     """Show the overview for a single service of a host."""
     with sites.only_sites(site_id):
@@ -83,6 +118,7 @@ def get_service_overview(
             hostname=hostname,
             service_name=service_name,
             site_id=site_id,
+            may_see_parameters=api_context.user.may("wato.rulesets"),
         )
 
 
@@ -92,6 +128,7 @@ def _handle_get_service_overview(
     hostname: str,
     service_name: str,
     site_id: str,
+    may_see_parameters: bool = False,
 ) -> ServiceOverviewResponse:
     try:
         service = host_services_repo.get_overview(
@@ -107,7 +144,7 @@ def _handle_get_service_overview(
             ),
         ) from None
 
-    return ServiceOverviewResponse.from_domain(service)
+    return ServiceOverviewResponse.from_domain(service, may_see_parameters=may_see_parameters)
 
 
 ENDPOINT_GET_SERVICE_OVERVIEW = VersionedEndpoint(
@@ -125,6 +162,7 @@ ENDPOINT_GET_SERVICE_OVERVIEW = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("general.see_all"),
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                    permissions.OkayToIgnorePerm("wato.rulesets"),
                 ]
             )
         )

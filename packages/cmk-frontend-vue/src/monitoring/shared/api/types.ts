@@ -23,6 +23,8 @@ export type ServiceOverview = components['schemas']['ServiceOverviewResponse']
 
 export type HostMode = components['schemas']['ModeInfo']
 
+export type ServiceMode = components['schemas']['ServiceModeInfo']
+
 export type ActionMenuItem = components['schemas']['ActionMenuItem']
 
 export interface HostRef {

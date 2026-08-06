@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 
-import type { HostMode } from '@/monitoring/shared/api/types'
+import type { HostMode, ServiceMode } from '@/monitoring/shared/api/types'
 import ModeIcons from '@/monitoring/shared/components/ModeIcons.vue'
 import ActionButtons, {
   type CellAction
@@ -15,7 +15,7 @@ import ActionButtons, {
 withDefaults(
   defineProps<{
     title: string
-    modes?: HostMode[]
+    modes?: (HostMode | ServiceMode)[]
     actions?: CellAction[]
     loadActionMenu?: (() => Promise<CellAction[]>) | undefined
   }>(),

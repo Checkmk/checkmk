@@ -6,13 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, markRaw } from 'vue'
+import { computed, markRaw, ref, watch } from 'vue'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
-import type { HostRef, HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
 
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
 import ServiceOverviewTab from './slide-in/ServiceOverviewTab.vue'
+import ServiceSlideInHeader from './slide-in/ServiceSlideInHeader.vue'
 
 const props = defineProps<{
   /** The service to detail. `null` keeps the slide-in closed. */
@@ -30,6 +31,27 @@ const servicesApi = new HostServicesApi()
 
 const open = computed(() => props.service !== null)
 
+// The header outlives the tab body, so the loaded overview is kept here rather than only being
+// handed to the tab component.
+const overview = ref<ServiceOverview | null>(null)
+
+watch(
+  () => props.service,
+  () => {
+    overview.value = null
+  }
+)
+
+async function loadOverview(description: string): Promise<ServiceOverview> {
+  const loaded = await servicesApi.fetchServiceOverview({ host: props.host, description })
+  // A request started for a service the user has since navigated away from must not win the
+  // race against the one for the service now on screen.
+  if (props.service?.name === description) {
+    overview.value = loaded
+  }
+  return loaded
+}
+
 const tabs = computed<SlideInTab[]>(() => {
   const service = props.service
   if (!service) {
@@ -41,7 +63,7 @@ const tabs = computed<SlideInTab[]>(() => {
       title: _t('Overview'),
       component: markRaw(ServiceOverviewTab),
       skeleton: markRaw(ServiceOverviewSkeleton),
-      load: () => servicesApi.fetchServiceOverview({ host: props.host, description: service.name })
+      load: () => loadOverview(service.name)
     }
   ]
 })
@@ -58,5 +80,9 @@ const tabs = computed<SlideInTab[]>(() => {
     :tabs="tabs"
     :header="{ title: _t('Service details'), closeButton: true }"
     @close="emit('close')"
-  />
+  >
+    <template #above-tabs>
+      <ServiceSlideInHeader v-if="service" :service="service" :modes="overview?.modes ?? []" />
+    </template>
+  </CmkSlideInTabbed>
 </template>

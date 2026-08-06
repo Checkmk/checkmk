@@ -106,6 +106,63 @@ describe('ServiceSlideIn', () => {
     })
   })
 
+  it('shows the mode icons in the header once the overview has loaded', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({
+        modes: [
+          {
+            icon_name: 'ack',
+            link: 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
+            title: 'Problem acknowledged'
+          }
+        ]
+      }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+
+    expect(await screen.findByRole('link', { name: 'Problem acknowledged' })).toBeInTheDocument()
+  })
+
+  it('lets a stale overview lose the race against the service now on screen', async () => {
+    let resolveStale: () => void = () => {}
+    const stale = new Promise((resolve) => {
+      resolveStale = () =>
+        resolve({
+          data: makeOverview({
+            modes: [
+              {
+                icon_name: 'ack',
+                link: 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
+                title: 'Problem acknowledged'
+              }
+            ]
+          }),
+          error: undefined,
+          response: new Response()
+        })
+    })
+    vi.spyOn(client, 'GET')
+      .mockReturnValueOnce(stale as never)
+      .mockResolvedValue({
+        data: makeOverview({ name: 'Memory' }),
+        error: undefined,
+        response: new Response()
+      } as never)
+
+    const { rerender } = render(ServiceSlideIn, {
+      props: { service: makeService(), host: HOST }
+    })
+    await rerender({ service: makeService({ name: 'Memory' }), host: HOST })
+
+    resolveStale()
+    // Let every pending microtask run, so the stale response really does get its chance to win.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(screen.queryByRole('link', { name: 'Problem acknowledged' })).not.toBeInTheDocument()
+  })
+
   it('emits close when the close button is used', async () => {
     const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
     await screen.findByText('Service details')

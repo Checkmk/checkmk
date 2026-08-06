@@ -8,10 +8,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 
-import type { HostMode } from '@/monitoring/shared/api/types'
+import type { HostMode, ServiceMode } from '@/monitoring/shared/api/types'
 
 defineProps<{
-  modes: HostMode[]
+  modes: (HostMode | ServiceMode)[]
 }>()
 </script>
 

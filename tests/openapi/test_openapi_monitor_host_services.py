@@ -644,6 +644,10 @@ class TestMonitorServiceOverview:
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
                     "contact_groups": ["all"],
+                    "long_plugin_output": "15 min load: 0.01 (per core: 0.01)",
+                    "current_attempt": 2,
+                    "max_check_attempts": 4,
+                    "next_check": time.time() + 60,
                 }
             ],
         )
@@ -671,6 +675,13 @@ class TestMonitorServiceOverview:
         assert resp.json["host_alias"] == _HOST_ALIAS
         assert resp.json["host_state"] == "UP"
         assert resp.json["contact_groups"] == ["all"]
+        assert resp.json["summary"] == "WARN - load average: 3.10, 2.05, 1.01"
+        assert resp.json["long_output"] == "15 min load: 0.01 (per core: 0.01)"
+        assert resp.json["last_check"] == "2026-07-13T11:39:00Z"
+        assert resp.json["last_state_change"] == "2026-07-13T11:39:00Z"
+        assert resp.json["current_attempt"] == 2
+        assert resp.json["max_check_attempts"] == 4
+        assert resp.json["next_check"] == "2026-07-13T11:40:00Z"
         assert resp.json["legacy_host_status_link"] == (
             f"view.py?view_name=hoststatus&site={_SITE_ID}&host={_HOSTNAME}"
         )
@@ -725,6 +736,10 @@ class TestMonitorServiceOverview:
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
                     "contact_groups": ["all"],
+                    "long_plugin_output": "15 min load: 0.01 (per core: 0.01)",
+                    "current_attempt": 2,
+                    "max_check_attempts": 4,
+                    "next_check": time.time() + 60,
                     **columns,
                 }
             ],
@@ -746,6 +761,55 @@ class TestMonitorServiceOverview:
             )
 
         assert [mode["icon_name"] for mode in resp.json["modes"]] == expected_icons
+
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_passive_service_has_no_next_check(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": _SERVICE_DESCRIPTION,
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "last_check": time.time(),
+                    "last_state_change": time.time(),
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "host_alias": _HOST_ALIAS,
+                    "host_state": 0,
+                    "host_acknowledged": 0,
+                    "host_scheduled_downtime_depth": 0,
+                    "contact_groups": ["all"],
+                    "long_plugin_output": "",
+                    "current_attempt": 1,
+                    "max_check_attempts": 1,
+                    "next_check": 0,
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+
+        assert resp.json["next_check"] is None
 
     def test_unknown_service_returns_404(
         self,
@@ -805,7 +869,8 @@ _HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state plugin_output last_check last_state_change acknowledged "
     "scheduled_downtime_depth notifications_enabled host_alias host_state host_acknowledged "
-    "host_scheduled_downtime_depth contact_groups"
+    "host_scheduled_downtime_depth contact_groups long_plugin_output current_attempt "
+    "max_check_attempts next_check"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"

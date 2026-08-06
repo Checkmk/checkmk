@@ -71,6 +71,11 @@ class ServiceOverview(Service):
     in_downtime: bool
     notifications_enabled: bool
     contact_groups: list[str]
+    long_output: str
+    current_attempt: int
+    max_check_attempts: int
+    # Passive services are never scheduled, so livestatus reports no next check for them.
+    next_check: dt.datetime | None
 
     @property
     def host_state_label(self) -> HostStateLabel:

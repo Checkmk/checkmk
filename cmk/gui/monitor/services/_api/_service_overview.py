@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime as dt
 from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
@@ -78,6 +79,36 @@ class ServiceOverviewResponse:
         description="Contact groups responsible for this service",
         example=["all"],
     )
+    summary: str = api_field(
+        description="Service summary, i.e. the first line of the check plugin output",
+        example="OK - load average: 0.10, 0.05, 0.01",
+    )
+    long_output: str = api_field(
+        description=(
+            "The remaining check plugin output below the summary. Empty when the plugin produces "
+            "no details. Can span many lines, so the frontend renders it collapsed."
+        ),
+        example="15 min load: 0.01 (per core: 0.01)",
+    )
+    last_check: dt.datetime = api_field(
+        description="Timestamp of the service's last check",
+        example="2026-07-13T11:38:30Z",
+    )
+    last_state_change: dt.datetime = api_field(
+        description="Timestamp of the service's last state change",
+        example="2026-07-13T11:39:00Z",
+    )
+    current_attempt: int = api_field(description="The current check attempt", example=2)
+    max_check_attempts: int = api_field(
+        description="Number of attempts after which a problem turns hard", example=4
+    )
+    next_check: dt.datetime | None = api_field(
+        description=(
+            "Timestamp of the next scheduled check. Null for passive services, which are never "
+            "scheduled."
+        ),
+        example="2026-07-13T11:40:00Z",
+    )
 
     @classmethod
     def from_domain(cls, service: ServiceOverview, *, may_see_parameters: bool) -> Self:
@@ -96,6 +127,13 @@ class ServiceOverviewResponse:
                 service_parameters_link(service) if may_see_parameters else None
             ),
             contact_groups=service.contact_groups,
+            summary=service.summary,
+            long_output=service.long_output,
+            last_check=service.last_check,
+            last_state_change=service.last_state_change,
+            current_attempt=service.current_attempt,
+            max_check_attempts=service.max_check_attempts,
+            next_check=service.next_check,
         )
 
 

@@ -101,6 +101,10 @@ class LiveStatusHostServicesRepository:
                 Services.host_acknowledged,
                 Services.host_scheduled_downtime_depth,
                 Services.contact_groups,
+                Services.long_plugin_output,
+                Services.current_attempt,
+                Services.max_check_attempts,
+                Services.next_check,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -127,6 +131,14 @@ class LiveStatusHostServicesRepository:
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
             contact_groups=list(row["contact_groups"]),
+            long_output=row["long_plugin_output"],
+            current_attempt=row["current_attempt"],
+            max_check_attempts=row["max_check_attempts"],
+            next_check=(
+                dt.datetime.fromtimestamp(row["next_check"], tz=dt.UTC)
+                if row["next_check"]
+                else None
+            ),
         )
 
     def count_total(self, hostname: str) -> int:

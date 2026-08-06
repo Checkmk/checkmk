@@ -13,8 +13,8 @@ import contextlib
 import time
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -26,6 +26,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.checkpoint.lib import DETECT
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 Section = Mapping[str, int]
 
@@ -51,14 +52,14 @@ def discover_checkpoint_packets(section: Section) -> DiscoveryResult:
 
 
 def check_checkpoint_packets(
-    params: Mapping[str, tuple[float, float]], section: Section
+    params: Mapping[str, SimpleLevelsConfigModel[int]], section: Section
 ) -> CheckResult:
     this_time = time.time()
     for name, value in section.items():
         key = name.lower()
         yield from check_levels(
             get_rate(get_value_store(), key, this_time, value, raise_overflow=True),
-            levels_upper=params.get(key),
+            levels_upper=params[key],
             metric_name=key,
             render_func=lambda x: f"{x:.1f} pkts/s",
             label=name,
@@ -89,11 +90,11 @@ check_plugin_checkpoint_packets = CheckPlugin(
     check_function=check_checkpoint_packets,
     check_ruleset_name="checkpoint_packets",
     check_default_parameters={
-        "accepted": (100000, 200000),
-        "rejected": (100000, 200000),
-        "dropped": (100000, 200000),
-        "logged": (100000, 200000),
-        "espencrypted": (100000, 200000),
-        "espdecrypted": (100000, 200000),
+        "accepted": ("fixed", (100000, 200000)),
+        "rejected": ("fixed", (100000, 200000)),
+        "dropped": ("fixed", (100000, 200000)),
+        "logged": ("fixed", (100000, 200000)),
+        "espencrypted": ("fixed", (100000, 200000)),
+        "espdecrypted": ("fixed", (100000, 200000)),
     },
 )

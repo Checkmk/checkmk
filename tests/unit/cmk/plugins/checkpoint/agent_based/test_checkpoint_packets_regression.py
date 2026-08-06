@@ -19,6 +19,7 @@ from cmk.plugins.checkpoint.agent_based.checkpoint_packets import (
     discover_checkpoint_packets,
     parse_checkpoint_packets,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
 @pytest.fixture(name="string_table")
@@ -76,13 +77,13 @@ def test_discover_checkpoint_packets_empty_data() -> None:
 
 @time_machine.travel("2019-10-28 08:51:18")
 def test_check_checkpoint_packets_initial_run(parsed: Mapping[str, int]) -> None:
-    params = {
-        "accepted": (100000, 200000),
-        "rejected": (100000, 200000),
-        "dropped": (100000, 200000),
-        "logged": (100000, 200000),
-        "espencrypted": (100000, 200000),
-        "espdecrypted": (100000, 200000),
+    params: Mapping[str, SimpleLevelsConfigModel[int]] = {
+        "accepted": ("fixed", (100000, 200000)),
+        "rejected": ("fixed", (100000, 200000)),
+        "dropped": ("fixed", (100000, 200000)),
+        "logged": ("fixed", (100000, 200000)),
+        "espencrypted": ("fixed", (100000, 200000)),
+        "espdecrypted": ("fixed", (100000, 200000)),
     }
 
     with pytest.raises(AssertionError, match="no value store manager is active"):

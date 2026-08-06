@@ -12,6 +12,7 @@ import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.checkpoint.agent_based import checkpoint_packets
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 # Anchored in UTC so the rates do not depend on the timezone the tests run in.
 _NOW = datetime.datetime(2019, 10, 28, 8, 52, 18, tzinfo=ZoneInfo("UTC"))
@@ -19,7 +20,9 @@ _T0 = _NOW.timestamp() - 60.0
 
 _COUNTER_KEYS = ("accepted", "rejected", "dropped", "logged", "espencrypted", "espdecrypted")
 
-PARAMS: Mapping[str, tuple[float, float]] = dict.fromkeys(_COUNTER_KEYS, (100000, 200000))
+PARAMS: Mapping[str, SimpleLevelsConfigModel[int]] = dict.fromkeys(
+    _COUNTER_KEYS, ("fixed", (100000, 200000))
+)
 
 # 600 more packets over 60 seconds is 10/s; the logged counter only advances by 60, so 1/s.
 _SECOND_POLL = [[["720", "780", "810", "64"]], [["600", "660"]]]
@@ -62,35 +65,12 @@ def test_check_reports_a_rate_per_counter(warm_value_store: None) -> None:
 
 
 @time_machine.travel(_NOW, tick=False)
-def test_check_without_configured_levels(warm_value_store: None) -> None:
-    """Every key is optional, so a rule that sets none still reports the rates."""
-    parsed = checkpoint_packets.parse_checkpoint_packets(_SECOND_POLL)
-
-    assert list(checkpoint_packets.check_checkpoint_packets({}, parsed)) == [
-        Result(state=State.OK, summary="Accepted: 10.0 pkts/s"),
-        Metric("accepted", 10.0),
-        Result(state=State.OK, summary="Rejected: 10.0 pkts/s"),
-        Metric("rejected", 10.0),
-        Result(state=State.OK, summary="Dropped: 10.0 pkts/s"),
-        Metric("dropped", 10.0),
-        Result(state=State.OK, summary="Logged: 1.0 pkts/s"),
-        Metric("logged", 1.0),
-        Result(state=State.OK, summary="EspEncrypted: 10.0 pkts/s"),
-        Metric("espencrypted", 10.0),
-        Result(state=State.OK, summary="EspDecrypted: 10.0 pkts/s"),
-        Metric("espdecrypted", 10.0),
-    ]
-
-
-@time_machine.travel(_NOW, tick=False)
 def test_check_crosses_the_configured_levels(warm_value_store: None) -> None:
     parsed = checkpoint_packets.parse_checkpoint_packets(
         [[["9000120", "180", "210", "4"]], [["0", "60"]]]
     )
 
-    results = list(
-        checkpoint_packets.check_checkpoint_packets({"accepted": (100000, 200000)}, parsed)
-    )
+    results = list(checkpoint_packets.check_checkpoint_packets(PARAMS, parsed))
 
     assert results[0] == Result(
         state=State.WARN,

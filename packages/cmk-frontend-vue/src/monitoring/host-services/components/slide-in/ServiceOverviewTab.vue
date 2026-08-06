@@ -9,6 +9,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
+import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 
 defineProps<{ data: ServiceOverview }>()
@@ -31,6 +32,15 @@ const { _t } = usei18n()
       </dd>
     </OverviewDetailList>
 
+    <hr class="monitoring-service-overview-tab__divider" />
+
+    <OverviewDetailList align="start">
+      <dt>{{ _t('Contact groups') }}</dt>
+      <dd>
+        <OverviewChips :items="data.contact_groups" />
+      </dd>
+    </OverviewDetailList>
+
     <div class="monitoring-service-overview-tab__links">
       <CmkLink :href="data.legacy_host_status_link" target="_top">
         {{ _t('Show host details') }}
@@ -47,6 +57,14 @@ const { _t } = usei18n()
   display: flex;
   flex-direction: column;
   gap: var(--spacing-double);
+}
+
+.monitoring-service-overview-tab__divider {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--ux-theme-4);
 }
 
 .monitoring-service-overview-tab__links {

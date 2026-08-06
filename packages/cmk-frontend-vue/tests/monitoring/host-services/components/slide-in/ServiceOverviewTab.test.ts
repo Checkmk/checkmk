@@ -47,6 +47,15 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByText('UP')).toBeInTheDocument()
   })
 
+  it('shows the contact groups responsible for the service', () => {
+    render(ServiceOverviewTab, {
+      props: { data: makeOverview({ contact_groups: ['linux-admins', 'on-call'] }) }
+    })
+
+    expect(screen.getByText('linux-admins')).toBeInTheDocument()
+    expect(screen.getByText('on-call')).toBeInTheDocument()
+  })
+
   it('links to the host details', () => {
     render(ServiceOverviewTab, { props: { data: makeOverview() } })
 

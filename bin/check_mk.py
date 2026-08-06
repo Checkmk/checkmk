@@ -17,7 +17,7 @@ import os
 import sys
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
-from typing import Self
+from typing import override, Self
 
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user.
@@ -61,6 +61,7 @@ from cmk.trace.export import (
 
 class CrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
+    @override
     def type(cls) -> str:
         return "base"
 

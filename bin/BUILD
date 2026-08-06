@@ -107,7 +107,16 @@ py_library(
     name = "check_mk_py",
     srcs = ["check_mk.py"],
     imports = ["."],
-    tags = ["no-mypy"],
+    deps = [
+        "//cmk/base:app",
+        "//cmk/base/modes",
+        "//cmk/base/modes:modes-registry",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-crash:crash",
+        "//packages/cmk-trace",
+    ],
 )
 
 py_library(

@@ -5,6 +5,7 @@ py_library(
     srcs = ["modes.py"],
     imports = ["../../.."],
     visibility = [
+        "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
@@ -26,6 +27,7 @@ py_library(
     ],
     imports = ["../../.."],
     visibility = [
+        "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
     ],

@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
-import typing
 from typing import override
 
 from marshmallow import ValidationError
@@ -22,7 +20,7 @@ class GlobalSettingsOneOfSchema(OneOfSchema):
     type_field = "type"
 
     @override
-    def get_obj_type(self, obj: dict[str, typing.Any]) -> str:
+    def get_obj_type(self, obj: object) -> str:
         if isinstance(obj, dict):
             if self.type_field not in obj:
                 raise ValidationError(f"Object must have a {repr(self.type_field)} field")

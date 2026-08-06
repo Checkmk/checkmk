@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, Sequence
@@ -27,7 +26,7 @@ from cmk.gui.token_auth import TokenType
 from cmk.gui.utils import permission_verification as permissions
 from cmk.licensing.basics.options import OptionName
 
-type HandlerFunction = Callable[..., TypedResponse[object | None]]
+type HandlerFunction = Callable[..., TypedResponse[object | None]]  # type: ignore[explicit-any]
 
 
 @dataclass(slots=True, frozen=True)

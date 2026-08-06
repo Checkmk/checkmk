@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Sequence
-from typing import Any, Literal, NewType, NotRequired, TypedDict
+from typing import Literal, NewType, NotRequired, TypedDict
 
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -95,7 +93,7 @@ class MetricTimeRangeParameters(TypedDict):
 
 
 type MetricTimeRange = Literal["current"] | tuple[Literal["range"], MetricTimeRangeParameters]
-type MetricDisplayRangeFixed = tuple[Literal["fixed"], Any]
+type MetricDisplayRangeFixed = tuple[Literal["fixed"], tuple[str, tuple[float, float]]]
 type MetricDisplayRangeWithAutomatic = MetricDisplayRangeFixed | Literal["automatic"]
 type StatusDisplay = None | tuple[Literal["background"], Literal["all", "not_ok"]]
 type StatusDisplayWithText = StatusDisplay | tuple[Literal["text"], Literal["all", "not_ok"]]

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Build links and paths to registered versioned endpoints.
 
 These helpers locate an endpoint by its (family, link_relation) pair and produce
@@ -47,7 +45,7 @@ class _HandlerInfo:
 
 
 @lru_cache(maxsize=64)
-def _inspect_handler(handler: Callable[..., object]) -> _HandlerInfo:
+def _inspect_handler(handler: Callable[..., object]) -> _HandlerInfo:  # type: ignore[explicit-any]
     """Extract parameter classification and body presence from handler annotations."""
     sig = inspect.signature(handler, eval_str=True)
     annotated = SignatureParametersProcessor.extract_annotated_parameters(sig)

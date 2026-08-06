@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any, override
+from typing import override
 
 from cmk import fields
 from cmk.ccc import version
@@ -23,17 +21,19 @@ class _AgentConnectionField(fields.String):
         "feature_not_supported": "Agent connection field not supported in this edition.",
     }
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, *, description: str, **kwargs: object) -> None:
         self._supported_editions = {
             version.Edition.ULTIMATEMT,
             version.Edition.ULTIMATE,
             version.Edition.CLOUD,
         }
-        kwargs["description"] = edition_field_description(
-            description=kwargs["description"],
-            supported_editions=self._supported_editions,
+        super().__init__(
+            description=edition_field_description(
+                description=description,
+                supported_editions=self._supported_editions,
+            ),
+            **kwargs,
         )
-        super().__init__(**kwargs)
 
     @override
     def _validate(self, value: str) -> None:

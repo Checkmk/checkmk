@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 import os
 from collections.abc import Collection, Mapping
-from typing import Any, override
+from typing import override
 
 import cmk.utils.paths
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
@@ -109,17 +108,17 @@ class ModeIcons(WatoMode):
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars("_upload_icon")
             vs_upload.validate_value(icon_info, "_upload_icon")
-            self._upload_icon(icon_info)
+            self._upload_icon(icon_info["icon"], icon_info["category"])
 
         return redirect(self.mode_url())
 
-    def _upload_icon(self, icon_info: dict[str, Any]) -> None:
+    def _upload_icon(self, icon: UploadedFile, category: str) -> None:
         dest_dir = cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"
         dest_dir.mkdir(mode=0o770, exist_ok=True, parents=True)
         try:
-            image = CMKImage(icon_info["icon"][2], ImageType.PNG)
-            image.add_metadata("Comment", icon_info["category"])
-            file_name = os.path.basename(icon_info["icon"][0])
+            image = CMKImage(icon[2], ImageType.PNG)
+            image.add_metadata("Comment", category)
+            file_name = os.path.basename(icon[0])
             image.save(dest_dir / file_name, ImageType.PNG)
         except OSError as e:
             # Might happen with interlaced PNG files and PIL version < 1.1.7

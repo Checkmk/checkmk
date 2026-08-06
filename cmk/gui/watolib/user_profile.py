@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import ast
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -12,7 +10,7 @@ from datetime import datetime
 from logging import Logger
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
-from typing import Any, cast, Literal, NamedTuple, override
+from typing import cast, Literal, NamedTuple, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
@@ -53,7 +51,7 @@ from cmk.utils.automation_config import RemoteAutomationConfig
 # Callback for dashboard migration — injected at startup from
 # cmk.gui.common_registration to avoid a circular dependency on
 # cmk.gui.dashboard.store.
-migrate_dashboard_config: Callable[..., Any] | None = None
+migrate_dashboard_config: Callable[..., object] | None = None  # type: ignore[explicit-any]
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the
@@ -253,7 +251,7 @@ def handle_ldap_sync_finished(
 def push_user_profiles_to_site_transitional_wrapper(
     automation_config: RemoteAutomationConfig,
     user_profiles: Mapping[UserId, UserSpec],
-    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None,
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Mapping[str, object]]] | None,
     *,
     debug: bool,
 ) -> Literal[True] | str:
@@ -263,7 +261,7 @@ def push_user_profiles_to_site_transitional_wrapper(
 def _push_user_profiles_to_site(
     automation_config: RemoteAutomationConfig,
     user_profiles: Mapping[UserId, UserSpec],
-    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None,
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Mapping[str, object]]] | None,
     debug: bool,
 ) -> Literal[True]:
     def _serialize(user_profiles: Mapping[UserId, UserSpec]) -> Mapping[UserId, UserSpec]:
@@ -285,7 +283,7 @@ def _push_user_profiles_to_site(
 
 class PushUserProfilesRequest(NamedTuple):
     user_profiles: Mapping[UserId, UserSpec]
-    user_visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None
+    user_visuals: Mapping[UserId, Mapping[VisualTypeName, Mapping[str, object]]] | None
     custom_user_attributes: Sequence[CustomUserAttrSpec]
     user_connections: Sequence[UserConnectionConfig]
     pprint_value: bool

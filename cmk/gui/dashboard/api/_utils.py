@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping
 from concurrent.futures.thread import ThreadPoolExecutor
 from http import HTTPStatus
-from typing import Any, Literal
+from typing import Literal
 
 import cmk.gui.utils.permission_verification as permissions
 from cmk.ccc.site import omd_site
@@ -344,7 +342,7 @@ def sync_user_to_remotes(
         return
 
     dashboards = load_raw_visuals_of_a_user("dashboards", user_id)
-    visuals: Mapping[UserId, Mapping[VisualTypeName, Mapping[str, Any]]] = {
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Mapping[str, object]]] = {
         user_id: {"dashboards": dashboards}
     }
 

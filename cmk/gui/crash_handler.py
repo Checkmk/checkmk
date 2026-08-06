@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, NotRequired, override, Self, TypedDict
+from typing import NotRequired, override, Self, TypedDict
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
@@ -33,7 +32,7 @@ from cmk.gui.utils.urls import makeuri, requested_file_name
 class DashletDetails(TypedDict):
     dashlet_id: NotRequired[int]
     dashlet_type: NotRequired[str]
-    dashlet_spec: NotRequired[dict[str, Any]]
+    dashlet_spec: NotRequired[Mapping[str, object]]
 
 
 class RequestDetails(TypedDict):

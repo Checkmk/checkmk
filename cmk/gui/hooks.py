@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -13,7 +12,7 @@ import threading
 import traceback
 import typing
 from collections.abc import Callable
-from typing import Any, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
@@ -74,7 +73,7 @@ def registered(name: str) -> bool:
     return hooks.get(name, []) != []
 
 
-def call(name: str, *args: Any) -> None:
+def call(name: str, *args: object) -> None:
     if not (registered_hooks := hooks.get(name, [])):
         return
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -12,7 +11,7 @@
 
 import abc
 import copy
-from typing import Any, override
+from typing import override
 
 from cmk.bi.actions import (
     BICallARuleAction,
@@ -790,10 +789,6 @@ class BIConfigStateOfRemainingServicesAction(BIStateOfRemainingServicesAction, A
 
 
 def get_aggregation_function_choices() -> Transform:
-    choices: list[Any] = []
-    for aggr_func_id, bi_aggr_func in bi_config_aggregation_function_registry.items():
-        choices.append((aggr_func_id, bi_aggr_func.title(), bi_aggr_func.valuespec()))
-
     return Transform(
         valuespec=CascadingDropdown(
             title=_("Aggregation function"),
@@ -802,7 +797,10 @@ def get_aggregation_function_choices() -> Transform:
                 "is constructed from the states of the child nodes."
             ),
             orientation="horizontal",
-            choices=choices,
+            choices=[
+                (aggr_func_id, bi_aggr_func.title(), bi_aggr_func.valuespec())
+                for aggr_func_id, bi_aggr_func in bi_config_aggregation_function_registry.items()
+            ],
         ),
         to_valuespec=convert_to_cascading_vs_choice,
         from_valuespec=convert_from_cascading_vs_choice,

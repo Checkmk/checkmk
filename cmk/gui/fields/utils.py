@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
 
 import typing
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.ccc.version import Edition
 from cmk.gui.fields.base import BaseSchema as BaseSchema
@@ -26,8 +24,9 @@ from cmk.livestatus_client.expressions import (
 from cmk.livestatus_client.types import Column, Table
 
 
-def tree_to_expr(
-    filter_dict: QueryExpression | typing.Mapping[str, Any], table: Any = None
+def tree_to_expr(  # type: ignore[explicit-any]
+    filter_dict: QueryExpression | typing.Mapping[str, typing.Any],
+    table: object = None,
 ) -> QueryExpression:
     """Turn a filter-dict into a QueryExpression.
 
@@ -102,11 +101,12 @@ def _lookup_column(table_name: str | type[Table], column_name: str) -> UnaryExpr
     return column.expr
 
 
-def _table_name(table: type[Table]) -> str:
+def _table_name(table: object) -> str:
     if isinstance(table, str):
         return table
-
-    return table.__tablename__
+    if isinstance(table, type) and issubclass(table, Table):
+        return table.__tablename__
+    raise TypeError(f"Not a table: {table!r}")
 
 
 def get_multiple_edition_description(editions: typing.Container[Edition]) -> str:

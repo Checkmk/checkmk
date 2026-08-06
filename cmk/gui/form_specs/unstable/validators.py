@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import ipaddress
 import re
 import typing
@@ -51,7 +49,7 @@ class IsInteger:
     ) -> None:
         self.error_msg = error_msg
 
-    def __call__(self, value: typing.Any) -> None:
+    def __call__(self, value: object) -> None:
         if not isinstance(value, int):
             raise ValidationError(self.error_msg)
 
@@ -63,7 +61,7 @@ class IsFloat:
     ) -> None:
         self.error_msg = error_msg
 
-    def __call__(self, value: typing.Any) -> None:
+    def __call__(self, value: object) -> None:
         if not isinstance(value, float | int):
             raise ValidationError(self.error_msg)
 

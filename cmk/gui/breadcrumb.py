@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Breadcrumb processing
 
 Cares about rendering the breadcrumb which is shown at the top of all pages
@@ -46,7 +44,9 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def __getitem__(self, index: slice[int, int, int]) -> MutableSequence[BreadcrumbItem]: ...
 
     @override
-    def __getitem__(self, index: int | slice) -> BreadcrumbItem | MutableSequence[BreadcrumbItem]:
+    def __getitem__(
+        self, index: int | slice[int, int, int]
+    ) -> BreadcrumbItem | MutableSequence[BreadcrumbItem]:
         return self._items[index]
 
     @overload  # type: ignore[override]
@@ -57,7 +57,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
 
     @override
     def __setitem__(
-        self, index: int | slice, value: BreadcrumbItem | Iterable[BreadcrumbItem]
+        self, index: int | slice[int, int, int], value: BreadcrumbItem | Iterable[BreadcrumbItem]
     ) -> None:
         self._items[index] = value  # type: ignore[index,assignment]
 
@@ -68,7 +68,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def __delitem__(self, index: slice[int, int, int]) -> None: ...
 
     @override
-    def __delitem__(self, index: int | slice) -> None:
+    def __delitem__(self, index: int | slice[int, int, int]) -> None:
         if isinstance(index, int):
             self._items.pop(index)
         else:

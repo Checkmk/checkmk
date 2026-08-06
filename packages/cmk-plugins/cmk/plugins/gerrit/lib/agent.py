@@ -106,7 +106,7 @@ class GerritRunContext:
 
 
 def run(ctx: GerritRunContext) -> int:
-    version_storage = Storage(f"{AGENT}_version", ctx.hostname)
+    version_storage = Storage("gerrit_version", ctx.hostname)
     version_cache = cache_ttl(version_storage, ttl=ctx.ttl.version)
     collect_version = version_cache(ctx.collectors.version.collect)
     _write_section(collect_version(), name="gerrit_version")

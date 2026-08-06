@@ -381,6 +381,60 @@ class TestMonitorHostServices:
             },
         }
 
+    def test_pending_service_has_no_last_check(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "",
+                    "last_check": 0,
+                    "last_state_change": time.time(),
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                f"Filter: name = {_HOSTNAME}",
+                "Limit: 1",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICES_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                _DEFAULT_ORDER_BY,
+                f"Limit: {_LIMIT}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                "Stats: state >= 0",
+                f"Filter: host_name = {_HOSTNAME}",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT
+            )
+
+        assert resp.json["services"][0]["last_check"] is None
+
     @pytest.mark.parametrize(
         "sort, expected_order_by",
         [
@@ -810,6 +864,58 @@ class TestMonitorServiceOverview:
             )
 
         assert resp.json["next_check"] is None
+
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_pending_service_has_no_last_check(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": _SERVICE_DESCRIPTION,
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "",
+                    "last_check": 0,
+                    "last_state_change": time.time(),
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "host_alias": _HOST_ALIAS,
+                    "host_state": 0,
+                    "host_acknowledged": 0,
+                    "host_scheduled_downtime_depth": 0,
+                    "contact_groups": ["all"],
+                    "long_plugin_output": "",
+                    "current_attempt": 1,
+                    "max_check_attempts": 1,
+                    "next_check": time.time() + 60,
+                    "tags": {},
+                    "labels": {},
+                    "label_sources": {},
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+
+        assert resp.json["last_check"] is None
 
     def test_unknown_service_returns_404(
         self,

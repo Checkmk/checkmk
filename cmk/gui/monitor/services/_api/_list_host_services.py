@@ -60,8 +60,11 @@ class HostServiceEntry:
         description="Service summary",
         example="Found no data, execution time 0.0 sec",
     )
-    last_check: dt.datetime = api_field(
-        description="Timestamp of the host's last check",
+    last_check: dt.datetime | None = api_field(
+        description=(
+            "Timestamp of the service's last check. Null for services that have never been "
+            "checked, i.e. those still pending their first check."
+        ),
         example="2026-07-13T11:38:30Z",
     )
     last_state_change: dt.datetime = api_field(

@@ -113,6 +113,24 @@ def test_service_sorter_timestamp_columns() -> None:
     assert value == expected
 
 
+def test_service_sorter_sorts_never_checked_services_first() -> None:
+    services = [
+        ServiceFactory.build(last_check=dt.datetime(2026, 1, 2, tzinfo=dt.UTC)),
+        ServiceFactory.build(last_check=None),
+        ServiceFactory.build(last_check=dt.datetime(2026, 1, 1, tzinfo=dt.UTC)),
+    ]
+    sorters = [ServiceSort(column=ServiceSortColumn.LAST_CHECK, direction=ServiceSortDirection.ASC)]
+
+    value = [service.last_check for service in sorted(services, key=service_sorter(sorters))]
+    expected = [
+        None,
+        dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
+        dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
+    ]
+
+    assert value == expected
+
+
 @pytest.mark.parametrize(
     "column, attribute",
     [

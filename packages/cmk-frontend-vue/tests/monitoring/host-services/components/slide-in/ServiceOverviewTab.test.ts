@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
@@ -56,21 +57,67 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByText('on-call')).toBeInTheDocument()
   })
 
-  it('links to the host details', () => {
+  it('shows what the check reported and when', () => {
     render(ServiceOverviewTab, { props: { data: makeOverview() } })
 
-    expect(screen.getByRole('link', { name: 'Show host details' })).toHaveAttribute(
-      'href',
-      HOST_LINK
-    )
+    expect(screen.getByText('OK - load average: 0.10, 0.05, 0.01')).toBeInTheDocument()
+    expect(screen.getByText('1/3')).toBeInTheDocument()
   })
 
-  it('links to the service details', () => {
+  it('dashes out the next check of a passive service', () => {
+    render(ServiceOverviewTab, { props: { data: makeOverview({ next_check: null }) } })
+
+    expect(screen.getByText('–')).toBeInTheDocument()
+  })
+
+  it('dashes out the last check of a service that has never been checked', () => {
+    render(ServiceOverviewTab, { props: { data: makeOverview({ last_check: null }) } })
+
+    expect(screen.getByText('–')).toBeInTheDocument()
+  })
+
+  it('keeps the long output collapsed until the panel is opened', async () => {
+    render(ServiceOverviewTab, {
+      props: { data: makeOverview({ long_output: '15 min load: 0.01 (per core: 0.01)' }) }
+    })
+    expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).not.toBeVisible()
+
+    await userEvent.click(screen.getByRole('button', { name: /Toggle Service details/ }))
+
+    expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).toBeVisible()
+  })
+
+  it('keeps the details panel when the plugin produced no output', async () => {
+    render(ServiceOverviewTab, { props: { data: makeOverview({ long_output: '' }) } })
+
+    await userEvent.click(screen.getByRole('button', { name: /Toggle Service details/ }))
+
+    expect(screen.getByText('This check plugin reports no further details.')).toBeVisible()
+  })
+
+  it('links to the host details from the host row', () => {
     render(ServiceOverviewTab, { props: { data: makeOverview() } })
 
-    expect(screen.getByRole('link', { name: 'Show service details' })).toHaveAttribute(
-      'href',
-      SERVICE_LINK
-    )
+    expect(
+      screen.getByRole('link', { name: 'Show details of host web-server-01' })
+    ).toHaveAttribute('href', HOST_LINK)
+  })
+
+  it('shows the modes of the host next to its state', () => {
+    render(ServiceOverviewTab, {
+      props: {
+        data: makeOverview({
+          host_modes: [
+            {
+              icon_name: 'downtime',
+              link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
+              title: 'Host is in scheduled downtime'
+            }
+          ]
+        })
+      }
+    })
+
+    expect(screen.getByRole('link', { name: 'Host is in scheduled downtime' })).toBeInTheDocument()
   })
 })

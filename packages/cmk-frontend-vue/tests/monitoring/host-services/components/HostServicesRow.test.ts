@@ -66,6 +66,15 @@ test('renders the two timestamps as formatted date-time strings', () => {
   expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
 })
 
+test('dashes out the last check of a service that has never been checked', () => {
+  const { container } = mountRow(makeService({ last_check: null }))
+
+  const cellText = (td: Element): string =>
+    (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
+  const tds = Array.from(container.querySelectorAll('td'))
+  expect(cellText(tds[4]!)).toBe('–')
+})
+
 test('renders the state badge with success color for state OK', () => {
   const { container } = mountRow(makeService({ state: 'OK' }))
 

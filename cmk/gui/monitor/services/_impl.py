@@ -74,7 +74,11 @@ class LiveStatusHostServicesRepository:
                         name=row["description"],
                         state=ServiceState(row["state"]),
                         summary=row["plugin_output"],
-                        last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
+                        last_check=(
+                            dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC)
+                            if row["last_check"]
+                            else None
+                        ),
                         last_state_change=dt.datetime.fromtimestamp(
                             row["last_state_change"], tz=dt.UTC
                         ),
@@ -121,7 +125,11 @@ class LiveStatusHostServicesRepository:
             site_id=row["site"],
             state=ServiceState(row["state"]),
             summary=row["plugin_output"],
-            last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
+            last_check=(
+                dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC)
+                if row["last_check"]
+                else None
+            ),
             last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,

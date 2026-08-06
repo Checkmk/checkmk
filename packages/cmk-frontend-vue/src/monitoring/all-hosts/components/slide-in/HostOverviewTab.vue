@@ -14,6 +14,7 @@ import type { HostOverview } from '@/monitoring/shared/api/types'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { useTimeSince } from '@/monitoring/shared/useTimeSince'
 
 import HostOverviewLabels from './HostOverviewLabels.vue'
 
@@ -33,21 +34,7 @@ const tagChips = computed(() =>
   Object.entries(props.data.tags).map(([group, tag]) => `${group}: ${tag}`)
 )
 
-function timeSince(iso: string): string {
-  const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
-  if (seconds < 60) {
-    return _t('%{count} sec', { count: seconds })
-  }
-  const minutes = Math.round(seconds / 60)
-  if (minutes < 60) {
-    return _t('%{count} min', { count: minutes })
-  }
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) {
-    return _t('%{count} h', { count: hours })
-  }
-  return _t('%{count} d', { count: Math.round(hours / 24) })
-}
+const timeSince = useTimeSince()
 </script>
 
 <template>

@@ -33,7 +33,9 @@ function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
 
-const lastCheck = computed(() => formatTimestamp(props.row.last_check))
+const lastCheck = computed(() =>
+  props.row.last_check === null ? '–' : formatTimestamp(props.row.last_check)
+)
 const lastStateChange = computed(() => formatTimestamp(props.row.last_state_change))
 </script>
 

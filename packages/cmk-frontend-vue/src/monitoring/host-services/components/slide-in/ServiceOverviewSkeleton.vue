@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import OverviewSkeleton from '@/monitoring/shared/components/slide-in/OverviewSkeleton.vue'
 
-const GROUPS = [{ rows: 3 }]
+const GROUPS = [{ rows: 5 }, { rows: 4 }]
 </script>
 
 <template>

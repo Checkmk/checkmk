@@ -472,7 +472,7 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
 
     def valuespec(self) -> ValueSpec:
         return Alternative(
-            title=_("Default time range of the global time picker"),
+            title=_("Global time picker default range"),
             orientation="horizontal",
             help=_(
                 "The time range preselected by the global time picker on graph pages. The "
@@ -523,7 +523,7 @@ class GraphDefaultRefreshTimeUserAttribute(UserAttribute):
 
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
-            title=_("Default refresh time of the global time picker"),
+            title=_("Global time picker default refresh time"),
             help=_(
                 "The refresh interval preselected in the refresh control of the global time "
                 "picker on graph pages. This only preselects the interval; it does not start "

@@ -1661,7 +1661,6 @@ def _mode_update(app: CheckmkBaseApp) -> None:
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    bake_on_restart = app.make_bake_on_restart(loading_result, hosts_config.hosts)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config
@@ -1718,7 +1717,6 @@ def _mode_update(app: CheckmkBaseApp) -> None:
                         )
                     )
                 ),
-                bake_on_restart=bake_on_restart,
                 notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
                 checker_config_writer=make_packed_config_writer(
                     raw_config,
@@ -1750,7 +1748,6 @@ mode_update = Mode(
             "When using the CheckMK Micro Core, the core configuration is created "
             "and the configuration for the Core helper processes is being created."
         ),
-        "The Agent Bakery is updating the agents.",
     ],
 )
 
@@ -1835,7 +1832,6 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
                 )
             )
         ),
-        bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         checker_config_writer=make_packed_config_writer(
             raw_config,
@@ -1946,7 +1942,6 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
                 )
             ),
         ),
-        bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         checker_config_writer=make_packed_config_writer(
             raw_config,

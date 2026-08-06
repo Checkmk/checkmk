@@ -117,7 +117,6 @@ py_library(
         "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/base/core",
-        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",

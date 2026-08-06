@@ -1336,7 +1336,6 @@ def _execute_autodiscovery(
     )
 
     hosts_config = env.hosts_config
-    bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
     notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
     core_objects_config = config.CoreObjectsConfig(
         env.loaded_config, env.ruleset_matcher, env.label_manager
@@ -1374,7 +1373,6 @@ def _execute_autodiscovery(
                     lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                 ),
             ),
-            bake_on_restart=bake_on_restart,
             notify_relay=notify_relay,
             checker_config_writer=checker_config_writer,
         )
@@ -1403,7 +1401,6 @@ def _execute_autodiscovery(
                     lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                 ),
             ),
-            bake_on_restart=bake_on_restart,
             notify_relay=notify_relay,
             checker_config_writer=checker_config_writer,
         )
@@ -1607,9 +1604,6 @@ class AutomationRenameHosts:
                         service_depends_on=config.ServiceDependsOn(
                             tag_list=env.host_tags.tag_list,
                             service_dependencies=env.loaded_config.service_dependencies,
-                        ),
-                        bake_on_restart=app.make_bake_on_restart(
-                            env.loading_result, hosts_config.hosts
                         ),
                         notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
                     ),
@@ -2527,7 +2521,6 @@ class AutomationRestart:
                 tag_list=env.host_tags.tag_list,
                 service_dependencies=env.loaded_config.service_dependencies,
             ),
-            bake_on_restart=app.make_bake_on_restart(env.loading_result, hosts_config.hosts),
             notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
         )
 
@@ -2602,7 +2595,6 @@ class RestartContext:
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts]
     ip_address_of_mgmt: ip_lookup.IPLookupOptional
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]]
-    bake_on_restart: Callable[[], None]
     notify_relay: Callable[[Callable[[str], object]], None]
 
 
@@ -2654,7 +2646,6 @@ def _execute_silently(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                     )
                 ),
-                bake_on_restart=rctx.bake_on_restart,
                 notify_relay=rctx.notify_relay,
                 checker_config_writer=checker_config_writer,
             )

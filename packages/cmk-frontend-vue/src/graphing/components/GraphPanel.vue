@@ -260,11 +260,6 @@ const headerIsCompact = computed(() => props.figureWidth < 400)
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metric="highlightedMetricName = $event"
-        @request-show-all="
-          () => {
-            /* TODO: open metric slideout */
-          }
-        "
       />
     </div>
   </div>

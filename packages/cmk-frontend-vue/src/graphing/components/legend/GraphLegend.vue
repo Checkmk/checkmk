@@ -51,7 +51,6 @@ const emit = defineEmits<{
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
   hoverMetric: [metricName: string | null]
-  requestShowAll: []
 }>()
 
 const metricsString = computed(() =>
@@ -148,14 +147,12 @@ watch(
           <th colspan="2">
             <div class="graphing-graph-legend__header-meta">
               <button
-                v-if="metrics.length > 9"
                 class="graphing-graph-legend__metric-count-btn"
-                :title="_t('Show all metrics')"
-                @click="$emit('requestShowAll')"
+                :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
+                @click="toggleAll"
               >
                 {{ metricsString }}
               </button>
-              <span v-else class="graphing-graph-legend__metric-count">{{ metricsString }}</span>
               <span class="graphing-graph-legend__selected-count">{{
                 _tn('%{n} selected', '%{n} selected', selectedCount, { n: selectedCount })
               }}</span>
@@ -356,10 +353,6 @@ watch(
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.graphing-graph-legend__metric-count {
-  font-weight: var(--font-weight-bold);
 }
 
 .graphing-graph-legend__metric-count-btn {

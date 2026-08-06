@@ -88,17 +88,20 @@ test('renders one row per metric', () => {
   expect(screen.getByText('Memory')).toBeInTheDocument()
 })
 
-test('with fewer than 10 metrics, count is shown as non-interactive text', () => {
-  render(GraphLegend, { props: { metrics: [CPU] } })
-  expect(screen.getByText(/1 metric/)).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /1 metric/ })).not.toBeInTheDocument()
+test('clicking the metric count hides every metric', async () => {
+  const { emitted } = render(GraphLegend, {
+    props: { metrics: [CPU, MEM], hiddenMetricNames: [] }
+  })
+  await fireEvent.click(screen.getByRole('button', { name: /2 metrics/ }))
+  expect(emitted()['update:hiddenMetricNames']).toEqual([[['cpu', 'mem']]])
 })
 
-test('with 10 or more metrics, count is a button that emits requestShowAll', async () => {
-  const metrics = Array.from({ length: 10 }, (_, i) => makeMetric(`m${i}`, `Metric ${i}`, [i]))
-  const { emitted } = render(GraphLegend, { props: { metrics } })
-  await fireEvent.click(screen.getByRole('button', { name: /10 metrics/ }))
-  expect(emitted()).toHaveProperty('requestShowAll')
+test('clicking the metric count with everything hidden shows every metric', async () => {
+  const { emitted } = render(GraphLegend, {
+    props: { metrics: [CPU, MEM], hiddenMetricNames: ['cpu', 'mem'] }
+  })
+  await fireEvent.click(screen.getByRole('button', { name: /2 metrics/ }))
+  expect(emitted()['update:hiddenMetricNames']).toEqual([[[]]])
 })
 
 test('clicking a visible metric eye emits update:hiddenMetricNames with that name added', async () => {

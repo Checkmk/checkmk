@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { userEvent } from '@testing-library/user-event'
+import { render, screen, waitFor } from '@testing-library/vue'
 
 import type { ValidationMessages } from '@/form'
 
@@ -30,4 +31,26 @@ test('surfaces the metric-name error but not the consolidation error already sho
 
   expect(screen.getByText('Metric name cannot be empty')).toBeVisible()
   expect(screen.queryByText('Aggregation lookback must be at least 1 second')).toBeNull()
+})
+
+test('a preserve histograms line offers the groupings that pair with it', async () => {
+  render(FormMetricBackendCustomQuery, {
+    props: {
+      consolidation: {
+        type: 'histogram',
+        function: 'histogram_preserve_quantile',
+        lookback_seconds: 120,
+        percentile: 90,
+        group_by: []
+      }
+    }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /Edit group by/ }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Grouping function' }))
+
+  await waitFor(() => {
+    expect(screen.getByRole('option', { name: 'percentile by' })).toBeVisible()
+    expect(screen.getByRole('option', { name: 'fraction below by' })).toBeVisible()
+  })
 })

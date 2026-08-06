@@ -274,12 +274,11 @@ def test_mk_oracle_section_systemparameter(
     _assert_rows_start_with_sid(rows, oracle.SID)
 
 
-def test_mk_oracle_section_ts_quotas(
-    oracle: OracleDatabase, mk_oracle_sections: dict[str, list[str]]
+def test_mk_oracle_section_ts_quotas_absent(
+    mk_oracle_sections: dict[str, list[str]],
 ) -> None:
-    rows = mk_oracle_sections.get("oracle_ts_quotas", [])
-    assert rows, "oracle_ts_quotas is empty"
-    _assert_rows_start_with_sid(rows, oracle.SID)
+    """ts_quotas is not in the default section set and no check plugin parses it."""
+    assert "oracle_ts_quotas" not in mk_oracle_sections
 
 
 def test_mk_oracle_section_jobs(

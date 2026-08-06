@@ -24,13 +24,7 @@ from tests.system.mk_oracle.conftest import OracleDatabase
 # a rationale; anything not listed is treated as a regression and fails the test.
 KNOWN_DEVIATIONS: dict[str, set[str]] = {
     "only_in_old": set(),
-    "only_in_new": {
-        # The new plugin emits an oracle_ts_quotas section (bare header + :sep(124)
-        # data variant); the old bash plugin does not produce it under the default
-        # section set. New-plugin addition.
-        "oracle_ts_quotas",
-        "oracle_ts_quotas:sep(124)",
-    },
+    "only_in_new": set(),
     "different": {
         # oracle_performance: two independent, accepted differences —
         #  * the OLD plugin emits a noise/debug row for the PDB

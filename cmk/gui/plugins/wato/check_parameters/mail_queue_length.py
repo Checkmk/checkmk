@@ -6,12 +6,11 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_elements
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mail_queue_length() -> Dictionary:
@@ -36,17 +35,6 @@ def _parameter_valuespec_mail_queue_length() -> Dictionary:
         optional_keys=["active", "deferred", "failed"],
     )
 
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="mail_queue_length",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Mail queue name")),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_mail_queue_length,
-        title=lambda: _("Mails in outgoing mail queue (multiple queues)"),
-    )
-)
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(

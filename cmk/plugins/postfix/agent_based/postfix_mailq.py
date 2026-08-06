@@ -3,14 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
-
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,11 +12,11 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    LevelsT,
     render,
     Service,
     StringTable,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 DEFAULT_ITEM_NAME: str = "default"
 
@@ -35,6 +29,8 @@ class PostfixMailQueue:
 
 
 Section = Mapping[str, list[PostfixMailQueue]]
+
+Params = Mapping[str, SimpleLevelsConfigModel[int]]
 
 
 def postfix_mailq_to_bytes(value: float, uom: str) -> int:
@@ -98,25 +94,14 @@ def discovery_postfix_mailq(section: Section) -> DiscoveryResult:
         yield Service(item=instance)
 
 
-def check_postfix_mailq(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    # If the user disabled the "Use new service description" option, we arrive
-    # at this function with item being None. In this case we still need to
-    # lookup the data in parsed under the default item name.
-    if item is None:
-        item = DEFAULT_ITEM_NAME
-
+def check_postfix_mailq(item: str, params: Params, section: Section) -> CheckResult:
     if item not in section:
         return
 
-    if not isinstance(params, dict) and isinstance(params, tuple):
-        params = {"deferred": params}
-
     for mail_queue in section[item]:
         _queue_name = mail_queue.name if mail_queue.name else ""
-        warn, crit = params.get(_queue_name if _queue_name != "mail" else "deferred", (None, None))
-        length_limit: LevelsT = ("no_levels", None)
-        if warn is not None and crit is not None:
-            length_limit = ("fixed", (warn, crit))
+        levels_key = "deferred" if _queue_name == "mail" else _queue_name
+        length_limit = params.get(levels_key, ("no_levels", None))
 
         # Metric names differ for active mailqueue
         length_metric_name: str = "length"
@@ -159,7 +144,7 @@ check_plugin_postfix_mailq = CheckPlugin(
     check_function=check_postfix_mailq,
     check_ruleset_name="mail_queue_length",
     check_default_parameters={
-        "deferred": (10, 20),
-        "active": (200, 300),  # may become large for big mailservers
+        "deferred": ("fixed", (10, 20)),
+        "active": ("fixed", (200, 300)),  # may become large for big mailservers
     },
 )

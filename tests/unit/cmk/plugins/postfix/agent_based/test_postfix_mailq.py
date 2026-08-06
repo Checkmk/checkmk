@@ -9,6 +9,7 @@ from cmk.plugins.postfix.agent_based.postfix_mailq import (
     check_postfix_mailq,
     DEFAULT_ITEM_NAME,
     discovery_postfix_mailq,
+    Params,
     parse_postfix_mailq,
     PostfixMailQueue,
     Section,
@@ -166,7 +167,7 @@ def test_discovery_postfix_mailq() -> None:
 
 def test_check_postfix_mailq() -> None:
     item = "deferred"
-    params = {"deferred": (10, 20)}
+    params: Params = {"deferred": ("fixed", (10, 20))}
     section: Section = {
         "deferred": [PostfixMailQueue(name="deferred", size=2048, length=1)],
     }
@@ -185,7 +186,7 @@ def test_check_postfix_mailq() -> None:
 
 def test_check_postfix_mailq_with_parameters_class() -> None:
     """This test validates that the Parameters class works with check_postfix_mailq function."""
-    params = Parameters({"active": (200, 300), "deferred": (10, 20)})
+    params = Parameters({"active": ("fixed", (200, 300)), "deferred": ("fixed", (10, 20))})
     section = {
         "default": [
             PostfixMailQueue(name="deferred", size=256, length=40),

@@ -271,6 +271,9 @@ def test_status_reports_a_missing_secret(tmp_path: Path) -> None:
     # without a secret there is nothing to authenticate with, so no request is made
     assert "not checked, no secret" in output
     assert "werk init" in output
+    # the output is meant to be pasted into tickets and chats
+    assert str(home) not in output
+    assert "$HOME/.config/cmk-werks/secret" in output
 
 
 def test_status_reports_an_unreachable_server(tmp_path: Path) -> None:
@@ -383,6 +386,8 @@ def test_status_json_reports_problems_and_exits_non_zero(tmp_path: Path) -> None
     assert returncode == 1
     items = [problem["item"] for problem in document["problems"]]
     assert "secret" in items
+    # the fix is meant to be copied, and it carries a path
+    assert document["problems"][0]["fix"] == "chmod 600 $HOME/.config/cmk-werks/secret"
     # every problem points at a key of the document itself
     for item in items:
         assert item in document

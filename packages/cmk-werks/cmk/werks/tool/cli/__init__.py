@@ -866,8 +866,10 @@ def main_init() -> None:
 
 def main_status(args: argparse.Namespace) -> None:
     config = get_config()
-    paths = make_paths_object(Path.home())
+    home = Path.home()
+    paths = make_paths_object(home)
     status = collect_status(
+        home=home,
         paths=paths,
         server_url=config.werk_ids_server_url,
         server_status=(
@@ -878,10 +880,12 @@ def main_status(args: argparse.Namespace) -> None:
         werk_exists=werk_exists,
     )
     if args.json:
-        sys.stdout.write(render_json(status) + "\n")
+        sys.stdout.write(render_json(home, status) + "\n")
     else:
         # Redirected output falls back to 80 columns in rich, which folds the paths.
-        render_status(status, Console(width=None if sys.stdout.isatty() else _REDIRECTED_WIDTH))
+        render_status(
+            home, status, Console(width=None if sys.stdout.isatty() else _REDIRECTED_WIDTH)
+        )
     if status.problems:
         sys.exit(1)
 

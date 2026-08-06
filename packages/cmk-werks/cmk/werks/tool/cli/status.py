@@ -30,14 +30,14 @@ class ServerInfo:
 
 @dataclass(frozen=True, kw_only=True)
 class FileInfo:
-    path: str
+    path: Path
     exists: bool
     mode: str | None
 
 
 @dataclass(frozen=True, kw_only=True)
 class StashInfo:
-    path: str
+    path: Path
     exists: bool
     mode: str | None
     count: int
@@ -71,8 +71,18 @@ def _is_readable_by_others(mode: str | None) -> bool:
     return mode is not None and bool(int(mode, 8) & 0o077)
 
 
+def _replace_home(home: Path, path: Path) -> Path:
+    # The output is meant to be pasted into tickets and chats, so the name of the home
+    # directory is replaced on the way out. Rich styles the parts of a path separately, so
+    # this has to happen before rendering, not on the rendered output.
+    try:
+        return Path("$HOME") / path.relative_to(home)
+    except ValueError:
+        return path
+
+
 def _file_info(path: Path) -> FileInfo:
-    return FileInfo(path=str(path), exists=path.exists(), mode=_mode(path))
+    return FileInfo(path=path, exists=path.exists(), mode=_mode(path))
 
 
 def _sorted_ids(raw_ids: Iterable[int]) -> Sequence[WerkId]:
@@ -97,7 +107,7 @@ def _legacy_stash_ids(paths: Paths) -> Sequence[WerkId]:
 
 def _stash_info(path: Path, reserved: Sequence[WerkId]) -> StashInfo:
     return StashInfo(
-        path=str(path),
+        path=path,
         exists=path.exists(),
         mode=_mode(path),
         count=len(reserved),
@@ -106,6 +116,7 @@ def _stash_info(path: Path, reserved: Sequence[WerkId]) -> StashInfo:
 
 
 def _problems(
+    home: Path,
     paths: Paths,
     server_url: str,
     server_status: ServerStatus | None,
@@ -132,7 +143,7 @@ def _problems(
         yield Problem(
             item="secret",
             problem=f"readable by others ({secret_mode})",
-            fix=f"chmod 600 {paths.secret_file}",
+            fix=f"chmod 600 {_replace_home(home, paths.secret_file)}",
         )
 
     match server_status:
@@ -163,6 +174,7 @@ def _problems(
 
 def collect_status(
     *,
+    home: Path,
     paths: Paths,
     server_url: str,
     server_status: ServerStatus | None,
@@ -181,14 +193,19 @@ def collect_status(
         secret=_file_info(paths.secret_file),
         reserved_ids=_stash_info(paths.stash_file, stash_ids),
         legacy_stash=_stash_info(paths.legacy_stash_file, legacy_ids),
-        problems=list(_problems(paths, server_url, server_status, reserved, werk_exists)),
+        problems=list(_problems(home, paths, server_url, server_status, reserved, werk_exists)),
     )
 
 
-def render_json(status: Status) -> str:
+def render_json(home: Path, status: Status) -> str:
     # Every section is emitted unconditionally, including the one the tables hide, so
     # consumers get a fixed shape and never have to probe for keys.
-    return json.dumps({"schema_version": SCHEMA_VERSION} | asdict(status), indent=2)
+    # Only the paths need `default`: everything else is a builtin already.
+    return json.dumps(
+        {"schema_version": SCHEMA_VERSION} | asdict(status),
+        indent=2,
+        default=lambda path: str(_replace_home(home, path)),
+    )
 
 
 _SERVER_NOTES = {
@@ -225,7 +242,7 @@ def _table(title: str, *columns: str) -> Table:
     return table
 
 
-def _werk_ids_table(status: Status) -> Table:
+def _werk_ids_table(home: Path, status: Status) -> Table:
     table = _table("WERK IDS", "ITEM", "DETAIL", "LOCATION", "MODE")
     table.add_row(
         _marker(status.server.status == ServerStatus.OK.value),
@@ -238,14 +255,14 @@ def _werk_ids_table(status: Status) -> Table:
         _marker(status.secret.exists),
         _ITEM_LABELS["secret"],
         "",
-        status.secret.path,
+        str(_replace_home(home, status.secret.path)),
         status.secret.mode or "",
     )
     table.add_row(
         _marker(status.reserved_ids.exists),
         _ITEM_LABELS["reserved_ids"],
         _reserved_summary(status.reserved_ids),
-        status.reserved_ids.path,
+        str(_replace_home(home, status.reserved_ids.path)),
         status.reserved_ids.mode or "",
     )
     # Shown only while it is there, with the same columns as the stash file so the two can
@@ -255,7 +272,7 @@ def _werk_ids_table(status: Status) -> Table:
             _marker(not status.secret.exists),
             _ITEM_LABELS["legacy_stash"],
             _reserved_summary(status.legacy_stash),
-            status.legacy_stash.path,
+            str(_replace_home(home, status.legacy_stash.path)),
             status.legacy_stash.mode or "",
         )
     return table
@@ -268,8 +285,8 @@ def _problems_table(status: Status) -> Table:
     return table
 
 
-def render_status(status: Status, console: Console) -> None:
-    console.print(_werk_ids_table(status))
+def render_status(home: Path, status: Status, console: Console) -> None:
+    console.print(_werk_ids_table(home, status))
     if status.problems:
         console.print(_problems_table(status))
         return

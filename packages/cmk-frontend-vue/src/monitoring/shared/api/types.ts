@@ -25,6 +25,13 @@ export type HostMode = components['schemas']['ModeInfo']
 
 export type ServiceMode = components['schemas']['ServiceModeInfo']
 
+export type HostLabelValue = components['schemas']['HostLabelValue']
+
+export type ServiceLabelValue = components['schemas']['ServiceLabelValue']
+
+/** Host and service labels carry the same shape today; the union keeps a future divergence a type error. */
+export type LabelValue = HostLabelValue | ServiceLabelValue
+
 export type ActionMenuItem = components['schemas']['ActionMenuItem']
 
 export interface HostRef {

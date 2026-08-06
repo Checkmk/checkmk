@@ -10,11 +10,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
-import type { HostOverview } from '@/monitoring/shared/api/types'
+import type { LabelValue } from '@/monitoring/shared/api/types'
 
 const DEFAULT_LIMIT = 5
 
-const props = withDefaults(defineProps<{ labels: HostOverview['labels']; limit?: number }>(), {
+const props = withDefaults(defineProps<{ labels: Record<string, LabelValue>; limit?: number }>(), {
   limit: DEFAULT_LIMIT
 })
 
@@ -42,7 +42,7 @@ const visibleItems = computed(() =>
 </script>
 
 <template>
-  <div class="monitoring-host-overview-labels">
+  <div class="monitoring-overview-labels">
     <CmkTag
       v-for="item in visibleItems"
       :key="item.text"
@@ -58,7 +58,7 @@ const visibleItems = computed(() =>
 </template>
 
 <style scoped>
-.monitoring-host-overview-labels {
+.monitoring-overview-labels {
   display: flex;
   flex-flow: row wrap;
   gap: var(--dimension-3);

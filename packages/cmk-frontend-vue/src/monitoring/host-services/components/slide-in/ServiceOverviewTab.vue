@@ -15,6 +15,7 @@ import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vu
 import ModeIcons from '@/monitoring/shared/components/ModeIcons.vue'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
+import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { useTimeSince } from '@/monitoring/shared/useTimeSince'
 
@@ -26,6 +27,10 @@ const timeSince = useTimeSince()
 
 const checkAttempt = computed(
   () => `${props.data.current_attempt}/${props.data.max_check_attempts}`
+)
+
+const tagChips = computed(() =>
+  Object.entries(props.data.tags).map(([group, tag]) => `${group}: ${tag}`)
 )
 
 const lastCheck = computed(() =>
@@ -66,6 +71,16 @@ const nextCheck = computed(() =>
       <dt>{{ _t('Contact groups:') }}</dt>
       <dd>
         <OverviewChips :items="data.contact_groups" />
+      </dd>
+
+      <dt>{{ _t('Tags:') }}</dt>
+      <dd>
+        <OverviewChips :items="tagChips" />
+      </dd>
+
+      <dt>{{ _t('Labels:') }}</dt>
+      <dd>
+        <OverviewLabels :labels="data.labels" />
       </dd>
     </OverviewDetailList>
 

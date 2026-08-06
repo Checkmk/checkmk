@@ -97,6 +97,34 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByText('This check plugin reports no further details.')).toBeVisible()
   })
 
+  it('shows the service tags', () => {
+    render(ServiceOverviewTab, {
+      props: { data: makeOverview({ tags: { criticality: 'prod', networking: 'lan' } }) }
+    })
+
+    expect(screen.getByText('criticality: prod')).toBeInTheDocument()
+    expect(screen.getByText('networking: lan')).toBeInTheDocument()
+  })
+
+  it('shows the service labels with their value', () => {
+    render(ServiceOverviewTab, {
+      props: {
+        data: makeOverview({
+          labels: { 'cmk/check_plugin': { value: 'cpu_load', source: 'discovered' } }
+        })
+      }
+    })
+
+    expect(screen.getByText('cmk/check_plugin: cpu_load')).toBeInTheDocument()
+  })
+
+  it('keeps the tag and label rows when the service has neither', () => {
+    render(ServiceOverviewTab, { props: { data: makeOverview({ tags: {}, labels: {} }) } })
+
+    expect(screen.getByText('Tags:')).toBeInTheDocument()
+    expect(screen.getByText('Labels:')).toBeInTheDocument()
+  })
+
   it('links to the host details from the host row', () => {
     render(ServiceOverviewTab, { props: { data: makeOverview() } })
 

@@ -13,10 +13,9 @@ import { computed } from 'vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
+import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { useTimeSince } from '@/monitoring/shared/useTimeSince'
-
-import HostOverviewLabels from './HostOverviewLabels.vue'
 
 const props = defineProps<{ data: HostOverview }>()
 
@@ -91,7 +90,7 @@ const timeSince = useTimeSince()
 
       <dt>{{ _t('Labels') }}</dt>
       <dd>
-        <HostOverviewLabels :labels="data.labels" />
+        <OverviewLabels :labels="data.labels" />
       </dd>
     </OverviewDetailList>
 

@@ -56,7 +56,9 @@ else
     # We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
     # That's why we need to mount the reference repos.
     GIT_REFERENCE_CLONE_PATH="${HOME}/git_reference_clones/check_mk.git"
-    REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
+    if [ -d "${GIT_REFERENCE_CLONE_PATH}" ]; then
+        REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
+    fi
 
     # Make the registry login available within the container, e.g. for agent plugin unit tests which are pulling
     # images from the registry within IMAGE_TESTING

@@ -20,7 +20,7 @@ from ._from_api import (
 from ._graph import Graph, Line, Rule, Stack
 from ._perfdata import MetricName, Service
 from ._quantities import RRDMetric, ScalarKind, ScalarOf
-from ._source import RRDFetchMetricNamesProtocol
+from ._source import FetchMetricNamesProtocol
 
 _PREDICT_PREFIX = "predict_"
 
@@ -140,7 +140,7 @@ def _matches_graph_name(graph: Graph, graph_name: str) -> bool:
 def build_matched_graphs(
     *,
     localizer: Callable[[str], str],
-    fetch_metric_names: RRDFetchMetricNamesProtocol,
+    fetch_metric_names: FetchMetricNamesProtocol,
     kind: str,
     registered_graphs: Sequence[_GraphPlugin],
     registered_metrics: Mapping[str, metrics_v1.Metric],

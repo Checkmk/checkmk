@@ -17,9 +17,9 @@ from cmk.graphing_engine import (
     build_matched_graphs,
     evaluate_graphs,
     EvaluatedGraph,
+    FetchDataProtocol,
+    FetchMetricNamesProtocol,
     Graph,
-    RRDFetchDataProtocol,
-    RRDFetchMetricNamesProtocol,
     RRDMetric,
 )
 from cmk.gui.config import active_config
@@ -78,7 +78,7 @@ def build_template_graphs(
     *,
     registered_graphs: Sequence[GraphFromAPI],
     registered_metrics: Mapping[str, metrics_v1.Metric],
-    fetch_metric_names: RRDFetchMetricNamesProtocol,
+    fetch_metric_names: FetchMetricNamesProtocol,
 ) -> Sequence[BuiltGraph]:
     graphs = build_matched_graphs(
         localizer=translate_to_current_language,
@@ -109,7 +109,7 @@ def evaluate_template_graphs(
     *,
     graphs: Sequence[Graph],
     options: CommonGraphOptions,
-    fetch_data: RRDFetchDataProtocol,
+    fetch_data: FetchDataProtocol,
 ) -> Sequence[EvaluatedGraph]:
     return evaluate_graphs(
         consolidation_function=options.consolidation_function,

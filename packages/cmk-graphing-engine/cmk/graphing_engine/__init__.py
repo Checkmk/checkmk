@@ -61,8 +61,8 @@ from ._quantities import (
     Sum,
 )
 from ._source import (
-    RRDFetchDataProtocol,
-    RRDFetchMetricNamesProtocol,
+    FetchDataProtocol,
+    FetchMetricNamesProtocol,
 )
 from ._units import (
     AutoPrecision,
@@ -98,7 +98,7 @@ __all__ = [
     "EvaluatedStack",
     "EvaluatedVerticalRange",
     "EvaluationContext",
-    "RRDFetchMetricNamesProtocol",
+    "FetchMetricNamesProtocol",
     "FixedRange",
     "Fraction",
     "MetricProtocol",
@@ -115,7 +115,7 @@ __all__ = [
     "QuantityBuilderProtocol",
     "RRDMetric",
     "PerformanceData",
-    "RRDFetchDataProtocol",
+    "FetchDataProtocol",
     "Rule",
     "SeriesAttributes",
     "EngineeringScientificNotation",

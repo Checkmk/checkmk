@@ -20,30 +20,12 @@ import {
   defaultFunction
 } from '@/metric-backend/consolidation/types'
 import type {
-  AllowedFunctions,
   ConsolidationFunction,
   ConsolidationModel,
   MetricType
 } from '@/metric-backend/consolidation/types'
 
 const { _t } = usei18n()
-
-// Offer only the functions the backend implements.
-const SUPPORTED_FUNCTIONS: AllowedFunctions = {
-  gauge: ['gauge_last', 'gauge_max', 'gauge_avg', 'gauge_min'],
-  sum: ['sum_rate', 'sum_last_raw', 'sum_delta'],
-  histogram: [
-    'histogram_preserve',
-    'histogram_quantile',
-    'histogram_count_delta',
-    'histogram_count_rate',
-    'histogram_sum_rate',
-    'histogram_sum_delta',
-    'histogram_fraction_below',
-    'histogram_fraction_between',
-    'histogram_sum_raw'
-  ]
-}
 
 // Fall back to histogram before the type resolves so the percentile stays reachable.
 const FALLBACK_TYPE: MetricType = 'histogram'
@@ -99,8 +81,7 @@ function paramsFor(fn: ConsolidationFunction): ConsolidationModel['params'] {
 
 function buildModel(): ConsolidationModel {
   const fn =
-    consolidationFunction.value ??
-    defaultFunction(availableTypes.value[0] ?? FALLBACK_TYPE, SUPPORTED_FUNCTIONS)
+    consolidationFunction.value ?? defaultFunction(availableTypes.value[0] ?? FALLBACK_TYPE)
   return {
     ...fn,
     params: paramsFor(fn),
@@ -216,11 +197,7 @@ immediateWatch(
     </td>
     <td>
       <CmkInlineValidation :validation="validationMessages" />
-      <FormConsolidation
-        v-model="model"
-        :available-types="availableTypes"
-        :allowed-functions="SUPPORTED_FUNCTIONS"
-      />
+      <FormConsolidation v-model="model" :available-types="availableTypes" />
     </td>
   </tr>
 </template>

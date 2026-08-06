@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
     condition=os.getenv("DISTRO") in ("almalinux-9", "almalinux-10"),
     reason="May fail on EL* systems, investigating.",
 )
+@pytest.mark.skip(reason="Flaky test. See CMK-37736")
 def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,

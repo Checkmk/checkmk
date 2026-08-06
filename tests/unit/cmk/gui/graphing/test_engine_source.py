@@ -27,6 +27,7 @@ from cmk.gui.graphing._engine_source import (
     HOST_PSEUDO_SERVICE,
     PerformanceDataRow,
     RRDFetchData,
+    RRDFetchMetricNameMapping,
     RRDFetchMetricNames,
 )
 from cmk.gui.graphing._engine_template_graphs import (
@@ -94,6 +95,48 @@ def test_fetch_metric_names_of_a_service_reads_the_services_table(
         Service(
             site_id=SiteID("NO_SITE"), host_name=HostName("h"), service_name=ServiceName("svc")
         ): frozenset({MetricName("x")})
+    }
+
+
+def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
+    load_config: Config, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The sibling fetcher only reports the canonical names, which cannot say which raw perf-data
+    # column each came from. This one carries the pairing out of livestatus intact.
+    translation = translations.Translation(
+        name="translation_cpu_utilization",
+        check_commands=[translations.PassiveCheck("cpu_utilization")],
+        translations={"wait": translations.RenameTo("io_wait")},
+    )
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                **_SERVICE_ROW,
+                "perf_data": "wait=5",
+                "metrics": ["wait"],
+                "check_command": "check_mk-cpu_utilization",
+            }
+        ],
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = h\nFilter: description = svc\nAnd: 2\n"
+    )
+
+    with mock_livestatus():
+        mapping = RRDFetchMetricNameMapping(
+            host_name=HostName("h"),
+            service_name=ServiceName("svc"),
+            debug=False,
+            registered_translations=[translation],
+        )()
+
+    assert mapping == {
+        Service(
+            site_id=SiteID("NO_SITE"), host_name=HostName("h"), service_name=ServiceName("svc")
+        ): {"wait": "io_wait"}
     }
 
 

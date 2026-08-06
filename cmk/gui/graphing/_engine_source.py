@@ -27,9 +27,11 @@ from cmk.graphing_engine import (
     RRDMetric,
     Service,
     ServiceName,
-    SiteID,
     TimeRange,
     TimeSeries,
+)
+from cmk.graphing_engine import (
+    SiteID as EngineSiteID,
 )
 from cmk.gui import sites
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
@@ -37,8 +39,8 @@ from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFou
 from ._engine_perfdata import parse_performance_data, RawPerformanceData
 from ._engine_series import chop_last_empty_step, merge_series, resample, scaled_series
 from ._engine_translations import (
+    map_metric_names,
     rrd_originals,
-    translate_metric_names,
     translate_performance_data,
 )
 
@@ -72,10 +74,8 @@ class _ObjectQuery:
     on_hosts_table: bool
 
     def parse_row(
-        self, row: Sequence[LivestatusColumn], site_id: SiteID | None = None
+        self, row: Sequence[LivestatusColumn], site_id: EngineSiteID | None = None
     ) -> tuple[Service, Sequence[LivestatusColumn]]:
-        # The query selects its key columns ahead of the requested ones: the host column on either
-        # table, plus `description` on the services table.
         if self.on_hosts_table:
             service_name, num_keys = HOST_PSEUDO_SERVICE, 1
         else:
@@ -108,14 +108,12 @@ def _object_queries(services: Sequence[Service], columns: Sequence[str]) -> Iter
         )
 
 
-def _only_sites(site: SiteID | None) -> SiteId | None:
-    # Scope a livestatus query to the metric's site when known (None = all sites, resolved by the
-    # prepending fetch).
+def _only_sites(site: EngineSiteID | None) -> SiteId | None:
     return SiteId(site) if site is not None else None
 
 
 @dataclass(frozen=True)
-class RRDFetchMetricNames:
+class RRDFetchMetricNameMapping:
     # The single service to resolve. Its site is an input because the same host/service can be
     # monitored by two sites: without a scope both are resolved, and a template graph - which is
     # single-service - cannot be built from two. A caller that knows the site (it painted a row, it
@@ -126,39 +124,57 @@ class RRDFetchMetricNames:
     site_id: SiteId | None = None
     registered_translations: Sequence[translations_v1.Translation] = ()
 
-    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
-        # prepend_site tags each row with the site its data lives on (as the legacy fetch does), so
-        # each resolved service carries its real site. The graph built from these services thereby
-        # carries the site on its metrics (for per-site fetching and tuning scoping).
-        result: dict[Service, frozenset[MetricName]] = {}
+    def __call__(self) -> Mapping[Service, Mapping[MetricName, MetricName]]:
+        result: dict[Service, Mapping[MetricName, MetricName]] = {}
         for query in _object_queries(
             [Service(host_name=self.host_name, service_name=self.service_name)],
             ["perf_data", "metrics", "check_command"],
         ):
             with sites.only_sites(self.site_id), sites.prepend_site():
                 for row_site, *row in sites.live().query(query.lql):
-                    service, values = query.parse_row(row, SiteID(str(row_site)))
+                    service, values = query.parse_row(row, EngineSiteID(str(row_site)))
                     perf_data_string, rrd_metrics, check_command = values
                     raw = parse_performance_data(
                         perf_data_string, check_command, rrd_metrics, debug=self.debug
                     )
-                    result[service] = translate_metric_names(
+                    result[service] = map_metric_names(
                         raw.check_command, list(raw.values), self.registered_translations
                     )
         return result
 
 
+@dataclass(frozen=True)
+class RRDFetchMetricNames:
+    host_name: HostName
+    service_name: ServiceName
+    debug: bool
+    site_id: SiteId | None = None
+    registered_translations: Sequence[translations_v1.Translation] = ()
+
+    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
+        return {
+            service: frozenset(mapping.values())
+            for service, mapping in RRDFetchMetricNameMapping(
+                host_name=self.host_name,
+                service_name=self.service_name,
+                debug=self.debug,
+                site_id=self.site_id,
+                registered_translations=self.registered_translations,
+            )().items()
+        }
+
+
 @dataclass(frozen=True, kw_only=True)
 class PerformanceDataRow:
     service: Service
-    site_id: SiteID
+    site_id: EngineSiteID
     perf_data: str
     check_command: str
 
 
 class _RRDFetchPerformanceDataProtocol(Protocol):
     def __call__(
-        self, services: Sequence[Service], *, only_site: SiteID | None
+        self, services: Sequence[Service], *, only_site: EngineSiteID | None
     ) -> Sequence[PerformanceDataRow]: ...
 
 
@@ -169,14 +185,14 @@ class _RRDFetchTimeSeriesProtocol(Protocol):
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
-        only_site: SiteID | None,
+        only_site: EngineSiteID | None,
     ) -> Mapping[RRDMetric, TimeSeries]: ...
 
 
 @dataclass(frozen=True)
 class RRDFetchPerformanceData:
     def __call__(
-        self, services: Sequence[Service], *, only_site: SiteID | None
+        self, services: Sequence[Service], *, only_site: EngineSiteID | None
     ) -> Sequence[PerformanceDataRow]:
         # prepend_site reveals which site each row came from (as in the legacy fetch_graph_row): a
         # metric whose site is unknown up front is thereby scoped to the site its data lives on for
@@ -190,7 +206,7 @@ class RRDFetchPerformanceData:
                     rows.append(
                         PerformanceDataRow(
                             service=service,
-                            site_id=SiteID(str(row_site)),
+                            site_id=EngineSiteID(str(row_site)),
                             perf_data=str(perf_data),
                             check_command=str(check_command),
                         )
@@ -210,7 +226,7 @@ class RRDFetchTimeSeries:
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
-        only_site: SiteID | None,
+        only_site: EngineSiteID | None,
     ) -> Mapping[RRDMetric, TimeSeries]:
         metrics_by_service: dict[Service, list[RRDMetric]] = {}
         for metric in rrd_metrics:
@@ -301,10 +317,10 @@ def assemble_fetched_data(
 
 def _grouped_by_site(
     rrd_metrics: Sequence[RRDMetric],
-) -> Mapping[SiteID | None, Sequence[RRDMetric]]:
+) -> Mapping[EngineSiteID | None, Sequence[RRDMetric]]:
     # Group by the metric's own site (None when unknown). A same host/service on two sites is thereby
     # kept apart - both as distinct fetch groups and as distinct performance-data keys.
-    groups: dict[SiteID | None, list[RRDMetric]] = {}
+    groups: dict[EngineSiteID | None, list[RRDMetric]] = {}
     for metric in rrd_metrics:
         groups.setdefault(metric.site_id, []).append(metric)
     return groups
@@ -344,7 +360,7 @@ class RRDFetchData:
     def _translated_performance_data(
         self,
         rrd_metrics: Sequence[RRDMetric],
-        raw_performance_data: Mapping[tuple[SiteID | None, Service], RawPerformanceData],
+        raw_performance_data: Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
     ) -> Mapping[RRDMetric, PerformanceData]:
         translated = {
             location: translate_performance_data(
@@ -367,8 +383,8 @@ class RRDFetchData:
     def _time_series(
         self,
         rrd_metrics: Sequence[RRDMetric],
-        raw_performance_data: Mapping[tuple[SiteID | None, Service], RawPerformanceData],
-        site_of_service: Mapping[Service, SiteID],
+        raw_performance_data: Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
+        site_of_service: Mapping[Service, EngineSiteID],
         *,
         consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
@@ -447,10 +463,11 @@ class RRDFetchData:
     def _fetch_performance_data(
         self, rrd_metrics: Sequence[RRDMetric]
     ) -> tuple[
-        Mapping[tuple[SiteID | None, Service], RawPerformanceData], Mapping[Service, SiteID]
+        Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
+        Mapping[Service, EngineSiteID],
     ]:
-        result: dict[tuple[SiteID | None, Service], RawPerformanceData] = {}
-        site_of_service: dict[Service, SiteID] = {}
+        result: dict[tuple[EngineSiteID | None, Service], RawPerformanceData] = {}
+        site_of_service: dict[Service, EngineSiteID] = {}
         for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
             site_services = tuple(
                 dict.fromkeys(

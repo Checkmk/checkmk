@@ -6,8 +6,8 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -23,6 +23,7 @@ from cmk.plugins.huawei.lib import (
     parse_huawei_physical_entity_values,
     Section,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
 def parse_huawei_switch_mem(string_table: Sequence[StringTable]) -> Section:
@@ -30,7 +31,7 @@ def parse_huawei_switch_mem(string_table: Sequence[StringTable]) -> Section:
 
 
 def check_huawei_switch_mem(
-    item: str, params: Mapping[str, tuple[float, float]], section: Section
+    item: str, params: Mapping[str, SimpleLevelsConfigModel[float]], section: Section
 ) -> CheckResult:
     if not (item_data := section.get(item)):
         return
@@ -45,7 +46,7 @@ def check_huawei_switch_mem(
 
     yield from check_levels(
         mem,
-        levels_upper=params.get("levels"),
+        levels_upper=params.get("levels", ("no_levels", None)),
         metric_name="mem_used_percent",
         render_func=render.percent,
         label="Usage",
@@ -80,6 +81,6 @@ check_plugin_huawei_switch_mem = CheckPlugin(
     check_function=check_huawei_switch_mem,
     check_ruleset_name="memory_percentage_used_multiitem",
     check_default_parameters={
-        "levels": (80.0, 90.0),
+        "levels": ("fixed", (80.0, 90.0)),
     },
 )

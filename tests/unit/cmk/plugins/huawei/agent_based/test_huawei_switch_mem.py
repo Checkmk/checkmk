@@ -15,6 +15,7 @@ from cmk.plugins.huawei.agent_based.huawei_switch_mem import (
     discover_huawei_switch_mem,
     parse_huawei_switch_mem,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 STRING_TABLE: Sequence[StringTable] = [
     [
@@ -60,7 +61,7 @@ def test_discover_huawei_switch_mem() -> None:
     assert all(isinstance(s, Service) for s in result)
 
 
-PARAMS: Mapping[str, tuple[float, float]] = {"levels": (80.0, 90.0)}
+PARAMS: Mapping[str, SimpleLevelsConfigModel[float]] = {"levels": ("fixed", (80.0, 90.0))}
 
 
 @pytest.mark.parametrize(

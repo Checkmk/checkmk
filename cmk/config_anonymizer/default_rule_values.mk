@@ -5158,7 +5158,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('memory_percentage_used_multiitem', [])
 
 checkgroup_parameters['memory_percentage_used_multiitem'] = [
-{'id': '68157e59-0fca-4634-9c07-d9964513a045', 'value': {'levels': (80.0, 90.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '68157e59-0fca-4634-9c07-d9964513a045', 'value': {'levels': ('fixed', (80.0, 90.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['memory_percentage_used_multiitem']
 
 
@@ -12570,7 +12570,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('memory_percentage_used_multiitem', [])
 
 static_checks['memory_percentage_used_multiitem'] = [
-{'id': '004d7389-1275-43a1-a76f-fa130606b49d', 'value': ('huawei_switch_mem', 'example', {'levels': (80.0, 90.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '004d7389-1275-43a1-a76f-fa130606b49d', 'value': ('huawei_switch_mem', 'example', {'levels': ('fixed', (80.0, 90.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['memory_percentage_used_multiitem']
 
 

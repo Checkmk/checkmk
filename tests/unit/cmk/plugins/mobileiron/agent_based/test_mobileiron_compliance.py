@@ -53,31 +53,33 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
     "params, section, expected_results",
     [
         (
-            {"ignore_compliance": False},
+            Params(policy_violation_levels=("fixed", (2, 3)), ignore_compliance=False),
             DEVICE_DATA,
             (
                 Result(
-                    state=State.OK,
-                    summary="Policy violation count: 4",
+                    state=State.CRIT,
+                    summary="Policy violation count: 4 (warn/crit at 2/3)",
                 ),
                 Metric(
                     "mobileiron_policyviolationcount",
                     value=4,
+                    levels=(2.0, 3.0),
                 ),
                 Result(state=State.CRIT, summary="Compliant: False"),
             ),
         ),
         (
-            {"ignore_compliance": True},
+            Params(policy_violation_levels=("fixed", (2, 3)), ignore_compliance=True),
             DEVICE_DATA,
             (
                 Result(
-                    state=State.OK,
-                    summary="Policy violation count: 4",
+                    state=State.CRIT,
+                    summary="Policy violation count: 4 (warn/crit at 2/3)",
                 ),
                 Metric(
                     "mobileiron_policyviolationcount",
                     value=4,
+                    levels=(2.0, 3.0),
                 ),
                 Result(state=State.OK, summary="Compliant: False (ignored)"),
             ),

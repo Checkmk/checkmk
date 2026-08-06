@@ -18,7 +18,7 @@ from cmk.plugins.mobileiron.lib import Section
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-class Params(TypedDict, total=False):
+class Params(TypedDict):
     policy_violation_levels: SimpleLevelsConfigModel[int]
     ignore_compliance: bool
 
@@ -28,7 +28,7 @@ def check_mobileiron_compliance(params: Params, section: Section) -> CheckResult
     yield from check_levels(
         label="Policy violation count",
         value=count,
-        levels_upper=params.get("policy_violation_levels", ("no_levels", None)),
+        levels_upper=params["policy_violation_levels"],
         metric_name="mobileiron_policyviolationcount",
         render_func=lambda v: str(int(v)),
     )

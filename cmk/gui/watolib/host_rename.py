@@ -33,6 +33,7 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -197,6 +198,7 @@ def perform_rename_hosts(
         renamings_by_site,
         site_configs=site_configs,
         pending_changes=pending_changes,
+        use_git=use_git,
         debug=debug,
     )
 
@@ -384,6 +386,7 @@ def _rename_hosts_in_check_mk(
     *,
     site_configs: Mapping[SiteId, SiteConfiguration],
     pending_changes: PendingChanges,
+    use_git: bool,
     debug: bool,
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
@@ -412,6 +415,9 @@ def _rename_hosts_in_check_mk(
         ).action_counts
 
         _merge_action_counts(action_counts, new_counts)
+
+    bakery.try_bake_agents_on_activation(call_site="Host rename", use_git=use_git, debug=debug)
+
     return action_counts
 
 

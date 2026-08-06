@@ -41,7 +41,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
-from cmk.gui.watolib import config_domain_name
+from cmk.gui.watolib import bakery, config_domain_name
 from cmk.gui.watolib.check_mk_automations import get_configuration, reload, restart
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -121,6 +121,14 @@ class ConfigDomainCore(ABCConfigDomain):
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # Agents have to be baked from the new configuration, but before the core picks
+        # it up, matching the point at which cmk/base used to do this.
+        bakery.try_bake_agents_on_activation(
+            call_site="Activate Changes",
+            use_git=active_config.wato_use_git,
+            debug=active_config.debug,
+        )
+
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
             self._parse_settings(settings).hosts_to_update, debug=active_config.debug
         ).config_warnings

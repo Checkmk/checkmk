@@ -60,53 +60,53 @@ def test_discover_huawei_switch_mem() -> None:
     assert all(isinstance(s, Service) for s in result)
 
 
+PARAMS: Mapping[str, tuple[float, float]] = {"levels": (80.0, 90.0)}
+
+
 @pytest.mark.parametrize(
-    "item, params, expected_state, expected_summary, expected_metric_name",
+    "item, expected_result, expected_value",
     [
-        (
+        pytest.param(
             "1",
-            {"levels": (80.0, 90.0)},
-            State.OK,
-            "Usage: 22.00%",
-            "mem_used_percent",
+            Result(state=State.OK, summary="Usage: 22.00%"),
+            22.0,
+            id="below_the_levels",
         ),
-        (
+        pytest.param(
             "2",
-            {"levels": (80.0, 90.0)},
-            State.WARN,
-            "Usage: 85.00% (warn/crit at 80.00%/90.00%)",
-            "mem_used_percent",
+            Result(state=State.WARN, summary="Usage: 85.00% (warn/crit at 80.00%/90.00%)"),
+            85.0,
+            id="above_the_warn_level",
         ),
-        (
+        pytest.param(
             "3",
-            {"levels": (80.0, 90.0)},
-            State.CRIT,
-            "Usage: 95.00% (warn/crit at 80.00%/90.00%)",
-            "mem_used_percent",
+            Result(state=State.CRIT, summary="Usage: 95.00% (warn/crit at 80.00%/90.00%)"),
+            95.0,
+            id="above_the_crit_level",
         ),
     ],
 )
-def test_check_huawei_switch_mem(
-    item: str,
-    params: Mapping[str, tuple[float, float]],
-    expected_state: State,
-    expected_summary: str,
-    expected_metric_name: str,
-) -> None:
-    """Test check function for huawei_switch_mem check."""
+def test_check_huawei_switch_mem(item: str, expected_result: Result, expected_value: float) -> None:
     parsed = parse_huawei_switch_mem(STRING_TABLE)
-    results = list(check_huawei_switch_mem(item, params, parsed))
-    result_objs = [r for r in results if isinstance(r, Result)]
-    metric_objs = [r for r in results if isinstance(r, Metric)]
-    assert len(result_objs) == 1
-    assert result_objs[0].state == expected_state
-    assert result_objs[0].summary == expected_summary
-    assert len(metric_objs) == 1
-    assert metric_objs[0].name == expected_metric_name
+
+    assert list(check_huawei_switch_mem(item, PARAMS, parsed)) == [
+        expected_result,
+        Metric("mem_used_percent", expected_value, levels=(80.0, 90.0)),
+    ]
+
+
+def test_check_huawei_switch_mem_without_levels() -> None:
+    """levels is optional in the plugin, and the check then reports usage without them."""
+    parsed = parse_huawei_switch_mem(STRING_TABLE)
+
+    assert list(check_huawei_switch_mem("1", {}, parsed)) == [
+        Result(state=State.OK, summary="Usage: 22.00%"),
+        Metric("mem_used_percent", 22.0),
+    ]
 
 
 def test_check_huawei_switch_mem_item_not_found() -> None:
     """Test check function returns empty for non-existent item."""
     parsed = parse_huawei_switch_mem(STRING_TABLE)
-    results = list(check_huawei_switch_mem("4", {"levels": (80.0, 90.0)}, parsed))
+    results = list(check_huawei_switch_mem("4", PARAMS, parsed))
     assert results == []

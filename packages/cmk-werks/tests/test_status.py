@@ -22,6 +22,7 @@ from cmk.werks.tool.cli.status import (
     SCHEMA_VERSION,
     SERVER_NOT_CHECKED,
     ServerInfo,
+    Severity,
     StashInfo,
     Status,
 )
@@ -89,6 +90,7 @@ def test_no_reserved_ids_and_unreachable_server_is_a_problem(tmp_path: Path) -> 
     assert status.problems == [
         Problem(
             item="reserved_ids",
+            severity=Severity.ERROR,
             problem="none reserved and the server is unavailable",
             fix="reconnect to the VPN, then 'werk new'",
         )
@@ -106,7 +108,9 @@ def test_rejected_secret_is_a_problem(tmp_path: Path) -> None:
     status = _collect(tmp_path, _paths(tmp_path, [20_251]), server_status=ServerStatus.UNAUTHORIZED)
 
     assert status.problems == [
-        Problem(item="server", problem="rejected your secret", fix="werk init")
+        Problem(
+            item="server", severity=Severity.ERROR, problem="rejected your secret", fix="werk init"
+        )
     ]
 
 
@@ -116,6 +120,7 @@ def test_server_error_is_a_problem(tmp_path: Path) -> None:
     assert status.problems == [
         Problem(
             item="server",
+            severity=Severity.ERROR,
             problem="answered with an error",
             fix="check http://werk-ids.test",
         )
@@ -132,6 +137,7 @@ def test_stale_reservation_is_a_problem(tmp_path: Path) -> None:
     assert status.problems == [
         Problem(
             item="reserved_ids",
+            severity=Severity.ERROR,
             problem="werk 20252 already exists on disk",
             fix="remove 20252 from the stash",
         )
@@ -141,7 +147,10 @@ def test_stale_reservation_is_a_problem(tmp_path: Path) -> None:
 def test_a_missing_secret_is_a_problem(tmp_path: Path) -> None:
     status = _collect(tmp_path, _paths(tmp_path, [20_251], secret_mode=None), server_status=None)
 
-    assert Problem(item="secret", problem="missing", fix="werk init") in status.problems
+    assert (
+        Problem(item="secret", severity=Severity.ERROR, problem="missing", fix="werk init")
+        in status.problems
+    )
     assert status.secret.exists is False
     assert status.secret.mode is None
     assert status.server.status == SERVER_NOT_CHECKED
@@ -159,6 +168,7 @@ def test_a_leftover_legacy_stash_is_a_problem(tmp_path: Path) -> None:
     assert status.problems == [
         Problem(
             item="legacy_stash",
+            severity=Severity.ERROR,
             problem="exists next to the current werk ID files",
             fix="look at both stash files and merge them by hand",
         )
@@ -202,6 +212,7 @@ def test_secret_readable_by_others_is_a_problem(tmp_path: Path) -> None:
     assert status.problems == [
         Problem(
             item="secret",
+            severity=Severity.ERROR,
             problem="readable by others (0644)",
             fix="chmod 600 $HOME/.config/cmk-werks/secret",
         )
@@ -320,8 +331,18 @@ def test_render_lists_problems_with_their_fix() -> None:
         _NO_HOME,
         _status(
             problems=[
-                Problem(item="secret", problem="readable by others (0644)", fix="chmod 600 x"),
-                Problem(item="server", problem="rejected your secret", fix="werk init"),
+                Problem(
+                    item="secret",
+                    severity=Severity.ERROR,
+                    problem="readable by others (0644)",
+                    fix="chmod 600 x",
+                ),
+                Problem(
+                    item="server",
+                    severity=Severity.ERROR,
+                    problem="rejected your secret",
+                    fix="werk init",
+                ),
             ]
         ),
     )
@@ -410,14 +431,36 @@ def test_json_keeps_a_fixed_shape() -> None:
     }
 
 
+def test_render_marks_a_warning_apart_from_an_error() -> None:
+    warning = Problem(
+        item="legacy_stash", severity=Severity.WARNING, problem="left over", fix="delete it"
+    )
+    error = Problem(item="secret", severity=Severity.ERROR, problem="missing", fix="werk init")
+
+    assert "!" in _rendered(_NO_HOME, _status(problems=[warning]))
+    assert "✗" in _rendered(_NO_HOME, _status(problems=[error]))
+    assert "✗" not in _rendered(_NO_HOME, _status(problems=[warning]))
+
+
+def test_only_errors_count_as_errors() -> None:
+    warning = Problem(
+        item="legacy_stash", severity=Severity.WARNING, problem="left over", fix="delete it"
+    )
+    error = Problem(item="secret", severity=Severity.ERROR, problem="missing", fix="werk init")
+
+    assert _status().has_errors is False
+    assert _status(problems=[warning]).has_errors is False
+    assert _status(problems=[warning, error]).has_errors is True
+
+
 def test_json_problem_items_reference_the_section_keys() -> None:
     document = json.loads(
         render_json(
             _NO_HOME,
             _status(
                 problems=[
-                    Problem(item="reserved_ids", problem="p", fix="f"),
-                    Problem(item="legacy_stash", problem="p", fix="f"),
+                    Problem(item="reserved_ids", severity=Severity.ERROR, problem="p", fix="f"),
+                    Problem(item="legacy_stash", severity=Severity.ERROR, problem="p", fix="f"),
                 ]
             ),
         )
@@ -425,7 +468,12 @@ def test_json_problem_items_reference_the_section_keys() -> None:
 
     for problem in document["problems"]:
         assert problem["item"] in document, f"{problem['item']} is not a section key"
-    assert document["problems"][0] == {"item": "reserved_ids", "problem": "p", "fix": "f"}
+    assert document["problems"][0] == {
+        "item": "reserved_ids",
+        "severity": "error",
+        "problem": "p",
+        "fix": "f",
+    }
 
 
 def test_json_replaces_the_home_directory_by_its_name(tmp_path: Path) -> None:
@@ -444,7 +492,8 @@ def test_json_has_no_problems_when_healthy() -> None:
 
 def test_json_contains_no_ansi_escapes() -> None:
     assert "\x1b" not in render_json(
-        _NO_HOME, _status(problems=[Problem(item="secret", problem="p", fix="f")])
+        _NO_HOME,
+        _status(problems=[Problem(item="secret", severity=Severity.ERROR, problem="p", fix="f")]),
     )
 
 

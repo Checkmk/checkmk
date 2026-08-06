@@ -886,7 +886,7 @@ def main_status(args: argparse.Namespace) -> None:
         render_status(
             home, status, Console(width=None if sys.stdout.isatty() else _REDIRECTED_WIDTH)
         )
-    if status.problems:
+    if status.has_errors:
         sys.exit(1)
 
 

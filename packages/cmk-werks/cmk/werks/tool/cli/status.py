@@ -6,6 +6,7 @@
 import json
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 from pathlib import Path
 
 from rich.box import SIMPLE_HEAD
@@ -20,6 +21,11 @@ SERVER_NOT_CHECKED = "not_checked"
 
 # Bump whenever the JSON document changes shape, so consumers can branch on it.
 SCHEMA_VERSION = 1
+
+
+class Severity(StrEnum):
+    ERROR = "error"
+    WARNING = "warning"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,6 +53,7 @@ class StashInfo:
 @dataclass(frozen=True, kw_only=True)
 class Problem:
     item: str
+    severity: Severity
     problem: str
     fix: str = ""
 
@@ -58,6 +65,10 @@ class Status:
     reserved_ids: StashInfo
     legacy_stash: StashInfo
     problems: Sequence[Problem]
+
+    @property
+    def has_errors(self) -> bool:
+        return any(problem.severity is Severity.ERROR for problem in self.problems)
 
 
 def _mode(path: Path) -> str | None:
@@ -130,6 +141,7 @@ def _problems(
     ):
         yield Problem(
             item="legacy_stash",
+            severity=Severity.ERROR,
             problem="exists next to the current werk ID files",
             # Deliberately not 'werk init': it needs the ID server, so it is no help in the
             # state that made every other command bail out, and it carries over only the IDs
@@ -138,20 +150,29 @@ def _problems(
         )
 
     if not paths.secret_file.exists():
-        yield Problem(item="secret", problem="missing", fix="werk init")
+        yield Problem(item="secret", severity=Severity.ERROR, problem="missing", fix="werk init")
     elif _is_readable_by_others(secret_mode := _mode(paths.secret_file)):
         yield Problem(
             item="secret",
+            severity=Severity.ERROR,
             problem=f"readable by others ({secret_mode})",
             fix=f"chmod 600 {_replace_home(home, paths.secret_file)}",
         )
 
     match server_status:
         case ServerStatus.UNAUTHORIZED:
-            yield Problem(item="server", problem="rejected your secret", fix="werk init")
+            yield Problem(
+                item="server",
+                severity=Severity.ERROR,
+                problem="rejected your secret",
+                fix="werk init",
+            )
         case ServerStatus.ERROR:
             yield Problem(
-                item="server", problem="answered with an error", fix=f"check {server_url}"
+                item="server",
+                severity=Severity.ERROR,
+                problem="answered with an error",
+                fix=f"check {server_url}",
             )
         case _:
             pass
@@ -159,6 +180,7 @@ def _problems(
     if not reserved and server_status is not ServerStatus.OK:
         yield Problem(
             item="reserved_ids",
+            severity=Severity.ERROR,
             problem="none reserved and the server is unavailable",
             fix="reconnect to the VPN, then 'werk new'",
         )
@@ -167,6 +189,7 @@ def _problems(
         if werk_exists(werk_id):
             yield Problem(
                 item="reserved_ids",
+                severity=Severity.ERROR,
                 problem=f"werk {werk_id} already exists on disk",
                 fix=f"remove {werk_id} from the stash",
             )
@@ -221,6 +244,12 @@ _ITEM_LABELS = {
     "secret": "secret",
     "reserved_ids": "reserved ids",
     "legacy_stash": "legacy stash",
+}
+
+
+_SEVERITY_MARKERS = {
+    Severity.ERROR: "[red]✗[/]",
+    Severity.WARNING: "[yellow]![/]",
 }
 
 
@@ -281,7 +310,12 @@ def _werk_ids_table(home: Path, status: Status) -> Table:
 def _problems_table(status: Status) -> Table:
     table = _table("PROBLEMS", "ITEM", "PROBLEM", "FIX")
     for problem in status.problems:
-        table.add_row("✗", _ITEM_LABELS[problem.item], problem.problem, problem.fix)
+        table.add_row(
+            _SEVERITY_MARKERS[problem.severity],
+            _ITEM_LABELS[problem.item],
+            problem.problem,
+            problem.fix,
+        )
     return table
 
 

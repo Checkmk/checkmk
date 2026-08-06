@@ -55,6 +55,9 @@ class Service:
 class ServiceOverview(Service):
     host_name: str
     site_id: str
+    acknowledged: bool
+    in_downtime: bool
+    notifications_enabled: bool
 
 
 class ServiceSortColumn(enum.StrEnum):

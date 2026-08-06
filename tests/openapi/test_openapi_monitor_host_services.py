@@ -636,13 +636,16 @@ class TestMonitorServiceOverview:
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
                     "last_check": time.time(),
                     "last_state_change": time.time(),
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
                 }
             ],
         )
         mock_livestatus.expect_query(
             [
                 "GET services",
-                f"Columns: {_SERVICES_COLUMNS}",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
                 f"Filter: description = {_SERVICE_DESCRIPTION}",
                 "And: 2",
@@ -658,6 +661,72 @@ class TestMonitorServiceOverview:
         assert resp.json["name"] == _SERVICE_DESCRIPTION
         assert resp.json["host_name"] == _HOSTNAME
         assert resp.json["site_id"] == _SITE_ID
+        assert resp.json["state"] == "WARN"
+        assert resp.json["modes"] == []
+
+    @pytest.mark.parametrize(
+        "columns, expected_icons",
+        [
+            pytest.param(
+                {"scheduled_downtime_depth": 1},
+                ["downtime"],
+                id="in scheduled downtime",
+            ),
+            pytest.param({"acknowledged": 1}, ["ack"], id="problem acknowledged"),
+            pytest.param(
+                {"notifications_enabled": 0},
+                ["notif_disabled"],
+                id="notifications disabled",
+            ),
+            pytest.param(
+                {"scheduled_downtime_depth": 2, "acknowledged": 1, "notifications_enabled": 0},
+                ["downtime", "ack", "notif_disabled"],
+                id="all modes at once",
+            ),
+        ],
+    )
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_modes_reflect_the_service_state(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        columns: dict[str, int],
+        expected_icons: list[str],
+    ) -> None:
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": _SERVICE_DESCRIPTION,
+                    "host_name": _HOSTNAME,
+                    "state": 2,
+                    "plugin_output": "CRIT - load average: 9.10, 8.05, 7.01",
+                    "last_check": time.time(),
+                    "last_state_change": time.time(),
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    **columns,
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+
+        assert [mode["icon_name"] for mode in resp.json["modes"]] == expected_icons
 
     def test_unknown_service_returns_404(
         self,
@@ -668,7 +737,7 @@ class TestMonitorServiceOverview:
         mock_livestatus.expect_query(
             [
                 "GET services",
-                f"Columns: {_SERVICES_COLUMNS}",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
                 "Filter: description = not-a-service",
                 "And: 2",
@@ -713,6 +782,10 @@ class TestMonitorServiceOverview:
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"
+_SERVICE_OVERVIEW_COLUMNS = (
+    "description host_name state plugin_output last_check last_state_change acknowledged "
+    "scheduled_downtime_depth notifications_enabled"
+)
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"

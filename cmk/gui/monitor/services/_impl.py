@@ -92,6 +92,9 @@ class LiveStatusHostServicesRepository:
                 Services.plugin_output,
                 Services.last_check,
                 Services.last_state_change,
+                Services.acknowledged,
+                Services.scheduled_downtime_depth,
+                Services.notifications_enabled,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -110,6 +113,9 @@ class LiveStatusHostServicesRepository:
             summary=row["plugin_output"],
             last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
             last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
+            acknowledged=bool(row["acknowledged"]),
+            in_downtime=row["scheduled_downtime_depth"] > 0,
+            notifications_enabled=bool(row["notifications_enabled"]),
         )
 
     def count_total(self, hostname: str) -> int:

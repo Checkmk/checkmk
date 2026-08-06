@@ -26,9 +26,10 @@ from cmk.gui.utils import permission_verification as permissions
 
 from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusHostServicesRepository
-from .._models import ServiceOverview
+from .._models import ServiceOverview, ServiceStateLabel
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
+from ._modes import build_service_modes, ServiceModeInfo
 
 
 @api_model
@@ -38,6 +39,15 @@ class ServiceOverviewResponse:
         description="Name of the host this service belongs to", example="web-server-01"
     )
     site_id: str = api_field(description="Site ID", example="local")
+    state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    modes: list[ServiceModeInfo] = api_field(
+        description=(
+            "Active service modes (e.g. scheduled downtime, acknowledgement, disabled "
+            "notifications) rendered as linked icons. Empty when the service is in none of these "
+            "modes."
+        ),
+        example=[],
+    )
 
     @classmethod
     def from_domain(cls, service: ServiceOverview) -> Self:
@@ -45,6 +55,8 @@ class ServiceOverviewResponse:
             name=service.name,
             host_name=service.host_name,
             site_id=service.site_id,
+            state=service.state_label,
+            modes=build_service_modes(service),
         )
 
 

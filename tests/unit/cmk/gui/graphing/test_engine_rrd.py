@@ -31,8 +31,8 @@ from cmk.gui.graphing._engine_rrd import (
     PerformanceDataRow,
 )
 from cmk.gui.graphing._engine_template_graphs import (
+    _EvaluateTemplateGraphs,
     build_template_graphs,
-    evaluate_template_graphs,
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -220,20 +220,15 @@ def _drawn(
     # The graph a service's metric is discovered into, evaluated over the data the sources serve:
     # what a user ends up seeing, and the columns the fetch read it from.
     time_series = _FakeRRDFetchTimeSeries(columns)
-    [evaluated] = evaluate_template_graphs(
-        graphs=[
-            built.graph
-            for built in build_template_graphs(
-                _SPEC,
-                registered_graphs=[],
-                registered_metrics={},
-                fetch_metric_names=_FakeMetricNames(metric_name),
-            )
-        ],
-        options=CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE
-        ),
-        fetch_data=EngineRRDFetchData(
+    [built] = build_template_graphs(
+        _SPEC,
+        registered_graphs=[],
+        registered_metrics={},
+        fetch_metric_names=_FakeMetricNames(metric_name),
+    )
+    [evaluated] = _EvaluateTemplateGraphs(
+        CommonGraphOptions(consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
+        EngineRRDFetchData(
             debug=True,
             registered_translations=[
                 translations.Translation(
@@ -245,7 +240,7 @@ def _drawn(
             performance_data_source=_FakeRRDFetchPerformanceData(perf_data),
             time_series_source=time_series,
         ),
-    )
+    )(built.graph).graphs
     [curve] = _drawn_curves(evaluated)
     return curve, time_series.requested
 

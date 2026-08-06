@@ -41,7 +41,7 @@ from cmk.gui.graphing._engine_dispatch import (
     serialize_graphs,
 )
 from cmk.gui.graphing._engine_rrd import FetchDiagnostics, QueryLimitReached
-from cmk.gui.graphing._engine_template_graphs import evaluate_template_graphs
+from cmk.gui.graphing._engine_template_graphs import _EvaluateTemplateGraphs
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import api_consolidation_to_engine, evaluated_to_response
 from cmk.gui.graphing.openapi.fetch_graph_data import fetch_graph_data_v1
@@ -91,7 +91,7 @@ def test_evaluated_to_response_has_no_diagnostics_by_default() -> None:
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_empty_graph_runs_end_to_end() -> None:
     # An empty graph has no metrics, so the livestatus-backed RRD source is never queried. The handler
-    # therefore runs end to end (evaluate_graphs -> evaluate_template_graphs -> evaluated_to_response)
+    # therefore runs end to end (evaluate_graphs -> _EvaluateTemplateGraphs -> evaluated_to_response)
     # and returns an empty, fallback-ranged response -- guarding the real wiring without a livestatus
     # fixture.
     graph = Graph(name="g", title="t", kind="template")
@@ -247,30 +247,33 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     )
     time_range = TimeRange(start=0, end=30, step=10)
 
-    def _fetch_data(
-        metrics: Sequence[MetricProtocol],
-        *,
-        consolidation_function: ConsolidationFunction,
-        time_range: TimeRange,
-    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-        return {
-            rrd_metric: [
-                FetchedData(
-                    performance_data=PerformanceData(value=5.0, warning=80.0),
-                    time_series=TimeSeries(time_range=time_range, values=[1.0, None, 3.0]),
-                )
-            ]
-            for rrd_metric in metrics
-            if isinstance(rrd_metric, RRDMetric)
-        }
+    class _FetchData:
+        diagnostics = FetchDiagnostics()
 
-    [evaluated] = evaluate_template_graphs(
-        graphs=[graph],
-        options=CommonGraphOptions(
+        def __call__(
+            self,
+            metrics: Sequence[MetricProtocol],
+            *,
+            consolidation_function: ConsolidationFunction,
+            time_range: TimeRange,
+        ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+            return {
+                rrd_metric: [
+                    FetchedData(
+                        performance_data=PerformanceData(value=5.0, warning=80.0),
+                        time_series=TimeSeries(time_range=time_range, values=[1.0, None, 3.0]),
+                    )
+                ]
+                for rrd_metric in metrics
+                if isinstance(rrd_metric, RRDMetric)
+            }
+
+    [evaluated] = _EvaluateTemplateGraphs(
+        CommonGraphOptions(
             consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
         ),
-        fetch_data=_fetch_data,
-    )
+        _FetchData(),
+    )(graph).graphs
     response = evaluated_to_response(
         evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
     )

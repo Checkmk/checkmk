@@ -31,10 +31,10 @@ from cmk.graphing_engine import (
     TimeSeries,
 )
 from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
-from cmk.gui.graphing._engine_rrd import RawPerformanceValue
+from cmk.gui.graphing._engine_rrd import FetchDiagnostics, RawPerformanceValue
 from cmk.gui.graphing._engine_template_graphs import (
+    _EvaluateTemplateGraphs,
     build_template_graphs,
-    evaluate_template_graphs,
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 
@@ -60,6 +60,7 @@ class _FakeRRDFetchData:
         default_factory=lambda: {_METRIC: RawPerformanceValue(value=1.0)}
     )
     requested_ranges: list[TimeRange] = field(default_factory=list)
+    diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)
 
     def __call__(
         self,
@@ -113,14 +114,14 @@ def test_template_lifecycle_discover_and_update() -> None:
     # Discovery fetches performance data only, never the time series.
     assert fetch_data.requested_ranges == []
 
-    evaluated = evaluate_template_graphs(
-        graphs=graphs,
-        options=CommonGraphOptions(
+    evaluate = _EvaluateTemplateGraphs(
+        CommonGraphOptions(
             consolidation_function=ConsolidationFunction.MAX,
             time_range=_DISCOVERY_RANGE,
         ),
-        fetch_data=fetch_data,
+        fetch_data,
     )
+    evaluated = [one for graph in graphs for one in evaluate(graph).graphs]
 
     assert len(evaluated) == len(graphs)
     # The update fetches the series for the range it is given.

@@ -16,8 +16,6 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
     build_matched_graphs,
     evaluate_graphs,
-    EvaluatedGraph,
-    FetchDataProtocol,
     FetchMetricNamesProtocol,
     Graph,
     RRDMetric,
@@ -32,6 +30,7 @@ from ._engine_dispatch import (
     CommonGraphOptions,
     EngineGraphDispatcher,
     EvaluatedGraphs,
+    FetchDataWithDiagnosticsProtocol,
 )
 from ._engine_plugins import registered_translations
 from ._engine_rrd import EngineRRDFetchData
@@ -105,40 +104,30 @@ def build_template_graphs(
     ]
 
 
-def evaluate_template_graphs(
-    *,
-    graphs: Sequence[Graph],
-    options: CommonGraphOptions,
-    fetch_data: FetchDataProtocol,
-) -> Sequence[EvaluatedGraph]:
-    return evaluate_graphs(
-        consolidation_function=options.consolidation_function,
-        time_range=options.time_range,
-        graphs=graphs,
-        fetch_data=fetch_data,
-    )
-
-
 @dataclass(frozen=True)
 class _EvaluateTemplateGraphs:
     options: CommonGraphOptions
+    fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
     def make(cls, options: Mapping[str, object]) -> Self:
-        return cls(CommonGraphOptions.from_request_options(options))
+        return cls(
+            CommonGraphOptions.from_request_options(options),
+            EngineRRDFetchData(
+                debug=active_config.debug,
+                registered_translations=registered_translations(),
+            ),
+        )
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
-        fetch_data = EngineRRDFetchData(
-            debug=active_config.debug,
-            registered_translations=registered_translations(),
-        )
         return EvaluatedGraphs(
-            graphs=evaluate_template_graphs(
+            graphs=evaluate_graphs(
+                consolidation_function=self.options.consolidation_function,
+                time_range=self.options.time_range,
                 graphs=[graph],
-                options=self.options,
-                fetch_data=fetch_data,
+                fetch_data=self.fetch_data,
             ),
-            diagnostics=fetch_data.diagnostics,
+            diagnostics=self.fetch_data.diagnostics,
         )
 
 

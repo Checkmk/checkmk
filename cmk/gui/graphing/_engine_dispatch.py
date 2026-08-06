@@ -12,7 +12,13 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.graphing_engine import ConsolidationFunction, EvaluatedGraph, Graph, TimeRange
+from cmk.graphing_engine import (
+    ConsolidationFunction,
+    EvaluatedGraph,
+    FetchDataProtocol,
+    Graph,
+    TimeRange,
+)
 
 from ._engine_codec import (
     consolidation_function_of,
@@ -53,6 +59,13 @@ class EvaluatedGraphs:
     # caller surfaces to the user - the engine evaluation itself stays diagnostics-free.
     graphs: Sequence[EvaluatedGraph]
     diagnostics: FetchDiagnostics
+
+
+class FetchDataWithDiagnosticsProtocol(FetchDataProtocol, Protocol):
+    # The fetch a dispatched evaluation runs on: it resolves the data and accumulates the non-fatal
+    # diagnostics the evaluation reads back into its result.
+    @property
+    def diagnostics(self) -> FetchDiagnostics: ...
 
 
 class DispatchedEvaluateProtocol(Protocol):

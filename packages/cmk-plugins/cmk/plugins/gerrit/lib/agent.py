@@ -115,9 +115,11 @@ def run(ctx: GerritRunContext) -> int:
 
 
 def _write_section(data: object, *, name: str) -> None:
-    section_payload = json.dumps(data, sort_keys=True)
-    sys.stdout.write(f"<<<{name}:sep(0)>>>\n")
-    sys.stdout.write(f"{section_payload}\n")
+    header = f"{name}:sep(0)"
+    content = json.dumps(data, sort_keys=True)
+
+    sys.stdout.write(f"<<<{header}>>>\n")
+    sys.stdout.write(f"{content}\n")
 
 
 if __name__ == "__main__":

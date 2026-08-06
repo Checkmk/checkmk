@@ -10,6 +10,7 @@ import { computed, markRaw, ref, watch } from 'vue'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
 import ServiceOverviewTab from './slide-in/ServiceOverviewTab.vue'
@@ -52,6 +53,31 @@ async function loadOverview(description: string): Promise<ServiceOverview> {
   return loaded
 }
 
+// Same shape as the host slide-in: link-only actions rendered as icon buttons in the header.
+const inlineActions = computed<CellAction[]>(() => {
+  const loaded = overview.value
+  if (!loaded) {
+    return []
+  }
+  const actions: CellAction[] = [
+    {
+      id: 'show_service',
+      label: _t('Show details of service %{name}', { name: loaded.name }),
+      icon: 'services',
+      url: loaded.legacy_service_status_link
+    }
+  ]
+  if (loaded.legacy_service_parameters_link !== null) {
+    actions.push({
+      id: 'show_parameters',
+      label: _t('Parameters of this service'),
+      icon: 'rulesets',
+      url: loaded.legacy_service_parameters_link
+    })
+  }
+  return actions
+})
+
 const tabs = computed<SlideInTab[]>(() => {
   const service = props.service
   if (!service) {
@@ -82,7 +108,12 @@ const tabs = computed<SlideInTab[]>(() => {
     @close="emit('close')"
   >
     <template #above-tabs>
-      <ServiceSlideInHeader v-if="service" :service="service" :modes="overview?.modes ?? []" />
+      <ServiceSlideInHeader
+        v-if="service"
+        :service="service"
+        :modes="overview?.modes ?? []"
+        :actions="inlineActions"
+      />
     </template>
   </CmkSlideInTabbed>
 </template>

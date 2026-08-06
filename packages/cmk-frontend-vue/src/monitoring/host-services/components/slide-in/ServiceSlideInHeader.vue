@@ -6,20 +6,23 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { HostServiceEntry, ServiceMode } from '@/monitoring/shared/api/types'
 import ServiceStateDisplay from '@/monitoring/shared/components/ServiceStateDisplay.vue'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
 
 withDefaults(
   defineProps<{
     service: HostServiceEntry
-    // The modes only arrive with the overview, so the header renders without them until it loads.
+    // The modes and actions only arrive with the overview, so the header renders without them
+    // until it loads.
     modes?: ServiceMode[]
+    actions?: CellAction[]
   }>(),
-  { modes: () => [] }
+  { modes: () => [], actions: () => [] }
 )
 </script>
 
 <template>
-  <SlideInHeader :title="service.name" :modes="modes">
+  <SlideInHeader :title="service.name" :modes="modes" :actions="actions">
     <template #state>
       <ServiceStateDisplay :state="service.state" />
     </template>

@@ -163,6 +163,36 @@ describe('ServiceSlideIn', () => {
     expect(screen.queryByRole('link', { name: 'Problem acknowledged' })).not.toBeInTheDocument()
   })
 
+  it('offers the service details and parameters as icon buttons in the header', async () => {
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+
+    expect(
+      await screen.findByRole('link', { name: 'Show details of service CPU load' })
+    ).toHaveAttribute(
+      'href',
+      'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load'
+    )
+    expect(screen.getByRole('link', { name: 'Parameters of this service' })).toHaveAttribute(
+      'href',
+      'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load'
+    )
+  })
+
+  it('hides the parameters button from users who may not see rulesets', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({ legacy_service_parameters_link: null }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+
+    await screen.findByRole('link', { name: 'Show details of service CPU load' })
+
+    expect(
+      screen.queryByRole('link', { name: 'Parameters of this service' })
+    ).not.toBeInTheDocument()
+  })
+
   it('emits close when the close button is used', async () => {
     const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
     await screen.findByText('Service details')

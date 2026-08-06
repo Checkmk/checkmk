@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
 import json
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any, Literal, override
+from typing import Literal, override
 
 import cmk.livestatus_client as livestatus
 from cmk.crash import read_occurrences
@@ -385,7 +384,7 @@ def _sort_crash_time(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -587,7 +586,7 @@ def _sort_crash_host(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -606,7 +605,7 @@ def _sort_crash_item(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -625,7 +624,7 @@ def _sort_crash_check_type(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -644,7 +643,7 @@ def _sort_crash_service_name(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -669,7 +668,7 @@ def _sort_crash_exception(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -688,7 +687,7 @@ def _sort_crash_ident(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -713,7 +712,7 @@ def _sort_crash_source(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -732,7 +731,7 @@ def _sort_crash_type(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -751,7 +750,7 @@ def _sort_crash_version(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -822,7 +821,7 @@ FilterCrashException.query_filter = query_filters.TableTextQuery(
 )
 
 
-def check_crash_source(selection: str, row: dict[str, Any]) -> bool:
+def check_crash_source(selection: str, row: Row) -> bool:
     is_extension = local_files_involved_in_crash(row["crash_exc_traceback"])
 
     if selection == "built_in" and is_extension:

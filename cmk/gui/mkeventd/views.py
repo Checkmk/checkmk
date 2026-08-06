@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, override, TypeGuard
+from typing import Literal, override, TypeGuard
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -1833,7 +1832,7 @@ def _sort_service_level(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:

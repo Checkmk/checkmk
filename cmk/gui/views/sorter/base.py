@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, NamedTuple, Protocol
+from typing import NamedTuple, Protocol
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
@@ -23,7 +21,7 @@ class SorterProtocol(Protocol):
         r1: Row,
         r2: Row,
         *,
-        parameters: Mapping[str, Any] | None,
+        parameters: Mapping[str, object] | None,
         config: Config,
         request: Request,
     ) -> int:
@@ -48,7 +46,7 @@ class SorterEntry(NamedTuple):
     sorter: Sorter
     negate: bool
     join_key: str | None
-    parameters: Mapping[str, Any] | None
+    parameters: Mapping[str, object] | None
 
 
 class Sorter:

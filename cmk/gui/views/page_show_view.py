@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
 
 """Display a table view"""
@@ -15,7 +14,6 @@ import contextlib
 import functools
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any
 
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.user import UserId
@@ -665,7 +663,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
         compfunc: SorterProtocol,
         row1: Row,
         row2: Row,
-        parameters: Mapping[str, Any] | None,
+        parameters: Mapping[str, object] | None,
         config: Config,
         req: Request,
     ) -> int:

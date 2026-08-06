@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
 import time
 from collections.abc import Mapping, Sequence
 from functools import partial
-from typing import Any, Literal
+from typing import Literal
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
@@ -282,7 +281,7 @@ def _sort_service_state(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -301,7 +300,7 @@ def _sort_host_state(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -322,7 +321,7 @@ def _sort_site_host(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -343,7 +342,7 @@ def _sort_host_name(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -362,7 +361,7 @@ def _sort_site_alias(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -383,7 +382,7 @@ def _sort_tags(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
     object_type: str,
@@ -412,7 +411,7 @@ def _sort_labels(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
     object_type: str,
@@ -448,7 +447,7 @@ def _sort_service_perf_val(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
     num: int,
@@ -535,12 +534,12 @@ def _sort_host_custom_variable(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
     assert parameters is not None
-    variable_name = parameters["ident"].upper()
+    variable_name = str(parameters["ident"]).upper()
 
     def _get_value(row: Row) -> str:
         try:
@@ -588,7 +587,7 @@ def _sort_host_ip_addresses(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -634,7 +633,7 @@ def _sort_num_problems(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config,
     request: Request,
 ) -> int:
@@ -704,7 +703,7 @@ def _sort_docker_nodes_(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
+    parameters: Mapping[str, object] | None,
     config: Config | None,
     request: Request | None,
 ) -> int:

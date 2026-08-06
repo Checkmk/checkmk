@@ -28,7 +28,7 @@ from cmk.gui.utils import permission_verification as permissions
 
 from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusHostServicesRepository
-from .._models import HostStateLabel, ServiceOverview, ServiceStateLabel
+from .._models import HostStateLabel, ServiceLabelValue, ServiceOverview, ServiceStateLabel
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
 from ._modes import build_host_modes, build_service_modes, ServiceModeInfo
@@ -112,6 +112,14 @@ class ServiceOverviewResponse:
         ),
         example="2026-07-13T11:40:00Z",
     )
+    tags: dict[str, str] = api_field(
+        description="Service tags",
+        example={"criticality": "prod"},
+    )
+    labels: dict[str, ServiceLabelValue] = api_field(
+        description="Service labels",
+        example={"cmk/check_plugin": ServiceLabelValue(value="cpu_load", source="discovered")},
+    )
 
     @classmethod
     def from_domain(cls, service: ServiceOverview, *, may_see_parameters: bool) -> Self:
@@ -137,6 +145,8 @@ class ServiceOverviewResponse:
             current_attempt=service.current_attempt,
             max_check_attempts=service.max_check_attempts,
             next_check=service.next_check,
+            tags=service.tags,
+            labels=service.labels,
         )
 
 

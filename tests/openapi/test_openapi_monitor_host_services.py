@@ -702,6 +702,9 @@ class TestMonitorServiceOverview:
                     "current_attempt": 2,
                     "max_check_attempts": 4,
                     "next_check": time.time() + 60,
+                    "tags": {"criticality": "prod"},
+                    "labels": {"cmk/check_plugin": "cpu_load"},
+                    "label_sources": {"cmk/check_plugin": "discovered"},
                 }
             ],
         )
@@ -736,6 +739,10 @@ class TestMonitorServiceOverview:
         assert resp.json["current_attempt"] == 2
         assert resp.json["max_check_attempts"] == 4
         assert resp.json["next_check"] == "2026-07-13T11:40:00Z"
+        assert resp.json["tags"] == {"criticality": "prod"}
+        assert resp.json["labels"] == {
+            "cmk/check_plugin": {"value": "cpu_load", "source": "discovered"}
+        }
         assert resp.json["legacy_host_status_link"] == (
             f"view.py?view_name=hoststatus&site={_SITE_ID}&host={_HOSTNAME}"
         )
@@ -794,6 +801,9 @@ class TestMonitorServiceOverview:
                     "current_attempt": 2,
                     "max_check_attempts": 4,
                     "next_check": time.time() + 60,
+                    "tags": {"criticality": "prod"},
+                    "labels": {"cmk/check_plugin": "cpu_load"},
+                    "label_sources": {"cmk/check_plugin": "discovered"},
                     **columns,
                 }
             ],
@@ -844,6 +854,9 @@ class TestMonitorServiceOverview:
                     "current_attempt": 1,
                     "max_check_attempts": 1,
                     "next_check": 0,
+                    "tags": {},
+                    "labels": {},
+                    "label_sources": {},
                 }
             ],
         )
@@ -976,7 +989,7 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state plugin_output last_check last_state_change acknowledged "
     "scheduled_downtime_depth notifications_enabled host_alias host_state host_acknowledged "
     "host_scheduled_downtime_depth contact_groups long_plugin_output current_attempt "
-    "max_check_attempts next_check"
+    "max_check_attempts next_check tags labels label_sources"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = "description host_name state plugin_output last_check last_state_change"

@@ -16,6 +16,8 @@ import datetime as dt
 import enum
 from typing import assert_never, Literal, NewType, override
 
+from cmk.ruleset_matcher.labels import LabelSource
+
 type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN"]
 
 type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
@@ -58,6 +60,12 @@ class Service:
 
 
 @dataclasses.dataclass(frozen=True)
+class ServiceLabelValue:
+    value: str
+    source: LabelSource
+
+
+@dataclasses.dataclass(frozen=True)
 class ServiceOverview(Service):
     host_name: str
     host_alias: str
@@ -74,6 +82,8 @@ class ServiceOverview(Service):
     max_check_attempts: int
     # Passive services are never scheduled, so livestatus reports no next check for them.
     next_check: dt.datetime | None
+    tags: dict[str, str]
+    labels: dict[str, ServiceLabelValue]
 
     @property
     def host_state_label(self) -> HostStateLabel:

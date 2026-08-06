@@ -24,6 +24,7 @@ from ._models import (
     HostState,
     Service,
     ServiceFilter,
+    ServiceLabelValue,
     ServiceOverview,
     ServiceSort,
     ServiceSortColumn,
@@ -109,6 +110,9 @@ class LiveStatusHostServicesRepository:
                 Services.current_attempt,
                 Services.max_check_attempts,
                 Services.next_check,
+                Services.tags,
+                Services.labels,
+                Services.label_sources,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -147,6 +151,11 @@ class LiveStatusHostServicesRepository:
                 if row["next_check"]
                 else None
             ),
+            tags=dict(row["tags"]),
+            labels={
+                key: ServiceLabelValue(value=value, source=row["label_sources"][key])
+                for key, value in row["labels"].items()
+            },
         )
 
     def count_total(self, hostname: str) -> int:

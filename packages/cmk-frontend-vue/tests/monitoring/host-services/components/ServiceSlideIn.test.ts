@@ -47,6 +47,8 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     current_attempt: 1,
     max_check_attempts: 3,
     next_check: '2026-07-13T11:40:00Z',
+    tags: {},
+    labels: {},
     ...overrides
   }
 }

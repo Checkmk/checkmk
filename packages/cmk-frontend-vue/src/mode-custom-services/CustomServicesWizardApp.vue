@@ -7,12 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { CustomServicesWizard } from 'cmk-shared-typing/typescript/mode_custom_services'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import AssignHostStep from './steps/AssignHostStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
-import { type ServiceModel, emptyService } from './types'
+import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
 defineProps<CustomServicesWizard>()
 
@@ -22,10 +22,26 @@ const currentStep = ref(1)
 const model = ref<ServiceModel>(emptyService())
 
 // A metric must be selected before the host-assignment step can be reached.
-const step1Valid = computed(() => model.value.metricName !== null)
+const step1Valid = computed(() => isMetricSelected(model.value))
+// A service name and a target host are both required before the service can be created.
+const step2Valid = computed(() => isReadyToCreate(model.value))
+
+// Default the service name to the selected metric name (editable in step 2).
+watch(
+  () => model.value.metricName,
+  (metric) => {
+    if (metric && model.value.serviceName.trim() === '') {
+      model.value.serviceName = metric
+    }
+  }
+)
 
 async function validateStep1(): Promise<boolean> {
   return step1Valid.value
+}
+
+function createAndActivate(): void {
+  // TODO(CMK-37547): persist the custom service and open Activate Changes.
 }
 </script>
 
@@ -54,11 +70,18 @@ async function validateStep1(): Promise<boolean> {
           <CmkHeading type="h3">{{ _t('Assign to host') }}</CmkHeading>
         </template>
         <template #content>
-          <CmkParagraph>{{
-            _t('Registering the metric as a service on a host is implemented in a following story.')
-          }}</CmkParagraph>
+          <AssignHostStep
+            v-model:service-name="model.serviceName"
+            v-model:host-name="model.hostName"
+          />
         </template>
         <template #actions>
+          <CmkWizardButton
+            type="finish"
+            :override-label="_t('Create & activate changes')"
+            :disabled="!step2Valid"
+            @click="createAndActivate"
+          />
           <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
@@ -73,11 +96,5 @@ async function validateStep1(): Promise<boolean> {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
-}
-
-.mode-custom-services-custom-services-wizard-app__header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-2);
 }
 </style>

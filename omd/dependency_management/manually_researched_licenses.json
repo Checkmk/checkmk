@@ -51,7 +51,7 @@
   "pkg:pypi/annotated-types@0.7.0": "MIT",
   "pkg:pypi/apipkg@3.0.2": "MIT",
   "pkg:pypi/apispec@6.10.0": "MIT",
-  "pkg:pypi/argcomplete@3.7.0": "Apache-2.0",
+  "pkg:pypi/argcomplete@3.7.2": "Apache-2.0",
   "pkg:pypi/azure-core@1.41.0": "MIT",
   "pkg:pypi/azure-identity@1.25.3": "MIT",
   "pkg:pypi/blinker@1.9.0": "MIT",

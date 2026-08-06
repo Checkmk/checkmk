@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import copy
 import dataclasses
 from collections.abc import Mapping
 from typing import Any
@@ -414,6 +415,20 @@ def edit_rule(param):
 
 
 def _validate_value(ruleset: Ruleset, value: Any) -> None:
+    """Validate a rule value via the form spec, falling back to the legacy valuespec.
+
+    The value is persisted verbatim, so it must already be in the current format. A value
+    that only becomes valid after migration is rejected instead of being migrated silently:
+    unlike the GUI - which renders the migrated value before the user saves it - the API
+    client never gets to see such a change, so persisting it would store something the
+    client is unaware of (and the ``value_raw`` reported back would no longer match the
+    input).
+
+    The FormSpec path validates the raw value without migration (``migrate_values=False``),
+    so an outdated value is already rejected there. The legacy valuespec validates the
+    migrated value, hence we additionally reject values whose migrated form differs from
+    the input.
+    """
     # FormSpec validation
     try:
         if problems := get_visitor(
@@ -443,6 +458,19 @@ def _validate_value(ruleset: Ruleset, value: Any) -> None:
         exception = FieldValidationException()
         exception.title = title
         exception.detail = strip_tags(exc.message)
+        raise exception
+
+    # Reject values that are not already in the current format. The legacy valuespec
+    # validates the migrated value, so a value in an outdated format can pass validation
+    # above. We deep-copy before migrating because some migrations mutate their input.
+    if valuespec.transform_value(copy.deepcopy(value)) != value:
+        exception = FieldValidationException()
+        exception.title = "Outdated value format"
+        exception.detail = (
+            "The provided 'value_raw' is in an outdated format. Please migrate it to the "
+            "current format - for example by opening and saving the rule in the GUI - and "
+            "send the migrated value."
+        )
         raise exception
 
 

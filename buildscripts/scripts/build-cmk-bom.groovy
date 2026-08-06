@@ -76,8 +76,7 @@ def main() {
                 // Further: the BOM image does not yet have a DISTRO label...
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     scanner_image.inside(
-                        "${mount_reference_repo_dir}" +
-                        " -v ${checkout_dir}:${checkout_dir}" +
+                        "-v ${checkout_dir}:${checkout_dir}" +
                         " --ulimit nofile=1024:1024" +
                         " --group-add=${docker_group_id}" +
                         " -v /var/run/docker.sock:/var/run/docker.sock"

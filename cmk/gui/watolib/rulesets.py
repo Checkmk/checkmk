@@ -1001,7 +1001,9 @@ class Ruleset:
 
     def matches_fulltext_search(self, search_options: SearchOptions) -> bool:
         return _match_one_of_search_expression(
-            search_options, "fulltext", [self.name, str(self.title()), str(self.help())]
+            search_options,
+            "fulltext",
+            [self.name, lambda: str(self.title()), lambda: str(self.help())],
         )
 
     def matches_ruleset_search_options(self, search_options: SearchOptions) -> bool:
@@ -1020,10 +1022,10 @@ class Ruleset:
         if not _match_search_expression(search_options, "ruleset_name", self.name):
             return False
 
-        if not _match_search_expression(search_options, "ruleset_title", str(self.title())):
+        if not _match_search_expression(search_options, "ruleset_title", lambda: str(self.title())):
             return False
 
-        if not _match_search_expression(search_options, "ruleset_help", str(self.help())):
+        if not _match_search_expression(search_options, "ruleset_help", lambda: str(self.help())):
             return False
 
         return True
@@ -1694,7 +1696,9 @@ def _match_rule_host_list(rule: Rule, search_hosts_str: str) -> bool:
     return True
 
 
-def _match_search_expression(search_options: SearchOptions, attr_name: str, search_in: str) -> bool:
+def _match_search_expression(
+    search_options: SearchOptions, attr_name: str, search_in: str | Callable[[], str]
+) -> bool:
     """
     >>> _match_search_expression({"rule_host_list": "foobar123"}, "rule_host_list", "~.*foo.*")
     True
@@ -1704,17 +1708,22 @@ def _match_search_expression(search_options: SearchOptions, attr_name: str, sear
     if attr_name not in search_options:
         return True  # not searched for this. Matching!
 
-    if search_in and search_in.startswith("~"):
-        return re.search(search_in.lstrip("~"), search_options[attr_name], re.I) is not None
+    search_in_text = search_in() if callable(search_in) else search_in
+
+    if search_in_text and search_in_text.startswith("~"):
+        return re.search(search_in_text.lstrip("~"), search_options[attr_name], re.I) is not None
 
     try:
-        return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
+        return bool(
+            search_in_text
+            and re.search(search_options[attr_name], search_in_text, re.I) is not None
+        )
     except re.error as e:
         raise MKUserError("", e.msg) from e
 
 
 def _match_one_of_search_expression(
-    search_options: SearchOptions, attr_name: str, search_in_list: list[str]
+    search_options: SearchOptions, attr_name: str, search_in_list: Sequence[str | Callable[[], str]]
 ) -> bool:
     for search_in in search_in_list:
         if _match_search_expression(search_options, attr_name, search_in):

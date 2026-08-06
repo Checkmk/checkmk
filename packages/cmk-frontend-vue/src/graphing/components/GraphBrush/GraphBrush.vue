@@ -46,6 +46,7 @@ const BAR_Y = 45
 const BAR_H = 8
 const TRACK_TOP = STRIP_TOP
 const TRACK_H = BAR_Y + BAR_H - TRACK_TOP
+const TRACK_BOTTOM = TRACK_TOP + TRACK_H
 
 const EDGE_TOP = TRACK_TOP
 const EDGE_BOTTOM = BAR_Y + BAR_H
@@ -107,13 +108,24 @@ let mode: BrushMode = 'move'
 let grabOffset = 0 // seconds between cursor and window.start (move)
 
 const localX = (ev: MouseEvent) => ev.clientX - (svgRef.value?.getBoundingClientRect().left ?? 0)
+const localY = (ev: MouseEvent) => ev.clientY - (svgRef.value?.getBoundingClientRect().top ?? 0)
+
+// The svg spans the whole figure; only the track itself is interactive.
+function onTrack(x: number, y: number): boolean {
+  return (
+    x >= props.plotLeft &&
+    x <= props.plotLeft + props.plotWidth &&
+    y >= TRACK_TOP &&
+    y <= TRACK_BOTTOM
+  )
+}
 
 function onMouseDown(ev: MouseEvent): void {
-  if (ev.button !== 0) {
+  const x = localX(ev)
+  if (ev.button !== 0 || !onTrack(x, localY(ev))) {
     return
   }
   ev.preventDefault()
-  const x = localX(ev)
   const span = props.window.end - props.window.start
   mode = hitTestMode(x, toPx(props.window.start), toPx(props.window.end), HANDLE_PX)
   if (mode === 'recenter') {
@@ -276,7 +288,6 @@ onBeforeUnmount(() => {
 .graphing-graph-brush {
   display: block;
   user-select: none;
-  cursor: grab;
 }
 
 .graphing-graph-brush--dragging {
@@ -287,6 +298,7 @@ onBeforeUnmount(() => {
   fill: transparent;
   stroke: var(--ux-theme-6, #e0e0e0);
   shape-rendering: crispedges;
+  cursor: grab;
 }
 
 .graphing-graph-brush__area {
@@ -313,6 +325,9 @@ onBeforeUnmount(() => {
   cursor: grab;
 }
 
+.graphing-graph-brush--dragging .graphing-graph-brush__track,
+.graphing-graph-brush--dragging .graphing-graph-brush__mask,
+.graphing-graph-brush--dragging .graphing-graph-brush__window,
 .graphing-graph-brush--dragging .graphing-graph-brush__bar {
   cursor: grabbing;
 }

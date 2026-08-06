@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Sequence
 
 import pytest
@@ -16,6 +14,8 @@ from cmk.plugins.pulse_secure.agent_based.pulse_secure_disk_util import (
     parse_pulse_secure_disk_util,
     PulseSecureDiskUtilParams,
 )
+
+PARAMS = PulseSecureDiskUtilParams(upper_levels=(80.0, 90.0))
 
 
 @pytest.mark.parametrize(
@@ -37,30 +37,46 @@ def test_discover_pulse_secure_disk(
 
 
 @pytest.mark.parametrize(
-    "params, string_table, expected_state, expected_summary_substring",
+    "utilization, expected_result",
     [
-        (
-            {"upper_levels": (80.0, 90.0)},
-            [["7"]],
-            State.OK,
-            "Percentage of disk space used",
+        pytest.param(
+            "7",
+            Result(state=State.OK, summary="Percentage of disk space used: 7.00%"),
+            id="below_the_levels",
+        ),
+        pytest.param(
+            "85",
+            Result(
+                state=State.WARN,
+                summary="Percentage of disk space used: 85.00% (warn/crit at 80.00%/90.00%)",
+            ),
+            id="above_the_warn_level",
+        ),
+        pytest.param(
+            "95",
+            Result(
+                state=State.CRIT,
+                summary="Percentage of disk space used: 95.00% (warn/crit at 80.00%/90.00%)",
+            ),
+            id="above_the_crit_level",
         ),
     ],
 )
-def test_check_pulse_secure_disk(
-    params: PulseSecureDiskUtilParams,
-    string_table: StringTable,
-    expected_state: State,
-    expected_summary_substring: str,
-) -> None:
-    """Test check function for pulse_secure_disk_util check."""
-    parsed = parse_pulse_secure_disk_util(string_table)
+def test_check_pulse_secure_disk(utilization: str, expected_result: Result) -> None:
+    parsed = parse_pulse_secure_disk_util([[utilization]])
     assert parsed is not None
-    results = list(check_pulse_secure_disk_util(params, parsed))
-    result_objs = [r for r in results if isinstance(r, Result)]
-    metric_objs = [r for r in results if isinstance(r, Metric)]
-    assert len(result_objs) == 1
-    assert result_objs[0].state == expected_state
-    assert expected_summary_substring in result_objs[0].summary
-    assert len(metric_objs) == 1
-    assert metric_objs[0].name == "disk_utilization"
+
+    assert list(check_pulse_secure_disk_util(PARAMS, parsed)) == [
+        expected_result,
+        Metric("disk_utilization", float(utilization), levels=(80.0, 90.0)),
+    ]
+
+
+def test_check_without_configured_levels() -> None:
+    parsed = parse_pulse_secure_disk_util([["7"]])
+    assert parsed is not None
+
+    assert list(check_pulse_secure_disk_util(PulseSecureDiskUtilParams(), parsed)) == [
+        Result(state=State.OK, summary="Percentage of disk space used: 7.00%"),
+        Metric("disk_utilization", 7.0),
+    ]

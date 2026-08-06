@@ -7,11 +7,12 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.domino.agent_based import domino_users
+from cmk.plugins.domino.agent_based.domino_users import DominoUsersParams
 
 # .1.3.6.1.4.1.334.72.1.1.6.3.6 -- lnServerUsers
 STRING_TABLE: StringTable = [["500"]]
 
-PARAMS = {"levels": (1000, 1500)}
+PARAMS = DominoUsersParams(levels=("fixed", (1000, 1500)))
 
 
 def test_parse_keeps_the_string_table() -> None:

@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
+from typing import TypedDict
 
-from collections.abc import Mapping
-from typing import Any
-
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -19,6 +16,11 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.domino.lib import DETECT
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+
+class DominoUsersParams(TypedDict):
+    levels: SimpleLevelsConfigModel[int]
 
 
 def discover_domino_users(section: StringTable) -> DiscoveryResult:
@@ -26,7 +28,7 @@ def discover_domino_users(section: StringTable) -> DiscoveryResult:
         yield Service()
 
 
-def check_domino_users(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+def check_domino_users(params: DominoUsersParams, section: StringTable) -> CheckResult:
     try:
         users = int(section[0][0])
     except IndexError:
@@ -62,7 +64,5 @@ check_plugin_domino_users = CheckPlugin(
     discovery_function=discover_domino_users,
     check_function=check_domino_users,
     check_ruleset_name="domino_users",
-    check_default_parameters={
-        "levels": (1000, 1500),
-    },
+    check_default_parameters=DominoUsersParams(levels=("fixed", (1000, 1500))),
 )

@@ -3232,7 +3232,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('domino_users', [])
 
 checkgroup_parameters['domino_users'] = [
-{'id': '6dfaf251-240b-4877-931a-a39a9dde36e0', 'value': {'levels': None}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '6dfaf251-240b-4877-931a-a39a9dde36e0', 'value': {'levels': ('no_levels', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['domino_users']
 
 
@@ -10707,7 +10707,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('domino_users', [])
 
 static_checks['domino_users'] = [
-{'id': '46f4a0cb-8cc7-4cb3-afae-70b6ac2787ea', 'value': ('domino_users', None, {'levels': None}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '46f4a0cb-8cc7-4cb3-afae-70b6ac2787ea', 'value': ('domino_users', None, {'levels': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['domino_users']
 
 

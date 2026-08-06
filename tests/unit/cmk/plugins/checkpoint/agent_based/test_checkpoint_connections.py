@@ -7,11 +7,12 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.checkpoint.agent_based import checkpoint_connections
+from cmk.plugins.checkpoint.agent_based.checkpoint_connections import Params
 
 # .1.3.6.1.4.1.2620.1.1.25.3 -- fwNumConn
 STRING_TABLE: StringTable = [["19190"]]
 
-PARAMS = {"levels": (40000, 50000)}
+PARAMS = Params(levels=("fixed", (40000, 50000)))
 
 
 def test_parse_reads_the_current_connection_count() -> None:

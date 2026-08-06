@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
+from typing import NamedTuple, TypedDict
 
-from typing import Any, NamedTuple
-
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -18,6 +16,11 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.checkpoint import lib as checkpoint
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+
+class Params(TypedDict):
+    levels: SimpleLevelsConfigModel[int]
 
 
 class Section(NamedTuple):
@@ -50,10 +53,10 @@ def discover_checkpoint_connections(section: Section) -> DiscoveryResult:
 
 
 def check_checkpoint_connections(
-    params: dict[str, Any],
+    params: Params,
     section: Section,
 ) -> CheckResult:
-    yield from check_levels_v1(
+    yield from check_levels(
         value=section.current,
         levels_upper=params["levels"],
         metric_name="connections",
@@ -67,6 +70,6 @@ check_plugin_checkpoint_connections = CheckPlugin(
     service_name="Connections",
     discovery_function=discover_checkpoint_connections,
     check_function=check_checkpoint_connections,
-    check_default_parameters={"levels": (40000, 50000)},
+    check_default_parameters=Params(levels=("fixed", (40000, 50000))),
     check_ruleset_name="checkpoint_connections",
 )

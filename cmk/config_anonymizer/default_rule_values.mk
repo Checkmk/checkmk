@@ -2413,7 +2413,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('checkpoint_connections', [])
 
 checkgroup_parameters['checkpoint_connections'] = [
-{'id': 'f9630bbf-586e-4290-808d-82c337387753', 'value': {'levels': (40000, 50000)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'f9630bbf-586e-4290-808d-82c337387753', 'value': {'levels': ('fixed', (40000, 50000))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['checkpoint_connections']
 
 
@@ -10005,7 +10005,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('checkpoint_connections', [])
 
 static_checks['checkpoint_connections'] = [
-{'id': '439bb868-b048-4226-b2ed-d687420e9ebe', 'value': ('checkpoint_connections', None, {'levels': (40000, 50000)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '439bb868-b048-4226-b2ed-d687420e9ebe', 'value': ('checkpoint_connections', None, {'levels': ('fixed', (40000, 50000))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['checkpoint_connections']
 
 

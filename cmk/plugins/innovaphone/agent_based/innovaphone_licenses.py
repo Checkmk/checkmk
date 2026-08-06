@@ -52,19 +52,25 @@ def discover_innovaphone_licenses(section: LicenseUsage) -> DiscoveryResult:
 
 
 def check_innovaphone_licenses(params: Mapping[str, Any], section: LicenseUsage) -> CheckResult:
-    perc_used = section.utilization
+    yield Result(state=State.OK, summary=f"Used: {section.used}")
+    yield Result(state=State.OK, summary=f"Total: {section.total}")
+
     warn, crit = params["levels"]
-    utilization_message = f" ({perc_used:.0f}%)" if perc_used is not None else ""
-    message = f"Used {section.used}/{section.total} Licences{utilization_message}"
-    levels = f"Warning/ Critical at ({warn}/{crit})"
-    if perc_used is None:
-        yield Result(state=State.UNKNOWN, summary=message)
-    elif perc_used > crit:
-        yield Result(state=State.CRIT, summary=message + levels)
-    elif perc_used > warn:
-        yield Result(state=State.WARN, summary=message + levels)
-    else:
-        yield Result(state=State.OK, summary=message)
+    levels_info = f"(warn/crit at {warn:.0f}%/{crit:.0f}%)"
+
+    # NOTE: not using check levels here because the legacy plugin used a exclusive relationship for
+    # both the warn and critical thresholds. So, we are essentially rolling our own here. That may
+    # change in the future, but requires a deeper look into what that means for deployed envs.
+    match section.utilization:
+        case None:
+            yield Result(state=State.UNKNOWN, summary="Utilization: n/a")
+        case float(value) if value > crit:
+            yield Result(state=State.CRIT, summary=f"Utilization: {value:.0f}% {levels_info}")
+        case float(value) if value > warn:
+            yield Result(state=State.WARN, summary=f"Utilization: {value:.0f}% {levels_info}")
+        case _:
+            yield Result(state=State.OK, summary=f"Utilization: {section.utilization:.0f}%")
+
     yield Metric("licenses", section.used, boundaries=(0, section.total))
 
 

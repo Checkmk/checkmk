@@ -59,7 +59,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=0, total=0),
             [
-                Result(state=State.UNKNOWN, summary="Used 0/0 Licences"),
+                Result(state=State.OK, summary="Used: 0"),
+                Result(state=State.OK, summary="Total: 0"),
+                Result(state=State.UNKNOWN, summary="Utilization: n/a"),
                 Metric("licenses", 0.0, boundaries=(0.0, 0.0)),
             ],
             id="zero values",
@@ -68,7 +70,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=0, total=100),
             [
-                Result(state=State.OK, summary="Used 0/100 Licences (0%)"),
+                Result(state=State.OK, summary="Used: 0"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.OK, summary="Utilization: 0%"),
                 Metric("licenses", 0.0, boundaries=(0.0, 100.0)),
             ],
             id="zero utilization with nonzero total",
@@ -77,7 +81,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=50, total=100),
             [
-                Result(state=State.OK, summary="Used 50/100 Licences (50%)"),
+                Result(state=State.OK, summary="Used: 50"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.OK, summary="Utilization: 50%"),
                 Metric("licenses", 50.0, boundaries=(0.0, 100.0)),
             ],
             id="ok state",
@@ -86,7 +92,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=90, total=100),
             [
-                Result(state=State.OK, summary="Used 90/100 Licences (90%)"),
+                Result(state=State.OK, summary="Used: 90"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.OK, summary="Utilization: 90%"),
                 Metric("licenses", 90.0, boundaries=(0.0, 100.0)),
             ],
             id="ok state at warn boundary",
@@ -95,10 +103,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=92, total=100),
             [
-                Result(
-                    state=State.WARN,
-                    summary="Used 92/100 Licences (92%)Warning/ Critical at (90.0/95.0)",
-                ),
+                Result(state=State.OK, summary="Used: 92"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.WARN, summary="Utilization: 92% (warn/crit at 90%/95%)"),
                 Metric("licenses", 92.0, boundaries=(0.0, 100.0)),
             ],
             id="warn state",
@@ -107,10 +114,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=95, total=100),
             [
-                Result(
-                    state=State.WARN,
-                    summary="Used 95/100 Licences (95%)Warning/ Critical at (90.0/95.0)",
-                ),
+                Result(state=State.OK, summary="Used: 95"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.WARN, summary="Utilization: 95% (warn/crit at 90%/95%)"),
                 Metric("licenses", 95.0, boundaries=(0.0, 100.0)),
             ],
             id="warn state at crit boundary",
@@ -119,10 +125,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=96, total=100),
             [
-                Result(
-                    state=State.CRIT,
-                    summary="Used 96/100 Licences (96%)Warning/ Critical at (90.0/95.0)",
-                ),
+                Result(state=State.OK, summary="Used: 96"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.CRIT, summary="Utilization: 96% (warn/crit at 90%/95%)"),
                 Metric("licenses", 96.0, boundaries=(0.0, 100.0)),
             ],
             id="crit state",
@@ -131,10 +136,9 @@ def test_discover_innovaphone_licenses() -> None:
             {"levels": (90.0, 95.0)},
             LicenseUsage(used=110, total=100),
             [
-                Result(
-                    state=State.CRIT,
-                    summary="Used 110/100 Licences (110%)Warning/ Critical at (90.0/95.0)",
-                ),
+                Result(state=State.OK, summary="Used: 110"),
+                Result(state=State.OK, summary="Total: 100"),
+                Result(state=State.CRIT, summary="Utilization: 110% (warn/crit at 90%/95%)"),
                 Metric("licenses", 110.0, boundaries=(0.0, 100.0)),
             ],
             id="used > total",

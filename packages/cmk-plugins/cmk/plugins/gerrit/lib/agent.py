@@ -12,6 +12,7 @@ import dataclasses
 import json
 import sys
 from collections.abc import Sequence
+from typing import NewType
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gerrit.lib.cache import cache_ttl
@@ -115,12 +116,21 @@ def process_version_section(ctx: GerritRunContext) -> None:
     name = "gerrit_version"
     storage = Storage(name, ctx.hostname)
     cache_wrapper = cache_ttl(storage, ttl=ctx.ttl.version)
-    data = cache_wrapper(ctx.collectors.version.collect)()
-    write_section(data, name=name)
+    data, ts = cache_wrapper(ctx.collectors.version.collect)()
+    cache_marker = build_cache_marker(ts=ts, ttl=ctx.ttl.version) if ts is not None else None
+    write_section(data, name=name, cache_marker=cache_marker)
 
 
-def write_section(data: object, *, name: str) -> None:
-    header = f"{name}:sep(0)"
+Marker = NewType("Marker", str)
+"""Marker indicates that a string is prefixed with a colon and can be added to a section header."""
+
+
+def build_cache_marker(ts: float, ttl: int) -> Marker:
+    return Marker(f":cached({int(ts)},{ttl})")
+
+
+def write_section(data: object, *, name: str, cache_marker: Marker | None = None) -> None:
+    header = f"{name}:sep(0){cache_marker or ''}"
     content = json.dumps(data, sort_keys=True)
 
     sys.stdout.write(f"<<<{header}>>>\n")

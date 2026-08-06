@@ -15,7 +15,9 @@ from cmk.server_side_programs.v1_unstable import Storage
 _HASH_NAMESPACE: Final = uuid.UUID("5871b8db-dcef-4c22-9b36-e81d7d4d66bb")
 
 
-def cache_ttl[**P, R](store: Storage, *, ttl: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
+def cache_ttl[**P, R](
+    store: Storage, *, ttl: int
+) -> Callable[[Callable[P, R]], Callable[P, tuple[R, float | None]]]:
     if ttl < 0:
         raise ValueError("Time to live value must be a positive integer.")
 
@@ -23,10 +25,10 @@ def cache_ttl[**P, R](store: Storage, *, ttl: int) -> Callable[[Callable[P, R]],
         ts: float
         data: T
 
-    def decorator(f: Callable[P, R]) -> Callable[P, R]:
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+    def decorator(f: Callable[P, R]) -> Callable[P, tuple[R, float | None]]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> tuple[R, float | None]:
             if ttl == 0:
-                return f(*args, **kwargs)
+                return f(*args, **kwargs), None
 
             if any(not isinstance(arg, Hashable) for arg in args):
                 raise ValueError(f"Unhashable arg values: {args}")
@@ -41,13 +43,13 @@ def cache_ttl[**P, R](store: Storage, *, ttl: int) -> Callable[[Callable[P, R]],
                 cache = Cache[R](ts=raw_cache["ts"], data=raw_cache["data"])
 
                 if 0 < time.time() - cache["ts"] < ttl:
-                    return cache["data"]
+                    return cache["data"], cache["ts"]
 
             new_data = f(*args, **kwargs)
-            new_cache = Cache[R](ts=time.time(), data=new_data)
+            new_cache = Cache[R](ts=(ts := time.time()), data=new_data)
             store.write(key, json.dumps(new_cache))
 
-            return new_data
+            return new_data, ts
 
         return wrapper
 

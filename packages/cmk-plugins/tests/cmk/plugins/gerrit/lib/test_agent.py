@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import re
 from pathlib import Path
 
 import pytest
@@ -31,8 +32,8 @@ def test_run_agent(capsys: pytest.CaptureFixture[str]) -> None:
     # agent ran without error
     assert captured.err == ""
 
-    # sections headings were successfully written out.
-    assert "<<<gerrit_version:sep(0)>>>" in captured.out
+    # section heading was written out with a cache timestamp.
+    assert re.search(r"<<<gerrit_version:sep\(0\):cached\([\d.]+,60\)>>>", captured.out)
 
     # cache is being used on second run.
     agent.run(ctx)
@@ -52,6 +53,11 @@ def test_run_agent_with_no_cache(capsys: pytest.CaptureFixture[str]) -> None:
     agent.run(ctx)
     second_run_output = capsys.readouterr().out
 
+    # section heading should not have :cached marker
+    assert "<<<gerrit_version:sep(0)>>>" in first_run_output
+    assert "<<<gerrit_version:sep(0)>>>" in second_run_output
+
+    # data should be different between runs
     assert first_run_output != second_run_output
 
 

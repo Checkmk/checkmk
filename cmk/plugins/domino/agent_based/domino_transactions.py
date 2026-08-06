@@ -5,8 +5,8 @@
 
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -16,6 +16,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.domino.lib import DETECT
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
 def discover_domino_transactions(section: StringTable) -> DiscoveryResult:
@@ -24,7 +25,7 @@ def discover_domino_transactions(section: StringTable) -> DiscoveryResult:
 
 
 class DominoTransactionsParams(TypedDict):
-    levels: tuple[int, int]
+    levels: SimpleLevelsConfigModel[int]
 
 
 def check_domino_transactions(
@@ -61,5 +62,5 @@ check_plugin_domino_transactions = CheckPlugin(
     discovery_function=discover_domino_transactions,
     check_function=check_domino_transactions,
     check_ruleset_name="domino_transactions",
-    check_default_parameters={"levels": (30000, 35000)},
+    check_default_parameters=DominoTransactionsParams(levels=("fixed", (30000, 35000))),
 )

@@ -3223,7 +3223,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('domino_transactions', [])
 
 checkgroup_parameters['domino_transactions'] = [
-{'id': 'd1d71afe-35dc-4b83-a7d8-a87b31978c42', 'value': {'levels': None}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd1d71afe-35dc-4b83-a7d8-a87b31978c42', 'value': {'levels': ('no_levels', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['domino_transactions']
 
 
@@ -10698,7 +10698,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('domino_transactions', [])
 
 static_checks['domino_transactions'] = [
-{'id': 'df9d7c50-f0fd-405e-963a-9cbab27504a7', 'value': ('domino_transactions', None, {'levels': None}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'df9d7c50-f0fd-405e-963a-9cbab27504a7', 'value': ('domino_transactions', None, {'levels': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['domino_transactions']
 
 

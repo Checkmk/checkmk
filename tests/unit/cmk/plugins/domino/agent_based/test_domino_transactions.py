@@ -12,7 +12,7 @@ from cmk.plugins.domino.agent_based.domino_transactions import DominoTransaction
 # .1.3.6.1.4.1.334.72.1.1.6.3.2 -- lnServerTransPerMinute
 STRING_TABLE: StringTable = [["12345"]]
 
-PARAMS = DominoTransactionsParams(levels=(30000, 35000))
+PARAMS = DominoTransactionsParams(levels=("fixed", (30000, 35000)))
 
 
 def test_parse_keeps_the_string_table() -> None:

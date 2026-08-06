@@ -123,6 +123,7 @@ def passwordstore_choices() -> Choices:
 
 
 # TODO remove this once a solution for use of passwordstore_choices is found
+@request_memoize()
 def passwordstore_choices_without_user() -> Choices:
     pw_store = PasswordStore()
     return [(ident, pw["title"]) for ident, pw in pw_store.load_for_reading().items()]

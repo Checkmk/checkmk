@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="misc"
 
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.mobileiron.agent_based.mobileiron_section import parse_mobileiron_statistics
-from cmk.plugins.mobileiron.agent_based.mobileiron_statistics import check_mobileiron_sourcehost
+from cmk.plugins.mobileiron.agent_based.mobileiron_statistics import (
+    check_mobileiron_sourcehost,
+    Params,
+)
 from cmk.plugins.mobileiron.lib import SourceHostSection
 
 DEVICE_DATA = parse_mobileiron_statistics([['{"non_compliant": 12, "total_count": 22}']])
@@ -23,7 +23,7 @@ DEVICE_DATA = parse_mobileiron_statistics([['{"non_compliant": 12, "total_count"
     "params, section, expected_results",
     [
         (
-            {"non_compliant_summary_levels": (10, 20)},
+            Params(non_compliant_summary_levels=("fixed", (10.0, 20.0))),
             DEVICE_DATA,
             (
                 Metric("mobileiron_devices_total", 22.0),
@@ -43,7 +43,7 @@ DEVICE_DATA = parse_mobileiron_statistics([['{"non_compliant": 12, "total_count"
             ),
         ),
         (
-            {"non_compliant_summary_levels": (50, 60)},
+            Params(non_compliant_summary_levels=("fixed", (50.0, 60.0))),
             DEVICE_DATA,
             (
                 Metric("mobileiron_devices_total", 22.0),
@@ -65,7 +65,7 @@ DEVICE_DATA = parse_mobileiron_statistics([['{"non_compliant": 12, "total_count"
     ],
 )
 def test_check_mobileiron_sourcehost(
-    params: Mapping[str, Any], section: SourceHostSection, expected_results: CheckResult
+    params: Params, section: SourceHostSection, expected_results: CheckResult
 ) -> None:
     results = tuple(check_mobileiron_sourcehost(params, section))
     assert results == expected_results

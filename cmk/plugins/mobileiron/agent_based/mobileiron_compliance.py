@@ -3,22 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
+from typing import TypedDict
 
-from collections.abc import Mapping
-from typing import Any
-
-from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.mobileiron.lib import Section
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:
+class Params(TypedDict, total=False):
+    policy_violation_levels: SimpleLevelsConfigModel[int]
+    ignore_compliance: bool
+
+
+def check_mobileiron_compliance(params: Params, section: Section) -> CheckResult:
     count = section.policy_violation_count or 0
-    yield from check_levels_v1(
+    yield from check_levels(
         label="Policy violation count",
         value=count,
-        levels_upper=params.get("policy_violation_levels"),
+        levels_upper=params.get("policy_violation_levels", ("no_levels", None)),
         metric_name="mobileiron_policyviolationcount",
         render_func=lambda v: str(int(v)),
     )
@@ -46,5 +56,7 @@ check_plugin_mobileiron_compliance = CheckPlugin(
     discovery_function=discover_single,
     check_function=check_mobileiron_compliance,
     check_ruleset_name="mobileiron_compliance",
-    check_default_parameters={"policy_violation_levels": (2, 3), "ignore_compliance": False},
+    check_default_parameters=Params(
+        policy_violation_levels=("fixed", (2, 3)), ignore_compliance=False
+    ),
 )

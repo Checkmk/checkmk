@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from collections.abc import Mapping
 
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.mobileiron.agent_based.mobileiron_compliance import check_mobileiron_compliance
+from cmk.plugins.mobileiron.agent_based.mobileiron_compliance import (
+    check_mobileiron_compliance,
+    Params,
+)
 from cmk.plugins.mobileiron.agent_based.mobileiron_section import parse_mobileiron
 from cmk.plugins.mobileiron.lib import Section
 
@@ -81,7 +83,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
             ),
         ),
         (
-            {"policy_violation_levels": (3, 5), "ignore_compliance": False},
+            Params(policy_violation_levels=("fixed", (3, 5)), ignore_compliance=False),
             DEVICE_DATA,
             (
                 Result(
@@ -97,7 +99,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
             ),
         ),
         (
-            {"policy_violation_levels": (3, 5), "ignore_compliance": False},
+            Params(policy_violation_levels=("fixed", (3, 5)), ignore_compliance=False),
             COMPLIANT_DEVICE_DATA,
             (
                 Result(
@@ -113,7 +115,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
             ),
         ),
         (
-            {"policy_violation_levels": (3, 5), "ignore_compliance": False},
+            Params(policy_violation_levels=("fixed", (3, 5)), ignore_compliance=False),
             NO_COUNT_DEVICE_DATA,
             (
                 Result(
@@ -131,7 +133,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
     ],
 )
 def test_check_mobileiron_compliance(
-    params: Mapping[str, object], section: Section, expected_results: CheckResult
+    params: Params, section: Section, expected_results: CheckResult
 ) -> None:
     results = tuple(check_mobileiron_compliance(params, section))
     assert results == expected_results

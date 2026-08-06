@@ -3,18 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """
 Provides summarized insights into the fetched partitions.
 Single service per mobileiron source host.
 """
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -25,11 +22,14 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.mobileiron.lib import SourceHostSection
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-def check_mobileiron_sourcehost(
-    params: Mapping[str, Any], section: SourceHostSection
-) -> CheckResult:
+class Params(TypedDict):
+    non_compliant_summary_levels: SimpleLevelsConfigModel[float]
+
+
+def check_mobileiron_sourcehost(params: Params, section: SourceHostSection) -> CheckResult:
     yield Metric(
         name="mobileiron_devices_total",
         value=section.total_count,
@@ -38,11 +38,11 @@ def check_mobileiron_sourcehost(
     yield Metric(name="mobileiron_non_compliant", value=section.non_compliant)
 
     non_compliant_percent = section.non_compliant / section.total_count * 100
-    yield from check_levels_v1(
+    yield from check_levels(
         label="Non-compliant devices",
         value=non_compliant_percent,
         metric_name="mobileiron_non_compliant_summary",
-        levels_upper=params.get("non_compliant_summary_levels"),
+        levels_upper=params["non_compliant_summary_levels"],
         render_func=render.percent,
         notice_only=True,
         boundaries=(0, 100),
@@ -69,5 +69,5 @@ check_plugin_mobileiron_statistics = CheckPlugin(
     discovery_function=discover_single,
     check_function=check_mobileiron_sourcehost,
     check_ruleset_name="mobileiron_statistics",
-    check_default_parameters={"non_compliant_summary_levels": (10.0, 20.0)},
+    check_default_parameters=Params(non_compliant_summary_levels=("fixed", (10.0, 20.0))),
 )

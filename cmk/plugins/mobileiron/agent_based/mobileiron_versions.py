@@ -9,8 +9,8 @@ import datetime
 import re
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -24,9 +24,9 @@ from cmk.plugins.mobileiron.lib import Section
 
 class Params(TypedDict):
     patchlevel_unparsable: int
-    patchlevel_age: int
+    patchlevel_age: float
     os_build_unparsable: int
-    os_age: int
+    os_age: float
     ios_version_regexp: str
     android_version_regexp: str
     os_version_other: int
@@ -56,11 +56,11 @@ def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
             summary=f"Security patch level has an invalid date format: '{patch_level}'",
         )
     else:
-        yield from check_levels_v1(
+        yield from check_levels(
             label=f"Security patch level is '{patch_level}'",
             metric_name="mobileiron_last_patched",
             value=age,
-            levels_upper=(level_days, level_days),
+            levels_upper=("fixed", (level_days, level_days)),
             render_func=render.timespan,
         )
 
@@ -75,11 +75,11 @@ def _check_os_build_version(params: Params, section: Section) -> CheckResult:
             notice=f"OS build version has an invalid date format: '{section.os_build_version}'",
         )
     else:
-        yield from check_levels_v1(
+        yield from check_levels(
             label=f"OS build version is '{section.os_build_version}'",
             metric_name="mobileiron_last_build",
             value=age,
-            levels_upper=(level_days, level_days),
+            levels_upper=("fixed", (level_days, level_days)),
             render_func=render.timespan,
             notice_only=True,
         )
@@ -141,9 +141,9 @@ check_plugin_mobileiron_versions = CheckPlugin(
     check_ruleset_name="mobileiron_versions",
     check_default_parameters={
         "patchlevel_unparsable": 0,
-        "patchlevel_age": 7776000,
+        "patchlevel_age": 7776000.0,
         "os_build_unparsable": 0,
-        "os_age": 7776000,
+        "os_age": 7776000.0,
         "ios_version_regexp": "",
         "android_version_regexp": "",
         "os_version_other": 0,

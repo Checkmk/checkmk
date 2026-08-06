@@ -5230,7 +5230,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('mobileiron_statistics', [])
 
 checkgroup_parameters['mobileiron_statistics'] = [
-{'id': 'ee6bb08e-78d2-49dd-9aff-13d3e9759364', 'value': {'non_compliant_summary_levels': (10.0, 20.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ee6bb08e-78d2-49dd-9aff-13d3e9759364', 'value': {'non_compliant_summary_levels': ('fixed', (10.0, 20.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['mobileiron_statistics']
 
 
@@ -5239,7 +5239,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('mobileiron_versions', [])
 
 checkgroup_parameters['mobileiron_versions'] = [
-{'id': '59530c47-beef-416c-994c-9fb8df311310', 'value': {'ios_version_regexp': '', 'android_version_regexp': '', 'os_version_other': 0, 'patchlevel_unparsable': 0, 'patchlevel_age': 7776000, 'os_build_unparsable': 0, 'os_age': 7776000}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '59530c47-beef-416c-994c-9fb8df311310', 'value': {'ios_version_regexp': '', 'android_version_regexp': '', 'os_version_other': 0, 'patchlevel_unparsable': 0, 'patchlevel_age': 7776000.0, 'os_build_unparsable': 0, 'os_age': 7776000.0}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['mobileiron_versions']
 
 
@@ -12633,7 +12633,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('mobileiron_statistics', [])
 
 static_checks['mobileiron_statistics'] = [
-{'id': '03a3851e-3e21-42e5-bba6-0c05a0f1248e', 'value': ('mobileiron_statistics', None, {'non_compliant_summary_levels': (10.0, 20.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '03a3851e-3e21-42e5-bba6-0c05a0f1248e', 'value': ('mobileiron_statistics', None, {'non_compliant_summary_levels': ('fixed', (10.0, 20.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['mobileiron_statistics']
 
 
@@ -12642,7 +12642,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('mobileiron_versions', [])
 
 static_checks['mobileiron_versions'] = [
-{'id': '527da807-2496-4d12-843b-f06da730111f', 'value': ('mobileiron_versions', None, {'ios_version_regexp': '', 'android_version_regexp': '', 'os_version_other': 0, 'patchlevel_unparsable': 0, 'patchlevel_age': 7776000, 'os_build_unparsable': 0, 'os_age': 7776000}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '527da807-2496-4d12-843b-f06da730111f', 'value': ('mobileiron_versions', None, {'ios_version_regexp': '', 'android_version_regexp': '', 'os_version_other': 0, 'patchlevel_unparsable': 0, 'patchlevel_age': 7776000.0, 'os_build_unparsable': 0, 'os_age': 7776000.0}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['mobileiron_versions']
 
 

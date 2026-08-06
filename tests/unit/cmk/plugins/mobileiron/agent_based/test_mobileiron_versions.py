@@ -96,9 +96,9 @@ def test_try_calculation_age_raises() -> None:
         (
             {
                 "patchlevel_unparsable": 0,
-                "patchlevel_age": 7776000,
+                "patchlevel_age": 7776000.0,
                 "os_build_unparsable": 0,
-                "os_age": 7776000,
+                "os_age": 7776000.0,
                 "ios_version_regexp": None,
                 "android_version_regexp": None,
                 "os_version_other": 0,
@@ -128,9 +128,9 @@ def test_try_calculation_age_raises() -> None:
         (
             {
                 "patchlevel_unparsable": 0,
-                "patchlevel_age": 7776000,
+                "patchlevel_age": 7776000.0,
                 "os_build_unparsable": 0,
-                "os_age": 7776000,
+                "os_age": 7776000.0,
                 "ios_version_regexp": None,
                 "android_version_regexp": None,
                 "os_version_other": 0,
@@ -154,9 +154,9 @@ def test_try_calculation_age_raises() -> None:
         (
             {
                 "patchlevel_unparsable": 0,
-                "patchlevel_age": 7776000,
+                "patchlevel_age": 7776000.0,
                 "os_build_unparsable": 1,
-                "os_age": 7776000,
+                "os_age": 7776000.0,
                 "ios_version_regexp": r"1[45]\.[0-9]\.[0-9]",
                 "android_version_regexp": None,
                 "os_version_other": 0,
@@ -180,9 +180,9 @@ def test_try_calculation_age_raises() -> None:
         (
             {
                 "patchlevel_unparsable": 0,
-                "patchlevel_age": 7776000,
+                "patchlevel_age": 7776000.0,
                 "os_build_unparsable": 0,
-                "os_age": 7776000,
+                "os_age": 7776000.0,
                 "ios_version_regexp": None,
                 "android_version_regexp": None,
                 "os_version_other": 3,

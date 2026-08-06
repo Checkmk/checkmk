@@ -5,13 +5,12 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary
 
 
 def _parameter_valuespec_checkpoint_packets() -> Dictionary:
@@ -81,68 +80,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_checkpoint_packets,
         title=lambda: _("Check point firewall packet rates"),
-    )
-)
-
-
-def _parameter_valuespec_checkpoint_tunnels() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "Active",
-                MonitoringState(
-                    title=_("State when VPN status is Active"),
-                    default_value=0,
-                ),
-            ),
-            (
-                "Destroy",
-                MonitoringState(
-                    title=_("State when VPN status is Destroy"),
-                    default_value=1,
-                ),
-            ),
-            (
-                "Idle",
-                MonitoringState(
-                    title=_("State when VPN status is Idle"),
-                    default_value=0,
-                ),
-            ),
-            (
-                "Phase1",
-                MonitoringState(
-                    title=_("State when VPN status is Phase1"),
-                    default_value=2,
-                ),
-            ),
-            (
-                "Down",
-                MonitoringState(
-                    title=_("State when VPN status is Down"),
-                    default_value=2,
-                ),
-            ),
-            (
-                "Init",
-                MonitoringState(
-                    title=_("State when VPN status is Init"),
-                    default_value=1,
-                ),
-            ),
-        ]
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="checkpoint_tunnels",
-        group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(
-            title=_("Name of VPN tunnel"),
-            allow_empty=True,
-        ),
-        parameter_valuespec=_parameter_valuespec_checkpoint_tunnels,
-        title=lambda: _("Check point tunnel status"),
     )
 )

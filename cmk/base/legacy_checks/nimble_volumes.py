@@ -38,7 +38,8 @@ def _check_nimble_volumes(item, params, info, now):
 
 
 def parse_nimble_volumes(string_table: StringTable) -> StringTable:
-    return string_table
+    # Some entries don't contain any monitoring data: CMK-37374
+    return [line for line in string_table if line[2] and line[3] and line[4]]
 
 
 check_info["nimble_volumes"] = LegacyCheckDefinition(

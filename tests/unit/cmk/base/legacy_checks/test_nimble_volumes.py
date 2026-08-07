@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from tests.unit.checks.checktestlib import mock_item_state
 
 from cmk.base.legacy_checks.nimble_volumes import (
@@ -37,7 +35,6 @@ def test_check_ok_volume() -> None:
     assert ("fs_size", 1073741824, None, None, 0, None) in perfdata
 
 
-@pytest.mark.xfail(strict=True, reason="CMK-37374")
 def test_check_does_not_crash_on_empty_size_values() -> None:
     section = parse_nimble_volumes(STRING_TABLE)
     assert not list(

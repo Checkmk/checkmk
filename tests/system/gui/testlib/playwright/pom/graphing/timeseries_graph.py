@@ -200,6 +200,11 @@ class GraphPanel:
         return self.root.locator(".graphing-graph-header__resolution")
 
     @property
+    def timestamp(self) -> Locator:
+        """The drawn window, e.g. ``2026-08-06 — 2026-08-07 @ 5min``; one date within a day."""
+        return self.root.locator(".graphing-graph-timestamp")
+
+    @property
     def peak_zoom_switch(self) -> Locator:
         """The Time zoom / Peak zoom switch that selects which axis a drag zooms."""
         return self.header.get_by_role("switch")

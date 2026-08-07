@@ -3,6 +3,9 @@ set noparent  # don't inherit owners information from parent folders
 per-file auth.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file auth.py=set noparent
 
+per-file authorization.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
+per-file authorization.py=set noparent
+
 per-file login.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file login.py=set noparent
 

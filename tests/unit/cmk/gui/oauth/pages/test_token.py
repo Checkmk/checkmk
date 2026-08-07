@@ -18,6 +18,7 @@ from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._token import OAuthTokenPage
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.pages import PageContext
+from cmk.gui.scopes import format_scopes
 from cmk.utils.redis import disable_redis
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -46,7 +47,7 @@ def _stored_record(
         user_id="alice",
         client_id=client_id,
         redirect_uri="https://client.example/callback",
-        scope="mcp",
+        scope="read",
         resource=resource,
         code_challenge=code_challenge,
     )
@@ -81,6 +82,42 @@ class TestOAuthTokenPage:
             access_token = response.json["access_token"]
             assert isinstance(access_token, str)
             assert access_token
+
+    @pytest.mark.usefixtures("clean_redis")
+    def test_the_minted_token_carries_the_scope_the_code_was_bound_to(
+        self, flask_app: Flask
+    ) -> None:
+        record = _stored_record()
+        AuthCodeStore().store(
+            _VALID_FORM["code"], record.model_copy(update={"scope": "read write"})
+        )
+        with flask_app.test_request_context(method="POST", data=_VALID_FORM):
+            flask_app.preprocess_request()
+            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+
+            assert isinstance(response.json, dict)
+            assert response.json["scope"] == "read write"
+            # The response is not just a claim: it is what the token really
+            # grants, as stored alongside the token itself.
+            stored = oauth.token_store().get_by_token(response.json["access_token"])
+            assert stored is not None
+            assert format_scopes(stored.scope) == "read write"
+
+    @pytest.mark.usefixtures("clean_redis")
+    def test_ignores_a_scope_sent_with_the_token_request(self, flask_app: Flask) -> None:
+        # The user approved read at the authorize endpoint; the client must not
+        # be able to talk itself into more at redemption time.
+        AuthCodeStore().store(
+            _VALID_FORM["code"], _stored_record().model_copy(update={"scope": "read"})
+        )
+        with flask_app.test_request_context(
+            method="POST", data={**_VALID_FORM, "scope": "read write"}
+        ):
+            flask_app.preprocess_request()
+            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+
+            assert isinstance(response.json, dict)
+            assert response.json["scope"] == "read"
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_redemption_when_the_client_was_deleted(self, flask_app: Flask) -> None:

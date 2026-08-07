@@ -29,6 +29,7 @@ class TestOAuthAuthorizationServerMetadataPage:
             "grant_types_supported": ["authorization_code"],
             "token_endpoint_auth_methods_supported": ["none"],
             "code_challenge_methods_supported": ["S256"],
+            "scopes_supported": ["read", "write"],
         }
 
     def test_returns_404_when_disabled(self) -> None:

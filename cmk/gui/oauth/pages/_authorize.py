@@ -19,6 +19,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.oauth import client_store
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.pages import Page, PageContext, PageResult
+from cmk.gui.scopes import (
+    DEFAULT_SCOPE,
+    format_scopes,
+    InvalidScopeError,
+    parse_scopes,
+    ScopeId,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
@@ -35,13 +42,17 @@ class OAuthAuthorizePage(Page):
     code. Returns 404 while no OAuth-consuming feature is enabled for the
     site (the enabled predicate is injected at registration).
 
+    This is where the granted scope is decided: the requested scope is
+    validated and normalized (see cmk.gui.scopes), shown to the user,
+    and bound to the code in that form, so the client's raw scope string never
+    reaches the token. There is no per-scope selection UI; approving grants
+    what was asked for.
+
     Codes minted on approval are persisted PKCE-bound via AuthCodeStore; the
     token endpoint later redeems them single-use. Validates client_id against
     the registered-client store (see cmk.gui.oauth.client_store()) and requires
     redirect_uri to exactly match one of that client's registered
-    redirect_uris. _token.py does not yet validate that a code was issued to
-    the client redeeming it -- that's separate follow-up work. Rejected
-    requests are logged as security events (see
+    redirect_uris. Rejected requests are logged as security events (see
     OAuthAuthorizationFailureEvent).
     """
 
@@ -106,6 +117,23 @@ class OAuthAuthorizePage(Page):
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
 
+        if len(request.values.getlist("scope")) > 1:
+            # RFC 6749 section 3.1 forbids repeating a request parameter, and
+            # with duplicates there is no answer to what the user is approving.
+            self._log_authorization_failure("repeated scope parameter")
+            self._error_redirect(ctx, redirect_uri, "invalid_request")
+            return None
+
+        raw_scope = request.var("scope", "").strip()
+        try:
+            # RFC 6749 section 3.3 leaves what an omitted scope means to us.
+            granted_scopes = parse_scopes(raw_scope) if raw_scope else DEFAULT_SCOPE
+        except InvalidScopeError as exc:
+            # RFC 6749 section 4.1.2.1. Rejected rather than downscoped.
+            self._log_authorization_failure(f"unknown scope: {exc}")
+            self._error_redirect(ctx, redirect_uri, "invalid_scope")
+            return None
+
         # received authorization form OK
         if request.request_method == "POST":
             check_csrf_token()
@@ -113,11 +141,11 @@ class OAuthAuthorizePage(Page):
                 if request.var("_deny") is not None:
                     self._error_redirect(ctx, redirect_uri, "access_denied")
                     return None
-                self._issue_code(ctx, redirect_uri, client_id, code_challenge)
+                self._issue_code(ctx, redirect_uri, client_id, code_challenge, granted_scopes)
                 return None
 
         # show concent page
-        self._show_consent_page(ctx, redirect_uri)
+        self._show_consent_page(ctx, redirect_uri, granted_scopes)
         return None
 
     def _open_login_frame(self, ctx: PageContext, title: str) -> None:
@@ -150,7 +178,12 @@ class OAuthAuthorizePage(Page):
         html.footer()
 
     def _issue_code(
-        self, ctx: PageContext, redirect_uri: str, client_id: str, code_challenge: str
+        self,
+        ctx: PageContext,
+        redirect_uri: str,
+        client_id: str,
+        code_challenge: str,
+        granted_scopes: frozenset[ScopeId],
     ) -> None:
         # The bound user is the server-side session user; the page registry
         # guarantees an authenticated session before this code runs.
@@ -160,7 +193,9 @@ class OAuthAuthorizePage(Page):
             user_id=user.id,
             client_id=client_id,
             redirect_uri=redirect_uri,
-            scope=request.var("scope"),
+            # The normalized grant the consent page showed, not the client's
+            # raw scope string.
+            scope=format_scopes(granted_scopes),
             resource=request.var("resource"),
             code_challenge=code_challenge,
         )
@@ -220,7 +255,9 @@ class OAuthAuthorizePage(Page):
         html.a(_("Click here if you are not redirected automatically."), href=target_url)
         self._close_login_frame()
 
-    def _show_consent_page(self, ctx: PageContext, redirect_uri: str) -> None:
+    def _show_consent_page(
+        self, ctx: PageContext, redirect_uri: str, granted_scopes: frozenset[ScopeId]
+    ) -> None:
         client_id = request.var("client_id")
 
         self._open_login_frame(ctx, _("Authorize access"))
@@ -232,6 +269,16 @@ class OAuthAuthorizePage(Page):
                 _('The application "%(client_id)s" is requesting access to this Checkmk site.')
                 % {"client_id": client_id}
             )
+        descriptions = {
+            ScopeId.READ: _("read data"),
+            ScopeId.WRITE: _("change data and configuration"),
+        }
+        html.p(
+            _("It is requesting permission to: %(grants)s.")
+            # ScopeId order, so a given grant always reads the same way.
+            % {"grants": ", ".join(descriptions[s] for s in ScopeId if s in granted_scopes)}
+        )
+        html.p(_("Your own user permissions still apply."))
         html.p(_("Redirect target: %(redirect_uri)s") % {"redirect_uri": redirect_uri})
         # Explicit action: this page is also reachable via the external OAuth
         # issuer alias (/oauth-<site>/authorize, see system_apache.py), where

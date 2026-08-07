@@ -25,6 +25,7 @@ from cmk.gui import auth, http, login, oauth
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
+from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
     SessionStateMachine,
@@ -192,7 +193,7 @@ def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
-        scope=None,
+        scope=DEFAULT_SCOPE,
         client_id=client_id,
     )
     with flask_app.test_request_context(
@@ -222,7 +223,7 @@ def test_login_with_expired_oauth_bearer_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
-        scope=None,
+        scope=DEFAULT_SCOPE,
         client_id=client_id,
     )
     with (

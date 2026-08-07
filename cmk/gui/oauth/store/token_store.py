@@ -11,7 +11,9 @@ from dataclasses import dataclass
 from datetime import datetime, UTC
 
 from cmk.ccc.user import UserId
+from cmk.gui.log import logger
 from cmk.gui.oauth.store.backend import Backend
+from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, ScopeId
 
 
 class UnknownClientError(LookupError):
@@ -29,7 +31,7 @@ class TokenRecord:
     issued_at: datetime
     expires_at: datetime
     resource: str | None
-    scope: str | None
+    scope: frozenset[ScopeId]
     client_id: str
 
     def is_valid(self, *, at: datetime | None = None) -> bool:
@@ -65,13 +67,15 @@ class TokenStore(Backend):
         *,
         expires_at: datetime,
         resource: str | None,
-        scope: str | None,
+        scope: frozenset[ScopeId],
         client_id: str,
     ) -> str:
         if not user_id:
             raise ValueError("user_id must not be empty")
         if not client_id:
             raise ValueError("client_id must not be empty")
+        if not scope:
+            raise ValueError("scope must not be empty")
 
         issued_at_timestamp = int(_utc_now().timestamp())
         expires_at_timestamp = _to_timestamp(expires_at)
@@ -93,7 +97,7 @@ class TokenStore(Backend):
                     issued_at_timestamp,
                     expires_at_timestamp,
                     resource,
-                    scope,
+                    format_scopes(scope),
                     client_id,
                 ),
             )
@@ -133,16 +137,26 @@ class TokenStore(Backend):
             """,
             (user_id,),
         ).fetchall()
-        return [_row_to_record(row) for row in rows]
+        return [record for row in rows if (record := _row_to_record(row)) is not None]
 
 
-def _row_to_record(row: sqlite3.Row) -> TokenRecord:
+def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:
+    """The row as a record, or None if its scope is not one we could have written."""
+    try:
+        scope = parse_scopes(row["scope"] or "")
+    except InvalidScopeError:
+        logger.warning(
+            "Refusing OAuth access token of user %(user_id)s: stored scope %(scope)r is not usable",
+            {"user_id": row["user_id"], "scope": row["scope"]},
+        )
+        return None
+
     return TokenRecord(
         user_id=UserId(row["user_id"]),
         issued_at=datetime.fromtimestamp(row["issued_at"], tz=UTC),
         expires_at=datetime.fromtimestamp(row["expires_at"], tz=UTC),
         resource=row["resource"],
-        scope=row["scope"],
+        scope=scope,
         client_id=row["client_id"],
     )
 

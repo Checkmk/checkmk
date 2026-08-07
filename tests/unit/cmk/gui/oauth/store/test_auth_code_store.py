@@ -18,7 +18,7 @@ def _make_record() -> AuthCodeRecord:
         user_id="cmkadmin",
         client_id="test-client",
         redirect_uri="https://client.example/callback",
-        scope="mcp",
+        scope="read",
         resource="https://host/mysite/check_mk/mcp",
         code_challenge="E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
     )
@@ -36,13 +36,13 @@ def test_store_writes_the_record_under_the_namespaced_code_key() -> None:
     assert AuthCodeRecord.model_validate_json(value) == record
 
 
-def test_scope_and_resource_are_optional() -> None:
+def test_resource_is_optional() -> None:
     store, fake = _make_store()
     record = AuthCodeRecord(
         user_id="cmkadmin",
         client_id="test-client",
         redirect_uri="https://client.example/callback",
-        scope=None,
+        scope="read",
         resource=None,
         code_challenge="E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
     )

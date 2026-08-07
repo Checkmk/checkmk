@@ -12,6 +12,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.backend import create_schema
 from cmk.gui.oauth.store.client_store import ClientRegistrationLimitExceededError, ClientStore
 from cmk.gui.oauth.store.token_store import TokenStore
+from cmk.gui.scopes import DEFAULT_SCOPE
 
 
 @pytest.fixture
@@ -148,7 +149,7 @@ def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
         UserId("cmkadmin"),
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
-        scope=None,
+        scope=DEFAULT_SCOPE,
         client_id=registered.client_id,
     )
 

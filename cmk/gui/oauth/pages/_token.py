@@ -20,6 +20,7 @@ from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenRespo
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
 from cmk.gui.oauth.store.token_store import UnknownClientError
 from cmk.gui.pages import Page, PageContext, PageResult
+from cmk.gui.scopes import format_scopes, parse_scopes
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
 from cmk.utils.security_event import log_security_event
 
@@ -78,8 +79,11 @@ class OAuthTokenPage(Page):
     single-use against the store the authorize endpoint fills, and every
     binding of the redeemed record is enforced: the PKCE S256 challenge, the
     client_id (which must still be registered), and redirect_uri/resource if
-    sent. A scope parameter is
-    ignored; the eventual token's user and scope come only from the record.
+    sent. A scope parameter on the token request is ignored; the token's user
+    and scope come only from the record, so the scope is the one the user
+    approved rather than one the client picks at redemption. It is echoed back
+    in the response body, so a client that asked for more than it got finds out
+    here instead of on its first rejected write.
     Rejections follow the RFC 6749 section 5.2 error format. The returned
     access token is a real, store-backed token issued for the record's user
     (see cmk.gui.oauth.token_store).
@@ -189,12 +193,16 @@ class OAuthTokenPage(Page):
             _error("invalid_grant")
             return None
 
+        # We assume that parse_scopes will be fine here, as we serialized the previously parsed
+        # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
+        granted_scopes = parse_scopes(record.scope)
+
         try:
             access_token = token_store().issue_token(
                 UserId(record.user_id),
                 expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
                 resource=record.resource,
-                scope=record.scope,
+                scope=granted_scopes,
                 client_id=record.client_id,
             )
         except UnknownClientError:
@@ -205,5 +213,9 @@ class OAuthTokenPage(Page):
             return None
 
         response.set_content_type("application/json")
-        response.set_data(OAuthTokenResponse(access_token=access_token).model_dump_json())
+        response.set_data(
+            OAuthTokenResponse(
+                access_token=access_token, scope=format_scopes(granted_scopes)
+            ).model_dump_json()
+        )
         return None

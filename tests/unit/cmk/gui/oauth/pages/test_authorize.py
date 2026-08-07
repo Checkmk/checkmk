@@ -84,6 +84,90 @@ class TestOAuthAuthorizePage:
             assert 'name="_authorize"' in body
             assert 'name="_deny"' in body
 
+    @pytest.mark.parametrize(
+        "requested_scope, expected_grants",
+        [
+            # The user is told what they are approving, in the normalized form
+            # the code will actually be bound to -- not the client's wording.
+            ("read", "read data"),
+            ("write", "read data, change data and configuration"),
+        ],
+    )
+    def test_consent_page_lists_the_grants(
+        self,
+        flask_app: Flask,
+        registered_client_id: str,
+        requested_scope: str,
+        expected_grants: str,
+    ) -> None:
+        with flask_app.test_request_context(
+            query_string={
+                "redirect_uri": "https://client.example/callback",
+                "response_type": "code",
+                "client_id": registered_client_id,
+                "code_challenge": "test-challenge",
+                "code_challenge_method": "S256",
+                "scope": requested_scope,
+            }
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+            body = response.get_data(as_text=True)
+            assert f"It is requesting permission to: {expected_grants}." in body
+
+    def test_redirects_with_invalid_scope_when_the_scope_is_unknown(
+        self, flask_app: Flask, registered_client_id: str
+    ) -> None:
+        # Both metadata documents advertise what this server accepts, so an
+        # unknown scope is a client bug. Rejecting it here beats downscoping
+        # and letting the client discover the gap on its first write.
+        with flask_app.test_request_context(
+            query_string={
+                "redirect_uri": "https://client.example/callback",
+                "response_type": "code",
+                "client_id": registered_client_id,
+                "code_challenge": "test-challenge",
+                "code_challenge_method": "S256",
+                "scope": "mcp",
+            }
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            target_url = _extract_redirect_target(response.get_data(as_text=True))
+
+        assert parse_qs(urlsplit(target_url).query)["error"] == ["invalid_scope"]
+
+    def test_redirects_with_invalid_request_when_scope_is_repeated(
+        self, flask_app: Flask, registered_client_id: str
+    ) -> None:
+        # With two scope values there is no single answer to what the user is
+        # approving, so the request is rejected rather than resolved to one.
+        with flask_app.test_request_context(
+            query_string=(
+                "redirect_uri=https://client.example/callback"
+                "&response_type=code"
+                f"&client_id={registered_client_id}"
+                "&code_challenge=test-challenge"
+                "&code_challenge_method=S256"
+                "&scope=read&scope=write"
+            )
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            target_url = _extract_redirect_target(response.get_data(as_text=True))
+
+        assert parse_qs(urlsplit(target_url).query)["error"] == ["invalid_request"]
+
     def test_consent_form_posts_back_to_the_request_path(
         self, flask_app: Flask, registered_client_id: str
     ) -> None:
@@ -509,6 +593,30 @@ class TestOAuthAuthorizePage:
         mock_log.assert_called_once()
         assert mock_log.call_args.args[0].details["reason"] == "invalid or missing redirect_uri"
 
+    def test_logs_which_scope_was_rejected(
+        self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
+    ) -> None:
+        # A report that a client asked for a scope we don't have is only
+        # actionable if it says which one.
+        mock_log = mocker.patch("cmk.gui.oauth.pages._authorize.log_security_event")
+        with flask_app.test_request_context(
+            query_string={
+                "redirect_uri": "https://client.example/callback",
+                "response_type": "code",
+                "client_id": registered_client_id,
+                "code_challenge": "test-challenge",
+                "code_challenge_method": "S256",
+                "scope": "read mcp",
+            }
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+        mock_log.assert_called_once()
+        assert mock_log.call_args.args[0].details["reason"] == "unknown scope: mcp"
+
     def test_logs_security_event_when_response_type_is_missing(
         self, flask_app: Flask, mocker: MockerFixture, registered_client_id: str
     ) -> None:
@@ -634,7 +742,7 @@ class TestOAuthAuthorizePage:
                     "client_id": registered_client_id,
                     "code_challenge": "test-challenge",
                     "code_challenge_method": "S256",
-                    "scope": "mcp",
+                    "scope": "read",
                     "resource": "https://host/mysite/check_mk/mcp",
                 },
             ),
@@ -652,15 +760,17 @@ class TestOAuthAuthorizePage:
             user_id=_SESSION_USER,
             client_id=registered_client_id,
             redirect_uri="https://client.example/callback",
-            scope="mcp",
+            scope="read",
             resource="https://host/mysite/check_mk/mcp",
             code_challenge="test-challenge",
         )
 
     @pytest.mark.usefixtures("clean_redis")
-    def test_approve_without_scope_and_resource_binds_none(
+    def test_approve_binds_the_normalized_scope(
         self, flask_app: Flask, registered_client_id: str
     ) -> None:
+        # A client asking to write is granted read as well -- one grant, one
+        # spelling, decided here rather than at redemption.
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
             patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
@@ -672,6 +782,7 @@ class TestOAuthAuthorizePage:
                     "client_id": registered_client_id,
                     "code_challenge": "test-challenge",
                     "code_challenge_method": "S256",
+                    "scope": "write",
                 },
             ),
         ):
@@ -686,7 +797,48 @@ class TestOAuthAuthorizePage:
         code = parse_qs(urlsplit(target_url).query)["code"][0]
         record = AuthCodeStore().consume(code)
         assert record is not None
-        assert record.scope is None
+        assert record.scope == "read write"
+
+    @pytest.mark.usefixtures("clean_redis")
+    @pytest.mark.parametrize(
+        "scope_param",
+        [
+            pytest.param({}, id="absent"),
+            pytest.param({"scope": "   "}, id="blank"),
+        ],
+    )
+    def test_approve_without_scope_binds_the_default_scope(
+        self, flask_app: Flask, registered_client_id: str, scope_param: dict[str, str]
+    ) -> None:
+        with (
+            patch.object(TransactionManager, "check_transaction", return_value=True),
+            patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),
+            flask_app.test_request_context(
+                method="POST",
+                data={
+                    "redirect_uri": "https://client.example/callback",
+                    "response_type": "code",
+                    "client_id": registered_client_id,
+                    "code_challenge": "test-challenge",
+                    "code_challenge_method": "S256",
+                    **scope_param,
+                },
+            ),
+        ):
+            flask_app.preprocess_request()
+            with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
+                OAuthAuthorizePage(lambda: True).handle_page(
+                    PageContext(config=Config(), request=request)
+                )
+
+            target_url = _extract_redirect_target(response.get_data(as_text=True))
+
+        code = parse_qs(urlsplit(target_url).query)["code"][0]
+        record = AuthCodeStore().consume(code)
+        assert record is not None
+        # An absent scope is a read grant (RFC 6749 section 3.3 allows a
+        # server-defined default), so unlike resource it never binds None.
+        assert record.scope == "read"
         assert record.resource is None
 
     @pytest.mark.usefixtures("clean_redis")

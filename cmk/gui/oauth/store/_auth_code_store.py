@@ -26,7 +26,7 @@ class AuthCodeRecord(BaseModel):
     user_id: str
     client_id: str
     redirect_uri: str
-    scope: str | None
+    scope: str
     resource: str | None
     code_challenge: str
 

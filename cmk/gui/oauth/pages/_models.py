@@ -8,6 +8,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
+from cmk.gui.scopes import SUPPORTED_SCOPES
+
 
 class OAuthAuthorizationServerMetadata(BaseModel):
     """RFC 8414 authorization server metadata document.
@@ -29,6 +31,7 @@ class OAuthAuthorizationServerMetadata(BaseModel):
     grant_types_supported: list[str] = ["authorization_code"]
     token_endpoint_auth_methods_supported: list[str] = ["none"]
     code_challenge_methods_supported: list[str] = ["S256"]
+    scopes_supported: list[str] = list(SUPPORTED_SCOPES)
 
 
 class OAuthClientRegistrationRequest(BaseModel):
@@ -70,10 +73,16 @@ class OAuthClientRegistrationErrorResponse(BaseModel):
 
 
 class OAuthTokenResponse(BaseModel):
-    """RFC 6749 section 5.1 access token response."""
+    """RFC 6749 section 5.1 access token response.
+
+    scope is always sent, not only when it differs from the request as section
+    5.1 requires at a minimum: normalization means it usually does differ, and
+    no client should have to infer that.
+    """
 
     access_token: str
     token_type: str = "Bearer"
+    scope: str
 
 
 class OAuthTokenErrorResponse(BaseModel):

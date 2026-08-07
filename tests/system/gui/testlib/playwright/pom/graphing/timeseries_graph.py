@@ -9,6 +9,7 @@ import logging
 
 from playwright.sync_api import FloatRect, Locator, Page
 
+from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
@@ -279,22 +280,27 @@ class ServiceGraphs:
         return [self.panel(index) for index in range(self.panel_count())]
 
     @property
+    def time_picker(self) -> GlobalTimePicker:
+        """The one picker driving every panel on this page."""
+        return GlobalTimePicker(self._main_area)
+
+    @property
     def global_time_picker(self) -> Locator:
-        return self._main_area.locator(".graphing-global-time-picker")
+        return self.time_picker.root
 
     @property
     def active_preset_chip(self) -> Locator:
         """The highlighted time-range preset; empty once the window is a custom one."""
-        return self.global_time_picker.locator('[aria-pressed="true"]')
+        return self.time_picker.active_preset_chip
 
     @property
     def refresh_indicator(self) -> Locator:
         """The live/paused refresh pill beside the time picker."""
-        return self.global_time_picker.locator(".graphing-global-refresh-control")
+        return self.time_picker.refresh_indicator
 
     @property
     def resume_refresh_button(self) -> Locator:
-        return self.refresh_indicator.get_by_role("button", name="Resume")
+        return self.time_picker.resume_refresh_button
 
     def reload(self) -> None:
         """Reload the page and wait for the graphs to come back."""

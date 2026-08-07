@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type AiButton, type ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, computed, provide, ref } from 'vue'
@@ -95,15 +96,10 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
 
   <Teleport v-if="templateLoaded && !conversationOpen" defer to=".main">
     <div class="ai-explain-button-app__tooltip-wrapper">
-      <button
-        type="button"
-        class="ai-explain-button-app__tooltip-button"
-        role="button"
-        @click="explainThis"
-      >
+      <CmkButton variant="ai" class="ai-explain-button-app__tooltip-button" @click="explainThis">
         {{ button_text }}
         <CmkIcon name="sparkle-white" size="xlarge" />
-      </button>
+      </CmkButton>
     </div>
   </Teleport>
 </template>
@@ -128,9 +124,7 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
   }
 }
 
-.ai-explain-button-app__tooltip-button {
-  display: flex;
-  align-items: center;
+.ai-explain-button-app__tooltip-wrapper .ai-explain-button-app__tooltip-button {
   gap: var(--dimension-4);
   position: absolute;
   top: 0;
@@ -142,9 +136,6 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
   border: none;
   border-radius: 25px 0 0 25px;
   background-color: var(--color-purple-60);
-  box-sizing: border-box;
-  cursor: pointer;
-  font-weight: 700;
   font-size: 12px;
   color: var(--color-white-100);
 
@@ -156,41 +147,6 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
     border-radius: 0 0 2px;
     transform: rotate(135deg);
     content: '';
-  }
-}
-
-.ai-explain-button-app__button {
-  height: 30px;
-  margin: 3px 0;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--ux-theme-5) !important;
-
-  .ai-explain-button-app__shimmer {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    opacity: 0.2;
-    background: linear-gradient(
-      90deg,
-      transparent 0,
-      var(--color-purple-80) 20%,
-      var(--color-purple-60) 60%,
-      transparent
-    );
-    animation: shimmer 3s infinite;
-  }
-
-  img {
-    margin-right: var(--dimension-3);
-  }
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
   }
 }
 </style>

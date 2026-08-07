@@ -346,6 +346,16 @@ class _TimerangeAge(_BaseTimerangeValue):
         age += (self.days or 0) * 86400
         return "age", age
 
+    @classmethod
+    def from_seconds(cls, duration: int) -> "_TimerangeAge":
+        return cls(
+            timerange_type="age",
+            days=duration // 86400,
+            hours=(duration % 86400) // 3600,
+            minutes=(duration % 3600) // 60,
+            seconds=duration % 60,
+        )
+
 
 @api_model
 class _TimerangeDate(_BaseTimerangeValue):
@@ -469,16 +479,16 @@ def timerange_from_internal(
                 if lookup == value:
                     return _TimerangePredefined(timerange_type="predefined", value=key)
         case int() as duration:
-            return _TimerangeGraph(timerange_type="graph", duration=duration)
+            # A stored duration that is no longer one of the configured graph time ranges (an admin
+            # edited or removed it under Setup > Global settings > Graph time ranges) would fail
+            # _TimerangeGraph validation. Emit it as a plain relative age instead, so the widget
+            # still renders "now - duration" rather than erroring on dashboard load or data fetch.
+            if any(tr["duration"] == duration for tr in active_config.graph_timeranges):
+                return _TimerangeGraph(timerange_type="graph", duration=duration)
+            return _TimerangeAge.from_seconds(duration)
         # mypy doesn't understand that this can only be an int
         case ("age", age) if isinstance(age, int):
-            return _TimerangeAge(
-                timerange_type="age",
-                days=age // 86400,
-                hours=(age % 86400) // 3600,
-                minutes=(age % 3600) // 60,
-                seconds=age % 60,
-            )
+            return _TimerangeAge.from_seconds(age)
         case ("date", (start, end)):
             return _TimerangeDate(
                 timerange_type="date",

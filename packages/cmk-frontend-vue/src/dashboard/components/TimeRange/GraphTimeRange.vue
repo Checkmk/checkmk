@@ -72,6 +72,29 @@ const durationOptionName = (totalSeconds: number): string => `duration_${totalSe
 const isDurationPredefinedKey = (key: PreDefinedTimeRange): key is PredefinedDurationKey =>
   key in predefinedDurationSeconds
 
+const secondsToAge = (totalSeconds: number): Age => ({
+  days: Math.floor(totalSeconds / 86400),
+  hours: Math.floor((totalSeconds % 86400) / 3600),
+  minutes: Math.floor((totalSeconds % 3600) / 60),
+  seconds: totalSeconds % 60
+})
+
+// The trailing-duration length a range denotes - a "last N ..." range stored either as a duration
+// or as a trailing-duration predefined key - or null for calendar / custom (age, date) ranges.
+const trailingDurationSeconds = (timerange: GraphTimerange): number | null => {
+  if (timerange.type === 'duration') {
+    return timerange.duration
+  }
+  if (
+    timerange.type === 'predefined' &&
+    timerange.predefined !== null &&
+    isDurationPredefinedKey(timerange.predefined)
+  ) {
+    return predefinedDurationSeconds[timerange.predefined]
+  }
+  return null
+}
+
 interface GraphTimerangeApiResult {
   title: string
   extensions: {
@@ -175,7 +198,22 @@ onMounted(async () => {
   apiDurationTimeranges.value = await loadApiDurationGraphTimeranges()
 
   if (selectedTimerange.value) {
-    selectedDropdownOption.value = getDropdownOptionFromTimerange(selectedTimerange.value)
+    const option = getDropdownOptionFromTimerange(selectedTimerange.value)
+    const optionAvailable =
+      option !== null && dropdownOptions.value.some((suggestion) => suggestion.name === option)
+    const fallbackSeconds = optionAvailable
+      ? null
+      : trailingDurationSeconds(selectedTimerange.value)
+
+    if (fallbackSeconds !== null) {
+      // The stored trailing-duration range was edited or removed under Setup > Global settings >
+      // Graph time ranges, so it no longer matches a configured option. Fall back to an equivalent
+      // custom "The last ..." range instead of rendering a dropdown option 'duration_<n>'.
+      customDuration.value = secondsToAge(fallbackSeconds)
+      selectedDropdownOption.value = customTimeOptionName
+    } else {
+      selectedDropdownOption.value = option
+    }
     if (selectedTimerange.value.type === 'age' && selectedTimerange.value.age) {
       customDuration.value = { ...selectedTimerange.value.age }
     } else if (selectedTimerange.value.type === 'date' && selectedTimerange.value.date_range) {

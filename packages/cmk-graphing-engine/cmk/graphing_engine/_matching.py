@@ -10,11 +10,11 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
+from ._api_plugins import drawn_metric_names_of_graph
 from ._fetch import FetchMetricNamesProtocol
 from ._from_api import (
     build_curve,
     build_single_quantity,
-    drawn_metric_names_of_graph,
     drawn_quantity,
     parse_graph_from_api,
     QuantityBuilderProtocol,

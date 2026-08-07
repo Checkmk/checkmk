@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Protocol
 
@@ -12,6 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
+from ._api_plugins import ApiQuantity, is_scalar, operands_of
 from ._display import (
     FALLBACK_ATTRIBUTES,
     metric_display_attributes,
@@ -19,7 +20,7 @@ from ._display import (
     parse_unit,
 )
 from ._graph import Bound, Curve, Graph, Line, MinimalRange, Rule, Stack
-from ._naming import MetricName, Service
+from ._naming import Service
 from ._quantities import (
     Constant,
     Difference,
@@ -33,21 +34,6 @@ from ._quantities import (
 )
 from ._quantity import QuantityProtocol
 from ._units import CurveAttributes
-
-type _ApiQuantity = (
-    str
-    | metrics_v1.Constant
-    | metrics_v1.WarningOf
-    | metrics_v1.CriticalOf
-    | metrics_v2_unstable.LowerWarningOf
-    | metrics_v2_unstable.LowerCriticalOf
-    | metrics_v1.MinimumOf
-    | metrics_v1.MaximumOf
-    | metrics_v1.Sum
-    | metrics_v1.Product
-    | metrics_v1.Difference
-    | metrics_v1.Fraction
-)
 
 
 class QuantityBuilderProtocol(Protocol):
@@ -81,21 +67,7 @@ class _ParseContext:
         return rrd_metric_of(self.services[0], metric_name)
 
 
-def _operands_of(quantity: _ApiQuantity) -> Sequence[_ApiQuantity]:
-    match quantity:
-        case metrics_v1.Sum():
-            return quantity.summands
-        case metrics_v1.Product():
-            return quantity.factors
-        case metrics_v1.Difference():
-            return [quantity.minuend, quantity.subtrahend]
-        case metrics_v1.Fraction():
-            return [quantity.dividend, quantity.divisor]
-        case _:
-            return []
-
-
-def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttributes:
+def _curve_display(quantity: ApiQuantity, context: _ParseContext) -> CurveAttributes:
     match quantity:
         case str():
             return metric_display_attributes(
@@ -124,7 +96,7 @@ def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttri
             # does not spell one out: it is the first operand's.
             return CurveAttributes(
                 title=quantity.title.localize(context.localizer),
-                unit=_curve_display(_operands_of(quantity)[0], context).unit,
+                unit=_curve_display(operands_of(quantity)[0], context).unit,
                 color=parse_color(quantity.color),
             )
         case metrics_v1.Product() | metrics_v1.Fraction():
@@ -137,7 +109,7 @@ def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttri
             assert_never(quantity)
 
 
-def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> QuantityProtocol:
+def _parse_quantity(quantity: ApiQuantity, context: _ParseContext) -> QuantityProtocol:
     match quantity:
         case str():
             return context.drawn(quantity)
@@ -199,72 +171,7 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> QuantityP
             assert_never(quantity)
 
 
-def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
-    match quantity:
-        case str():
-            yield MetricName(quantity)
-        case metrics_v1.Constant():
-            return
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-            | metrics_v1.MinimumOf()
-            | metrics_v1.MaximumOf()
-        ):
-            yield MetricName(quantity.metric_name)
-        case (
-            metrics_v1.Sum()
-            | metrics_v1.Product()
-            | metrics_v1.Difference()
-            | metrics_v1.Fraction()
-        ):
-            for operand in _operands_of(quantity):
-                yield from _metric_names_in_quantity(operand)
-        case _:
-            assert_never(quantity)
-
-
-def _is_scalar(quantity: _ApiQuantity) -> bool:
-    match quantity:
-        case str():
-            return False
-        case (
-            metrics_v1.Constant()
-            | metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-            | metrics_v1.MinimumOf()
-            | metrics_v1.MaximumOf()
-        ):
-            return True
-        case (
-            metrics_v1.Sum()
-            | metrics_v1.Product()
-            | metrics_v1.Difference()
-            | metrics_v1.Fraction()
-        ):
-            return all(_is_scalar(operand) for operand in _operands_of(quantity))
-        case _:
-            assert_never(quantity)
-
-
-def drawn_metric_names_of_graph(
-    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
-) -> Sequence[MetricName]:
-    return list(
-        {
-            name
-            for quantity in (*graph.compound_lines, *graph.simple_lines)
-            if not _is_scalar(quantity)
-            for name in _metric_names_in_quantity(quantity)
-        }
-    )
-
-
-def _parse_bound(bound: int | float | _ApiQuantity, context: _ParseContext) -> Bound:
+def _parse_bound(bound: int | float | ApiQuantity, context: _ParseContext) -> Bound:
     if isinstance(bound, int | float):
         return bound
     return _parse_quantity(bound, context)
@@ -329,20 +236,18 @@ def _parse_lines(
     *,
     inverse: bool,
 ) -> tuple[Sequence[Stack], Sequence[Line], Sequence[Rule]]:
-    def _curve(q: _ApiQuantity) -> Curve:
+    def _curve(q: ApiQuantity) -> Curve:
         return build_curve(
             _parse_quantity(q, context), context.localizer, context.registered_metrics
         )
 
-    stack_members = [_curve(q) for q in graph.compound_lines if not _is_scalar(q)]
+    stack_members = [_curve(q) for q in graph.compound_lines if not is_scalar(q)]
     stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
-    lines = [
-        Line(curve=_curve(q), inverse=inverse) for q in graph.simple_lines if not _is_scalar(q)
-    ]
+    lines = [Line(curve=_curve(q), inverse=inverse) for q in graph.simple_lines if not is_scalar(q)]
     rules = [
         Rule(curve=_curve(q), inverse=inverse)
         for q in (*graph.compound_lines, *graph.simple_lines)
-        if _is_scalar(q)
+        if is_scalar(q)
     ]
     return stacks, lines, rules
 

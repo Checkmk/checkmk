@@ -47,7 +47,6 @@ from cmk.gui.graphing._engine_codec import (
     graph_codec,
     QuantitySpec,
 )
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
 
 _METRIC = RRDMetric(
     host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
@@ -188,7 +187,8 @@ def test_rrd_metric_site_id_round_trips() -> None:
         kind="template",
         lines=[Line(curve=Curve(quantity=metric, attributes=attributes), inverse=False)],
     )
-    [restored] = community_graph_codec().deserialize_graphs(serialize_graphs([graph]))
+    codec = community_graph_codec()
+    [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
     [line] = restored.lines
     assert line.curve.quantity == metric
 
@@ -196,7 +196,7 @@ def test_rrd_metric_site_id_round_trips() -> None:
 def test_template_round_trip_is_lossless() -> None:
     codec = community_graph_codec()
     graphs = _rich_graphs()
-    payload = serialize_graphs(graphs)
+    payload = codec.serialize_graphs(graphs)
     # The payload is plain JSON.
     assert json.loads(json.dumps(payload)) == payload
     # Each graph carries its own kind; there is no separate envelope field.
@@ -206,7 +206,7 @@ def test_template_round_trip_is_lossless() -> None:
     # The round-trip is stable: deserializing and re-serializing reproduces the same payload (compared
     # as JSON, so the empty-sequence list/tuple distinction the dataclass defaults carry is irrelevant).
     restored = codec.deserialize_graphs(payload)
-    assert serialize_graphs(restored) == payload
+    assert codec.serialize_graphs(restored) == payload
     # The source id survives the round-trip; untagged curves stay untagged.
     assert restored[0].stacks[0].members[0].source_id == "A"
     assert restored[0].stacks[0].members[1].source_id is None

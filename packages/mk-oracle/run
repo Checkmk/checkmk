@@ -348,18 +348,19 @@ run_test_component_remote_host() {
     fi
 
     : "${TEST_BINARIES:=test_ora_no_db_test test_ora_discovery_test test_ora_with_db_test}"
-    # NOTE: create test folder and directory structure emulating real deployment too
+    # Create test folder and directory structure emulating real deployment
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
         mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle"
-        mkdir -p "${TEST_BINARY_REMOTE_PATH}/tests/files/tns"
+        mkdir -p "${TEST_BINARY_REMOTE_PATH}/tests"
+        : >"${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle/libclntsh.so"
 EOF
     # copy Oracle DB plug-in test binaries and test data to the remote-host
     # shellcheck disable=SC2086
     scp $SSH_ARGS ${TEST_BINARIES} "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/"
     # shellcheck disable=SC2086
-    scp $SSH_ARGS tests/files/tns/tnsnames.ora "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/tests/files/tns/"
+    scp $SSH_ARGS -r tests/files "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/tests/"
     # The heredoc below is expanded locally; an unset ORACLE_HOME must stay
     # unset on the remote host too, so its export is prepared here.
     ORACLE_HOME_EXPORT=""

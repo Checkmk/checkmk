@@ -75,7 +75,9 @@ def _parse_cli_threshold(raw: str) -> Sensitivity | None:
         return _CLI_THRESHOLDS[raw]
     except KeyError:
         raise MKGeneralException(
-            "Invalid sensitivity threshold %r (allowed: %s)" % (raw, ", ".join(_CLI_THRESHOLDS))
+            "Invalid sensitivity threshold {!r} (allowed: {})".format(
+                raw, ", ".join(_CLI_THRESHOLDS)
+            )
         ) from None
 
 

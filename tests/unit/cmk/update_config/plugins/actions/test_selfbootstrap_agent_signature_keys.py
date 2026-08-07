@@ -40,7 +40,7 @@ def test_rewrites_bare_file() -> None:
     path = cmk.utils.paths.default_config_dir / "multisite.d/wato/agent_signature_keys.mk"
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        path.write_text("agent_signature_keys.update(%r)\n" % ({1: _RAW_KEY},))
+        path.write_text(f"agent_signature_keys.update({ ({1: _RAW_KEY})!r})\n")
         keys_before = KeypairStore(path, "agent_signature_keys").load()
 
         _ACTION(logging.getLogger(__name__))

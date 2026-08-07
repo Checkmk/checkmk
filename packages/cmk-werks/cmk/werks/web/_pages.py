@@ -44,7 +44,7 @@ class WerkDetailPage(Page):
         acknowledged_ids = load_acknowledgements()
         translator = WerkTranslator()
 
-        title = "%s %s - %s" % (_("Werk"), _render_werk_id(werk), werk.title)
+        title = "{} {} - {}".format(_("Werk"), _render_werk_id(werk), werk.title)
 
         builder = HtmlBuilder()
         builder.open_table(class_=["data", "headerleft", "werks"])

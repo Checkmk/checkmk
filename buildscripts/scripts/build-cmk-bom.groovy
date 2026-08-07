@@ -72,12 +72,18 @@ def main() {
                 scanner_image = docker.build(scanner_image_tag, "--tag ${scanner_image_tag} .");
             }
 
+            def reference_repo_dir = cmd_output("""
+                if [ -f ${checkout_dir}/.git/objects/info/alternates ]; then \
+                    dirname \$(cat ${checkout_dir}/.git/objects/info/alternates);\
+                fi
+            """);
+
             stage('Create BOM') {
                 // Further: the BOM image does not yet have a DISTRO label...
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     scanner_image.inside(
-                        "${mount_reference_repo_dir}" +
-                        " -v ${checkout_dir}:${checkout_dir}" +
+                        (reference_repo_dir ? "-v ${reference_repo_dir}:${reference_repo_dir}:ro " : "") +
+                        "-v ${checkout_dir}:${checkout_dir}" +
                         " --ulimit nofile=1024:1024" +
                         " --group-add=${docker_group_id}" +
                         " -v /var/run/docker.sock:/var/run/docker.sock"

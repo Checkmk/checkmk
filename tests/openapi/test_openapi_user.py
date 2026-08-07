@@ -72,6 +72,11 @@ def _test_pending_changes() -> PendingChanges:
 
 MOCK_SAML_CONNECTOR_NAME = "saml_connector"
 
+# Time picker preferences in their API shape, i.e. the tagged union rather than the bare
+# duration and interval the user profile stores.
+_INDIVIDUAL_TIME_RANGE = {"option": "individual", "duration": 14400}
+_INDIVIDUAL_REFRESH_TIME = {"option": "individual", "interval": 60}
+
 _is_managed_edition = version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
 
 
@@ -1478,4 +1483,104 @@ def test_openapi_time_picker_refresh_intervals_match_the_gui_choices() -> None:
     # the single source of truth the GUI valuespec uses.
     assert set(get_args(IndividualRefreshTimeModel.__annotations__["interval"])) == set(
         GRAPH_REFRESH_INTERVALS_SECONDS
+    )
+
+
+def test_time_picker_defaults_round_trip_via_put(clients: ClientRegistry) -> None:
+    """The two graph defaults survive an edit, one preference at a time.
+
+    Create carries concrete defaults; edit is the separate, partial path -
+    `UpdateTimePickerModel` writes only the keys it was given, so setting one preference must
+    leave the other standing.
+    """
+    username = "time_picker_put_user"
+    clients.User.create(username=username, fullname="Time Picker User")
+
+    after_range = clients.User.edit(
+        username=username,
+        interface_options={"time_picker": {"default_time_range": _INDIVIDUAL_TIME_RANGE}},
+    ).json["extensions"]["interface_options"]["time_picker"]
+    assert after_range["default_time_range"] == _INDIVIDUAL_TIME_RANGE
+    assert after_range["default_refresh_time"] == {"option": "default"}
+
+    after_refresh = clients.User.edit(
+        username=username,
+        interface_options={"time_picker": {"default_refresh_time": _INDIVIDUAL_REFRESH_TIME}},
+    ).json["extensions"]["interface_options"]["time_picker"]
+    assert after_refresh["default_refresh_time"] == _INDIVIDUAL_REFRESH_TIME
+    # The first edit is still there, so the second one patched rather than replaced.
+    assert after_refresh["default_time_range"] == _INDIVIDUAL_TIME_RANGE
+
+    internal_attributes = _load_internal_attributes(UserId(username))
+    assert internal_attributes["graph_default_time_range"] == 14400
+    assert internal_attributes["graph_default_refresh_time"] == 60
+    assert (
+        clients.User.get(username=username).json["extensions"]["interface_options"]["time_picker"]
+        == after_refresh
+    )
+
+
+def test_start_of_week_round_trips(clients: ClientRegistry) -> None:
+    """The start-of-week preference survives a create and reaches storage."""
+    username = "start_of_week_user"
+    extensions = clients.User.create(
+        username=username,
+        fullname="Time Picker User",
+        interface_options={"time_picker": {"start_of_week": "sunday"}},
+    ).json["extensions"]["interface_options"]["time_picker"]
+
+    assert extensions["start_of_week"] == "sunday"
+    assert _load_internal_attributes(UserId(username))["start_of_week"] == "sunday"
+    assert (
+        clients.User.get(username=username).json["extensions"]["interface_options"]["time_picker"][
+            "start_of_week"
+        ]
+        == "sunday"
+    )
+
+
+@pytest.mark.parametrize(
+    "start_of_week, expected_status_code",
+    [
+        ("monday", 200),
+        ("browser_locale", 200),
+        # Not a weekday the schema offers; the picker has no way to render it.
+        ("funday", 400),
+        # A weekday, but the schema deliberately offers only the three the GUI does.
+        ("tuesday", 400),
+    ],
+)
+def test_invalid_start_of_week_is_rejected(
+    clients: ClientRegistry, start_of_week: str, expected_status_code: int
+) -> None:
+    """An unsupported start-of-week is refused rather than stored."""
+    resp = clients.User.create(
+        username=_random_string(10),
+        fullname="Time Picker User",
+        interface_options={"time_picker": {"start_of_week": start_of_week}},
+        expect_ok=expected_status_code == 200,
+    )
+    resp.assert_status_code(expected_status_code)
+
+
+def test_default_time_range_round_trips_via_post(clients: ClientRegistry) -> None:
+    """The default-time-range preference survives creation.
+
+    The create path, as against the edit path above: `CreateTimePickerModel` has concrete defaults
+    where `UpdateTimePickerModel` has `None`.
+    """
+    username = "time_picker_post_user"
+    extensions = clients.User.create(
+        username=username,
+        fullname="Time Picker User",
+        interface_options={"time_picker": {"default_time_range": _INDIVIDUAL_TIME_RANGE}},
+    ).json["extensions"]["interface_options"]["time_picker"]
+
+    assert extensions["default_time_range"] == _INDIVIDUAL_TIME_RANGE
+    assert _load_internal_attributes(UserId(username))["graph_default_time_range"] == 14400
+    assert (
+        clients.User.get(username=username).json["extensions"]["interface_options"]["time_picker"][
+            "default_time_range"
+        ]
+        == _INDIVIDUAL_TIME_RANGE
     )

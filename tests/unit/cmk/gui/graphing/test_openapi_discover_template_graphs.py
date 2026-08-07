@@ -11,6 +11,7 @@ from collections.abc import Callable, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import _engine_template_graphs as template_graphs_module
@@ -131,6 +132,32 @@ def test_discover_template_graphs_passes_the_specification_to_the_fetch(
         graph_id=None,
     )
     assert isinstance(captured["fetch_metric_names"], RRDFetchMetricNames)
+
+
+def test_discover_template_graphs_scopes_the_lookup_to_a_requested_site(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A dashboard widget hands over the site of its filter context; the same host and service can be
+    # monitored by two sites and a template graph is single-service.
+    captured: dict[str, object] = {}
+
+    def _build(specification: TemplateGraphSpecification, **kwargs: object) -> Sequence[BuiltGraph]:
+        captured["specification"] = specification
+        captured.update(kwargs)
+        return [BuiltGraph(graph=Graph(name="g", title="t", kind="template"), specification=None)]
+
+    monkeypatch.setattr(template_graphs_module, "build_template_graphs", _build)
+
+    clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load", site="remote-site"
+    )
+
+    specification = captured["specification"]
+    assert isinstance(specification, TemplateGraphSpecification)
+    assert specification.site == SiteId("remote-site")
+    fetch_metric_names = captured["fetch_metric_names"]
+    assert isinstance(fetch_metric_names, RRDFetchMetricNames)
+    assert fetch_metric_names.site_id == SiteId("remote-site")
 
 
 def test_discover_template_graphs_filters_by_graph_id(

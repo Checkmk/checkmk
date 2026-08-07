@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
     APIVersion,
@@ -29,6 +30,16 @@ from .models import GraphsDiscoverResponse
 class TemplateGraphsDiscoverRequest:
     hostname: AnnotatedHostName = api_field(description="The host name.", example="my-host")
     service_description: str = api_field(description="The service description.", example="CPU load")
+    site: SiteId | None = api_field(
+        description=(
+            "Look the service up on this site only. The same host and service can be monitored by "
+            "two sites, and a template graph is single-service, so a caller that knows the site "
+            "(from a site filter, from a specification it holds) passes it. None looks it up on "
+            "all sites the user may see."
+        ),
+        example="mysite",
+        default=None,
+    )
     graph_id: str | None = api_field(
         description=(
             "Return only the graph with this id. A legacy 'METRIC_<name>' id matches the "
@@ -46,7 +57,7 @@ def discover_template_graphs_v1(
     try:
         discovered = discover_template_graphs(
             TemplateGraphSpecification(
-                site=None,
+                site=body.site,
                 host_name=body.hostname,
                 service_description=body.service_description,
                 graph_id=body.graph_id,

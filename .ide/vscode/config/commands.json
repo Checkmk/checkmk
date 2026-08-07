@@ -6,7 +6,7 @@
   },
   "cmk.buildSharedTyping": {
     "name": "Build shared-typing",
-    "command": "bazel build //packages/cmk-shared-typing:cmk_shared_typing_ts //packages/cmk-shared-typing:cmk_shared_typing_py && mkdir -p packages/cmk-frontend-vue/node_modules/ && ln -sfn $(bazel info bazel-bin)/packages/cmk-shared-typing packages/cmk-frontend-vue/node_modules/cmk-shared-typing",
+    "command": "bazel build //packages/cmk-shared-typing:cmk_shared_typing_ts //packages/cmk-shared-typing:cmk_shared_typing_py && for pkg in cmk-frontend-vue cmk-ui-library; do mkdir -p packages/$pkg/node_modules/ && ln -sfn $(bazel info bazel-bin)/packages/cmk-shared-typing packages/$pkg/node_modules/cmk-shared-typing; done",
     "requires": "frontend"
   },
   "cmk.buildCmkFrontend": {
@@ -21,7 +21,7 @@
   },
   "cmk.runUcl": {
     "name": "Run UI Component Library",
-    "command": "cd packages/cmk-frontend-vue && { ibazel build //packages/cmk-frontend:dist //packages/cmk-frontend-vue:compile_i18n & deps=$!; trap 'kill $deps 2>/dev/null' EXIT; ./node_modules/.bin/vite --config vite.config.ucl.ts; }",
+    "command": "cd packages/cmk-frontend-vue && { ibazel build //packages/cmk-frontend:dist //packages/cmk-frontend-vue:compile_i18n //packages/cmk-shared-typing:cmk_shared_typing_ts & deps=$!; trap 'kill $deps 2>/dev/null' EXIT; ./node_modules/.bin/vite --config vite.config.ucl.ts; }",
     "requires": "frontend",
     "force": true,
     "openBrowser": "http://localhost:5174/"

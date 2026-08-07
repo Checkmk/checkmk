@@ -45,20 +45,17 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
   const requiredBins = ['python', 'dmypy', 'ruff'].map((b) => path.join(wsPath, '.venv', 'bin', b))
   status.venv.ok = fs.existsSync(venvCfg) && requiredBins.every((p) => fs.existsSync(p))
 
-  const sharedTypingLink = path.join(
-    wsPath,
-    'packages',
-    'cmk-frontend-vue',
-    'node_modules',
-    'cmk-shared-typing'
+  const sharedTypingLinks = ['cmk-frontend-vue', 'cmk-ui-library'].map((pkg) =>
+    path.join(wsPath, 'packages', pkg, 'node_modules', 'cmk-shared-typing')
   )
-  try {
-    const target = fs.readlinkSync(sharedTypingLink)
-    const resolved = path.resolve(path.dirname(sharedTypingLink), target)
-    status.sharedTypingTs.ok = fs.existsSync(resolved)
-  } catch {
-    status.sharedTypingTs.ok = false
-  }
+  status.sharedTypingTs.ok = sharedTypingLinks.every((link) => {
+    try {
+      const target = fs.readlinkSync(link)
+      return fs.existsSync(path.resolve(path.dirname(link), target))
+    } catch {
+      return false
+    }
+  })
 
   try {
     const sitePackages = fs

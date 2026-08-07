@@ -23,7 +23,7 @@ const PROPS: GlobalTimePickerProps = {
     { title: 'Last 25 hours', total_seconds: 25 * HOUR }
   ],
   default_time_range: 4 * HOUR,
-  server_time_zone: 'America/Los_Angeles',
+  server_time_zone: 'Europe/Berlin',
   first_day_of_week: null,
   default_refresh_time: null
 }
@@ -83,5 +83,35 @@ describe('GlobalTimePickerApp', () => {
     useGlobalRefresh().setRefreshIntervalSeconds(90)
     render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
     expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
+  })
+
+  test('a fresh page shows the configured default active, with no interaction', () => {
+    render(GlobalTimePickerApp, {
+      props: {
+        ...PROPS,
+        custom_time_ranges: [
+          { title: 'Last 1 hour', total_seconds: HOUR },
+          ...PROPS.custom_time_ranges
+        ],
+        default_time_range: HOUR
+      }
+    })
+    expect(screen.getByRole('button', { name: 'Last 1 hour' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+  })
+
+  test('the preference decides the initial selection, not the configured order', () => {
+    // The preference names the *second* range, so a picker that simply took the first would fail.
+    render(GlobalTimePickerApp, { props: { ...PROPS, default_time_range: 25 * HOUR } })
+    expect(screen.getByRole('button', { name: 'Last 25 hours' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+    expect(screen.getByRole('button', { name: 'Last 4 hours' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    )
   })
 })

@@ -198,6 +198,9 @@ def get_exclude_patterns(options: BackupExclusions) -> list[str]:
     excludes.append("var/check_mk/persisted/*")
     excludes.append("var/check_mk/persisted_sections/*")
 
+    # exclude the generated helper config, it is recreated by "cmk -U" during restore
+    excludes.append("var/check_mk/core/helper_config/*")
+
     if not options.rrds:
         excludes.append("var/pnp4nagios/perfdata/*")
         excludes.append("var/pnp4nagios/spool/*")

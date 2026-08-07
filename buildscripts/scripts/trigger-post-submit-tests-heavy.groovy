@@ -14,14 +14,14 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
 
     def job_names = [
-        "test-composition-cee",
-        "test-composition-cre",
-        "test-integration-cee",
-        "test-integration-cme",
-        "test-integration-cre",
-        "test-gui-crawl-node",
-        "test-gui-e2e",
-        "test-update-cee",
+        "test-system-multisite-cee",
+        "test-system-multisite-cre",
+        "test-system-singlesite-cee",
+        "test-system-singlesite-cme",
+        "test-system-singlesite-cre",
+        "test-system-gui-crawl-node",
+        "test-system-gui",
+        "test-system-update-cee",
     ];
     /// In order to ensure a fixed order for stages executed in parallel,
     /// we wait an increasing amount of time (N * 1s).
@@ -81,7 +81,7 @@ def main() {
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
                 force_build: force_build,
-                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl-node",
+                relative_job_name: "${branch_base_folder}/heavy/test-system-gui-crawl-xss-node",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
                 ],

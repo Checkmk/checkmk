@@ -76,6 +76,18 @@ test_types = [
     "extension_compatibility",
 ]
 
+# The system test suites were moved to tests/system/<suite>/, but their "-T TYPE"
+# labels predate that layout and are kept as they are, so the suite directory has
+# to be mapped back to the label.
+system_test_types = {
+    "singlesite": "integration",
+    "multisite": "composition",
+    "plugins": "plugins_integration",
+    "gui": "gui_e2e",
+    "gui_crawl": "gui_crawl",
+    "update": "update",
+}
+
 
 def pytest_addoption(parser):
     """Register the -T option to pytest"""
@@ -124,6 +136,8 @@ def pytest_collection_modifyitems(items):
         file_path = Path("%s" % item.reportinfo()[0])
         repo_rel_path = file_path.relative_to(repo_path())
         ty = repo_rel_path.parts[1]
+        if ty == "system" and len(repo_rel_path.parts) > 2:
+            ty = system_test_types.get(repo_rel_path.parts[2], ty)
         if ty not in test_types:
             if not isinstance(item, pytest.DoctestItem):
                 raise Exception(f"Test in {repo_rel_path} not TYPE marked: {item!r} ({ty!r})")

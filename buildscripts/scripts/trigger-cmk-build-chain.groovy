@@ -154,7 +154,7 @@ def main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        relative_job_name: "${edition_base_folder}/test-composition",
+                        relative_job_name: "${edition_base_folder}/test-system-multisite",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
@@ -168,7 +168,7 @@ def main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        relative_job_name: "${edition_base_folder}/test-update",
+                        relative_job_name: "${edition_base_folder}/test-system-update",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,

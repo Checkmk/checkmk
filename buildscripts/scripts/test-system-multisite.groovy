@@ -1,8 +1,8 @@
 #!groovy
 
-/// file: test-integration-packages.groovy
+/// file: test-system-multisite.groovy
 
-/// Run integration tests for checkmk OS packages
+/// Run composition tests
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
@@ -47,7 +47,7 @@ def main() {
 
     currentBuild.description += (
         """
-        |Run integration tests for packages<br>
+        |Run composition tests for<br>
         |VERSION: ${VERSION}<br>
         |EDITION: ${EDITION}<br>
         |selected_distros: ${selected_distros}<br>
@@ -56,10 +56,9 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_distros:.............. │${all_distros}│
-        |selected_distros:......... │${selected_distros}│
+        |selected_distros:........  │${selected_distros}│
         |branch_name:.............. │${branch_name}│
-        |safe_branch_name:......... │${safe_branch_name}│
+        |safe_branch_name:........  │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
@@ -67,7 +66,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def relative_job_name = "${branch_base_folder}/builders/test-system-singlesite-single";
+    def relative_job_name = "${branch_base_folder}/builders/test-system-multisite-single-node";
 
     /// avoid failures due to leftover artifacts from prior runs
     sh("rm -rf ${checkout_dir}/test-results");

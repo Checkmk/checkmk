@@ -13,7 +13,6 @@ import logging
 import os
 import subprocess
 from collections.abc import Callable
-from contextlib import suppress
 from functools import cache
 from pathlib import Path
 
@@ -147,17 +146,6 @@ def git_essential_directories(checkout_dir: Path) -> list[str]:
 
     if not common_dir.is_relative_to(checkout_dir):
         essential_dirs.append(common_dir.as_posix())
-
-    # In case of reference clones we also need to access them.
-    # Not sure if 'objects/info/alternates' can contain more than one line and if we really need
-    # the parent, but at least this one is working for us
-    with (
-        suppress(FileNotFoundError),
-        (common_dir / "objects/info/alternates").open() as alternates,
-    ):
-        for alternate in (Path(line).parent for line in alternates):
-            if not alternate.is_relative_to(checkout_dir):
-                essential_dirs.append(alternate.as_posix())
 
     return essential_dirs
 

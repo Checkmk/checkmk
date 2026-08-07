@@ -10,6 +10,7 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
+from ._fetch import FetchMetricNamesProtocol
 from ._from_api import (
     build_curve,
     build_single_quantity,
@@ -21,7 +22,6 @@ from ._from_api import (
 from ._graph import Graph, Line, Rule, Stack
 from ._perfdata import MetricName, Service
 from ._quantities import QuantityProtocol, rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
-from ._source import FetchMetricNamesProtocol
 
 _PREDICT_PREFIX = "predict_"
 

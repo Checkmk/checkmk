@@ -10,11 +10,11 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import assert_never
 
+from ._fetch import fetch_evaluation_context, FetchDataProtocol
 from ._graph import Bound, Curve, FixedRange, Graph, MinimalRange, Rule, VerticalRange
 from ._options import ConsolidationFunction, TimeRange
 from ._perfdata import MACRO_SERIES_ID, SeriesAttributes, TimeSeries
 from ._quantities import EvaluationContext, first_value, QuantityProtocol
-from ._source import fetch_evaluation_context, FetchDataProtocol
 from ._title import evaluate_title
 from ._units import CurveAttributes
 

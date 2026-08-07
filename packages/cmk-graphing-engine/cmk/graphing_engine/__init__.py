@@ -14,6 +14,10 @@ from ._evaluate import (
     EvaluatedVerticalRange,
     VerticalRangeKind,
 )
+from ._fetch import (
+    FetchDataProtocol,
+    FetchMetricNamesProtocol,
+)
 from ._from_api import build_curve, parse_graph_from_api, QuantityBuilderProtocol
 from ._graph import (
     Bound,
@@ -59,10 +63,6 @@ from ._quantities import (
     ScalarKind,
     ScalarOf,
     Sum,
-)
-from ._source import (
-    FetchDataProtocol,
-    FetchMetricNamesProtocol,
 )
 from ._units import (
     AutoPrecision,

@@ -12,4 +12,5 @@ item:
  Name of the volume
 
 discovery:
- One service is created for each volume.
+ One service is created for each volume. Volumes whose SNMP walk contains no
+ size, usage or online data are ignored.

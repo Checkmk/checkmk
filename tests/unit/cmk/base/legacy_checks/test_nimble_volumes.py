@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.nimble_volumes import (
     _check_nimble_volumes,
     inventory_nimble_volumes,
@@ -38,7 +36,6 @@ def test_check_ok_volume() -> None:
     assert ("fs_size", 1073741824, None, None, 0, None) in perfdata
 
 
-@pytest.mark.xfail(strict=True, reason="CMK-37374")
 def test_check_does_not_crash_on_empty_size_values() -> None:
     section = parse_nimble_volumes(STRING_TABLE)
     assert not list(

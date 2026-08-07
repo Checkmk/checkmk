@@ -17,7 +17,8 @@ const buttonVariants = cva('', {
       warning: 'cmk-button--variant-warning',
       danger: 'cmk-button--variant-danger',
       info: 'cmk-button--variant-info',
-      text: 'cmk-button--variant-text'
+      text: 'cmk-button--variant-text',
+      ai: 'cmk-button--variant-ai'
     },
     size: {
       medium: 'cmk-button--size-medium',

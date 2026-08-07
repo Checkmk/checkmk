@@ -40,9 +40,11 @@ export const panelConfig = {
       { title: 'Warning', name: 'warning' },
       { title: 'Danger', name: 'danger' },
       { title: 'Info', name: 'info' },
-      { title: 'Text', name: 'text' }
+      { title: 'Text', name: 'text' },
+      { title: 'AI', name: 'ai' }
     ] satisfies Options<ButtonVariants['variant']>[],
-    initialState: 'optional' as const
+    initialState: 'optional' as const,
+    help: 'AI renders the optional button with a purple shimmer sweeping across it, marking an AI-powered action.'
   },
   size: {
     type: 'list' as const,

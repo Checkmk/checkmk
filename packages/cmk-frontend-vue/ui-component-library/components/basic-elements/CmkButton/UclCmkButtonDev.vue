@@ -65,6 +65,21 @@ defineProps<{ screenshotMode: boolean }>()
       <CmkButton variant="text">button</CmkButton>
     </dd>
 
+    <dt><code>&lt;CmkButton variant="ai"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton variant="ai">button</CmkButton>
+    </dd>
+
+    <dt>
+      <code
+        >&lt;CmkButton variant="ai" :icon="{ name: 'sparkle' }"&gt;Explain this
+        issue&lt;/CmkButton&gt;</code
+      >
+    </dt>
+    <dd>
+      <CmkButton variant="ai" :icon="{ name: 'sparkle' }">Explain this issue</CmkButton>
+    </dd>
+
     <dt>
       <code
         >&lt;CmkButton&gt;&lt;CmkIcon name="about-checkmk" variant="inline"

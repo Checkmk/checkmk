@@ -291,6 +291,55 @@ defineEmits(['click'])
   }
 }
 
+.cmk-button--variant-ai {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--default-button-optional-color);
+  border: 1px solid var(--button-optional-border-color);
+  color: var(--button-optional-text-color);
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(-100%);
+    opacity: 0.2;
+    background: linear-gradient(
+      90deg,
+      transparent 0,
+      var(--color-purple-80) 20%,
+      var(--color-purple-60) 60%,
+      transparent
+    );
+    animation: cmk-button-ai-shimmer 3s infinite;
+    pointer-events: none;
+    content: '';
+  }
+
+  &:hover:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-optional-color) 90%,
+      var(--white) 10%
+    );
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-optional-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
+  }
+}
+
+@keyframes cmk-button-ai-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .cmk-button--disabled,
 button.cmk-button:disabled {
   opacity: 0.5;

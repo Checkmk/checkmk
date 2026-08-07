@@ -9,6 +9,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.valuespec import DropdownChoice
@@ -17,6 +18,7 @@ from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalS
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.gui.watolib.utils import site_neutral_path
+from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.utils.paths import log_dir, omd_root, var_dir
 
 
@@ -80,27 +82,21 @@ DUMMY_CONTEXT = GlobalSettingsContext(
 
 
 def test_use_new_descriptions_for_sample_config_readable() -> None:
-    value_spec = ConfigVariableUseNewDescriptionsFor.valuespec(DUMMY_CONTEXT)
+    form_spec = ConfigVariableUseNewDescriptionsFor.value_model(DUMMY_CONTEXT)
+    assert isinstance(form_spec, Dictionary)
 
     sample_config = USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"]
-    sample_config_as_ui_model = value_spec.transform_value(
-        USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"]
-    )
-    value_spec.validate_value(sample_config_as_ui_model, "")
-    value_spec.validate_datatype(sample_config_as_ui_model, "")
-
-    for plugin_name, expected_selected in sample_config.items():
-        if plugin_name in _KNOWN_EXCEPTIONS:
-            continue
-        assert sample_config_as_ui_model[plugin_name] == expected_selected
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
+    assert visitor.validate(RawDiskData(sample_config)) == []
+    assert visitor.to_disk(RawDiskData(sample_config)) == sample_config
 
 
 def test_use_new_descriptions_sample_config_same_entries_as_ui_selection() -> None:
     """Ensure sample config and UI selection of plugins for new descriptions are in sync"""
-    value_spec = ConfigVariableUseNewDescriptionsFor.valuespec(DUMMY_CONTEXT)
+    form_spec = ConfigVariableUseNewDescriptionsFor.value_model(DUMMY_CONTEXT)
+    assert isinstance(form_spec, Dictionary)
 
-    assert isinstance(value_spec.default_value(), dict)
-    ui_selection = value_spec.default_value().keys()
+    ui_selection = form_spec.elements.keys()
     sample_config_selection = (
         set(USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"].keys()) - _KNOWN_EXCEPTIONS
     )

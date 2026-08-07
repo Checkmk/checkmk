@@ -20,9 +20,9 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.password_store import (
-    postprocessable_ios_password,
-)
+from cmk.gui.watolib.password_store import postprocessable_ios_password
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Title
 
 _Schemes = Literal["http", "https", "socks4", "socks4a", "socks5", "socks5h"]
 _allowed_schemes = frozenset(get_args(_Schemes))
@@ -80,6 +80,58 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
             ("url", _("Manual proxy configuration"), HTTPProxyInput(allowed_schemes)),
         ],
         sorted=False,
+    )
+
+
+def http_proxy_input_form_spec() -> fs.Dictionary:
+    return fs.Dictionary(
+        title=Title("Proxy"),
+        elements={
+            "scheme": fs.DictElement(
+                required=True,
+                parameter_form=fs.SingleChoice(
+                    title=Title("Scheme"),
+                    elements=[
+                        fs.SingleChoiceElement(name="http", title=Title("http")),
+                        fs.SingleChoiceElement(name="https", title=Title("https")),
+                        fs.SingleChoiceElement(name="socks4", title=Title("socks4")),
+                        fs.SingleChoiceElement(name="socks4a", title=Title("socks4a")),
+                        fs.SingleChoiceElement(name="socks5", title=Title("socks5")),
+                        fs.SingleChoiceElement(name="socks5h", title=Title("socks5h")),
+                    ],
+                    prefill=fs.DefaultValue("http"),
+                ),
+            ),
+            "proxy_server_name": fs.DictElement(
+                required=True,
+                parameter_form=fs.String(title=Title("Proxy server name or IP address")),
+            ),
+            "port": fs.DictElement(
+                required=True,
+                parameter_form=fs.Integer(
+                    title=Title("Port"),
+                    custom_validate=[fs.validators.NetworkPort()],
+                ),
+            ),
+            "auth": fs.DictElement(
+                parameter_form=fs.Dictionary(
+                    title=Title("Authentication for proxy required"),
+                    elements={
+                        "user": fs.DictElement(
+                            required=True,
+                            parameter_form=fs.String(title=Title("Username")),
+                        ),
+                        "password": fs.DictElement(
+                            required=True,
+                            parameter_form=fs.Password(
+                                title=Title("Password"),
+                                custom_validate=[fs.validators.LengthInRange(min_value=1)],
+                            ),
+                        ),
+                    },
+                ),
+            ),
+        },
     )
 
 

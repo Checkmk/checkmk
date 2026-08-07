@@ -681,13 +681,15 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "http_proxies": {
         "[add]": {
-            "ident": "",
-            "proxy_config": {"port": 0, "proxy_server_name": "", "scheme": "http"},
-            "title": "",
+            "ident": NoSaveableDefault(),
+            "proxy_config": {
+                "port": NoSaveableDefault(),
+                "proxy_server_name": NoSaveableDefault(),
+                "scheme": "http",
+            },
+            "title": NoSaveableDefault(),
         },
         "[add].proxy_config.auth": UnstableDefault(),
-        "[add].proxy_config.auth.password.password": "",
-        "[add].proxy_config.auth.password.store": NoSaveableDefault(),
     },
     "inventory_check_interval": {
         "[enable]": 720,
@@ -1182,7 +1184,6 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "site_subject_alternative_names": [],
     "site_trace_receive": None,
     "site_trace_send": "no_tracing",
-    "snmp_backend_default": "classic",
     "snmp_credentials": [],
     "translate_snmptraps": False,
     "trusted_certificate_authorities": {"use_system_wide_cas": False, "trusted_cas": []},
@@ -1682,6 +1683,50 @@ CASES: Mapping[str, list[Case]] = {
                 }
             },
         ),
+        CasePass(
+            "configured-with-stored-password-auth",
+            {
+                "corp": {
+                    "ident": "corp",
+                    "title": "Corp proxy",
+                    "proxy_config": {
+                        "scheme": "http",
+                        "proxy_server_name": "proxy.corp.example",
+                        "port": 3128,
+                        "auth": {
+                            "user": "proxyuser",
+                            "password": (
+                                "cmk_postprocessed",
+                                "stored_password",
+                                ("proxy_secret", ""),
+                            ),
+                        },
+                    },
+                }
+            },
+        ),
+        CasePass(
+            "configured-with-explicit-password-auth",
+            {
+                "corp": {
+                    "ident": "corp",
+                    "title": "Corp proxy",
+                    "proxy_config": {
+                        "scheme": "http",
+                        "proxy_server_name": "proxy.corp.example",
+                        "port": 3128,
+                        "auth": {
+                            "user": "proxyuser",
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("uuid_from_an_old_save", "hunter2"),
+                            ),
+                        },
+                    },
+                }
+            },
+        ),
         CaseFail(
             "unknown-scheme",
             {
@@ -1742,7 +1787,7 @@ CASES: Mapping[str, list[Case]] = {
                 },
             },
         ),
-        CaseFail("not-a-dict-crashes-transform", ["corp"], AttributeError),
+        CaseFail("not-a-dict-crashes-transform", ["corp"], AssertionError),
     ],
     "inject_js_profiling_code": CHECKBOX_CASES,
     "inventory_check_autotrigger": CHECKBOX_CASES,
@@ -2455,6 +2500,12 @@ class ConfigVariableSuite:
     @pytest.fixture(name="global_settings_context")
     def fixture_global_settings_context(self) -> GlobalSettingsContext:
         return make_global_settings_context(self.EDITION)
+
+    @pytest.fixture(autouse=True)
+    def fixture_empty_password_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Rendering the Password form spec lists the password store entries the
+        user may read, which requires a logged-in user this suite does not have."""
+        monkeypatch.setattr("cmk.gui.watolib.password_visitor.passwordstore_choices", list)
 
     def test_all_config_variable_defaults_round_trip_unchanged(
         self, global_settings_context: GlobalSettingsContext

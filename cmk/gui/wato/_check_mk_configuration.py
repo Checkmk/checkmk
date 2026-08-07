@@ -16,11 +16,16 @@ from typing import Any, Literal, override
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.regex import regex, REGEX_ID
 from cmk.ccc.version import Edition
 from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
+from cmk.gui.form_specs.generators.age import Age as FSAge
 from cmk.gui.form_specs.unstable import OptionalChoice
+from cmk.gui.form_specs.unstable.legacy_converter.transform import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.groups import GroupName
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages
@@ -133,7 +138,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import (
@@ -141,7 +146,7 @@ from ._group_selection import (
     HostGroupSelection,
     ServiceGroupSelection,
 )
-from ._http_proxy import HTTPProxyInput
+from ._http_proxy import http_proxy_input_form_spec
 
 
 def register(
@@ -2600,505 +2605,189 @@ ConfigVariableGroupCheckExecution = ConfigVariableGroup(
 )
 
 
-def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueSpec:
-    available_selection = [
-        (
-            "aix_memory",
-            Checkbox(
-                title=_("Memory usage for %(os)s hosts") % {"os": "AIX"},
-                label=_("Use the new service name"),
+def use_new_descriptions_for_form_spec(context: GlobalSettingsContext) -> fs.Dictionary:
+    def use_new_service_name(title: Title, label: Label | None = None) -> fs.DictElement[bool]:
+        return fs.DictElement(
+            required=True,
+            parameter_form=fs.BooleanChoice(
+                title=title,
+                label=label or Label("Use the new service name"),
             ),
-        ),
-        (
-            "barracuda_mailqueues",
-            Checkbox(title=_("Barracuda: mail queue"), label=_("Use the new service name")),
-        ),
-        (
-            "brocade_sys_mem",
-            Checkbox(
-                title=_("Main memory usage for Brocade fibre channel switches"),
-                label=_("Use the new service name"),
+        )
+
+    return fs.Dictionary(
+        title=Title("Use new service names"),
+        ignored_elements=("megaraid_vdisks",),
+        elements={
+            "aix_memory": use_new_service_name(
+                Title("Memory usage for %(os)s hosts") % {"os": "AIX"}
             ),
-        ),
-        (
-            "casa_cpu_temp",
-            Checkbox(title=_("Casa module: CPU temperature"), label=_("Use the new service name")),
-        ),
-        (
-            "cisco_mem",
-            Checkbox(
-                title=_("Cisco memory usage (%(check)s)") % {"check": "cisco_mem"},
-                label=_("Use the new service name"),
+            "barracuda_mailqueues": use_new_service_name(Title("Barracuda: mail queue")),
+            "brocade_sys_mem": use_new_service_name(
+                Title("Main memory usage for Brocade fibre channel switches")
             ),
-        ),
-        (
-            "cisco_mem_asa",
-            Checkbox(
-                title=_("Cisco memory usage (%(check)s)") % {"check": "cisco_mem_asa"},
-                label=_("Use the new service name"),
+            "casa_cpu_temp": use_new_service_name(Title("Casa module: CPU temperature")),
+            "cisco_mem": use_new_service_name(
+                Title("Cisco memory usage (%(check)s)") % {"check": "cisco_mem"}
             ),
-        ),
-        (
-            "cisco_mem_asa64",
-            Checkbox(
-                title=_("Cisco memory usage (%(check)s)") % {"check": "cisco_mem_asa64"},
-                label=_("Use the new service name"),
+            "cisco_mem_asa": use_new_service_name(
+                Title("Cisco memory usage (%(check)s)") % {"check": "cisco_mem_asa"}
             ),
-        ),
-        (
-            "cmciii_psm_current",
-            Checkbox(title=_("Rittal CMC-III Units: Current"), label=_("Use the new service name")),
-        ),
-        (
-            "cmciii_temp",
-            Checkbox(
-                title=_("Rittal CMC-III Units: Temperatures"),
-                label=_("Use the new service name"),
+            "cisco_mem_asa64": use_new_service_name(
+                Title("Cisco memory usage (%(check)s)") % {"check": "cisco_mem_asa64"}
             ),
-        ),
-        (
-            "cmciii_lcp_airin",
-            Checkbox(
-                title=_("Rittal CMC-III LCP: Air In and Temperature"),
-                label=_("Use the new service name"),
+            "cmciii_psm_current": use_new_service_name(Title("Rittal CMC-III Units: Current")),
+            "cmciii_temp": use_new_service_name(Title("Rittal CMC-III Units: Temperatures")),
+            "cmciii_lcp_airin": use_new_service_name(
+                Title("Rittal CMC-III LCP: Air In and Temperature")
             ),
-        ),
-        (
-            "cmciii_lcp_airout",
-            Checkbox(
-                title=_("Rittal CMC-III LCP: Air Out Temperature"),
-                label=_("Use the new service name"),
+            "cmciii_lcp_airout": use_new_service_name(
+                Title("Rittal CMC-III LCP: Air Out Temperature")
             ),
-        ),
-        (
-            "cmciii_lcp_water",
-            Checkbox(
-                title=_("Rittal CMC-III LCP: Water In/Out Temperature"),
-                label=_("Use the new service name"),
+            "cmciii_lcp_water": use_new_service_name(
+                Title("Rittal CMC-III LCP: Water In/Out Temperature")
             ),
-        ),
-        (
-            "cmk_inventory",
-            Checkbox(
-                title=_("Monitor hosts for unchecked services (Checkmk Discovery)"),
-                label=_("Use the new service name"),
+            "cmk_inventory": use_new_service_name(
+                Title("Monitor hosts for unchecked services (Checkmk Discovery)")
             ),
-        ),
-        ("db2_mem", Checkbox(title=_("DB2 memory usage"), label=_("Use the new service name"))),
-        (
-            "df",
-            Checkbox(title=_("Used space in file systems"), label=_("Use the new service name")),
-        ),
-        (
-            "df_netapp",
-            Checkbox(
-                title=_("NetApp filers: used space in file systems"),
-                label=_("Use the new service name"),
+            "db2_mem": use_new_service_name(Title("DB2 memory usage")),
+            "df": use_new_service_name(Title("Used space in file systems")),
+            "df_netapp": use_new_service_name(Title("NetApp filers: used space in file systems")),
+            "df_netapp32": use_new_service_name(
+                Title("NetApp filers: used space in file system using 32-bit counters")
             ),
-        ),
-        (
-            "df_netapp32",
-            Checkbox(
-                title=_("NetApp filers: used space in file system using 32-bit counters"),
-                label=_("Use the new service name"),
+            "docker_container_mem": use_new_service_name(
+                Title("Memory usage of Docker containers")
             ),
-        ),
-        (
-            "docker_container_mem",
-            Checkbox(
-                title=_("Memory usage of Docker containers"),
-                label=_("Use the new service name"),
+            "enterasys_temp": use_new_service_name(Title("Enterasys switch: temperature")),
+            "esx_vsphere_datastores": use_new_service_name(
+                Title("VMware ESX host systems: Used space")
             ),
-        ),
-        (
-            "enterasys_temp",
-            Checkbox(title=_("Enterasys switch: temperature"), label=_("Use the new service name")),
-        ),
-        (
-            "esx_vsphere_datastores",
-            Checkbox(
-                title=_("VMware ESX host systems: Used space"),
-                label=_("Use the new service name"),
+            "esx_vsphere_hostsystem_mem_usage": use_new_service_name(
+                Title("Main memory usage of ESX host system")
             ),
-        ),
-        (
-            "esx_vsphere_hostsystem_mem_usage",
-            Checkbox(
-                title=_("Main memory usage of ESX host system"),
-                label=_("Use the new service name"),
+            "esx_vsphere_hostsystem_mem_usage_cluster": use_new_service_name(
+                Title("Memory usage of ESX Clusters")
             ),
-        ),
-        (
-            "esx_vsphere_hostsystem_mem_usage_cluster",
-            Checkbox(title=_("Memory usage of ESX Clusters"), label=_("Use the new service name")),
-        ),
-        (
-            "etherbox_temp",
-            Checkbox(
-                title=_("Etherbox / MessPC: sensor temperature"),
-                label=_("Use the new service name"),
+            "etherbox_temp": use_new_service_name(Title("Etherbox / MessPC: sensor temperature")),
+            "fortigate_memory": use_new_service_name(
+                Title("Memory usage of Fortigate devices (fortigate_memory)")
             ),
-        ),
-        (
-            "fortigate_memory",
-            Checkbox(
-                title=_("Memory usage of Fortigate devices (fortigate_memory)"),
-                label=_("Use the new service name"),
+            "fortigate_memory_base": use_new_service_name(
+                Title("Memory usage of Fortigate devices (fortigate_memory_base)")
             ),
-        ),
-        (
-            "fortigate_memory_base",
-            Checkbox(
-                title=_("Memory usage of Fortigate devices (fortigate_memory_base)"),
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "fortigate_node_memory",
-            Checkbox(title=_("FortiGate node memory"), label=_("Use the new service name")),
-        ),
-        (
-            "hr_fs",
-            Checkbox(
-                title=_("Used space in file systems via SNMP"),
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "hr_mem",
-            Checkbox(title=_("HR: Used memory via SNMP"), label=_("Use the new service name")),
-        ),
-        # TODO: can be removed when
-        #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
-        #  can be removed
-        (
-            "http",
-            Checkbox(
-                title=_(
+            "fortigate_node_memory": use_new_service_name(Title("FortiGate node memory")),
+            "hr_fs": use_new_service_name(Title("Used space in file systems via SNMP")),
+            "hr_mem": use_new_service_name(Title("HR: Used memory via SNMP")),
+            # TODO: can be removed when
+            #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+            #  can be removed
+            "http": use_new_service_name(
+                Title(
                     "Check HTTP: use HTTPS instead of HTTP for SSL/TLS connections (deprecated/ineffective)"
-                ),
-                label=_("Use the new service name"),
+                )
             ),
-        ),
-        (
-            "huawei_switch_mem",
-            Checkbox(
-                title=_("Memory percentage used of devices with modules (Huawei)"),
-                label=_("Use the new service name"),
+            "huawei_switch_mem": use_new_service_name(
+                Title("Memory percentage used of devices with modules (Huawei)")
             ),
-        ),
-        (
-            "hyperv_vms",
-            Checkbox(title=_("Hyper-V Server: State of VMs"), label=_("Use the new service name")),
-        ),
-        (
-            "ibm_svc_mdiskgrp",
-            Checkbox(
-                title=_("IBM SVC / Storwize V3700 / V7000: status and usage of MDisksGrps"),
-                label=_("Use the new service name"),
+            "hyperv_vms": use_new_service_name(Title("Hyper-V Server: State of VMs")),
+            "ibm_svc_mdiskgrp": use_new_service_name(
+                Title("IBM SVC / Storwize V3700 / V7000: status and usage of MDisksGrps")
             ),
-        ),
-        (
-            "ibm_svc_system",
-            Checkbox(title=_("IBM SVC / V7000: system info"), label=_("Use the new service name")),
-        ),
-        (
-            "ibm_svc_systemstats_cache",
-            Checkbox(
-                title=_("IBM SVC / V7000: cache usage in total"),
-                label=_("Use the new service name"),
+            "ibm_svc_system": use_new_service_name(Title("IBM SVC / V7000: system info")),
+            "ibm_svc_systemstats_cache": use_new_service_name(
+                Title("IBM SVC / V7000: cache usage in total")
             ),
-        ),
-        (
-            "ibm_svc_systemstats_disk_latency",
-            Checkbox(
-                title=_("IBM SVC / V7000: latency for drives/MDisks/VDisks in total"),
-                label=_("Use the new service name"),
+            "ibm_svc_systemstats_disk_latency": use_new_service_name(
+                Title("IBM SVC / V7000: latency for drives/MDisks/VDisks in total")
             ),
-        ),
-        (
-            "ibm_svc_systemstats_diskio",
-            Checkbox(
-                title=_("IBM SVC / V7000: disk throughput for drives/MDisks/VDisks in total"),
-                label=_("Use the new service name"),
+            "ibm_svc_systemstats_diskio": use_new_service_name(
+                Title("IBM SVC / V7000: disk throughput for drives/MDisks/VDisks in total")
             ),
-        ),
-        (
-            "ibm_svc_systemstats_iops",
-            Checkbox(
-                title=_("IBM SVC / V7000: I/O operations/sec for drives/MDisks/VDisks in total"),
-                label=_("Use the new service name"),
+            "ibm_svc_systemstats_iops": use_new_service_name(
+                Title("IBM SVC / V7000: I/O operations/sec for drives/MDisks/VDisks in total")
             ),
-        ),
-        (
-            "innovaphone_mem",
-            Checkbox(title=_("Innovaphone memory usage"), label=_("Use the new service name")),
-        ),
-        (
-            "innovaphone_temp",
-            Checkbox(
-                title=_("Innovaphone gateway: current temperature"),
-                label=_("Use the new service name"),
+            "innovaphone_mem": use_new_service_name(Title("Innovaphone memory usage")),
+            "innovaphone_temp": use_new_service_name(
+                Title("Innovaphone gateway: current temperature")
             ),
-        ),
-        (
-            "juniper_mem",
-            Checkbox(
-                title=_("Juniper memory usage (%(check)s)") % {"check": "juniper_mem"},
-                label=_("Use the new service name"),
+            "juniper_mem": use_new_service_name(
+                Title("Juniper memory usage (%(check)s)") % {"check": "juniper_mem"}
             ),
-        ),
-        (
-            "juniper_screenos_mem",
-            Checkbox(
-                title=_("Juniper memory usage (%(check)s)") % {"check": "juniper_screenos_mem"},
-                label=_("Use the new service name"),
+            "juniper_screenos_mem": use_new_service_name(
+                Title("Juniper memory usage (%(check)s)") % {"check": "juniper_screenos_mem"}
             ),
-        ),
-        (
-            "juniper_trpz_mem",
-            Checkbox(
-                title=_("Juniper memory usage (%(check)s)") % {"check": "juniper_trpz_mem"},
-                label=_("Use the new service name"),
+            "juniper_trpz_mem": use_new_service_name(
+                Title("Juniper memory usage (%(check)s)") % {"check": "juniper_trpz_mem"}
             ),
-        ),
-        (
-            "liebert_bat_temp",
-            Checkbox(
-                title=_("Liebert UPS Device: Temperature sensor"),
-                label=_("Use the new service name"),
+            "liebert_bat_temp": use_new_service_name(
+                Title("Liebert UPS Device: Temperature sensor")
             ),
-        ),
-        (
-            "logwatch",
-            Checkbox(
-                title=_("Check log files for relevant new messages"),
-                label=_("Use the new service name"),
+            "logwatch": use_new_service_name(Title("Check log files for relevant new messages")),
+            "logwatch_groups": use_new_service_name(Title("Check log file groups")),
+            "megaraid_pdisks": use_new_service_name(Title("LSI MegaRAID: Physical Disks")),
+            "megaraid_ldisks": use_new_service_name(Title("LSI MegaRAID: Logical Disks")),
+            "megaraid_bbu": use_new_service_name(Title("LSI MegaRAID: battery backup unit")),
+            "mem_used": use_new_service_name(Title("Main memory usage (Unix / other devices)")),
+            "mem_win": use_new_service_name(
+                Title("Memory usage for %(os)s hosts") % {"os": "Windows"}
             ),
-        ),
-        (
-            "logwatch_groups",
-            Checkbox(title=_("Check log file groups"), label=_("Use the new service name")),
-        ),
-        (
-            "megaraid_pdisks",
-            Checkbox(title=_("LSI MegaRAID: Physical Disks"), label=_("Use the new service name")),
-        ),
-        (
-            "megaraid_ldisks",
-            Checkbox(title=_("LSI MegaRAID: Logical Disks"), label=_("Use the new service name")),
-        ),
-        (
-            "megaraid_bbu",
-            Checkbox(
-                title=_("LSI MegaRAID: battery backup unit"),
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "mem_used",
-            Checkbox(
-                title=_("Main memory usage (Unix / other devices)"),
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "mem_win",
-            Checkbox(
-                title=_("Memory usage for %(os)s hosts") % {"os": "Windows"},
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "mknotifyd",
-            Checkbox(title=_("Notification spooler"), label=_("Use the new service name")),
-        ),
-        (
-            "mknotifyd_connection",
-            Checkbox(
-                title=_("Notification spooler connection"), label=_("Use the new service name")
-            ),
-        ),
-        (
-            "mssql_backup",
-            Checkbox(title=_("MSSQL backup"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_blocked_sessions",
-            Checkbox(title=_("MSSQL blocked sessions"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_cache_hits",
-            Checkbox(title=_("MSSQL cache hits"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_file_sizes",
-            Checkbox(title=_("MSSQL file sizes"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_locks",
-            Checkbox(title=_("MSSQL locks"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_locks_per_batch",
-            Checkbox(title=_("MSSQL locks per batch"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_pageactivity",
-            Checkbox(title=_("MSSQL page activity"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_sqlstats",
-            Checkbox(title=_("MSSQL SQL stats"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_counters_transactions",
-            Checkbox(title=_("MSSQL transactions"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_databases",
-            Checkbox(title=_("MSSQL database"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_datafiles",
-            Checkbox(title=_("MSSQL datafile"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_tablespaces",
-            Checkbox(title=_("MSSQL tablespace"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_transactionlogs",
-            Checkbox(title=_("MSSQL transaction log"), label=_("Use the new service name")),
-        ),
-        (
-            "mssql_versions",
-            Checkbox(title=_("MSSQL version"), label=_("Use the new service name")),
-        ),
-        (
-            "netapp_ontap_volumes",
-            Checkbox(
-                title=_("NetApp Volumes"),
-                label=_(
+            "mknotifyd": use_new_service_name(Title("Notification spooler")),
+            "mknotifyd_connection": use_new_service_name(Title("Notification spooler connection")),
+            "mssql_backup": use_new_service_name(Title("MSSQL backup")),
+            "mssql_blocked_sessions": use_new_service_name(Title("MSSQL blocked sessions")),
+            "mssql_counters_cache_hits": use_new_service_name(Title("MSSQL cache hits")),
+            "mssql_counters_file_sizes": use_new_service_name(Title("MSSQL file sizes")),
+            "mssql_counters_locks": use_new_service_name(Title("MSSQL locks")),
+            "mssql_counters_locks_per_batch": use_new_service_name(Title("MSSQL locks per batch")),
+            "mssql_counters_pageactivity": use_new_service_name(Title("MSSQL page activity")),
+            "mssql_counters_sqlstats": use_new_service_name(Title("MSSQL SQL stats")),
+            "mssql_counters_transactions": use_new_service_name(Title("MSSQL transactions")),
+            "mssql_databases": use_new_service_name(Title("MSSQL database")),
+            "mssql_datafiles": use_new_service_name(Title("MSSQL datafile")),
+            "mssql_tablespaces": use_new_service_name(Title("MSSQL tablespace")),
+            "mssql_transactionlogs": use_new_service_name(Title("MSSQL transaction log")),
+            "mssql_versions": use_new_service_name(Title("MSSQL version")),
+            "netapp_ontap_volumes": use_new_service_name(
+                Title("NetApp Volumes"),
+                label=Label(
                     "Use the new service name. "
                     "Disabling this option does not work for services where the monitored SVM or volume names contain colons"
                 ),
             ),
-        ),
-        (
-            "netapp_ontap_snapshots",
-            Checkbox(
-                title=_("NetApp Snapshot Volumes"),
-                label=_(
+            "netapp_ontap_snapshots": use_new_service_name(
+                Title("NetApp Snapshot Volumes"),
+                label=Label(
                     "Use the new service name. "
                     "Disabling this option does not work for services where the monitored SVM or volume names contain colons"
                 ),
             ),
-        ),
-        (
-            "netscaler_mem",
-            Checkbox(title=_("NetScaler memory usage"), label=_("Use the new service name")),
-        ),
-        (
-            "nullmailer_mailq",
-            Checkbox(title=_("Nullmailer: mail queue"), label=_("Use the new service name")),
-        ),
-        (
-            "prism_alerts",
-            Checkbox(title=_("Nutanix: Prism Alerts"), label=_("Use the new service name")),
-        ),
-        (
-            "prism_containers",
-            Checkbox(title=_("Nutanix: Containers"), label=_("Use the new service name")),
-        ),
-        (
-            "prism_info",
-            Checkbox(title=_("Nutanix: Prism Cluster"), label=_("Use the new service name")),
-        ),
-        (
-            "prism_storage_pools",
-            Checkbox(title=_("Nutanix: Storage Pools"), label=_("Use the new service name")),
-        ),
-        (
-            "nvidia_temp",
-            Checkbox(
-                title=_("Temperatures of NVIDIA graphics card"),
-                label=_("Use the new service name"),
+            "netscaler_mem": use_new_service_name(Title("NetScaler memory usage")),
+            "nullmailer_mailq": use_new_service_name(Title("Nullmailer: mail queue")),
+            "prism_alerts": use_new_service_name(Title("Nutanix: Prism Alerts")),
+            "prism_containers": use_new_service_name(Title("Nutanix: Containers")),
+            "prism_info": use_new_service_name(Title("Nutanix: Prism Cluster")),
+            "prism_storage_pools": use_new_service_name(Title("Nutanix: Storage Pools")),
+            "nvidia_temp": use_new_service_name(Title("Temperatures of NVIDIA graphics card")),
+            "postfix_mailq": use_new_service_name(Title("Postfix: mail queue")),
+            "ps": use_new_service_name(Title("State and Count of Processes")),
+            "qmail_stats": use_new_service_name(Title("Qmail: mail queue")),
+            "raritan_emx": use_new_service_name(Title("Raritan EMX Rack: Temperature")),
+            "raritan_pdu_inlet": use_new_service_name(Title("Raritan PDU: Input Phases")),
+            "services": use_new_service_name(Title("Windows Services")),
+            "solaris_mem": use_new_service_name(
+                Title("Memory usage for %(os)s hosts") % {"os": "Solaris"}
             ),
-        ),
-        (
-            "postfix_mailq",
-            Checkbox(title=_("Postfix: mail queue"), label=_("Use the new service name")),
-        ),
-        (
-            "ps",
-            Checkbox(title=_("State and Count of Processes"), label=_("Use the new service name")),
-        ),
-        (
-            "qmail_stats",
-            Checkbox(title=_("Qmail: mail queue"), label=_("Use the new service name")),
-        ),
-        (
-            "raritan_emx",
-            Checkbox(title=_("Raritan EMX Rack: Temperature"), label=_("Use the new service name")),
-        ),
-        (
-            "raritan_pdu_inlet",
-            Checkbox(title=_("Raritan PDU: Input Phases"), label=_("Use the new service name")),
-        ),
-        (
-            "services",
-            Checkbox(title=_("Windows Services"), label=_("Use the new service name")),
-        ),
-        (
-            "solaris_mem",
-            Checkbox(
-                title=_("Memory usage for %(os)s hosts") % {"os": "Solaris"},
-                label=_("Use the new service name"),
+            "sophos_memory": use_new_service_name(Title("Sophos Memory utilization")),
+            "statgrab_mem": use_new_service_name(Title("Statgrab memory usage")),
+            "tplink_mem": use_new_service_name(Title("TP Link: Used memory via SNMP")),
+            "ups_bat_temp": use_new_service_name(Title("Generic UPS Device: Temperature sensor")),
+            "vms_diskstat_df": use_new_service_name(Title("Disk space on OpenVMS")),
+            "wmic_process": use_new_service_name(
+                Title("Resource consumption of Windows processes")
             ),
-        ),
-        (
-            "sophos_memory",
-            Checkbox(title=_("Sophos Memory utilization"), label=_("Use the new service name")),
-        ),
-        (
-            "statgrab_mem",
-            Checkbox(title=_("Statgrab memory usage"), label=_("Use the new service name")),
-        ),
-        (
-            "tplink_mem",
-            Checkbox(title=_("TP Link: Used memory via SNMP"), label=_("Use the new service name")),
-        ),
-        (
-            "ups_bat_temp",
-            Checkbox(
-                title=_("Generic UPS Device: Temperature sensor"),
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "vms_diskstat_df",
-            Checkbox(title=_("Disk space on OpenVMS"), label=_("Use the new service name")),
-        ),
-        (
-            "wmic_process",
-            Checkbox(
-                title=_("Resource consumption of Windows processes"),
-                label=_("Use the new service name"),
-            ),
-        ),
-        (
-            "zfsget",
-            Checkbox(
-                title=_("Used space in ZFS pools and file systems"),
-                label=_("Use the new service name"),
-            ),
-        ),
-    ]
-    return Dictionary(
-        title=_("Use new service names"),
-        elements=available_selection,
-        optional_keys=[],
+            "zfsget": use_new_service_name(Title("Used space in ZFS pools and file systems")),
+        },
     )
 
 
@@ -3106,7 +2795,7 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="use_new_descriptions_for",
-    valuespec=use_new_descriptions_for_valuespec,
+    form_spec=use_new_descriptions_for_form_spec,
 )
 
 
@@ -3114,16 +2803,16 @@ ConfigVariableTCPConnectTimeout = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="tcp_connect_timeout",
-    valuespec=lambda context: Float(
-        title=_("Agent TCP connect timeout"),
-        help=_(
+    form_spec=lambda context: fs.Float(
+        title=Title("Agent TCP connect timeout"),
+        help_text=Help(
             "Timeout for TCP connect to agent in seconds. If the connection "
             "to the agent cannot be established within this time, it is considered to be unreachable. "
             "Note: This does <b>not</b> limit the time the agent needs to "
             "generate its output."
         ),
-        minvalue=1.0,
-        unit="sec",
+        unit_symbol="sec",
+        custom_validate=[fs.validators.NumberInRange(min_value=1.0)],
     ),
 )
 
@@ -3131,10 +2820,10 @@ ConfigVariableSimulationMode = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="simulation_mode",
-    valuespec=lambda context: Checkbox(
-        title=_("Simulation mode"),
-        label=_("Run in simulation mode"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Simulation mode"),
+        label=Label("Run in simulation mode"),
+        help_text=Help(
             "This boolean variable allows you to bring Checkmk into a dry run mode. "
             "No hosts will be contacted, no DNS lookups will take place and data is read "
             "from cache files that have been created during normal operation or have "
@@ -3147,19 +2836,22 @@ ConfigVariableRestartLocking = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="restart_locking",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Simultaneous activation of changes"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[None | str](
+        title=Title("Simultaneous activation of changes"),
+        help_text=Help(
             "When two users simultaneously try to activate the changes then "
             "you can decide to abort with an error (default) or have the requests "
             "serialized. It is also possible - but not recommended - to turn "
             "off locking altogether."
         ),
-        choices=[
-            ("abort", _("Abort with an error")),
-            ("wait", _("Wait until the other has finished")),
-            (None, _("Disable locking")),
+        elements=[
+            SingleChoiceElementExtended(name="abort", title=Title("Abort with an error")),
+            SingleChoiceElementExtended(
+                name="wait", title=Title("Wait until the other has finished")
+            ),
+            SingleChoiceElementExtended(name=None, title=Title("Disable locking")),
         ],
+        prefill=fs.DefaultValue("abort"),
     ),
 )
 
@@ -3167,10 +2859,10 @@ ConfigVariableDelayPrecompile = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="delay_precompile",
-    valuespec=lambda context: Checkbox(
-        title=_("Delay precompiling of host checks"),
-        label=_("delay precompiling"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Delay precompiling of host checks"),
+        label=Label("delay precompiling"),
+        help_text=Help(
             "If you enable this option, then Checkmk will not directly Python-bytecompile "
             "all host checks when activating the configuration and restarting Nagios. "
             "Instead it will delay this to the first "
@@ -3185,10 +2877,10 @@ ConfigVariableClusterMaxCachefileAge = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="cluster_max_cachefile_age",
-    valuespec=lambda context: Integer(
-        title=_("Maximum cache file age for clusters"),
-        label=_("seconds"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Maximum cache file age for clusters"),
+        label=Label("seconds"),
+        help_text=Help(
             "The number of seconds a cache file may be old if Checkmk should "
             "use it instead of getting information from the target hosts while "
             "checking a cluster. Per default this is enabled and set to 90 seconds. "
@@ -3202,9 +2894,9 @@ ConfigVariablePiggybackMaxCachefileAge = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="piggyback_max_cachefile_age",
-    valuespec=lambda context: Age(
-        title=_("Maximum age for piggyback files"),
-        help=_(
+    form_spec=lambda context: FSAge(
+        title=Title("Maximum age for piggyback files"),
+        help_text=Help(
             "The maximum age for piggyback data from another host to be valid for monitoring. "
             "Older files are deleted before processing them. Please make sure that this age is "
             "at least as large as you normal check interval for piggy hosts."
@@ -3216,10 +2908,10 @@ ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="check_mk_perfdata_with_times",
-    valuespec=lambda context: Checkbox(
-        title=_("Checkmk with times metrics"),
-        label=_("Return process times within metrics"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Checkmk with times metrics"),
+        label=Label("Return process times within metrics"),
+        help_text=Help(
             "Enabling this option results in additional metrics "
             "for the Checkmk output, giving information regarding the process times. "
             "It provides the following fields: user_time, system_time, children_user_time "
@@ -3232,10 +2924,10 @@ ConfigVariableUseDNSCache = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="use_dns_cache",
-    valuespec=lambda context: Checkbox(
-        title=_("Use DNS lookup cache"),
-        label=_("Prevent DNS lookups by use of a cache file"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Use DNS lookup cache"),
+        label=Label("Prevent DNS lookups by use of a cache file"),
+        help_text=Help(
             "When this option is enabled (which is the default), then Checkmk tries to "
             "prevent IP address lookups during the configuration generation. This can speed "
             "up this process greatly when you have a larger number of hosts. The cache is stored "
@@ -3261,23 +2953,25 @@ def _transform_snmp_backend_from_valuespec(
             raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
+def _migrate_snmp_backend_default(value: object) -> Literal["classic", "inline"]:
+    return _transform_snmp_backend_from_valuespec(_transform_snmp_backend_hosts_to_valuespec(value))
+
+
 ConfigVariableChooseSNMPBackend = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="snmp_backend_default",
-    valuespec=lambda context: Transform(
-        valuespec=DropdownChoice(
-            title=_("Choose SNMP backend"),
-            choices=[
-                (SNMPBackendEnum.CLASSIC, _("Use classic SNMP backend")),
-                (SNMPBackendEnum.INLINE, _("Use inline SNMP backend")),
-            ],
-            help=_(
-                "By default, Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
-            ),
+    form_spec=lambda context: fs.SingleChoice(
+        title=Title("Choose SNMP backend"),
+        elements=[
+            fs.SingleChoiceElement(name="classic", title=Title("Use classic SNMP backend")),
+            fs.SingleChoiceElement(name="inline", title=Title("Use inline SNMP backend")),
+        ],
+        help_text=Help(
+            "By default, Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
         ),
-        to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
-        from_valuespec=_transform_snmp_backend_from_valuespec,
+        prefill=fs.DefaultValue("classic"),
+        migrate=_migrate_snmp_backend_default,
     ),
 )
 
@@ -3285,83 +2979,101 @@ ConfigVariableSNMPwalkDownloadTimeout = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainGUI,
     ident="snmp_walk_download_timeout",
-    valuespec=lambda context: Age(
-        title=_("SNMP walk download timeout"),
-        help=_(
+    form_spec=lambda context: FSAge(
+        title=Title("SNMP walk download timeout"),
+        help_text=Help(
             "This configuration option sets the timeout used when downloading "
             "SNMP walks via the user interface."
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
+
+
+def _http_proxies_from_disk(value: object) -> list[object]:
+    assert isinstance(value, dict)
+    return list(value.values())
+
+
+def _http_proxies_to_disk(value: object) -> dict[str, object]:
+    assert isinstance(value, list)
+    return {proxy["ident"]: proxy for proxy in value}
+
 
 ConfigVariableHTTPProxies = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
     primary_domain=ConfigDomainCore,
     ident="http_proxies",
-    valuespec=lambda context: Transform(
-        valuespec=ListOf(
-            valuespec=Dictionary(
-                title=_("HTTP proxy"),
-                elements=[
-                    (
-                        "ident",
-                        ID(
-                            title=_("Unique ID"),
-                            help=_(
-                                "The ID must be a unique text. It will be used as an internal key "
-                                "when objects refer to this object."
-                            ),
-                            allow_empty=False,
-                        ),
-                    ),
-                    (
-                        "title",
-                        TextInput(
-                            title=_("Title"),
-                            help=_("The title of the %(object)s. It will be used as display name.")
-                            % {"object": _("HTTP proxy")},
-                            allow_empty=False,
-                            size=80,
-                        ),
-                    ),
-                    ("proxy_config", HTTPProxyInput()),
-                ],
-                optional_keys=False,
-            ),
-            title=_("HTTP proxies"),
-            movable=False,
-            # astrein: disable=localization-named-placeholder
-            totext=_("%d HTTP proxy servers configured"),
-            help=_(
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=fs.List(
+            title=Title("HTTP proxies"),
+            help_text=Help(
                 "Use this option to configure one or several proxy servers that can then be "
                 "used in different places to establish connections to services using these "
                 "HTTP proxies."
             ),
-            validate=_validate_proxies,
+            element_template=fs.Dictionary(
+                title=Title("HTTP proxy"),
+                elements={
+                    "ident": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(
+                            title=Title("Unique ID"),
+                            help_text=Help(
+                                "The ID must be a unique text. It will be used as an internal key "
+                                "when objects refer to this object."
+                            ),
+                            custom_validate=[
+                                fs.validators.LengthInRange(min_value=1),
+                                fs.validators.MatchRegex(
+                                    regex=regex(REGEX_ID, re.ASCII),
+                                    error_msg=Message(
+                                        "An identifier must only consist of letters, digits, dash "
+                                        "and underscore and it must start with a letter or underscore."
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ),
+                    "title": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(
+                            title=Title("Title"),
+                            help_text=Help(
+                                "The title of the HTTP proxy. It will be used as display name."
+                            ),
+                            custom_validate=[fs.validators.LengthInRange(min_value=1)],
+                        ),
+                    ),
+                    "proxy_config": fs.DictElement(
+                        required=True,
+                        parameter_form=http_proxy_input_form_spec(),
+                    ),
+                },
+            ),
+            editable_order=False,
+            custom_validate=[_validate_proxies],
         ),
-        to_valuespec=lambda v: list(v.values()),
-        from_valuespec=lambda v: {p["ident"]: p for p in v},
+        from_disk=_http_proxies_from_disk,
+        to_disk=_http_proxies_to_disk,
     ),
 )
 
 
-def _validate_proxies(value: Sequence[Mapping[str, object]], varprefix: str) -> None:
+def _validate_proxies(value: Sequence[Mapping[str, object]]) -> None:
     seen_idents, seen_titles = [], []
     for http_proxy in value:
         if http_proxy["ident"] in seen_idents:
-            raise MKUserError(
-                varprefix,
-                _("Found multiple proxies using the ID '%(ident)s'")
-                % {"ident": http_proxy["ident"]},
+            raise fs.validators.ValidationError(
+                Message("Found multiple proxies using the ID '%(ident)s'")
+                % {"ident": str(http_proxy["ident"])}
             )
         seen_idents.append(http_proxy["ident"])
 
         if http_proxy["title"] in seen_titles:
-            raise MKUserError(
-                varprefix,
-                _("Found multiple proxies using the title '%(title)s'")
-                % {"title": http_proxy["title"]},
+            raise fs.validators.ValidationError(
+                Message("Found multiple proxies using the title '%(title)s'")
+                % {"title": str(http_proxy["title"])}
             )
         seen_titles.append(http_proxy["title"])
 

@@ -29,9 +29,9 @@ from cmk.gui.graphing._engine_discovery import BuiltGraph
 from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
 from cmk.gui.graphing._engine_source import (
     EngineRRDFetchData,
-    EngineRRDFetchMetricNames,
     HOST_PSEUDO_SERVICE,
     PerformanceDataRow,
+    RRDFetchMetricNames,
 )
 from cmk.gui.graphing._engine_template_graphs import (
     _EvaluateTemplateGraphs,
@@ -68,7 +68,7 @@ def test_fetch_metric_names_of_a_host_reads_the_hosts_table(
     )
 
     with mock_livestatus():
-        resolved = EngineRRDFetchMetricNames(
+        resolved = RRDFetchMetricNames(
             host_name=HostName("h"), service_name=HOST_PSEUDO_SERVICE, debug=False
         )()
 
@@ -90,7 +90,7 @@ def test_fetch_metric_names_of_a_service_reads_the_services_table(
     )
 
     with mock_livestatus():
-        resolved = EngineRRDFetchMetricNames(
+        resolved = RRDFetchMetricNames(
             host_name=HostName("h"), service_name=ServiceName("svc"), debug=False
         )()
 
@@ -103,7 +103,7 @@ def test_fetch_metric_names_of_a_service_reads_the_services_table(
 
 @dataclass(frozen=True)
 class _FakeMetricNamesOnSites:
-    # In place of EngineRRDFetchMetricNames: the sites a host/service resolved on. Unscoped, the
+    # In place of RRDFetchMetricNames: the sites a host/service resolved on. Unscoped, the
     # same host/service monitored by two sites resolves on both.
     site_ids: Sequence[str]
 

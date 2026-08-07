@@ -37,7 +37,7 @@ from cmk.shared_typing.global_time_picker import (
 
 from . import _engine_plugins as engine_plugins
 from ._engine_dispatch import serialize_graphs
-from ._engine_source import EngineRRDFetchMetricNames
+from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
@@ -207,7 +207,7 @@ def render_engine_graph_group(
         specification,
         registered_graphs=engine_plugins.registered_graphs(),
         registered_metrics=engine_plugins.registered_metrics(),
-        fetch_metric_names=EngineRRDFetchMetricNames(
+        fetch_metric_names=RRDFetchMetricNames(
             host_name=EngineHostName(host_name),
             service_name=EngineServiceName(service_name),
             debug=debug,

@@ -37,7 +37,7 @@ from ._engine_dispatch import (
     legacy_graph_id,
 )
 from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
-from ._engine_source import EngineRRDFetchData, EngineRRDFetchMetricNames
+from ._engine_source import EngineRRDFetchData, RRDFetchMetricNames
 from ._from_api import GraphFromAPI
 
 TEMPLATE_KIND: Final = "template"
@@ -144,7 +144,7 @@ def discover_template_graphs(
             specification,
             registered_graphs=registered_graphs(),
             registered_metrics=registered_metrics(),
-            fetch_metric_names=EngineRRDFetchMetricNames(
+            fetch_metric_names=RRDFetchMetricNames(
                 host_name=HostName(specification.host_name),
                 service_name=ServiceName(specification.service_description),
                 debug=debug,

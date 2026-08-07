@@ -115,7 +115,7 @@ def _only_sites(site: SiteID | None) -> SiteId | None:
 
 
 @dataclass(frozen=True)
-class EngineRRDFetchMetricNames:
+class RRDFetchMetricNames:
     # The single service to resolve. Its site is an input because the same host/service can be
     # monitored by two sites: without a scope both are resolved, and a template graph - which is
     # single-service - cannot be built from two. A caller that knows the site (it painted a row, it

@@ -15,7 +15,7 @@ from cmk.graphing_engine import Graph
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import _engine_template_graphs as template_graphs_module
 from cmk.gui.graphing._engine_discovery import BuiltGraph
-from cmk.gui.graphing._engine_source import EngineRRDFetchMetricNames
+from cmk.gui.graphing._engine_source import RRDFetchMetricNames
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.livestatus_client import MKLivestatusSocketError
 from tests.testlib.rest_api_client import ClientRegistry
@@ -130,7 +130,7 @@ def test_discover_template_graphs_passes_the_specification_to_the_fetch(
         service_description="CPU load",
         graph_id=None,
     )
-    assert isinstance(captured["fetch_metric_names"], EngineRRDFetchMetricNames)
+    assert isinstance(captured["fetch_metric_names"], RRDFetchMetricNames)
 
 
 def test_discover_template_graphs_filters_by_graph_id(

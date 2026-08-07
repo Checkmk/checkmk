@@ -261,7 +261,10 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
 .graphing-custom-graph-designer-app__header {
   position: sticky;
   top: 0;
-  z-index: 1;
+
+  /* Above the sticky header and footer rows of the tables below, which carry z-indices of their
+     own. Kept well under the overlay scale so floating content still opens over the header. */
+  z-index: 10;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;

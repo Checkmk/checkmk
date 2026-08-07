@@ -30,13 +30,16 @@ const {
   suggestions,
   role,
   noResultsHint = '',
-  markSelected = false
+  markSelected = false,
+  maxHeight = '200px'
 } = defineProps<{
   selectedSuggestion: SuggestionValue
   suggestions: Suggestions
   role: 'suggestion' | 'option'
   noResultsHint?: string
   markSelected?: boolean
+  /** Max-height of the scrollable list area (any CSS length). */
+  maxHeight?: string
 }>()
 
 const showFilter = computed<boolean>(() => {
@@ -363,7 +366,7 @@ defineExpose({
         @keydown.escape.prevent="emit('blur')"
       />
     </span>
-    <CmkScrollContainer :max-height="'200px'">
+    <CmkScrollContainer class="cmk-suggestions__scroll" :max-height="maxHeight">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
@@ -441,6 +444,8 @@ defineExpose({
 
 <style scoped>
 .cmk-suggestions {
+  display: flex;
+  flex-direction: column;
   position: absolute;
   z-index: var(--z-index-dropdown-offset);
   color: var(--font-color);
@@ -454,6 +459,12 @@ defineExpose({
   margin: 0;
   padding: 0;
   list-style-type: none;
+
+  /* Take the remaining height when the list is height-bounded; a no-op when it fits its content. */
+  .cmk-suggestions__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
 
   mark {
     background: transparent;

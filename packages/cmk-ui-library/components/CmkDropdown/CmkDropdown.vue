@@ -173,6 +173,23 @@ const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')
 const rootRef = ref<HTMLElement | null>(null)
 
+const PREFERRED_MIN_BELOW_PX = 200
+
+// Modern browsers position the list via CSS anchor positioning (see <style>); older ones use the JS fallback.
+const supportsAnchorPositioning =
+  typeof CSS !== 'undefined' &&
+  typeof CSS.supports === 'function' &&
+  CSS.supports('anchor-name: --x') &&
+  CSS.supports('anchor-scope: all')
+
+const flippedUp = ref(false)
+
+const nonFloatingMaxHeight = supportsAnchorPositioning ? 'none' : '200px'
+// Grace margin kept between the list and the viewport edge.
+const viewportBottomMargin = '40px'
+// reka-ui provides this collision-aware available-height var.
+const floatingMaxHeight = `calc(var(--reka-popper-available-height, 500px) - ${viewportBottomMargin})`
+
 // Swallow the click-outside fired by the in-flight bubble when open() is
 // called from a sibling's click handler.
 const suppressNextClickOutside = ref(false)
@@ -206,16 +223,33 @@ function showSuggestions(): void {
     nextTick(async () => {
       if (suggestionsRef.value) {
         if (!floating) {
-          const suggestionsRect = suggestionsRef.value.$el.getBoundingClientRect()
-          if (window.innerHeight - suggestionsRect.bottom < suggestionsRect.height) {
-            suggestionsRef.value.$el.style.bottom = `calc(2 * var(--spacing))`
-          } else {
-            suggestionsRef.value.$el.style.removeProperty('bottom')
-          }
+          updateNonFloatingPlacement()
         }
         await suggestionsRef.value.focus()
       }
     })
+  }
+}
+
+function updateNonFloatingPlacement(): void {
+  const listElement = suggestionsRef.value?.$el as HTMLElement | undefined
+  const anchor = rootRef.value
+  if (!listElement || !anchor) {
+    return
+  }
+  const anchorRect = anchor.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - anchorRect.bottom
+  const spaceAbove = anchorRect.top
+  flippedUp.value = spaceBelow < PREFERRED_MIN_BELOW_PX && spaceAbove > spaceBelow
+
+  if (supportsAnchorPositioning) {
+    // From here the CSS positions and sizes the list, keyed on the flippedUp class.
+    return
+  }
+  if (flippedUp.value) {
+    listElement.style.bottom = `calc(2 * var(--spacing))`
+  } else {
+    listElement.style.removeProperty('bottom')
   }
 }
 
@@ -321,9 +355,11 @@ const group = computed<ButtonVariants['group']>(() => {
       v-if="!!suggestionsShown && !floating"
       ref="suggestionsRef"
       role="option"
+      :class="['cmk-dropdown__suggestions', { 'cmk-dropdown__suggestions--flipped': flippedUp }]"
       :suggestions="options"
       :selected-suggestion="selectedOption"
       :no-results-hint="noResultsHint"
+      :max-height="nonFloatingMaxHeight"
       @request-close-suggestions="hideSuggestions"
       @select-suggestion="handleUpdate"
     />
@@ -350,6 +386,7 @@ const group = computed<ButtonVariants['group']>(() => {
             :suggestions="options"
             :selected-suggestion="selectedOption"
             :no-results-hint="noResultsHint"
+            :max-height="floatingMaxHeight"
             @request-close-suggestions="hideSuggestions"
             @select-suggestion="handleUpdate"
           />
@@ -361,6 +398,8 @@ const group = computed<ButtonVariants['group']>(() => {
 
 <style scoped>
 .cmk-dropdown {
+  --cmk-dropdown-viewport-margin: v-bind(viewportBottomMargin);
+
   display: inline-block;
   position: relative;
   white-space: nowrap;
@@ -408,5 +447,30 @@ const group = computed<ButtonVariants['group']>(() => {
 .cmk-dropdown__floating .cmk-suggestions {
   position: static;
   min-width: var(--reka-popper-anchor-width);
+}
+
+/* Fill the list to the viewport edge (upward when flipped) less a grace margin, and scroll the
+   overflow. The layout engine keeps this correct on scroll, resize and zoom with no JS listener. */
+@supports (anchor-name: --x) and (anchor-scope: all) {
+  .cmk-dropdown {
+    anchor-name: --cmk-dropdown-anchor;
+
+    /* Confine the anchor name so each list tethers to its own button, not a single shared one. */
+    anchor-scope: --cmk-dropdown-anchor;
+  }
+
+  .cmk-dropdown > .cmk-dropdown__suggestions {
+    position: fixed;
+    position-anchor: --cmk-dropdown-anchor;
+    position-area: block-end span-inline-end;
+    block-size: fit-content;
+    min-width: anchor-size(width);
+    margin-block: 0 var(--cmk-dropdown-viewport-margin);
+  }
+
+  .cmk-dropdown > .cmk-dropdown__suggestions.cmk-dropdown__suggestions--flipped {
+    position-area: block-start span-inline-end;
+    margin-block: var(--cmk-dropdown-viewport-margin) 0;
+  }
 }
 </style>

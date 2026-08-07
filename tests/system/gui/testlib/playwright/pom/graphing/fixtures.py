@@ -10,10 +10,19 @@ fixtures (custom graph, collection, forecast) `skip` until completed by the grap
 test suites, since creating and surfacing them depends on the graph implementation.
 """
 
+from collections.abc import Iterator
+
 import pytest
 
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
+from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
+from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.testlib.graphing import InjectedRrd
 from tests.testlib.site import Site
+
+# Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
+SERVICE_WITH_GRAPHS = "Memory"
 
 
 @pytest.fixture(name="graph_hosts_with_varying_data", scope="module")
@@ -70,3 +79,37 @@ def fixture_graph_collection(test_site: Site) -> str:
 def fixture_forecast_graph(test_site: Site) -> str:
     """A saved forecast graph; complete via the forecast-graph creation flow."""
     pytest.skip("forecast_graph is scaffolding: graph engine not implemented yet.")
+
+
+@pytest.fixture(name="javascript_errors")
+def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[str]]:
+    """Uncaught page errors raised while the test runs."""
+    errors: list[str] = []
+    dashboard_page.page.on("pageerror", lambda error: errors.append(str(error)))
+    yield errors
+
+
+@pytest.fixture(name="service_graphs")
+def fixture_service_graphs(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+) -> Iterator[ServiceGraphs]:
+    """The graph panels on a service detail page, rendered and ready for interaction.
+
+    Depends on `javascript_errors` so the listener is attached before this navigates.
+    """
+    host_name = graph_hosts_with_varying_data[0]
+    services_of_host = ServicesOfHostPage(dashboard_page.page, host_name=host_name)
+    services_of_host.services_table.host_services_table(host_name).get_by_role(
+        "link", name=SERVICE_WITH_GRAPHS, exact=True
+    ).click()
+    service_page = ServicePage(
+        dashboard_page.page,
+        host_name=host_name,
+        service_name=SERVICE_WITH_GRAPHS,
+        navigate_to_page=False,
+    )
+    graphs = ServiceGraphs(service_page)
+    graphs.wait_until_rendered()
+    yield graphs

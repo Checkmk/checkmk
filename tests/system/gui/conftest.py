@@ -30,7 +30,9 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_graph_hosts_with_varying_data,
     fixture_graph_rrd_dst_boundary,
     fixture_graph_rrd_with_gaps,
+    fixture_javascript_errors,
     fixture_saved_custom_graph,
+    fixture_service_graphs,
 )
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
@@ -62,7 +64,9 @@ graphing_fixtures = [
     fixture_graph_hosts_with_varying_data,
     fixture_graph_rrd_dst_boundary,
     fixture_graph_rrd_with_gaps,
+    fixture_javascript_errors,
     fixture_saved_custom_graph,
+    fixture_service_graphs,
 ]
 
 

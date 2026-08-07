@@ -131,6 +131,7 @@ export default defineConfig(({ command }) => {
         // enable jest-like global test APIs
         globals: true,
         environment: 'jsdom',
+        pool: 'threads',
         setupFiles: ['tests/setup-tests.ts'],
         reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
           ? [

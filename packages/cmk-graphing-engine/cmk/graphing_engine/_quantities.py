@@ -30,6 +30,16 @@ from ._perfdata import (
 from ._units import CurveAttributes
 
 
+def _last_present[T](values: Iterable[T | None]) -> T | None:
+    # A fan-out leaf's series are all keyed by the same metric leaf, so a single-valued view of it
+    # has to pick one: the last that carries anything at all wins.
+    last: T | None = None
+    for value in values:
+        if value is not None:
+            last = value
+    return last
+
+
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
     time_range: TimeRange
@@ -39,18 +49,10 @@ class EvaluationContext:
         return self.fetched.get(metric, ())
 
     def data_of(self, metric: MetricProtocol) -> PerformanceData | None:
-        performance_data: PerformanceData | None = None
-        for data in self.fetched_of(metric):
-            if data.performance_data is not None:
-                performance_data = data.performance_data
-        return performance_data
+        return _last_present(data.performance_data for data in self.fetched_of(metric))
 
     def time_series_of(self, metric: MetricProtocol) -> TimeSeries | None:
-        time_series: TimeSeries | None = None
-        for data in self.fetched_of(metric):
-            if data.time_series is not None:
-                time_series = data.time_series
-        return time_series
+        return _last_present(data.time_series for data in self.fetched_of(metric))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -202,6 +204,25 @@ def _collapse_operands(
     return present
 
 
+def _operation_ident(kind: str, operands: Sequence[QuantityProtocol]) -> str:
+    return f"{kind}({','.join(operand.ident() for operand in operands)})"
+
+
+def _operation_metrics(operands: Sequence[QuantityProtocol]) -> Iterable[MetricProtocol]:
+    for operand in operands:
+        yield from operand.metrics()
+
+
+def _evaluate_operation(
+    operator: _Operator,
+    operands: Sequence[QuantityProtocol],
+    context: EvaluationContext,
+) -> Sequence[EvaluatedQuantity]:
+    if (collapsed := _collapse_operands([o.evaluate(context) for o in operands])) is None:
+        return []
+    return [_apply_operator(operator, collapsed, context)]
+
+
 @dataclass(frozen=True)
 class Constant:
     value: int | float
@@ -253,12 +274,13 @@ class RRDMetric:
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         data = context.data_of(self)
+        value = None if data is None else data.value
         existing = context.time_series_of(self)
-        if not ((data is not None and data.value is not None) or existing is not None):
+        if value is None and existing is None:
             return []
         return [
             EvaluatedQuantity(
-                value=None if data is None else data.value,
+                value=value,
                 time_series=(
                     existing
                     if existing is not None
@@ -365,17 +387,13 @@ class Sum:
         return "sum"
 
     def ident(self) -> str:
-        return f"{self.kind()}({','.join(summand.ident() for summand in self.summands)})"
+        return _operation_ident(self.kind(), self.summands)
 
     def metrics(self) -> Iterable[MetricProtocol]:
-        for summand in self.summands:
-            yield from summand.metrics()
+        return _operation_metrics(self.summands)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        operands = _collapse_operands([summand.evaluate(context) for summand in self.summands])
-        if operands is None:
-            return []
-        return [_apply_operator(_op_sum, operands, context)]
+        return _evaluate_operation(_op_sum, self.summands, context)
 
     def attributes(
         self,
@@ -394,17 +412,13 @@ class Product:
         return "product"
 
     def ident(self) -> str:
-        return f"{self.kind()}({','.join(factor.ident() for factor in self.factors)})"
+        return _operation_ident(self.kind(), self.factors)
 
     def metrics(self) -> Iterable[MetricProtocol]:
-        for factor in self.factors:
-            yield from factor.metrics()
+        return _operation_metrics(self.factors)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        operands = _collapse_operands([factor.evaluate(context) for factor in self.factors])
-        if operands is None:
-            return []
-        return [_apply_operator(_op_product, operands, context)]
+        return _evaluate_operation(_op_product, self.factors, context)
 
     def attributes(
         self,
@@ -424,19 +438,13 @@ class Difference:
         return "difference"
 
     def ident(self) -> str:
-        return f"{self.kind()}({self.minuend.ident()},{self.subtrahend.ident()})"
+        return _operation_ident(self.kind(), (self.minuend, self.subtrahend))
 
     def metrics(self) -> Iterable[MetricProtocol]:
-        yield from self.minuend.metrics()
-        yield from self.subtrahend.metrics()
+        return _operation_metrics((self.minuend, self.subtrahend))
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        operands = _collapse_operands(
-            [self.minuend.evaluate(context), self.subtrahend.evaluate(context)]
-        )
-        if operands is None:
-            return []
-        return [_apply_operator(_op_difference, operands, context)]
+        return _evaluate_operation(_op_difference, (self.minuend, self.subtrahend), context)
 
     def attributes(
         self,
@@ -456,19 +464,13 @@ class Fraction:
         return "fraction"
 
     def ident(self) -> str:
-        return f"{self.kind()}({self.dividend.ident()},{self.divisor.ident()})"
+        return _operation_ident(self.kind(), (self.dividend, self.divisor))
 
     def metrics(self) -> Iterable[MetricProtocol]:
-        yield from self.dividend.metrics()
-        yield from self.divisor.metrics()
+        return _operation_metrics((self.dividend, self.divisor))
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        operands = _collapse_operands(
-            [self.dividend.evaluate(context), self.divisor.evaluate(context)]
-        )
-        if operands is None:
-            return []
-        return [_apply_operator(_op_fraction, operands, context)]
+        return _evaluate_operation(_op_fraction, (self.dividend, self.divisor), context)
 
     def attributes(
         self,

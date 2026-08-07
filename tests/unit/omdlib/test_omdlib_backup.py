@@ -101,6 +101,7 @@ def test_get_exclude_patterns_default() -> None:
     actual_excludes = get_exclude_patterns(BackupExclusions.from_options(options))
 
     assert "tmp/*" in actual_excludes
+    assert "var/check_mk/core/helper_config/*" in actual_excludes
     assert "var/check_mk/agents/*" not in actual_excludes
     assert "var/log/*/*" not in actual_excludes
     assert "var/check_mk/rrd/*" not in actual_excludes

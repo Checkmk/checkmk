@@ -103,19 +103,34 @@ def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
     return {"graphs": [graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs]}
 
 
-def evaluate_graphs(
-    internal: Mapping[str, object],
+def _deserialized_graphs(internal: Mapping[str, object]) -> Sequence[Graph]:
+    graphs = []
+    for serialized in ensure_type(internal["graphs"], list):
+        graph = ensure_type(serialized, dict)
+        graphs.append(graph_dispatcher_registry[ensure_type(graph["kind"], str)].deserialize(graph))
+    return graphs
+
+
+def evaluate_built_graphs(
+    graphs: Sequence[Graph],
     options: Mapping[str, object],
 ) -> EvaluatedGraphs:
     evaluated_graphs: list[EvaluatedGraph] = []
     diagnostics = FetchDiagnostics()
-    # The definition may hold graphs of different kinds, but they share the options of one request:
-    # each graph type makes its evaluation for them, then reads its graph back and evaluates it.
-    for serialized in ensure_type(internal["graphs"], list):
-        graph = ensure_type(serialized, dict)
-        dispatcher = graph_dispatcher_registry[ensure_type(graph["kind"], str)]
-        evaluated = dispatcher.make_evaluate(options)(dispatcher.deserialize(graph))
+    # The graphs may be of different kinds, but they share the options of one request: each graph
+    # type makes its evaluation for them and evaluates the graph of its own kind.
+    for graph in graphs:
+        evaluated = graph_dispatcher_registry[graph.kind].make_evaluate(options)(graph)
         evaluated_graphs.extend(evaluated.graphs)
         diagnostics.limits_reached.extend(evaluated.diagnostics.limits_reached)
         diagnostics.errors.extend(evaluated.diagnostics.errors)
     return EvaluatedGraphs(graphs=evaluated_graphs, diagnostics=diagnostics)
+
+
+def evaluate_graphs(
+    internal: Mapping[str, object],
+    options: Mapping[str, object],
+) -> EvaluatedGraphs:
+    # The entry point of a definition that came off the wire; a caller that still holds the built
+    # graphs evaluates them directly.
+    return evaluate_built_graphs(_deserialized_graphs(internal), options)

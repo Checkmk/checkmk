@@ -23,6 +23,7 @@ from ._perfdata import (
     MetricName,
     PerformanceData,
     SeriesAttributes,
+    Service,
     ServiceName,
     SiteID,
     TimeSeries,
@@ -269,6 +270,13 @@ class RRDMetric:
         location = "" if self.site_id is None else f"{self.site_id}/"
         return f"{self.kind()}({location}{self.host_name}/{self.service_name}/{self.metric_name})"
 
+    def service(self) -> Service:
+        return Service(
+            site_id=self.site_id,
+            host_name=self.host_name,
+            service_name=self.service_name,
+        )
+
     def metrics(self) -> Iterable[MetricProtocol]:
         yield self
 
@@ -295,6 +303,15 @@ class RRDMetric:
         registered_metrics: Mapping[str, metrics_v1.Metric],
     ) -> CurveAttributes:
         return metric_display_attributes(self.metric_name, localizer, registered_metrics)
+
+
+def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:
+    return RRDMetric(
+        site_id=service.site_id,
+        host_name=service.host_name,
+        service_name=service.service_name,
+        metric_name=MetricName(metric_name),
+    )
 
 
 class ScalarKind(enum.StrEnum):

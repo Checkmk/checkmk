@@ -26,6 +26,7 @@ from ._quantities import (
     Fraction,
     Product,
     QuantityProtocol,
+    rrd_metric_of,
     RRDMetric,
     ScalarKind,
     ScalarOf,
@@ -63,17 +64,7 @@ def drawn_quantity(
     services: Sequence[Service],
     quantity_builder: QuantityBuilderProtocol,
 ) -> QuantityProtocol:
-    return quantity_builder(
-        [
-            RRDMetric(
-                site_id=service.site_id,
-                host_name=service.host_name,
-                service_name=service.service_name,
-                metric_name=MetricName(metric_name),
-            )
-            for service in services
-        ]
-    )
+    return quantity_builder([rrd_metric_of(service, metric_name) for service in services])
 
 
 @dataclass(frozen=True)
@@ -87,13 +78,21 @@ class _ParseContext:
         return drawn_quantity(metric_name, self.services, self.quantity_builder)
 
     def scalar(self, metric_name: str) -> RRDMetric:
-        service = self.services[0]
-        return RRDMetric(
-            site_id=service.site_id,
-            host_name=service.host_name,
-            service_name=service.service_name,
-            metric_name=MetricName(metric_name),
-        )
+        return rrd_metric_of(self.services[0], metric_name)
+
+
+def _operands_of(quantity: _ApiQuantity) -> Sequence[_ApiQuantity]:
+    match quantity:
+        case metrics_v1.Sum():
+            return quantity.summands
+        case metrics_v1.Product():
+            return quantity.factors
+        case metrics_v1.Difference():
+            return [quantity.minuend, quantity.subtrahend]
+        case metrics_v1.Fraction():
+            return [quantity.dividend, quantity.divisor]
+        case _:
+            return []
 
 
 def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttributes:
@@ -120,25 +119,15 @@ def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttri
             return CurveAttributes(
                 title=attributes.title, unit=attributes.unit, color=parse_color(quantity.color)
             )
-        case metrics_v1.Sum():
+        case metrics_v1.Sum() | metrics_v1.Difference():
+            # A sum and a difference are in the unit of what they add up or take apart, so the API
+            # does not spell one out: it is the first operand's.
             return CurveAttributes(
                 title=quantity.title.localize(context.localizer),
-                unit=_curve_display(quantity.summands[0], context).unit,
+                unit=_curve_display(_operands_of(quantity)[0], context).unit,
                 color=parse_color(quantity.color),
             )
-        case metrics_v1.Product():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=parse_unit(quantity.unit),
-                color=parse_color(quantity.color),
-            )
-        case metrics_v1.Difference():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_curve_display(quantity.minuend, context).unit,
-                color=parse_color(quantity.color),
-            )
-        case metrics_v1.Fraction():
+        case metrics_v1.Product() | metrics_v1.Fraction():
             return CurveAttributes(
                 title=quantity.title.localize(context.localizer),
                 unit=parse_unit(quantity.unit),
@@ -208,20 +197,6 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> QuantityP
             )
         case _:
             assert_never(quantity)
-
-
-def _operands_of(quantity: _ApiQuantity) -> Sequence[_ApiQuantity]:
-    match quantity:
-        case metrics_v1.Sum():
-            return quantity.summands
-        case metrics_v1.Product():
-            return quantity.factors
-        case metrics_v1.Difference():
-            return [quantity.minuend, quantity.subtrahend]
-        case metrics_v1.Fraction():
-            return [quantity.dividend, quantity.divisor]
-        case _:
-            return []
 
 
 def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
@@ -295,22 +270,15 @@ def _parse_bound(bound: int | float | _ApiQuantity, context: _ParseContext) -> B
     return _parse_quantity(bound, context)
 
 
-def _parse_minimal_range(
-    minimal_range: graphs_v1.MinimalRange | graphs_v2_unstable.MinimalRange,
-    context: _ParseContext,
-) -> MinimalRange:
-    return MinimalRange(
-        lower=_parse_bound(minimal_range.lower, context),
-        upper=_parse_bound(minimal_range.upper, context),
-    )
-
-
 def _parse_range(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
     context: _ParseContext,
 ) -> MinimalRange | None:
-    return (
-        None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range, context)
+    if graph.minimal_range is None:
+        return None
+    return MinimalRange(
+        lower=_parse_bound(graph.minimal_range.lower, context),
+        upper=_parse_bound(graph.minimal_range.upper, context),
     )
 
 

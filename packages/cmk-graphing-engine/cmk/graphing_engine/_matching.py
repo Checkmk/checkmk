@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Container, Mapping, Sequence
+import itertools
+from collections.abc import Callable, Container, Iterator, Mapping, Sequence
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -19,7 +20,7 @@ from ._from_api import (
 )
 from ._graph import Graph, Line, Rule, Stack
 from ._perfdata import MetricName, Service
-from ._quantities import RRDMetric, ScalarKind, ScalarOf
+from ._quantities import QuantityProtocol, rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
 from ._source import FetchMetricNamesProtocol
 
 _PREDICT_PREFIX = "predict_"
@@ -65,6 +66,14 @@ def _matchable_parts(graph: _GraphPlugin) -> _MatchableParts:
             ]
 
 
+def _drawn_quantities(graph: Graph) -> Iterator[tuple[QuantityProtocol, bool]]:
+    for group in graph.stacks:
+        for member in group.members:
+            yield member.quantity, group.inverse
+    for line in graph.lines:
+        yield line.curve.quantity, line.inverse
+
+
 def _add_predictive_lines(
     graph: Graph,
     service: Service,
@@ -73,15 +82,10 @@ def _add_predictive_lines(
     registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> tuple[Graph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
-    for group in graph.stacks:
-        for member in group.members:
-            for metric in member.quantity.metrics():
-                if isinstance(metric, RRDMetric):
-                    inverse_by_metric.setdefault(metric.metric_name, group.inverse)
-    for line in graph.lines:
-        for metric in line.curve.quantity.metrics():
+    for quantity, inverse in _drawn_quantities(graph):
+        for metric in quantity.metrics():
             if isinstance(metric, RRDMetric):
-                inverse_by_metric.setdefault(metric.metric_name, line.inverse)
+                inverse_by_metric.setdefault(metric.metric_name, inverse)
 
     added: list[Line] = []
     names: set[MetricName] = set()
@@ -94,14 +98,7 @@ def _add_predictive_lines(
                 added.append(
                     Line(
                         curve=build_curve(
-                            RRDMetric(
-                                site_id=service.site_id,
-                                host_name=service.host_name,
-                                service_name=service.service_name,
-                                metric_name=predictive,
-                            ),
-                            localizer,
-                            registered_metrics,
+                            rrd_metric_of(service, predictive), localizer, registered_metrics
                         ),
                         inverse=inverse,
                     )
@@ -151,7 +148,7 @@ def build_matched_graphs(
     # The metric-name fetch returns the services tagged with their resolved site; build from those so
     # the metrics carry it.
     resolved = list(names_by_service)
-    available = frozenset[MetricName]().union(*names_by_service.values())
+    available = frozenset(itertools.chain.from_iterable(names_by_service.values()))
     single_service = resolved[0] if len(resolved) == 1 else None
     matched_graphs: list[Graph] = []
     claimed: set[MetricName] = set()
@@ -184,12 +181,7 @@ def build_matched_graphs(
     def _fallback_rules(name: MetricName) -> Sequence[Rule]:
         if single_service is None:
             return []
-        metric = RRDMetric(
-            site_id=single_service.site_id,
-            host_name=single_service.host_name,
-            service_name=single_service.service_name,
-            metric_name=name,
-        )
+        metric = rrd_metric_of(single_service, name)
         return [
             Rule(
                 curve=build_curve(

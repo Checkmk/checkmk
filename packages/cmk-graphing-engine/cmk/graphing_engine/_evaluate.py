@@ -199,18 +199,13 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
             line.curve, inverse=line.inverse, seen=seen, context=context
         )
     ]
-    rules = [
-        evaluated
-        for rule in graph.rules
-        if (
-            evaluated := _evaluate_rule(
-                rule,
-                _create_id(rule.curve.quantity, inverse=rule.inverse, seen=seen),
-                context,
-            )
-        )
-        is not None
-    ]
+    rules = []
+    for rule in graph.rules:
+        # The id has to be minted before the rule is known to be present: it counts the quantity
+        # towards the graph's seen ones either way.
+        rule_id = _create_id(rule.curve.quantity, inverse=rule.inverse, seen=seen)
+        if (evaluated := _evaluate_rule(rule, rule_id, context)) is not None:
+            rules.append(evaluated)
     return EvaluatedGraph(
         name=graph.name,
         title=evaluate_title(graph.title, graph.metrics(), context),

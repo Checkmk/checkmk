@@ -7,12 +7,13 @@ import json
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
-from ._perfdata import MetricName, Service
+from ._perfdata import Service
 from ._quantities import (
     EvaluationContext,
     first_value,
     MetricProtocol,
     QuantityProtocol,
+    rrd_metric_of,
     RRDMetric,
     ScalarKind,
     ScalarOf,
@@ -31,26 +32,13 @@ _TITLE_SCALAR_KINDS: Mapping[str, ScalarKind] = {
 
 
 def _unique_service(metrics: Iterable[MetricProtocol]) -> Service | None:
-    services = {
-        Service(
-            site_id=metric.site_id,
-            host_name=metric.host_name,
-            service_name=metric.service_name,
-        )
-        for metric in metrics
-        if isinstance(metric, RRDMetric)
-    }
+    services = {metric.service() for metric in metrics if isinstance(metric, RRDMetric)}
     return next(iter(services)) if len(services) == 1 else None
 
 
 def _title_quantity(raw: str, service: Service) -> QuantityProtocol | None:
     expression: Mapping[str, str] = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
-    metric = RRDMetric(
-        site_id=service.site_id,
-        host_name=service.host_name,
-        service_name=service.service_name,
-        metric_name=MetricName(expression["metric"]),
-    )
+    metric = rrd_metric_of(service, expression["metric"])
     if (scalar := expression.get("scalar")) is None:
         return metric
     if (scalar_kind := _TITLE_SCALAR_KINDS.get(scalar)) is None:

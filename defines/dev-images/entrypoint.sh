@@ -41,12 +41,4 @@ else
     echo >&2 "WARNING: ${HOME}/.docker not available"
 fi
 
-if [ "$USER" = "jenkins" ]; then
-    if [ -d "${HOME}/git_reference_clones/check_mk.git" ]; then
-        cat "${HOME}/git_reference_clones/check_mk.git/config" >/dev/null
-    else
-        echo >&2 "WARNING: ${HOME}/git_reference_clones/check_mk.git not available"
-    fi
-fi
-
 exec "$@"

@@ -9,6 +9,8 @@
   ],
   "exclude": ["src/lib/i18nString.ts"],
   "compilerOptions": {
+    // Own build info, see tsconfig.test.json.
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.ucl.tsbuildinfo",
     "types": ["node"],
     "paths": {
       "cmk-ui-library/lib/i18nString": ["weaki18nString.d.ts"],

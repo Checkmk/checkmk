@@ -341,12 +341,53 @@ vitest_bin.vitest_test(
     data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
 )
 
+# One target per tsconfig project: they have no cross-references, so a single
+# `--build` only ran them serially. Mirrors //bazel/rules:vue_package.bzl. Only
+# the tests project needs tests/ in its sandbox.
 vue_tsc_bin.vue_tsc_test(
     name = "type-check",
-    timeout = "long",
+    timeout = "moderate",
     args = [
-        "--build",
-        "--force",
+        "-p",
+        "tsconfig.app.json",
+    ],
+    chdir = package_name(),
+    data = TOOLING + SRCS,
+    include_types = True,
+)
+
+vue_tsc_bin.vue_tsc_test(
+    name = "type-check-node",
+    timeout = "short",
+    args = [
+        "-p",
+        "tsconfig.node.json",
+    ],
+    chdir = package_name(),
+    data = TOOLING + SRCS,
+    include_types = True,
+)
+
+# Covers the same files as tsconfig.test.json but without the vitest and jest-dom
+# ambient types, so a test global leaking into the demo app is still an error.
+vue_tsc_bin.vue_tsc_test(
+    name = "type-check-ucl",
+    timeout = "moderate",
+    args = [
+        "-p",
+        "tsconfig.ucl.json",
+    ],
+    chdir = package_name(),
+    data = TOOLING + SRCS,
+    include_types = True,
+)
+
+vue_tsc_bin.vue_tsc_test(
+    name = "type-check-tests",
+    timeout = "moderate",
+    args = [
+        "-p",
+        "tsconfig.test.json",
     ],
     chdir = package_name(),
     data = TOOLING + SRCS_AND_TESTS + [":test_vue"],

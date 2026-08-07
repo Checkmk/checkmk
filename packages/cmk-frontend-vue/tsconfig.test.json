@@ -9,6 +9,8 @@
     "ui-component-library/**/*"
   ],
   "compilerOptions": {
+    // Own build info: inheriting app's gave bogus up-to-date verdicts.
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
     "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
     "paths": {
       "cmk-ui-library/lib/i18nString": ["weaki18nString.d.ts"],

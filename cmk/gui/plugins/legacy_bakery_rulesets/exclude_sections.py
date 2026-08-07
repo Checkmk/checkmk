@@ -41,7 +41,7 @@ def _skippable_linux_agent_sections() -> dict[str, str]:
         "mem": _("Memory"),
         "mounts": _("Mount options"),
         "multipathing": _("Multipathing"),
-        "nfs_mounts": ("NFS mounts"),
+        "nfs_mounts": _("NFS mounts"),
         "nvidia": _("Nvidia"),
         "omd_cores": _("OMD monitoring cores"),
         "omd": _("Status of OMD sites and Checkmk notification spooler"),

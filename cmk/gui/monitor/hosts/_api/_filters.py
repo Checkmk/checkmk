@@ -8,7 +8,9 @@ from typing import Annotated, Literal
 from annotated_types import MinLen
 from pydantic import AfterValidator
 
+from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.livestatus_client.expressions import LqSafe
 
 from .._models import HostFilter, HostState, HostStateLabel
@@ -64,6 +66,20 @@ class StateChoiceCondition:
 
 
 @api_model
+class SiteChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["site_id"] = api_field(description="Site field", example="site_id")
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[
+        list[Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)]],
+        MinLen(1),
+        AfterValidator(validate_uniqueness),
+    ] = api_field(description="Site IDs to match", example=["local"])
+
+
+@api_model
 class NumericCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
@@ -87,7 +103,13 @@ class BooleanCondition:
     value: bool = api_field(description="Boolean value to compare against", example=False)
 
 
-type ConditionNode = StringCondition | StateChoiceCondition | NumericCondition | BooleanCondition
+type ConditionNode = (
+    StringCondition
+    | StateChoiceCondition
+    | SiteChoiceCondition
+    | NumericCondition
+    | BooleanCondition
+)
 
 
 @api_model(slots=False)
@@ -129,6 +151,89 @@ class NotNode:
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
 
 
+def extract_site_scope(
+    node: FilterNode, all_site_ids: frozenset[SiteId]
+) -> tuple[FilterNode | None, list[SiteId] | None]:
+    """Split off the tree's 'site_id' condition, if any, as a site scope restriction.
+
+    Site ID isn't a real Livestatus column, so it can't contribute a filter line; it's pushed
+    down into which sites get queried instead. Only a single 'site_id' condition is supported,
+    optionally wrapped with a 'not' condition. If a site condition is combined with the rest of
+    the tree with anything but an 'and' condition, a `ValueError` is raised.
+
+    Additional details:
+
+    - Combining it with an unrelated condition via 'or' would need hosts from every other site
+      too (e.g. "site A's hosts OR any DOWN host"), which can't be reduced to a site restriction.
+    - Negating a mixed (site + non-site) subtree hits the same problem:
+      NOT(site_id=A AND cond) = (site_id!=A OR NOT cond), which turns the 'and' into an 'or'.
+    - The only one site condition is done to constrain the current parsing logic. This constraint
+      can be lifted when the need arises, but will come with added complexity.
+    """
+    found: list[tuple[SiteChoiceCondition, bool]] = []
+
+    def record(condition: SiteChoiceCondition, *, negated: bool, and_only: bool) -> None:
+        if not and_only:
+            raise ValueError(
+                "'site_id' conditions may only be combined via 'and'; they cannot appear "
+                "inside 'or', or inside 'not' together with other conditions."
+            )
+        if found:
+            raise ValueError("Only one 'site_id' condition is allowed per filter.")
+        found.append((condition, negated))
+
+    def walk(current: FilterNode, and_only: bool) -> FilterNode | None:
+        match current:
+            case SiteChoiceCondition():
+                record(current, negated=False, and_only=and_only)
+                return None
+
+            case NotNode(child=SiteChoiceCondition() as site_condition):
+                record(site_condition, negated=True, and_only=and_only)
+                return None
+
+            case NotNode(child=child):
+                # Passes through unchanged unless a 'site_id' condition turns up further inside,
+                # which `and_only=False` rejects (see docstring: mixed-subtree negation).
+                walk(child, and_only=False)
+                return current
+
+            case AndNode(children=children):
+                residual_children = [
+                    residual
+                    for residual in (walk(child, and_only) for child in children)
+                    if residual is not None
+                ]
+                match residual_children:
+                    case []:
+                        return None
+                    case [single]:
+                        return single
+                    case _:
+                        return AndNode(type="and", children=residual_children)
+
+            case OrNode(children=children):
+                # 'or' can never be reduced to a site restriction, so any 'site_id' condition
+                # anywhere inside is rejected by `record`; nothing is ever extracted here.
+                for child in children:
+                    walk(child, and_only=False)
+                return current
+
+            case _:
+                return current
+
+    residual = walk(node, and_only=True)
+
+    if not found:
+        return residual, None
+
+    condition, negated = found[0]
+    extracted_site_ids = {SiteId(site_id) for site_id in condition.value}
+    site_ids = list(all_site_ids - extracted_site_ids if negated else extracted_site_ids)
+
+    return residual, site_ids
+
+
 def parse_as_livestatus_filter(node: FilterNode) -> HostFilter:
     filters: list[str] = []
     _accumulate_filters(node, filters)
@@ -160,6 +265,9 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
             match node.op:
                 case "one_of" if len(node.value) > 1:
                     filters.append(f"Or: {len(node.value)}")
+
+        case SiteChoiceCondition():
+            raise AssertionError("Site conditions are not fully supported as filter nodes.")
 
         case AndNode() | OrNode():
             for child in node.children:

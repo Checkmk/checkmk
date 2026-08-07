@@ -8,9 +8,13 @@ import time
 import pytest
 import time_machine
 
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.monitor.hosts._api._list_hosts import _MAX_NUMBER_OF_HOSTS
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 
 _SITE_ID = "NO_SITE"
@@ -41,6 +45,7 @@ class TestMonitorHostsAuth:
 
         mock_livestatus.add_table("hosts", _HOSTS)
         # see_all-less user → sites.live() adds an AuthUser line; match loosely to tolerate it.
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -50,7 +55,6 @@ class TestMonitorHostsAuth:
             ],
             match_type="loose",
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
 
         with mock_livestatus(expect_status_query=True):
             resp = client.list_all(limit=_LIMIT)
@@ -109,6 +113,59 @@ class TestMonitorHostsQueryParamValidation:
                 },
                 id="min length of 'or' condition",
             ),
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": ["no-such-site"],
+                },
+                id="unknown site id",
+            ),
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": [_SITE_ID, _SITE_ID],
+                },
+                id="duplicate site ids",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {
+                            "type": "condition",
+                            "field": "site_id",
+                            "op": "one_of",
+                            "value": [_SITE_ID],
+                        },
+                        {
+                            "type": "condition",
+                            "field": "site_id",
+                            "op": "one_of",
+                            "value": [_SITE_ID],
+                        },
+                    ],
+                },
+                id="a second site_id condition",
+            ),
+            pytest.param(
+                {
+                    "type": "or",
+                    "children": [
+                        {
+                            "type": "condition",
+                            "field": "site_id",
+                            "op": "one_of",
+                            "value": [_SITE_ID],
+                        },
+                        {"type": "condition", "field": "name", "op": "contains", "value": "heute"},
+                    ],
+                },
+                id="site_id nested under 'or'",
+            ),
         ],
     )
     def test_filters_validation_errors(
@@ -127,6 +184,7 @@ class TestMonitorHosts:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -135,7 +193,6 @@ class TestMonitorHosts:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.list_all(limit=_LIMIT)
@@ -148,6 +205,7 @@ class TestMonitorHosts:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -155,7 +213,6 @@ class TestMonitorHosts:
                 "OrderBy: name asc natural",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.list_all(limit=None)
@@ -176,6 +233,7 @@ class TestMonitorHostsLimitPermissions:
 
         mock_livestatus.add_table("hosts", _HOSTS)
         # see_all-less user → sites.live() adds an AuthUser line; match loosely to tolerate it.
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -185,7 +243,6 @@ class TestMonitorHostsLimitPermissions:
             ],
             match_type="loose",
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
 
         with mock_livestatus(expect_status_query=True):
             resp = client.list_all(limit=None)
@@ -202,6 +259,7 @@ class TestMonitorHostsLimitPermissions:
         client.set_credentials(*with_admin)
 
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -209,7 +267,6 @@ class TestMonitorHostsLimitPermissions:
                 "OrderBy: name asc natural",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         with mock_livestatus(expect_status_query=True):
             resp = client.list_all(limit=None)
@@ -226,6 +283,7 @@ class TestMonitorHostsQuery:
         query: str,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -234,7 +292,6 @@ class TestMonitorHostsQuery:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.list_all(limit=_LIMIT, q=query)
@@ -247,6 +304,7 @@ class TestMonitorHostsQuery:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -259,7 +317,6 @@ class TestMonitorHostsQuery:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -283,6 +340,7 @@ class TestMonitorHostsFilters:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -296,7 +354,6 @@ class TestMonitorHostsFilters:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -344,6 +401,107 @@ class TestMonitorHostsFilters:
             },
         ]
 
+    def test_hosts_filtered_by_site(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        # The grand total stays unscoped (queried on every configured site, per the default
+        # `expect_query` routing), unlike the fetch/matched-count queries below.
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ],
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], sites=[_SITE_ID])
+        filters = {"type": "condition", "field": "site_id", "op": "one_of", "value": [_SITE_ID]}
+
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
+
+        assert len(resp.json["hosts"]) == len(_HOSTS)
+        assert resp.json["meta"]["matched"] == len(_HOSTS)
+        assert resp.json["meta"]["total"] == len(_HOSTS)
+
+    def test_hosts_excluding_a_site(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        # "remote" needs to be a real configured site (not just a mock-livestatus fake site) for
+        # `SiteIdConverter.should_exist` to accept it, and for the complement (every site except
+        # "remote") to be computed against the right set of configured sites.
+        with set_config(sites=_site_configs([SiteId(_SITE_ID), SiteId("remote"), SiteId("local")])):
+            mock_livestatus.add_table("hosts", _HOSTS)
+            mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+            # Excluding "remote" restricts the fetch/matched-count queries to the two remaining
+            # configured sites (NO_SITE, local) rather than broadcasting to all three.
+            mock_livestatus.expect_query(
+                [
+                    "GET hosts",
+                    f"Columns: {_HOST_TABLE_COLUMNS}",
+                    "OrderBy: name asc natural",
+                    f"Limit: {_LIMIT}",
+                ],
+                sites=[_SITE_ID, "local"],
+            )
+            mock_livestatus.expect_query(
+                ["GET hosts", "Stats: state >= 0"], sites=[_SITE_ID, "local"]
+            )
+            filters = {
+                "type": "not",
+                "child": {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": ["remote"],
+                },
+            }
+
+            with mock_livestatus():
+                resp = clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
+
+        assert len(resp.json["hosts"]) == len(_HOSTS)
+        assert resp.json["meta"]["matched"] == len(_HOSTS)
+        assert resp.json["meta"]["total"] == len(_HOSTS)
+
+    def test_hosts_excluding_every_site(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        # Negating every currently configured site computes an empty site scope. Livestatus's
+        # `only_sites([])` can't express "zero sites" -- an empty list is falsy to it and it falls
+        # back to "no restriction" instead -- so this must be short-circuited before ever building
+        # a fetch/matched-count query, rather than silently returning every host from every site.
+        with set_config(sites=_site_configs([SiteId(_SITE_ID)])):
+            mock_livestatus.add_table("hosts", _HOSTS)
+            mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+            filters = {
+                "type": "not",
+                "child": {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": [_SITE_ID],
+                },
+            }
+
+            with mock_livestatus():
+                resp = clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
+
+        assert resp.json["hosts"] == []
+        assert resp.json["meta"]["matched"] == 0
+        assert resp.json["meta"]["total"] == len(_HOSTS)
+
 
 class TestMonitorHostsFields:
     def test_non_default_field_omitted(
@@ -352,6 +510,7 @@ class TestMonitorHostsFields:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -360,7 +519,6 @@ class TestMonitorHostsFields:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.list_all(limit=_LIMIT)
@@ -376,6 +534,7 @@ class TestMonitorHostsFields:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -384,7 +543,6 @@ class TestMonitorHostsFields:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=[_NON_DEFAULT_FIELD])
@@ -400,6 +558,7 @@ class TestMonitorHostsFields:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -408,7 +567,6 @@ class TestMonitorHostsFields:
                 f"Limit: {_LIMIT}",
             ]
         )
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
 
         optional_fields = [
             "alias",
@@ -716,6 +874,33 @@ class TestMonitorHostsReschedule:
             )
 
         assert resp.json["rescheduled"] == 2
+
+
+def _site_configs(site_ids: list[SiteId]) -> dict[SiteId, SiteConfiguration]:
+    return {
+        site_id: SiteConfiguration(
+            id=site_id,
+            alias=str(site_id),
+            socket=("local", None),
+            disable_wato=True,
+            disabled=False,
+            insecure=False,
+            url_prefix=f"/{site_id}/",
+            multisiteurl="",
+            persist=False,
+            replicate_ec=False,
+            replicate_mkps=False,
+            replication=None,
+            timeout=5,
+            user_login=True,
+            proxy=None,
+            user_attribute_sync_connections="all",
+            status_host=None,
+            message_broker_port=5672,
+            is_trusted=False,
+        )
+        for site_id in site_ids
+    }
 
 
 _LIMIT = 1000

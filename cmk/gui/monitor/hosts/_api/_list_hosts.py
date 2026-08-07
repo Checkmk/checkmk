@@ -9,6 +9,7 @@ from typing import Annotated, Self
 from annotated_types import Interval
 from pydantic import PlainValidator
 
+from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -21,6 +22,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.utils import permission_verification as permissions
 
 from .._impl import LiveStatusHostRepository
@@ -35,7 +37,7 @@ from .._models import (
 )
 from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
-from ._filters import FilterNode, parse_as_livestatus_filter
+from ._filters import extract_site_scope, FilterNode, parse_as_livestatus_filter
 from ._modes import build_host_modes, ModeInfo
 from ._urls import host_view_link
 from ._validators import parse_host_search_query, parse_host_sort_options
@@ -244,8 +246,6 @@ def list_hosts(
     body: HostsRequestBody = HostsRequestBody(),
 ) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
-    host_repo = LiveStatusHostRepository(connection=sites.live())
-
     # A `None` request means "remove the limit". We only honor that for users allowed to ignore
     # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are already
     # bounded to the ceiling by the request schema, so they pass through unchanged.
@@ -257,41 +257,84 @@ def list_hosts(
         case _:
             limit = body.limit
 
-    parsed_filters = (
-        HostFilter("")
-        if isinstance(body.filter, ApiOmitted)
-        else parse_as_livestatus_filter(body.filter)
-    )
+    # Validated before opening a Livestatus connection below, so a bad filter is rejected without
+    # ever needing one.
+    if isinstance(body.filter, ApiOmitted):
+        filters, site_ids = None, None
+    else:
+        try:
+            filters, site_ids = extract_site_scope(
+                node=body.filter,
+                all_site_ids=frozenset(api_context.config.sites),
+            )
+        except ValueError as exc:
+            raise RestAPIRequestGeneralException(
+                status=400, title="Invalid filter", detail=str(exc)
+            ) from exc
 
-    return _handle_list_hosts(
-        host_repo,
-        limit=limit,
-        query="" if isinstance(body.q, ApiOmitted) else body.q,
-        sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-        filters=parsed_filters,
-        fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
-    )
+    host_repo = LiveStatusHostRepository(connection=sites.live())
+
+    # NOTE: we never want this value scoped by the selected sites. It should always get full count.
+    # As a temporary solution, we are querying count here and passing the result to the handler.
+    # This is done to make the handler more testable without the need to be tested within a request
+    # context as `sites` triggers that side-effect.
+    total_host_count = host_repo.count_total()
+
+    fields = _DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields
+
+    # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and
+    # gets treated as "no restriction" instead, i.e. every site. This happens when the filter
+    # negates every currently configured site, so it's handled here before ever calling into
+    # Livestatus, rather than being passed through.
+    if site_ids == []:
+        return HostsResponse(
+            hosts=[],
+            meta=HostsPageMeta(limit=limit, matched=0, total=total_host_count, fields=fields),
+        )
+
+    with sites.only_sites(site_ids):
+        return _handle_list_hosts(
+            host_repo,
+            total_host_count,
+            limit=limit,
+            query="" if isinstance(body.q, ApiOmitted) else body.q,
+            sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+            filters=HostFilter("") if filters is None else parse_as_livestatus_filter(filters),
+            fields=fields,
+            site_ids=site_ids,
+        )
 
 
 def _handle_list_hosts(
     host_repo: HostRepository,
+    total_host_count: int,
     *,
     limit: int | None = _DEFAULT_LIMIT,
     query: str = "",
     sorters: Sequence[HostSort] = _DEFAULT_SORT,
     filters: HostFilter = HostFilter(""),
     fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
+    site_ids: Sequence[SiteId] | None = None,
 ) -> HostsResponse:
+    # Derived from the same `site_ids` the caller scoped the connection with via `only_sites`,
+    # rather than taken as a separately-passed flag, so the two can't drift apart.
+    has_site_filter = site_ids is not None
+
     hosts = host_repo.fetch(
         limit=limit,
         query=query,
         sorters=sorters,
         filters=filters,
     )
-    total_host_count = host_repo.count_total()
+    # `limit` reaches Livestatus as a per-site cap (queried in parallel across sites, then merged
+    # and sorted here), so a multi-site fetch can come back with up to `limit * len(sites)` rows.
+    # Re-applying it client-side after the merge is what makes the *global* top-`limit` hold.
+    if limit is not None:
+        hosts = hosts[:limit]
+
     if limit is None:
         matched_host_count = len(hosts)
-    elif query or filters:
+    elif query or filters or has_site_filter:
         matched_host_count = host_repo.count_matched(query=query, filters=filters)
     else:
         matched_host_count = total_host_count

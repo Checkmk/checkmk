@@ -28,6 +28,7 @@ from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
+from cmk.gui.user_sites import sorted_sites
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.all_hosts import (
@@ -36,6 +37,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
     MonitoringAllHostsApp,
     MonitoringPageLinkButton,
     RowAction,
+    Site,
 )
 from cmk.utils import paths
 
@@ -133,6 +135,10 @@ class MonitorAllHostsPage(Page):
                     poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
                     user_id=str(user.id),
                     site=str(omd_site()),
+                    sites=[
+                        Site(id=str(site_id), alias=alias)
+                        for site_id, alias in sorted_sites(ctx.config.sites)
+                    ],
                     edition=Edition(edition(paths.omd_root).short),
                     actions=[
                         MonitoringAction(

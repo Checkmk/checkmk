@@ -11,13 +11,25 @@
     "site": {
       "type": "string"
     },
+    "sites": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/site" }
+    },
     "edition": { "$ref": "#/$defs/edition" }
   },
-  "required": ["user_id", "site", "edition"],
+  "required": ["user_id", "site", "sites", "edition"],
   "$defs": {
     "edition": {
       "type": "string",
       "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
+    },
+    "site": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "alias": { "type": "string" }
+      },
+      "required": ["id", "alias"]
     }
   }
 }

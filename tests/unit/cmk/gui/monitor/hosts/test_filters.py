@@ -5,14 +5,17 @@
 
 import pytest
 
+from cmk.ccc.site import SiteId
 from cmk.gui.monitor.hosts._api._filters import (
     AndNode,
     BooleanCondition,
+    extract_site_scope,
     NotNode,
     NumericCondition,
     NumericOp,
     OrNode,
     parse_as_livestatus_filter,
+    SiteChoiceCondition,
     StateChoiceCondition,
     StringCondition,
     StringOp,
@@ -138,3 +141,186 @@ def test_query_builder_state_choice_multiple_with_or() -> None:
     )
 
     assert value == expected
+
+
+# `@api_model` classes are plain dataclasses: constructing one directly (as these tests do) never
+# runs the pydantic converters (e.g. `SiteIdConverter.should_exist`) that only fire when a request
+# body is actually parsed - see the openapi-level `test_filters_validation_errors` for that. So this
+# doesn't need to be a real configured site, and `all_site_ids` below is free to include others.
+_SITE_ID = SiteId("NO_SITE")
+
+
+def test_extract_site_scope_bare_condition() -> None:
+    condition = SiteChoiceCondition(
+        type="condition",
+        field="site_id",
+        op="one_of",
+        value=[_SITE_ID],
+    )
+
+    residual, site_ids = extract_site_scope(condition, frozenset({_SITE_ID, SiteId("other")}))
+
+    assert residual is None
+    assert site_ids == [_SITE_ID]
+
+
+def test_extract_site_scope_negated_condition_is_a_complement() -> None:
+    node = NotNode(
+        type="not",
+        child=SiteChoiceCondition(
+            type="condition",
+            field="site_id",
+            op="one_of",
+            value=[_SITE_ID],
+        ),
+    )
+
+    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID, SiteId("other")}))
+
+    assert residual is None
+    assert site_ids == [SiteId("other")]
+
+
+def test_extract_site_scope_negating_every_site_yields_empty_set() -> None:
+    node = NotNode(
+        type="not",
+        child=SiteChoiceCondition(
+            type="condition",
+            field="site_id",
+            op="one_of",
+            value=[_SITE_ID],
+        ),
+    )
+
+    _, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+
+    assert site_ids == []
+
+
+def test_extract_site_scope_and_combined_with_unrelated_condition() -> None:
+    node = AndNode(
+        type="and",
+        children=[
+            SiteChoiceCondition(
+                type="condition",
+                field="site_id",
+                op="one_of",
+                value=[_SITE_ID],
+            ),
+            StringCondition(type="condition", field="name", op="contains", value="heute"),
+        ],
+    )
+
+    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+
+    assert residual == StringCondition(type="condition", field="name", op="contains", value="heute")
+    assert site_ids == [_SITE_ID]
+
+
+def test_extract_site_scope_at_various_and_nesting_depths() -> None:
+    node = AndNode(
+        type="and",
+        children=[
+            AndNode(
+                type="and",
+                children=[
+                    SiteChoiceCondition(
+                        type="condition",
+                        field="site_id",
+                        op="one_of",
+                        value=[_SITE_ID],
+                    ),
+                    StringCondition(type="condition", field="name", op="contains", value="heute"),
+                ],
+            ),
+            NumericCondition(type="condition", field="num_services", op="gt", value=0),
+        ],
+    )
+
+    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+
+    assert residual == AndNode(
+        type="and",
+        children=[
+            StringCondition(type="condition", field="name", op="contains", value="heute"),
+            NumericCondition(type="condition", field="num_services", op="gt", value=0),
+        ],
+    )
+    assert site_ids == [_SITE_ID]
+
+
+def test_extract_site_scope_leaves_a_site_free_tree_unaffected() -> None:
+    node = AndNode(
+        type="and",
+        children=[
+            StringCondition(type="condition", field="name", op="contains", value="heute"),
+            NumericCondition(type="condition", field="num_services", op="gt", value=0),
+        ],
+    )
+
+    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+
+    assert residual == node
+    assert site_ids is None
+
+
+def test_extract_site_scope_rejects_a_second_site_condition() -> None:
+    node = AndNode(
+        type="and",
+        children=[
+            SiteChoiceCondition(
+                type="condition",
+                field="site_id",
+                op="one_of",
+                value=[_SITE_ID],
+            ),
+            SiteChoiceCondition(
+                type="condition",
+                field="site_id",
+                op="one_of",
+                value=[_SITE_ID],
+            ),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="Only one"):
+        extract_site_scope(node, frozenset({_SITE_ID}))
+
+
+def test_extract_site_scope_rejects_nesting_under_or() -> None:
+    node = OrNode(
+        type="or",
+        children=[
+            SiteChoiceCondition(
+                type="condition",
+                field="site_id",
+                op="one_of",
+                value=[_SITE_ID],
+            ),
+            StringCondition(type="condition", field="name", op="contains", value="heute"),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="'or'"):
+        extract_site_scope(node, frozenset({_SITE_ID}))
+
+
+def test_extract_site_scope_rejects_negating_a_mixed_subtree() -> None:
+    node = NotNode(
+        type="not",
+        child=AndNode(
+            type="and",
+            children=[
+                SiteChoiceCondition(
+                    type="condition",
+                    field="site_id",
+                    op="one_of",
+                    value=[_SITE_ID],
+                ),
+                StringCondition(type="condition", field="name", op="contains", value="heute"),
+            ],
+        ),
+    )
+
+    with pytest.raises(ValueError, match="'or'"):
+        extract_site_scope(node, frozenset({_SITE_ID}))

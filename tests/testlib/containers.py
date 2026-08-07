@@ -92,19 +92,17 @@ def execute_tests_in_container(
             logger.info("+-------------------------------------------------")
             logger.info("| Next steps: Start the test of your choice, for example:")
             logger.info("| ")
-            logger.info("| make -C tests test-system-singlesite")
+            logger.info("| make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info(
-                "| pytest -T integration tests/system/singlesite/livestatus/test_livestatus.py"
-            )
+            logger.info("| pytest -T integration tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
                 "| pytest -T integration "
-                "tests/system/singlesite/livestatus/test_livestatus.py "
+                "tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
             logger.info("| ")
@@ -136,7 +134,7 @@ def execute_tests_in_container(
             environment=_container_env(version),
             workdir="/git",
             stream=True,
-            tty=True,  # NOTE: Some tests require a tty (e.g. test-system-update)!
+            tty=True,  # NOTE: Some tests require a tty (e.g. test-update)!
         )
 
         # Collect the test results located in /results of the container. The

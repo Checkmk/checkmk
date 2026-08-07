@@ -1,81 +1,83 @@
 #!groovy
 
-/// file: test-integration-packages.groovy
-
-/// Run integration tests for checkmk OS packages
+/// file: test-update.groovy
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+def build_make_target(edition) {
+    def prefix = "test-update-";
+    def suffix = "-docker";
+    switch(edition) {
+        case 'enterprise':
+            return prefix + "cee" + suffix;
+        case 'cloud':
+            return prefix + "cce" + suffix;
+        default:
+            error("The update tests are not yet enabled for edition: " + edition);
+    }
+}
+
 def main() {
     check_job_parameters([
-        "EDITION",
         "VERSION",
         "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-        "USE_CASE",
         "FAKE_ARTIFACTS",
     ]);
 
+    check_environment_variables([
+        "EDITION",
+    ]);
+
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
-    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
 
-    // TODO: we should always use USE_CASE directly from the job parameters
-    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
-    test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
-    def all_distros = versioning.get_distros(override: "all");
-    def selected_distros = versioning.get_distros(
-        edition: EDITION,
-        use_case: use_case,
-        override: OVERRIDE_DISTROS
-    );
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+
+    def edition = params.EDITION;
+    def all_distros = versioning.get_distros(override: "all");
+    def distros = versioning.get_distros(edition: edition, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
-    currentBuild.description += (
-        """
-        |Run integration tests for packages<br>
-        |VERSION: ${VERSION}<br>
-        |EDITION: ${EDITION}<br>
-        |selected_distros: ${selected_distros}<br>
-        """.stripMargin());
+    def make_target = build_make_target(edition);
 
     print(
         """
         |===== CONFIGURATION ===============================
         |all_distros:.............. │${all_distros}│
-        |selected_distros:......... │${selected_distros}│
+        |distros:.................. │${distros}│
+        |edition:.................. │${edition}│
         |branch_name:.............. │${branch_name}│
         |safe_branch_name:......... │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
+        |checkout_dir:............. │${checkout_dir}│
+        |branch_base_folder:....... │${branch_base_folder}│
+        |make_target:.............. |${make_target}|
         |===================================================
         """.stripMargin());
 
-    def relative_job_name = "${branch_base_folder}/builders/test-integration-single";
-
-    /// avoid failures due to leftover artifacts from prior runs
-    sh("rm -rf ${checkout_dir}/test-results");
+    def build_for_parallel = [:];
+    def relative_job_name = "${branch_base_folder}/builders/test-update-single-node";
 
     def test_stages = all_distros.collectEntries { distro -> [
         ("Test ${distro}") : {
             def stepName = "Test ${distro}";
-            def run_condition = distro in selected_distros;
+            def run_condition = distro in distros;
             def build_instance = null;
 
             /// this makes sure the whole parallel thread is marked as skipped
@@ -86,7 +88,7 @@ def main() {
             smart_stage(
                 name: stepName,
                 condition: run_condition,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
@@ -94,14 +96,14 @@ def main() {
                     relative_job_name: relative_job_name,
                     build_params: [
                         DISTRO: distro,
-                        EDITION: EDITION,
-                        CUSTOM_GIT_REF: effective_git_ref,
+                        EDITION: edition,
+                        VERSION: version,
+                        CUSTOM_GIT_REF: CUSTOM_GIT_REF,
                         FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
-                        // FIPS node specifier has to be respected
-                        CIPARAM_OVERRIDE_BUILD_NODE: CIPARAM_OVERRIDE_BUILD_NODE,
                     ],
                     build_params_no_check: [
-                        CIPARAM_CLEANUP_WORKSPACE: CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
@@ -132,14 +134,6 @@ def main() {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
             }
-            xunit([Custom(
-                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                deleteOutputFiles: true,
-                failIfNotNew: false,    // as they are copied from the single tests
-                pattern: "**/junit.xml",
-                skipNoTestFiles: false,
-                stopProcessingIfError: true
-            )]);
         }
     }
 }

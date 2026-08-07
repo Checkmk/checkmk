@@ -479,10 +479,8 @@ def _allow_default_plus_component_under_test(
 ) -> bool:
     if component.startswith("tests.unit.checks"):
         component_under_test = Component("cmk.base.plugins.agent_based")
-    elif component.startswith("tests.unit."):
+    elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
         component_under_test = Component(".".join(component.split(".")[2:]))
-    elif component.startswith("tests.system.singlesite."):
-        component_under_test = Component(".".join(component.split(".")[3:]))
     else:
         raise ValueError(f"Unhandled component: {component}")
 
@@ -618,24 +616,24 @@ _COMPONENTS = (
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
     (
-        Component("tests.system.singlesite.cmk.post_rename_site"),
+        Component("tests.integration.cmk.post_rename_site"),
         _allow_default_plus_component_under_test,
     ),
     (
-        Component("tests.system.singlesite.cmk.snmplib"),
+        Component("tests.integration.cmk.snmplib"),
         _allow_default_plus_component_under_test,
     ),
-    (Component("tests.system.singlesite.cmk.gui"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.gui"), _allow_default_plus_component_under_test),
     (
-        Component("tests.system.singlesite.cmk.cee.liveproxy"),
+        Component("tests.integration.cmk.cee.liveproxy"),
         _allow_default_plus_component_under_test,
     ),
     (
-        Component("tests.system.singlesite.cmk.base"),
+        Component("tests.integration.cmk.base"),
         _allow_default_plus_component_under_test_bakery_checkengine,
     ),
     (
-        Component("tests.system.singlesite.cmk.cee.robotmk"),
+        Component("tests.integration.cmk.cee.robotmk"),
         _allow_default_plus_component_under_test,
     ),
     (Component("cmk.agent_based"), _in_component),  # wants to be a package someday

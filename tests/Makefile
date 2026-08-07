@@ -26,20 +26,20 @@ AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defi
 RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
-    test-system-singlesite \
-    test-system-multisite \
-    test-system-update-cee \
-    test-system-update-cce \
+    test-integration \
+    test-composition \
+    test-update-cee \
+    test-update-cce \
     test-schemathesis-openapi \
-    test-system-plugins \
-    test-system-gui-crawl \
-    test-system-gui-crawl-xss \
-    test-system-gui \
-    test-system-gui-non-free \
-    test-system-gui-cee \
-    test-system-gui-cce \
-    test-system-gui-cme \
-    test-system-gui-cse \
+    test-plugins \
+    test-gui-crawl \
+    test-xss-crawl \
+    test-gui-e2e \
+    test-gui-e2e-non-free \
+    test-gui-e2e-cee \
+    test-gui-e2e-cce \
+    test-gui-e2e-cme \
+    test-gui-e2e-cse \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
@@ -97,7 +97,7 @@ help:
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
-	@echo "test-system-gui                        - Run GUI End-to-End locally"
+	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
 	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
 	@echo "test-license-headers                - Run license headers tests"
 	@echo "test-license-headers-docker         - Run license headers tests in docker"
@@ -272,49 +272,49 @@ test-lint-groovy:
 test-lint-groovy-docker:
 	DOCKER_RUN_ADDOPTS="-e HOME" ../scripts/run-in-docker.sh make --quiet test-lint-groovy
 
-test-system-gui-crawl: prepare-playwright
-	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui_crawl/test_gui_crawl.py)
+test-gui-crawl: prepare-playwright
+	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
-test-system-gui-crawl-xss: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui_crawl/test_gui_crawl.py) --numprocesses=1
+test-xss-crawl: prepare-playwright
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
-test-system-gui test-system-gui-cee: prepare-playwright # full e2e test is done for cee
+test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
 	EDITION=cee $(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui/)  --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
-test-system-gui-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
+test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/gui/cee)  --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
 
-test-system-gui-cce:
-	EDITION=cce $(MAKE) test-system-gui-non-free
+test-gui-e2e-cce:
+	EDITION=cce $(MAKE) test-gui-e2e-non-free
 
-test-system-gui-cme:
-	EDITION=cme $(MAKE) test-system-gui-non-free
+test-gui-e2e-cme:
+	EDITION=cme $(MAKE) test-gui-e2e-non-free
 
-test-system-gui-cse:
-	EDITION=cse $(MAKE) test-system-gui-non-free
+test-gui-e2e-cse:
+	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
-test-system-singlesite:
-	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/singlesite)
+test-integration:
+	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
-test-system-multisite:
-	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/multisite)
+test-composition:
+	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
-test-system-update-cee:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/update) -m cee
+test-update-cee:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee
 
-test-system-update-cce:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/update) -m cce
+test-update-cce:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 
-test-system-plugins:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath system/plugins)
+test-plugins:
+	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"

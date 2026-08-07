@@ -629,7 +629,7 @@ class Crawler:
 
             tests += 1
 
-        testsuite.attrib["name"] = "test-system-gui-crawl"
+        testsuite.attrib["name"] = "test-gui-crawl"
         testsuite.attrib["tests"] = str(tests)
         testsuite.attrib["skipped"] = str(skipped)
         testsuite.attrib["errors"] = str(errors)

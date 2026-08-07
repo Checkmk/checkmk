@@ -30,9 +30,7 @@ class Stash(BaseModel):
         try:
             return WerkId(sorted(self.ids)[0])
         except (KeyError, IndexError) as e:
-            raise RuntimeError(
-                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
-            ) from e
+            raise RuntimeError("You have no Werk IDs in your stash.") from e
 
     def free_id(self, werk_id: "WerkId") -> None:
         """
@@ -77,7 +75,8 @@ class LegacyStash(BaseModel):
             return WerkId(sorted(self.ids_by_project[project])[0])
         except (KeyError, IndexError) as e:
             raise RuntimeError(
-                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
+                "You have no Werk IDs. Please run 'werk init' to switch to the new reservation "
+                "mechanism, which reserves werk IDs on the fly during 'werk new'."
             ) from e
 
     def free_id(self, werk_id: "WerkId") -> None:

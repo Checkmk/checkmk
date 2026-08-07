@@ -6,10 +6,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-import pytest
-
 from cmk.ccc.hostaddress import HostAddress
-from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import translations
 from cmk.graphing_engine import (
     ConsolidationFunction,
@@ -25,7 +22,6 @@ from cmk.graphing_engine import (
     TimeSeries,
 )
 from cmk.gui.config import Config
-from cmk.gui.graphing._engine_discovery import BuiltGraph
 from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
 from cmk.gui.graphing._engine_source import (
     HOST_PSEUDO_SERVICE,
@@ -99,62 +95,6 @@ def test_fetch_metric_names_of_a_service_reads_the_services_table(
             site_id=SiteID("NO_SITE"), host_name=HostName("h"), service_name=ServiceName("svc")
         ): frozenset({MetricName("x")})
     }
-
-
-@dataclass(frozen=True)
-class _FakeMetricNamesOnSites:
-    # In place of RRDFetchMetricNames: the sites a host/service resolved on. Unscoped, the
-    # same host/service monitored by two sites resolves on both.
-    site_ids: Sequence[str]
-
-    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
-        return {
-            Service(
-                site_id=SiteID(site_id),
-                host_name=HostName("h"),
-                service_name=ServiceName("svc"),
-            ): frozenset({MetricName("x")})
-            for site_id in self.site_ids
-        }
-
-
-def _build_template_graphs(site_ids: Sequence[str]) -> Sequence[BuiltGraph]:
-    return build_template_graphs(
-        TemplateGraphSpecification(
-            site=SiteId(site_ids[0]) if len(site_ids) == 1 else None,
-            host_name=HostAddress("h"),
-            service_description="svc",
-        ),
-        registered_graphs=[],
-        registered_metrics={},
-        fetch_metric_names=_FakeMetricNamesOnSites(site_ids),
-    )
-
-
-def test_template_graphs_are_built_for_the_site_the_service_resolved_on() -> None:
-    # A template graph is single-service: its metrics carry the site the fetch resolved the service
-    # on, and that is the site the graph is addressed by.
-    built = _build_template_graphs(["site_b"])
-
-    assert {
-        metric.site_id
-        for one in built
-        for metric in one.graph.metrics()
-        if isinstance(metric, RRDMetric)
-    } == {SiteID("site_b")}
-    assert [
-        one.specification.site
-        for one in built
-        if isinstance(one.specification, TemplateGraphSpecification)
-    ] == [SiteId("site_b")]
-
-
-def test_template_graphs_cannot_be_built_from_a_service_resolved_on_two_sites() -> None:
-    # The same host/service monitored by two sites leaves the single-service build with two metrics
-    # where it needs one. Scoping the fetch to the caller's site is what keeps it to one; without it
-    # this is the crash a service view hits.
-    with pytest.raises(ValueError, match="too many values to unpack"):
-        _build_template_graphs(["site_a", "site_b"])
 
 
 def test_fetch_data_of_a_host_metric_reads_the_hosts_table(

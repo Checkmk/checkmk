@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
+from cmk.graphing_engine import Graph
+from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointDoc,
@@ -18,7 +20,7 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import MKLivestatusException
 
-from .._engine_dispatch import evaluate_graphs
+from .._engine_dispatch import evaluate_built_graphs, evaluate_graphs, EvaluatedGraphs
 from ._family import GRAPH_FAMILY
 from ._serialize import (
     api_consolidation_to_engine,
@@ -34,19 +36,11 @@ from .models import (
 )
 
 
-def evaluate_graph_to_response(
-    internal: Mapping[str, object],
-    *,
-    requested_time_range: ApiTimeRange,
+def _fetch_options(
+    time_range: EngineTimeRange,
     consolidation_function: ApiConsolidation,
     combination_mode: ApiCombinationMode | None,
-) -> GraphFetchResponse:
-    """Evaluate the serialized definition of exactly one graph into its fetched data.
-
-    Shared with the token-authenticated dashboard widget fetch, so both resolve their data the
-    same way and only differ in how they get hold of the definition.
-    """
-    time_range = api_time_range_to_engine(requested_time_range)
+) -> Mapping[str, object]:
     options: dict[str, object] = {
         "consolidation_function": api_consolidation_to_engine(consolidation_function),
         "time_range": time_range,
@@ -54,8 +48,12 @@ def evaluate_graph_to_response(
     }
     if combination_mode is not None:
         options["combination_mode"] = combination_mode
+    return options
+
+
+def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedGraphs:
     try:
-        evaluated = evaluate_graphs(internal, options)
+        return evaluate()
     except MKLivestatusException as exc:
         raise ProblemException(
             status=503,
@@ -68,6 +66,11 @@ def evaluate_graph_to_response(
             title="Graph evaluation failed",
             detail=f"Failed to evaluate graph: {exc}",
         ) from exc
+
+
+def _single_graph_response(
+    evaluated: EvaluatedGraphs, *, fallback_time_range: EngineTimeRange
+) -> GraphFetchResponse:
     if len(evaluated.graphs) != 1:
         raise ProblemException(
             status=500,
@@ -76,8 +79,44 @@ def evaluate_graph_to_response(
         )
     return evaluated_to_response(
         evaluated.graphs[0],
-        fallback_time_range=time_range,
+        fallback_time_range=fallback_time_range,
         diagnostics=evaluated.diagnostics,
+    )
+
+
+def evaluate_graph_to_response(
+    internal: Mapping[str, object],
+    *,
+    requested_time_range: ApiTimeRange,
+    consolidation_function: ApiConsolidation,
+    combination_mode: ApiCombinationMode | None,
+) -> GraphFetchResponse:
+    """Evaluate the serialized definition of exactly one graph into its fetched data."""
+    time_range = api_time_range_to_engine(requested_time_range)
+    options = _fetch_options(time_range, consolidation_function, combination_mode)
+    return _single_graph_response(
+        _evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
+        fallback_time_range=time_range,
+    )
+
+
+def evaluate_built_graph_to_response(
+    graph: Graph,
+    *,
+    requested_time_range: ApiTimeRange,
+    consolidation_function: ApiConsolidation,
+    combination_mode: ApiCombinationMode | None,
+) -> GraphFetchResponse:
+    """Evaluate a graph that was built in this request into its fetched data.
+
+    Used by the token-authenticated dashboard widget fetch, which discovers its graph server-side:
+    it resolves the data exactly as the serialized entry point does, without a wire form in between.
+    """
+    time_range = api_time_range_to_engine(requested_time_range)
+    options = _fetch_options(time_range, consolidation_function, combination_mode)
+    return _single_graph_response(
+        _evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
+        fallback_time_range=time_range,
     )
 
 

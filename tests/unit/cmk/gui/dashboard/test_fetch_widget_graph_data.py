@@ -235,14 +235,14 @@ def test_fetch_takes_the_combination_mode_from_the_widget_not_the_request(
 ) -> None:
     captured: dict[str, Mapping[str, object]] = {}
 
-    def _capture(_internal: object, options: Mapping[str, object]) -> EvaluatedGraphs:
+    def _capture(_graphs: Sequence[Graph], options: Mapping[str, object]) -> EvaluatedGraphs:
         captured["options"] = options
         return EvaluatedGraphs(
             graphs=[EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[])],
             diagnostics=FetchDiagnostics(),
         )
 
-    monkeypatch.setattr(fetch_graph_data_module, "evaluate_graphs", _capture)
+    monkeypatch.setattr(fetch_graph_data_module, "evaluate_built_graphs", _capture)
     _impersonating(
         monkeypatch,
         {_WIDGET_ID: _graph_widget("combined_graph", presentation="stacked", graph_template="cpu")},
@@ -265,14 +265,14 @@ def test_fetch_evaluates_as_the_token_issuer(monkeypatch: pytest.MonkeyPatch) ->
     # unauthenticated user this request otherwise is would not be filtered at all.
     evaluated_as: dict[str, object] = {}
 
-    def _capture(_internal: object, _options: Mapping[str, object]) -> EvaluatedGraphs:
+    def _capture(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> EvaluatedGraphs:
         evaluated_as["user_id"] = user.id
         return EvaluatedGraphs(
             graphs=[EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[])],
             diagnostics=FetchDiagnostics(),
         )
 
-    monkeypatch.setattr(fetch_graph_data_module, "evaluate_graphs", _capture)
+    monkeypatch.setattr(fetch_graph_data_module, "evaluate_built_graphs", _capture)
     _impersonating(monkeypatch, {_WIDGET_ID: _graph_widget()})
     _discovering(monkeypatch, [_built()])
 

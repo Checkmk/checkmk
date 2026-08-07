@@ -24,8 +24,7 @@ from cmk.gui.dashboard.token_util import (
 )
 from cmk.gui.dashboard.type_defs import CombinedGraphDashletConfig, DashletConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.gui.graphing.openapi.fetch_graph_data import evaluate_graph_to_response
+from cmk.gui.graphing.openapi.fetch_graph_data import evaluate_built_graph_to_response
 from cmk.gui.graphing.openapi.models import (
     ApiCombinationMode,
     ApiConsolidation,
@@ -133,8 +132,8 @@ def fetch_widget_graph_data_v1(
                     detail=discovered.no_data_message or "The widget has no graph to fetch.",
                 )
 
-            return evaluate_graph_to_response(
-                serialize_graphs([discovered.graphs[0].graph]),
+            return evaluate_built_graph_to_response(
+                discovered.graphs[0].graph,
                 requested_time_range=body.requested_time_range,
                 consolidation_function=body.consolidation_function,
                 combination_mode=_combination_mode(widget_config),

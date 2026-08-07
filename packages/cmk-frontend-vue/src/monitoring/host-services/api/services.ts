@@ -17,9 +17,9 @@ import type {
 } from '@/monitoring/shared/api/types'
 
 export interface HostServicesQueryParams extends MonitoringQueryParams {
-  // The shared filter machinery (FilterStore/MonitoringService) is built around the host
-  // filter shape; the API only accepts the narrower service-scoped `ServiceFilterNode`, which
-  // the `state` filter's `one_of` condition is always compatible with.
+  // `FilterNode` spans every monitoring page's fields; the API only accepts the service-scoped
+  // `ServiceFilterNode` schema, generated separately from the host one (e.g. `state`'s allowed
+  // values differ between the two), hence the `unknown` bridge below rather than a direct cast.
   filter?: FilterNode | undefined
 }
 

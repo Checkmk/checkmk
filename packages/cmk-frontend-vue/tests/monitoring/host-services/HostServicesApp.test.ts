@@ -188,6 +188,46 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
   )
 })
 
+test('requests services whose summary contains the typed filter text', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Summary' }))
+  const panel = screen.getByRole('group', { name: 'Filter Summary' })
+  await fireEvent.update(within(panel).getByRole('textbox'), 'timeout')
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: { type: 'condition', field: 'summary', op: 'contains', value: 'timeout' }
+      }
+    })
+  )
+})
+
+test('clearing the summary filter restores the full, unfiltered list', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Summary' }))
+  let panel = screen.getByRole('group', { name: 'Filter Summary' })
+  await fireEvent.update(within(panel).getByRole('textbox'), 'timeout')
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Summary' }))
+  panel = screen.getByRole('group', { name: 'Filter Summary' })
+  await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000 } })
+  )
+})
+
 test('marks the sorted column with its direction', async () => {
   mockServices([makeApiEntry()])
   renderApp()

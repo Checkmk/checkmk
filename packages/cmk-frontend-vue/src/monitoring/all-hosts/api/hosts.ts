@@ -17,6 +17,9 @@ import type {
 } from '../../shared/api/types'
 
 export interface HostQueryParams extends MonitoringQueryParams {
+  // `FilterNode` spans every monitoring page's fields, including service-only ones like
+  // `summary`; the API only accepts the host's own generated schema, and this page only ever
+  // puts host fields into it, hence the cast below rather than a direct assignment.
   filter?: FilterNode | undefined
   fields?: HostOptionalField[]
 }
@@ -28,7 +31,7 @@ export class HostApi extends MonitoringApi {
   ): Promise<HostsResponse> {
     const body: HostsRequestBody = {
       ...this.buildRequestBody(params),
-      ...(params.filter && { filter: params.filter }),
+      ...(params.filter && { filter: params.filter as NonNullable<HostsRequestBody['filter']> }),
       ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(

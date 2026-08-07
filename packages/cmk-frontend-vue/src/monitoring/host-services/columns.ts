@@ -39,6 +39,11 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     field: 'name'
   }
 
+  const summaryFilter: StringInputFilter<'summary'> = {
+    type: 'string-input',
+    field: 'summary'
+  }
+
   return [
     {
       id: 'select',
@@ -79,7 +84,8 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       accessorKey: 'summary',
       header: _t('Summary'),
       sortDescFirst: false,
-      minSize: 200
+      minSize: 200,
+      meta: { filter: summaryFilter }
     },
     {
       accessorKey: 'last_check',

@@ -20,10 +20,9 @@ export type HostServiceEntry = components['schemas']['HostServiceEntry']
 export type ServicesRequestBody = components['schemas']['ServicesRequestBody']
 
 /**
- * Boolean filter expression tree for the host services listing. Structurally
- * shaped like {@link FilterNode}, but scoped to the service fields/conditions
- * the API accepts (currently just `state`), which is why it is kept as its own
- * type rather than reusing the host one.
+ * Boolean filter expression tree for the host services listing. Structurally shaped like
+ * {@link FilterNode}, but scoped to whatever fields the service's own generated schema
+ * defines, which is why it is kept as its own type rather than reusing the host one.
  */
 export type ServiceFilterNode = components['schemas']['ServiceFilterNode']
 
@@ -60,28 +59,62 @@ export type ServiceState = components['schemas']['ServiceStateLabel']
 
 export type HostsPageMeta = components['schemas']['HostsPageMeta']
 
-export type FilterNode = components['schemas']['FilterNode']
+// --- Filter model ---------------------------------------------------------
+// Two tree shapes share the same per-field conditions below:
+//   - FilterNode: the whole-query tree (FilterStore's canonical representation), mixing
+//     conditions on any field.
+//   - ColumnFilterNode<F>: a single column funnel's tree, restricted to field F alone.
+// Every field's condition shape is read straight off the generated schemas — host fields from
+// `ConditionNode`, service fields (including service-only ones like `summary`) from
+// `ServiceConditionNode` — so a new field on either side needs no type hand-written here.
 
-export type ConditionNode = components['schemas']['ConditionNode']
+/** The host's own generated filter condition schema. */
+type HostConditionNode = components['schemas']['ConditionNode']
 
-export type FilterField = ConditionNode['field']
+/** The service's own generated filter condition schema — covers fields with no host counterpart. */
+type ServiceConditionNode = components['schemas']['ServiceConditionNode']
+
+/** Every condition shape a field can resolve to, host or service. */
+type AnyConditionNode = HostConditionNode | ServiceConditionNode
+
+/** Every field a filter condition can target, across all monitoring pages. */
+export type FilterField = AnyConditionNode['field']
+
+/**
+ * The condition shape(s) for field `F`. `C` must stay a naked type parameter (rather than being
+ * substituted directly with `AnyConditionNode`) so the `extends` check distributes over the
+ * union, picking out every member whose `field` matches `F` — e.g. `state` resolves to both the
+ * host's and the service's state condition, since both schemas define that field.
+ */
+type ConditionForField<
+  F extends FilterField,
+  C extends AnyConditionNode = AnyConditionNode
+> = C extends { field: infer Fields } ? (F extends Fields ? C : never) : never
+
+/** Lookup table from field to its condition shape — the building block for both trees below. */
+export type FieldConditionMap = {
+  [F in FilterField]: ConditionForField<F>
+}
+
+/** Every condition a {@link FilterNode} can carry, across every field. */
+export type ConditionNode = FieldConditionMap[FilterField]
 
 export type NumericCondition = Extract<ConditionNode, { value: number }>
 
 export type NumericOp = NumericCondition['op']
 
-type ConditionForField<F extends FilterField, C extends ConditionNode = ConditionNode> = C extends {
-  field: infer Fields
-}
-  ? F extends Fields
-    ? C
-    : never
-  : never
+/**
+ * Boolean filter expression tree: the whole query's conditions, mixing any fields. Recursively
+ * defined from {@link ConditionNode} rather than a straight alias of the generated schema type,
+ * so it can carry service fields the host schema alone doesn't know about.
+ */
+export type FilterNode =
+  | { type: 'and'; children: FilterNode[] }
+  | { type: 'or'; children: FilterNode[] }
+  | { type: 'not'; child: FilterNode }
+  | ConditionNode
 
-export type FieldConditionMap = {
-  [F in FilterField]: ConditionForField<F>
-}
-
+/** A single column funnel's tree: conditions restricted to one field, `F`. */
 export type ColumnFilterNode<F extends FilterField> =
   | { type: 'and'; children: ColumnFilterNode<F>[] }
   | { type: 'or'; children: ColumnFilterNode<F>[] }

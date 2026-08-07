@@ -11,7 +11,6 @@ import pytest
 from cmk.legacy_checks.innovaphone_licenses import check_innovaphone_licenses
 
 
-@pytest.mark.xfail(strict=True, reason="metric perfdata is missing its upper boundary")
 def test_check_innovaphone_licenses_metric_boundaries() -> None:
     _state, _message, perf = check_innovaphone_licenses(
         None, {"levels": (90.0, 95.0)}, [["100", "50"]]

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
+
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -21,6 +23,10 @@ def inventory_nimble_volumes(info):
 
 
 def check_nimble_volumes(item, params, info):
+    yield from _check_nimble_volumes(item, params, info, time.time())
+
+
+def _check_nimble_volumes(item, params, info, now):
     for line in info:
         if line[1] == item:
             if line[4] == "0":
@@ -28,7 +34,7 @@ def check_nimble_volumes(item, params, info):
                 continue
             total = int(line[2])
             free = total - int(line[3])
-            yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
+            yield df_check_filesystem_list(item, params, [(item, total, free, 0)], this_time=now)
 
 
 def parse_nimble_volumes(string_table: StringTable) -> StringTable:

@@ -28,9 +28,9 @@ from cmk.gui.config import Config
 from cmk.gui.graphing._engine_discovery import BuiltGraph
 from cmk.gui.graphing._engine_dispatch import CommonGraphOptions
 from cmk.gui.graphing._engine_source import (
-    EngineRRDFetchData,
     HOST_PSEUDO_SERVICE,
     PerformanceDataRow,
+    RRDFetchData,
     RRDFetchMetricNames,
 )
 from cmk.gui.graphing._engine_template_graphs import (
@@ -180,7 +180,7 @@ def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
     )
 
     with mock_livestatus():
-        [fetched] = EngineRRDFetchData(debug=False)(
+        [fetched] = RRDFetchData(debug=False)(
             [metric],
             consolidation_function=ConsolidationFunction.MAX,
             time_range=TimeRange(start=0, end=30, step=10),
@@ -279,7 +279,7 @@ def _drawn(
     )
     [evaluated] = _EvaluateTemplateGraphs(
         CommonGraphOptions(consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
-        EngineRRDFetchData(
+        RRDFetchData(
             debug=True,
             registered_translations=[
                 translations.Translation(

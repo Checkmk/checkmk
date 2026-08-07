@@ -37,7 +37,7 @@ from ._engine_dispatch import (
     legacy_graph_id,
 )
 from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
-from ._engine_source import EngineRRDFetchData, RRDFetchMetricNames
+from ._engine_source import RRDFetchData, RRDFetchMetricNames
 from ._from_api import GraphFromAPI
 
 TEMPLATE_KIND: Final = "template"
@@ -107,7 +107,7 @@ class _EvaluateTemplateGraphs:
     def make(cls, options: Mapping[str, object]) -> Self:
         return cls(
             CommonGraphOptions.from_request_options(options),
-            EngineRRDFetchData(
+            RRDFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
             ),

@@ -311,7 +311,7 @@ def _grouped_by_site(
 
 
 @dataclass(frozen=True)
-class EngineRRDFetchData:
+class RRDFetchData:
     debug: bool
     registered_translations: Sequence[translations_v1.Translation] = ()
     # Where the two reads this fetch is built on come from. The defaults are the monitoring core;

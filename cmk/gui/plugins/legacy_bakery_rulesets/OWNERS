@@ -1,5 +1,8 @@
 
 
+set noparent  # don't inherit owners information from parent folders
+file:/component_owners/plugins/OWNERS_DEFINITION
+
 per-file mk_inventory.py=file:/component_owners/hw_sw_inventory/OWNERS_DEFINITION
 per-file mk_inventory.py=set noparent
 per-file mk_mongodb*=file:/component_owners/plugins_databases/OWNERS_DEFINITION

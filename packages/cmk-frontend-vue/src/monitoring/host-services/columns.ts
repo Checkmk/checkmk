@@ -7,7 +7,10 @@ import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
-import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
+import type {
+  CheckboxListFilter,
+  StringInputFilter
+} from '@/monitoring/shared/components/filter/types'
 
 /**
  * The columns frozen to the edges of the table once it has to scroll
@@ -29,6 +32,11 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       { value: 'CRIT', title: _t('CRIT') },
       { value: 'UNKNOWN', title: _t('UNKNOWN') }
     ] satisfies { value: ServiceState; title: string }[]
+  }
+
+  const nameFilter: StringInputFilter<'name'> = {
+    type: 'string-input',
+    field: 'name'
   }
 
   return [
@@ -64,7 +72,8 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       sortDescFirst: false,
       enableHiding: false,
       minSize: 150,
-      maxSize: 350
+      maxSize: 350,
+      meta: { filter: nameFilter }
     },
     {
       accessorKey: 'summary',

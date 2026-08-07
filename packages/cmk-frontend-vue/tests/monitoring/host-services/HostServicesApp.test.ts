@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
@@ -146,6 +146,46 @@ test('tells the user the empty result came from their search', async () => {
   await userEvent.type(input, 'nope{Enter}')
 
   expect(await screen.findByText('No results found for your search.')).toBeInTheDocument()
+})
+
+test('requests services whose name contains the typed filter text', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Service' }))
+  const panel = screen.getByRole('group', { name: 'Filter Service' })
+  await fireEvent.update(within(panel).getByRole('textbox'), 'cpu')
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: { type: 'condition', field: 'name', op: 'contains', value: 'cpu' }
+      }
+    })
+  )
+})
+
+test('clearing the name filter restores the full, unfiltered list', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Service' }))
+  let panel = screen.getByRole('group', { name: 'Filter Service' })
+  await fireEvent.update(within(panel).getByRole('textbox'), 'cpu')
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Service' }))
+  panel = screen.getByRole('group', { name: 'Filter Service' })
+  await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000 } })
+  )
 })
 
 test('marks the sorted column with its direction', async () => {

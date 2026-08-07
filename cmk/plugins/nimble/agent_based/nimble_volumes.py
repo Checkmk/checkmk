@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -32,6 +32,16 @@ def discover_nimble_volumes(section: StringTable) -> DiscoveryResult:
 
 
 def check_nimble_volumes(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    yield from _check_nimble_volumes(item, params, section, time.time(), get_value_store())
+
+
+def _check_nimble_volumes(
+    item: str,
+    params: Mapping[str, Any],
+    section: StringTable,
+    now: float,
+    value_store: MutableMapping[str, object],
+) -> CheckResult:
     for line in section:
         if line[1] == item:
             if line[4] == "0":
@@ -40,11 +50,11 @@ def check_nimble_volumes(item: str, params: Mapping[str, Any], section: StringTa
             total = int(line[2])
             free = total - int(line[3])
             yield from df_check_filesystem_list(
-                get_value_store(),
+                value_store,
                 item,
                 params,
                 [(item, total, free, 0)],
-                this_time=time.time(),
+                this_time=now,
             )
 
 

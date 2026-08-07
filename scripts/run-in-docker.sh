@@ -105,14 +105,6 @@ if [ -d "${HOME}/.docker" ]; then
     DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/.docker:${HOME}/.docker"
 fi
 
-# We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
-# That's why we need to mount the reference repos.
-GIT_REFERENCE_CLONE_PATH="${HOME}/git_reference_clones/check_mk.git"
-if [ -d "${GIT_REFERENCE_CLONE_PATH}" ]; then
-    mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${GIT_REFERENCE_CLONE_PATH}")"
-    DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
-fi
-
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 : "${CPU_LIMITATION:="--cpus=8"}"
 : "${MEMORY_LIMITATION:="--memory=24g"}"

@@ -81,6 +81,24 @@ def _resolve_src(entry: ConfigFileEntry, repo_root: Path) -> Path:
     return repo_root / entry.src
 
 
+def _replace_file(src: Path, dst: Path, mode: int | None) -> None:
+    """Install ``src`` at ``dst`` without opening the destination for writing.
+
+    Version trees ship read-only files (e.g. 0555 console-script wrappers,
+    0444 bills of materials) and the clone only guarantees writable
+    *directories* (see ``version_clone._ensure_writable_dirs``).  Copying
+    onto the destination would fail with EACCES, so copy to a sibling temp
+    file and rename it over the destination, which only needs the writable
+    parent.
+    """
+    tmp = dst.with_name(dst.name + ".cmk-dev-deploy-tmp")
+    tmp.unlink(missing_ok=True)  # stale temp from an interrupted deploy
+    shutil.copy2(src, tmp)
+    if mode:
+        os.chmod(tmp, mode)
+    os.replace(tmp, dst)
+
+
 def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path) -> None:
     """Copy a config/data directory to the site using the Bazel-derived file list.
 
@@ -109,13 +127,7 @@ def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path)
 
             dst = dest / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src_path, dst)
-
-            # Apply file mode
-            mode = _resolve_mode(entry.mode, spec.mode, spec.file_chmod)
-            if mode:
-                os.chmod(dst, mode)
-
+            _replace_file(src_path, dst, _resolve_mode(entry.mode, spec.mode, spec.file_chmod))
             expected_files.add(rel)
 
         # Also copy files matching include patterns (dev convenience)
@@ -125,10 +137,7 @@ def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path)
                     rel = str(match.relative_to(source))
                     dst = dest / rel
                     dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(match, dst)
-                    mode = _resolve_mode("", spec.mode, spec.file_chmod)
-                    if mode:
-                        os.chmod(dst, mode)
+                    _replace_file(match, dst, _resolve_mode("", spec.mode, spec.file_chmod))
                     expected_files.add(rel)
 
         # Delete extra files at dest not present in source.
@@ -170,10 +179,9 @@ def _install_files(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: 
                 continue
             dest.mkdir(parents=True, exist_ok=True)
             dest_file = dest / os.path.basename(entry.dest)
-            shutil.copy2(src_path, dest_file)
-            mode = _resolve_mode(entry.mode, spec.mode, spec.file_chmod)
-            if mode:
-                os.chmod(dest_file, mode)
+            _replace_file(
+                src_path, dest_file, _resolve_mode(entry.mode, spec.mode, spec.file_chmod)
+            )
             count += 1
     else:
         for src_entry in sorted(source.iterdir()):
@@ -181,8 +189,7 @@ def _install_files(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: 
                 continue
             assert spec.mode is not None
             dest.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src_entry, dest / src_entry.name)
-            os.chmod(dest / src_entry.name, spec.mode)
+            _replace_file(src_entry, dest / src_entry.name, spec.mode)
             count += 1
 
     return count
@@ -257,14 +264,12 @@ def _compile_and_deploy_locale(source: Path, dest: Path, spec: ConfigDeploySpec)
         # Install alias file if present
         alias_file = lang_dir / "alias"
         if alias_file.exists():
-            shutil.copy2(alias_file, dest / name / "alias")
-            os.chmod(dest / name / "alias", 0o644)
+            _replace_file(alias_file, dest / name / "alias", 0o644)
 
         # Install compiled multisite.mo if present
         mo_file = lang_dir / "LC_MESSAGES" / "multisite.mo"
         if mo_file.exists():
-            shutil.copy2(mo_file, lc_dest / "multisite.mo")
-            os.chmod(lc_dest / "multisite.mo", 0o644)
+            _replace_file(mo_file, lc_dest / "multisite.mo", 0o644)
             files_installed += 1
 
     return files_installed, po_compiled

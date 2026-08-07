@@ -12,7 +12,12 @@ from pathlib import Path
 import pytest
 
 from cmk.dev_deploy.deployers import config_deployer
-from cmk.dev_deploy.deployers.config_deployer import _copy_dir, _install_files, deploy_config
+from cmk.dev_deploy.deployers.config_deployer import (
+    _compile_and_deploy_locale,
+    _copy_dir,
+    _install_files,
+    deploy_config,
+)
 from cmk.dev_deploy.types import (
     ConfigDeploySpec,
     ConfigFileEntry,
@@ -124,6 +129,83 @@ class TestCopyDirRenames:
 
         assert (site_bin / "check_mk").read_text() == "new"
         assert not (site_bin / "check_mk.py").exists()
+
+
+class TestReadOnlyDestination:
+    """Pristine version trees ship read-only files (e.g. 0555 wrappers).
+
+    The clone only guarantees writable parent directories, so deployers
+    must replace files via rename instead of opening them for writing.
+    """
+
+    def test_copy_dir_replaces_read_only_file(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        (repo / "bin").mkdir(parents=True)
+        (repo / "bin" / "check_mk.py").write_text("new")
+        site_bin = tmp_path / "site" / "bin"
+        site_bin.mkdir(parents=True)
+        (site_bin / "check_mk").write_text("pristine wrapper")
+        os.chmod(site_bin / "check_mk", 0o555)
+
+        spec = _spec(
+            source_prefix="bin/",
+            site_dest="bin/",
+            files=(ConfigFileEntry(src="bin/check_mk.py", dest="bin/check_mk", mode="0755"),),
+        )
+        _copy_dir(repo / "bin", site_bin, spec, repo)
+
+        assert (site_bin / "check_mk").read_text() == "new"
+        assert os.stat(site_bin / "check_mk").st_mode & 0o777 == 0o755
+
+    def test_install_files_replaces_read_only_file(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        (repo / "active_checks").mkdir(parents=True)
+        (repo / "active_checks" / "check_foo.py").write_text("new")
+        dest = tmp_path / "site" / "lib" / "nagios" / "plugins"
+        dest.mkdir(parents=True)
+        (dest / "check_foo").write_text("pristine")
+        os.chmod(dest / "check_foo", 0o555)
+
+        spec = _spec(
+            source_prefix="active_checks/",
+            site_dest="lib/nagios/plugins/",
+            method=DeployMethod.INSTALL_FILES,
+            files=(
+                ConfigFileEntry(
+                    src="active_checks/check_foo.py",
+                    dest="lib/nagios/plugins/check_foo",
+                    mode="0755",
+                ),
+            ),
+        )
+        assert _install_files(repo / "active_checks", dest, spec, repo) == 1
+
+        assert (dest / "check_foo").read_text() == "new"
+        assert os.stat(dest / "check_foo").st_mode & 0o777 == 0o755
+
+    def test_locale_deploy_replaces_read_only_files(self, tmp_path: Path) -> None:
+        source = tmp_path / "locale"
+        (source / "de" / "LC_MESSAGES").mkdir(parents=True)
+        (source / "de" / "alias").write_text("Deutsch")
+        (source / "de" / "LC_MESSAGES" / "multisite.mo").write_bytes(b"new mo")
+        dest = tmp_path / "site" / "locale"
+        (dest / "de" / "LC_MESSAGES").mkdir(parents=True)
+        (dest / "de" / "alias").write_text("old")
+        os.chmod(dest / "de" / "alias", 0o444)
+        (dest / "de" / "LC_MESSAGES" / "multisite.mo").write_bytes(b"old mo")
+        os.chmod(dest / "de" / "LC_MESSAGES" / "multisite.mo", 0o444)
+
+        spec = _spec(
+            source_prefix="locale/",
+            site_dest="share/check_mk/locale/",
+            method=DeployMethod.LOCALE_COMPILE,
+            files=(),
+        )
+        installed, _compiled = _compile_and_deploy_locale(source, dest, spec)
+
+        assert installed == 1
+        assert (dest / "de" / "alias").read_text() == "Deutsch"
+        assert (dest / "de" / "LC_MESSAGES" / "multisite.mo").read_bytes() == b"new mo"
 
 
 def _make_site(tmp_path: Path) -> tuple[SiteInfo, Path]:

@@ -21,7 +21,8 @@ from ._from_api import (
 )
 from ._graph import Graph, Line, Rule, Stack
 from ._naming import MetricName, Service
-from ._quantities import QuantityProtocol, rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
+from ._quantities import rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
+from ._quantity import QuantityProtocol
 
 _PREDICT_PREFIX = "predict_"
 

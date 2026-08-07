@@ -49,16 +49,18 @@ from ._naming import (
 from ._quantities import (
     Constant,
     Difference,
-    EvaluatedQuantity,
-    EvaluationContext,
     Fraction,
-    MetricProtocol,
     Product,
-    QuantityProtocol,
     RRDMetric,
     ScalarKind,
     ScalarOf,
     Sum,
+)
+from ._quantity import (
+    EvaluatedQuantity,
+    EvaluationContext,
+    MetricProtocol,
+    QuantityProtocol,
 )
 from ._timeseries import (
     ConsolidationFunction,

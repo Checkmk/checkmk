@@ -24,6 +24,7 @@ py_library(
         "cmk/graphing_engine/_matching.py",
         "cmk/graphing_engine/_naming.py",
         "cmk/graphing_engine/_quantities.py",
+        "cmk/graphing_engine/_quantity.py",
         "cmk/graphing_engine/_timeseries.py",
         "cmk/graphing_engine/_title.py",
         "cmk/graphing_engine/_units.py",

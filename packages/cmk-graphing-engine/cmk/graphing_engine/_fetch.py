@@ -9,7 +9,7 @@ from typing import Protocol
 from ._fetched import FetchedData
 from ._graph import Graph
 from ._naming import MetricName, Service
-from ._quantities import EvaluationContext, MetricProtocol
+from ._quantity import EvaluationContext, MetricProtocol
 from ._timeseries import ConsolidationFunction, TimeRange
 
 

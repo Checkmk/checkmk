@@ -25,13 +25,13 @@ from ._quantities import (
     Difference,
     Fraction,
     Product,
-    QuantityProtocol,
     rrd_metric_of,
     RRDMetric,
     ScalarKind,
     ScalarOf,
     Sum,
 )
+from ._quantity import QuantityProtocol
 from ._units import CurveAttributes
 
 type _ApiQuantity = (

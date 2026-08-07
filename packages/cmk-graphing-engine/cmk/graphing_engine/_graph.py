@@ -9,7 +9,7 @@ import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from ._quantities import MetricProtocol, QuantityProtocol
+from ._quantity import MetricProtocol, QuantityProtocol
 from ._title import title_metrics
 from ._units import CurveAttributes
 

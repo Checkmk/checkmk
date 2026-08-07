@@ -19,12 +19,15 @@ from cmk.graphing_engine import (
     DecimalNotation,
     EvaluatedCurve,
     EvaluatedQuantity,
+    EvaluationContext,
     FetchedData,
     Graph,
     HostName,
     Line,
     MetricName,
+    MetricProtocol,
     PerformanceData,
+    QuantityProtocol,
     RRDMetric,
     ServiceName,
     Sum,
@@ -33,7 +36,6 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.graphing_engine._evaluate import _evaluate_graph
-from cmk.graphing_engine._quantities import EvaluationContext, MetricProtocol, QuantityProtocol
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points

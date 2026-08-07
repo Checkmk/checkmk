@@ -26,7 +26,7 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def publish_images = params.PUBLISH_IMAGES == true;
     def publish_special_images = params.PUBLISH_SPECIAL_IMAGES_WITH_CUSTOM_GIT_REF;
-    def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: versioning.get_docker_tag(checkout_dir);
+    def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: "";
 
     def all_distros = [];
     def selected_distros = [];

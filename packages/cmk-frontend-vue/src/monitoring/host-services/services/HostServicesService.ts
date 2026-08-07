@@ -30,7 +30,8 @@ export class HostServicesService extends MonitoringService<HostServiceEntry> {
       {
         limit: this.requestedLimit.value,
         sort: this.sortState.value,
-        searchQuery: this.searchQuery.value
+        searchQuery: this.searchQuery.value,
+        filter: this.filterState.value
       },
       signal
     )

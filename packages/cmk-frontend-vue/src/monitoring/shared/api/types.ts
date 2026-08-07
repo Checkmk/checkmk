@@ -17,6 +17,16 @@ export type HostServicesResponse = components['schemas']['HostServicesResponse']
 
 export type HostServiceEntry = components['schemas']['HostServiceEntry']
 
+export type ServicesRequestBody = components['schemas']['ServicesRequestBody']
+
+/**
+ * Boolean filter expression tree for the host services listing. Structurally
+ * shaped like {@link FilterNode}, but scoped to the service fields/conditions
+ * the API accepts (currently just `state`), which is why it is kept as its own
+ * type rather than reusing the host one.
+ */
+export type ServiceFilterNode = components['schemas']['ServiceFilterNode']
+
 export type HostOverview = components['schemas']['HostOverviewResponse']
 
 export type ServiceOverview = components['schemas']['ServiceOverviewResponse']

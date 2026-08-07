@@ -501,7 +501,7 @@ def _image_build_binds() -> dict[str, Mapping[str, str]]:
 def _git_repos() -> dict[str, Mapping[str, str]]:
     checkout_dir = repo_path()
     return {
-        # This ensures that we can also work with git-worktrees and reference clones.
+        # This ensures that we can also work with git-worktrees.
         # For this, the original git repository needs to be mapped into the container as well.
         **{path: {"bind": path, "mode": "ro"} for path in git_essential_directories(checkout_dir)},
         # To get access to the test scripts and for updating the version from

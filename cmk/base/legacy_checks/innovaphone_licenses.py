@@ -36,7 +36,7 @@ def check_innovaphone_licenses(_no_item, params, info):
     warn, crit = params["levels"]
     message = f"Used {used:.0f}/{total:.0f} Licences ({perc_used:.0f}%)"
     levels = f"Warning/ Critical at ({warn}/{crit})"
-    perf = [("licenses", used, None, None, total)]
+    perf = [("licenses", used, None, None, 0, total)]
     if perc_used > crit:
         return 2, message + levels, perf
     if perc_used > warn:

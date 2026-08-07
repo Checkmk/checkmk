@@ -6,6 +6,7 @@
 import datetime
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.checkmk.agent_based.cmk_agent_ctl_status import parse_cmk_agent_ctl_status
@@ -14,6 +15,7 @@ from cmk.plugins.checkmk.agent_based.lib import (
     Connection,
     ControllerSection,
     LocalConnectionStatus,
+    TrustedCa,
 )
 
 
@@ -118,6 +120,37 @@ from cmk.plugins.checkmk.agent_based.lib import (
             ),
             id="imported connection",
         ),
+        pytest.param(
+            [
+                [
+                    """{"version":"2026.08.03","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"site_id":"localhost/heute","receiver_port":8001,"uuid":"44d137be-179c-4879-9fd1-1dbb295db0e2","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'heute' local CA","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"},"trusted_cas":[{"common_name":"Site 'heute' local CA","fingerprint":"AB:CD:EF","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"}]},"remote":"remote_query_disabled"}]}"""
+                ]
+            ],
+            ControllerSection(
+                allow_legacy_pull=False,
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id="localhost/heute",
+                        coordinates=None,
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime.datetime(2028, 1, 24, 15, 20, 54, tzinfo=datetime.UTC),
+                                issuer="Site 'heute' local CA",
+                            ),
+                            trusted_cas=[
+                                TrustedCa(
+                                    common_name="Site 'heute' local CA",
+                                    fingerprint="AB:CD:EF",
+                                )
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+            id="trusted CAs",
+        ),
     ],
 )
 def test_parse_cmk_agent_ctl_status(
@@ -125,3 +158,15 @@ def test_parse_cmk_agent_ctl_status(
     expected_parse_result: ControllerSection,
 ) -> None:
     assert parse_cmk_agent_ctl_status(string_table) == expected_parse_result
+
+
+def test_parse_cmk_agent_ctl_status_unparsable_trusted_ca() -> None:
+    """The controller reports CAs it could not parse as a plain error string."""
+    with pytest.raises(ValidationError):
+        parse_cmk_agent_ctl_status(
+            [
+                [
+                    """{"version":"2026.08.03","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"site_id":"localhost/heute","receiver_port":8001,"uuid":"44d137be-179c-4879-9fd1-1dbb295db0e2","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'heute' local CA","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"},"trusted_cas":[{"common_name":"Site 'heute' local CA","fingerprint":"AB:CD:EF","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"},"parsing_error"]},"remote":"remote_query_disabled"}]}"""
+                ]
+            ]
+        )

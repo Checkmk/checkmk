@@ -30,6 +30,7 @@ from cmk.plugins.checkmk.agent_based.lib import (
     CachedPluginsSection,
     CheckmkSection,
     CMKAgentUpdateSection,
+    Connection,
     ControllerSection,
     Plugin,
     PluginSection,
@@ -556,6 +557,81 @@ def _check_controller_cert_validity(section: ControllerSection, now: float) -> C
         )
 
 
+def _connection_label(connection: Connection) -> str:
+    return f"`{site_id}`" if (site_id := connection.get_site_id()) else "imported connection"
+
+
+def _normalize_fingerprint(fingerprint: str) -> str:
+    return fingerprint.replace(":", "").strip().upper()
+
+
+def _trusts(connection: Connection, fingerprint: str) -> bool:
+    return any(
+        _normalize_fingerprint(ca.fingerprint) == _normalize_fingerprint(fingerprint)
+        for ca in connection.local.trusted_cas
+    )
+
+
+def _match_connection(connection: Connection, site: str, hostname: str | None) -> bool:
+    if hostname and (site_id := connection.get_site_id()):
+        return site_id == f"{hostname}/{site}"
+    if site_name := connection.get_site_name():
+        return site_name == str(site)
+    return False
+
+
+def _check_trusted_cas(
+    expected_cas: Sequence[Mapping[str, Any]],
+    section: ControllerSection,
+    fail_state: State,
+    now: float,
+) -> CheckResult:
+    missing = []
+
+    for expected_ca in expected_cas:
+        if (trusted_from := expected_ca.get("trusted_from")) is not None and now < trusted_from:
+            continue
+
+        connections = [
+            connection
+            for connection in section.connections
+            if _match_connection(
+                connection,
+                expected_ca["site"],
+                expected_ca.get("hostname", None),
+            )
+        ]
+
+        fingerprint = expected_ca["fingerprint"]
+        for connection in connections:
+            if not _trusts(connection, fingerprint):
+                missing.append(
+                    f"{fingerprint} (not trusted for connection '{connection.get_site_id()}')"
+                )
+
+    details = (
+        "\n".join(
+            f"Trusted CA for {_connection_label(connection)}: {ca.common_name} ({ca.fingerprint})"
+            for connection in section.connections
+            for ca in connection.local.trusted_cas
+        )
+        or "The agent controller does not trust any CA"
+    )
+
+    if missing:
+        yield Result(
+            state=fail_state,
+            summary=f"CAs not trusted by the agent controller: {', '.join(missing)}",
+            details=details,
+        )
+    else:
+        yield Result(
+            state=State.OK,
+            notice="All required CAs are trusted by the agent controller",
+            details=details,
+        )
+
+
 def _format_cached_plugin(plugin: CachedPlugin) -> str:
     plugin_info = f"Timeout: {plugin.timeout}s, PID: {plugin.pid}"
 
@@ -616,6 +692,13 @@ def check_checkmk_agent(
 
     if section_cmk_agent_ctl_status:
         yield from _check_controller_cert_validity(section_cmk_agent_ctl_status, time.time())
+        if expected_cas := params.get("trusted_cas"):
+            yield from _check_trusted_cas(
+                expected_cas,
+                section_cmk_agent_ctl_status,
+                State(params["trusted_cas_mismatch"]),
+                time.time(),
+            )
 
     if section_checkmk_cached_plugins:
         yield from _check_cached_plugins(section_checkmk_cached_plugins)
@@ -640,6 +723,7 @@ check_plugin_checkmk_agent = CheckPlugin(
         "agent_version_missmatch": 1,
         "restricted_address_mismatch": 1,
         "legacy_pull_mode": 1,
+        "trusted_cas_mismatch": 2,
         # This next entry will be postprocessed by the backend.
         # The "only_from" configuration is not a check parameter but it is configured as an Agent Bakery rule,
         # and controls the *deployment* of the only_from setting.

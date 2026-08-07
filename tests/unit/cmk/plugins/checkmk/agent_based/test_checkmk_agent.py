@@ -19,6 +19,7 @@ from cmk.plugins.checkmk.agent_based.checkmk_agent import (
     _check_only_from,
     _check_python_plugins,
     _check_transport,
+    _check_trusted_cas,
     _check_version,
     _get_error_result,
     check_checkmk_agent,
@@ -41,6 +42,7 @@ from cmk.plugins.checkmk.agent_based.lib import (
     LocalConnectionStatus,
     Plugin,
     PluginSection,
+    TrustedCa,
 )
 
 # TODO: make this more blackboxy once API vialoations are reduced!
@@ -1245,6 +1247,278 @@ def test_certificate_validity(
             list(check_checkmk_agent({}, None, None, controller_section, None, None))
             == expected_result
         )
+
+
+def _connection_trusting(*fingerprints: str, site_id: str = "localhost/heute") -> Connection:
+    return Connection(
+        site_id=site_id,
+        local=LocalConnectionStatus(
+            cert_info=CertInfoController(
+                to=datetime(2028, 1, 24, 15, 20, 54, tzinfo=UTC),
+                issuer="Site 'heute' local CA",
+            ),
+            trusted_cas=[
+                TrustedCa(common_name=f"CA {fingerprint}", fingerprint=fingerprint)
+                for fingerprint in fingerprints
+            ],
+        ),
+    )
+
+
+def _controller_section(*connections: Connection) -> ControllerSection:
+    return ControllerSection(
+        allow_legacy_pull=False,
+        agent_socket_operational=True,
+        ip_allowlist=[],
+        connections=list(connections),
+    )
+
+
+def _trusted_cas_details(*fingerprints: str, site_id: str = "localhost/heute") -> str:
+    return "\n".join(
+        f"Trusted CA for `{site_id}`: CA {fingerprint} ({fingerprint})"
+        for fingerprint in fingerprints
+    )
+
+
+def _not_trusted(fingerprint: str, site_id: str = "localhost/heute") -> str:
+    return f"{fingerprint} (not trusted for connection '{site_id}')"
+
+
+def _local_timestamp(year: int, month: int, day: int) -> float:
+    return datetime(year, month, day).timestamp()
+
+
+_EXPECTED_CAS = [
+    {"fingerprint": "1111", "site": "heute"},
+    {"fingerprint": "2222", "site": "heute"},
+]
+
+
+@pytest.mark.parametrize(
+    [
+        "trusted_fingerprints",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            ("2222", "1111", "3333"),
+            [
+                Result(
+                    state=State.OK,
+                    notice="All required CAs are trusted by the agent controller",
+                    details=_trusted_cas_details("2222", "1111", "3333"),
+                )
+            ],
+            id="All expected CAs trusted, unexpected CA is ignored",
+        ),
+        pytest.param(
+            ("2222", "3333"),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary=f"CAs not trusted by the agent controller: {_not_trusted('1111')}",
+                    details=_trusted_cas_details("2222", "3333"),
+                )
+            ],
+            id="One expected CA missing",
+        ),
+        pytest.param(
+            (),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary=(
+                        "CAs not trusted by the agent controller: "
+                        f"{_not_trusted('1111')}, {_not_trusted('2222')}"
+                    ),
+                    details="The agent controller does not trust any CA",
+                )
+            ],
+            id="No CA trusted at all",
+        ),
+    ],
+)
+def test_check_trusted_cas(
+    trusted_fingerprints: tuple[str, ...],
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            _check_trusted_cas(
+                _EXPECTED_CAS,
+                _controller_section(_connection_trusting(*trusted_fingerprints)),
+                State.CRIT,
+                _local_timestamp(2026, 8, 10),
+            )
+        )
+        == expected_result
+    )
+
+
+@pytest.mark.parametrize("fail_state", list(State))
+def test_check_trusted_cas_fail_state(fail_state: State) -> None:
+    assert list(
+        _check_trusted_cas(
+            [{"fingerprint": "1111", "site": "heute"}],
+            _controller_section(_connection_trusting()),
+            fail_state,
+            _local_timestamp(2026, 8, 10),
+        )
+    ) == [
+        Result(
+            state=fail_state,
+            summary=f"CAs not trusted by the agent controller: {_not_trusted('1111')}",
+            details="The agent controller does not trust any CA",
+        )
+    ]
+
+
+def test_check_trusted_cas_ignores_fingerprint_formatting() -> None:
+    assert list(
+        _check_trusted_cas(
+            [{"fingerprint": "ab:cd:ef", "site": "heute"}],
+            _controller_section(_connection_trusting("AB:CD:EF")),
+            State.CRIT,
+            _local_timestamp(2026, 8, 10),
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            notice="All required CAs are trusted by the agent controller",
+            details=_trusted_cas_details("AB:CD:EF"),
+        )
+    ]
+
+
+_TWO_SITE_DETAILS = (
+    f"{_trusted_cas_details('1111', site_id='localhost/site_a')}\n"
+    f"{_trusted_cas_details('2222', site_id='localhost/site_b')}"
+)
+
+
+@pytest.mark.parametrize(
+    [
+        "expected_fingerprint",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            "1111",
+            [
+                Result(
+                    state=State.OK,
+                    notice="All required CAs are trusted by the agent controller",
+                    details=_TWO_SITE_DETAILS,
+                )
+            ],
+            id="trusted by the connection with that site",
+        ),
+        pytest.param(
+            "2222",
+            [
+                Result(
+                    state=State.CRIT,
+                    summary=(
+                        "CAs not trusted by the agent controller: "
+                        f"{_not_trusted('2222', 'localhost/site_a')}"
+                    ),
+                    details=_TWO_SITE_DETAILS,
+                )
+            ],
+            id="trusted by the connection with another site only",
+        ),
+    ],
+)
+def test_check_trusted_cas_is_scoped_to_the_connection_with_that_site(
+    expected_fingerprint: str,
+    expected_result: CheckResult,
+) -> None:
+    section = _controller_section(
+        _connection_trusting("1111", site_id="localhost/site_a"),
+        _connection_trusting("2222", site_id="localhost/site_b"),
+    )
+    assert (
+        list(
+            _check_trusted_cas(
+                [{"fingerprint": expected_fingerprint, "site": "site_a"}],
+                section,
+                State.CRIT,
+                _local_timestamp(2026, 8, 10),
+            )
+        )
+        == expected_result
+    )
+
+
+def test_check_trusted_cas_without_connection_with_that_site() -> None:
+    assert list(
+        _check_trusted_cas(
+            [{"fingerprint": "2222", "site": "site_b"}],
+            _controller_section(_connection_trusting("1111", site_id="localhost/site_a")),
+            State.CRIT,
+            _local_timestamp(2026, 8, 10),
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            notice="All required CAs are trusted by the agent controller",
+            details=_trusted_cas_details("1111", site_id="localhost/site_a"),
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    [
+        "now",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            _local_timestamp(2026, 8, 10),
+            [
+                Result(
+                    state=State.OK,
+                    notice="All required CAs are trusted by the agent controller",
+                    details="The agent controller does not trust any CA",
+                ),
+            ],
+            id="before the required from date",
+        ),
+        pytest.param(
+            _local_timestamp(2026, 9, 2),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary=f"CAs not trusted by the agent controller: {_not_trusted('1111')}",
+                    details="The agent controller does not trust any CA",
+                )
+            ],
+            id="after the required from date",
+        ),
+    ],
+)
+def test_check_trusted_cas_required_from_date(
+    now: float,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            _check_trusted_cas(
+                [
+                    {
+                        "fingerprint": "1111",
+                        "site": "heute",
+                        "trusted_from": _local_timestamp(2026, 9, 1),
+                    }
+                ],
+                _controller_section(_connection_trusting()),
+                State.CRIT,
+                now,
+            )
+        )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(

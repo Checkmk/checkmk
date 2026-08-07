@@ -77,8 +77,14 @@ class CertInfoController(BaseModel):
         )
 
 
+class TrustedCa(BaseModel):
+    common_name: str
+    fingerprint: str
+
+
 class LocalConnectionStatus(BaseModel):
     cert_info: CertInfoController
+    trusted_cas: Sequence[TrustedCa] = []
 
 
 class Connection(BaseModel):
@@ -92,6 +98,10 @@ class Connection(BaseModel):
         if self.coordinates:
             return self._coordinates_to_site_id(self.coordinates)
         return None
+
+    def get_site_name(self) -> str | None:
+        site_id = self.get_site_id()
+        return site_id.rsplit("/", 1)[-1] if site_id else None
 
     @staticmethod
     def _coordinates_to_site_id(coordinates: str) -> str:

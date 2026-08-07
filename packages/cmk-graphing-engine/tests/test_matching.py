@@ -209,7 +209,7 @@ def _evaluate(discovered: Graph, fetch_data: _FakeRRDFetchData) -> EvaluatedGrap
     return evaluated
 
 
-def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
+def test_build_matched_graphs_empty_service_returns_no_graphs() -> None:
     service = _service()
     registered_graphs = [graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["x"])]
     fetch_data = _FakeRRDFetchData(performance_response={service: _perf_data()})
@@ -217,7 +217,7 @@ def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
     assert _discover(registered_graphs, fetch_data=fetch_data) == []
 
 
-def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaimed_metrics() -> None:
+def test_build_matched_graphs_falls_back_to_single_metric_graph_for_unclaimed_metrics() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     registered_graphs: list[graphs_v1.Graph] = []
@@ -235,7 +235,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     assert _evaluate(discovered, fetch_data).lines == []
 
 
-def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
+def test_build_matched_graphs_matching_plugin_claims_its_metrics() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     cpu_system = MetricName("cpu_system")
@@ -256,7 +256,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     assert [line.curve.value for line in _evaluate(discovered[0], fetch_data).lines] == [1.0, 1.0]
 
 
-def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() -> None:
+def test_build_matched_graphs_emits_default_graph_for_unclaimed_metrics() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     extra = MetricName("extra")
@@ -298,7 +298,7 @@ def test_build_matched_graphs_filters_to_the_requested_graph_name() -> None:
     assert list(_matched("does_not_exist")) == []
 
 
-def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() -> None:
+def test_build_matched_graphs_rejects_plugin_when_required_metric_missing() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     plugin = graphs_v1.Graph(
@@ -312,7 +312,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
     assert fallback == _fallback(cpu_user)
 
 
-def test_discover_template_graphs_optional_missing_metric_still_matches() -> None:
+def test_build_matched_graphs_optional_missing_metric_still_matches() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     plugin = graphs_v1.Graph(
@@ -329,7 +329,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
     assert discovered == parse_graph_from_api(plugin, [service], _id, _METRICS, kind=_KIND)
 
 
-def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() -> None:
+def test_build_matched_graphs_conflicting_metric_present_rejects_plugin() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     util = MetricName("util")
@@ -349,7 +349,7 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
     assert all(d.name != "cpu" for d in discovered)
 
 
-def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
+def test_build_matched_graphs_matches_v2_unstable_graph() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     cpu_system = MetricName("cpu_system")
@@ -366,7 +366,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
     assert discovered == parse_graph_from_api(plugin, [service], _id, _METRICS, kind=_KIND)
 
 
-def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
+def test_build_matched_graphs_matches_v2_unstable_bidirectional() -> None:
     service = _service()
     in_ = MetricName("if_in")
     out = MetricName("if_out")
@@ -386,7 +386,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
     assert discovered == parse_graph_from_api(plugin, [service], _id, _METRICS, kind=_KIND)
 
 
-def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:
+def test_build_matched_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     cpu_system = MetricName("cpu_system")
@@ -413,7 +413,7 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
     assert [rule.value for rule in _evaluate(cpu, fetch_data).rules] == [50.0]
 
 
-def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
+def test_build_matched_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     cpu_system = MetricName("cpu_system")
@@ -438,7 +438,7 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
     assert [rule.value for rule in _evaluate(cpu, fetch_data).rules] == [50.0]
 
 
-def test_discover_template_graphs_evaluates_the_title_expression() -> None:
+def test_build_matched_graphs_evaluates_the_title_expression() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     plugin = graphs_v1.Graph(
@@ -458,7 +458,7 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
     assert "_EXPRESSION:" in discovered.title
 
 
-def test_discover_template_graphs_title_expression_falls_back_when_unresolvable() -> None:
+def test_build_matched_graphs_title_expression_falls_back_when_unresolvable() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     plugin = graphs_v1.Graph(
@@ -475,7 +475,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
     assert _evaluate(discovered, fetch_data).title == "CPU"
 
 
-def test_discover_template_graphs_matches_despite_a_metric_referenced_only_in_the_title() -> None:
+def test_build_matched_graphs_matches_despite_a_metric_referenced_only_in_the_title() -> None:
     service = _service()
     util = MetricName("util")
     # cpu_user is referenced by the title only (not drawn as a line).
@@ -495,7 +495,7 @@ def test_discover_template_graphs_matches_despite_a_metric_referenced_only_in_th
     assert _evaluate(discovered[0], fetch_data).title == "CPU"
 
 
-def test_discover_template_graphs_does_not_claim_a_metric_referenced_only_in_the_title() -> None:
+def test_build_matched_graphs_does_not_claim_a_metric_referenced_only_in_the_title() -> None:
     service = _service()
     util = MetricName("util")
     cpu_user = MetricName("cpu_user")
@@ -518,7 +518,7 @@ def test_discover_template_graphs_does_not_claim_a_metric_referenced_only_in_the
     assert _evaluate(cpu, fetch_data).title == "CPU - 8 cores"
 
 
-def test_discover_template_graphs_title_metric_does_not_make_a_match() -> None:
+def test_build_matched_graphs_title_metric_does_not_make_a_match() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     # The drawn metric util is missing; the title references cpu_user, which is present.
@@ -537,7 +537,7 @@ def test_discover_template_graphs_title_metric_does_not_make_a_match() -> None:
     assert [d.name for d in discovered] == [str(cpu_user)]
 
 
-def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> None:
+def test_build_matched_graphs_adds_predictive_lines_to_a_matched_graph() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     predict = MetricName("predict_cpu_user")
@@ -556,7 +556,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     assert len(_evaluate(discovered[0], fetch_data).lines) == 2
 
 
-def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() -> None:
+def test_build_matched_graphs_adds_predictive_lines_to_a_fallback_graph() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     predict = MetricName("predict_cpu_user")
@@ -572,7 +572,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
     assert _dline(_rrd(predict)) in discovered[0].lines
 
 
-def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base() -> None:
+def test_build_matched_graphs_ignores_a_predictive_metric_without_its_base() -> None:
     service = _service()
     predict = MetricName("predict_cpu_user")
     registered_graphs: list[graphs_v1.Graph] = []

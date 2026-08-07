@@ -151,7 +151,12 @@ function onActionPerformed(result: ActionFeedbackResult): void {
         <HostServicesRow :row="row" :table-row="tableRow" @open="openSlideIn" />
       </template>
     </MonitoringSplitPane>
-    <ServiceSlideIn :service="slideInService" :host="host" @close="closeSlideIn" />
+    <ServiceSlideIn
+      :service="slideInService"
+      :host="host"
+      :ai-explain="props.ai_explain ?? false"
+      @close="closeSlideIn"
+    />
   </div>
 </template>
 

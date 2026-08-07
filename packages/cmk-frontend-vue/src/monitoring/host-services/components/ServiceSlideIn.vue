@@ -12,15 +12,21 @@ import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 
+import ServiceAiExplainButton from './slide-in/ServiceAiExplainButton.vue'
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
 import ServiceOverviewTab from './slide-in/ServiceOverviewTab.vue'
 import ServiceSlideInHeader from './slide-in/ServiceSlideInHeader.vue'
 
-const props = defineProps<{
-  /** The service to detail. `null` keeps the slide-in closed. */
-  service: HostServiceEntry | null
-  host: HostRef
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** The service to detail. `null` keeps the slide-in closed. */
+    service: HostServiceEntry | null
+    host: HostRef
+    /** Offer the cloud edition's "Explain with AI" action. */
+    aiExplain?: boolean
+  }>(),
+  { aiExplain: false }
+)
 
 const emit = defineEmits<{
   (event: 'close'): void
@@ -114,6 +120,7 @@ const tabs = computed<SlideInTab[]>(() => {
         :modes="overview?.modes ?? []"
         :actions="inlineActions"
       />
+      <ServiceAiExplainButton v-if="aiExplain && overview" :overview="overview" />
     </template>
   </CmkSlideInTabbed>
 </template>

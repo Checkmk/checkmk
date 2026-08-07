@@ -14,6 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.monitor.command import MonitorCommands
+from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
@@ -72,6 +73,7 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     host=hostname,
                     site=site_id,
+                    ai_explain=ai_explain.is_enabled(),
                     actions=self._permitted_actions(),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
@@ -84,6 +86,8 @@ class MonitorHostServicesPage(Page):
                 )
             ),
         )
+
+        ai_explain.render_listener()
 
         html.footer()
 

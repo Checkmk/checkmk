@@ -10,6 +10,10 @@
     },
     "site": {
       "type": "string"
+    },
+    "ai_explain": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["host", "site"]

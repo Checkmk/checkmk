@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
+import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -193,6 +194,45 @@ describe('ServiceSlideIn', () => {
     expect(
       screen.queryByRole('link', { name: 'Parameters of this service' })
     ).not.toBeInTheDocument()
+  })
+
+  it('offers no AI explanation outside the cloud edition', async () => {
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    await screen.findByText('Service details')
+
+    expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
+  })
+
+  it('asks the AI app to explain the shown service', async () => {
+    const explainRequests: ExplainThisIssueData[] = []
+    const listener = (event: Event) => {
+      explainRequests.push((event as CustomEvent<ExplainThisIssueData>).detail)
+    }
+    document.addEventListener('cmk-ai-explain-button', listener)
+    render(ServiceSlideIn, {
+      props: { service: makeService(), host: HOST, aiExplain: true }
+    })
+
+    await userEvent.click(await screen.findByTestId('service-ai-explain-button'))
+    document.removeEventListener('cmk-ai-explain-button', listener)
+
+    expect(explainRequests).toEqual([
+      {
+        host_name: 'web-server-01',
+        service_name: 'CPU load',
+        service_state: 'OK',
+        host_state: 'Up'
+      }
+    ])
+  })
+
+  it('waits for the overview before offering the AI explanation', () => {
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
+    render(ServiceSlideIn, {
+      props: { service: makeService(), host: HOST, aiExplain: true }
+    })
+
+    expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
   })
 
   it('emits close when the close button is used', async () => {

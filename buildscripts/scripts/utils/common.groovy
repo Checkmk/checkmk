@@ -58,7 +58,6 @@ provide_clone = { repo_name, credentials_id ->
             branches: [new hudson.plugins.git.BranchSpec("FETCH_HEAD")],
             extensions: [
                 [$class: 'CloneOption',
-                 // reference: "${reference_clone}",
                  timeout: 20,
             ]],
         ]);

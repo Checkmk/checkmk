@@ -29,6 +29,7 @@ from cmk.graphing_engine import (
     MetricName,
     MetricProtocol,
     MinimalRange,
+    PerformanceData,
     Product,
     RRDMetric,
     Rule,
@@ -44,7 +45,6 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.graphing_engine._evaluate import _evaluate_graph, _resolve_series_title, EvaluatedRule
-from cmk.graphing_engine._perfdata import PerformanceData
 from cmk.graphing_engine._quantities import EvaluatedQuantity, EvaluationContext, QuantityProtocol
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))

@@ -18,6 +18,12 @@ from ._fetch import (
     FetchDataProtocol,
     FetchMetricNamesProtocol,
 )
+from ._fetched import (
+    FetchedData,
+    MACRO_SERIES_ID,
+    PerformanceData,
+    SeriesAttributes,
+)
 from ._from_api import build_curve, parse_graph_from_api, QuantityBuilderProtocol
 from ._graph import (
     Bound,
@@ -33,22 +39,12 @@ from ._graph import (
 from ._matching import (
     build_matched_graphs,
 )
-from ._options import (
-    ConsolidationFunction,
-    TimeRange,
-)
-from ._perfdata import (
-    constant_time_series,
-    FetchedData,
+from ._naming import (
     HostName,
-    MACRO_SERIES_ID,
     MetricName,
-    PerformanceData,
-    SeriesAttributes,
     Service,
     ServiceName,
     SiteID,
-    TimeSeries,
 )
 from ._quantities import (
     Constant,
@@ -63,6 +59,12 @@ from ._quantities import (
     ScalarKind,
     ScalarOf,
     Sum,
+)
+from ._timeseries import (
+    ConsolidationFunction,
+    constant_time_series,
+    TimeRange,
+    TimeSeries,
 )
 from ._units import (
     AutoPrecision,

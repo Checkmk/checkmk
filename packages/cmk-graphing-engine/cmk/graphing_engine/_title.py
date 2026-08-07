@@ -7,7 +7,7 @@ import json
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
-from ._perfdata import Service
+from ._naming import Service
 from ._quantities import (
     EvaluationContext,
     first_value,

@@ -20,7 +20,7 @@ from ._from_api import (
     QuantityBuilderProtocol,
 )
 from ._graph import Graph, Line, Rule, Stack
-from ._perfdata import MetricName, Service
+from ._naming import MetricName, Service
 from ._quantities import QuantityProtocol, rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
 
 _PREDICT_PREFIX = "predict_"

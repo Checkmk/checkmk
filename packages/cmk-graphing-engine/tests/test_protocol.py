@@ -24,6 +24,7 @@ from cmk.graphing_engine import (
     HostName,
     Line,
     MetricName,
+    PerformanceData,
     RRDMetric,
     ServiceName,
     Sum,
@@ -32,7 +33,6 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.graphing_engine._evaluate import _evaluate_graph
-from cmk.graphing_engine._perfdata import PerformanceData
 from cmk.graphing_engine._quantities import EvaluationContext, MetricProtocol, QuantityProtocol
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))

@@ -6,14 +6,11 @@
 from collections.abc import Mapping, Sequence
 from typing import Protocol
 
+from ._fetched import FetchedData
 from ._graph import Graph
-from ._options import ConsolidationFunction, TimeRange
-from ._perfdata import (
-    FetchedData,
-    MetricName,
-    Service,
-)
+from ._naming import MetricName, Service
 from ._quantities import EvaluationContext, MetricProtocol
+from ._timeseries import ConsolidationFunction, TimeRange
 
 
 class FetchMetricNamesProtocol(Protocol):

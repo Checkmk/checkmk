@@ -15,19 +15,9 @@ from typing import assert_never, Protocol
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._display import metric_display_attributes
-from ._options import ConsolidationFunction, TimeRange
-from ._perfdata import (
-    constant_time_series,
-    FetchedData,
-    HostName,
-    MetricName,
-    PerformanceData,
-    SeriesAttributes,
-    Service,
-    ServiceName,
-    SiteID,
-    TimeSeries,
-)
+from ._fetched import FetchedData, PerformanceData, SeriesAttributes
+from ._naming import HostName, MetricName, Service, ServiceName, SiteID
+from ._timeseries import ConsolidationFunction, constant_time_series, TimeRange, TimeSeries
 from ._units import CurveAttributes
 
 

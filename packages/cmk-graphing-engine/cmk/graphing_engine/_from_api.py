@@ -19,7 +19,7 @@ from ._display import (
     parse_unit,
 )
 from ._graph import Bound, Curve, Graph, Line, MinimalRange, Rule, Stack
-from ._perfdata import MetricName, Service
+from ._naming import MetricName, Service
 from ._quantities import (
     Constant,
     Difference,

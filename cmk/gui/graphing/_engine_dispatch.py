@@ -76,7 +76,7 @@ class DispatchedEvaluateProtocol(Protocol):
 
 
 @dataclass(frozen=True)
-class EngineGraphDispatcher:
+class GraphDispatcher:
     kind: str
     codec: GraphCodec
     # How to make this graph type's evaluation for the options of a request: that is where it
@@ -90,21 +90,17 @@ class EngineGraphDispatcher:
         return self.codec.deserialize_graph(graph)
 
 
-class EngineGraphDispatcherRegistry(Registry[EngineGraphDispatcher]):
+class GraphDispatcherRegistry(Registry[GraphDispatcher]):
     @override
-    def plugin_name(self, instance: EngineGraphDispatcher) -> str:
+    def plugin_name(self, instance: GraphDispatcher) -> str:
         return instance.kind
 
 
-engine_graph_dispatcher_registry = EngineGraphDispatcherRegistry()
+graph_dispatcher_registry = GraphDispatcherRegistry()
 
 
 def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
-    return {
-        "graphs": [
-            engine_graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs
-        ]
-    }
+    return {"graphs": [graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs]}
 
 
 def evaluate_graphs(
@@ -117,7 +113,7 @@ def evaluate_graphs(
     # each graph type makes its evaluation for them, then reads its graph back and evaluates it.
     for serialized in ensure_type(internal["graphs"], list):
         graph = ensure_type(serialized, dict)
-        dispatcher = engine_graph_dispatcher_registry[ensure_type(graph["kind"], str)]
+        dispatcher = graph_dispatcher_registry[ensure_type(graph["kind"], str)]
         evaluated = dispatcher.make_evaluate(options)(dispatcher.deserialize(graph))
         evaluated_graphs.extend(evaluated.graphs)
         diagnostics.limits_reached.extend(evaluated.diagnostics.limits_reached)

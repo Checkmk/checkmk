@@ -12,7 +12,7 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import metrics_autocompleter
 from ._engine_codec import community_graph_codec, GraphCodec
-from ._engine_dispatch import engine_graph_dispatcher_registry, EngineGraphDispatcherRegistry
+from ._engine_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._engine_template_graphs import template_graph_dispatcher
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_images import AjaxGraphImagesForNotifications
@@ -35,7 +35,7 @@ from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
 
-def _register_graph_dispatchers(registry: EngineGraphDispatcherRegistry, codec: GraphCodec) -> None:
+def _register_graph_dispatchers(registry: GraphDispatcherRegistry, codec: GraphCodec) -> None:
     # Every graph kind of the edition is registered with that one codec.
     registry.register(template_graph_dispatcher(codec))
 
@@ -71,7 +71,7 @@ def register(
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
 
-    _register_graph_dispatchers(engine_graph_dispatcher_registry, community_graph_codec())
+    _register_graph_dispatchers(graph_dispatcher_registry, community_graph_codec())
 
     metric_backend_registry.register(MetricBackend())
 

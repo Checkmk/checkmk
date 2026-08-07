@@ -31,9 +31,9 @@ from cmk.gui.i18n import _, translate_to_current_language
 from ._engine_discovery import BuiltGraph, DiscoveredGraphs
 from ._engine_dispatch import (
     CommonGraphOptions,
-    EngineGraphDispatcher,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
+    GraphDispatcher,
     legacy_graph_id,
 )
 from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
@@ -125,10 +125,10 @@ class _EvaluateTemplateGraphs:
         )
 
 
-def template_graph_dispatcher(codec: GraphCodec) -> EngineGraphDispatcher:
+def template_graph_dispatcher(codec: GraphCodec) -> GraphDispatcher:
     # The codec is the edition's, not this kind's: every graph of an edition is read with all of
     # its quantities, so a definition holding one another kind introduced still round-trips.
-    return EngineGraphDispatcher(
+    return GraphDispatcher(
         kind=TEMPLATE_KIND,
         codec=codec,
         make_evaluate=_EvaluateTemplateGraphs.make,

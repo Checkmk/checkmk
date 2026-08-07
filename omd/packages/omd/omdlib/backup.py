@@ -207,6 +207,9 @@ def get_exclude_patterns(options: BackupExclusions) -> list[str]:
     excludes.append("var/check_mk/persisted/*")
     excludes.append("var/check_mk/persisted_sections/*")
 
+    # exclude the generated helper config, it is recreated by "cmk -U" during restore
+    excludes.append("var/check_mk/core/helper_config/*")
+
     # exclude ClickHouse data. This is used in monitoring, and thus old data would only confuse the
     # monitoring. Once we use a more long-term storage, we will have to come with a backup.
     excludes.append("var/clickhouse-server/*")

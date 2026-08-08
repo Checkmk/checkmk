@@ -18,7 +18,6 @@ py_cmk_test(
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),
         requirement("pymongo"),
-        requirement("marshmallow"),
         "//agents/plugins:agent-plugins-python",
     ],
 )

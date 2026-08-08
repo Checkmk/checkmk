@@ -17,7 +17,6 @@ py_cmk_test(
     deps = [
         "//cmk/legacy_includes",
         "//tests/unit:conftest",
-        requirement("marshmallow"),
         requirement("pytest-asyncio"),
         requirement("pytest-mock"),
         requirement("pytest-random-order"),

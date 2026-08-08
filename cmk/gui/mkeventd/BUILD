@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "mkeventd",
@@ -56,7 +55,5 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ec",
         "//packages/cmk-livestatus-client",
-        requirement("marshmallow"),
-        requirement("marshmallow-oneofschema"),
     ],
 )

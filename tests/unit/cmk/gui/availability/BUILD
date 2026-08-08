@@ -14,7 +14,6 @@ py_cmk_test(
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("fido2"),
-        requirement("marshmallow"),
         requirement("opentelemetry-sdk"),
         requirement("python-ldap"),
     ],

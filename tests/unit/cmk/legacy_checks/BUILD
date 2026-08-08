@@ -18,7 +18,6 @@ py_cmk_test(
         "//cmk/legacy_checks",
         "//cmk/legacy_includes",
         "//tests/unit:conftest",
-        requirement("marshmallow"),
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),
         requirement("time-machine"),

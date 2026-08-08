@@ -12,7 +12,6 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
-        requirement("marshmallow"),
         requirement("pytest-mock"),
         "//cmk/plugins/files/agents",
     ],

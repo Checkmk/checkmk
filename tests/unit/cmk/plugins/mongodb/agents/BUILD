@@ -12,7 +12,6 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
-        requirement("marshmallow"),
         requirement("pymongo"),
         "//cmk/plugins/mongodb/agents",
     ],

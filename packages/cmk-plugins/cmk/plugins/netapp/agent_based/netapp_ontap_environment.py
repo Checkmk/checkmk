@@ -141,7 +141,7 @@ check_plugin_netapp_ontap_environment = CheckPlugin(
     name="netapp_ontap_environment",
     service_name="PSU Controller %s",
     discovery_function=discover_netapp_ontap_environment(
-        lambda v: v.name.startswith("PSU") and v.name.endswith(" FAULT")
+        lambda v: v.name.startswith("PSU") and (v.sensor_type == "fru")
     ),
     check_function=check_netapp_ontap_environment_discrete,
     check_ruleset_name="hw_psu",

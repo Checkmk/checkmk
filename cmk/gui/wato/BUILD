@@ -159,7 +159,6 @@ py_library(
         "//packages/cmk-profiling:gui",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-werks:tool",
-        requirement("cryptography"),
         requirement("fido2"),
         requirement("icalendar"),
         requirement("jinja2"),

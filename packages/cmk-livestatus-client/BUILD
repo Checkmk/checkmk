@@ -26,7 +26,6 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",
         "//packages/cmk-trace",
-        requirement("opentelemetry-api"),
     ],
 )
 

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-04 02:31+0000\n"
+"PO-Revision-Date: 2026-08-07 18:01+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -380,6 +380,10 @@ msgstr "%%d ロックされた要素"
 #, python-format
 msgid "%%d locked elements"
 msgstr "%%d ロックされた要素"
+
+#, python-format
+msgid "%(family)s (locally installed, download requires login)"
+msgstr ""
 
 #, python-format
 msgid "%.1f mm"
@@ -3620,6 +3624,8 @@ msgid ""
 "Account names on Windows, user or group names - or numeric IDs - on Linux "
 "and UNIX."
 msgstr ""
+"Windowsでのアカウント名、LinuxおよびUnixでのユーザー名やグループ名、あるいは"
+"数値のID。"
 
 msgid "Accounts display name"
 msgstr "アカウント表示名"
@@ -5724,9 +5730,8 @@ msgstr "アラーム"
 msgid "Alert"
 msgstr "アラート"
 
-#, fuzzy
 msgid "Alert after being at or above the threshold for"
-msgstr "しきい値以上になった時のアラート"
+msgstr "しきい値超過でアラート"
 
 msgid "Alert after being at or below the threshold for"
 msgstr "しきい値以下になった時のアラート"
@@ -11942,7 +11947,7 @@ msgid "Can't parse version %r"
 msgstr "バージョン%rは使用できません"
 
 msgid "Canada"
-msgstr ""
+msgstr "カナダ"
 
 msgid "Cancel"
 msgstr "キャンセル"
@@ -12221,6 +12226,8 @@ msgid ""
 "Cannot render complete graph. See graph '<a href='%s'>%s</a>' for further "
 "details."
 msgstr ""
+"完全グラフをレンダリングできません。詳細はグラフ「<a href='%s'>%s</a>」を参照"
+"してください。"
 
 msgid "Cannot render drop-down: Missing required information"
 msgstr "ドロップダウンをレンダリングできません：必要な情報がありません"
@@ -12247,6 +12254,8 @@ msgid ""
 "Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set "
 "'No IP' in the 'Network address' section."
 msgstr ""
+"DNSを解決できません。DNS解決可能なホスト名、IPアドレスを入力するか、「ネット"
+"ワークアドレス」のセクションで「No IP」を設定してください。"
 
 #, python-format
 msgid "Cannot retrieve data from ntop REST API: %s"
@@ -12260,6 +12269,7 @@ msgstr "エラーが含まれているため、フォームを保存できませ
 
 msgid "Cannot specify both 'view_name' and 'embedded_id' parameters."
 msgstr ""
+"「view_name」と「embedded_id」パラメーターの両方を指定することはできません。"
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "テストできません。ターゲットシステムのCPU数を判別できません。"
@@ -12281,7 +12291,7 @@ msgid "Capabilities enabled"
 msgstr "通知を有効化"
 
 msgid "Capabilities map supported"
-msgstr ""
+msgstr "機能マップのサポート"
 
 #, fuzzy
 msgid "Capabilities supported"
@@ -12385,7 +12395,7 @@ msgstr ""
 
 #, python-format
 msgid "Central site returned HTTP %d: %s"
-msgstr ""
+msgstr "セントラルサイトからHTTP %dが返されました：%s"
 
 msgid "Ceph (Linux)"
 msgstr "Ceph (Linux)"
@@ -13318,6 +13328,7 @@ msgid ""
 "Checkmk has identified and attempted to redact sensitive information in the "
 "crash report."
 msgstr ""
+"Checkmkはクラッシュレポート内の機密情報を特定し、その削除を試みました。"
 
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
@@ -13442,6 +13453,12 @@ msgid ""
 "verification exists as a fallback for setups without internet access, "
 "requiring manual verification and reporting."
 msgstr ""
+"Checkmkは定期的に現在のライセンス使用状況を報告します。転送が正常に完了する"
+"と、確認メッセージと転送された情報の概要が表示されます。このプロセスの一環と"
+"して、その間にライセンスを延長または更新した場合、Checkmkは自動的にCheckmkカ"
+"スタマーポータルから新しいライセンス情報を取得します。インターネットに接続で"
+"きない環境向けの代替手段としてはオフライン認証機能も用意されており、この場合"
+"は手動での検証と報告が必要となります。"
 
 #, fuzzy
 msgid "Checkmk with times metrics"
@@ -14047,16 +14064,16 @@ msgid "Cisco SMA DNS requests"
 msgstr "HEAD リクエスト"
 
 msgid "Cisco SMA files and sockets"
-msgstr ""
+msgstr "Cisco SMAファイルとソケット"
 
 msgid "Cisco SMA mail transfer memory"
-msgstr ""
+msgstr "Cisco SMAメール転送メモリ"
 
 msgid "Cisco SMA mail transfer threads"
-msgstr ""
+msgstr "Cisco SMAメール転送スレッド"
 
 msgid "Cisco SMA queue"
-msgstr ""
+msgstr "Cisco SMAキュー"
 
 msgid "Cisco Stack Switch Status"
 msgstr "Ciscoスタックスイッチのステータス"
@@ -14197,6 +14214,8 @@ msgid ""
 "Clearing the log acknowledges and removes the stored messages. Log files on "
 "the host stay unchanged."
 msgstr ""
+"ログをクリーンすると、保存されているメッセージが承認され、削除されます。ホス"
+"ト上のログファイル自体に変更はありません。"
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -14277,8 +14296,9 @@ msgstr "クライアントID /アプリケーションID"
 msgid "Client ID is required"
 msgstr "必須"
 
+#, fuzzy
 msgid "Client ID must be a valid UUID."
-msgstr ""
+msgstr "クライアントIDは有効なUUIDである必要があります。"
 
 msgid "Client Secret"
 msgstr "クライアントシークレット"
@@ -14527,10 +14547,10 @@ msgid "Cluster behavior"
 msgstr "クラスターの動作"
 
 msgid "Cluster collector: Container metrics cache size"
-msgstr ""
+msgstr "クラスターコレクター：コンテナメトリクスのキャッシュサイズ"
 
 msgid "Cluster collector: Machine sections cache size"
-msgstr ""
+msgstr "クラスターコレクター：マシンセクションのキャッシュサイズ"
 
 msgid "Cluster health"
 msgstr "クラスターの状態"
@@ -14608,16 +14628,16 @@ msgid "Cnt."
 msgstr "Cnt"
 
 msgid "Code 2xx"
-msgstr ""
+msgstr "コード 2xx"
 
 msgid "Code 3xx"
-msgstr ""
+msgstr "コード 3xx"
 
 msgid "Code 4xx"
-msgstr ""
+msgstr "コード 4xx"
 
 msgid "Code 5xx"
-msgstr ""
+msgstr "コード 5xx"
 
 msgid "Code size"
 msgstr "コードサイズ"
@@ -14931,6 +14951,9 @@ msgid ""
 "detect and alert on failovers. Note that using this option might require a "
 "service re-discovery. You will be informed if this is the case."
 msgstr ""
+"現在のフェイルオーバーモードと検出時のモードを比較し、フェイルオーバーを検出"
+"してアラートを発報します。このオプションを使用する場合、再度サービスディスカ"
+"バリーが必要になる場合があります。その場合は、通知が表示されます。"
 
 msgid "Compare the current state of the VM against the discovered state"
 msgstr "VMの現在の状態を検出された状態と比較します"
@@ -15095,9 +15118,11 @@ msgid ""
 "Conda environments can be packed into .tar.gz archives using <tt>conda-pack</"
 "tt>."
 msgstr ""
+"Conda環境は、<tt>conda-pack</tt>を使用して、.tar.gz アーカイブにパッケージ化"
+"できます。"
 
 msgid "Conda manifest (yaml file)"
-msgstr ""
+msgstr "Conda マニフェスト（yaml ファイル）"
 
 msgid "Condition"
 msgstr "条件"
@@ -15293,6 +15318,8 @@ msgid ""
 "Configure age thresholds for VM checkpoints. You can set warning and "
 "critical levels for both the newest and oldest checkpoints."
 msgstr ""
+"VMチェックポイントの有効期限を設定します。最新と最も古いチェックポイントの両"
+"方について、WarningレベルとCriticalレベルを設定できます。"
 
 msgid "Configure agent access related settings using rule sets"
 msgstr "ルールセットを使用してエージェントアクセス関連の設定を構成する"
@@ -15333,6 +15360,8 @@ msgid ""
 "expected connection state, MAC configuration, and expected virtual switch "
 "assignment."
 msgstr ""
+"Hyper-V VMネットワークインターフェイスの期待される状態を設定します。接続状"
+"態、MAC構成、および仮想スイッチの割り当てを指定できます。"
 
 msgid "Configure fallback email address"
 msgstr "フォールバックメールアドレスの設定"
@@ -15668,6 +15697,8 @@ msgid ""
 "Configure warning and critical upper thresholds for Corosync link latency: "
 "both instantaneous maximum values and the averaged latency."
 msgstr ""
+"Corosyncリンク遅延の警告および重大な上限しきい値を設定します：瞬間的な最大値"
+"と平均遅延の両方に対して設定します。"
 
 msgid ""
 "Configure whether RCC validates TLS certificates when downloading or pulling "
@@ -15991,6 +16022,8 @@ msgid ""
 "Connection to the license server timed out. Please try again or check your "
 "network settings."
 msgstr ""
+"ライセンスサーバーへの接続がタイムアウトしました。もう一度試すか、ネットワー"
+"ク設定をチェックしてください。"
 
 msgid "Connection type"
 msgstr "接続タイプ"
@@ -16060,7 +16093,7 @@ msgid "Connectors"
 msgstr "接続"
 
 msgid "Consecutive reachability failures (up to 8)"
-msgstr ""
+msgstr "連続した到達不能状態（最大８回）"
 
 msgid ""
 "Consent to product usage analytics data collection. By default, this is "
@@ -16186,7 +16219,7 @@ msgid "Contact sensor type"
 msgstr "コンタクトセンサータイプ"
 
 msgid "Contact the dashboard owner if you need access."
-msgstr ""
+msgstr "アクセスが必要な場合は、ダッシュボードの所有者にお問合せください。"
 
 msgid "Contact us"
 msgstr "お問合せ"
@@ -16334,6 +16367,8 @@ msgid ""
 "Control whether VM templates should be monitored. Check this box to create "
 "services for VM templates."
 msgstr ""
+"VMテンプレートを監視するかどうかを制御します。VMテンプレートのサービスを作成"
+"するには、このボックスをオンにします。"
 
 msgid "Controller"
 msgstr "コントローラー"
@@ -16360,6 +16395,20 @@ msgid ""
 "Client at the specified path; supports environment variable expansion (e.g. "
 "<tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
+"プラグインがデータベースへの接続に使用するOracle Instant Clientを制御します。"
+"利用可能なソースは2つあります：<b>エージェントローカルクライアント </b> — "
+"Checkmkエージェントのインストール先である<tt>$MK_LIBDIR/packages/mk-oracle/ "
+"</tt> に手動でインストールされたOracle Instant Clientライブラリ — および、 "
+"<b> ホストクライアント </b> — 監視対象ホストに既に存在するOracleインストー"
+"ル。注意：CheckmkはOracle Instant Clientを自動的にデプロイ<b>しません</b>。"
+"エージェントローカルクライアントを使用する場合は、手動でインストールする必要"
+"があります。<b>自動検出</b>: まずホストのクライアントを試行し、失敗した場合は"
+"エージェントローカルクライアントに切り替えます。 <b> ホストのクライアントは使"
+"用しない </b>: エージェントローカルクライアントのみを使用し、ホストへのインス"
+"トールは無視します。 <b> 常にホストのクライアントを使用 </b>: ホストのクライ"
+"アントのみを使用し、エージェントローカルクライアントは無視します。 <b> カスタ"
+"ムパス </b>: 指定されたパスにあるOracle Instant Clientを使用します。環境変数"
+"の展開をサポートしています（例: <tt>${ORACLE_HOME} /lib </tt>）。"
 
 msgid "Convert FQHN"
 msgstr "FQHNを変換する"
@@ -16488,14 +16537,14 @@ msgid "Cores per CPU"
 msgstr "CPUあたりのコア数"
 
 msgid "Corosync Latency max/avg"
-msgstr ""
+msgstr "Corosync レイテンシ 最大値/平均値"
 
 #, fuzzy
 msgid "Corosync latency"
 msgstr "同期レイテンシ"
 
 msgid "Corosync link"
-msgstr ""
+msgstr "Corosync リンク"
 
 msgid "Corrected codewords"
 msgstr "修正されたコード語"
@@ -16510,50 +16559,50 @@ msgid "Cosmic"
 msgstr "コズミック"
 
 msgid "Cosmos DB container failed requests (404)"
-msgstr ""
+msgstr "Cosmos DB コンテナのリクエスト失敗 (404)"
 
 msgid "Cosmos DB container normalized RU consumption"
-msgstr ""
+msgstr "Cosmos DB コンテナ正規化RU消費量"
 
 #, fuzzy
 msgid "Cosmos DB container requests"
 msgstr "スポットインスタンスリクエスト"
 
 msgid "Cosmos DB container throttled requests (429)"
-msgstr ""
+msgstr "Cosmos DB コンテナのリクエストスロットリング (429)"
 
 msgid "Cosmos DB container throttled requests ratio"
-msgstr ""
+msgstr "Cosmos DB コンテナのリクエストスロットリング比率"
 
 #, fuzzy
 msgid "Cosmos DB container throughput"
 msgstr "FCP 書き込みスループット"
 
 msgid "Cosmos DB container total RUs"
-msgstr ""
+msgstr "Cosmos DB コンテナの総RU"
 
 msgid "Cosmos DB container total requests"
-msgstr ""
+msgstr "Cosmos DB コンテナの総リクエスト数"
 
 #, fuzzy
 msgid "Cosmos DB data usage"
 msgstr "データ使用量"
 
 msgid "Cosmos DB database failed requests (404)"
-msgstr ""
+msgstr "Cosmos DB データベースのリクエスト失敗 (404)"
 
 msgid "Cosmos DB database normalized RU consumption"
-msgstr ""
+msgstr "Cosmos DB データベースの正規化されたRU消費量"
 
 #, fuzzy
 msgid "Cosmos DB database requests"
 msgstr "MongoDBデータベース接続"
 
 msgid "Cosmos DB database throttled requests (429)"
-msgstr ""
+msgstr "Cosmos DB データベースによるリクエストのスロットリング (429)"
 
 msgid "Cosmos DB database throttled requests ratio"
-msgstr ""
+msgstr "Cosmos DB データベースのリクエストスロットリング比率"
 
 #, fuzzy
 msgid "Cosmos DB database throughput"
@@ -16564,7 +16613,7 @@ msgid "Cosmos DB database total RUs"
 msgstr "MongoDBデータベース接続"
 
 msgid "Cosmos DB database total requests"
-msgstr ""
+msgstr "Cosmos DB データベースの総リクエスト数"
 
 #, fuzzy
 msgid "Cosmos DB documents"
@@ -16575,14 +16624,14 @@ msgid "Cosmos DB failed requests (404)"
 msgstr "失敗したリクエスト"
 
 msgid "Cosmos DB index overhead"
-msgstr ""
+msgstr "Cosmos DB インデックスのオーバーヘッド"
 
 #, fuzzy
 msgid "Cosmos DB index usage"
 msgstr "コストと使用量(CE)"
 
 msgid "Cosmos DB normalized RU consumption"
-msgstr ""
+msgstr "Cosmos DBによるRU消費量の正規化"
 
 #, fuzzy
 msgid "Cosmos DB service availability"
@@ -16609,7 +16658,7 @@ msgid "Cosmos DB total requests"
 msgstr "スロットルされたリクエスト"
 
 msgid "Cosmos DB total storage"
-msgstr ""
+msgstr "Cosmos DB 総ストレージ"
 
 msgid "CosmosDb"
 msgstr "CosmosDb"
@@ -16733,6 +16782,9 @@ msgid ""
 "wato.bi_admin permissions or permissions to modify the parent BI pack to "
 "delete a BI rule."
 msgstr ""
+"BIルール「%s」を削除できませんでした。BIルールを削除するには、そのルールが存"
+"在しているかのうせいがあり、wato.bi_admin許可、または親BIパックを変更する権限"
+"のいずれかが必要です。"
 
 #, fuzzy, python-format
 msgid "Could not detect type of manual page: %s. Maybe the check is missing "
@@ -17181,6 +17233,8 @@ msgid ""
 "Create host labels for each discovered systemd service in the following "
 "format %r"
 msgstr ""
+"検出された各systemdサービスに対し、以下のフォーマット%rでホストラベルを作成す"
+"る"
 
 msgid "Create hosts"
 msgstr "ホストを作成する"
@@ -17485,6 +17539,8 @@ msgid ""
 "Credentials that expired more than this long ago will be ignored. Useful for "
 "suppressing alerts on expired credentials that have already been replaced."
 msgstr ""
+"この期間より前に有効期限が切れた認証情報は無視されます。すでに置き換えられた"
+"有効期限切れの認証情報に関するアラートを抑制する場合に役立ちます。"
 
 msgid "Credentials to access the database"
 msgstr "データベースにアクセスするための認証情報"
@@ -17889,6 +17945,8 @@ msgid ""
 "Custom endpoint URL for S3-compatible storage services (e.g., Backblaze B2). "
 "Leave empty to use the default AWS S3 endpoint."
 msgstr ""
+"S3互換ストレージサービス用のカスタムエンドポイントURL（例：Backblaze B2）。デ"
+"フォルトのAWS S3エンドポイントを使用する場合は空欄のままにしてください。"
 
 msgid "Custom event limit"
 msgstr "カスタムイベント制限"
@@ -17990,7 +18048,7 @@ msgid "Custom notification table of this user"
 msgstr "このユーザーのカスタム通知テーブル"
 
 msgid "Custom path to Oracle client libraries"
-msgstr ""
+msgstr "Oracleクライアントライブラリへのカスタムパス"
 
 msgid "Custom port"
 msgstr "カスタムポート"
@@ -18213,7 +18271,7 @@ msgid "DATAPROXY - Throttled server connections"
 msgstr "DATAPROXY - スロットルされたサーバー接続"
 
 msgid "DB CPU"
-msgstr ""
+msgstr "DB CPU"
 
 msgid "DB Connections"
 msgstr "DB接続"
@@ -18545,10 +18603,10 @@ msgid "Data"
 msgstr "データ"
 
 msgid "Data Guard CRITICAL"
-msgstr ""
+msgstr "Data Guard CRITICAL"
 
 msgid "Data block (DB)"
-msgstr ""
+msgstr "Data block (DB)"
 
 msgid "Data directory"
 msgstr "データディレクトリ"
@@ -18719,7 +18777,7 @@ msgid "Database identifier"
 msgstr "データベース識別子"
 
 msgid "Database instances – state breakdown"
-msgstr ""
+msgstr "データベースインスタンス – ステートブレイクダウン"
 
 msgid "Database is being recovered"
 msgstr "データベースが復元されています"
@@ -18776,7 +18834,7 @@ msgid "Databases"
 msgstr "データベース"
 
 msgid "Databases needing attention (unhandled, non-OK)"
-msgstr ""
+msgstr "要注意のデータベース（未処理、OKではない）"
 
 #, fuzzy
 msgid "Databases to monitor"
@@ -18990,6 +19048,8 @@ msgid ""
 "Decide whether to show the quick activation slideout, the full page view or "
 "being asked every time."
 msgstr ""
+"クイックアクティベーションのスライドアウトを表示するか、全画面表示にするか、"
+"あるいは毎回確認するかを設定します。"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -19319,6 +19379,10 @@ msgid ""
 "Authentication and connection options from the default settings are used "
 "automatically, but can be overridden per database if needed."
 msgstr ""
+"監視対象とするOracleデータベースを定義します。各エントリにはOracleデータベー"
+"ス識別子（サービス名、インスタンス名、SID、TNSエイリアス）を含める必要があり"
+"ます。認証及び接続オプションはデフォルト設定が自動的に使用されますが、必要に"
+"応じてデータベース毎に上書きすることも可能です。"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -20623,7 +20687,7 @@ msgid "Device uplinks"
 msgstr "オンラインデバイス"
 
 msgid "Device uplinks (HW/SW inventory only)"
-msgstr ""
+msgstr "デバイスアップリンク(HW/SWインベントリのみ)"
 
 msgid "Devices"
 msgstr "デバイス"
@@ -20670,7 +20734,7 @@ msgid "Difference between the first and last operation in the oplog"
 msgstr "oplogの最初と最後の操作の差異"
 
 msgid "Difference in time from provider was too large"
-msgstr ""
+msgstr "プロバイダとの時間差が大きすぎます"
 
 msgid "Difference on summed up values lower level"
 msgstr "合計値の差が下位レベル"
@@ -21237,10 +21301,10 @@ msgid "Disk usage (Podman containers)"
 msgstr "Dockerノードとコンテナー"
 
 msgid "Disk usage (Podman images)"
-msgstr ""
+msgstr "ディスク使用量（Podmanイメージ）"
 
 msgid "Disk usage (Podman volumes)"
-msgstr ""
+msgstr "ディスク使用量（Podmanボリューム）"
 
 msgid "Disk utilization"
 msgstr "ディスク使用率"
@@ -21364,7 +21428,7 @@ msgstr "タイムラインの凡例を表示する"
 
 #, python-format
 msgid "Display limit of %d monitoring results reached."
-msgstr ""
+msgstr "監視結果の表示制限%d件に達しました。"
 
 #, python-format
 msgid "Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)"
@@ -22554,7 +22618,7 @@ msgid "Dump file: %s"
 msgstr "ダンプファイル:%s"
 
 msgid "Duplex"
-msgstr ""
+msgstr "Duplex"
 
 #, python-format
 msgid ""
@@ -22562,13 +22626,16 @@ msgid ""
 "Only one of the following services can be monitored at a time:<ul>%(items)s</"
 "ul>"
 msgstr ""
+"ホスト<b>%(host_name)s</b>に対してサービス名<b>%(description)s</b>が重複して"
+"います。以下のサービスのうち、一度に監視できるのは１つだけです："
+"<ul>%(items)s</ul>"
 
 #, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "補助タグ内の重複タグID \"%s\""
 
 msgid "Duplicated elements provided."
-msgstr ""
+msgstr "重複する要素が含まれています。"
 
 msgid "Duplicated messages management"
 msgstr "重複メッセージの管理"
@@ -23533,6 +23600,9 @@ msgid ""
 "(graph.microsoft.com) will appear as the sending host in the message headers "
 "of forwarded emails by default."
 msgstr ""
+"EメールはMicrosoft Graph API経由で送信されます。デフォルトでは、転送された"
+"メールのメッセージヘッダーには、送信元ホストとしてエンドポイント"
+"（graph.microsoft.com）が表示されます。"
 
 msgid "Emails containing URL per second"
 msgstr "URLを含むメール/秒"
@@ -23672,6 +23742,9 @@ msgid ""
 "Enable experimental rendering modes for form specs. Keep in mind that some "
 "form specs are always rendered in the frontend, regardless of this setting."
 msgstr ""
+"フォーム仕様の実験的なレンダリングモードを有効にします。フォームの仕様によっ"
+"ては、この設定にかかわらず常にフロントエンドでレンダリングされることに注意し"
+"てください。"
 
 msgid "Enable flap detection"
 msgstr "フラップ検出を有効にする"
@@ -23713,6 +23786,9 @@ msgid ""
 "all users will have access to the 'Explain with AI' button. Disabling this "
 "means that no data is sent to the AI provider."
 msgstr ""
+"「AIで説明」機能をグローバルに有効化または無効化します。有効に設定すると、す"
+"べてのユーザーが「AIで説明」ボタンを利用できます。無効化すると、AIプロバイダ"
+"へのデータ送信は行われません。"
 
 #, fuzzy
 msgid "Enable package"
@@ -23926,6 +24002,11 @@ msgid ""
 "performing TLS registration on the agent, or wanting to ping VMs by their "
 "DNS name."
 msgstr ""
+"このオプションを有効にすると、ホスト名計算から仮想マシンが除外され、仮想マシ"
+"ンがホストに紐づけられる場合でもオリジナルのAzure名が保持されます。これはエー"
+"ジェントのインストールやエージェントでのTLS登録を行ってVMを監視する場合、ある"
+"いはDNS名でVMにpingを送信したい場合に、自動ホスト作成機能を使用する際に必要に"
+"なります。"
 
 #, fuzzy
 msgid ""
@@ -23983,6 +24064,20 @@ msgid ""
 "<b><tt>azr_rg_myresourcegroup_3f40ba0d</tt></b>, "
 "<b><tt>azr_vm_myvm1_86824be2</tt></b>    </ul>  </li></ul>"
 msgstr ""
+"一意のホスト名計算を有効にすると、Checkmk はピギーバックホストに対して一意の"
+"ホスト名を生成します。これにより、Azure内で同一名称のエンティティによる競合が"
+"回避され、監視データの上書きや損失を防ぎます。複数のAzureテナントやサブスクリ"
+"プションにまたがり、同一名称のサブスクリプション、リソース、リソースグループ"
+"が存在する場合は有効にしてください。<b>この設定を保存後に変更すると、すべての"
+"ピギーバックホストの名前が変更されます。</b><hr>一意のホスト名生成を有効化す"
+"る際、<b>Short（短形式）</b>と<b>Long（長形式）</b>の2つのテンプレートから選"
+"択できます。これはホスト名に含まれる情報を制御します。<ul>  <li>    <b>Short:"
+"</b> <tt>[object name from Azure]_[unique id]</tt>    <ul>      <li>example: "
+"<b><tt>myresourcegroup_3f40ba0d</tt></b>, <b><tt>myvm1_86824be2</tt></b>    "
+"</ul>  </li>  <li>    <b>Long:</b> <tt>azr_[object type]_[object name from "
+"Azure]_[unique id]</tt>    <ul>      <li>example: "
+"<b><tt>azr_rg_myresourcegroup_3f40ba0d</tt></b>, "
+"<b><tt>azr_vm_myvm1_86824be2</tt></b>    </ul>  </li></ul>"
 
 msgid "Enc-In frames rate"
 msgstr "Enc-Inフレームレート"
@@ -24187,7 +24282,7 @@ msgid "Enter a valid IP address or host name."
 msgstr "有効なIPアドレスもマクロもありません"
 
 msgid "Enter a valid port number (example: 1234)."
-msgstr ""
+msgstr "有効なポート番号を入力してください（例：1234）。"
 
 msgid "Enter address"
 msgstr "住所を入力してください"
@@ -24315,6 +24410,13 @@ msgid ""
 "to filter objects by tenant and display the inventory data as columns in "
 "your views. This is useful for setups where multiple tenants are monitored."
 msgstr ""
+"このスペシャルエージェントルールによって監視されるテナントの名前を入力してく"
+"ださい。この名前はホストラベルとして使用され、ソースホスト（スペシャルエー"
+"ジェント実行中のホスト）および関連するすべてのピギーバックホスト（サブスクリ"
+"プションやリソースを表す）HW/SWインベントリに含まれます。これにより、テナント"
+"ごとにオブジェクトをフィルタリングしたり、ビュー内でインベントリデータを列と"
+"して表示したりすることができます。これは、複数のテナントを監視する環境におい"
+"て有用です。"
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -24513,6 +24615,8 @@ msgid ""
 "Error while querying the following metrics: %s.<br>Last error message: %s."
 "<br>See web.log for further details."
 msgstr ""
+"以下のメトリクスをクエリ中にエラーが発生しました：%s。<br>最後のエラーメッ"
+"セージ: %s.<br>詳細はweb.log参照。"
 
 #, python-format
 msgid "Error while rendering element type '%s'"
@@ -24539,7 +24643,7 @@ msgid "Errors (Detailed)"
 msgstr "ホストの詳細"
 
 msgid "Errors (Discards)"
-msgstr ""
+msgstr "エラー（破棄）"
 
 #, python-format
 msgid "Errors on restoring snapshot:<br>%s"
@@ -25423,7 +25527,7 @@ msgid "Explain with AI"
 msgstr "明示的"
 
 msgid "Explain with AI manifest"
-msgstr ""
+msgstr "AIマニフェストによる説明"
 
 msgid "Explanation for event action"
 msgstr "イベントアクションの説明"
@@ -25565,7 +25669,7 @@ msgid "Extend downtimes by..."
 msgstr "ダウンタイムを次のように延長します..."
 
 msgid "Extend post-diagnostics phase by additional time span"
-msgstr ""
+msgstr "診断後期間を追加の期間分延長する"
 
 msgid "Extend the Checkmk GUI with your custom icons"
 msgstr "カスタムアイコンでCheckmk GUIを拡張する"
@@ -25653,7 +25757,7 @@ msgstr ""
 "を表示します"
 
 msgid "Extreme Networks ExtremeCloud IQ"
-msgstr ""
+msgstr "Extreme Networks ExtremeCloud IQ"
 
 #, fuzzy
 msgid "ExtremeCloud IQ password"
@@ -26002,6 +26106,8 @@ msgid ""
 "Failed to ping the IP address. This could be due to an invalid IP, network "
 "issues, or firewall restrictions."
 msgstr ""
+"IPアドレスへのpingに失敗しました。これは無効なIPアドレス、ネットワークの問"
+"題、またはファイアウォールの制限が原因である可能性があります。"
 
 #, fuzzy, python-format
 msgid ""
@@ -26204,7 +26310,7 @@ msgid "Falling"
 msgstr "落下"
 
 msgid "False"
-msgstr ""
+msgstr "False"
 
 msgid "Fan Name"
 msgstr "ファン名"
@@ -26563,7 +26669,7 @@ msgid "Files"
 msgstr "ファイル"
 
 msgid "Files are unpackaged and remain in your system."
-msgstr ""
+msgstr "ファイルは解凍され、システム内に残ります。"
 
 #, python-format
 msgid ""
@@ -27242,6 +27348,7 @@ msgstr ""
 "セキュリティ上の理由から、パスワードの設定にはパスワードストアを使用すること"
 "をお勧めします。"
 
+#, fuzzy
 msgid ""
 "For security reasons the plug-in checks the permissions of the Oracle client "
 "files it is about to load, because loading them as an administrative user "
@@ -27260,6 +27367,24 @@ msgid ""
 "with the check enabled you may allow specific groups and/or users to have "
 "write access to the Oracle client files."
 msgstr ""
+"セキュリティ上の理由から、プラグインは読み込もうとしているOracleクライアント"
+"ファイルの許可をチェックします。これは、管理者ユーザーとしてこれらのファイル"
+"を読み込むと、そのファイルを作成したユーザーの許可で実行されてしまうためで"
+"す。Oracleインストール環境の外からファイルが変更可能な場合、プラグインはプロ"
+"セスを停止し、Oracleの監視機能が停止します。 Windows では、クライアントファイ"
+"ルへの書き込み権限は、特権アカウント（SYSTEM、ローカルの Administrators グ"
+"ループ、Domain Admins および Enterprise Admins）にのみ付与される必要がありま"
+"す。Linux および Unix では、クライアントライブラリ、そのディレクトリ、および"
+"それらの親ディレクトリへの書き込み権限は、<tt>（root </tt>）、または従来の "
+"Oracle 所有者であるユーザー <tt>（oracle </tt>）およびグループ <tt>"
+"（oinstall </tt>）にのみ付与される必要があります。したがって、標準的なインス"
+"トール環境では変更なしで動作します。その他のアカウントやグループで管理されて"
+"いる Oracle ソフトウェアについては、以下で明示的に許可する必要があります。 "
+"Oracle データベースの監視を継続する唯一の手段である場合（通常、許可を修正でき"
+"ず、監視専用のアカウントも使用できない場合など）、<tt> </tt> このオプションを"
+"無効にすることができます。このチェックが有効になっている場合でも、特定のグ"
+"ループやユーザーに対して Oracle クライアントファイルへの書き込みアクセスを許"
+"可することは可能です。"
 
 msgid "For specific SIDs"
 msgstr "特定のSIDの場合"
@@ -27477,7 +27602,7 @@ msgstr "転送方法"
 
 #, python-format
 msgid "Forwarding the agent download to the central site failed: %s"
-msgstr ""
+msgstr "エージェントのダウンロードをセントラルサイトへ転送できませんでした：%s"
 
 #, python-format
 msgid "Found %d groups for synchronization."
@@ -27976,7 +28101,7 @@ msgstr ""
 "す）。"
 
 msgid "GUID"
-msgstr ""
+msgstr "GUID"
 
 msgid "Gamelan"
 msgstr "ガムラン"
@@ -28085,6 +28210,8 @@ msgid ""
 "Generate service labels based on matching conditions. All matching entries "
 "will add to the list of service labels."
 msgstr ""
+"一致条件に基づいてサービスラベルを生成します。条件に一致するすべてのエントリ"
+"はサービスラベルのリストに追加されます。"
 
 msgid "Generate service labels for created groups"
 msgstr "作成したグループのサービスラベルを生成する"
@@ -28601,7 +28728,7 @@ msgid "Group patterns"
 msgstr "グループパターン"
 
 msgid "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
-msgstr ""
+msgstr "Group<nobr> </nobr>DN<nobr> </nobr>or<nobr> </nobr>CN"
 
 msgid "Grouping"
 msgstr "グループ化"
@@ -28807,7 +28934,7 @@ msgid "HTTP Parameters"
 msgstr "HTTPパラメータ"
 
 msgid "HTTP SSL/TLS default port (queries)"
-msgstr ""
+msgstr "HTTP SSL/TLS デフォルトポート (クエリ)"
 
 msgid "HTTP accelerator statistics"
 msgstr "HTTPアクセラレータ統計"
@@ -28825,7 +28952,7 @@ msgid "HTTP method"
 msgstr "HTTPメソッド"
 
 msgid "HTTP port (useful for accessing web UI)"
-msgstr ""
+msgstr "HTTPポート（Web UIへのアクセスに有用）"
 
 msgid "HTTP proxies"
 msgstr "HTTPプロキシ"
@@ -29095,6 +29222,8 @@ msgid ""
 "Health and key metrics of one Oracle database instance: hit ratios, "
 "sessions, tablespaces, and recent problems."
 msgstr ""
+"１つのOracleデータベースインスタンスへのヘルスと主要メトリック：ヒット率、"
+"セッション数、テーブルスペース、および最近の問題。"
 
 #, fuzzy
 msgid "Health check healthy count"
@@ -29111,7 +29240,7 @@ msgid "Health probe status lower levels"
 msgstr "ヘルスプローブステータス下位レベル"
 
 msgid "Health state of each database (ORA Instance)"
-msgstr ""
+msgstr "各データベースのヘルス状態（ORAインスタンス）"
 
 #, fuzzy
 msgid "Healthy"
@@ -29297,6 +29426,8 @@ msgid ""
 "Here you can configure messages filtering parameters using regular "
 "expressions. The rule is case insensitive."
 msgstr ""
+"ここでは、正規表現を使用してメッセージのフィルタリングパラメータを設定できま"
+"す。このルールでは大文字と小文字は区別されません。"
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -31961,10 +32092,13 @@ msgstr "Checkmkが測定データを評価すべき過去の日数"
 msgid ""
 "How old (in seconds) the cache file for builtin sections is allowed to be."
 msgstr ""
+"組込みセクションのキャッシュファイルが、最大でどのくらいの時間（秒単位）経過"
+"していても許容されるか。"
 
 msgid ""
 "How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
+"カスタムメトリックのキャッシュファイルが許容される最大経過時間（秒単位）。"
 
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
@@ -32031,7 +32165,7 @@ msgid "Humidity levels for devices with a single sensor"
 msgstr "単一センサー搭載機器の湿度レベル"
 
 msgid "Hyper-V"
-msgstr ""
+msgstr "Hyper-V"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-Vサーバー:VMの状態"
@@ -32199,6 +32333,8 @@ msgid ""
 "ID entry fields may contain either numeric event ID or pair of numeric event "
 "IDs separated by dash."
 msgstr ""
+"ID入力フィールドには、数値のイベントID、またはダッシュで区切られた数値のイベ"
+"ントIDのペアのいずれかを含めることができます。"
 
 msgid "ID of phase"
 msgstr "フェーズのID"
@@ -32256,7 +32392,7 @@ msgid "IMAP STARTTLS"
 msgstr "STARTTLS"
 
 msgid "INFO"
-msgstr ""
+msgstr "INFO"
 
 msgid "INotify Levels"
 msgstr "INotifyレベル"
@@ -32334,20 +32470,20 @@ msgid "IP addresses"
 msgstr "IPアドレス"
 
 msgid "IP group active calls in"
-msgstr ""
+msgstr "IPグループのアクティブ通話着信数"
 
 msgid "IP group active calls out"
-msgstr ""
+msgstr "IPグループのアクティブ通話発信数"
 
 #, fuzzy
 msgid "IP group calls in"
 msgstr "ホストグループエイリアス"
 
 msgid "IP group calls in/out"
-msgstr ""
+msgstr "IPグループ通話 着信/発信"
 
 msgid "IP group calls out"
-msgstr ""
+msgstr "IPグループ通話 発信"
 
 msgid "IP network"
 msgstr "IPネットワーク"
@@ -32371,41 +32507,41 @@ msgid "IP-Version"
 msgstr "IPバージョン"
 
 msgid "IP2Tel"
-msgstr ""
+msgstr "IP2Tel"
 
 msgid "IP2Tel Number of Attempted SIP/H323 calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323コールの試行回数"
 
 msgid "IP2Tel Number of Attempted SIP/H323 fax calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323 FAXの試行回数"
 
 msgid "IP2Tel Number of Destination Busy SIP/H323 calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323コールの話し中回数"
 
 msgid "IP2Tel Number of No Answer SIP/H323 calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323通話の無応答回数"
 
 msgid ""
 "IP2Tel Number of No Route SIP/H323 calls. Most likely to be due to wrong "
 "number"
-msgstr ""
+msgstr "IP2Tel SIP/H323通話のNo Route数。おそらく番号が間違っていたことが原因"
 
 msgid "IP2Tel Number of No capability match between peers on SIP/H323 calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323コールにおいて、ピア間での機能一致が確認できません"
 
 msgid "IP2Tel Number of SIP/H323 fax success calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323 fax の成功回数"
 
 msgid ""
 "IP2Tel Number of established (connected and voice activated) SIP/H323 calls"
-msgstr ""
+msgstr "IP2Tel 確立された（接続済みかつ音声応答可能な）SIP/H323通話の数"
 
 #, fuzzy
 msgid "IP2Tel Number of failed SIP/H323 calls"
 msgstr "失敗したパスの数"
 
 msgid "IP2Tel Total duration of SIP/H323 calls"
-msgstr ""
+msgstr "IP2Tel SIP/H323 通話の合計時間"
 
 msgid "IPC semaphore IDs"
 msgstr "IPCセマフォID"
@@ -32491,7 +32627,7 @@ msgid "IPv4/IPv6 address"
 msgstr "IPv4 / IPv6アドレス"
 
 msgid "IPv4/IPv6 address or subnet (CIDR notation)"
-msgstr ""
+msgstr "IPv4/IPv6アドレスまたはサブネット（CIDR表記）"
 
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6デュアルスタック"
@@ -32577,6 +32713,8 @@ msgid ""
 "Identfier of the DB instance and the name of the region in square brackets, "
 "e.g. 'db-instance-1 \\[eu-central-1\\]'."
 msgstr ""
+"DBインスタンスの識別子と、角括弧で囲まれたリージョンの名前（例：'db-"
+"instance-1 \\[eu-central-1\\]'）。"
 
 msgid "Identity"
 msgstr "アイデンティティー"
@@ -32744,6 +32882,16 @@ msgid ""
 "list to make Checkmk count the node as both roles. Nodes without a control "
 "plane role (specified above) are automatically counted as worker nodes."
 msgstr ""
+"ノードが以下のいずれかの役割を持つ場合、Checkmkではそのノードをワーカーノード"
+"とみなします。ワーカーノードは、場合によってはコンロトールプレーンノードでも"
+"あることがあります。一部のKubernetesディストリビュ―ションでは、ワーカーノード"
+"に「worker」などのロールを自動的に割り当てられます。お使いのディストリビュー"
+"ションでそれが行われておらず、コントロールプレーンノードとワーカーノードの両"
+"方の役割を持つノードがある場合は、それらのノードにロールを割り当て、そのロー"
+"ルがこのリストに含まれていることを確認することで、Checkmkがそのノードを両方の"
+"ロールとしてカウントするようにすることができます。（上記で指定された）コント"
+"ロールプレーン・ロールを持たないノードは、自動的にwokernodeとしてカウントされ"
+"ます。"
 
 msgid ""
 "If a reboot is required, the selected status will be displayed. Default is "
@@ -32862,6 +33010,9 @@ msgid ""
 "passed, it will be removed from the Event Console. Only events which reach "
 "or exceed their expected count within the time period are kept."
 msgstr ""
+"指定された期間経過後も、イベントが依然として<i>集計中</i> の状態にある場合、"
+"そのイベントはイベントコンソールから削除されます。指定された期間内に予想カウ"
+"ント数に達した、またはそれを超えたイベントのみが保持されます。"
 
 msgid "If available, the following metric will be shown"
 msgstr "可能な場合は、次のメトリックが表示されます"
@@ -32920,11 +33071,15 @@ msgid ""
 "If enabled, the instance name will be queried from the database instead of "
 "the database name."
 msgstr ""
+"有効にするとデータベース名ではなくインスタンス名がデータベースからクエリされ"
+"ます。"
 
 msgid ""
 "If enabled, the plug-in will not attempt to connect to locally detected "
 "instances that are currently stopped.Only applicable for Windows."
 msgstr ""
+"この設定を有効にすると、プラグインは、現在停止中のローカルで検出されたインス"
+"タンスへの接続を試みません。Windoesでのみ適用されます。"
 
 #, fuzzy
 msgid ""
@@ -33085,6 +33240,8 @@ msgid ""
 "If the VM is locked longer than the defined levels, a warning/critical state "
 "is triggered.If this is set to 'No Levels', the lock duration is not checked."
 msgstr ""
+"VMのロック時間が定義されたレベルを超えると、警告/クリティカル状態が発生しま"
+"す。これを「レベル無し」に設定した場合、ロック時間のチェックは行われません。"
 
 msgid ""
 "If the application of the message matches this regular expression (case "

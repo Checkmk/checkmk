@@ -384,6 +384,10 @@ msgid "%%d locked elements"
 msgstr "%%d gesperrte Elemente"
 
 #, python-format
+msgid "%(family)s (locally installed, download requires login)"
+msgstr ""
+
+#, python-format
 msgid "%.1f mm"
 msgstr "%.1f mm"
 

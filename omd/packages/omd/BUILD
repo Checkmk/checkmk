@@ -250,7 +250,6 @@ py_library(
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
         requirement("psutil"),
-        requirement("marshmallow"),
     ],
 )
 

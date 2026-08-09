@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 
+import ipaddress
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from json import JSONDecodeError
@@ -21,6 +22,15 @@ LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
 
 class CannotRecover(RuntimeError): ...
+
+
+def _host_port_for_url(host: str, port: int) -> str:
+    """Render host:port for use in a URL, bracketing IPv6 literals per RFC 3986."""
+    try:
+        is_ipv6 = ipaddress.ip_address(host).version == 6
+    except ValueError:
+        is_ipv6 = False
+    return f"[{host}]:{port}" if is_ipv6 else f"{host}:{port}"
 
 
 class _ProxmoxVeSession:
@@ -84,7 +94,7 @@ class _ProxmoxVeSession:
 
         self._timeout = timeout
         self._verify_ssl = verify_ssl
-        self._base_url = "https://%s:%d/" % endpoint
+        self._base_url = f"https://{_host_port_for_url(*endpoint)}/"
         self._session = create_session()
 
     def __enter__(self) -> Any:

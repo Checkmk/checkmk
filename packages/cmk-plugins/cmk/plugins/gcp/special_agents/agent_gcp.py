@@ -644,7 +644,7 @@ def run(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
         )
         serializer([assets])
-    except (PermissionDenied, Unauthenticated):
+    except (PermissionDenied, Unauthenticated, ResourceExhausted, InternalServerError):
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
         return

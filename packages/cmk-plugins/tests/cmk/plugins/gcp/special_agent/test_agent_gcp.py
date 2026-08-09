@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import Any
 
 import pytest
+from google.api_core.exceptions import InternalServerError, ResourceExhausted
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -114,7 +115,10 @@ class FakeMonitoringClient:
 
 
 class FakeAssetClient:
-    def __init__(self, assets: Iterable[str] | None = None) -> None:
+    def __init__(
+        self, assets: Iterable[str] | None = None, exception: Exception | None = None
+    ) -> None:
+        self._exception = exception
         if assets is None:
             self._assets: Iterable[str] = [
                 '{"name": "//compute.googleapis.com/projects/checkmk-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
@@ -125,8 +129,9 @@ class FakeAssetClient:
             self._assets = assets
 
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
-        for a in self._assets:
-            yield agent_gcp.Asset.deserialize(a).asset
+        if self._exception is not None:
+            raise self._exception
+        return (agent_gcp.Asset.deserialize(a).asset for a in self._assets)
 
     def __call__(self) -> "FakeAssetClient":
         return self
@@ -289,6 +294,34 @@ def test_asset_serialization(
     assert json.loads(lines[1]) == {"config": list(agent_gcp.SERVICES)}
     for line in lines[2:]:
         agent_gcp.Asset.deserialize(line)
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        InternalServerError("boom"),  # type: ignore[no-untyped-call,unused-ignore]
+        ResourceExhausted("boom"),  # type: ignore[no-untyped-call,unused-ignore]
+    ],
+)
+def test_run_reports_transient_asset_errors_instead_of_crashing(
+    exception: Exception,
+) -> None:
+    client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient(exception=exception))
+    sections: list[agent_gcp.Section] = []
+    collector = collector_factory(sections)
+
+    agent_gcp.run(
+        client,
+        list(agent_gcp.SERVICES.values()),
+        [],
+        cost=None,
+        serializer=collector,
+        piggy_back_prefix="custom-prefix",
+    )
+
+    assert not any(isinstance(s, agent_gcp.AssetSection) for s in sections)
+    exception_sections = [s for s in sections if isinstance(s, agent_gcp.ExceptionSection)]
+    assert any(s.source == "Cloud Asset" and s.exception is exception for s in exception_sections)
 
 
 @pytest.fixture(name="asset_and_piggy_back_sections")

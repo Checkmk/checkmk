@@ -728,7 +728,7 @@ class ModeBackup(WatoMode[object]):
 
                     assert state.bytes_per_second is not None
                     html.write_text_permissive(
-                        _(" (duration: %(duration)s, %(size)s IO: %(io_speed)s/s)")
+                        _(" (duration: %(duration)s, %(size)s I/O: %(io_speed)s/s)")
                         % {
                             "duration": render.timespan(duration),
                             "size": size_txt,

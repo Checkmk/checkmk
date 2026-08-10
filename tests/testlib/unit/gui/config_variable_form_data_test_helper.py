@@ -22,6 +22,7 @@ from typing import Any, ClassVar
 
 import pytest
 
+import cmk.base.default_config
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
@@ -51,6 +52,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     GlobalSettingsContext,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs
@@ -100,6 +102,38 @@ def gui_save_round_trip_disk_value[T](form_spec: FormSpec[T], value: object) -> 
     submitted = RawFrontendData(json.loads(json.dumps(frontend_value)))
     assert validate_value_from_frontend(form_spec, submitted) == []
     return parse_and_validate_frontend_data(form_spec, submitted)
+
+
+@dataclass(frozen=True)
+class NoFactoryDefault:
+    """The variable has no factory default a unit test could see: its config
+    domain either does not define one or derives it from the running site's
+    configuration files."""
+
+
+ENVIRONMENT_DERIVED_DEFAULT_DOMAINS = frozenset({"apache", "rrdcached", "omd"})
+
+
+def factory_default_disk_value(config_variable: ConfigVariable) -> object:
+    """The value the GUI shows for a variable nobody has ever saved: the
+    factory default of the variable's primary config domain. ConfigDomainCore
+    asks the site via the get-configuration automation, whose result is the
+    module-level default config of cmk.base (see _automation_get_configuration
+    in cmk.base.automations.check_mk); the unit test reads that module
+    directly."""
+    domain = config_variable.primary_domain()
+    if isinstance(domain, ConfigDomainCore):
+        value = getattr(cmk.base.default_config, config_variable.ident(), NoFactoryDefault())
+        return NoFactoryDefault() if callable(value) else value
+    if domain.ident() in ENVIRONMENT_DERIVED_DEFAULT_DOMAINS:
+        return NoFactoryDefault()
+    return domain.default_globals().get(config_variable.ident(), NoFactoryDefault())
+
+
+FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {}
+"""Factory defaults the GUI load path consciously rewrites: the disk world
+allows values the form cannot express, and the form spec's migrate maps them
+to the value with the same meaning."""
 
 
 def validate_disk_value(
@@ -2455,6 +2489,37 @@ class ConfigVariableSuite:
             assert gui_save_round_trip_disk_value(value_model, value) == value, (
                 config_variable.ident()
             )
+
+    def test_factory_defaults_load_in_the_gui(
+        self, global_settings_context: GlobalSettingsContext
+    ) -> None:
+        """On a pristine site no global setting was ever saved, so the GUI
+        renders every variable with the factory default of its config domain -
+        a value no disk migration can ever fix, because it never lies on disk.
+        A legacy Dictionary silently ignored factory-default keys the form
+        does not model; a FormSpec rejects the whole value and falls back to
+        the spec default, so the GUI would show - and an unedited save would
+        write - a wrong value. cmc_log_cmk_helpers fell into this trap: its
+        factory default carries a log_level key without a form element, which
+        the port must preserve via ignored_elements. Every factory default
+        must therefore survive the disk load path unchanged, except for the
+        conscious rewrites pinned in FACTORY_DEFAULTS_NORMALIZED_BY_LOAD."""
+        problems: dict[str, object] = {}
+        for ident, config_variable in config_variable_registry.items():
+            value_model = config_variable.value_model(global_settings_context)
+            if not isinstance(value_model, FormSpec):
+                continue
+            factory = factory_default_disk_value(config_variable)
+            if isinstance(factory, NoFactoryDefault):
+                continue
+            expected = FACTORY_DEFAULTS_NORMALIZED_BY_LOAD.get(ident, factory)
+            try:
+                loaded = round_trip_disk_value(config_variable, global_settings_context, factory)
+                if loaded != expected:
+                    problems[ident] = {"factory": factory, "loaded": loaded}
+            except Exception as e:
+                problems[ident] = repr(e)
+        assert problems == {}, pprint.pformat(problems, width=96)
 
     def test_default_disk_value_unchanged(
         self, ident: str, global_settings_context: GlobalSettingsContext

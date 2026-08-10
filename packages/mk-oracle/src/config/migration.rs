@@ -338,6 +338,69 @@ fn parse_custom_sql_sids(
         .unwrap_or_default()
 }
 
+/// Rewrite the `SQLS_SIDS` entries that name a `REMOTE_INSTANCE_*` variable
+/// instead of an Oracle SID.
+///
+/// A section that keeps no SID at all is dropped instead of migrated: an empty
+/// SID list means "run everywhere" and would widen its scope silently.
+///
+/// Returns the warnings for the dropped references and sections.
+fn resolve_remote_instance_sids(
+    custom_sqls: &mut Vec<LegacyCustomSql>,
+    variables: &HashMap<String, String>,
+) -> Vec<String> {
+    let mut warnings = Vec::new();
+    custom_sqls.retain_mut(|custom| {
+        if custom.tns_alias.is_some() {
+            // the alias already pins the section to one instance, its SQLS_SIDS
+            // never reach the migrated config
+            return true;
+        }
+        let resolved: Vec<String> = custom
+            .sids
+            .iter()
+            .filter_map(|sid| match resolve_remote_instance_sid(sid, variables) {
+                Ok(sid) => Some(sid),
+                Err(reason) => {
+                    warnings.push(format!("{}: {reason}", custom.name));
+                    None
+                }
+            })
+            .collect();
+        if !custom.sids.is_empty() && resolved.is_empty() {
+            warnings.push(format!(
+                "{}: no instance left to run on, skipping custom SQL section",
+                custom.name
+            ));
+            return false;
+        }
+        custom.sids = resolved;
+        true
+    });
+    warnings
+}
+
+/// Map a single `SQLS_SIDS` entry to the SID of the migrated instance.
+/// Entries that are not a `REMOTE_INSTANCE_*` reference pass through unchanged.
+fn resolve_remote_instance_sid(
+    sid: &str,
+    variables: &HashMap<String, String>,
+) -> Result<String, String> {
+    if !sid.starts_with("REMOTE_INSTANCE_") {
+        return Ok(sid.to_string());
+    }
+    let Some(value) = variables.get(sid) else {
+        return Err(format!(
+            "SQLS_SIDS references '{sid}', but no such remote instance is defined, ignoring it"
+        ));
+    };
+    parse_remote_instance(sid, value)
+        .and_then(|remote| remote.sid)
+        .ok_or_else(|| {
+            format!("SQLS_SIDS references '{sid}', whose definition is invalid, ignoring it")
+        })
+}
+
 /// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
 /// the enclosing function name (None = top level).
 fn collect_raw_sqls_sids(legacy: &str) -> HashMap<Option<String>, String> {
@@ -416,13 +479,15 @@ pub fn convert(
     }
 
     // Windows legacy plugin doesn't support custom SQL sections
-    let custom_sqls = if cfg!(windows) {
+    let mut custom_sqls = if cfg!(windows) {
         Vec::new()
     } else {
         parse_custom_sqls(legacy, variables)
     };
 
-    for warning in custom_sql_warnings(&custom_sqls) {
+    let mut warnings = resolve_remote_instance_sids(&mut custom_sqls, variables);
+    warnings.extend(custom_sql_warnings(&custom_sqls));
+    for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
         print!("{warning}");
         out.push_str(&warning);
@@ -1235,6 +1300,157 @@ sec2 () {
         ]);
         let result = parse_custom_sqls("", &vars);
         assert_eq!(result[0].sids, vec!["A", "B", "C"]);
+    }
+
+    /// Build the custom SQL sections the way `convert` does: parse, then map
+    /// the `REMOTE_INSTANCE_*` references onto the SIDs of the migrated
+    /// instances. Returns the sections and the warnings.
+    fn parse_and_resolve_custom_sqls(
+        legacy: &str,
+        variables: &HashMap<String, String>,
+    ) -> (Vec<LegacyCustomSql>, Vec<String>) {
+        let mut custom_sqls = parse_custom_sqls(legacy, variables);
+        let warnings = resolve_remote_instance_sids(&mut custom_sqls, variables);
+        (custom_sqls, warnings)
+    }
+
+    #[test]
+    fn test_resolve_remote_instance_sids() {
+        // The legacy plugin sets MK_SID to the variable name of a remote
+        // instance, so SQLS_SIDS addresses it that way; the migrated config
+        // knows it by its SID (field 7).
+        let vars = HashMap::from([
+            (
+                "REMOTE_INSTANCE_FOO".into(),
+                "user:pass::remotehost:1521::prod_sid:11.2".into(),
+            ),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            (
+                "SQLS.sec1.SQLS_SIDS".into(),
+                "PLAIN,REMOTE_INSTANCE_FOO".into(),
+            ),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls("", &vars);
+        assert_eq!(custom_sqls[0].sids, vec!["PLAIN", "PROD_SID"]);
+        assert!(warnings.is_empty(), "got: {warnings:?}");
+    }
+
+    #[test]
+    fn test_resolve_remote_instance_sids_unknown_reference() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "REMOTE_INSTANCE_GONE".into()),
+            (
+                "SQLS.sec2.SQLS_SIDS".into(),
+                "REMOTE_INSTANCE_GONE PLAIN".into(),
+            ),
+            ("SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls("", &vars);
+        assert_eq!(
+            custom_sqls.len(),
+            1,
+            "a section without any resolvable SID must be dropped, not made global"
+        );
+        assert_eq!(custom_sqls[0].name, "sec2");
+        assert_eq!(custom_sqls[0].sids, vec!["PLAIN"]);
+        assert_eq!(
+            warnings,
+            vec![
+                "sec1: SQLS_SIDS references 'REMOTE_INSTANCE_GONE', but no such remote instance is defined, ignoring it".to_string(),
+                "sec1: no instance left to run on, skipping custom SQL section".to_string(),
+                "sec2: SQLS_SIDS references 'REMOTE_INSTANCE_GONE', but no such remote instance is defined, ignoring it".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_resolve_remote_instance_sids_invalid_definition() {
+        let vars = HashMap::from([
+            // no SID in field 7, so the definition yields no instance
+            ("REMOTE_INSTANCE_FOO".into(), "user:pass::host:1521".into()),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "REMOTE_INSTANCE_FOO".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls("", &vars);
+        assert!(custom_sqls.is_empty());
+        assert_eq!(
+            warnings[0],
+            "sec1: SQLS_SIDS references 'REMOTE_INSTANCE_FOO', whose definition is invalid, ignoring it"
+        );
+    }
+
+    #[test]
+    fn test_resolve_remote_instance_sids_keeps_tnsalias_sections() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "REMOTE_INSTANCE_GONE".into()),
+            ("SQLS.sec1.SQLS_TNSALIAS".into(), "TNS".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls("", &vars);
+        assert_eq!(
+            custom_sqls.len(),
+            1,
+            "SQLS_TNSALIAS pins the section, its SQLS_SIDS must not drop it"
+        );
+        assert!(warnings.is_empty(), "got: {warnings:?}");
+    }
+
+    #[test]
+    fn test_resolve_remote_instance_sids_keeps_global_sections() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls("", &vars);
+        assert_eq!(custom_sqls.len(), 1, "no SQLS_SIDS means all instances");
+        assert!(custom_sqls[0].sids.is_empty());
+        assert!(warnings.is_empty());
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_custom_sql_of_remote_instance() {
+        // CMK-37343: a REMOTE_INSTANCE_* reference used to be migrated as a
+        // literal SID, adding an instance that only carried the metric and fell
+        // back to the main connection.
+        let legacy =
+            "sec1 () {\n    SQLS_SIDS=\"REMOTE_INSTANCE_FOO\"\n    SQLS_SQL=\"a.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            (
+                "REMOTE_INSTANCE_FOO".into(),
+                "user:pass::remotehost:1521::PRODSID:11.2".into(),
+            ),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "REMOTE_INSTANCE_FOO".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            !result.contains("- sid: REMOTE_INSTANCE_FOO"),
+            "the reference must not become an own instance, got: {result}"
+        );
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ora = config.ora_sql().expect("ora_sql must be present");
+        let inst = ora
+            .instances()
+            .iter()
+            .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("PRODSID"))
+            .expect("the remote instance must be migrated");
+        assert_eq!(inst.conn().hostname().to_string(), "remotehost");
+        assert_eq!(
+            inst.custom_metrics()
+                .iter()
+                .map(|s| s.item_value().unwrap().as_str().to_string())
+                .collect::<Vec<_>>(),
+            ["sec1"],
+            "the metric must be attached to the migrated remote instance"
+        );
     }
 
     #[test]

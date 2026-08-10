@@ -629,7 +629,7 @@ fn test_execute_config_custom_sqls() {
     // variables set inside the section function are extracted per section
     assert_eq!(
         vars["SQLS_SECTIONS"],
-        "mycustomsection1 mycustomsection2 mycustomsection3 mycustomsection4 mycustomsection5"
+        "mycustomsection1 mycustomsection2 mycustomsection3 mycustomsection4 mycustomsection5 mycustomsection6"
     );
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_SIDS"], "MYINST3");
     assert_eq!(vars["SQLS.mycustomsection1.SQLS_DIR"], "/etc/check_mk");
@@ -650,6 +650,8 @@ fn test_execute_config_custom_sqls() {
     assert_eq!(vars["SQLS.mycustomsection4.SQLS_SQL"], "custom_sql_2.sql");
     assert_eq!(vars["SQLS.mycustomsection5.SQLS_TNSALIAS"], "TNS");
     assert_eq!(vars["SQLS.mycustomsection5.SQLS_SQL"], "custom_sql_2.sql");
+    assert_eq!(vars["SQLS.mycustomsection6.SQLS_SIDS"], "REMOTE_INSTANCE_1");
+    assert_eq!(vars["SQLS.mycustomsection6.SQLS_SQL"], "custom_sql_3.sql");
 }
 
 #[test]
@@ -870,6 +872,12 @@ fn test_migrate_reference_config_custom_metrics() {
                     "mycustomsection4".to_string(),
                     Some(Path::new("custom_sql_2.sql"))
                 ),
+                // SQLS_SIDS=REMOTE_INSTANCE_1 addresses the same instance by
+                // the name of its variable
+                (
+                    "mycustomsection6".to_string(),
+                    Some(Path::new("custom_sql_3.sql"))
+                ),
             ]
         );
         assert_eq!(
@@ -895,7 +903,79 @@ fn test_migrate_reference_config_custom_metrics() {
                 .any(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("NOT_USED")),
             "SQLS_SIDS must be ignored when SQLS_TNSALIAS is set"
         );
+        assert!(
+            !stdout.contains("- sid: REMOTE_INSTANCE_"),
+            "a REMOTE_INSTANCE_* reference must not become an own instance, got: {stdout}"
+        );
     }
+}
+
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_custom_sql_unknown_remote_instance() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    let cfg = dir.join("mk_oracle.cfg");
+    fs::write(
+        &cfg,
+        r#"DBUSER='user:pass'
+REMOTE_INSTANCE_KNOWN='user:pass::remotehost:1521::PRODSID:11.2'
+SQLS_SECTIONS="dangling partly"
+dangling () {
+    SQLS_SIDS="REMOTE_INSTANCE_GONE"
+    SQLS_SQL="a.sql"
+}
+partly () {
+    SQLS_SIDS="REMOTE_INSTANCE_GONE,REMOTE_INSTANCE_KNOWN"
+    SQLS_SQL="b.sql"
+}
+"#,
+    )
+    .unwrap();
+
+    let output = run_bin().args(["-M", cfg.to_str().unwrap()]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(
+        stdout.contains(
+            "# WARNING: dangling: SQLS_SIDS references 'REMOTE_INSTANCE_GONE', but no such remote instance is defined, ignoring it\n"
+        ),
+        "got: {stdout}"
+    );
+    assert!(
+        stdout.contains(
+            "# WARNING: dangling: no instance left to run on, skipping custom SQL section\n"
+        ),
+        "got: {stdout}"
+    );
+    assert!(
+        !stdout.contains("- sid: REMOTE_INSTANCE_"),
+        "the unresolvable reference must not become an instance, got: {stdout}"
+    );
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    assert!(
+        ora.all_sections().iter().all(|s| !s.is_custom_metric()),
+        "a dropped section must not become a global custom metric"
+    );
+    let instance = ora
+        .instances()
+        .iter()
+        .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("PRODSID"))
+        .expect("the remote instance must be migrated");
+    let metrics: Vec<_> = instance
+        .custom_metrics()
+        .iter()
+        .map(|s| s.item_value().unwrap().as_str().to_string())
+        .collect();
+    assert_eq!(
+        metrics,
+        ["partly"],
+        "a section keeping one valid reference stays on that instance"
+    );
 }
 
 // windows ps1 legacy plugin doesn't support custom SQL sections

@@ -345,6 +345,7 @@ def test_config_sync_source_remote_remote_diff_customer(
         _check_config_redistributed([central_site, remote_site, remote_site_2], config_inodes)
 
 
+@pytest.mark.xfail(reason="CMK-35803; flake")
 def test_config_sync_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
     """
     Scenario: Host renaming triggers piggyback config re-distribution

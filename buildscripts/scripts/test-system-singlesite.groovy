@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-integration-packages.groovy
+/// file: test-system-singlesite.groovy
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
@@ -46,7 +46,7 @@ def main() {
 
     currentBuild.description += (
         """
-        |Run integration tests for packages<br>
+        |Run singlesite system tests for<br>
         |VERSION: ${VERSION}<br>
         |EDITION: ${EDITION}<br>
         |selected_distros: ${selected_distros}<br>

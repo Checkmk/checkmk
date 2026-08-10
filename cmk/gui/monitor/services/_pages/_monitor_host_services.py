@@ -27,7 +27,10 @@ from cmk.shared_typing.monitoring.host_services import (
     MonitoringPageLinkButton,
 )
 
-_SUPPORTED_ACTIONS: tuple[str, ...] = ("schedule_downtimes",)
+_SUPPORTED_ACTIONS: tuple[str, ...] = (
+    "acknowledge",
+    "schedule_downtimes",
+)
 
 
 class MonitorHostServicesPage(Page):

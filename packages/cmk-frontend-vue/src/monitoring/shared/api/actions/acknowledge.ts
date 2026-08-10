@@ -6,9 +6,11 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
+import { hostNameQuery, serviceDescriptionQuery } from '@/monitoring/shared/api/actions/query'
 
 export type AcknowledgeHostQueryProblem = components['schemas']['AcknowledgeHostQueryProblem']
+
+export type AcknowledgeServiceQueryProblem = components['schemas']['AcknowledgeServiceQueryProblem']
 
 export interface AcknowledgeOptions {
   comment: string
@@ -23,11 +25,7 @@ export class AcknowledgeApi {
     const body: AcknowledgeHostQueryProblem = {
       acknowledge_type: 'host_by_query',
       query: hostNameQuery(hostNames),
-      comment: options.comment,
-      sticky: options.sticky,
-      persistent: options.persistent,
-      notify: options.notify,
-      ...(options.expireOn && { expire_on: options.expireOn })
+      ...this.commonFields(options)
     }
     unwrap(
       await client.POST('/domain-types/acknowledge/collections/host', {
@@ -35,5 +33,33 @@ export class AcknowledgeApi {
         body
       })
     )
+  }
+
+  public async acknowledgeServices(
+    hostName: string,
+    serviceDescriptions: string[],
+    options: AcknowledgeOptions
+  ): Promise<void> {
+    const body: AcknowledgeServiceQueryProblem = {
+      acknowledge_type: 'service_by_query',
+      query: serviceDescriptionQuery(hostName, serviceDescriptions),
+      ...this.commonFields(options)
+    }
+    unwrap(
+      await client.POST('/domain-types/acknowledge/collections/service', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body
+      })
+    )
+  }
+
+  private commonFields(options: AcknowledgeOptions) {
+    return {
+      comment: options.comment,
+      sticky: options.sticky,
+      persistent: options.persistent,
+      notify: options.notify,
+      ...(options.expireOn && { expire_on: options.expireOn })
+    }
   }
 }

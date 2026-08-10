@@ -111,3 +111,88 @@ describe('AcknowledgeApi.acknowledgeHosts', () => {
     await expect(new AcknowledgeApi().acknowledgeHosts(['db-1'], BASE_OPTIONS)).rejects.toThrow()
   })
 })
+
+describe('AcknowledgeApi.acknowledgeServices', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let postSpy: any
+
+  beforeEach(() => {
+    postSpy = vi.spyOn(client, 'POST')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function mockNoContent(): void {
+    postSpy.mockResolvedValueOnce({
+      data: undefined,
+      error: undefined,
+      response: new Response(null, { status: 204 })
+    } as never)
+  }
+
+  it('scopes the query to the page host and the selected descriptions', async () => {
+    mockNoContent()
+
+    await new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load', 'Memory'], BASE_OPTIONS)
+
+    expect(postSpy).toHaveBeenCalledTimes(1)
+    expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/collections/service', {
+      ...CONTENT_TYPE,
+      body: {
+        acknowledge_type: 'service_by_query',
+        query: {
+          op: 'and',
+          expr: [
+            { op: '=', left: 'host_name', right: 'web-1' },
+            {
+              op: 'or',
+              expr: [
+                { op: '=', left: 'description', right: 'CPU load' },
+                { op: '=', left: 'description', right: 'Memory' }
+              ]
+            }
+          ]
+        },
+        comment: 'expected downtime',
+        sticky: true,
+        persistent: false,
+        notify: true
+      }
+    })
+  })
+
+  it('includes expire_on when an expiry is provided', async () => {
+    mockNoContent()
+
+    await new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load'], {
+      ...BASE_OPTIONS,
+      expireOn: '2026-05-20T07:30:00.000Z'
+    })
+
+    const body = postSpy.mock.calls[0][1].body
+    expect(body.expire_on).toBe('2026-05-20T07:30:00.000Z')
+  })
+
+  it('omits expire_on when no expiry is provided', async () => {
+    mockNoContent()
+
+    await new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load'], BASE_OPTIONS)
+
+    const body = postSpy.mock.calls[0][1].body
+    expect(body).not.toHaveProperty('expire_on')
+  })
+
+  it('throws when the response is not ok', async () => {
+    postSpy.mockResolvedValueOnce({
+      data: undefined,
+      error: {},
+      response: new Response('', { status: 403, statusText: 'Forbidden' })
+    } as never)
+
+    await expect(
+      new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load'], BASE_OPTIONS)
+    ).rejects.toThrow()
+  })
+})

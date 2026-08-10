@@ -23,6 +23,7 @@ import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { createActionRegistry } from '../shared/components/action/registry'
+import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
 import { HostServicesApi } from './api/services'
 import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
@@ -55,7 +56,10 @@ const hostServicesService = new HostServicesService(
   }
 )
 
-const actionRegistry = createActionRegistry<string>([useScheduleServiceDowntimeAction(host)])
+const actionRegistry = createActionRegistry<string>([
+  useAcknowledgeServicesAction(host),
+  useScheduleServiceDowntimeAction(host)
+])
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 

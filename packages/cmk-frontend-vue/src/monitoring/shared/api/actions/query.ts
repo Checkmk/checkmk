@@ -11,3 +11,21 @@ export function hostNameQuery(hostNames: string[]) {
     expr: hostNames.map((name) => ({ op: '=' as const, left: 'name', right: name }))
   }
 }
+
+/** A Livestatus filter matching the named services of a single host. */
+export function serviceDescriptionQuery(hostName: string, serviceDescriptions: string[]) {
+  return {
+    op: 'and' as const,
+    expr: [
+      { op: '=' as const, left: 'host_name', right: hostName },
+      {
+        op: 'or' as const,
+        expr: serviceDescriptions.map((description) => ({
+          op: '=' as const,
+          left: 'description',
+          right: description
+        }))
+      }
+    ]
+  }
+}

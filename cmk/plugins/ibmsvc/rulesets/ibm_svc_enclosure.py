@@ -76,7 +76,7 @@ def _parameter_form_ibm_svc_enclosure() -> Dictionary:
 
 rule_spec_ibm_svc_enclosure = CheckParameters(
     name="ibm_svc_enclosure",
-    title=Title("IBM SVC Enclosure"),
+    title=Title("IBM SVC enclosure"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form_ibm_svc_enclosure,
     condition=HostAndItemCondition(item_title=Title("Name of enclosure")),

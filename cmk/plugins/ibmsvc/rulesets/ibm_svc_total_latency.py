@@ -45,7 +45,7 @@ def _parameter_form_ibm_svc_total_latency() -> Dictionary:
 
 rule_spec_ibm_svc_total_latency = CheckParameters(
     name="ibm_svc_total_latency",
-    title=Title("IBM SVC Total Disk Latency"),
+    title=Title("IBM SVC total disk latency"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form_ibm_svc_total_latency,
     condition=HostAndItemCondition(

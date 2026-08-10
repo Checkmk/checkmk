@@ -51,7 +51,7 @@ def _parameter_form_ibm_svc_host() -> Dictionary:
 
 rule_spec_ibm_svc_host = CheckParameters(
     name="ibm_svc_host",
-    title=Title("IBM SVC Hosts"),
+    title=Title("IBM SVC hosts"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form_ibm_svc_host,
     condition=HostCondition(),

@@ -11,11 +11,14 @@ CASES covers the config variables of all editions in one flat table; the
 config variable registry of the edition under test decides which entries
 apply, see generate_config_variable_tests."""
 
+# mypy: disable-error-code="explicit-any"
+
 import json
-from collections.abc import Mapping
+import pprint
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import pytest
 
@@ -36,18 +39,23 @@ from cmk.gui.form_specs._utils import (
     parse_and_validate_frontend_data,
     validate_value_from_frontend,
 )
+from cmk.gui.form_specs.unstable import ListUniqueSelection, OptionalChoice
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FormSpecTuple
 from cmk.gui.form_specs.unstable.legacy_converter.transform import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
+from cmk.gui.form_specs.unstable.list_unique_selection import UniqueSingleChoiceElement
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
     GlobalSettingsContext,
 )
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.internal.form_specs import SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from tests.testlib.fake_site import edition as edition_from_env
 from tests.testlib.gui.common_fixtures import perform_load_plugins
 
@@ -162,16 +170,28 @@ class DefaultWithoutKeys:
     keys: frozenset[str]
 
 
+_REUSE_LOWER_EDITION = object()
+
+
 @dataclass(frozen=True)
 class EditionDependentDefault:
-    """A config variable whose default differs between the community edition
-    and the commercial editions."""
+    """A pin whose value differs between editions. Every edition reuses the
+    value of the next lower edition (declaration order of Edition: community,
+    pro, ultimate, ultimatemt, cloud) unless it spells out its own, so a pin
+    states only the editions where the value changes. community is the base
+    of the chain and therefore always required."""
 
     community: object
-    commercial: object
+    pro: object = _REUSE_LOWER_EDITION
+    ultimate: object = _REUSE_LOWER_EDITION
+    ultimatemt: object = _REUSE_LOWER_EDITION
+    cloud: object = _REUSE_LOWER_EDITION
 
     def for_edition(self, edition: Edition) -> object:
-        return self.community if edition is Edition.COMMUNITY else self.commercial
+        editions = list(Edition)
+        while (value := getattr(self, edition.long)) is _REUSE_LOWER_EDITION:
+            edition = editions[editions.index(edition) - 1]
+        return value
 
 
 def resolve_case_value(
@@ -271,6 +291,654 @@ def is_scalar_value_model(value_model: object) -> bool:
     if isinstance(value_model, TransformDataForLegacyFormatOrRecomposeFunction):
         return is_scalar_value_model(value_model.wrapped_form_spec)
     return type(value_model) in SCALAR_VALUE_MODELS
+
+
+@dataclass(frozen=True)
+class NoSaveableDefault:
+    """The revealed sub-form has no saveable default (e.g. an InputHint field):
+    the GUI forces the user to fill it in before saving."""
+
+
+@dataclass(frozen=True)
+class UnstableDefault:
+    """The revealed default depends on the environment (host name, random
+    secret, current time): only its presence is pinned, not its value."""
+
+
+@dataclass(frozen=True)
+class AbsentDefault:
+    """The reveal point does not exist in this edition (used inside
+    EditionDependentDefault)."""
+
+
+_ABSENT_PATH = object()
+
+
+def revealed_defaults_mismatches(
+    computed: Mapping[str, object], pinned: Mapping[str, object]
+) -> dict[str, tuple[object, object]]:
+    """The reveal paths whose computed default their pin does not accept,
+    mapped to (pin, computed value); _ABSENT_PATH means the path does not
+    exist on that side."""
+
+    def accepts(pin: object, value: object) -> bool:
+        match pin:
+            case AbsentDefault():
+                return value is _ABSENT_PATH
+            case UnstableDefault():
+                return value is not _ABSENT_PATH
+            case _:
+                return value is not _ABSENT_PATH and value == pin
+
+    return {
+        path: (pin, value)
+        for path in set(computed) | set(pinned)
+        if not accepts(
+            pin := pinned.get(path, AbsentDefault()), value := computed.get(path, _ABSENT_PATH)
+        )
+    }
+
+
+def collect_revealed_defaults(value_model: object) -> dict[str, object]:
+    """The defaults the GUI reveals on interaction, keyed by reveal path.
+
+    A reveal point is a sub-form whose default is not part of the stored value
+    but surfaces through a GUI interaction: clicking "Add element" on a list
+    for example. The test pins the revealed defaults to detect regressions in
+    the GUI. Path segments name the chain of interactions: an optional
+    dictionary element by its key, ``[add]`` for the row a list's add-element
+    button inserts, ``[enable]`` for an activated optional choice, a cascading
+    alternative by its name, ``[choice N]`` for element N of a legacy
+    Alternative (its elements have no names) and tuple elements by index."""
+    revealed: dict[str, object] = {}
+    _walk_value_model(value_model, "", revealed)
+    return revealed
+
+
+def _walk_value_model(model: object, path: str, revealed: dict[str, object]) -> None:
+    if isinstance(model, FormSpec):
+        _walk_form_spec(model, path, revealed)
+    else:
+        _walk_legacy_valuespec(model, path, revealed)
+
+
+def _join_key(path: str, key: str) -> str:
+    return f"{path}.{key}" if path else key
+
+
+def _resolve_lazy_form_spec(spec: FormSpec[Any] | Callable[[], FormSpec[Any]]) -> FormSpec[Any]:
+    return spec if isinstance(spec, FormSpec) else spec()
+
+
+def _resolve_parameter_form(element: form_specs.DictElement[Any]) -> FormSpec[Any]:
+    return _resolve_lazy_form_spec(element.parameter_form)
+
+
+def _form_spec_revealed_default(spec: FormSpec[Any]) -> object:
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+    try:
+        return visitor.to_disk(DEFAULT_VALUE)
+    except MKGeneralException:
+        return _partial_revealed_default(spec)
+
+
+def _partial_revealed_default(spec: FormSpec[Any]) -> object:
+    """A composite whose default is not saveable as a whole (some field is an
+    InputHint) still prefills its other fields: pin those individually."""
+    if isinstance(spec, form_specs.Dictionary):
+        return {
+            key: _form_spec_revealed_default(_resolve_parameter_form(element))
+            for key, element in spec.elements.items()
+            if element.required
+        }
+    if isinstance(spec, FormSpecTuple):
+        return tuple(_form_spec_revealed_default(element) for element in spec.elements)
+    return NoSaveableDefault()
+
+
+def _contains_no_saveable_default(value: object) -> bool:
+    match value:
+        case NoSaveableDefault():
+            return True
+        case dict():
+            return any(_contains_no_saveable_default(v) for v in value.values())
+        case tuple() | list():
+            return any(_contains_no_saveable_default(v) for v in value)
+        case _:
+            return False
+
+
+def _added_list_element_disk_value(spec: form_specs.List[Any]) -> object:
+    """What actually lands on disk when the user clicks "Add element" and
+    saves: the frontend clones the vue spec's element_default_value verbatim."""
+    list_visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+    vue_spec, _vue_value = list_visitor.to_vue(RawDiskData([]))
+    assert isinstance(vue_spec, shared_type_defs.List)
+    frontend_value = json.loads(json.dumps(vue_spec.element_default_value))
+    element_visitor = get_visitor(
+        spec.element_template, VisitorOptions(migrate_values=True, mask_values=False)
+    )
+    return element_visitor.to_disk(RawFrontendData(frontend_value))
+
+
+def _list_unique_selection_template(spec: ListUniqueSelection[Any]) -> FormSpec[Any]:
+    assert spec.single_choice_type is form_specs.SingleChoice
+    return SingleChoiceExtended(
+        elements=[
+            element.parameter_form
+            for element in spec.elements
+            if isinstance(element, UniqueSingleChoiceElement)
+        ],
+        prefill=spec.single_choice_prefill,
+    )
+
+
+_FORM_SPEC_LEAVES = (
+    form_specs.BooleanChoice,
+    form_specs.DataSize,
+    form_specs.FileUpload,
+    form_specs.FixedValue,
+    form_specs.Float,
+    form_specs.Integer,
+    form_specs.MultilineText,
+    form_specs.MultipleChoice,
+    form_specs.Password,
+    form_specs.Percentage,
+    form_specs.RegularExpression,
+    form_specs.SingleChoice,
+    form_specs.String,
+    form_specs.TimeSpan,
+    MultipleChoiceExtended,
+    SingleChoiceExtended,
+)
+
+
+def _walk_form_spec(spec: FormSpec[Any], path: str, revealed: dict[str, object]) -> None:
+    if isinstance(spec, TransformDataForLegacyFormatOrRecomposeFunction):
+        _walk_form_spec(_resolve_lazy_form_spec(spec.wrapped_form_spec), path, revealed)
+    elif isinstance(spec, LegacyValueSpec):
+        _walk_legacy_valuespec(spec.valuespec, path, revealed)
+    elif isinstance(spec, form_specs.Dictionary):
+        for key, dict_element in spec.elements.items():
+            element_path = _join_key(path, key)
+            parameter_form = _resolve_parameter_form(dict_element)
+            if not dict_element.required:
+                revealed[element_path] = _form_spec_revealed_default(parameter_form)
+            _walk_form_spec(parameter_form, element_path, revealed)
+    elif isinstance(spec, form_specs.List):
+        template_path = f"{path}[add]"
+        template_default = _form_spec_revealed_default(spec.element_template)
+        revealed[template_path] = template_default
+        if not _contains_no_saveable_default(template_default):
+            assert _added_list_element_disk_value(spec) == template_default, template_path
+        _walk_form_spec(spec.element_template, template_path, revealed)
+    elif isinstance(spec, ListUniqueSelection):
+        revealed[f"{path}[add]"] = _form_spec_revealed_default(
+            _list_unique_selection_template(spec)
+        )
+    elif isinstance(spec, form_specs.CascadingSingleChoice):
+        for choice_element in spec.elements:
+            element_path = _join_key(path, choice_element.name)
+            revealed[element_path] = _form_spec_revealed_default(choice_element.parameter_form)
+            _walk_form_spec(choice_element.parameter_form, element_path, revealed)
+    elif isinstance(spec, OptionalChoice):
+        parameter_path = f"{path}[enable]"
+        revealed[parameter_path] = _form_spec_revealed_default(spec.parameter_form)
+        _walk_form_spec(spec.parameter_form, parameter_path, revealed)
+    elif isinstance(spec, FormSpecTuple):
+        for index, tuple_element in enumerate(spec.elements):
+            _walk_form_spec(tuple_element, _join_key(path, str(index)), revealed)
+    elif isinstance(spec, _FORM_SPEC_LEAVES):
+        pass
+    else:
+        raise NotImplementedError(f"unhandled form spec {type(spec).__name__} at path {path!r}")
+
+
+def _legacy_revealed_default(vs: valuespec.ValueSpec[Any]) -> object:
+    try:
+        return vs.default_value()
+    except Exception:
+        return NoSaveableDefault()
+
+
+def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -> None:
+    """Delete this walker, _legacy_revealed_default and the LegacyValueSpec
+    handoff in _walk_form_spec once the last config variable is ported to
+    FormSpec (CMK-24409): only _walk_form_spec is needed then."""
+    if isinstance(vs, valuespec.Transform | valuespec.Foldable):
+        _walk_legacy_valuespec(vs._valuespec, path, revealed)
+    elif isinstance(vs, valuespec.Dictionary):
+        for key, element_vs in vs._get_elements():
+            element_path = _join_key(path, key)
+            if vs._optional_keys and key not in vs._required_keys:
+                revealed[element_path] = _legacy_revealed_default(element_vs)
+            _walk_legacy_valuespec(element_vs, element_path, revealed)
+    elif isinstance(vs, valuespec.ListOf | valuespec.ListOfStrings):
+        template_path = f"{path}[add]"
+        revealed[template_path] = _legacy_revealed_default(vs._valuespec)
+        _walk_legacy_valuespec(vs._valuespec, template_path, revealed)
+    elif isinstance(vs, valuespec.CascadingDropdown):
+        for ident, _title, sub_vs in vs.choices():
+            if sub_vs is None:
+                continue
+            element_path = _join_key(path, str(ident))
+            revealed[element_path] = _legacy_revealed_default(sub_vs)
+            _walk_legacy_valuespec(sub_vs, element_path, revealed)
+    elif isinstance(vs, valuespec.Optional):
+        parameter_path = f"{path}[enable]"
+        revealed[parameter_path] = _legacy_revealed_default(vs._valuespec)
+        _walk_legacy_valuespec(vs._valuespec, parameter_path, revealed)
+    elif isinstance(vs, valuespec.Alternative):
+        for index, element_vs in enumerate(vs._elements):
+            element_path = _join_key(path, f"[choice {index}]")
+            revealed[element_path] = _legacy_revealed_default(element_vs)
+            _walk_legacy_valuespec(element_vs, element_path, revealed)
+    elif isinstance(vs, valuespec.Tuple):
+        for index, element_vs in enumerate(vs._elements):
+            _walk_legacy_valuespec(element_vs, _join_key(path, str(index)), revealed)
+
+
+REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
+    "actions": {
+        "[add]": {
+            "action": ("email", {"body": "", "subject": "", "to": ""}),
+            "disabled": False,
+            "hidden": False,
+            "id": "",
+            "title": "",
+        },
+        "[add].action.email": {"body": "", "subject": "", "to": ""},
+        "[add].action.script": {"script": ""},
+    },
+    "adhoc_downtime": {
+        "[enable]": {"comment": "", "duration": 60},
+    },
+    "agent_bakery_logging": {
+        "[choice 0]": None,
+        "[choice 1]": 30,
+    },
+    "agent_deployment_central": {
+        "automation_user": None,
+        "central_url": "",
+    },
+    "agent_deployment_host_selection": {
+        "match_exclude_hosts": [],
+        "match_exclude_hosts[add]": None,
+        "match_folders": [],
+        "match_folders[add]": "",
+        "match_hostgroups": [],
+        "match_hostlabels": {},
+        "match_hosts": [],
+        "match_hosts[add]": None,
+        "match_hosttags": {},
+        "match_site": [],
+    },
+    "agent_deployment_remote": {
+        "certificates": [],
+        "certificates[add]": None,
+        "certificates[add].[choice 0]": None,
+        "certificates[add].[choice 1]": b"",
+        "certificates[add].[choice 2]": "",
+        "remote_url": "",
+    },
+    "auth_by_http_header": {
+        "[enable]": "X-Remote-User",
+    },
+    "builtin_icon_visibility": {
+        "[add]": ("parent_child_topology", {}),
+        "[add].1.sort_index": 0,
+        "[add].1.toplevel": True,
+    },
+    "bulk_discovery_default_settings": {
+        "mode.custom": {
+            "add_new_services": False,
+            "remove_vanished_services": False,
+            "update_changed_service_labels": False,
+            "update_changed_service_parameters": False,
+            "update_host_labels": False,
+        },
+        "mode.update_everything": {
+            "add_new_services": True,
+            "remove_vanished_services": True,
+            "update_changed_service_labels": True,
+            "update_changed_service_parameters": True,
+            "update_host_labels": True,
+        },
+    },
+    "cmc_config_multiprocessing": {
+        "limit_workers": 1,
+    },
+    "cmc_graphite": {
+        "[add]": {"host": "127.0.0.1", "mangling": False, "port": 2003, "prefix": ""},
+    },
+    "cmc_real_time_checks": {
+        "[choice 0]": None,
+        "[choice 1]": {"port": 6559},
+    },
+    "cmc_smartping_tuning": {
+        "throttling": (10, 1000),
+    },
+    "cmc_statehist_cache": {
+        "[enable]": {"horizon": 63072000, "max_core_downtime": 30},
+        "[enable].tarpit": 0,
+    },
+    "custom_service_attributes": {
+        "[add]": {"ident": "", "title": "", "type": "TextAscii"},
+    },
+    "default_user_profile": {},
+    "diskspace_cleanup": {
+        "cleanup_abandoned_host_files": 2592000,
+        "max_file_age": 31536000,
+        "min_free_bytes": (0, 2592000),
+    },
+    "graph_timeranges": {
+        "[add]": {"duration": 0, "title": ""},
+    },
+    "hostname_translation": {
+        "case": None,
+        "drop_domain": True,
+        "mapping": [],
+        "mapping[add]": ("", ""),
+        "regex": [],
+        "regex[add]": ("", ""),
+    },
+    "http_proxies": {
+        "[add]": {
+            "ident": "",
+            "proxy_config": {"port": 0, "proxy_server_name": "", "scheme": "http"},
+            "title": "",
+        },
+        "[add].proxy_config.auth": UnstableDefault(),
+        "[add].proxy_config.auth.password.password": "",
+        "[add].proxy_config.auth.password.store": NoSaveableDefault(),
+    },
+    "inventory_check_interval": {
+        "[enable]": 720,
+    },
+    "inventory_cleanup": {
+        "default.[choice 0]": {
+            "file_age": 34560000,
+            "number_of_history_entries": 100,
+            "strategy": "and",
+        },
+        "default.[choice 1]": None,
+        "for_hosts[add]": {"parameters": ("file_age", 34560000), "regex_or_explicit": []},
+        "for_hosts[add].parameters.combined": {
+            "file_age": 34560000,
+            "number_of_history_entries": 100,
+            "strategy": "and",
+        },
+        "for_hosts[add].parameters.file_age": 34560000,
+        "for_hosts[add].parameters.number_of_history_entries": 100,
+        "for_hosts[add].regex_or_explicit[add]": "",
+        "for_hosts[add].regex_or_explicit[add].[choice 0]": "",
+        "for_hosts[add].regex_or_explicit[add].[choice 1]": "~",
+    },
+    "ldap_quarantine_period": {
+        "[enable]": 2592000,
+    },
+    "lock_on_logon_failures": {
+        "[enable]": 1,
+    },
+    "login_screen": {
+        "footer_links": [],
+        "footer_links[add]": ("", "", "_blank"),
+        "hide_version": True,
+        "login_message": "",
+    },
+    "metric_backend": {
+        "disabled": None,
+        "enabled": {
+            "https_port": 26900,
+            "relative_memory_limit_percentage": 50.0,
+            "tls_port": 27907,
+        },
+        "enabled.http_port": 26409,
+    },
+    "mkeventd_notify_remotehost": {
+        "[enable]": "",
+    },
+    "mkeventd_service_levels": {
+        "[add]": (0, ""),
+    },
+    "network_flow": {
+        "disabled": None,
+        "enabled": {
+            "dns_mode": 3,
+            "flow_source_endpoints": [],
+            "local_networks": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+            "retention_days": 30,
+        },
+        "enabled.flow_source_endpoints[add]": ("connect", ""),
+        "enabled.flow_source_endpoints[add].connect": "",
+        "enabled.flow_source_endpoints[add].listen": 1,
+        "enabled.local_networks[add]": "",
+    },
+    "notification_fallback_format": {
+        "asciimail": {},
+        "asciimail.DictGroupExtendedtitleTitleBulknotificationshelptextNonelayoutDictionaryGroupLayoutverticalvertical.bulk_sort_order": "newest_first",
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.disable_multiplexing": True,
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from": {},
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.address": "",
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.display_name": "",
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_subject": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to": {},
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.address": "",
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.display_name": "",
+        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.service_subject": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+        "asciimail.common_body": "Host:     $HOSTNAME$\nAlias:    $HOSTALIAS$\nAddress:  $HOSTADDRESS$\n",
+        "asciimail.host_body": "Event:    $EVENT_TXT$\nOutput:   $HOSTOUTPUT$\nPerfdata: $HOSTPERFDATA$\n$LONGHOSTOUTPUT$\n",
+        "asciimail.service_body": "Service:  $SERVICEDESC$\nEvent:    $EVENT_TXT$\nOutput:   $SERVICEOUTPUT$\nPerfdata: $SERVICEPERFDATA$\n$LONGSERVICEOUTPUT$\n",
+        "mail": {},
+        "mail.DictGroupExtendedtitleTitleBulknotificationshelptextNonelayoutDictionaryGroupLayoutverticalvertical.bulk_sort_order": "newest_first",
+        "mail.DictGroupExtendedtitleTitleBulknotificationshelptextNonelayoutDictionaryGroupLayoutverticalvertical.notifications_with_graphs": 5,
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.contact_groups": True,
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.elements": [
+            "abstime",
+            "longoutput",
+            "graph",
+        ],
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.graphs_per_notification": 5,
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_labels": True,
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_tags": True,
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.insert_html_section": "<HTMLTAG>CONTENT</HTMLTAG>",
+        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.svc_labels": True,
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.disable_multiplexing": True,
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from": {},
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.address": "",
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.display_name": "",
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_subject": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to": {},
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.address": "",
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.display_name": "",
+        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.service_subject": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical": EditionDependentDefault(
+            community=AbsentDefault(),
+            cloud={},
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp": EditionDependentDefault(
+            community=AbsentDefault(), pro={"port": 25, "smarthosts": []}
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.auth": EditionDependentDefault(
+            community=AbsentDefault(), pro=UnstableDefault()
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.auth.password.password": EditionDependentDefault(
+            community=AbsentDefault(), pro=""
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.auth.password.store": EditionDependentDefault(
+            community=AbsentDefault(), pro=NoSaveableDefault()
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.encryption": EditionDependentDefault(
+            community=AbsentDefault(), pro="ssl_tls"
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.smarthosts[add]": EditionDependentDefault(
+            community=AbsentDefault(), pro=""
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix": (
+            "automatic_http",
+            None,
+        ),
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix.automatic_http": None,
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix.automatic_https": None,
+        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix.manual": UnstableDefault(),
+        "mail.DictGroupExtendedtitleTitleTroubleshootingtestingsettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.notification_rule": True,
+    },
+    "notification_spooler_config": {
+        "concurrency[add]": ("mail", {"process_count": 1, "retries": 3}),
+        "concurrency[add].1.timeout": 60,
+        "forwarding_process_count": 1,
+        "incoming": {
+            "authentication": "tls_authenticated",
+            "encryption": "encrypted",
+            "heartbeat_interval": 10,
+            "listen_port": 6555,
+        },
+        "outgoing[add]": {
+            "address": "",
+            "cooldown": 20,
+            "encryption": "encrypted",
+            "heartbeat_interval": 10,
+            "heartbeat_timeout": 3,
+            "port": 6555,
+        },
+    },
+    "ntop_connection": {
+        "admin_password.password": "",
+        "admin_password.store": NoSaveableDefault(),
+    },
+    "password_policy": {
+        "max_age": 31536000,
+        "min_length": 12,
+        "num_groups": 1,
+        "wordlist_check": True,
+    },
+    "product_usage_analytics": {
+        "proxy_setting.environment": "environment",
+        "proxy_setting.global": None,
+        "proxy_setting.no_proxy": None,
+        "proxy_setting.url": {"port": 0, "proxy_server_name": "", "scheme": "http"},
+        "proxy_setting.url.auth": UnstableDefault(),
+        "proxy_setting.url.auth.password.password": "",
+        "proxy_setting.url.auth.password.store": NoSaveableDefault(),
+    },
+    "profiling_options": {
+        "max_age_days": 1,
+    },
+    "quicksearch_search_order": {
+        "[add]": ("menu", "continue"),
+    },
+    "remote_status": {
+        "[enable]": (6558, False, None),
+        "[enable].2[enable]": [],
+        "[enable].2[enable][add]": "",
+    },
+    "replication": {
+        "[enable]": {"connect_timeout": 10, "interval": 10, "master": ("", 6558)},
+        "[enable].disabled": True,
+        "[enable].fallback": 60,
+        "[enable].logging": True,
+        "[enable].takeover": 30,
+    },
+    "reporting_email_options": {
+        "body": "Scheduled Checkmk Report $TITLE$.\n",
+        "filename": "report-$DATE$.pdf",
+        "from": "",
+        "reply_to": "",
+        "subject": "Checkmk $PERIODNAME$ '$TITLE$'",
+    },
+    "reporting_graph_layout": {
+        "vertical_axis_width.explicit": 40.0,
+    },
+    "reporting_rangespec": {
+        "age": 0,
+        "date": UnstableDefault(),
+        "time": UnstableDefault(),
+    },
+    "service_view_grouping": {
+        "[add]": {"min_items": 2, "pattern": "", "title": ""},
+    },
+    "session_mgmt": {
+        "max_duration": {"enforce_reauth": 86400},
+        "max_duration.enforce_reauth_warning_threshold": 900,
+        "user_idle_timeout": 5400,
+    },
+    "sidebar_notify_interval": {
+        "[enable]": 10.0,
+    },
+    "single_user_session": {
+        "[enable]": 60,
+    },
+    "site_livestatus_tcp": {
+        "[enable]": {
+            "instances": 500,
+            "only_from": ["0.0.0.0", "::/0"],
+            "per_source": 250,
+            "port": 6557,
+        },
+        "[enable].only_from[add]": "",
+        "[enable].tls": True,
+    },
+    "site_mkeventd": {
+        "[enable]": [],
+    },
+    "site_opentelemetry_collector_memory_limit": {
+        "limit.absolute": {"limit": 0, "spike_limit": 0},
+        "limit.relative": {"limit": 80, "spike_limit": 20},
+    },
+    "site_subject_alternative_names": {
+        "[add]": "",
+    },
+    "site_trace_receive": {
+        "[enable]": {"address": "[::1]", "port": 4317},
+    },
+    "site_trace_send": {
+        "local_site": True,
+        "no_tracing": True,
+        "other_collector": {"url": NoSaveableDefault()},
+    },
+    "snmp_credentials": {
+        "[add]": {"credentials": "public", "description": ""},
+        "[add].credentials.[choice 0]": "",
+        "[add].credentials.[choice 1]": ("noAuthNoPriv", ""),
+        "[add].credentials.[choice 2]": ("authNoPriv", "md5", "", ""),
+        "[add].credentials.[choice 3]": ("authPriv", "md5", "", "", "DES", ""),
+        "[add].engine_ids": [],
+        "[add].engine_ids[add]": "",
+    },
+    "translate_snmptraps": {
+        "True": {},
+        "True.add_description": True,
+    },
+    "trusted_certificate_authorities": {
+        "trusted_cas[add]": None,
+        "trusted_cas[add].[choice 0]": None,
+        "trusted_cas[add].[choice 1]": b"",
+        "trusted_cas[add].[choice 2]": "",
+    },
+    "user_downtime_timeranges": {
+        "[add]": {"end": 86400, "title": ""},
+        "[add].end.[choice 0]": 0,
+        "[add].end.[choice 1]": "next_day",
+    },
+    "user_icons_and_actions": {
+        "[add]": ("", {"icon": None}),
+        "[add].1.sort_index": 15,
+        "[add].1.title": "",
+        "[add].1.toplevel": True,
+        "[add].1.url": ("", "_blank"),
+    },
+    "user_localizations": {
+        "[add]": ("", {}),
+        "[add].1.en": "",
+    },
+    "virtual_host_trees": {
+        "[add]": {"exclude_empty_tag_choices": False, "id": "", "title": "", "tree_spec": []},
+        "[add].tree_spec[add]": "agent",
+    },
+    "wato_icon_categories": {
+        "[add]": ("", ""),
+    },
+}
 
 
 DEFAULT_DISK_VALUES: Mapping[str, object] = {
@@ -377,7 +1045,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
             "cmk.web.slow-views": 30,
             "cmk.web.automatic_host_removal": 30,
         },
-        commercial={
+        pro={
             "cmk.web": 30,
             "cmk.web.auth": 30,
             "cmk.web.ldap": 30,
@@ -1837,6 +2505,36 @@ class ConfigVariableSuite:
         )
         if self.EDITION is Edition.ULTIMATEMT:
             assert set(DEFAULT_DISK_VALUES) - set(config_variable_registry) <= (
+                CLOUD_EXCLUSIVE_VARIABLES
+            )
+
+    def test_revealed_defaults_unchanged(
+        self, global_settings_context: GlobalSettingsContext
+    ) -> None:
+        """The defaults the GUI reveals on interaction - the row inserted by a
+        list's "Add element" button, the sub-form of an activated optional
+        element or choice, a selected cascading alternative - are not part of
+        any stored value, so the round-trip tests never exercise them.
+        Changing one must be a conscious decision, made in REVEALED_DEFAULTS
+        as well: in particular a FormSpec port that changes what the GUI
+        inserts must update the pins in the same commit, so the change is
+        part of the port's diff."""
+        mismatches = {}
+        for ident, config_variable in config_variable_registry.items():
+            computed = collect_revealed_defaults(
+                config_variable.value_model(global_settings_context)
+            )
+            pinned = {
+                path: value.for_edition(self.EDITION)
+                if isinstance(value, EditionDependentDefault)
+                else value
+                for path, value in REVEALED_DEFAULTS.get(ident, {}).items()
+            }
+            if bad_paths := revealed_defaults_mismatches(computed, pinned):
+                mismatches[ident] = bad_paths
+        assert mismatches == {}, pprint.pformat(mismatches, width=96)
+        if self.EDITION is Edition.ULTIMATEMT:
+            assert set(REVEALED_DEFAULTS) - set(config_variable_registry) <= (
                 CLOUD_EXCLUSIVE_VARIABLES
             )
 

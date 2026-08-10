@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useId from '@/lib/useId'
@@ -26,6 +27,12 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<MetricBackendCustomQuery>('data', { required: true })
+
+const serviceNameTemplateErrors = computed<string[]>(() =>
+  props.backendValidation
+    .filter((message) => message.location[0] === 'service_name_template')
+    .map((message) => message.message)
+)
 
 const componentId = useId()
 </script>
@@ -51,6 +58,7 @@ const componentId = useId()
               type="text"
               field-size="LARGE"
               :placeholder="_t('Service name template')"
+              :external-errors="serviceNameTemplateErrors"
             />
             <CmkHelpText :help="METRIC_BACKEND_MACRO_HELP" />
           </div>

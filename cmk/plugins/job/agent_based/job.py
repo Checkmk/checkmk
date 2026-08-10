@@ -294,7 +294,7 @@ def check_job(
     if job is None:
         return
 
-    if job.get("exit_code") is None:
+    if job.get("exit_code") is None or not ("start_time" in job or "running_start_time" in job):
         yield Result(
             state=State.UNKNOWN,
             summary="Got incomplete information for this job",

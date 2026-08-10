@@ -13,8 +13,13 @@ when instantiated.
 import datetime as dt
 from collections.abc import Mapping, Sequence
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.livestatus_client import MultiSiteConnection
+from cmk.livestatus_client import (
+    LivestatusClient,
+    MultiSiteConnection,
+    ScheduleForcedServiceCheck,
+)
 from cmk.livestatus_client.expressions import And, NothingExpression, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
@@ -22,6 +27,7 @@ from cmk.livestatus_client.tables import Hosts, Services
 from ._exceptions import ServiceNotFoundError
 from ._models import (
     HostState,
+    RescheduleTarget,
     Service,
     ServiceFilter,
     ServiceLabelValue,
@@ -191,6 +197,23 @@ _LIVESTATUS_COLUMN_OVERRIDES: Mapping[ServiceSortColumn, str] = {
     ServiceSortColumn.NAME: "description",
     ServiceSortColumn.SUMMARY: "plugin_output",
 }
+
+
+class LiveStatusServiceActions:
+    def __init__(self, *, connection: MultiSiteConnection) -> None:
+        self._connection = connection
+
+    def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ScheduleForcedServiceCheck(
+                    host_name=HostName(target.host_name),
+                    description=target.description,
+                    check_time=target.check_time,
+                ),
+                SiteId(target.site_id),
+            )
 
 
 def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:

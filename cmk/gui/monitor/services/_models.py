@@ -145,6 +145,16 @@ class ServiceSort:
         return f"{self.column.value}:{self.direction.value}"
 
 
+@dataclasses.dataclass(frozen=True)
+class RescheduleTarget:
+    """A single service check to be forcibly rescheduled at a specific time."""
+
+    site_id: str
+    host_name: str
+    description: str
+    check_time: dt.datetime
+
+
 # NOTE: this is intended to indicate that a stringified filter has been properly parsed into a
 # specific query implementation. For now, we are only supporting Livestatus queries, but this would
 # allow us to easily swap out for an alternative filter parser, e.g. SQL.

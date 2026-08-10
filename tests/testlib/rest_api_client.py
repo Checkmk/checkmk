@@ -4902,6 +4902,24 @@ class MonitorHostsClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def reschedule_services(
+        self,
+        services: list[dict[str, str]],
+        spread_minutes: int | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/monitor/services/actions/reschedule",
+            body=_only_set_keys(
+                {
+                    "services": services,
+                    "spread_minutes": spread_minutes,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
 
 class DisabledEndpointStubClient(RestApiClient):
     """Test-only client for verifying the disabled_endpoint mechanism returns 403."""

@@ -995,6 +995,91 @@ class TestMonitorServiceOverview:
         assert "credentials" in resp.json["detail"]
 
 
+class TestMonitorHostServicesReschedule:
+    def test_reschedule_sends_forced_check_command(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.expect_query(
+            f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
+            match_type="ellipsis",
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.reschedule_services(
+                services=[
+                    {
+                        "site_id": _SITE_ID,
+                        "host_name": _HOSTNAME,
+                        "name": _SERVICE_DESCRIPTION,
+                    }
+                ]
+            )
+
+        assert resp.json["rescheduled"] == 1
+
+    def test_reschedule_sends_one_command_per_service(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.expect_query(
+            f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
+            match_type="ellipsis",
+        )
+        mock_livestatus.expect_query(
+            f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};Memory;...",
+            match_type="ellipsis",
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.reschedule_services(
+                services=[
+                    {
+                        "site_id": _SITE_ID,
+                        "host_name": _HOSTNAME,
+                        "name": _SERVICE_DESCRIPTION,
+                    },
+                    {"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": "Memory"},
+                ],
+                spread_minutes=5,
+            )
+
+        assert resp.json["rescheduled"] == 2
+
+    def test_reschedule_without_services_touches_no_site(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.reschedule_services(services=[])
+
+        assert resp.json["rescheduled"] == 0
+
+    def test_negative_spread_is_rejected(self, clients: ClientRegistry) -> None:
+        resp = clients.MonitorHosts.reschedule_services(
+            services=[{"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION}],
+            spread_minutes=-1,
+            expect_ok=False,
+        )
+
+        assert resp.status_code == 400
+
+    def test_invalid_credentials(self, clients: ClientRegistry) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials("foouser", "barpassword")
+
+        resp = client.reschedule_services(
+            services=[{"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION}],
+            expect_ok=False,
+        )
+
+        assert resp.status_code == 401
+        assert "credentials" in resp.json["detail"]
+
+
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"

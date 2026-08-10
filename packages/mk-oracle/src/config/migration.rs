@@ -100,6 +100,15 @@ impl LegacyCustomSql {
             None => self.sql_file.clone(),
         }
     }
+
+    /// The SID an aliased section can keep as the `sid:` of its instance entry:
+    /// only a single, literal `SQLS_SIDS` value identifies one instance.
+    fn reference_sid(&self) -> Option<String> {
+        match self.sids.as_slice() {
+            [sid] if !self.dynamic_sids => Some(sid.clone()),
+            _ => None,
+        }
+    }
 }
 
 fn optional_value(s: &str) -> Option<String> {
@@ -345,7 +354,8 @@ fn has_dynamic_sqls_sids(section: &str, raw_sids: &HashMap<Option<String>, Strin
 /// instead of an Oracle SID.
 ///
 /// A section that keeps no SID at all is dropped instead of migrated: an empty
-/// SID list means "run everywhere" and would widen its scope silently.
+/// SID list means "run everywhere" and would widen its scope silently. A section
+/// with a `SQLS_TNSALIAS` is exempt, the alias already pins it to one instance.
 ///
 /// Returns the warnings for the dropped references and sections.
 fn resolve_remote_instance_sids(
@@ -354,11 +364,6 @@ fn resolve_remote_instance_sids(
 ) -> Vec<String> {
     let mut warnings = Vec::new();
     custom_sqls.retain_mut(|custom| {
-        if custom.tns_alias.is_some() {
-            // the alias already pins the section to one instance, its SQLS_SIDS
-            // never reach the migrated config
-            return true;
-        }
         let resolved: Vec<String> = custom
             .sids
             .iter()
@@ -370,7 +375,7 @@ fn resolve_remote_instance_sids(
                 }
             })
             .collect();
-        if !custom.sids.is_empty() && resolved.is_empty() {
+        if custom.tns_alias.is_none() && !custom.sids.is_empty() && resolved.is_empty() {
             warnings.push(format!(
                 "{}: no instance left to run on, skipping custom SQL section",
                 custom.name
@@ -439,6 +444,50 @@ fn warn_dynamic_sqls_sids(custom_sqls: &mut Vec<LegacyCustomSql>) -> Vec<String>
         true
     });
     warnings
+}
+
+/// Warn about the custom SQL sections that set `SQLS_SIDS` and `SQLS_TNSALIAS`
+/// together.
+///
+/// The two restrict different things in the legacy plugin — the SID the section
+/// runs on and the connect identifier it uses — while the migrated config
+/// resolves an instance by its alias as soon as one is set. The SID is
+/// therefore kept as the `sid:` of the aliased entry wherever
+/// `custom_sql_alias_instances` can place it, but it never restricts the
+/// section any more, so both outcomes are reported.
+fn warn_custom_sql_alias_sids(
+    custom_sqls: &[LegacyCustomSql],
+    known_aliases: &[String],
+) -> Vec<String> {
+    let instances = custom_sql_alias_instances(custom_sqls, known_aliases);
+    custom_sqls
+        .iter()
+        .filter(|c| !c.sids.is_empty())
+        .filter_map(|custom| {
+            let alias = custom.tns_alias.as_ref()?;
+            let kept = custom.reference_sid().is_some_and(|sid| {
+                instances
+                    .iter()
+                    .any(|(known, known_sid)| known == alias && known_sid.as_ref() == Some(&sid))
+            });
+            Some(if kept {
+                format!(
+                    "{}: SQLS_SIDS '{}' is migrated next to SQLS_TNSALIAS '{alias}', but the \
+                     instance is resolved by its alias, so the SID no longer restricts the section",
+                    custom.name,
+                    custom.sids.join(", ")
+                )
+            } else {
+                format!(
+                    "{}: SQLS_SIDS '{}' cannot be kept next to SQLS_TNSALIAS '{alias}', the \
+                     instance is resolved by its alias alone; verify that the alias connects to \
+                     the intended database",
+                    custom.name,
+                    custom.sids.join(", ")
+                )
+            })
+        })
+        .collect()
 }
 
 /// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
@@ -527,6 +576,10 @@ pub fn convert(
 
     let mut warnings = resolve_remote_instance_sids(&mut custom_sqls, variables);
     warnings.extend(warn_dynamic_sqls_sids(&mut custom_sqls));
+    warnings.extend(warn_custom_sql_alias_sids(
+        &custom_sqls,
+        &known_aliases(&dbuser, &dbuser_extras),
+    ));
     warnings.extend(custom_sql_warnings(&custom_sqls));
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
@@ -646,6 +699,14 @@ fn format_options(max_tasks: Option<u32>) -> Vec<String> {
     lines
 }
 
+/// TNS aliases that already have an instance entry of their own
+fn known_aliases(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Vec<String> {
+    std::iter::once(dbuser)
+        .chain(dbuser_extras.iter())
+        .filter_map(|entry| entry.tns_alias.clone())
+        .collect()
+}
+
 fn format_instances(
     dbuser: &LegacyDbUser,
     dbuser_extras: &[LegacyDbUser],
@@ -655,7 +716,7 @@ fn format_instances(
     // only when at least one entry exists, so a bare DBUSER yields no block.
     let mut lines: Vec<String> = Vec::new();
     let mut known_sids: Vec<String> = Vec::new();
-    let mut known_aliases: Vec<String> = Vec::new();
+    let known_aliases = known_aliases(dbuser, dbuser_extras);
     let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
         let sid = &entry.sid;
@@ -678,7 +739,6 @@ fn format_instances(
                 if sid_written { ' ' } else { '-' },
                 &alias
             ));
-            known_aliases.push(alias.clone());
         };
 
         // The main DBUSER (sid == None) inherits connection and authentication
@@ -729,14 +789,18 @@ fn format_instances(
     }
     // SIDs and aliases only referenced by SQLS_SIDS/SQLS_TNSALIAS need an
     // own entry to carry the metrics
-    let (sids, aliases) =
-        custom_sql_only_sids_and_aliases(custom_sqls, &known_sids, &known_aliases);
-    for sid in sids {
+    for sid in custom_sql_only_sids(custom_sqls, &known_sids) {
         lines.push(format!("      - sid: {sid}\n"));
         lines.extend(instance_custom_metrics(custom_sqls, Some(&sid), None));
     }
-    for alias in aliases {
-        lines.push(format!("      - alias: {alias}\n"));
+    for (alias, sid) in custom_sql_alias_instances(custom_sqls, &known_aliases) {
+        match sid {
+            Some(sid) => {
+                lines.push(format!("      - sid: {sid}\n"));
+                lines.push(format!("        alias: {alias}\n"));
+            }
+            None => lines.push(format!("      - alias: {alias}\n")),
+        }
         lines.extend(instance_custom_metrics(custom_sqls, None, Some(&alias)));
     }
     if lines.is_empty() {
@@ -764,30 +828,50 @@ fn instance_custom_metrics(
     format_custom_metric_entries(&metrics, "        ")
 }
 
-/// SIDs and TNS aliases referenced by custom SQL sections without a matching
-/// instance entry; a section with a TNS alias contributes only the alias
-fn custom_sql_only_sids_and_aliases(
-    custom_sqls: &[LegacyCustomSql],
-    known_sids: &[String],
-    known_aliases: &[String],
-) -> (Vec<String>, Vec<String>) {
-    let mut seen_sids = HashSet::new();
-    let mut seen_aliases = HashSet::new();
-    let sids = custom_sqls
+/// SIDs referenced by `SQLS_SIDS` without a matching instance entry; a section
+/// with a TNS alias contributes its alias instead (see
+/// `custom_sql_alias_instances`)
+fn custom_sql_only_sids(custom_sqls: &[LegacyCustomSql], known_sids: &[String]) -> Vec<String> {
+    let mut seen = HashSet::new();
+    custom_sqls
         .iter()
         .filter(|c| c.tns_alias.is_none())
         .flat_map(|c| &c.sids)
         .filter(|sid| !known_sids.contains(sid))
-        .filter(|sid| seen_sids.insert(sid.as_str()))
+        .filter(|sid| seen.insert(sid.as_str()))
         .cloned()
-        .collect();
-    let aliases = custom_sqls
-        .iter()
-        .filter_map(|c| c.tns_alias.clone())
-        .filter(|alias| !known_aliases.contains(alias))
-        .filter(|alias| seen_aliases.insert(alias.clone()))
-        .collect();
-    (sids, aliases)
+        .collect()
+}
+
+/// TNS aliases referenced by `SQLS_TNSALIAS` without a matching instance entry,
+/// paired with the SID the aliased sections are restricted to.
+///
+/// The alias identifies the instance — that is what the plugin connects
+/// through — so the SID of `SQLS_SIDS` can only be carried along as the `sid:`
+/// of the same entry. That works as long as the sections sharing the alias
+/// agree on exactly one SID; otherwise the entry keeps the alias alone and
+/// `warn_custom_sql_alias_sids` reports the loss.
+fn custom_sql_alias_instances(
+    custom_sqls: &[LegacyCustomSql],
+    known_aliases: &[String],
+) -> Vec<(String, Option<String>)> {
+    let mut instances: Vec<(String, Option<String>)> = Vec::new();
+    for custom in custom_sqls {
+        let Some(alias) = custom.tns_alias.clone() else {
+            continue;
+        };
+        if known_aliases.contains(&alias) {
+            continue;
+        }
+        let sid = custom.reference_sid();
+        match instances.iter_mut().find(|(known, _)| *known == alias) {
+            // sections sharing the alias but not the SID leave it undecided
+            Some(instance) if instance.1 != sid => instance.1 = None,
+            Some(_) => (),
+            None => instances.push((alias, sid)),
+        }
+    }
+    instances
 }
 
 fn format_sections(
@@ -1426,6 +1510,37 @@ sec2 () {
     }
 
     #[test]
+    fn test_warn_custom_sql_alias_sids_kept() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE"]);
+        custom.tns_alias = Some("PROD".into());
+        assert_eq!(
+            warn_custom_sql_alias_sids(&[custom], &[]),
+            ["sec1: SQLS_SIDS 'XE' is migrated next to SQLS_TNSALIAS 'PROD', but the instance is resolved by its alias, so the SID no longer restricts the section".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_alias_sids_lost() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE", "XE2"]);
+        custom.tns_alias = Some("PROD".into());
+        assert_eq!(
+            warn_custom_sql_alias_sids(&[custom], &[]),
+            ["sec1: SQLS_SIDS 'XE, XE2' cannot be kept next to SQLS_TNSALIAS 'PROD', the instance is resolved by its alias alone; verify that the alias connects to the intended database".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_alias_sids_ignores_unaffected_sections() {
+        let plain = make_custom_sql("plain", None, "a.sql", &["XE"]);
+        let mut aliased = make_custom_sql("aliased", None, "b.sql", &[]);
+        aliased.tns_alias = Some("PROD".into());
+        assert!(
+            warn_custom_sql_alias_sids(&[plain, aliased], &[]).is_empty(),
+            "only sections setting both are reported"
+        );
+    }
+
+    #[test]
     fn test_parse_custom_sqls_sids_comma_and_space_separated() {
         let vars = HashMap::from([
             ("SQLS_SECTIONS".into(), "sec1".into()),
@@ -1531,6 +1646,34 @@ sec2 () {
             custom_sqls.len(),
             1,
             "SQLS_TNSALIAS pins the section, its SQLS_SIDS must not drop it"
+        );
+        assert!(
+            custom_sqls[0].sids.is_empty(),
+            "the dangling reference must not be kept as a SID"
+        );
+        assert_eq!(
+            warnings,
+            ["sec1: SQLS_SIDS references 'REMOTE_INSTANCE_GONE', but no such remote instance is defined, ignoring it".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_resolve_remote_instance_sids_of_tnsalias_section() {
+        let vars = HashMap::from([
+            (
+                "REMOTE_INSTANCE_FOO".into(),
+                "user:pass::remotehost:1521::PROD_SID:11.2".into(),
+            ),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "REMOTE_INSTANCE_FOO".into()),
+            ("SQLS.sec1.SQLS_TNSALIAS".into(), "TNS".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls("", &vars);
+        assert_eq!(
+            custom_sqls[0].sids,
+            vec!["PROD_SID"],
+            "an aliased section keeps its SID, so the reference must be resolved too"
         );
         assert!(warnings.is_empty(), "got: {warnings:?}");
     }
@@ -1838,16 +1981,58 @@ sec3 () {
     }
 
     #[test]
-    fn test_format_instances_tnsalias_takes_precedence_over_sids() {
+    fn test_format_instances_tnsalias_keeps_single_sid() {
         let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
         let mut custom = make_custom_sql("sec1", None, "a.sql", &["XE"]);
         custom.tns_alias = Some("PROD".into());
         let out: String = format_instances(&dbuser, &[], &[custom]).join("");
         assert!(
-            !out.contains("- sid: XE"),
-            "no SID entry when the metric is pinned to a TNS alias"
+            out.contains("      - sid: XE\n        alias: PROD\n        custom_metrics:\n"),
+            "SQLS_SIDS and SQLS_TNSALIAS must both reach the entry, got: {out}"
         );
-        assert!(out.contains("      - alias: PROD\n        custom_metrics:\n"));
+        assert_eq!(
+            out.matches("- sid: XE").count(),
+            1,
+            "the aliased entry is the only one carrying the SID, got: {out}"
+        );
+    }
+
+    #[test]
+    fn test_format_instances_tnsalias_drops_ambiguous_sids() {
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
+        let mut multi = make_custom_sql("multi", None, "a.sql", &["XE", "XE2"]);
+        multi.tns_alias = Some("PROD".into());
+        let mut shared = make_custom_sql("shared", None, "b.sql", &["OTHER"]);
+        shared.tns_alias = Some("REPORTING".into());
+        let mut rival = make_custom_sql("rival", None, "c.sql", &["RIVAL"]);
+        rival.tns_alias = Some("REPORTING".into());
+        let out: String = format_instances(&dbuser, &[], &[multi, shared, rival]).join("");
+        assert!(
+            out.contains("      - alias: PROD\n"),
+            "several SIDs cannot identify one aliased entry, got: {out}"
+        );
+        assert!(
+            out.contains("      - alias: REPORTING\n"),
+            "sections disagreeing on the SID leave the alias alone, got: {out}"
+        );
+        assert!(!out.contains("- sid:"), "got: {out}");
+    }
+
+    #[test]
+    fn test_format_instances_tnsalias_of_known_instance_keeps_its_sid() {
+        let dbuser = make_dbuser(None, "user", "pass", "", None, None, None);
+        let owner = make_dbuser(Some("XE1"), "user", "pass", "", None, None, Some("PROD"));
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["OTHER"]);
+        custom.tns_alias = Some("PROD".into());
+        let out: String = format_instances(&dbuser, &[owner], &[custom]).join("");
+        assert!(
+            out.contains("      - sid: XE1\n        alias: PROD\n"),
+            "the alias keeps the SID of the instance owning it, got: {out}"
+        );
+        assert!(
+            !out.contains("OTHER"),
+            "the section must not add a second entry for the same alias, got: {out}"
+        );
     }
 
     // Run this test only on Linux since on Windows the legacy plugin

@@ -1024,6 +1024,7 @@ Each function listed in `SQLS_SECTIONS` becomes one `custom_metrics:` entry:
 | `SQLS_SIDS` (literal list)           | Places the entry under the matching `instances:` entries        |
 | `SQLS_SIDS` (shell expression)       | The instances it expands to, or nothing (see below)             |
 | `SQLS_TNSALIAS`                      | Places the entry under the instance with that `alias:`          |
+| `SQLS_SIDS` + `SQLS_TNSALIAS`        | One entry carrying both, the alias identifies it (see below)    |
 | `SQLS_SECTION_NAME` (≠ `oracle_sql`) | `header_name:`                                                  |
 | `SQLS_SECTION_SEP` (ASCII code)      | `header_sep:` (kept only together with a custom `header_name:`) |
 
@@ -1037,6 +1038,7 @@ Placement rules:
 - A section whose `SQLS_SIDS` names a `REMOTE_INSTANCE_*` variable is attached to the
   instance that variable defines. References that resolve to nothing are dropped with
   a warning, and a section left without any instance is skipped.
+- A section setting both `SQLS_SIDS` and `SQLS_TNSALIAS` keeps both values (see below).
 - A section without `SQLS_SQL` is skipped with a warning.
 
 ##### Dynamic `SQLS_SIDS` values
@@ -1072,6 +1074,42 @@ remote ones that the legacy expression never selected — creating unexpected se
 and failing wherever the queried objects do not exist. Add the section back manually
 under the `instances:` entries it is meant to run on (or, if it really applies to all
 of them, as a global `custom_metrics:` entry).
+
+##### `SQLS_SIDS` together with `SQLS_TNSALIAS`
+
+Both may be set for the same section, and they restrict different things in the legacy
+plugin: `SQLS_SIDS` selects the monitored SID the section runs on, `SQLS_TNSALIAS` the
+connect identifier it uses to get there. The migration keeps both on one instance
+entry:
+
+```yaml
+instances:
+  - sid: NORMALDB
+    alias: NORMALDB_ALIAS
+    custom_metrics:
+      - Invalid objects in DB:
+          path: /etc/check_mk/ProdSQLs/invalid_objects.sql
+```
+
+Note that `mk-oracle` identifies an instance by its `alias:` as soon as one is set, so
+the `sid:` above documents the origin of the entry but no longer restricts the section.
+The migration says so for every affected section:
+
+```
+# WARNING: Invalid objects in DB: SQLS_SIDS 'NORMALDB' is migrated next to SQLS_TNSALIAS 'NORMALDB_ALIAS', but the instance is resolved by its alias, so the SID no longer restricts the section
+```
+
+The SID cannot be kept at all when it does not identify one instance of the migrated
+configuration — the section lists several SIDs, several sections use the same alias with
+different SIDs, or the alias already belongs to a `DBUSER_*` entry with a SID of its own.
+The alias then forms the entry alone and the dropped restriction is reported:
+
+```
+# WARNING: Ambiguous: SQLS_SIDS 'ONE, TWO' cannot be kept next to SQLS_TNSALIAS 'SHARED_ALIAS', the instance is resolved by its alias alone; verify that the alias connects to the intended database
+```
+
+In both cases, check that the alias resolves to the database the section was meant to
+query — the connection now depends on your `tnsnames.ora` alone.
 
 ### What Is Not Migrated
 

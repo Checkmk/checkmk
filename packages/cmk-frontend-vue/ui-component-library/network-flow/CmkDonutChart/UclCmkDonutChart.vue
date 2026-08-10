@@ -36,6 +36,13 @@ const slices: DonutSlice[] = [
     <UclDetailPageHeader>CmkDonutChart</UclDetailPageHeader>
 
     <UclDetailPageComponent>
+      <div style="width: 560px; height: 260px">
+        <CmkDonutChart :slices="slices" :format-value="formatBytes" />
+      </div>
+    </UclDetailPageComponent>
+
+    <!-- The tightest widget a dashboard allows. -->
+    <UclDetailPageComponent>
       <div style="width: 320px; height: 180px">
         <CmkDonutChart :slices="slices" :format-value="formatBytes" />
       </div>

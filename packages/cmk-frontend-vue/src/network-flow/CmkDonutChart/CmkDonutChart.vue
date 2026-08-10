@@ -274,11 +274,12 @@ const center = computed(() => {
   container-type: size;
 }
 
+/* Capped at about a third of the width: past that it starves the legend. */
 .network-flow-cmk-donut-chart__figure {
   position: relative;
   flex: 0 0 auto;
-  width: min(60cqw, 100cqh);
-  height: min(60cqw, 100cqh);
+  width: min(40cqw, 100cqh);
+  height: min(40cqw, 100cqh);
 }
 
 .network-flow-cmk-donut-chart__svg {
@@ -406,6 +407,7 @@ const center = computed(() => {
 
 .network-flow-cmk-donut-chart__legend-label {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

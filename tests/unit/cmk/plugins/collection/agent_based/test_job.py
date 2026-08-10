@@ -343,6 +343,43 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
             },
             id="AIX time output with capitalized labels",
         ),
+        pytest.param(
+            # mk-job versions that determine the timestamp via perl write a bare
+            # "start_time " if perl is not installed. The parser only evaluates
+            # lines consisting of two fields, so the timestamp is dropped.
+            [
+                ["==>", "Cleanup-Cache-Files", "<=="],
+                ["start_time"],
+                ["real", "0:00.96"],
+                ["user", "0.11"],
+                ["sys", "0.50"],
+                ["reads", "4608"],
+                ["writes", "24"],
+                ["max_res_kbytes", "25216"],
+                ["avg_mem_kbytes", "0"],
+                ["invol_context_switches", "940"],
+                ["vol_context_switches", "99"],
+                ["exit_code", "0"],
+            ],
+            {
+                "Cleanup-Cache-Files": {
+                    "running": False,
+                    "exit_code": 0,
+                    "metrics": {
+                        "real_time": 0.96,
+                        "user_time": 0.11,
+                        "system_time": 0.5,
+                        "reads": 4608,
+                        "writes": 24,
+                        "max_res_bytes": 25216000,
+                        "avg_mem_bytes": 0,
+                        "invol_context_switches": 940,
+                        "vol_context_switches": 99,
+                    },
+                }
+            },
+            id="start_time without a value",
+        ),
     ],
 )
 def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> None:
@@ -617,6 +654,39 @@ def test_process_job_stats(
             {"age": (1, 2)},
             SECTION_2,
             [],
+        ),
+        (
+            "Cleanup-Cache-Files",
+            {"age": (0, 0)},
+            {
+                "Cleanup-Cache-Files": {
+                    "running": False,
+                    "exit_code": 0,
+                    "metrics": {"real_time": 0.96},
+                }
+            },
+            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+        ),
+        (
+            "Cleanup-Cache-Files",
+            {"age": (0, 0)},
+            {
+                "Cleanup-Cache-Files": {
+                    "running": True,
+                    "exit_code": 0,
+                    "running_start_time": [int(TIME) - 60],
+                    "metrics": {},
+                }
+            },
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
+                ),
+                Result(state=State.OK, summary="Job age (currently running): 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
         ),
     ],
 )

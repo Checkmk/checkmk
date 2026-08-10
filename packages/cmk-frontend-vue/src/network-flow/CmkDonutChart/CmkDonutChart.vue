@@ -6,13 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
-import { computed, useId } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
 import type { CmkDonutChartProps, DonutSlice } from './types'
 
 const { _t } = usei18n()
 const props = defineProps<CmkDonutChartProps>()
+const emit = defineEmits<{ sliceActivate: [key: string] }>()
 
 // The viewBox is centered on the origin, where d3 draws its arcs.
 const SIZE = 300
@@ -34,8 +35,10 @@ const total = computed(() => props.slices.reduce((sum, slice) => sum + slice.val
 
 interface Segment {
   key: string
+  label: string
   color: string
   path: string
+  ariaLabel: string
 }
 
 const segments = computed<Segment[]>(() => {
@@ -50,8 +53,10 @@ const segments = computed<Segment[]>(() => {
     .padAngle(props.slices.length > 1 ? SLICE_GAP_RADIANS : 0)
   return layout(props.slices).map((datum) => ({
     key: datum.data.key,
+    label: datum.data.label,
     color: chartColorCss(datum.data.color),
-    path: sliceArc(datum) ?? ''
+    path: sliceArc(datum) ?? '',
+    ariaLabel: `${datum.data.label}, ${props.formatValue(datum.value)}, ${percentText(datum.value)}`
   }))
 })
 
@@ -63,7 +68,37 @@ function percentText(value: number): string {
   return `${percent(value).toFixed(1)}%`
 }
 
-const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
+// One piece of state for ring, legend and center, so the highlight can be
+// raised from either end.
+const highlighted = ref<string | null>(null)
+
+function highlight(key: string | null): void {
+  highlighted.value = key
+}
+
+function isDimmed(key: string): boolean {
+  return highlighted.value !== null && highlighted.value !== key
+}
+
+const highlightedSlice = computed(() =>
+  props.slices.find((slice) => slice.key === highlighted.value)
+)
+
+const center = computed(() => {
+  const slice = highlightedSlice.value
+  if (slice) {
+    return {
+      label: slice.label,
+      value: props.formatValue(slice.value),
+      share: _t('%{share} of shown', { share: percentText(slice.value) })
+    }
+  }
+  return {
+    label: props.centerLabel ?? _t('Volume'),
+    value: props.formatValue(total.value),
+    share: ''
+  }
+})
 </script>
 
 <template>
@@ -72,7 +107,6 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
       <svg
         class="network-flow-cmk-donut-chart__svg"
         :viewBox="`${-SIZE / 2} ${-SIZE / 2} ${SIZE} ${SIZE}`"
-        role="img"
         preserveAspectRatio="xMidYMid meet"
       >
         <circle
@@ -97,25 +131,41 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
             <stop offset="100%" class="network-flow-cmk-donut-chart__shading-stop--outer" />
           </radialGradient>
         </defs>
-        <path
+        <!-- Slice and shading share a group so that hovering, focusing and
+             dimming address them as one shape. -->
+        <g
           v-for="segment in segments"
           :key="segment.key"
-          class="network-flow-cmk-donut-chart__slice"
-          :d="segment.path"
-          :fill="segment.color"
-        />
-        <!-- Its own layer, so the slices keep their flat palette colour. -->
-        <path
-          v-for="segment in segments"
-          :key="`${segment.key}-shading`"
-          class="network-flow-cmk-donut-chart__shading"
-          :d="segment.path"
-          :fill="`url(#${shadingId})`"
-        />
+          class="network-flow-cmk-donut-chart__segment"
+          :class="{ 'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key) }"
+          role="button"
+          tabindex="0"
+          :aria-label="segment.ariaLabel"
+          @mouseenter="highlight(segment.key)"
+          @mouseleave="highlight(null)"
+          @focus="highlight(segment.key)"
+          @blur="highlight(null)"
+          @click="emit('sliceActivate', segment.key)"
+          @keydown.enter.prevent="emit('sliceActivate', segment.key)"
+          @keydown.space.prevent="emit('sliceActivate', segment.key)"
+        >
+          <path
+            class="network-flow-cmk-donut-chart__slice"
+            :d="segment.path"
+            :fill="segment.color"
+          />
+          <!-- Its own layer, so the slice keeps its flat palette colour. -->
+          <path
+            class="network-flow-cmk-donut-chart__shading"
+            :d="segment.path"
+            :fill="`url(#${shadingId})`"
+          />
+        </g>
       </svg>
       <div v-if="segments.length" class="network-flow-cmk-donut-chart__center">
-        <span class="network-flow-cmk-donut-chart__center-label">{{ centerCaption }}</span>
-        <span class="network-flow-cmk-donut-chart__center-value">{{ formatValue(total) }}</span>
+        <span class="network-flow-cmk-donut-chart__center-label">{{ center.label }}</span>
+        <span class="network-flow-cmk-donut-chart__center-value">{{ center.value }}</span>
+        <span class="network-flow-cmk-donut-chart__center-share">{{ center.share }}</span>
       </div>
     </div>
 
@@ -124,6 +174,11 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
         v-for="slice in slices"
         :key="slice.key"
         class="network-flow-cmk-donut-chart__legend-item"
+        :class="{
+          'network-flow-cmk-donut-chart__legend-item--highlighted': highlighted === slice.key
+        }"
+        @mouseenter="highlight(slice.key)"
+        @mouseleave="highlight(null)"
       >
         <span
           class="network-flow-cmk-donut-chart__swatch"
@@ -165,6 +220,22 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
   height: 100%;
 }
 
+.network-flow-cmk-donut-chart__segment {
+  cursor: pointer;
+  transition:
+    opacity 120ms,
+    filter 120ms;
+}
+
+.network-flow-cmk-donut-chart__segment:hover,
+.network-flow-cmk-donut-chart__segment:focus-visible {
+  filter: drop-shadow(0 2px 5px var(--nf-donut-lift-shadow));
+}
+
+.network-flow-cmk-donut-chart__segment--dimmed {
+  opacity: 0.5;
+}
+
 /* The divider takes the colour of the surface behind the chart. */
 .network-flow-cmk-donut-chart__slice {
   stroke: var(--db-content-bg-color);
@@ -189,9 +260,11 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
   stroke: var(--ux-theme-4);
 }
 
+/* Covers the whole figure, so it has to let the pointer through. */
 .network-flow-cmk-donut-chart__center {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -207,10 +280,21 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
 }
 
 .network-flow-cmk-donut-chart__center-label {
+  max-width: 100%;
+  overflow: hidden;
   font-size: 0.85em;
   color: var(--color-mid-grey-50);
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
   letter-spacing: 0.04em;
+}
+
+/* Kept in the layout even when empty, so the block does not jump. */
+.network-flow-cmk-donut-chart__center-share {
+  min-height: 1em;
+  font-size: 0.85em;
+  color: var(--color-mid-grey-50);
 }
 
 .network-flow-cmk-donut-chart__legend {
@@ -228,6 +312,10 @@ const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
   align-items: center;
   padding: clamp(2px, 1.5cqh, 7px) 0;
   border-bottom: 1px solid var(--ux-theme-6);
+}
+
+.network-flow-cmk-donut-chart__legend-item--highlighted {
+  background-color: var(--ux-theme-4);
 }
 
 .network-flow-cmk-donut-chart__swatch {

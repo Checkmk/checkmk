@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { fireEvent, render } from '@testing-library/vue'
 
 import CmkDonutChart from '@/network-flow/CmkDonutChart/CmkDonutChart.vue'
 import type { DonutSlice } from '@/network-flow/CmkDonutChart/types'
@@ -100,4 +100,76 @@ test('overlays every slice with the shared shading gradient', () => {
     `url(#${gradientId})`,
     `url(#${gradientId})`
   ])
+})
+
+test('names every slice for assistive technology', () => {
+  const { container } = renderChart()
+
+  const labels = [...container.querySelectorAll('.network-flow-cmk-donut-chart__segment')].map(
+    (el) => el.getAttribute('aria-label')
+  )
+  expect(labels).toEqual(['TLS, 90 B, 60.0%', 'Other, 60 B, 40.0%'])
+})
+
+test('dims the other slices while one is pointed at', async () => {
+  const { container } = renderChart()
+
+  const [tls, other] = [
+    ...container.querySelectorAll('.network-flow-cmk-donut-chart__segment')
+  ] as HTMLElement[]
+  await fireEvent.mouseEnter(tls!)
+
+  expect(tls).not.toHaveClass('network-flow-cmk-donut-chart__segment--dimmed')
+  expect(other).toHaveClass('network-flow-cmk-donut-chart__segment--dimmed')
+
+  await fireEvent.mouseLeave(tls!)
+  expect(other).not.toHaveClass('network-flow-cmk-donut-chart__segment--dimmed')
+})
+
+test('hands the center over to the slice being pointed at', async () => {
+  const { container } = renderChart()
+
+  const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
+  await fireEvent.focus(tls)
+
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
+    'TLS'
+  )
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
+    '90 B'
+  )
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
+    '60.0% of shown'
+  )
+
+  await fireEvent.blur(tls)
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
+    '150 B'
+  )
+})
+
+test('raises the highlight from the legend as well as from the ring', async () => {
+  const { container } = renderChart()
+
+  const legendRows = [...container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')]
+  await fireEvent.mouseEnter(legendRows[1]!)
+
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
+    'Other'
+  )
+  expect(legendRows[1]).toHaveClass('network-flow-cmk-donut-chart__legend-item--highlighted')
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment--dimmed')).toHaveLength(
+    1
+  )
+})
+
+test('activates a slice by click and by keyboard', async () => {
+  const { container, emitted } = renderChart()
+
+  const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
+  await fireEvent.click(tls)
+  await fireEvent.keyDown(tls, { key: 'Enter' })
+  await fireEvent.keyDown(tls, { key: ' ' })
+
+  expect(emitted('sliceActivate')).toEqual([['tls'], ['tls'], ['tls']])
 })

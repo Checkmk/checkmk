@@ -10,6 +10,7 @@
     --nf-donut-shading-inner-opacity: 0;
     --nf-donut-shading-outer-color: var(--black);
     --nf-donut-shading-outer-opacity: 0.13;
+    --nf-donut-lift-shadow: color-mix(in srgb, var(--black) 28%, transparent);
   }
 
   body[data-theme='modern-dark'] {
@@ -18,5 +19,6 @@
     --nf-donut-shading-inner-opacity: 0.09;
     --nf-donut-shading-outer-color: var(--black);
     --nf-donut-shading-outer-opacity: 0.1;
+    --nf-donut-lift-shadow: color-mix(in srgb, var(--black) 45%, transparent);
   }
 }

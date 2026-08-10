@@ -12,6 +12,9 @@ from playwright.sync_api import expect
 
 from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
@@ -20,6 +23,13 @@ from tests.system.gui.testlib.playwright.pom.monitor.service_search import Servi
 from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 logger = logging.getLogger(__name__)
+
+# Serves the legacy renderer's first load and every update alike, so any use of it at all
+# shows up here.
+_LEGACY_GRAPH_ENDPOINT = "ajax_render_graph.py"
+
+# A graph that rendered must have asked this: the page ships no series data of its own.
+_ENGINE_GRAPH_ENDPOINT = "domain-types/graph/actions/fetch_data/invoke"
 
 
 @pytest.mark.parametrize(
@@ -145,21 +155,71 @@ def test_no_errors_on_combined_graphs_page(
     # ), "There are broken graphs on the 'Combined graphs - Service search' page"
 
 
-# --- Graphing engine skeletons (CMK-35973): R1.3 Areas 1, 2, 9 --------------------
+# --- Graphing engine skeletons (CMK-35973): R1.3 Areas 2, 9 --------------------
 # Complete once the engine renders on these surfaces: reach the graph via
 # GraphAccessor.graph_root.
 
 
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_service_graphs_have_titles_and_legend_no_broken(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
+def test_service_graphs_render_through_the_engine(
+    service_graphs: ServiceGraphs,
+    javascript_errors: list[str],
+    requested_urls: list[str],
 ) -> None:
-    """SG-02 (R1.3 Area 1): each service graph has a title and legend and is not broken.
+    """The service detail page renders its graphs through the engine.
 
-    Do: as SG-01; wait until all graph components finish loading.
-    Assert: titles and the legend table present in each component; zero broken-graph.
+    The legacy renderer is still live and still serves the host surfaces, so showing that
+    the engine renders here says nothing on its own: the legacy path has to be shown unused
+    as well.
+
+    Hovering a graph icon on the way in would defeat the endpoint check, as the legacy hover
+    preview asks that same endpoint. The fixture arrives by clicking the service's name.
     """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+    expect(
+        service_graphs.panels, "The engine rendered no graph at all on the service detail page"
+    ).not_to_have_count(0)
+    expect(
+        GraphAccessor(service_graphs.owner).container(GraphContainment.PAGE_DIRECT),
+        "The legacy graph container is still on the page beside the engine's",
+    ).to_have_count(0)
+
+    # Without this, a listener that collected nothing would pass the check below as quietly
+    # as a page that really had stopped using the legacy renderer.
+    assert any(_ENGINE_GRAPH_ENDPOINT in url for url in requested_urls), (
+        f"No graph data was fetched at all, so nothing here observed a graph being "
+        f"rendered: {requested_urls}"
+    )
+    legacy_requests = [url for url in requested_urls if _LEGACY_GRAPH_ENDPOINT in url]
+
+    assert not legacy_requests, f"The page asked the legacy renderer for a graph: {legacy_requests}"
+    assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
+
+
+def test_service_graphs_have_titles_and_legend_no_broken(
+    service_graphs: ServiceGraphs, javascript_errors: list[str]
+) -> None:
+    """Each service graph has a title and a legend, and none reports a failed load.
+
+    Both the title and the legend rows are filled from the fetch response, so a graph
+    showing either of them empty has drawn its frame without the data behind it.
+    """
+    expect(
+        service_graphs.panels, "The engine rendered no graph at all on the service detail page"
+    ).not_to_have_count(0)
+
+    for index, panel in enumerate(service_graphs.all_panels()):
+        expect(panel.title, f"Graph {index} rendered without a title").to_be_visible()
+        expect(panel.title, f"Graph {index} rendered an empty title").not_to_have_text("")
+        expect(panel.legend, f"Graph {index} rendered without a legend").to_be_visible()
+        expect(
+            panel.legend.locator(".graphing-graph-legend__row"),
+            f"The legend of graph {index} lists no metric",
+        ).not_to_have_count(0)
+
+    expect(
+        service_graphs.broken_graphs,
+        "A graph reported that it could not be loaded",
+    ).to_have_count(0)
+    assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)

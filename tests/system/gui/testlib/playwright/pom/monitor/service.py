@@ -62,12 +62,12 @@ class ServicePage(CmkPage):
 
     @property
     def broken_graph(self) -> Locator:
-        """The message shown in place of the graphs when they could not be loaded.
+        """The notices shown in place of the graphs that could not be loaded.
 
-        The engine reports a failed load once for the whole graph group rather than per
-        graph, so this can only ever resolve to 0 or 1 elements.
+        One per unloadable graph, plus a standalone one when a first load produced no panel
+        to sit over - so this is not capped at a single element.
         """
-        return self.row_content("Service graphs").locator(".graphing-graph-group__error")
+        return self.row_content("Service graphs").locator(".graphing-graph-notice--error")
 
     def click_explain_with_ai(self) -> None:
         self.main_area.get_suggestion("Explain with AI").click()

@@ -90,6 +90,18 @@ def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[st
     yield errors
 
 
+@pytest.fixture(name="requested_urls")
+def fixture_requested_urls(dashboard_page: MainDashboard) -> Iterator[list[str]]:
+    """Every URL the page requested while the test runs.
+
+    A passive listener, not a `page.route` handler: routing intercepts what it matches, and
+    every intercepted request then has to be continued by hand.
+    """
+    urls: list[str] = []
+    dashboard_page.page.on("request", lambda request: urls.append(request.url))
+    yield urls
+
+
 def open_service_graphs(page: Page, host_name: str) -> ServiceGraphs:
     """Open the service detail page holding the graphs and wait for them to render.
 
@@ -118,9 +130,11 @@ def fixture_service_graphs(
     dashboard_page: MainDashboard,
     graph_hosts_with_varying_data: list[str],
     javascript_errors: list[str],
+    requested_urls: list[str],
 ) -> Iterator[ServiceGraphs]:
     """The graph panels on a service detail page, rendered and ready for interaction.
 
-    Depends on `javascript_errors` so the listener is attached before this navigates.
+    Depends on `javascript_errors` and `requested_urls` so their listeners are attached
+    before this navigates.
     """
     yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])

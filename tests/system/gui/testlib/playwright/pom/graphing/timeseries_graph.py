@@ -196,6 +196,11 @@ class GraphPanel:
         return self.root.locator(".graphing-graph-header")
 
     @property
+    def title(self) -> Locator:
+        """Settles only once the graph has its data: the title comes from the fetch."""
+        return self.header.locator(".graphing-graph-title")
+
+    @property
     def resolution_note(self) -> Locator:
         return self.root.locator(".graphing-graph-header__resolution")
 
@@ -279,6 +284,15 @@ class ServiceGraphs:
         Decorative and ``aria-hidden``, so no role query reaches them.
         """
         return self._main_area.locator(".graphing-graph-skeleton")
+
+    @property
+    def broken_graphs(self) -> Locator:
+        """The notices the engine shows in place of the graphs it could not load.
+
+        Scoped to the group, not to a panel: a first load that produced no panel at all
+        puts its notice outside every panel.
+        """
+        return self._main_area.locator(".graphing-graph-notice--error")
 
     def panel_count(self) -> int:
         # ``.count()`` does not auto-wait, so this is only correct once

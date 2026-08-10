@@ -31,6 +31,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_graph_rrd_dst_boundary,
     fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
+    fixture_requested_urls,
     fixture_saved_custom_graph,
     fixture_service_graphs,
 )
@@ -65,6 +66,7 @@ graphing_fixtures = [
     fixture_graph_rrd_dst_boundary,
     fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
+    fixture_requested_urls,
     fixture_saved_custom_graph,
     fixture_service_graphs,
 ]

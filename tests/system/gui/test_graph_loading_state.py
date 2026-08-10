@@ -16,11 +16,10 @@ C-01 to C-04 extend the same concern to the remaining surfaces and are skipped
 skeletons until the engine renders on them.
 """
 
-from collections.abc import Iterator
-
 import pytest
 from playwright.sync_api import expect, Route
 
+from tests.system.gui.testlib.playwright.pom.graphing.fixtures import SERVICE_WITH_GRAPHS
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
@@ -29,18 +28,6 @@ from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 # The endpoint every rendered graph fetches its data from; holding it holds the load window open.
 _GRAPH_DATA_URL = "**/domain-types/graph/actions/fetch_data/invoke"
-
-# The same service the canvas interaction tests drive: several graphs from one /proc/meminfo, so
-# the group has more than one panel to skeletonise.
-SERVICE_WITH_GRAPHS = "Memory"
-
-
-@pytest.fixture(name="javascript_errors")
-def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[str]]:
-    """Uncaught page errors raised while the test runs."""
-    errors: list[str] = []
-    dashboard_page.page.on("pageerror", lambda error: errors.append(str(error)))
-    yield errors
 
 
 def _open_service_graphs(dashboard_page: MainDashboard, host_name: str) -> ServiceGraphs:

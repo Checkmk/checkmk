@@ -445,7 +445,9 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   clearAllFilters(): void {
+    this.searchQuery.value = ''
     this.filters.clearAllFilters()
+    this.updateFilters(undefined)
   }
 
   stopPolling(): void {

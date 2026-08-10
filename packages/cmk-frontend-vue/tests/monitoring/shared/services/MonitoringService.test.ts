@@ -592,6 +592,52 @@ describe('MonitoringService', () => {
     service.stopPolling()
   })
 
+  it('clearAllFilters drops the search query along with the conditions', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+    const service = new TestService(fetchBatch, {
+      quickFilters: [
+        {
+          label: 'Down',
+          filter: { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        }
+      ]
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSearch('web')
+    service.activateQuickFilter(service.filters.quickFilters[0]!)
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.clearAllFilters()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.searchQuery.value).toBe('')
+    expect(service.committedSearchQuery.value).toBe('')
+    expect(service.filterState.value).toBeUndefined()
+
+    service.stopPolling()
+  })
+
+  it('clearAllFilters refetches when only the search query was set', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSearch('web')
+    await vi.advanceTimersByTimeAsync(0)
+    const callsBeforeClear = fetchBatch.mock.calls.length
+
+    service.clearAllFilters()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchBatch.mock.calls.length).toBeGreaterThan(callsBeforeClear)
+    expect(service.committedSearchQuery.value).toBe('')
+
+    service.stopPolling()
+  })
+
   it('destruct() removes the focus-search callback so it is no longer dispatched', () => {
     let shortcutCallback: (() => void) | undefined
     const shortCutService = {

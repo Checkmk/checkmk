@@ -23,13 +23,21 @@ from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec_with_color
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
+_PREDICT_LOWER_PREFIX = "predict_lower_"
+_PREDICT_PREFIX = "predict_"
+
+
+def _normalized_metric_name(metric_name: str) -> MetricName:
+    """Bring a metric name into the form the translation tables are keyed by."""
+    return MetricName(pnp_cleanup(metric_name.replace('"', "").replace("'", "")))
+
 
 def _parse_perf_values(
     data_str: str,
 ) -> tuple[str, str, tuple[str | None, str | None, str | None, str | None]]:
     "convert perf str into a tuple with values"
     varname, values = data_str.split("=", 1)
-    varname = pnp_cleanup(varname.replace('"', "").replace("'", ""))
+    varname = _normalized_metric_name(varname)
 
     value_parts = values.split(";")
     value = value_parts.pop(0)
@@ -73,11 +81,20 @@ def _split_unit(value_text: str) -> tuple[float | None, str | None]:
 
 
 def _compute_lookup_metric_name(metric_name: str) -> str:
-    if metric_name.startswith("predict_lower_"):
-        return metric_name[14:]
-    if metric_name.startswith("predict_"):
-        return metric_name[8:]
+    if metric_name.startswith(_PREDICT_LOWER_PREFIX):
+        return metric_name.removeprefix(_PREDICT_LOWER_PREFIX)
+    if metric_name.startswith(_PREDICT_PREFIX):
+        return metric_name.removeprefix(_PREDICT_PREFIX)
     return metric_name
+
+
+def _canonical_metric_name(raw_metric_name: MetricName, translated_name: MetricName) -> MetricName:
+    """Reattach to the translated name the predictive prefix stripped for lookup."""
+    if raw_metric_name.startswith(_PREDICT_LOWER_PREFIX):
+        return MetricName(f"{_PREDICT_LOWER_PREFIX}{translated_name}")
+    if raw_metric_name.startswith(_PREDICT_PREFIX):
+        return MetricName(f"{_PREDICT_PREFIX}{translated_name}")
+    return translated_name
 
 
 def _parse_check_command(check_command: str) -> str:
@@ -142,6 +159,38 @@ def parse_perf_data(
     return perf_data, check_command
 
 
+def parse_perf_data_with_rrd_metrics(
+    perf_data_string: str,
+    check_command: str | None,
+    rrd_metrics: Sequence[MetricName],
+    *,
+    debug: bool,
+) -> tuple[Perfdata, str]:
+    """Parse the live perf data plus the metrics only the RRDs still know about.
+
+    The RRD-only names run through the same parser as the live ones, so both are normalized
+    the same way, and a name the live perf data already carries is not added twice. Only the
+    names of the RRD-only entries are meaningful; each carries a placeholder value of 1.
+    """
+    perf_data, check_command = parse_perf_data(perf_data_string, check_command, debug=debug)
+    rrd_perf_data, check_command = parse_perf_data(
+        " ".join(
+            f'"{m}"=1' if " " in m else f"{m}=1"
+            for m in rrd_metrics
+            # Metrics with "," in their name are not allowed. They lead to problems with the RPN
+            # processing of the metric system. They are used as separators for the single parts of
+            # the expression and since the var_names are used as part of the expressions, they
+            # should better not be processed even when reported by the core.
+            if "," not in m
+        ),
+        check_command,
+        debug=debug,
+    )
+    live_metric_names = {p.metric_name for p in perf_data}
+    rrd_only_perf_data = [p for p in rrd_perf_data if p.metric_name not in live_metric_names]
+    return perf_data + rrd_only_perf_data, check_command
+
+
 @dataclass(frozen=True)
 class TranslationSpec:
     name: MetricName
@@ -187,6 +236,36 @@ def find_matching_translation(
         ):  # Regex entry
             return translation
     return TranslationSpec(name=metric_name, scale=1.0, auto_graph=True, deprecated="")
+
+
+def map_metric_names(
+    check_command: str,
+    raw_metric_names: Sequence[MetricName],
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+) -> Mapping[MetricName, MetricName]:
+    """Pair every raw perf-data name with the canonical metric name it translates to.
+
+    Names no translation renames map to themselves, so the result has one entry per raw
+    name. Several raw names may share one canonical name; the pairing keeps them apart,
+    which a set of canonical names cannot.
+
+    Raw names are normalized for the lookup exactly as the perf-data parser normalizes
+    them, so a name taken straight from livestatus or an RRD resolves the same way one
+    that has already been parsed does. The keys are the names as passed in.
+    """
+    translation_by_metric_names = lookup_metric_translations_for_check_command(
+        translations, check_command
+    )
+    return {
+        raw_metric_name: _canonical_metric_name(
+            raw_metric_name,
+            find_matching_translation(
+                MetricName(_compute_lookup_metric_name(_normalized_metric_name(raw_metric_name))),
+                translation_by_metric_names,
+            ).name,
+        )
+        for raw_metric_name in raw_metric_names
+    }
 
 
 @dataclass(frozen=True)
@@ -253,12 +332,9 @@ def translate_metrics(
             lookup_metric_translations_for_check_command(check_metrics, check_command),
         )
 
-        if perf_data_tuple.metric_name.startswith("predict_lower_"):
-            metric_name = f"predict_lower_{translation_spec.name}"
-        elif perf_data_tuple.metric_name.startswith("predict_"):
-            metric_name = f"predict_{translation_spec.name}"
-        else:
-            metric_name = translation_spec.name
+        metric_name = _canonical_metric_name(
+            MetricName(perf_data_tuple.metric_name), translation_spec.name
+        )
 
         originals = [Original(perf_data_tuple.metric_name, translation_spec.scale)]
         mi = get_metric_spec_with_color(metric_name, color_counter, registered_metrics)
@@ -298,24 +374,9 @@ def available_metrics_translated(
     if not rrd_metrics:
         return {}
 
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command, debug=debug)
-    rrd_perf_data, check_command = parse_perf_data(
-        " ".join(
-            f'"{m}"=1' if " " in m else f"{m}=1"
-            for m in rrd_metrics
-            # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
-            # of the metric system. They are used as separators for the single parts of the expression and
-            # since the var_names are used as part of the expressions, they should better not be processed
-            # even when reported by the core.
-            if "," not in m
-        ),
-        check_command,
-        debug=debug,
+    perf_data, check_command = parse_perf_data_with_rrd_metrics(
+        perf_data_string, check_command, rrd_metrics, debug=debug
     )
-    current_variables = [p.metric_name for p in perf_data]
-    for p in rrd_perf_data:
-        if p.metric_name not in current_variables:
-            perf_data.append(p)
     return translate_metrics(
         perf_data,
         check_command,

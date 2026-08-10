@@ -11,10 +11,15 @@ import pytest
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
+    _canonical_metric_name,
+    _compute_lookup_metric_name,
     _parse_check_command,
+    available_metrics_translated,
     find_matching_translation,
     lookup_metric_translations_for_check_command,
+    map_metric_names,
     parse_perf_data,
+    parse_perf_data_with_rrd_metrics,
     translate_metrics,
     TranslationSpec,
 )
@@ -136,6 +141,16 @@ def test_parse_perf_data(
 def test_parse_perf_data2() -> None:
     with pytest.raises(ValueError):
         parse_perf_data("hi ho", None, debug=True)
+
+
+def test_parse_perf_data_with_rrd_metrics_does_not_duplicate_a_live_name() -> None:
+    perf_data, _check_command = parse_perf_data_with_rrd_metrics(
+        "wait=5",
+        "my-check-plugin",
+        [MetricName("wait")],
+        debug=True,
+    )
+    assert [(p.metric_name, p.value) for p in perf_data] == [("wait", 5)]
 
 
 @pytest.mark.parametrize(
@@ -337,6 +352,91 @@ def test_find_matching_translation(
 
 
 @pytest.mark.parametrize(
+    "raw_metric_name, translated_name, expected",
+    [
+        pytest.param("predict_lower_wait", "io_wait", "predict_lower_io_wait", id="lower"),
+        pytest.param("predict_wait", "io_wait", "predict_io_wait", id="upper"),
+        pytest.param("wait", "io_wait", "io_wait", id="not predictive"),
+    ],
+)
+def test_canonical_metric_name_restores_the_predictive_prefix(
+    raw_metric_name: str,
+    translated_name: str,
+    expected: str,
+) -> None:
+    assert (
+        _canonical_metric_name(MetricName(raw_metric_name), MetricName(translated_name)) == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "raw_metric_name",
+    ["predict_lower_wait", "predict_wait", "wait"],
+)
+def test_stripping_and_restoring_the_predictive_prefix_are_inverse(
+    raw_metric_name: str,
+) -> None:
+    # _compute_lookup_metric_name strips the prefix for the translation lookup and
+    # _canonical_metric_name puts it back. If the two ever disagree about what a prefix is,
+    # a name that no translation renames stops surviving the round trip.
+    assert (
+        _canonical_metric_name(
+            MetricName(raw_metric_name),
+            MetricName(_compute_lookup_metric_name(raw_metric_name)),
+        )
+        == raw_metric_name
+    )
+
+
+def test_map_metric_names_normalizes_raw_names_before_looking_them_up() -> None:
+    # A name read straight from livestatus or an RRD may carry characters the perf-data
+    # parser turns into underscores. Without normalizing, "disk read" would miss the
+    # translation keyed by "disk_read" and be reported as translating to itself.
+    translations = {
+        "check_mk-foo": {MetricName("disk_read"): CheckMetricEntry(name="disk_read_throughput")}
+    }
+    assert dict(map_metric_names("check_mk-foo", [MetricName("disk read")], translations)) == {
+        "disk read": "disk_read_throughput"
+    }
+
+
+def test_map_metric_names_pairs_raw_names_with_their_canonical_names() -> None:
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]] = {
+        "check_mk-postfix_mailq": {
+            MetricName("~mail_queue_.*_length"): {"name": MetricName("mail_queue_active_length")},
+        },
+    }
+    assert dict(
+        map_metric_names(
+            "check_mk-postfix_mailq",
+            [MetricName("mail_queue_active_length"), MetricName("mail_queue_deferred_length")],
+            translations,
+        )
+    ) == {
+        "mail_queue_active_length": "mail_queue_active_length",
+        "mail_queue_deferred_length": "mail_queue_active_length",
+    }
+
+
+def test_map_metric_names_maps_untranslated_names_to_themselves() -> None:
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]] = {
+        "check_mk-cpu_utilization": {MetricName("wait"): {"name": MetricName("io_wait")}},
+    }
+    assert dict(
+        map_metric_names("check_mk-cpu_utilization", [MetricName("user")], translations)
+    ) == {"user": "user"}
+
+
+def test_map_metric_names_strips_the_predictive_prefix_before_the_lookup() -> None:
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]] = {
+        "check_mk-cpu_utilization": {MetricName("wait"): {"name": MetricName("io_wait")}},
+    }
+    assert dict(
+        map_metric_names("check_mk-cpu_utilization", [MetricName("predict_wait")], translations)
+    ) == {"predict_wait": "predict_io_wait"}
+
+
+@pytest.mark.parametrize(
     "metric_name, predictive_metric_name, expected_title, expected_color",
     [
         pytest.param(
@@ -407,6 +507,19 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
     )
     assert translated_metrics["predict_messages_outbound"].color == "#4b4b4b"
     assert translated_metrics["predict_lower_messages_outbound"].color == "#5a5a5a"
+
+
+def test_available_metrics_translated_unions_perf_data_with_usable_rrd_metrics() -> None:
+    translated_metrics = available_metrics_translated(
+        "wait=5",
+        [MetricName("wait"), MetricName("disk read"), MetricName("user,system")],
+        "my-check-plugin",
+        {},
+        debug=True,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    assert set(translated_metrics) == {"wait", "disk_read"}
+    assert translated_metrics["wait"].value == 5.0
 
 
 @pytest.mark.parametrize(

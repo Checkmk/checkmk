@@ -249,9 +249,10 @@ type ConsolidationFunction = (
 )
 
 
-def canonical_attribute_filter_key(attribute_filter: Mapping[str, object]) -> str:
-    """Stable, hashable identity for an attribute-filter wire mapping."""
-    return json.dumps(attribute_filter, sort_keys=True, separators=(",", ":"))
+def canonical_mapping_key(mapping: Mapping[str, object] | None) -> str:
+    """Stable, hashable identity for an (optional) wire mapping such as an attribute
+    filter or a group-by aggregator."""
+    return json.dumps(mapping, sort_keys=True, separators=(",", ":"))
 
 
 @dataclass(frozen=True)
@@ -259,6 +260,7 @@ class QueryDataKey:
     metric_name: MetricName
     consolidation_function: ConsolidationFunction
     attribute_filter: Mapping[str, object]
+    aggregator: Mapping[str, object] | None = None
 
     @override
     def __hash__(self) -> int:
@@ -267,7 +269,8 @@ class QueryDataKey:
             (
                 self.metric_name,
                 self.consolidation_function,
-                canonical_attribute_filter_key(self.attribute_filter),
+                canonical_mapping_key(self.attribute_filter),
+                canonical_mapping_key(self.aggregator),
             )
         )
 

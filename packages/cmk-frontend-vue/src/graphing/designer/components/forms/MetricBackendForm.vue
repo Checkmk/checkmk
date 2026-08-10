@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
@@ -15,10 +16,16 @@ import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendCo
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
 import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
-import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
+import { type ConsolidationFunction, outputType } from '@/metric-backend/consolidation/types'
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
-import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
+  type GroupByInputType,
+  type GroupByModel,
+  groupByForInputType
+} from '@/metric-backend/group-by/types'
+import {
+  aggregatorToFloatGroupBy,
+  floatGroupByToAggregator,
   fractionBelowGroupBy,
   fractionBetweenGroupBy,
   groupFractionBelowThresholdToWire,
@@ -160,8 +167,9 @@ function toPicker(consolidation: Consolidation): ConsolidationFunction {
   }
 }
 
-function withConsolidation(consolidation: Consolidation): void {
-  store.replace({ ...item, consolidation_function: consolidation })
+function persist(consolidation: Consolidation, aggregator: Aggregator | undefined): void {
+  const { aggregator: _dropped, ...rest } = { ...item, consolidation_function: consolidation }
+  store.replace(aggregator === undefined ? rest : { ...rest, aggregator })
 }
 
 const metricTypes = ref<string[]>([])
@@ -185,19 +193,21 @@ function storeCurrentWith(overrides: {
   upperThresholdForFractionBetween?: number
   consolidationFunction?: ConsolidationFunction
 }): void {
-  withConsolidation(
-    toStored(
-      overrides.consolidationFunction ?? consolidationFunction.value,
-      overrides.lookbackSeconds ?? aggregationLookback.value,
-      overrides.percentile ?? aggregationHistogramPercentile.value,
-      overrides.thresholdForFractionBelow ?? aggregationHistogramThresholdForFractionBelow.value,
-      overrides.lowerThresholdForFractionBetween ??
-        aggregationHistogramLowerThresholdForFractionBetween.value,
-      overrides.upperThresholdForFractionBetween ??
-        aggregationHistogramUpperThresholdForFractionBetween.value,
-      groupBy.value
-    )
+  const consolidation = overrides.consolidationFunction ?? consolidationFunction.value
+  const inputType = outputType(consolidation.type, consolidation.function)
+  const group = groupByForInputType(inputType, groupBy.value)
+  const stored = toStored(
+    consolidation,
+    overrides.lookbackSeconds ?? aggregationLookback.value,
+    overrides.percentile ?? aggregationHistogramPercentile.value,
+    overrides.thresholdForFractionBelow ?? aggregationHistogramThresholdForFractionBelow.value,
+    overrides.lowerThresholdForFractionBetween ??
+      aggregationHistogramLowerThresholdForFractionBetween.value,
+    overrides.upperThresholdForFractionBetween ??
+      aggregationHistogramUpperThresholdForFractionBetween.value,
+    group
   )
+  persist(stored, inputType === 'float' ? floatGroupByToAggregator(group) : undefined)
 }
 
 const aggregationLookback = computed<number>({
@@ -242,8 +252,8 @@ const consolidationFunction = computed<ConsolidationFunction>({
   set: (value) => storeCurrentWith({ consolidationFunction: value })
 })
 
-const showGroupBy = computed<boolean>(
-  () => consolidationFunction.value.function === 'histogram_preserve'
+const groupByInputType = computed<GroupByInputType>(() =>
+  outputType(consolidationFunction.value.type, consolidationFunction.value.function)
 )
 
 // The draft the widget edits, not a view of the stored value: an empty pill (a key the
@@ -261,7 +271,7 @@ function storedGroupBy(): GroupByModel {
     case 'histogram_preserve_quantile':
       return percentileGroupBy(stored)
     default:
-      return percentileGroupBy()
+      return aggregatorToFloatGroupBy(item.aggregator)
   }
 }
 
@@ -309,14 +319,14 @@ const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLe
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
       />
-      <tr v-if="showGroupBy">
+      <tr>
         <td class="graphing-metric-backend-form__label-cell">
           {{ _t('Group by') }}
         </td>
         <td>
           <FormGroupBy
             v-model="groupBy"
-            input-type="histogram"
+            :input-type="groupByInputType"
             :query-suggestions="groupByQuerySuggestions"
             :resolve-level="groupByResolveLevel"
           />

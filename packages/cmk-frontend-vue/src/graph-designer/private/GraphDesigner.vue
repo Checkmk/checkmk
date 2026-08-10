@@ -473,7 +473,10 @@ async function addQuery() {
       ...(dataQuery.value.attributeFilter !== undefined
         ? { attribute_filter: dataQuery.value.attributeFilter }
         : {}),
-      consolidation_function: dataQuery.value.consolidationFunction
+      consolidation_function: dataQuery.value.consolidationFunction,
+      ...(dataQuery.value.aggregator !== undefined
+        ? { aggregator: dataQuery.value.aggregator }
+        : {})
     })
     dataQuery.value = {
       metricName: null,
@@ -900,18 +903,33 @@ function consolidationEquals(a: WireConsolidationFunction, b: WireConsolidationF
   }
 }
 
+// Serialize with sorted object keys so equality is order-independent, matching the backend's
+// canonical (json.dumps(sort_keys=True)) identity for these same wire mappings.
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(value ?? null, (_key, val: unknown) =>
+    val !== null && typeof val === 'object' && !Array.isArray(val)
+      ? Object.fromEntries(Object.entries(val).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : val
+  )
+}
+
 function sameAttributeFilter(
   a: GraphLineQuery['attribute_filter'],
   b: GraphLineQuery['attribute_filter']
 ): boolean {
-  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+  return canonicalJson(a) === canonicalJson(b)
+}
+
+function sameAggregator(a: GraphLineQuery['aggregator'], b: GraphLineQuery['aggregator']): boolean {
+  return canonicalJson(a) === canonicalJson(b)
 }
 
 function sameQuery(a: GraphLineQuery, b: GraphLineQuery): boolean {
   return (
     a.metric_name === b.metric_name &&
     sameAttributeFilter(a.attribute_filter, b.attribute_filter) &&
-    consolidationEquals(a.consolidation_function, b.consolidation_function)
+    consolidationEquals(a.consolidation_function, b.consolidation_function) &&
+    sameAggregator(a.aggregator, b.aggregator)
   )
 }
 
@@ -1342,6 +1360,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:metric-name="graphLine.metric_name"
               v-model:attribute-filter="graphLine.attribute_filter"
               v-model:consolidation="graphLine.consolidation_function"
+              v-model:aggregator="graphLine.aggregator"
               :backend-validation="validateFormMetricBackendCustomQuery(undefined, graphLine)"
               :class="{ 'gd__yellow-border': hasLimitedReached(graphLine) }"
               @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -1447,6 +1466,7 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:metric-name="dataQuery.metricName"
           v-model:attribute-filter="dataQuery.attributeFilter"
           v-model:consolidation="dataQuery.consolidationFunction"
+          v-model:aggregator="dataQuery.aggregator"
           :backend-validation="validateFormMetricBackendCustomQuery(dataQuery)"
         />
         <CmkButton :aria-label="_t('Add query')" @click="addQuery">

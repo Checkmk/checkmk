@@ -46,6 +46,13 @@ export function defaultFunction(type: GroupByInputType): GroupByFunction {
   return functionsForInputType(type)[0]!
 }
 
+/** Coerce a grouping to an input type, resetting an incompatible function while keeping its keys. */
+export function groupByForInputType(type: GroupByInputType, groupBy: GroupByModel): GroupByModel {
+  return isFunctionValidForInputType(type, groupBy.function)
+    ? groupBy
+    : { function: defaultFunction(type), params: {}, keys: groupBy.keys }
+}
+
 export function functionTakesKeys(fn: GroupByFunction): boolean {
   return fn !== 'none'
 }

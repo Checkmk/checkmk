@@ -3,7 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { userEvent } from '@testing-library/user-event'
+import { render, screen, waitFor, within } from '@testing-library/vue'
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
@@ -54,4 +56,71 @@ test('composes the metric, attributes and consolidation sections', async () => {
   expect(await screen.findByText('Metric')).toBeInTheDocument()
   expect(screen.getByText('Attributes')).toBeInTheDocument()
   expect(screen.getByText('Consolidation')).toBeInTheDocument()
+})
+
+const SUM_BY_SERVICE: Aggregator = {
+  stages: [
+    {
+      aggregate_by: [{ kind: 'resource', name: 'service.name' }],
+      aggregation_fn: { type: 'scalar', name: 'sum' }
+    }
+  ]
+}
+
+function storedItem(store: ReturnType<typeof renderForm>): DraftMetricBackendItem {
+  const item = store.items.value.find((candidate) => candidate.id === 'A')
+  if (item?.type !== 'metric_backend') {
+    throw new Error('metric-backend item went missing')
+  }
+  return item
+}
+
+async function openGroupByFunctionDropdown(): Promise<void> {
+  await userEvent.click(await screen.findByRole('button', { name: /Edit group by/ }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Grouping function' }))
+}
+
+test('a float consolidation offers the float grouping functions, not the histogram ones', async () => {
+  renderForm(newMetricBackendDraft('A')) // defaults to the float gauge_last consolidation
+  // Editing an empty grouping opens the function dropdown directly.
+  await userEvent.click(await screen.findByRole('button', { name: /Edit group by/ }))
+
+  expect(await screen.findByRole('option', { name: 'avg by' })).toBeVisible()
+  expect(screen.getByRole('option', { name: 'count by' })).toBeVisible()
+  expect(screen.queryByRole('option', { name: 'percentile by' })).toBeNull()
+})
+
+test('a stored aggregator populates the group-by widget', async () => {
+  renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+
+  const chip = await screen.findByRole('button', { name: /Edit group by/ })
+  expect(chip).toHaveTextContent('sum by')
+  expect(within(chip).getByText('service.name')).toBeVisible()
+})
+
+const MAX_BY_SERVICE: Aggregator = {
+  stages: [
+    {
+      aggregate_by: [{ kind: 'resource', name: 'service.name' }],
+      aggregation_fn: { type: 'scalar', name: 'max' }
+    }
+  ]
+}
+
+test('selecting another function re-persists the sibling aggregator', async () => {
+  const store = renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+  await openGroupByFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'max by' }))
+
+  await waitFor(() => expect(storedItem(store).aggregator).toEqual(MAX_BY_SERVICE))
+})
+
+test('selecting "no grouping" clears the sibling aggregator', async () => {
+  const store = renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+  await openGroupByFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'no grouping' }))
+
+  await waitFor(() => expect(storedItem(store).aggregator).toBeUndefined())
 })

@@ -82,6 +82,9 @@
         },
         "attribute_filter": {
           "$ref": "attribute_filter.json"
+        },
+        "aggregator": {
+          "$ref": "aggregation.json"
         }
       },
       "required": [

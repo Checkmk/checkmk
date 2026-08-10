@@ -41,6 +41,7 @@ class BackendQueryBuilderProtocol(Protocol):
         metric_name: str,
         attribute_filter: Mapping[str, object],
         consolidation_function: ConsolidationFunction,
+        aggregator: Mapping[str, object] | None = None,
     ) -> QuantityProtocol: ...
 
 

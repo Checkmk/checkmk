@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
@@ -30,10 +31,16 @@ import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendCo
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
 import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
-import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
+import { type ConsolidationFunction, outputType } from '@/metric-backend/consolidation/types'
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
-import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
+  type GroupByInputType,
+  type GroupByModel,
+  groupByForInputType
+} from '@/metric-backend/group-by/types'
+import {
+  aggregatorToFloatGroupBy,
+  floatGroupByToAggregator,
   fractionBelowGroupBy,
   fractionBetweenGroupBy,
   percentileGroupBy
@@ -45,6 +52,7 @@ export interface Query {
   metricName: string | null
   attributeFilter?: AttributeFilter
   consolidationFunction: WireConsolidationFunction
+  aggregator?: Aggregator
 }
 
 const props = defineProps<{
@@ -74,6 +82,8 @@ const attributeFilter = defineModel<AttributeFilter | undefined>('attributeFilte
   default: undefined
 })
 const consolidation = defineModel<WireConsolidationFunction>('consolidation', { required: true })
+// Float grouping rides this sibling; histogram grouping stays embedded in the consolidation.
+const aggregator = defineModel<Aggregator | undefined>('aggregator', { default: undefined })
 
 const aggregationLookback = computed<number>({
   get: () => consolidation.value.lookback_seconds,
@@ -152,11 +162,19 @@ function storedGroupBy(): GroupByModel {
     case 'histogram_preserve_quantile':
       return percentileGroupBy(stored)
     default:
-      return percentileGroupBy()
+      return aggregatorToFloatGroupBy(aggregator.value)
   }
 }
 
+function groupByInputTypeOf(consolidationFunction: ConsolidationFunction | null): GroupByInputType {
+  return consolidationFunction
+    ? outputType(consolidationFunction.type, consolidationFunction.function)
+    : 'float'
+}
+
 function rebuildConsolidation(consolidationFunction: ConsolidationFunction | null): void {
+  const inputType = groupByInputTypeOf(consolidationFunction)
+  const group = groupByForInputType(inputType, groupBy.value)
   consolidation.value = buildConsolidationFunction(
     consolidationFunction,
     aggregationLookback.value,
@@ -164,8 +182,9 @@ function rebuildConsolidation(consolidationFunction: ConsolidationFunction | nul
     aggregationHistogramThresholdForFractionBelow.value,
     aggregationHistogramLowerThresholdForFractionBetween.value,
     aggregationHistogramUpperThresholdForFractionBetween.value,
-    groupBy.value
+    group
   )
+  aggregator.value = inputType === 'float' ? floatGroupByToAggregator(group) : undefined
 }
 
 const consolidationFunction = computed<ConsolidationFunction | null>({
@@ -175,8 +194,8 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
 
 watch(groupBy, () => rebuildConsolidation(consolidationFunction.value))
 
-const showGroupBy = computed<boolean>(
-  () => consolidationFunction.value?.function === 'histogram_preserve'
+const groupByInputType = computed<GroupByInputType>(() =>
+  groupByInputTypeOf(consolidationFunction.value)
 )
 
 // The group-by pills pick from the same attribute keys as the where clause, and a group
@@ -224,12 +243,12 @@ const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLe
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
       />
-      <tr v-if="showGroupBy">
+      <tr>
         <td>{{ _t('Group by') }}</td>
         <td>
           <FormGroupBy
             v-model="groupBy"
-            input-type="histogram"
+            :input-type="groupByInputType"
             :query-suggestions="groupByQuerySuggestions"
             :resolve-level="groupByResolveLevel"
           />

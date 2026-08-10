@@ -25,6 +25,7 @@ import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
+import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
 import { HostServicesApi } from './api/services'
 import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
@@ -59,6 +60,7 @@ const hostServicesService = new HostServicesService(
 
 const actionRegistry = createActionRegistry<string>([
   useAcknowledgeServicesAction(host),
+  useRescheduleServicesAction(host),
   useScheduleServiceDowntimeAction(host)
 ])
 

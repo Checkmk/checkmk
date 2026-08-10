@@ -29,6 +29,7 @@ from cmk.shared_typing.monitoring.host_services import (
 
 _SUPPORTED_ACTIONS: tuple[str, ...] = (
     "acknowledge",
+    "reschedule",
     "schedule_downtimes",
 )
 

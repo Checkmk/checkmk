@@ -58,3 +58,59 @@ describe('RescheduleApi.rescheduleHosts', () => {
     await expect(new RescheduleApi().rescheduleHosts(HOSTS, 0)).rejects.toThrow()
   })
 })
+
+describe('RescheduleApi.rescheduleServices', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let postSpy: any
+
+  beforeEach(() => {
+    postSpy = vi.spyOn(client, 'POST')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function mockRescheduled(rescheduled: number): void {
+    postSpy.mockResolvedValueOnce({
+      data: { rescheduled },
+      error: undefined,
+      response: new Response(null, { status: 200 })
+    } as never)
+  }
+
+  it('expands the names to services of the page host', async () => {
+    mockRescheduled(2)
+
+    const count = await new RescheduleApi().rescheduleServices(
+      { site_id: 'local', name: 'web-1' },
+      ['CPU load', 'Memory'],
+      5
+    )
+
+    expect(count).toBe(2)
+    expect(postSpy).toHaveBeenCalledTimes(1)
+    expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/reschedule', {
+      ...CONTENT_TYPE,
+      body: {
+        services: [
+          { site_id: 'local', host_name: 'web-1', name: 'CPU load' },
+          { site_id: 'local', host_name: 'web-1', name: 'Memory' }
+        ],
+        spread_minutes: 5
+      }
+    })
+  })
+
+  it('throws when the response is not ok', async () => {
+    postSpy.mockResolvedValueOnce({
+      data: undefined,
+      error: {},
+      response: new Response('', { status: 403, statusText: 'Forbidden' })
+    } as never)
+
+    await expect(
+      new RescheduleApi().rescheduleServices({ site_id: 'local', name: 'web-1' }, ['CPU load'], 0)
+    ).rejects.toThrow()
+  })
+})

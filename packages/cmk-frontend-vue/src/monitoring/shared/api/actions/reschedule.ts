@@ -17,4 +17,25 @@ export class RescheduleApi {
     )
     return response.rescheduled
   }
+
+  public async rescheduleServices(
+    host: HostRef,
+    serviceNames: string[],
+    spreadMinutes: number
+  ): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/services/actions/reschedule', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          services: serviceNames.map((name) => ({
+            site_id: host.site_id,
+            host_name: host.name,
+            name
+          })),
+          spread_minutes: spreadMinutes
+        }
+      })
+    )
+    return response.rescheduled
+  }
 }

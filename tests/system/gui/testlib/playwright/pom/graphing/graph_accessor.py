@@ -28,6 +28,11 @@ _ENGINE_DESIGNER_PREVIEW_SELECTOR = ".graphing-designer-body__preview"
 # mounts a figure there instead of a group of panels. Neither marker appears on the other's
 # surface, which is why a widget needs its own accessor rather than `graph_root`.
 _ENGINE_GRAPH_FIGURE_SELECTOR = ".graphing-graph-figure"
+# Accessible name of the graph burger menu's trigger button (`GraphBurgerMenu.vue`), fed
+# through unconditionally on every surface that renders one - not tied to what the menu
+# offers, so this stays valid regardless of which actions a given graph type exposes.
+ACTION_MENU_BUTTON_NAME = "Action menu"
+ACTION_MENU_DROPDOWN_SELECTOR = ".graphing-graph-burger-menu__dropdown"
 
 
 class GraphAccessor:

@@ -352,6 +352,7 @@ def _render_engine_graph_group(
             _DEFAULT_INTERACTION, pin="enabled" if display_config.show_pin else "disabled"
         ),
         show_graph_time=display_config.show_time_range_previews,
+        show_legend=display_config.show_legend,
         debug=debug,
     )
 

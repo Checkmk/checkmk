@@ -431,7 +431,7 @@ def command_toggle_active_checks_action(
 
 CommandToggleActiveChecks = Command(
     ident="toggle_active_checks",
-    title=_l("Enable/Disable active checks"),
+    title=_l("Enable/disable active checks"),
     confirm_title=lambda: (
         _l("Enable active checks") if request.var("_enable_checks") else _l("Disable active checks")
     ),
@@ -504,7 +504,7 @@ def command_toggle_passive_checks_action(
 
 CommandTogglePassiveChecks = Command(
     ident="toggle_passive_checks",
-    title=_l("Enable/Disable passive checks"),
+    title=_l("Enable/disable passive checks"),
     confirm_title=lambda: (
         _l("Enable passive checks")
         if request.var("_enable_passive_checks")

@@ -5513,7 +5513,7 @@ class PainterLogWhat(Painter):
 
     @override
     def short_title(self, cell: Cell) -> str:
-        return _("Host/Service")
+        return _("Host/service")
 
     @property
     @override

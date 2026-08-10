@@ -253,12 +253,12 @@ class VisualInfoLog(VisualInfo):
     @property
     @override
     def title(self) -> str:
-        return _("Log Entry")
+        return _("Log entry")
 
     @property
     @override
     def title_plural(self) -> str:
-        return _("Log Entries")
+        return _("Log entries")
 
     @property
     @override
@@ -566,7 +566,7 @@ class VisualInfoEventHistory(VisualInfo):
             (
                 "history_line",
                 Integer(
-                    title=_("History Line Number"),
+                    title=_("History line number"),
                 ),
             ),
         ]
@@ -575,7 +575,7 @@ class VisualInfoEventHistory(VisualInfo):
     def single_spec_components(self) -> list[FilterComponent]:
         return [
             components.TextInput(id="event_id", label=_("Event ID")),
-            components.TextInput(id="history_line", label=_("History Line Number")),
+            components.TextInput(id="history_line", label=_("History line number")),
         ]
 
 

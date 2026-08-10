@@ -8,8 +8,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
+import GraphLegendEyeButton from '@/graphing/components/legend/GraphLegendEyeButton.vue'
+
 import { chartColorCss } from '../colors'
 import type { CmkDonutChartProps, DonutSlice } from './types'
+import { type SliceAngles, useDonutTween } from './useDonutTween'
 
 const { _t } = usei18n()
 const props = defineProps<CmkDonutChartProps>()
@@ -22,6 +25,8 @@ const INNER_RADIUS = 110
 const TRACK_RADIUS = (OUTER_RADIUS + INNER_RADIUS) / 2
 const TRACK_STROKE = OUTER_RADIUS - INNER_RADIUS
 const SLICE_GAP_RADIANS = (1.5 * Math.PI) / 180
+// Below this sweep the divider reads as a stray line, so it fades out.
+const DIVIDER_FADE_RADIANS = (5 * Math.PI) / 180
 
 const sliceArc = arc<PieArcDatum<DonutSlice>>().innerRadius(INNER_RADIUS).outerRadius(OUTER_RADIUS)
 
@@ -31,7 +36,40 @@ const shadingId = `donut-shading-${useId()}`
 // this fraction of it.
 const RING_INNER_OFFSET = `${(INNER_RADIUS / OUTER_RADIUS) * 100}%`
 
-const total = computed(() => props.slices.reduce((sum, slice) => sum + slice.value, 0))
+// The ring, the total and every share are recomputed over what is left.
+const hidden = ref(new Set<string>())
+
+function toggleHidden(key: string): void {
+  const next = new Set(hidden.value)
+  if (!next.delete(key)) {
+    next.add(key)
+  }
+  hidden.value = next
+}
+
+const visibleSlices = computed(() => props.slices.filter((slice) => !hidden.value.has(slice.key)))
+
+// Counted off the slices at hand: a key hidden before its category left the
+// data must not make the chart claim it is holding something back.
+const hiddenCount = computed(() => props.slices.length - visibleSlices.value.length)
+
+const total = computed(() => visibleSlices.value.reduce((sum, slice) => sum + slice.value, 0))
+
+const targetAngles = computed<SliceAngles>(() => {
+  // No traffic at all is no ring: the empty track takes over.
+  if (total.value <= 0) {
+    return new Map()
+  }
+  const layout = pie<DonutSlice>()
+    .sort(null)
+    .value((slice) => slice.value)
+    // A lone slice gets no gap: it would otherwise be a full ring with a notch
+    // cut out of it.
+    .padAngle(visibleSlices.value.length > 1 ? SLICE_GAP_RADIANS : 0)
+  return new Map(layout(visibleSlices.value).map((datum) => [datum.data.key, datum]))
+})
+
+const { angles: displayedAngles, leaving } = useDonutTween(targetAngles)
 
 interface Segment {
   key: string
@@ -39,26 +77,30 @@ interface Segment {
   color: string
   path: string
   ariaLabel: string
+  dividerOpacity: number
+  leaving: boolean
 }
 
+// Driven by the tweened angles, because a leaving slice still has to be drawn.
 const segments = computed<Segment[]>(() => {
-  if (total.value <= 0) {
-    return []
-  }
-  const layout = pie<DonutSlice>()
-    .sort(null)
-    .value((slice) => slice.value)
-    // A lone slice gets no gap: it would otherwise be a full ring with a notch
-    // cut out of it.
-    .padAngle(props.slices.length > 1 ? SLICE_GAP_RADIANS : 0)
-  return layout(props.slices).map((datum) => ({
+  return [...displayedAngles.value.values()].map((datum) => ({
     key: datum.data.key,
     label: datum.data.label,
     color: chartColorCss(datum.data.color),
     path: sliceArc(datum) ?? '',
-    ariaLabel: `${datum.data.label}, ${props.formatValue(datum.value)}, ${percentText(datum.value)}`
+    ariaLabel: `${datum.data.label}, ${props.formatValue(datum.value)}, ${percentText(datum.value)}`,
+    dividerOpacity: Math.min(1, (datum.endAngle - datum.startAngle) / DIVIDER_FADE_RADIANS),
+    leaving: leaving.value.has(datum.data.key)
   }))
 })
+
+// A collapsing slice is on its way out of the ring: activating it would open
+// the very category the reader just hid.
+function activate(segment: Segment): void {
+  if (!segment.leaving) {
+    emit('sliceActivate', segment.key)
+  }
+}
 
 function percent(value: number): number {
   return total.value > 0 ? (value / total.value) * 100 : 0
@@ -77,11 +119,12 @@ function highlight(key: string | null): void {
 }
 
 function isDimmed(key: string): boolean {
-  return highlighted.value !== null && highlighted.value !== key
+  // Pointing at a hidden category must not fade the whole ring.
+  return highlightedSlice.value !== undefined && highlightedSlice.value.key !== key
 }
 
 const highlightedSlice = computed(() =>
-  props.slices.find((slice) => slice.key === highlighted.value)
+  visibleSlices.value.find((slice) => slice.key === highlighted.value)
 )
 
 const center = computed(() => {
@@ -96,7 +139,13 @@ const center = computed(() => {
   return {
     label: props.centerLabel ?? _t('Volume'),
     value: props.formatValue(total.value),
-    share: ''
+    share:
+      hiddenCount.value > 0
+        ? _t('%{visible} of %{all} shown', {
+            visible: `${visibleSlices.value.length}`,
+            all: `${props.slices.length}`
+          })
+        : ''
   }
 })
 </script>
@@ -133,26 +182,33 @@ const center = computed(() => {
         </defs>
         <!-- Slice and shading share a group so that hovering, focusing and
              dimming address them as one shape. -->
+        <!-- A leaving slice is out of reach: its share is measured against a
+             ring it is on its way out of. -->
         <g
           v-for="segment in segments"
           :key="segment.key"
           class="network-flow-cmk-donut-chart__segment"
-          :class="{ 'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key) }"
+          :class="{
+            'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key),
+            'network-flow-cmk-donut-chart__segment--leaving': segment.leaving
+          }"
           role="button"
-          tabindex="0"
+          :tabindex="segment.leaving ? -1 : 0"
+          :aria-hidden="segment.leaving ? 'true' : undefined"
           :aria-label="segment.ariaLabel"
           @mouseenter="highlight(segment.key)"
           @mouseleave="highlight(null)"
           @focus="highlight(segment.key)"
           @blur="highlight(null)"
-          @click="emit('sliceActivate', segment.key)"
-          @keydown.enter.prevent="emit('sliceActivate', segment.key)"
-          @keydown.space.prevent="emit('sliceActivate', segment.key)"
+          @click="activate(segment)"
+          @keydown.enter.prevent="activate(segment)"
+          @keydown.space.prevent="activate(segment)"
         >
           <path
             class="network-flow-cmk-donut-chart__slice"
             :d="segment.path"
             :fill="segment.color"
+            :stroke-opacity="segment.dividerOpacity"
           />
           <!-- Its own layer, so the slice keeps its flat palette colour. -->
           <path
@@ -175,18 +231,28 @@ const center = computed(() => {
         :key="slice.key"
         class="network-flow-cmk-donut-chart__legend-item"
         :class="{
-          'network-flow-cmk-donut-chart__legend-item--highlighted': highlighted === slice.key
+          'network-flow-cmk-donut-chart__legend-item--highlighted': highlighted === slice.key,
+          'network-flow-cmk-donut-chart__legend-item--hidden': hidden.has(slice.key)
         }"
         @mouseenter="highlight(slice.key)"
         @mouseleave="highlight(null)"
       >
+        <GraphLegendEyeButton
+          :hidden="hidden.has(slice.key)"
+          :aria-label="
+            hidden.has(slice.key)
+              ? _t('Show %{category} in the chart', { category: slice.label })
+              : _t('Hide %{category} in the chart', { category: slice.label })
+          "
+          @toggle="toggleHidden(slice.key)"
+        />
         <span
           class="network-flow-cmk-donut-chart__swatch"
-          :style="{ backgroundColor: chartColorCss(slice.color) }"
+          :style="{ backgroundColor: hidden.has(slice.key) ? '' : chartColorCss(slice.color) }"
         />
         <span class="network-flow-cmk-donut-chart__legend-label">{{ slice.label }}</span>
         <span class="network-flow-cmk-donut-chart__legend-value">{{
-          percentText(slice.value)
+          hidden.has(slice.key) ? '–' : percentText(slice.value)
         }}</span>
       </li>
     </ul>
@@ -234,6 +300,10 @@ const center = computed(() => {
 
 .network-flow-cmk-donut-chart__segment--dimmed {
   opacity: 0.5;
+}
+
+.network-flow-cmk-donut-chart__segment--leaving {
+  pointer-events: none;
 }
 
 /* The divider takes the colour of the surface behind the chart. */
@@ -318,11 +388,20 @@ const center = computed(() => {
   background-color: var(--ux-theme-4);
 }
 
+/* A hidden category keeps its row, so it stays reachable. */
+.network-flow-cmk-donut-chart__legend-item--hidden {
+  opacity: 0.45;
+}
+
 .network-flow-cmk-donut-chart__swatch {
   flex: 0 0 auto;
   width: 0.75em;
   height: 0.75em;
   border-radius: 2px;
+}
+
+.network-flow-cmk-donut-chart__legend-item--hidden .network-flow-cmk-donut-chart__swatch {
+  background-color: var(--color-mid-grey-30);
 }
 
 .network-flow-cmk-donut-chart__legend-label {

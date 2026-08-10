@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render } from '@testing-library/vue'
+import { nextTick } from 'vue'
 
 import CmkDonutChart from '@/network-flow/CmkDonutChart/CmkDonutChart.vue'
 import type { DonutSlice } from '@/network-flow/CmkDonutChart/types'
@@ -12,6 +13,49 @@ const SLICES: DonutSlice[] = [
   { key: 'tls', label: 'TLS', value: 90, color: 'blue' },
   { key: 'other', label: 'Other', value: 60, color: 'grey' }
 ]
+
+// The arc tween runs on animation frames; driving them by hand keeps the tests
+// deterministic.
+let frames = new Map<number, FrameRequestCallback>()
+let nextFrameHandle = 0
+let now = 0
+
+beforeEach(() => {
+  frames = new Map()
+  nextFrameHandle = 0
+  now = 0
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+    frames.set(++nextFrameHandle, callback)
+    return nextFrameHandle
+  })
+  vi.stubGlobal('cancelAnimationFrame', (handle: number) => frames.delete(handle))
+  vi.spyOn(performance, 'now').mockImplementation(() => now)
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
+
+async function renderFrame(elapsedMs: number): Promise<void> {
+  now += elapsedMs
+  const pending = [...frames.entries()]
+  frames.clear()
+  pending.forEach(([, callback]) => callback(now))
+  await nextTick()
+}
+
+async function advanceTween(): Promise<void> {
+  while (frames.size > 0) {
+    await renderFrame(1000)
+  }
+}
+
+function slicePaths(container: Element): (string | null)[] {
+  return [...container.querySelectorAll('.network-flow-cmk-donut-chart__slice')].map((el) =>
+    el.getAttribute('d')
+  )
+}
 
 function renderChart(slices: DonutSlice[] = SLICES) {
   return render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
@@ -172,4 +216,147 @@ test('activates a slice by click and by keyboard', async () => {
   await fireEvent.keyDown(tls, { key: ' ' })
 
   expect(emitted('sliceActivate')).toEqual([['tls'], ['tls'], ['tls']])
+})
+
+test('recomputes the ring, the total and every share when a category is hidden', async () => {
+  const { container, getByLabelText } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  // 90 of 90 is the whole ring now, and the total drops to what is left.
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
+    '90 B'
+  )
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
+    '1 of 2 shown'
+  )
+  const values = [...container.querySelectorAll('.network-flow-cmk-donut-chart__legend-value')].map(
+    (el) => el.textContent
+  )
+  expect(values).toEqual(['100.0%', '–'])
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+})
+
+test('keeps the hidden row reachable so it can be brought back', async () => {
+  const { container, getByLabelText } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  const otherRow = container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')[1]
+  expect(otherRow).toHaveClass('network-flow-cmk-donut-chart__legend-item--hidden')
+
+  await fireEvent.click(getByLabelText('Show Other in the chart'))
+  await advanceTween()
+
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(2)
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
+    ''
+  )
+})
+
+test('lets a leaving slice collapse before it is dropped', async () => {
+  const { container, getByLabelText } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await nextTick()
+
+  // Still drawn while it shrinks.
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(2)
+
+  await advanceTween()
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+})
+
+test('keeps a collapsing slice out of reach while it is drawn', async () => {
+  const { container, getByLabelText, emitted } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await nextTick()
+
+  const collapsing = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  expect(collapsing).toHaveClass('network-flow-cmk-donut-chart__segment--leaving')
+  expect(collapsing).toHaveAttribute('aria-hidden', 'true')
+  expect(collapsing).toHaveAttribute('tabindex', '-1')
+
+  await fireEvent.keyDown(collapsing, { key: 'Enter' })
+  expect(emitted()['sliceActivate']).toBeUndefined()
+})
+
+test('does not replay the animation when a refresh brings the same shares', async () => {
+  const { rerender } = renderChart()
+
+  await rerender({ slices: SLICES.map((slice) => ({ ...slice, value: slice.value * 2 })) })
+
+  expect(frames.size).toBe(0)
+})
+
+test('does not claim to hold anything back once the hidden category is gone', async () => {
+  const { container, getByLabelText, rerender } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  await rerender({ slices: SLICES.slice(0, 1) })
+  await advanceTween()
+
+  expect(
+    container.querySelector('.network-flow-cmk-donut-chart__center-share')
+  ).toBeEmptyDOMElement()
+})
+
+test('shows the empty track once every category is hidden', async () => {
+  const { container, getByLabelText } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide TLS in the chart'))
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(0)
+  expect(container.querySelector('.network-flow-cmk-donut-chart__empty-track')).not.toBeNull()
+})
+
+test('does not fade the ring when a hidden category is pointed at', async () => {
+  const { container, getByLabelText } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  const otherRow = container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')[1]!
+  await fireEvent.mouseEnter(otherRow)
+
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment--dimmed')).toHaveLength(
+    0
+  )
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
+    '90 B'
+  )
+})
+
+test('eases the arcs into their new sizes instead of snapping', async () => {
+  const { container, getByLabelText } = renderChart()
+  const before = slicePaths(container)
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await renderFrame(240)
+  const midway = slicePaths(container)
+
+  await advanceTween()
+  const after = slicePaths(container)
+
+  // Halfway through the 480ms tween.
+  expect(midway).not.toEqual(before)
+  expect(midway).not.toEqual(after)
+})
+
+test('lands immediately when the reader asks for reduced motion', async () => {
+  vi.stubGlobal('matchMedia', () => ({ matches: true }))
+  const { container, getByLabelText } = renderChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await nextTick()
+
+  expect(frames.size).toBe(0)
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
 })

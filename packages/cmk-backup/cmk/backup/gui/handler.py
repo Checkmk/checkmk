@@ -1139,10 +1139,6 @@ def show_job_details(job: MKBackupJob) -> None:
 
 
 class ModeBackupJobState(WatoMode[object]):
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._from_vars()
-
     @override
     def _from_vars(self) -> None:
         if (job_ident := request.var("job")) is None:

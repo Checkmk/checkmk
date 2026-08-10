@@ -64,6 +64,10 @@ function setSelectAll(table: Table<T>, value: boolean | 'indeterminate'): void {
   table.toggleAllRowsSelected(value === true)
 }
 
+function toggleSelectAll(table: Table<T>): void {
+  table.toggleAllRowsSelected(!table.getIsAllRowsSelected())
+}
+
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
 function stickyStyle(columnId: string): CSSProperties {
@@ -176,12 +180,14 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             v-if="!header.isPlaceholder && header.column.columnDef.meta?.selectColumn"
             class="monitoring-table-header__select"
             :style="contentStyle(header.column.columnDef)"
+            @click="toggleSelectAll(header.getContext().table)"
           >
             <CmkCheckbox
               :allow-indeterminate="true"
               :aria-label="_t('Select all rows')"
               :model-value="selectAllModel(header.getContext().table)"
               @update:model-value="setSelectAll(header.getContext().table, $event)"
+              @click.stop
             />
           </div>
           <button
@@ -343,6 +349,18 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.monitoring-table-header__select :deep(.cmk-checkbox__container) {
+  pointer-events: none;
+}
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.monitoring-table-header__select:hover :deep(.cmk-checkbox__button) {
+  background-color: var(--input-hover-bg-color);
 }
 
 .monitoring-table-header__header-button {

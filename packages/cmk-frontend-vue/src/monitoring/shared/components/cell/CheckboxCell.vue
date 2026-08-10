@@ -17,21 +17,65 @@ defineProps<{
 }>()
 
 const value = defineModel<boolean>({ required: false, default: false })
+
+function toggle(): void {
+  value.value = !value.value
+}
 </script>
 
 <template>
   <BaseCell class="monitoring-checkbox-cell" :column-id="columnId" :vertical-align="verticalAlign">
     <template #default>
-      <CmkCheckbox v-model="value" :aria-label="ariaLabel"></CmkCheckbox>
+      <div
+        class="monitoring-checkbox-cell__hit-area"
+        :class="{
+          'monitoring-checkbox-cell__hit-area--vertical-middle': verticalAlign === 'middle'
+        }"
+        @click="toggle"
+      >
+        <CmkCheckbox v-model="value" :aria-label="ariaLabel" @click.stop></CmkCheckbox>
+      </div>
     </template>
   </BaseCell>
 </template>
 
 <style scoped>
 /* stylelint-disable selector-pseudo-class-no-unknown */
+.monitoring-checkbox-cell {
+  height: 1px;
+}
+
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.monitoring-checkbox-cell :deep(.monitoring-base-cell__highlight) {
-  margin: 0;
-  padding: var(--dimension-2) var(--dimension-3);
+td.monitoring-checkbox-cell :deep(.monitoring-base-cell__wrapper) {
+  height: 100%;
+  padding: 0;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+td.monitoring-checkbox-cell :deep(.monitoring-base-cell__plain) {
+  height: 100%;
+  padding: 0;
+}
+
+.monitoring-checkbox-cell__hit-area {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 5px var(--dimension-4);
+  cursor: pointer;
+}
+
+.monitoring-checkbox-cell__hit-area--vertical-middle {
+  display: flex;
+  align-items: center;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-checkbox-cell__hit-area :deep(.cmk-checkbox__container) {
+  pointer-events: none;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-checkbox-cell__hit-area:hover :deep(.cmk-checkbox__button) {
+  background-color: var(--input-hover-bg-color);
 }
 </style>

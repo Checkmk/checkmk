@@ -185,6 +185,15 @@ describe('MonitoringSplitPane', () => {
     expect(screen.getByRole('button', { name: RESCHEDULE_LABEL })).not.toHaveClass(RUNNING_CLASS)
   })
 
+  it('selects every row when the select-all cell is clicked next to its checkbox', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+    await screen.findByRole('checkbox', { name: 'Select all rows' })
+
+    await userEvent.click(document.querySelector('.monitoring-table-header__select')!)
+
+    expect(await screen.findByText('1 hosts selected')).toBeInTheDocument()
+  })
+
   it('ignores a bulk action while nothing is selected', async () => {
     const perform = vi.fn()
     await mountPaneWithLoadedRows(perform)

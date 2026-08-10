@@ -29,7 +29,6 @@ class ECEventContext(event_context.EventContext, total=False):
 
     EC_CONTACT: str
     EC_CONTACT_GROUPS: str
-    EC_ID: str
     EC_MATCH_GROUPS: str
     EC_ORIG_HOST: str
     EC_OWNER: str

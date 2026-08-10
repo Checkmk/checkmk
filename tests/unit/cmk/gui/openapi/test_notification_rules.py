@@ -15,7 +15,7 @@ from cmk.ccc import version
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example as _default_config,
 )
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+from cmk.gui.openapi.endpoints.notification_rules.common import (
     notification_rule_request_example,
 )
 from cmk.gui.openapi.endpoints.notification_rules.request_schemas import (

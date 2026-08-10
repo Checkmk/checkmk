@@ -28,6 +28,7 @@ class EventContext(TypedDict, total=False):
     DATE: str
     EC_COMMENT: str
     EC_FACILITY: str
+    EC_ID: str
     EC_PRIORITY: str
     EC_RULE_ID: str
     HOSTATTEMPT: str

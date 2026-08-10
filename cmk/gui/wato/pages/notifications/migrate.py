@@ -5,8 +5,8 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-from collections.abc import Mapping
-from typing import cast
+from collections.abc import Mapping, Sequence
+from typing import cast, Final, get_args
 from uuid import uuid4
 
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
@@ -55,6 +55,26 @@ from cmk.utils.notify_types import (
     TimeperiodBulkParameters,
 )
 from cmk.utils.timeperiod import TimeperiodName
+
+_ANY_FROM_STATE: Final = "?"
+
+_ALL_HOST_EVENTS: Final[Sequence[HostEventType]] = [
+    *(
+        state_change
+        for state_change in get_args(get_args(HostEventType)[0])
+        if state_change.startswith(_ANY_FROM_STATE)
+    ),
+    *get_args(NonStateChangeEventType),
+]
+
+_ALL_SERVICE_EVENTS: Final[Sequence[ServiceEventType]] = [
+    *(
+        state_change
+        for state_change in get_args(get_args(ServiceEventType)[0])
+        if state_change.startswith(_ANY_FROM_STATE)
+    ),
+    *get_args(NonStateChangeEventType),
+]
 
 
 def host_event_mapper(
@@ -121,32 +141,37 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
         )
         return state_change_service
 
-    if (
-        "match_host_event" not in event_rule
-        and "match_service_event" not in event_rule
-        and "match_ec" not in event_rule
-    ):
-        return "all_events", None
+    match_ec = event_rule.get("match_ec")
+    host_events = event_rule.get("match_host_event")
+    service_events = event_rule.get("match_service_event")
+
+    if host_events is None and service_events is None:
+        if match_ec is None:
+            return "all_events", None
+        if match_ec is False:
+            # Quick Setup has no "all events except Event Console alerts".
+            host_events = _ALL_HOST_EVENTS
+            service_events = _ALL_SERVICE_EVENTS
 
     specific_events = SpecificEvents()
 
-    if "match_host_event" in event_rule:
+    if host_events is not None:
         specific_events["host_events"] = [
             _non_state_change_events(ev)
             if is_non_state_change_event_type(ev)
             else _migrate_host_event(ev)
-            for ev in event_rule["match_host_event"]
+            for ev in host_events
         ]
 
-    if "match_service_event" in event_rule:
+    if service_events is not None:
         specific_events["service_events"] = [
             _non_state_change_events(ev)
             if is_non_state_change_event_type(ev)
             else _migrate_service_event(ev)
-            for ev in event_rule["match_service_event"]
+            for ev in service_events
         ]
 
-    if "match_ec" in event_rule and event_rule["match_ec"] is not False:
+    if match_ec is not None and match_ec is not False:
         specific_events["ec_alerts"] = True
 
     return "specific_events", specific_events

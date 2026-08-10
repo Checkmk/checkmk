@@ -16,6 +16,7 @@ from cmk.gui.openapi.framework.model.converter import (
     HostConverter,
     LDAPConnectionIDConverter,
     RelativeUrlConverter,
+    SAMLConnectionIDConverter,
     SiteIdConverter,
     TypedPlainValidator,
 )
@@ -508,7 +509,10 @@ class LDAPAuthenticationConnectionModel:
 @api_model
 class SAMLAuthenticationConnectionModel:
     type: Literal["saml"] = api_field(description="A SAML connection.")
-    connection_id: str = api_field(
+    connection_id: Annotated[
+        str,
+        TypedPlainValidator(str, SAMLConnectionIDConverter.should_exist),
+    ] = api_field(
         description="An existing SAML connection.",
         example="saml_1",
     )

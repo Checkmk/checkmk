@@ -661,8 +661,17 @@ def test_update_site_connection_empty_authentication_connections_400(
     ).assert_status_code(400)
 
 
+@pytest.fixture(name="saml_connection")
+def _saml_connection(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.openapi.framework.model.converter.get_saml_connections",
+        lambda: {"saml_1": {}},
+    )
+
+
 def test_site_connection_saml_authentication_connection_round_trip(
     clients: ClientRegistry,
+    saml_connection: None,
 ) -> None:
     config, site_id = _default_config_with_site_id()
     remote_site_url = config["configuration_connection"]["url_of_remote_site"]
@@ -705,6 +714,53 @@ def test_site_connection_saml_authentication_connection_round_trip(
             },
         )
     ]
+
+
+def test_update_site_connection_unknown_saml_authentication_connection_400(
+    clients: ClientRegistry,
+    saml_connection: None,
+) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"]["authentication_connections"] = {
+        "type": "list",
+        "connections": [{"type": "saml", "connection_id": "saml_unknown"}],
+    }
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_update_site_connection_saml_authentication_connection_needs_global_permission_403(
+    clients: ClientRegistry,
+    saml_connection: None,
+) -> None:
+    """Holding "wato.sites" alone must not reveal which SAML connections exist."""
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    clients.UserRole.clone(body={"role_id": "admin", "new_role_id": "site_admin"})
+    clients.UserRole.edit(role_id="site_admin", body={"new_permissions": {"wato.global": "no"}})
+    clients.User.create(
+        username="site_admin",
+        fullname="site_admin",
+        roles=["site_admin"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.SiteManagement.set_credentials("site_admin", "supersecretish")
+
+    details = []
+    for saml_id in ("saml_1", "saml_unknown"):
+        config["configuration_connection"]["authentication_connections"] = {
+            "type": "list",
+            "connections": [{"type": "saml", "connection_id": saml_id}],
+        }
+        resp = clients.SiteManagement.update(site_id=site_id, site_config=config, expect_ok=False)
+        resp.assert_status_code(403)
+        details.append(resp.json["detail"])
+    assert details[0] == details[1]
 
 
 def test_update_site_connection_user_sync_with_ldap_connections_200(

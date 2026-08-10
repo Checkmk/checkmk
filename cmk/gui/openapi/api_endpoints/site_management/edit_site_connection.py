@@ -39,7 +39,7 @@ from cmk.livestatus_client import SiteConfiguration
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .models.request_models import SiteConnectionEditModel
 from .models.response_models import SiteConnectionModel
-from .utils import PERMISSIONS
+from .utils import PERMISSIONS_WITH_SAML_CONNECTION_READ
 
 
 def _preserve_non_modeled_site_config_fields(
@@ -137,7 +137,7 @@ ENDPOINT_EDIT_SITE_CONNECTION = VersionedEndpoint(
         link_relation="cmk/update",
         method="put",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=PERMISSIONS_WITH_SAML_CONNECTION_READ),
     doc=EndpointDoc(family=SITE_MANAGEMENT_FAMILY.name),
     versions={APIVersion.V1: EndpointHandler(handler=edit_site_connection_v1)},
 )

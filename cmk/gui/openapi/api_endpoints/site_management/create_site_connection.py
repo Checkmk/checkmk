@@ -34,7 +34,7 @@ from cmk.gui.watolib.site_management import (
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
 from .models.request_models import SiteConnectionCreateModel
 from .models.response_models import SiteConnectionModel
-from .utils import PERMISSIONS
+from .utils import PERMISSIONS_WITH_SAML_CONNECTION_READ
 
 
 def create_site_connection_v1(
@@ -101,7 +101,7 @@ ENDPOINT_CREATE_SITE_CONNECTION = VersionedEndpoint(
         link_relation="cmk/create",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS),
+    permissions=EndpointPermissions(required=PERMISSIONS_WITH_SAML_CONNECTION_READ),
     doc=EndpointDoc(family=SITE_MANAGEMENT_FAMILY.name),
     versions={APIVersion.V1: EndpointHandler(handler=create_site_connection_v1)},
 )

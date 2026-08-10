@@ -3,14 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Forecast graph and graph collection surfaces (R1.3 Areas 6, 7). Skipped (CMK-35973).
+"""Forecast graph and graph collection surfaces.
 
-Complete once the engine renders on these surfaces: reach them via the ForecastGraph /
-GraphCollection POMs and GraphAccessor.graph_root.
+The collection cases assert what the engine renders, never what the legacy renderer no longer
+does: a slot holds either a plot the engine drew or an error box, so a plot in every slot already
+says the old renderer drew nothing.
+
+The forecast case stays a skipped skeleton (CMK-35973) until the engine renders on that surface.
 """
 
 import pytest
+from playwright.sync_api import expect
 
+from tests.system.gui.testlib.playwright.pom.graphing.fixtures import GRAPH_COLLECTION_SIZE
+from tests.system.gui.testlib.playwright.pom.graphing.graph_collection import GraphCollection
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
@@ -19,7 +25,7 @@ from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 def test_forecast_graph_shows_historical_and_forecast_series(
     dashboard_page: MainDashboard, forecast_graph: str
 ) -> None:
-    """FG-02 (R1.3 Area 6): the forecast graph shows historical and forecast series.
+    """The forecast graph shows historical and forecast series.
 
     Do: inspect the rendered forecast component.
     Assert: legend entries for both the historical and forecast series; no broken-graph.
@@ -27,25 +33,63 @@ def test_forecast_graph_shows_historical_and_forecast_series(
     pytest.fail("CMK-35973 skeleton: body not implemented")
 
 
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
+@pytest.mark.skip_if_edition("community")
 def test_graph_collection_renders_every_slot(
-    dashboard_page: MainDashboard, graph_collection: str
+    dashboard_page: MainDashboard,
+    graph_collection: str,
+    javascript_errors: list[str],
 ) -> None:
-    """GC-01 (R1.3 Area 7): every graph in a collection renders.
+    """Every graph in a collection renders through the new engine.
 
-    Do: navigate to a saved graph collection (>=2 graphs).
-    Assert: every slot has a rendered graph; no JS errors.
+    One plot per slot and as many plots as the collection holds together say that every slot
+    drew exactly one graph, without asserting per index which graph landed where.
     """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+    collection = GraphCollection(dashboard_page.page, graph_collection)
+
+    expect(
+        collection.slots_holding_a_graph,
+        "A slot of the collection holds no graph rendered by the new engine",
+    ).to_have_count(GRAPH_COLLECTION_SIZE)
+    expect(
+        collection.drawn_plots,
+        "A graph of the collection drew no plot on screen",
+    ).to_have_count(GRAPH_COLLECTION_SIZE)
+    assert not javascript_errors, (
+        f"Opening the collection raised uncaught page errors: {javascript_errors}"
+    )
 
 
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
+@pytest.mark.skip_if_edition("community")
 def test_graph_collection_has_no_broken_graphs(
-    dashboard_page: MainDashboard, graph_collection: str
+    dashboard_page: MainDashboard,
+    graph_collection: str,
+    javascript_errors: list[str],
 ) -> None:
-    """GC-02 (R1.3 Area 7): a graph collection renders with no broken graphs.
+    """A graph collection renders with no broken graphs.
 
-    Do: navigate to the same collection; count broken-graph indicators.
-    Assert: zero broken-graph elements; each component reports loaded.
+    The order matters. A graph the server cannot resolve never mounts a group at all, so its box
+    is checked first; every graph reporting itself loaded then gates the engine's own failure
+    states, which settle at the same moment, so each of them reports itself instead of surfacing
+    as a missing graph.
     """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+    collection = GraphCollection(dashboard_page.page, graph_collection)
+
+    expect(
+        collection.broken_graphs,
+        "The server could not resolve every graph of the collection",
+    ).to_have_count(0)
+    expect(
+        collection.slots_reporting_loaded,
+        "A graph of the collection never reported itself loaded",
+    ).to_have_count(GRAPH_COLLECTION_SIZE)
+    expect(
+        collection.error_notices,
+        "A graph of the collection failed to load its data",
+    ).to_have_count(0)
+    expect(
+        collection.skeletons,
+        "A skeleton outlived the graph it was standing in for",
+    ).to_have_count(0)
+    assert not javascript_errors, (
+        f"Rendering the collection raised uncaught page errors: {javascript_errors}"
+    )

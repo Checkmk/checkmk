@@ -176,6 +176,20 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
+    @contextmanager
+    def acting_as(self, user: str, password: str) -> Iterator[None]:
+        """Send the requests inside the block as `user`, restoring the identity afterwards.
+
+        A site hands this session over to its automation user as soon as that user exists, so a
+        call whose effect is stored per user has to name the one it needs.
+        """
+        previous = self.headers["Authorization"]
+        self.set_authentication_header(user, password)
+        try:
+            yield
+        finally:
+            self.headers["Authorization"] = previous
+
     @override
     def get(  # type: ignore[override]
         self, url: str, api_version: APIVersion | None = None, **kwargs: Any
@@ -2218,6 +2232,28 @@ class GraphAPI(BaseAPI):
                 "internal": json.dumps(internal),
                 "requested_time_range": requested_time_range,
                 "consolidation_function": consolidation_function,
+            },
+        )
+
+    def add_to_container(
+        self,
+        family: str,
+        container_id: str,
+        specification: Mapping[str, object],
+        internal: str,
+    ) -> Mapping[str, object]:
+        """Store one discovered graph in a container page addressed by its pagetype name.
+
+        `internal` is the JSON string the discover actions return, passed on unchanged. A
+        container the acting user does not own is cloned for them first.
+        """
+        return self._post(
+            "add_to_container",
+            {
+                "family": family,
+                "id": container_id,
+                "specification": specification,
+                "internal": internal,
             },
         )
 

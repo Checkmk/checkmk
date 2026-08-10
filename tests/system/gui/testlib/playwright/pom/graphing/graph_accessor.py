@@ -25,8 +25,8 @@ _GRAPH_CONTAINER_SELECTOR = "div.graph:not(.preview)"
 _DESIGNER_PREVIEW_SELECTOR = "#graph_0"
 
 # The engine mounts one graph group per painter, holding a panel per graph it resolved.
-_ENGINE_GRAPH_GROUP_SELECTOR = ".graphing-graph-group"
-_ENGINE_GRAPH_PANEL_SELECTOR = ".graphing-graph-panel"
+ENGINE_GRAPH_GROUP_SELECTOR = ".graphing-graph-group"
+ENGINE_GRAPH_PANEL_SELECTOR = ".graphing-graph-panel"
 
 
 class GraphAccessor:
@@ -73,19 +73,26 @@ class GraphAccessor:
         *,
         widget: Locator | None = None,
         iframed: bool = False,
+        within: Locator | None = None,
     ) -> Locator:
-        """Return the engine's graph group scoping every graph of one painter."""
+        """Return the engine's graph group scoping every graph of one painter.
+
+        ``within`` narrows `PAGE_DIRECT` to one part of the page, for a surface that hosts
+        several groups and needs the one belonging to a given slot.
+        """
         match containment:
             case GraphContainment.PAGE_DIRECT:
-                return self._owner.main_area.locator(_ENGINE_GRAPH_GROUP_SELECTOR)
+                if within is not None:
+                    return within.locator(ENGINE_GRAPH_GROUP_SELECTOR)
+                return self._owner.main_area.locator(ENGINE_GRAPH_GROUP_SELECTOR)
             case GraphContainment.DASHBOARD_WIDGET:
                 if widget is None:
                     raise ValueError(
                         "A widget locator is required for DASHBOARD_WIDGET containment."
                     )
                 if iframed:
-                    return widget.frame_locator("iframe").locator(_ENGINE_GRAPH_GROUP_SELECTOR)
-                return widget.locator(_ENGINE_GRAPH_GROUP_SELECTOR)
+                    return widget.frame_locator("iframe").locator(ENGINE_GRAPH_GROUP_SELECTOR)
+                return widget.locator(ENGINE_GRAPH_GROUP_SELECTOR)
             case _:
                 raise ValueError(f"The engine does not render on containment: {containment!r}")
 
@@ -95,6 +102,7 @@ class GraphAccessor:
         *,
         widget: Locator | None = None,
         iframed: bool = False,
+        within: Locator | None = None,
     ) -> Locator:
         """Return every graph the engine rendered on this surface.
 
@@ -103,6 +111,6 @@ class GraphAccessor:
         auto-waits for each graph to render, unlike ``.all()`` / ``.count()``), then
         address them via ``.nth(i)``.
         """
-        return self.engine_graph_group(containment, widget=widget, iframed=iframed).locator(
-            _ENGINE_GRAPH_PANEL_SELECTOR
-        )
+        return self.engine_graph_group(
+            containment, widget=widget, iframed=iframed, within=within
+        ).locator(ENGINE_GRAPH_PANEL_SELECTOR)

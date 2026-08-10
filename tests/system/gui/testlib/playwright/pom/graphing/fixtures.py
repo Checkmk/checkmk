@@ -6,11 +6,12 @@
 """Reusable fixtures for the graph E2E suites.
 
 Registered for discovery in ``tests/system/gui/conftest.py``. The saved-surface
-fixtures (custom graph, collection, forecast) `skip` until completed by the graph
+fixtures still to be built (custom graph, forecast) `skip` until completed by the graph
 test suites, since creating and surfacing them depends on the graph implementation.
 """
 
 from collections.abc import Iterator
+from typing import Final
 
 import pytest
 from playwright.sync_api import Page
@@ -24,7 +25,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.testlib.graphing import InjectedRrd
-from tests.testlib.site import Site
+from tests.testlib.site import ADMIN_USER, Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
 SERVICE_WITH_GRAPHS = "Memory"
@@ -33,6 +34,14 @@ SERVICE_WITH_GRAPHS = "Memory"
 # filter spanning several templates leaves a test more than one card to judge. A linux dump
 # host's cpu services carry two.
 COMBINED_GRAPHS_SERVICE_FILTER = "cpu"
+
+# The collection every user starts out with; adding to it clones it for the acting user.
+_BUILTIN_COLLECTION_NAME: Final = "default"
+_BUILTIN_COLLECTION_TITLE: Final = "My graphs"
+
+_COLLECTION_FAMILY: Final = "graph_collection"
+_COLLECTION_USER_CONFIG: Final = "user_graph_collections.mk"
+GRAPH_COLLECTION_SIZE: Final = 2
 
 
 @pytest.fixture(name="graph_hosts_with_varying_data", scope="module")
@@ -80,9 +89,42 @@ def fixture_saved_custom_graph(test_site: Site) -> str:
 
 
 @pytest.fixture(name="graph_collection")
-def fixture_graph_collection(test_site: Site) -> str:
-    """A saved graph collection; complete via the graph-collection creation flow."""
-    pytest.skip("graph_collection is scaffolding: graph engine not implemented yet.")
+def fixture_graph_collection(
+    test_site: Site, graph_hosts_with_varying_data: list[str]
+) -> Iterator[str]:
+    """The title of a saved graph collection holding `GRAPH_COLLECTION_SIZE` graphs.
+
+    Filled acting as the user the browser logs in as: the graphs land in that user's own copy of
+    the collection, and only that user sees them.
+
+    Collections are a Pro+ surface, so a test asking for this gates its own edition.
+    """
+    host_name = graph_hosts_with_varying_data[0]
+    discovered = test_site.openapi.graph.discover_template_graphs(host_name, SERVICE_WITH_GRAPHS)
+    addable_graphs = [
+        graph for graph in discovered["graphs"] if graph["add_to_specification"] is not None
+    ]
+    assert len(addable_graphs) >= GRAPH_COLLECTION_SIZE, (
+        f"{host_name}/{SERVICE_WITH_GRAPHS} yielded {len(addable_graphs)} graphs that can be "
+        f"added, too few to fill a collection of {GRAPH_COLLECTION_SIZE}: "
+        f"{discovered['no_data_message']}"
+    )
+
+    # The add appends, so a collection left behind by a killed run would grow instead of match.
+    collections_of_user = f"var/check_mk/web/{ADMIN_USER}/{_COLLECTION_USER_CONFIG}"
+    test_site.delete_file(collections_of_user)
+    try:
+        with test_site.openapi.acting_as(ADMIN_USER, test_site.admin_password):
+            for graph in addable_graphs[:GRAPH_COLLECTION_SIZE]:
+                test_site.openapi.graph.add_to_container(
+                    family=_COLLECTION_FAMILY,
+                    container_id=_BUILTIN_COLLECTION_NAME,
+                    specification=graph["add_to_specification"],
+                    internal=graph["internal"],
+                )
+        yield _BUILTIN_COLLECTION_TITLE
+    finally:
+        test_site.delete_file(collections_of_user)
 
 
 @pytest.fixture(name="forecast_graph")

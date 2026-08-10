@@ -45,6 +45,8 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import HostAddressValidator
+from cmk.gui.form_specs.unstable import OptionalChoice
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
@@ -122,7 +124,11 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import ContactGroupSelection, MainModuleTopicEvents
+from cmk.gui.wato import (
+    ContactGroupSelection,
+    MainModuleTopicEvents,
+    sorted_contact_group_choices,
+)
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
@@ -209,10 +215,20 @@ from cmk.rulesets.internal.form_specs import (
     SingleChoiceExtended,
 )
 from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
     DictElement,
+    InvalidElementMode,
+    InvalidElementValidator,
     String,
+    validators,
+)
+from cmk.rulesets.v1.form_specs import (
+    Integer as FSInteger,
+)
+from cmk.rulesets.v1.form_specs import (
+    List as FSList,
 )
 from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
@@ -4964,15 +4980,30 @@ ConfigVariableEventConsolePrettyPrintRules = ConfigVariable(
 )
 
 TITLE_MKEVENTD_NOTIFY_CONTACTGROUP = _("Send notifications to Event Console")
+
+
+def _contact_group_elements() -> Sequence[SingleChoiceElementExtended[str]]:
+    return [
+        SingleChoiceElementExtended(
+            name=name,
+            title=Title(title),  # astrein: disable=localization-checker
+        )
+        for name, title in sorted_contact_group_choices()
+    ] + [
+        SingleChoiceElementExtended(
+            name="", title=Title("(don't send notifications to Event Console)")
+        )
+    ]
+
+
 ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_contactgroup",
-    valuespec=lambda context: ContactGroupSelection(
-        title=TITLE_MKEVENTD_NOTIFY_CONTACTGROUP,
-        no_selection=_("(don't send notifications to Event Console)"),
-        label=_("send notifications to contact group:"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[str](
+        title=Title("Send notifications to Event Console"),
+        label=Label("send notifications to contact group:"),
+        help_text=Help(
             "If you select a contact group here, all notifications of "
             "hosts and services in that contact group will be sent to the "
             "Event Console. <b>Note</b>: you still need to create a rule "
@@ -4981,6 +5012,9 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
             "this setting is deprecated. Please use the notification "
             "plug-in <i>Forward notification to Event Console</i> instead."
         ),
+        elements=_contact_group_elements,
+        prefill=DefaultValue(""),
+        invalid_element_validation=InvalidElementValidator(mode=InvalidElementMode.KEEP),
     ),
     need_restart=True,
 )
@@ -4989,12 +5023,13 @@ ConfigVariableEventConsoleNotifyRemoteHost = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_remotehost",
-    valuespec=lambda context: Optional(
-        valuespec=TextInput(
-            title=_("Host running Event Console"),
+    form_spec=lambda context: OptionalChoice(
+        parameter_form=String(
+            label=Label("Host running Event Console"),
+            prefill=DefaultValue(""),
         ),
-        title=_("Send notifications to remote Event Console"),
-        help=_(
+        title=Title("Send notifications to remote Event Console"),
+        help_text=Help(
             "This will send the notification to a Checkmk Event Console on a remote host "
             "by using syslog. <b>Note</b>: this setting will only be applied if no Event "
             "Console is running locally in this site! That way you can use the same global "
@@ -5002,8 +5037,8 @@ ConfigVariableEventConsoleNotifyRemoteHost = ConfigVariable(
             "easier. Please also make sure that <b>Send notifications to Event Console</b> "
             "is enabled."
         ),
-        label=_("Send to remote Event Console via syslog"),
-        none_label=_("Do not send to remote host"),
+        label=Label("Send to remote Event Console via syslog"),
+        none_label=Label("Do not send to remote host"),
     ),
     need_restart=True,
 )
@@ -5013,14 +5048,21 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_facility",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Syslog facility for Event Console notifications"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[int](
+        title=Title("Syslog facility for Event Console notifications"),
+        help_text=Help(
             "When sending notifications from the monitoring system to the Event Console, "
             "the following syslog facility will be set for these messages. Choosing "
             "a unique facility makes the creation of rules easier."
         ),
-        choices=syslog_facilities,
+        elements=[
+            SingleChoiceElementExtended(
+                name=value,
+                title=Title(title),  # astrein: disable=localization-checker
+            )
+            for value, title in syslog_facilities
+        ],
+        prefill=DefaultValue(16),
     ),
     need_restart=True,
 )
@@ -5029,23 +5071,24 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_service_levels",
-    valuespec=lambda context: ListOf(
-        valuespec=Tuple(
+    form_spec=lambda context: FSList(
+        element_template=FSTuple(
             elements=[
-                Integer(
-                    title=_("internal ID"),
-                    minvalue=0,
-                    maxvalue=100,
+                FSInteger(
+                    title=Title("internal ID"),
+                    prefill=DefaultValue(0),
+                    custom_validate=[validators.NumberInRange(min_value=0, max_value=100)],
                 ),
-                TextInput(
-                    title=_("Name / Description"),
-                    allow_empty=False,
+                String(
+                    title=Title("Name / Description"),
+                    prefill=DefaultValue(""),
+                    custom_validate=[validators.LengthInRange(min_value=1)],
                 ),
             ],
-            orientation="horizontal",
+            layout="horizontal",
         ),
-        title=_("Service levels"),
-        help=_(
+        title=Title("Service levels"),
+        help_text=Help(
             "Here, you can configure the list of possible service levels "
             "for hosts, services and events. A service level can be assigned "
             "to a host or service by configuration. The Event Console can "
@@ -5058,7 +5101,7 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
             "Event Console when you forward notifications to it and will "
             "override the setting of the matching rule.</p>"
         ),
-        allow_empty=False,
+        custom_validate=[validators.LengthInRange(min_value=1)],
     ),
     need_restart=False,
 )

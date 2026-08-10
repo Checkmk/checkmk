@@ -133,7 +133,9 @@ def factory_default_disk_value(config_variable: ConfigVariable) -> object:
     return domain.default_globals().get(config_variable.ident(), NoFactoryDefault())
 
 
-FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {}
+FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
+    "notification_spooling": "local",
+}
 """Factory defaults the GUI load path consciously rewrites: the disk world
 allows values the form cannot express, and the form spec's migrate maps them
 to the value with the same meaning."""
@@ -768,77 +770,66 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "enabled.flow_source_endpoints[add].listen": 1,
         "enabled.local_networks[add]": "",
     },
+    "notification_fallback_email": {
+        "[enable]": NoSaveableDefault(),
+    },
     "notification_fallback_format": {
         "asciimail": {},
-        "asciimail.DictGroupExtendedtitleTitleBulknotificationshelptextNonelayoutDictionaryGroupLayoutverticalvertical.bulk_sort_order": "newest_first",
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.disable_multiplexing": True,
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from": {},
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.address": "",
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.display_name": "",
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_subject": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to": {},
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.address": "",
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.display_name": "",
-        "asciimail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.service_subject": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+        "asciimail.bulk_sort_order": "newest_first",
         "asciimail.common_body": "Host:     $HOSTNAME$\nAlias:    $HOSTALIAS$\nAddress:  $HOSTADDRESS$\n",
+        "asciimail.disable_multiplexing": True,
+        "asciimail.from": {},
+        "asciimail.from.address": NoSaveableDefault(),
+        "asciimail.from.display_name": NoSaveableDefault(),
         "asciimail.host_body": "Event:    $EVENT_TXT$\nOutput:   $HOSTOUTPUT$\nPerfdata: $HOSTPERFDATA$\n$LONGHOSTOUTPUT$\n",
+        "asciimail.host_subject": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
+        "asciimail.reply_to": {},
+        "asciimail.reply_to.address": NoSaveableDefault(),
+        "asciimail.reply_to.display_name": NoSaveableDefault(),
         "asciimail.service_body": "Service:  $SERVICEDESC$\nEvent:    $EVENT_TXT$\nOutput:   $SERVICEOUTPUT$\nPerfdata: $SERVICEPERFDATA$\n$LONGSERVICEOUTPUT$\n",
+        "asciimail.service_subject": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
         "mail": {},
-        "mail.DictGroupExtendedtitleTitleBulknotificationshelptextNonelayoutDictionaryGroupLayoutverticalvertical.bulk_sort_order": "newest_first",
-        "mail.DictGroupExtendedtitleTitleBulknotificationshelptextNonelayoutDictionaryGroupLayoutverticalvertical.notifications_with_graphs": 5,
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.contact_groups": True,
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.elements": [
-            "abstime",
-            "longoutput",
-            "graph",
-        ],
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.graphs_per_notification": 5,
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_labels": True,
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_tags": True,
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.insert_html_section": "<HTMLTAG>CONTENT</HTMLTAG>",
-        "mail.DictGroupExtendedtitleTitleEmailbodycontenthelptextNonelayoutDictionaryGroupLayoutverticalvertical.svc_labels": True,
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.disable_multiplexing": True,
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from": {},
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.address": "",
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.from.display_name": "",
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.host_subject": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to": {},
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.address": "",
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.reply_to.display_name": "",
-        "mail.DictGroupExtendedtitleTitleEmailheaderhelptextNonelayoutDictionaryGroupLayoutverticalvertical.service_subject": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical": EditionDependentDefault(
-            community=AbsentDefault(),
-            cloud={},
-        ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp": EditionDependentDefault(
+        "mail.bulk_sort_order": "newest_first",
+        "mail.contact_groups": True,
+        "mail.disable_multiplexing": True,
+        "mail.elements": ["abstime", "graph", "longoutput"],
+        "mail.from": {},
+        "mail.from.address": NoSaveableDefault(),
+        "mail.from.display_name": NoSaveableDefault(),
+        "mail.graphs_per_notification": 5,
+        "mail.host_labels": True,
+        "mail.host_subject": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
+        "mail.host_tags": True,
+        "mail.insert_html_section": "<HTMLTAG>CONTENT</HTMLTAG>",
+        "mail.notification_rule": True,
+        "mail.notifications_with_graphs": 5,
+        "mail.reply_to": {},
+        "mail.reply_to.address": NoSaveableDefault(),
+        "mail.reply_to.display_name": NoSaveableDefault(),
+        "mail.service_subject": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+        "mail.smtp": EditionDependentDefault(
             community=AbsentDefault(), pro={"port": 25, "smarthosts": []}
         ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.auth": EditionDependentDefault(
-            community=AbsentDefault(), pro=UnstableDefault()
+        "mail.smtp.auth": EditionDependentDefault(
+            community=AbsentDefault(),
+            pro={
+                "method": "plaintext",
+                "password": NoSaveableDefault(),
+                "user": NoSaveableDefault(),
+            },
         ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.auth.password.password": EditionDependentDefault(
-            community=AbsentDefault(), pro=""
-        ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.auth.password.store": EditionDependentDefault(
+        "mail.smtp.encryption": EditionDependentDefault(community=AbsentDefault(), pro="ssl_tls"),
+        "mail.smtp.smarthosts[add]": EditionDependentDefault(
             community=AbsentDefault(), pro=NoSaveableDefault()
         ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.encryption": EditionDependentDefault(
-            community=AbsentDefault(), pro="ssl_tls"
-        ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.smtp.smarthosts[add]": EditionDependentDefault(
-            community=AbsentDefault(), pro=""
-        ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix": (
-            "automatic_http",
-            None,
-        ),
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix.automatic_http": None,
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix.automatic_https": None,
-        "mail.DictGroupExtendedtitleTitleSettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.url_prefix.manual": UnstableDefault(),
-        "mail.DictGroupExtendedtitleTitleTroubleshootingtestingsettingshelptextNonelayoutDictionaryGroupLayoutverticalvertical.notification_rule": True,
+        "mail.svc_labels": True,
+        "mail.url_prefix": ("automatic_http", None),
+        "mail.url_prefix.automatic_http": None,
+        "mail.url_prefix.automatic_https": None,
+        "mail.url_prefix.manual": UnstableDefault(),
     },
     "notification_spooler_config": {
-        "concurrency[add]": ("mail", {"process_count": 1, "retries": 3}),
+        "concurrency[add]": (NoSaveableDefault(), {"process_count": 1, "retries": 3}),
         "concurrency[add].1.timeout": 60,
         "forwarding_process_count": 1,
         "incoming": {
@@ -848,7 +839,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "listen_port": 6555,
         },
         "outgoing[add]": {
-            "address": "",
+            "address": NoSaveableDefault(),
             "cooldown": 20,
             "encryption": "encrypted",
             "heartbeat_interval": 10,
@@ -1140,10 +1131,10 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     ),
     "login_screen": {},
     "metric_backend": ("disabled", None),
-    "mkeventd_notify_contactgroup": "",
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
     "network_flow": ("disabled", None),
+    "notification_fallback_email": "",
     "notification_fallback_format": ("asciimail", {}),
     "notification_spooler_config": {
         "log_level": 20,
@@ -1424,7 +1415,10 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("unknown-key", {"bogus": 1}),
     ],
     "alert_handler_event_types": [
-        CasePass("configured", ["statechange", "checkresult"]),
+        CasePass("configured", ["checkresult", "statechange"]),
+        CaseMigrates(
+            "order-normalized", ["statechange", "checkresult"], ["checkresult", "statechange"]
+        ),
         CaseFail("empty-list", []),
         CaseFail("unknown-event-type", ["bogus"]),
     ],
@@ -2005,6 +1999,7 @@ CASES: Mapping[str, list[Case]] = {
     "notification_bulk_interval": MIN_ONE_AGE_CASES,
     "notification_fallback_email": [
         CasePass("configured", "ops@example.com"),
+        CasePass("unconfigured", ""),
         CaseFail("not-an-email", "not-an-email"),
         CaseFail("not-a-string", 123),
     ],
@@ -2035,6 +2030,23 @@ CASES: Mapping[str, list[Case]] = {
                         "authentication": "tls_authenticated",
                         "heartbeat_interval": 10,
                     }
+                }
+            ),
+        ),
+        CaseFail(
+            "outgoing-port-zero",
+            DefaultWithOverrides(
+                {
+                    "outgoing": [
+                        {
+                            "address": "spooler.example.com",
+                            "port": 0,
+                            "encryption": "encrypted",
+                            "cooldown": 20,
+                            "heartbeat_interval": 10,
+                            "heartbeat_timeout": 3,
+                        }
+                    ]
                 }
             ),
         ),
@@ -2582,7 +2594,8 @@ class ConfigVariableSuite:
         """Opening a FormSpec-backed setting in the GUI and saving without edits
         must not rewrite the stored value. Grows automatically with the FormSpec
         port. Variables ported with an InputHint prefill have no default to
-        save and are skipped."""
+        save and are skipped, and so are defaults the GUI refuses to save in
+        the first place (e.g. an empty list below the minimum length)."""
         for config_variable in config_variable_registry.values():
             value_model = config_variable.value_model(global_settings_context)
             if not isinstance(value_model, FormSpec):
@@ -2593,6 +2606,11 @@ class ConfigVariableSuite:
                 if "input hint" in str(e):
                     continue
                 raise
+            visitor = get_visitor(
+                value_model, VisitorOptions(migrate_values=True, mask_values=False)
+            )
+            if visitor.validate(RawDiskData(value)):
+                continue
             assert gui_save_round_trip_disk_value(value_model, value) == value, (
                 config_variable.ident()
             )

@@ -7,7 +7,7 @@
 
 import datetime
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from copy import copy
 from zoneinfo import ZoneInfo
 
@@ -551,7 +551,7 @@ def test_process_job_stats(  # type: ignore[misc]
     [
         (
             "SHREK",
-            {"age": (0, 0)},
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
             SECTION_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
@@ -580,13 +580,13 @@ def test_process_job_stats(  # type: ignore[misc]
         ),
         (
             "item",
-            {"age": (0, 0)},
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
             {"item": {}},
             [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
         ),
         (
             "cleanup_remote_logs",
-            {"age": (0, 0)},
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
             SECTION_2,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
@@ -615,7 +615,7 @@ def test_process_job_stats(  # type: ignore[misc]
         ),
         (
             "backup.sh",
-            {"age": (1, 2)},
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
             SECTION_2,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
@@ -650,13 +650,13 @@ def test_process_job_stats(  # type: ignore[misc]
         ),
         (
             "missing",
-            {"age": (1, 2)},
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
             SECTION_2,
             [],
         ),
         (
             "Cleanup-Cache-Files",
-            {"age": (0, 0)},
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
             {
                 "Cleanup-Cache-Files": {
                     "running": False,
@@ -668,7 +668,7 @@ def test_process_job_stats(  # type: ignore[misc]
         ),
         (
             "Cleanup-Cache-Files",
-            {"age": (0, 0)},
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
             {
                 "Cleanup-Cache-Files": {
                     "running": True,
@@ -691,7 +691,7 @@ def test_process_job_stats(  # type: ignore[misc]
 )
 def test_check_job(
     item: str,
-    params: Mapping[str, object],
+    params: job.CheckParameters,
     section: job.Section,
     expected_results: Sequence[Result | Metric],
 ) -> None:

@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
 
 import time
 from collections.abc import Callable, Mapping
-from typing import Any, Final, TypedDict
+from typing import Final, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -47,6 +45,12 @@ from cmk.agent_based.v2 import (
 # writes 0
 # max_res_kbytes 1984
 # avg_mem_kbytes 0
+
+
+class CheckParameters(TypedDict):
+    age: tuple[int, int] | None
+    exit_code_to_state_map: list[tuple[int, int]]
+
 
 _METRIC_TRANSLATION: Final = {
     "real": "real_time",
@@ -194,7 +198,7 @@ def discover_job(section: Section) -> DiscoveryResult:
         yield Service(item=jobname)
 
 
-_METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
+_METRIC_SPECS: Mapping[str, tuple[str, Callable[[float | int], str]]] = {
     "real_time": ("Real time", render.timespan),
     "user_time": ("User time", render.timespan),
     "system_time": ("System time", render.timespan),
@@ -287,7 +291,7 @@ def _process_job_stats(
 
 def check_job(
     item: str,
-    params: Mapping[str, Any],
+    params: CheckParameters,
     section: Section,
 ) -> CheckResult:
     job = section.get(item)
@@ -303,24 +307,17 @@ def check_job(
 
     yield from _process_job_stats(
         job,
-        params.get("age"),
-        {0: State.OK, **{k: State(v) for k, v in params.get("exit_code_to_state_map", [])}},
+        params["age"],
+        {k: State(v) for k, v in params["exit_code_to_state_map"]},
         time.time(),
     )
 
-
-_STATE_TO_STR = {
-    State.OK: "OK",
-    State.WARN: "WARN",
-    State.CRIT: "CRIT",
-    State.UNKNOWN: "UNKNOWN",
-}
 
 check_plugin_job = CheckPlugin(
     name="job",
     service_name="Job %s",
     discovery_function=discover_job,
-    check_default_parameters={},
+    check_default_parameters={"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
     check_ruleset_name="job",
     check_function=check_job,
 )

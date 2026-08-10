@@ -2890,7 +2890,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         if self._new:
             _add_change_for_sites(
                 action_name="new-rule-pack",
-                text=_("Created new rule pack with id %(rule_pack_id)s")
+                text=_("Created new rule pack with ID %(rule_pack_id)s")
                 % {"rule_pack_id": self._rule_pack["id"]},
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,

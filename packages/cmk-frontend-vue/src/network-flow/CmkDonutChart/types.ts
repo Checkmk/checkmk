@@ -23,4 +23,8 @@ export interface CmkDonutChartProps {
    * sum of all slice values.
    */
   slices: DonutSlice[]
+  /** The chart does not know what its values measure, so the caller formats. */
+  formatValue: (value: number) => string
+  /** Defaults to "Volume". */
+  centerLabel?: string
 }

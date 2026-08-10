@@ -5,14 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
+import { formatBytes } from '@/network-flow/format'
 
 const slices: DonutSlice[] = [
-  { key: 'tls', label: 'TLS', value: 47.2, color: 'blue' },
-  { key: 'pops', label: 'POPS', value: 17.0, color: 'purple' },
-  { key: 'other', label: 'Other', value: 35.8, color: 'grey' }
+  { key: 'tls', label: 'TLS', value: 4_720_000_000, color: 'blue' },
+  { key: 'pops', label: 'POPS', value: 1_700_000_000, color: 'purple' },
+  { key: 'other', label: 'Other', value: 3_580_000_000, color: 'grey' }
 ]
 </script>
 
 <template>
-  <CmkDonutChart :slices="slices" />
+  <CmkDonutChart :slices="slices" :format-value="formatBytes" />
 </template>

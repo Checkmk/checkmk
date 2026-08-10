@@ -14,7 +14,7 @@ const SLICES: DonutSlice[] = [
 ]
 
 function renderChart(slices: DonutSlice[] = SLICES) {
-  return render(CmkDonutChart, { props: { slices } })
+  return render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
 }
 
 test('renders one arc segment and one legend entry per slice', () => {
@@ -36,14 +36,25 @@ test('derives percentages from the sum of all slice values', () => {
   expect(values).toEqual(['60.0%', '40.0%'])
 })
 
-test('highlights the top slice in the center', () => {
+test('shows the total of the ring in the center, not the top slice', () => {
   const { container } = renderChart()
 
+  // 90 + 60, rendered by the caller's formatter.
   expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
-    '60.0%'
+    '150 B'
   )
   expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
-    'TLS'
+    'Volume'
+  )
+})
+
+test('lets the caller caption the center', () => {
+  const { container } = render(CmkDonutChart, {
+    props: { slices: SLICES, formatValue: String, centerLabel: 'Throughput' }
+  })
+
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
+    'Throughput'
   )
 })
 

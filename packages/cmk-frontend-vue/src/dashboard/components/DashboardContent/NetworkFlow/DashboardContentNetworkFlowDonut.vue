@@ -12,6 +12,7 @@ import type { NetworkFlowDonutContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
 import { CATEGORICAL_PALETTE } from '@/network-flow/colors'
+import { formatBytes } from '@/network-flow/format'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'
@@ -59,7 +60,7 @@ const { data: slices, error } = useNetworkFlowWidgetData(
         <CmkAlertBox :variant="error.variant">{{ error.message }}</CmkAlertBox>
       </div>
       <CmkLoading v-else-if="slices === undefined" />
-      <CmkDonutChart v-else :slices="slices" />
+      <CmkDonutChart v-else :slices="slices" :format-value="formatBytes" />
     </div>
   </DashboardContentContainer>
 </template>

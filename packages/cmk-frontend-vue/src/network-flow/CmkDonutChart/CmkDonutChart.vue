@@ -4,12 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
 import type { CmkDonutChartProps, DonutSlice } from './types'
 
+const { _t } = usei18n()
 const props = defineProps<CmkDonutChartProps>()
 
 // The viewBox is centered on the origin, where d3 draws its arcs.
@@ -61,8 +63,7 @@ function percentText(value: number): string {
   return `${percent(value).toFixed(1)}%`
 }
 
-// The caller ranks the slices, so the top one is first.
-const topSlice = computed(() => props.slices[0])
+const centerCaption = computed(() => props.centerLabel ?? _t('Volume'))
 </script>
 
 <template>
@@ -112,11 +113,9 @@ const topSlice = computed(() => props.slices[0])
           :fill="`url(#${shadingId})`"
         />
       </svg>
-      <div v-if="topSlice" class="network-flow-cmk-donut-chart__center">
-        <span class="network-flow-cmk-donut-chart__center-value">{{
-          percentText(topSlice.value)
-        }}</span>
-        <span class="network-flow-cmk-donut-chart__center-label">{{ topSlice.label }}</span>
+      <div v-if="segments.length" class="network-flow-cmk-donut-chart__center">
+        <span class="network-flow-cmk-donut-chart__center-label">{{ centerCaption }}</span>
+        <span class="network-flow-cmk-donut-chart__center-value">{{ formatValue(total) }}</span>
       </div>
     </div>
 

@@ -570,6 +570,33 @@ class MainArea(LocatorHelper):
         """
         expect(self.get_text("No entries.")).to_be_visible()
 
+    @property
+    def warning(self) -> Locator:
+        """The warning banner shown in the main area, if any."""
+        return self.locator("div.warning")
+
+    def check_warning_shown(self) -> None:
+        """Assert that exactly one warning banner is shown."""
+        expect(self.warning, message="No (single) warning banner is shown").to_have_count(1)
+
+    def check_warning_texts(self, *expected_texts: str) -> None:
+        """Assert that exactly one warning banner is shown, containing all given texts.
+
+        Pass each expected text as a separate positional argument, e.g.
+        `self.check_warning_texts("hello", "world", "universe", "galaxy")` asserts that a
+        single warning banner is shown and contains all four texts.
+        """
+        assert expected_texts, "check_warning_texts() requires at least one expected text"
+        self.check_warning_shown()
+        for text in expected_texts:
+            expect(
+                self.warning, message=f"Warning banner does not contain text: '{text}'"
+            ).to_contain_text(text)
+
+    def check_no_warnings(self) -> None:
+        """Assert that no warning banner is shown."""
+        expect(self.warning, message="A warning banner is shown unexpectedly").to_have_count(0)
+
     def locator_via_xpath(self, element: str, text: str) -> Locator:
         """Return a locator defined by element and text via xpath."""
         return self.locator(f"//{element}[text() = '{text}']")

@@ -204,7 +204,7 @@ class LDAPConnectionValuespec(Dictionary):
                         "be altered."
                     ),
                     choices=[
-                        ("ad", _("Active directory"), self._vs_directory_options("ad")),
+                        ("ad", _("Active Directory"), self._vs_directory_options("ad")),
                         ("openldap", _("OpenLDAP"), self._vs_directory_options("openldap")),
                         (
                             "389directoryserver",
@@ -396,8 +396,8 @@ class LDAPConnectionValuespec(Dictionary):
                                 TextInput(
                                     title=_("DNS domain name to discover LDAP servers of"),
                                     help=_(
-                                        "Configure the DNS domain name of your Active directory domain here, Checkmk "
-                                        "will then query this domain for it's closest domain controller to communicate "
+                                        "Configure the DNS domain name of your Active Directory domain here, Checkmk "
+                                        "will then query this domain for its closest domain controller to communicate "
                                         "with."
                                     ),
                                     allow_empty=False,
@@ -480,7 +480,7 @@ class LDAPConnectionValuespec(Dictionary):
                     help=_(
                         "Using this option, you can define the DN of a group object which is used to filter the users. "
                         "Only members of this group will then be synchronized. This is a filter which can be "
-                        'used to extend capabilities of the regular "Search Filter". Using the search filter '
+                        'used to extend capabilities of the regular "Search filter". Using the search filter '
                         "you can only define filters which directly apply to the user objects. To filter by "
                         "group memberships, you can use the <tt>memberOf</tt> attribute of the user objects in some "
                         "directories. But some directories do not have such attributes because the memberships "

@@ -5190,7 +5190,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                 % {"hours": max_value[0], "minutes": max_value[1]},
             )
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
-            raise MKUserError(varprefix, _("Hours/Minutes out of range"))
+            raise MKUserError(varprefix, _("Hours/minutes out of range"))
 
     @override
     def value_to_json(self, value: TimeofdayValue) -> JSONValue:

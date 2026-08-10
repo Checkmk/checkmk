@@ -321,7 +321,7 @@ class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
     @property
     @override
     def title(self) -> str:
-        return _("Temperature, Humidity, Electrical Parameters, etc.")
+        return _("Temperature, humidity, electrical parameters, etc.")
 
 
 class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
@@ -498,7 +498,7 @@ class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
     @property
     @override
     def title(self) -> str:
-        return _("Temperature, Humidity, Electrical Parameters, etc.")
+        return _("Temperature, humidity, electrical parameters, etc.")
 
 
 class RulespecGroupCheckParametersApplications(RulespecSubGroup):

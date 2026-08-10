@@ -1631,7 +1631,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No check man pages using the deprecated API"),
+            text=_("No check manual pages using the deprecated API"),
             site_id=site_id,
         )
 

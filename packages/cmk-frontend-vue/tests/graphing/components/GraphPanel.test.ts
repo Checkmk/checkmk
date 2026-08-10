@@ -657,3 +657,18 @@ test('keeps the all-hidden message when data arrived but nothing is shown', () =
   expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
+
+test('a window that returned no data reuses the all-hidden message', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      interaction: INTERACTION_NONE
+    }
+  })
+
+  // Pins today's wording: nothing was hidden, there was nothing to show. Change both together.
+  expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
+  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+})

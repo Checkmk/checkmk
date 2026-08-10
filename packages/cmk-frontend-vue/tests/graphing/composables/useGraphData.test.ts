@@ -128,6 +128,17 @@ describe('useGraphData — requested resolution', () => {
     const samplesPerColumn = (eightDays.end - eightDays.start) / step / columns
     expect(samplesPerColumn).toBeCloseTo(4, 1)
   })
+
+  test('a window reaching past the retained data is asked for verbatim', async () => {
+    // Narrowing here would redraw a different period than the picker states, so only the step
+    // is ever derived.
+    const fourHundredDays = { start: 0, end: 400 * 86_400 }
+
+    fetchFor(fourHundredDays, 750)
+
+    const { start, end } = await requestedTimeRange()
+    expect({ start, end }).toEqual(fourHundredDays)
+  })
 })
 
 /** Mounts the composable on the given fetcher and hands back the diagnostics it exposes. */

@@ -28,7 +28,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-openssl.sh \
         install-patchelf.sh \
         install-protobuf-cpp.sh \
-        install-python.sh \
         install-valgrind.sh \
         ci.bazelrc \
         "${TARGET_DIR}"

@@ -11,7 +11,10 @@ import AcknowledgeForm, {
   type AcknowledgeValues
 } from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
 
-function mountForm(overrides: Partial<AcknowledgeValues> = {}) {
+function mountForm(
+  overrides: Partial<AcknowledgeValues> = {},
+  targetKind: 'host' | 'service' = 'host'
+) {
   const modelValue: AcknowledgeValues = {
     comment: '',
     expireOnEnabled: false,
@@ -21,7 +24,7 @@ function mountForm(overrides: Partial<AcknowledgeValues> = {}) {
     notify: true,
     ...overrides
   }
-  return render(AcknowledgeForm, { props: { modelValue } })
+  return render(AcknowledgeForm, { props: { modelValue, targetKind } })
 }
 
 test('reports invalid while the comment is empty and valid once it is filled', async () => {
@@ -48,6 +51,14 @@ test('notify is on by default and the option checkboxes are rendered', () => {
     screen.getByRole('checkbox', { name: 'Ignore status changes until the host recovers (OK/UP)' })
   ).not.toBeChecked()
   expect(screen.getByRole('checkbox', { name: 'Persistent comment' })).not.toBeChecked()
+})
+
+test('the sticky option names the service on the service page', () => {
+  mountForm({}, 'service')
+
+  expect(
+    screen.getByRole('checkbox', { name: 'Ignore status changes until the service recovers (OK)' })
+  ).toBeInTheDocument()
 })
 
 test('the expiry picker appears only once its checkbox is ticked', async () => {

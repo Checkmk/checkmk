@@ -6,9 +6,11 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
+import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
+
 export type AcknowledgeHostQueryProblem = components['schemas']['AcknowledgeHostQueryProblem']
 
-export interface AcknowledgeHostOptions {
+export interface AcknowledgeOptions {
   comment: string
   sticky: boolean
   persistent: boolean
@@ -17,16 +19,10 @@ export interface AcknowledgeHostOptions {
 }
 
 export class AcknowledgeApi {
-  public async acknowledgeHosts(
-    hostNames: string[],
-    options: AcknowledgeHostOptions
-  ): Promise<void> {
+  public async acknowledgeHosts(hostNames: string[], options: AcknowledgeOptions): Promise<void> {
     const body: AcknowledgeHostQueryProblem = {
       acknowledge_type: 'host_by_query',
-      query: {
-        op: 'or',
-        expr: hostNames.map((hostName) => ({ op: '=', left: 'name', right: hostName }))
-      },
+      query: hostNameQuery(hostNames),
       comment: options.comment,
       sticky: options.sticky,
       persistent: options.persistent,

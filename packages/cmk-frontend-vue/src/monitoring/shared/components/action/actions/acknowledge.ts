@@ -4,17 +4,30 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import { AcknowledgeApi } from '@/monitoring/shared/api/actions/acknowledge'
-import type { HostRef } from '@/monitoring/shared/api/types'
+import {
+  AcknowledgeApi,
+  type AcknowledgeOptions
+} from '@/monitoring/shared/api/actions/acknowledge'
 
-import type { MonitoringAction } from '../types'
+import type { ActionTargetKind, MonitoringAction } from '../types'
 import AcknowledgeForm, { type AcknowledgeValues } from './AcknowledgeForm.vue'
 
 export const ACK_ACTION_ID = 'acknowledge'
 
-export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
-  const { _t, _tn } = usei18n()
+export interface AcknowledgeKindConfig<Target> {
+  targetKind: ActionTargetKind
+  /** Perform the API call for the selected targets and return the count actually acted on. */
+  acknowledge(api: AcknowledgeApi, targets: Target[], options: AcknowledgeOptions): Promise<number>
+  successMessage(count: number): TranslatedString
+}
+
+/** Shared acknowledgement flow for hosts and services: only the API call and wording differ. */
+export function createAcknowledgeAction<Target>(
+  config: AcknowledgeKindConfig<Target>
+): MonitoringAction<AcknowledgeValues, Target> {
+  const { _t } = usei18n()
   const api = new AcknowledgeApi()
 
   return {
@@ -22,6 +35,7 @@ export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
     title: _t('Acknowledge problems'),
     submitLabel: _t('Acknowledge'),
     form: AcknowledgeForm,
+    formProps: { targetKind: config.targetKind },
     defaultValues: () => ({
       comment: '',
       expireOnEnabled: false,
@@ -30,27 +44,16 @@ export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
       persistent: false,
       notify: true
     }),
-    perform: async (targets: HostRef[], values: AcknowledgeValues) => {
+    perform: async (targets: Target[], values: AcknowledgeValues) => {
       try {
-        await api.acknowledgeHosts(
-          targets.map((target) => target.name),
-          {
-            comment: values.comment,
-            sticky: values.sticky,
-            persistent: values.persistent,
-            notify: values.notify,
-            expireOn: values.expireOnEnabled ? values.expireOn?.toDate().toISOString() : undefined
-          }
-        )
-        return {
-          variant: 'success',
-          message: _tn(
-            'Acknowledged the problem for %{count} host',
-            'Acknowledged the problem for %{count} hosts',
-            targets.length,
-            { count: targets.length }
-          )
-        }
+        const count = await config.acknowledge(api, targets, {
+          comment: values.comment,
+          sticky: values.sticky,
+          persistent: values.persistent,
+          notify: values.notify,
+          expireOn: values.expireOnEnabled ? values.expireOn?.toDate().toISOString() : undefined
+        })
+        return { variant: 'success', message: config.successMessage(count) }
       } catch (error) {
         return {
           variant: 'error',

@@ -24,13 +24,13 @@ import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
-import { useAcknowledgeAction } from '../shared/components/action/actions/acknowledge'
 import {
   RESCHEDULE_ACTION_ID,
   useRescheduleAction
 } from '../shared/components/action/actions/reschedule'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
+import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
 import { HostApi } from './api/hosts'
@@ -140,7 +140,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
 const actionRegistry = createActionRegistry([
-  useAcknowledgeAction(),
+  useAcknowledgeHostsAction(),
   useRescheduleAction(),
   useScheduleHostDowntimeAction()
 ])

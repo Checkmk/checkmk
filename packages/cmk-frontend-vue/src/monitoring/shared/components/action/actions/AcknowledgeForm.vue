@@ -28,7 +28,13 @@ import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
+
+import type { ActionTargetKind } from '../types'
+
+const props = withDefaults(defineProps<{ targetKind?: ActionTargetKind }>(), {
+  targetKind: 'host'
+})
 
 const model = defineModel<AcknowledgeValues>({ required: true })
 
@@ -37,6 +43,24 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+const expireOnHelp = computed(() =>
+  props.targetKind === 'service'
+    ? _t(
+        'Let the acknowledgement expire automatically. Leave this off to keep it until the ' +
+          'service recovers or it is removed manually.'
+      )
+    : _t(
+        'Let the acknowledgement expire automatically. Leave this off to keep it until the ' +
+          'host recovers or it is removed manually.'
+      )
+)
+
+const stickyLabel = computed(() =>
+  props.targetKind === 'service'
+    ? _t('Ignore status changes until the service recovers (OK)')
+    : _t('Ignore status changes until the host recovers (OK/UP)')
+)
 
 watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
   immediate: true,
@@ -64,12 +88,7 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
         <CmkCheckbox
           v-model="model.expireOnEnabled"
           :label="_t('Expire on')"
-          :help="
-            _t(
-              'Let the acknowledgement expire automatically. Leave this off to keep it until the ' +
-                'host recovers or it is removed manually.'
-            )
-          "
+          :help="expireOnHelp"
         />
         <CmkDateTimePicker
           v-if="model.expireOnEnabled"
@@ -79,10 +98,7 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
         />
       </div>
 
-      <CmkCheckbox
-        v-model="model.sticky"
-        :label="_t('Ignore status changes until the host recovers (OK/UP)')"
-      />
+      <CmkCheckbox v-model="model.sticky" :label="stickyLabel" />
       <CmkCheckbox v-model="model.persistent" :label="_t('Persistent comment')" />
       <CmkCheckbox v-model="model.notify" :label="_t('Notify affected users')" />
     </div>

@@ -7,12 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
-import { onUnmounted, ref, watch } from 'vue'
+import { onUnmounted, ref } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 import { BOTTOM_SCREEN_MARGIN } from './constants'
 
-const props = withDefaults(defineProps<{ groups?: BurgerMenuGroup[]; scrollable?: boolean }>(), {
+withDefaults(defineProps<{ groups?: BurgerMenuGroup[]; scrollable?: boolean }>(), {
   groups: () => [],
   scrollable: true
 })
@@ -21,7 +21,9 @@ const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
-const dropdownMaxHeight = ref<number | null>(null)
+
+// Consumed by the <style> block below via v-bind().
+const viewportBottomMargin = `${BOTTOM_SCREEN_MARGIN}px`
 
 function onDocumentClick(e: MouseEvent) {
   if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
@@ -29,28 +31,9 @@ function onDocumentClick(e: MouseEvent) {
   }
 }
 
-function updateDropdownMaxHeight() {
-  if (!props.scrollable || !containerRef.value) {
-    dropdownMaxHeight.value = null
-    return
-  }
-  dropdownMaxHeight.value =
-    window.innerHeight - containerRef.value.getBoundingClientRect().bottom - BOTTOM_SCREEN_MARGIN
-}
-
-watch(isOpen, (open) => {
-  if (open) {
-    updateDropdownMaxHeight()
-    window.addEventListener('resize', updateDropdownMaxHeight)
-  } else {
-    window.removeEventListener('resize', updateDropdownMaxHeight)
-  }
-})
-
 document.addEventListener('click', onDocumentClick)
 onUnmounted(() => {
   document.removeEventListener('click', onDocumentClick)
-  window.removeEventListener('resize', updateDropdownMaxHeight)
 })
 
 function doAction(onClick: BurgerMenuCallable) {
@@ -75,11 +58,6 @@ function doAction(onClick: BurgerMenuCallable) {
       v-if="isOpen"
       class="graphing-graph-burger-menu__dropdown"
       :class="{ 'graphing-graph-burger-menu__dropdown_scrollable': scrollable }"
-      :style="
-        scrollable && dropdownMaxHeight !== null
-          ? { maxHeight: `${dropdownMaxHeight}px` }
-          : undefined
-      "
     >
       <ul
         v-for="group in groups"
@@ -168,6 +146,27 @@ function doAction(onClick: BurgerMenuCallable) {
 
 .graphing-graph-burger-menu__dropdown_scrollable {
   overflow-y: auto;
+}
+
+/* Sized and placed by the layout engine: correct on scroll, resize and zoom, no JS. */
+@supports (anchor-name: --x) and (anchor-scope: all) {
+  .graphing-graph-burger-menu {
+    anchor-name: --graphing-graph-burger-menu-anchor;
+
+    /* Confine the anchor name so each menu tethers to its own trigger, not a single shared one. */
+    anchor-scope: --graphing-graph-burger-menu-anchor;
+  }
+
+  .graphing-graph-burger-menu__dropdown_scrollable {
+    position: fixed;
+    position-anchor: --graphing-graph-burger-menu-anchor;
+    position-area: block-end span-inline-start;
+    inset: auto;
+    block-size: fit-content;
+    /* -1px overlaps the trigger's bottom border, matching the static top offset. */
+    margin-block: -1px v-bind(viewportBottomMargin);
+    margin-inline-end: 10px;
+  }
 }
 
 .graphing-graph-burger-menu__group {

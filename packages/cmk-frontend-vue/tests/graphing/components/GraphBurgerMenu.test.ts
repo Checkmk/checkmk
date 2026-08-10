@@ -56,27 +56,17 @@ test('clicking outside the component closes the dropdown', async () => {
   expect(screen.queryByText('Add to dashboard')).not.toBeInTheDocument()
 })
 
-test('constrains the dropdown height to the remaining viewport space when scrollable', async () => {
-  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(500)
-  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
-    bottom: 100
-  } as DOMRect)
+test.each([true, false])(
+  'reflects the scrollable prop on the dropdown class (scrollable=%s)',
+  async (scrollable) => {
+    render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable } })
+    await fireEvent.click(screen.getByRole('button'))
 
-  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: true } })
-  await fireEvent.click(screen.getByRole('button'))
-
-  const dropdown = screen
-    .getByText('Add to dashboard')
-    .closest('.graphing-graph-burger-menu__dropdown')
-  expect(dropdown).toHaveStyle({ maxHeight: '360px' })
-})
-
-test('does not constrain the dropdown height when scrollable is disabled', async () => {
-  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: false } })
-  await fireEvent.click(screen.getByRole('button'))
-
-  const dropdown = screen
-    .getByText('Add to dashboard')
-    .closest('.graphing-graph-burger-menu__dropdown')
-  expect((dropdown as HTMLElement).style.maxHeight).toBe('')
-})
+    const dropdown = screen
+      .getByText('Add to dashboard')
+      .closest('.graphing-graph-burger-menu__dropdown')
+    expect(dropdown?.classList.contains('graphing-graph-burger-menu__dropdown_scrollable')).toBe(
+      scrollable
+    )
+  }
+)

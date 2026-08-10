@@ -24,6 +24,9 @@ def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:
 
 def _get_ctl_status_line(data: Sequence[str]) -> dict[str, str | list | bool]:
     s = data[CTL_STATUS_LINE].replace(":false", ":False").replace(":true", ":True")
+    # An empty cmk_agent_ctl_status section shifts the output and lands us on the next
+    # section header. Say so, instead of failing with an unrelated SyntaxError.
+    assert s.startswith("{"), f"No controller status at line {CTL_STATUS_LINE}, got: {s!r}"
     return ast.literal_eval(s)
 
 

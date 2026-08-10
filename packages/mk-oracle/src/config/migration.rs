@@ -85,6 +85,8 @@ struct LegacyCustomSql {
     dir: Option<String>,
     sql_file: String,
     sids: Vec<String>,
+    /// True when `sids` comes from a shell expression instead of a literal list
+    dynamic_sids: bool,
     tns_alias: Option<String>,
     header_name: Option<String>,
     header_sep: Option<char>,
@@ -231,7 +233,8 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                     .or_else(|| variables.get("SQLS_DIR"))
                     .cloned(),
                 sql_file: sql_file.clone(),
-                sids: parse_custom_sql_sids(name, &raw_sids, variables),
+                sids: parse_custom_sql_sids(name, variables),
+                dynamic_sids: has_dynamic_sqls_sids(name, &raw_sids),
                 // no global fallback: the legacy plugin unsets SQLS_TNSALIAS
                 // before each section and never saves a global value
                 tns_alias: section_var("SQLS_TNSALIAS").cloned(),
@@ -307,25 +310,11 @@ fn starts_with_word(line: &str, word: &str) -> bool {
 
 /// SIDs a custom SQL section is restricted to, empty means all instances.
 ///
-/// `raw_sids` comes from parsing the config text and decides the outcome: a
-/// shell expansion (`$`, backtick) means all instances.
-/// `variables` comes from sourcing the config and only
-/// supplies the literal SID values once a plain assignment is confirmed; its
-/// value can't be trusted for the decision, as it depends on the migration
-/// host's environment.
-fn parse_custom_sql_sids(
-    section: &str,
-    raw_sids: &HashMap<Option<String>, String>,
-    variables: &HashMap<String, String>,
-) -> Vec<String> {
-    let raw = raw_sids
-        .get(&Some(section.to_string()))
-        .or_else(|| raw_sids.get(&None));
-    if raw.is_some_and(|r| r.contains('$') || r.contains('`')) {
-        // Dynamic expression — can't resolve at migration time.
-        // Empty sids = global metric (runs on all instances).
-        return Vec::new();
-    }
+/// The values come from sourcing the config, so a `SQLS_SIDS` built by a shell
+/// expression contributes whatever it expanded to on the migration host. The
+/// section value falls back to the global one, as in the legacy plugin
+/// (`${SQLS_SIDS:-$custom_sqls_sids}`).
+fn parse_custom_sql_sids(section: &str, variables: &HashMap<String, String>) -> Vec<String> {
     variables
         .get(&format!("SQLS.{section}.SQLS_SIDS"))
         .or_else(|| variables.get("SQLS_SIDS"))
@@ -336,6 +325,20 @@ fn parse_custom_sql_sids(
                 .collect()
         })
         .unwrap_or_default()
+}
+
+/// True when the `SQLS_SIDS` a section uses is assigned from a shell expression
+/// (`$...` or a command substitution) instead of a literal list.
+///
+/// `raw_sids` comes from parsing the config text, the only place where the
+/// expression is still visible: after sourcing the config only its expansion
+/// is left, and that depends on the migration host and on state the legacy
+/// plugin sets up at runtime.
+fn has_dynamic_sqls_sids(section: &str, raw_sids: &HashMap<Option<String>, String>) -> bool {
+    raw_sids
+        .get(&Some(section.to_string()))
+        .or_else(|| raw_sids.get(&None))
+        .is_some_and(|raw| raw.contains('$') || raw.contains('`'))
 }
 
 /// Rewrite the `SQLS_SIDS` entries that name a `REMOTE_INSTANCE_*` variable
@@ -399,6 +402,43 @@ fn resolve_remote_instance_sid(
         .ok_or_else(|| {
             format!("SQLS_SIDS references '{sid}', whose definition is invalid, ignoring it")
         })
+}
+
+/// Warn about the custom SQL sections whose `SQLS_SIDS` is built by a shell
+/// expression: the migration can only keep the SIDs the expression expanded to
+/// while the config was sourced, which is not necessarily the set the legacy
+/// plugin selects at runtime.
+///
+/// A section whose expression expanded to nothing is dropped instead of
+/// migrated: an empty SID list means "run on all instances" in the migrated
+/// config, so it would silently widen the scope of the section.
+///
+/// Returns the warnings for the kept and the dropped sections.
+fn warn_dynamic_sqls_sids(custom_sqls: &mut Vec<LegacyCustomSql>) -> Vec<String> {
+    let mut warnings = Vec::new();
+    custom_sqls.retain(|custom| {
+        // the alias already pins the section to one instance, its SQLS_SIDS
+        // never reach the migrated config
+        if !custom.dynamic_sids || custom.tns_alias.is_some() {
+            return true;
+        }
+        if custom.sids.is_empty() {
+            warnings.push(format!(
+                "{}: SQLS_SIDS is built by a shell expression that expanded to no SID, \
+                 skipping custom SQL section; assign the intended instances manually",
+                custom.name
+            ));
+            return false;
+        }
+        warnings.push(format!(
+            "{}: SQLS_SIDS is built by a shell expression, which cannot be migrated reliably; \
+             using the SIDs it expanded to: {}",
+            custom.name,
+            custom.sids.join(", ")
+        ));
+        true
+    });
+    warnings
 }
 
 /// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
@@ -486,6 +526,7 @@ pub fn convert(
     };
 
     let mut warnings = resolve_remote_instance_sids(&mut custom_sqls, variables);
+    warnings.extend(warn_dynamic_sqls_sids(&mut custom_sqls));
     warnings.extend(custom_sql_warnings(&custom_sqls));
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
@@ -1220,6 +1261,7 @@ mod tests {
                 dir: Some("/etc/check_mk".into()),
                 sql_file: "MyCustomSQL.sql".into(),
                 sids: vec!["MYINST3".into()],
+                dynamic_sids: false,
                 tns_alias: None,
                 header_name: None,
                 header_sep: None,
@@ -1242,6 +1284,7 @@ mod tests {
                 dir: Some("/global/dir".into()),
                 sql_file: "global.sql".into(),
                 sids: vec![],
+                dynamic_sids: false,
                 tns_alias: None,
                 header_name: None,
                 header_sep: None,
@@ -1266,8 +1309,10 @@ mod tests {
         assert!(parse_custom_sqls("", &HashMap::new()).is_empty());
     }
 
+    /// A `SQLS_SIDS` built by a shell expression is migrated as the SIDs the
+    /// expression expanded to while the config was sourced.
     #[test]
-    fn test_parse_custom_sqls_dynamic_sids_apply_to_all() {
+    fn test_parse_custom_sqls_dynamic_sids_use_expansion() {
         let legacy = r#"SQLS_SECTIONS="sec1 sec2"
 sec1 () {
     SQLS_SIDS=${ORACLE_SID:-$SIDS}
@@ -1281,14 +1326,103 @@ sec2 () {
 
         let vars = HashMap::from([
             ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
-            ("SQLS.sec1.SQLS_SIDS".into(), "LEAKED".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "EXPANDED".into()),
             ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
             ("SQLS.sec2.SQLS_SQL".into(), "b.sql".into()),
         ]);
         let result = parse_custom_sqls(legacy, &vars);
         assert_eq!(result.len(), 2);
-        assert!(result[0].sids.is_empty(), "env var SIDS must mean all");
-        assert!(result[1].sids.is_empty(), "command SIDS must mean all");
+        assert_eq!(result[0].sids, vec!["EXPANDED"]);
+        assert!(result[0].dynamic_sids);
+        assert!(
+            result[1].sids.is_empty(),
+            "the command expanded to nothing, so no SID is left"
+        );
+        assert!(result[1].dynamic_sids);
+    }
+
+    /// A `SQLS_SIDS` assigned at the top level applies to every section that
+    /// does not define one of its own, so its dynamic nature applies too.
+    #[test]
+    fn test_parse_custom_sqls_dynamic_sids_from_global_assignment() {
+        let legacy = r#"SQLS_SIDS="$(echo "$SIDS" | paste -sd,)"
+SQLS_SECTIONS="sec1 sec2"
+sec1 () {
+    SQLS_SQL="a.sql"
+}
+sec2 () {
+    SQLS_SIDS="PLAIN"
+    SQLS_SQL="b.sql"
+}
+"#;
+
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS.sec2.SQLS_SIDS".into(), "PLAIN".into()),
+            ("SQLS.sec2.SQLS_SQL".into(), "b.sql".into()),
+        ]);
+        let result = parse_custom_sqls(legacy, &vars);
+        assert!(
+            result[0].dynamic_sids,
+            "sec1 inherits the global expression"
+        );
+        assert!(
+            !result[1].dynamic_sids,
+            "sec2 overrides it with a literal list"
+        );
+    }
+
+    #[test]
+    fn test_warn_dynamic_sqls_sids_keeps_expanded_section() {
+        let legacy = "sec1 () {\n    SQLS_SIDS=$SIDS\n    SQLS_SQL=\"a.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "XE,MYINST2".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls(legacy, &vars);
+        assert_eq!(custom_sqls.len(), 1);
+        assert_eq!(custom_sqls[0].sids, vec!["XE", "MYINST2"]);
+        assert_eq!(
+            warnings,
+            vec!["sec1: SQLS_SIDS is built by a shell expression, which cannot be migrated reliably; using the SIDs it expanded to: XE, MYINST2".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_warn_dynamic_sqls_sids_drops_unexpanded_section() {
+        let legacy = "sec1 () {\n    SQLS_SIDS=$SIDS\n    SQLS_SQL=\"a.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls(legacy, &vars);
+        assert!(
+            custom_sqls.is_empty(),
+            "an unresolved expression must not become a global metric"
+        );
+        assert_eq!(
+            warnings,
+            vec!["sec1: SQLS_SIDS is built by a shell expression that expanded to no SID, skipping custom SQL section; assign the intended instances manually".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_warn_dynamic_sqls_sids_keeps_tnsalias_sections() {
+        let legacy = "sec1 () {\n    SQLS_SIDS=$SIDS\n    SQLS_SQL=\"a.sql\"\n}\n";
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_TNSALIAS".into(), "TNS".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+        ]);
+        let (custom_sqls, warnings) = parse_and_resolve_custom_sqls(legacy, &vars);
+        assert_eq!(
+            custom_sqls.len(),
+            1,
+            "SQLS_TNSALIAS pins the section, its SQLS_SIDS is irrelevant"
+        );
+        assert!(warnings.is_empty(), "got: {warnings:?}");
     }
 
     #[test]
@@ -1302,15 +1436,17 @@ sec2 () {
         assert_eq!(result[0].sids, vec!["A", "B", "C"]);
     }
 
-    /// Build the custom SQL sections the way `convert` does: parse, then map
-    /// the `REMOTE_INSTANCE_*` references onto the SIDs of the migrated
-    /// instances. Returns the sections and the warnings.
+    /// Build the custom SQL sections the way `convert` does: parse, map the
+    /// `REMOTE_INSTANCE_*` references onto the SIDs of the migrated instances,
+    /// then handle the dynamic `SQLS_SIDS` values.
+    /// Returns the sections and the warnings.
     fn parse_and_resolve_custom_sqls(
         legacy: &str,
         variables: &HashMap<String, String>,
     ) -> (Vec<LegacyCustomSql>, Vec<String>) {
         let mut custom_sqls = parse_custom_sqls(legacy, variables);
-        let warnings = resolve_remote_instance_sids(&mut custom_sqls, variables);
+        let mut warnings = resolve_remote_instance_sids(&mut custom_sqls, variables);
+        warnings.extend(warn_dynamic_sqls_sids(&mut custom_sqls));
         (custom_sqls, warnings)
     }
 
@@ -1581,6 +1717,7 @@ sec3 () {
             dir: dir.map(String::from),
             sql_file: sql_file.into(),
             sids: sids.iter().map(|s| s.to_string()).collect(),
+            dynamic_sids: false,
             tns_alias: None,
             header_name: None,
             header_sep: None,

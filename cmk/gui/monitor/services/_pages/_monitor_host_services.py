@@ -33,6 +33,9 @@ _SUPPORTED_ACTIONS: tuple[str, ...] = (
     "schedule_downtimes",
 )
 
+_LEGACY_VIEW_NAME = "host"
+_LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
+
 
 class MonitorHostServicesPage(Page):
     def __init__(self, commands: MonitorCommands) -> None:
@@ -46,6 +49,8 @@ class MonitorHostServicesPage(Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
+        user.need_permission(_LEGACY_VIEW_PERMISSION)
+
         hostname = ctx.request.get_validated_type_input_mandatory(HostName, "host")
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
@@ -82,7 +87,11 @@ class MonitorHostServicesPage(Page):
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,
-                            [("view_name", "host"), ("host", hostname), ("site", site_id)],
+                            [
+                                ("view_name", _LEGACY_VIEW_NAME),
+                                ("host", hostname),
+                                ("site", site_id),
+                            ],
                             filename="view.py",
                         ),
                         title=_("Return to classic view"),

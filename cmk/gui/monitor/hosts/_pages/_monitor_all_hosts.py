@@ -38,6 +38,9 @@ from ._actions import PermittedHostActions
 
 _PAGE_TITLE = _("All hosts (experimental)")
 
+_LEGACY_VIEW_NAME = "allhosts"
+_LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
+
 
 def _row_actions(config: Config) -> list[RowAction]:
     if not config.wato_enabled:
@@ -99,6 +102,8 @@ class MonitorAllHostsPage(Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
+        user.need_permission(_LEGACY_VIEW_PERMISSION)
+
         breadcrumb = _make_breadcrumb(ctx)
 
         make_header(
@@ -121,7 +126,9 @@ class MonitorAllHostsPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
-                            ctx.request, vars_=[("view_name", "allhosts")], filename="view.py"
+                            ctx.request,
+                            vars_=[("view_name", _LEGACY_VIEW_NAME)],
+                            filename="view.py",
                         ),
                         title=_("Return to classic view"),
                     ),
@@ -148,35 +155,42 @@ def _make_breadcrumb(ctx: PageContext) -> Breadcrumb:
     return breadcrumb
 
 
-def _build_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+def _availability_dropdowns() -> list[PageMenuDropdown]:
+    if not user.may("general.see_availability"):
+        return []
+
     availability_url = makeuri_contextless(
         request,
-        [("view_name", "allhosts"), ("mode", "availability")],
+        [("view_name", _LEGACY_VIEW_NAME), ("mode", "availability")],
         filename="view.py",
     )
 
+    return [
+        PageMenuDropdown(
+            name="availability",
+            title=_("Availability"),
+            topics=[
+                PageMenuTopic(
+                    title=_("This view"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Availability"),
+                            icon_name=StaticIcon(IconNames.availability),
+                            item=make_simple_link(availability_url),
+                            name="availability",
+                            is_shortcut=False,
+                            is_suggested=False,
+                        )
+                    ],
+                )
+            ],
+        ),
+    ]
+
+
+def _build_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     menu = PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="availability",
-                title=_("Availability"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("This view"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Availability"),
-                                icon_name=StaticIcon(IconNames.availability),
-                                item=make_simple_link(availability_url),
-                                name="availability",
-                                is_shortcut=False,
-                                is_suggested=False,
-                            )
-                        ],
-                    )
-                ],
-            ),
-        ],
+        dropdowns=_availability_dropdowns(),
         breadcrumb=breadcrumb,
     )
 

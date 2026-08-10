@@ -69,8 +69,8 @@ def configure_host() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure Proxmox VE host"),
         sub_title=_(
-            "Enter a unique configuration ID, your Proxmox VE node's host name and define the "
-            "folder path where nodes and VMs should be created"
+            "Enter a unique configuration ID and the host name of your Proxmox VE node, then "
+            "define the folder path where nodes and VMs should be created."
         ),
         configure_components=[
             widgets.unique_id_formspec_wrapper(

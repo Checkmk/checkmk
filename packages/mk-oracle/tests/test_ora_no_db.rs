@@ -1368,10 +1368,11 @@ oracle:
 /// Resolve `tests/files` for both Bazel (cwd is the runfiles root) and cargo (cwd is the crate).
 #[cfg(not(windows))]
 fn files_dir() -> std::path::PathBuf {
-    if cfg!(feature = "build_system_bazel") {
-        std::env::current_dir()
-            .unwrap()
-            .join("packages/mk-oracle/tests/files")
+    let runfiles = std::env::current_dir()
+        .unwrap()
+        .join("packages/mk-oracle/tests/files");
+    if runfiles.is_dir() {
+        runfiles
     } else {
         std::path::PathBuf::from("tests/files")
     }

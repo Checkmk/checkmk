@@ -53,12 +53,6 @@ def _preserve_non_modeled_site_config_fields(
     if (secret := old_site_config.get("secret")) is not None:
         site_config_spec_from_request["secret"] = secret
 
-    # Unconditional: the request model has no field for this yet. Once it gains one, only apply
-    # this when the request omitted a value (the ApiOmitted sentinel pattern that
-    # SiteConnectionBaseModel.base_to_internal() already uses), or real updates get ignored.
-    if (auth_connections := old_site_config.get("authentication_connections")) is not None:
-        site_config_spec_from_request["authentication_connections"] = auth_connections
-
     if (site_globals := old_site_config.get("globals")) is not None:
         site_config_spec_from_request["globals"] = site_globals
 

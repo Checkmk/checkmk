@@ -72,6 +72,7 @@ class ConfigurationConnection(TypedDict, total=False):
     disable_remote_configuration: bool
     ignore_tls_errors: bool
     direct_login_to_web_gui_allowed: bool
+    authentication_connections: dict
     user_sync: dict
     replicate_event_console: bool
     replicate_extensions: bool

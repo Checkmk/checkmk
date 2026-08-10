@@ -3071,6 +3071,10 @@ def connection(
             "disable_remote_configuration": disable_remote_configuration,
             "ignore_tls_errors": True,
             "direct_login_to_web_gui_allowed": True,
+            "authentication_connections": {
+                "type": "all",
+                "connection_types": ["ldap", "saml"],
+            },
             "user_sync": {"sync_with_ldap_connections": "all"},
             "replicate_event_console": True,
             "replicate_extensions": True,

@@ -5,7 +5,7 @@
 
 from typing import Annotated, Literal, Self
 
-from annotated_types import Ge, Interval
+from annotated_types import Ge, Interval, MinLen
 from pydantic import Discriminator, PlainSerializer, WithJsonSchema
 
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -19,14 +19,19 @@ from cmk.gui.openapi.framework.model.converter import (
     SiteIdConverter,
     TypedPlainValidator,
 )
+from cmk.gui.watolib.config_sync import populate_saml_site_endpoint_urls
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.livestatus_client import (
+    AuthenticationConnectionEntry,
+    AuthenticationConnectionsValue,
+    AuthenticationConnectionType,
     LocalSocketInfo,
     NetworkSocketDetails,
     NetworkSocketInfo,
     ProxyConfig,
     ProxyConfigParams,
     ProxyConfigTcp,
+    SAMLAuthenticationEntry,
     SiteConfiguration,
     TLSParams,
     UnixSocketDetails,
@@ -487,6 +492,110 @@ class ConnectionWithoutReplicationModel:
 
 
 @api_model
+class LDAPAuthenticationConnectionModel:
+    type: Literal["ldap"] = api_field(description="An LDAP connection.")
+    connection_id: Annotated[
+        str,
+        TypedPlainValidator(
+            str, LDAPConnectionIDConverter(read_permissions=("wato.sites",)).should_exist
+        ),
+    ] = api_field(
+        description="An existing LDAP connection.",
+        example="LDAP_1",
+    )
+
+
+@api_model
+class SAMLAuthenticationConnectionModel:
+    type: Literal["saml"] = api_field(description="A SAML connection.")
+    connection_id: str = api_field(
+        description="An existing SAML connection.",
+        example="saml_1",
+    )
+
+
+@api_model
+class AuthenticationDisabledModel:
+    type: Literal["disabled"] = api_field(
+        description="Allow no LDAP or SAML login on this site, use the local users of the"
+        " central site."
+    )
+
+    def to_internal(self) -> Literal["disabled"]:
+        return "disabled"
+
+
+@api_model
+class AuthenticationWithAllConnectionsModel:
+    type: Literal["all"] = api_field(
+        description="Use every configured connection of the selected types, including ones"
+        " added later."
+    )
+    connection_types: Annotated[list[AuthenticationConnectionType], MinLen(1)] = api_field(
+        description="The connection types to use."
+    )
+
+    def to_internal(self) -> tuple[Literal["all"], list[AuthenticationConnectionType]]:
+        return "all", list(self.connection_types)
+
+
+@api_model
+class AuthenticationWithConnectionsModel:
+    type: Literal["list"] = api_field(description="Use the following connections.")
+    connections: Annotated[
+        list[
+            Annotated[
+                LDAPAuthenticationConnectionModel | SAMLAuthenticationConnectionModel,
+                Discriminator("type"),
+            ]
+        ],
+        MinLen(1),
+    ] = api_field(description="A list of existing connections.")
+
+    def to_internal(self) -> list[AuthenticationConnectionEntry]:
+        return [
+            ("ldap", connection.connection_id)
+            if isinstance(connection, LDAPAuthenticationConnectionModel)
+            else ("saml", SAMLAuthenticationEntry(connection_id=connection.connection_id))
+            for connection in self.connections
+        ]
+
+
+AuthenticationConnectionsModel = Annotated[
+    AuthenticationDisabledModel
+    | AuthenticationWithAllConnectionsModel
+    | AuthenticationWithConnectionsModel,
+    Discriminator("type"),
+]
+
+
+def authentication_connections_from_internal(
+    value: AuthenticationConnectionsValue | None,
+) -> AuthenticationConnectionsModel:
+    if value == "disabled":
+        return AuthenticationDisabledModel(type="disabled")
+
+    if isinstance(value, list):
+        return AuthenticationWithConnectionsModel(
+            type="list",
+            connections=[
+                LDAPAuthenticationConnectionModel(type="ldap", connection_id=connection)
+                if isinstance(connection, str)
+                else SAMLAuthenticationConnectionModel(
+                    type="saml", connection_id=connection["connection_id"]
+                )
+                for _kind, connection in value
+            ],
+        )
+
+    # An absent key (legacy / hand-edited spec) means all connections.
+    return AuthenticationWithAllConnectionsModel(
+        type="all",
+        connection_types=list(value[1]) if value is not None else ["ldap", "saml"],
+    )
+
+
+@api_model
 class UserSyncWithLdapModel:
     sync_with_ldap_connections: Literal["ldap"] = api_field(
         description="Sync with ldap connections.",
@@ -574,6 +683,10 @@ class ConnectionModel:
         " related option is changed and users are allowed to login to the web GUI of this site.",
         example=True,
     )
+    authentication_connections: AuthenticationConnectionsModel = api_field(
+        description="The connections that are available for login on this site. They are"
+        " responsible for creating the user and the initial user setup."
+    )
     user_sync: Annotated[
         UserSyncWithLdapModel | UserSyncAllModel | UserSyncDisabledModel,
         Discriminator("sync_with_ldap_connections"),
@@ -647,10 +760,6 @@ class SiteConnectionBaseModel:
             replicate_mkps=True,
             message_broker_port=5672,
             is_trusted=False,
-            # The API does not expose the field yet; write the site editor's
-            # default so the key is always present on disk. The edit endpoint
-            # carries over the existing value instead.
-            authentication_connections=("all", ["ldap", "saml"]),
         )
 
         if isinstance(self.status_connection.status_host, StatusHostEnabled):
@@ -666,6 +775,9 @@ class SiteConnectionBaseModel:
         if not isinstance(self.configuration_connection.url_of_remote_site, ApiOmitted):
             site_configuration["multisiteurl"] = self.configuration_connection.url_of_remote_site
         site_configuration["insecure"] = self.configuration_connection.ignore_tls_errors
+        site_configuration["authentication_connections"] = (
+            self.configuration_connection.authentication_connections.to_internal()
+        )
         site_configuration["user_attribute_sync_connections"] = (
             self.configuration_connection.user_sync.to_internal()
         )
@@ -682,4 +794,6 @@ class SiteConnectionBaseModel:
         )
         site_configuration["is_trusted"] = self.configuration_connection.is_trusted
 
-        return site_configuration
+        # The site editor writes the derived SAML endpoint URLs on save, so both ways of saving
+        # a site produce the same configuration.
+        return populate_saml_site_endpoint_urls(site_configuration, empty_marker="")

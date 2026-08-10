@@ -49,6 +49,10 @@ def default_config_example() -> SiteConfigAPISpec:
             "disable_remote_configuration": True,
             "ignore_tls_errors": False,
             "direct_login_to_web_gui_allowed": True,
+            "authentication_connections": {
+                "type": "all",
+                "connection_types": ["ldap", "saml"],
+            },
             "user_sync": {
                 "sync_with_ldap_connections": "all",
             },

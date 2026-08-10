@@ -25,7 +25,7 @@ from cmk.gui.rest_api_types.site_connection import (
 )
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.sites import SitesConfigFile
-from cmk.livestatus_client import SiteConfiguration
+from cmk.livestatus_client import SAMLAuthenticationEntry, SiteConfiguration
 from cmk.utils import paths
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -608,33 +608,103 @@ def test_update_site_connection_preserves_settings_it_cannot_express(
     for key, value in sentinel_values.items():
         assert stored_after_update.get(key) == value, (
             f"{key!r} was dropped by a rest-api update -- carry it over in "
-            "edit_site_connection_v1, the same way `secret` and "
-            "`authentication_connections` already are"
+            "edit_site_connection_v1, the same way `secret` already is"
         )
 
 
-def test_update_site_connection_preserves_authentication_connections_value(
-    clients: ClientRegistry,
-) -> None:
-    """`authentication_connections` needs its own test: `to_internal()` writes a hard-coded
-    default for it on create AND update, so the key is always present and the test above --
-    which derives unmodeled keys from those *absent* after `create()` -- never covers it.
-    """
+def test_update_site_connection_authentication_connections(clients: ClientRegistry) -> None:
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+            },
+        }
+    )
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"]["authentication_connections"] = {
+        "type": "list",
+        "connections": [{"type": "ldap", "connection_id": "LDAP_1"}],
+    }
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
-    # a value only Setup can produce, distinct from to_internal()'s ("all", ["ldap", "saml"]):
+    stored = SitesConfigFile().load_for_reading()[SiteId(site_id)]
+    assert stored["authentication_connections"] == [("ldap", "LDAP_1")]
+
+
+@pytest.mark.parametrize(
+    "authentication_connections",
+    [
+        {"type": "all", "connection_types": []},
+        {"type": "list", "connections": []},
+    ],
+)
+def test_update_site_connection_empty_authentication_connections_400(
+    clients: ClientRegistry,
+    authentication_connections: dict[str, object],
+) -> None:
+    # reflecting gui behavior in the REST-API
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"]["authentication_connections"] = authentication_connections
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_site_connection_saml_authentication_connection_round_trip(
+    clients: ClientRegistry,
+) -> None:
+    config, site_id = _default_config_with_site_id()
+    remote_site_url = config["configuration_connection"]["url_of_remote_site"]
+    clients.SiteManagement.create(site_config=config)
+
+    # SAML connections can only be configured in Setup, in editions supporting them:
     sites_config_file = SitesConfigFile()
     sites = sites_config_file.load_for_modification()
-    sites[SiteId(site_id)]["authentication_connections"] = ("all", ["saml"])
+    sites[SiteId(site_id)]["authentication_connections"] = [
+        (
+            "saml",
+            SAMLAuthenticationEntry(
+                connection_id="saml_1",
+                metadata_endpoint="http://localhost/site/check_mk/saml_metadata.py",
+                acs_endpoint="http://localhost/site/check_mk/saml_acs.py",
+            ),
+        )
+    ]
     sites_config_file.save(sites, pprint_value=False)
 
-    clients.SiteManagement.update(site_id=site_id, site_config=config)
+    # the endpoint URLs are derived, so the rest-api does not return them ...
+    resp = clients.SiteManagement.get(site_id=site_id)
+    config = resp.json["extensions"]
+    assert config["configuration_connection"]["authentication_connections"] == {
+        "type": "list",
+        "connections": [{"type": "saml", "connection_id": "saml_1"}],
+    }
 
-    stored_after_update = SitesConfigFile().load_for_reading()[SiteId(site_id)]
-    assert stored_after_update["authentication_connections"] == ("all", ["saml"]), (
-        "authentication_connections must survive an update, not reset to to_internal()'s default"
-    )
+    # ... but does store them, just like the site editor:
+    config.pop("logged_in", None)
+    clients.SiteManagement.update(site_id=site_id, site_config=config)
+    stored = SitesConfigFile().load_for_reading()[SiteId(site_id)]
+    assert stored["authentication_connections"] == [
+        (
+            "saml",
+            {
+                "connection_id": "saml_1",
+                "metadata_endpoint": f"{remote_site_url}saml_metadata.py?RelayState=saml_1",
+                "acs_endpoint": f"{remote_site_url}saml_acs.py?acs",
+            },
+        )
+    ]
 
 
 def test_update_site_connection_user_sync_with_ldap_connections_200(
@@ -732,6 +802,10 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "disable_remote_configuration": True,
         "ignore_tls_errors": True,
         "direct_login_to_web_gui_allowed": True,
+        "authentication_connections": {
+            "type": "all",
+            "connection_types": ["ldap", "saml"],
+        },
         "user_sync": {
             "sync_with_ldap_connections": "all",
         },
@@ -746,6 +820,10 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "disable_remote_configuration": True,
         "ignore_tls_errors": True,
         "direct_login_to_web_gui_allowed": True,
+        "authentication_connections": {
+            "type": "all",
+            "connection_types": ["ldap", "saml"],
+        },
         "user_sync": {
             "sync_with_ldap_connections": "all",
         },
@@ -760,6 +838,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "disable_remote_configuration": True,
         "ignore_tls_errors": True,
         "direct_login_to_web_gui_allowed": True,
+        "authentication_connections": {"type": "disabled"},
         "user_sync": {
             "sync_with_ldap_connections": "disabled",
         },
@@ -787,6 +866,10 @@ def test_update_configuration_connection_200(  # type: ignore[misc]
 
 config_cnx_test_data_400: list[ConfigurationConnection] = [
     {
+        "authentication_connections": {
+            "type": "all",
+            "connection_types": ["ldap", "saml"],
+        },
         "user_sync": {
             "sync_with_ldap_connections": "all",
         },
@@ -802,6 +885,10 @@ config_cnx_test_data_400: list[ConfigurationConnection] = [
         "disable_remote_configuration": False,
         "ignore_tls_errors": False,
         "direct_login_to_web_gui_allowed": False,
+        "authentication_connections": {
+            "type": "all",
+            "connection_types": ["ldap", "saml"],
+        },
         "user_sync": {
             "sync_with_ldap_connections": "all",
         },
@@ -814,6 +901,10 @@ config_cnx_test_data_400: list[ConfigurationConnection] = [
         "disable_remote_configuration": True,
         "ignore_tls_errors": True,
         "direct_login_to_web_gui_allowed": True,
+        "authentication_connections": {
+            "type": "all",
+            "connection_types": ["ldap", "saml"],
+        },
         "user_sync": {
             "sync_with_ldap_connections": "all",
         },
@@ -971,6 +1062,10 @@ def test_validation_layer_min_config(clients: ClientRegistry) -> None:
             "disable_remote_configuration": True,
             "ignore_tls_errors": False,
             "direct_login_to_web_gui_allowed": True,
+            "authentication_connections": {
+                "type": "all",
+                "connection_types": ["ldap", "saml"],
+            },
             "user_sync": {"sync_with_ldap_connections": "all"},
             "replicate_event_console": True,
             "replicate_extensions": True,

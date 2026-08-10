@@ -20,6 +20,7 @@ from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 
 from .common import (
+    authentication_connections_from_internal,
     ConnectionModel,
     SiteConnectionBaseModel,
     StatusConnectionModel,
@@ -103,6 +104,9 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
                 disable_remote_configuration=site_configuration["disable_wato"],
                 ignore_tls_errors=site_configuration["insecure"],
                 direct_login_to_web_gui_allowed=site_configuration["user_login"],
+                authentication_connections=authentication_connections_from_internal(
+                    site_configuration.get("authentication_connections")
+                ),
                 user_sync=_user_sync_from_internal(
                     user_sync=site_configuration.get("user_attribute_sync_connections")
                 ),

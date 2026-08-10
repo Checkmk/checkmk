@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { TitleMacroGroup } from 'cmk-shared-typing/typescript/custom_graph_designer'
-import { vi } from 'vitest'
+import { type MockInstance, vi } from 'vitest'
 
 import MetricsTable from '@/graphing/designer/components/MetricsTable.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
@@ -25,6 +25,10 @@ vi.mock('@/graphing/designer/components/MetricBackendRuleSlideIn.vue', () => ({
   }
 }))
 
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 const ADD_RULE_LABEL = 'Add rule: Metric backend (Custom query)'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400', '#ec48b6', '#ffd703']
@@ -32,6 +36,15 @@ const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
 const TITLE_MACROS: TitleMacroGroup[] = [
   { source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$', '$METRIC_NAME$'] }
 ]
+
+/** Waits for the row group holding `id` to have been scrolled into view. */
+async function expectScrolledToRow(scrollIntoView: MockInstance, id: string): Promise<void> {
+  await waitFor(() => {
+    const scrolled = scrollIntoView.mock.contexts.at(-1)
+    expect(scrolled).toBeInstanceOf(HTMLElement)
+    expect(within(scrolled as HTMLElement).getByText(id)).toBeInTheDocument()
+  })
+}
 
 function renderTable(
   seed: DesignerItem[] = [],
@@ -61,6 +74,23 @@ test('adding a source appends an auto-expanded draft row', async () => {
   expect(store.items.value[1]).toMatchObject({ type: 'rrd_metric', host_name: null })
   // The new row opens expanded, showing its source configuration form.
   expect(await screen.findByText('Single metric')).toBeInTheDocument()
+})
+
+test('the added row is scrolled into view', async () => {
+  const scrollIntoView = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+  renderTable([rrdMetricItem('A')])
+  await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
+  await fireEvent.click(await screen.findByRole('option', { name: 'Checkmk RRD' }))
+
+  await expectScrolledToRow(scrollIntoView, 'B')
+})
+
+test('a cloned row is scrolled into view', async () => {
+  const scrollIntoView = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+  renderTable([rrdMetricItem('A')])
+  await fireEvent.click(screen.getByRole('button', { name: 'Clone' }))
+
+  await expectScrolledToRow(scrollIntoView, 'B')
 })
 
 test('adding a constant line opens the constant form', async () => {

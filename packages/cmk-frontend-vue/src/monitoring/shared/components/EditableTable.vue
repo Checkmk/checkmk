@@ -12,7 +12,7 @@ import {
   useVueTable
 } from '@tanstack/vue-table'
 import useDragging from 'cmk-ui-library/lib/useDragging'
-import { computed, provide, ref } from 'vue'
+import { type ComponentPublicInstance, computed, provide, ref } from 'vue'
 
 import {
   COLUMN_LAYOUT_KEY,
@@ -123,6 +123,23 @@ provide(ROW_DRAG_KEY, {
 function isRowExpanded(row: T, index: number): boolean {
   return props.expandedRows?.[String(props.getRowKey(row, index))] === true
 }
+
+const rowGroups = new Map<string, HTMLElement>()
+
+function registerRowGroup(key: string, element: Element | ComponentPublicInstance | null): void {
+  if (element instanceof HTMLElement) {
+    rowGroups.set(key, element)
+  } else {
+    rowGroups.delete(key)
+  }
+}
+
+defineExpose({
+  /** Scroll the row with this key into view, together with its expansion. */
+  scrollToRow: (key: string | number): void => {
+    rowGroups.get(String(key))?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+})
 </script>
 
 <template>
@@ -146,6 +163,7 @@ function isRowExpanded(row: T, index: number): boolean {
       <tbody
         v-for="(row, index) in rows"
         :key="getRowKey(row, index)"
+        :ref="(element) => registerRowGroup(String(getRowKey(row, index)), element)"
         class="monitoring-editable-table__row-group"
         :class="{ 'monitoring-editable-table__row-group--dragging': draggedRowIndex === index }"
       >

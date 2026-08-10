@@ -12,7 +12,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -78,6 +78,13 @@ const titleMacroHelp = renderTitleMacroHelp(titleMacros)
 const rowSelection = ref<RowSelectionState>({})
 const expandedRows = ref<Record<string, boolean>>({})
 
+const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
+
+async function scrollToRow(id: ItemId): Promise<void> {
+  await nextTick()
+  table.value?.scrollToRow(id)
+}
+
 const columns: ColumnDef<DesignerItem>[] = [
   { id: 'drag', header: '', meta: { justify: 'center' } },
   { id: 'visibility', header: '', meta: { justify: 'center' } },
@@ -140,6 +147,7 @@ function onAddSource(value: string): void {
     }
   })
   expandedRows.value = { ...expandedRows.value, [id]: true }
+  void scrollToRow(id)
 }
 
 const rowActions: CellAction[] = [
@@ -171,7 +179,10 @@ const rowDelete = useDeleteWithDependents(store, () => {
 
 function onRowAction(row: DesignerItem, action: CellAction): void {
   if (action.id === 'clone') {
-    store.clone([row.id])
+    const [created] = store.clone([row.id])
+    if (created !== undefined) {
+      void scrollToRow(created)
+    }
   } else if (action.id === 'delete') {
     rowDelete.request([row.id])
   } else if (action.id === 'add-rule' && row.type === 'metric_backend' && isComplete(row)) {
@@ -180,8 +191,11 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
 }
 
 function onBulkClone(): void {
-  store.clone(selectedIds.value)
+  const [firstCreated] = store.clone(selectedIds.value)
   rowSelection.value = {}
+  if (firstCreated !== undefined) {
+    void scrollToRow(firstCreated)
+  }
 }
 
 function onLineStyleChange(row: DesignerItem, value: string | null): void {
@@ -224,6 +238,7 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
       :style="{ overflow: 'var(--graphing-designer-body-table-overflow, auto)' }"
     >
       <EditableTable
+        ref="table"
         v-model:row-selection="rowSelection"
         :rows="[...store.items.value]"
         :columns="columns"

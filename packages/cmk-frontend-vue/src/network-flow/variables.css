@@ -1,0 +1,22 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+@layer network-flow {
+  body[data-theme='facelift'] {
+    /* The ring deepens towards its outer edge, away from the viewer. */
+    --nf-donut-shading-inner-color: var(--black);
+    --nf-donut-shading-inner-opacity: 0;
+    --nf-donut-shading-outer-color: var(--black);
+    --nf-donut-shading-outer-opacity: 0.13;
+  }
+
+  body[data-theme='modern-dark'] {
+    /* A light ring on a dark surface catches the light along its inner edge. */
+    --nf-donut-shading-inner-color: var(--white);
+    --nf-donut-shading-inner-opacity: 0.09;
+    --nf-donut-shading-outer-color: var(--black);
+    --nf-donut-shading-outer-opacity: 0.1;
+  }
+}

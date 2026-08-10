@@ -20,7 +20,7 @@ function renderChart(slices: DonutSlice[] = SLICES) {
 test('renders one arc segment and one legend entry per slice', () => {
   const { container } = renderChart()
 
-  expect(container.querySelectorAll('path')).toHaveLength(2)
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__slice')).toHaveLength(2)
   // The empty-track circle is only rendered when there are no slices.
   expect(container.querySelectorAll('circle')).toHaveLength(0)
   expect(container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')).toHaveLength(2)
@@ -50,9 +50,9 @@ test('highlights the top slice in the center', () => {
 test('colors each arc segment with its slice color', () => {
   const { container } = renderChart()
 
-  const fills = [...container.querySelectorAll<SVGPathElement>('path')].map((el) =>
-    el.getAttribute('fill')
-  )
+  const fills = [
+    ...container.querySelectorAll<SVGPathElement>('.network-flow-cmk-donut-chart__slice')
+  ].map((el) => el.getAttribute('fill'))
   // The named colors resolve to their theme palette CSS variables.
   expect(fills).toEqual(['var(--color-light-blue-50)', 'var(--color-mid-grey-50)'])
 })
@@ -70,8 +70,23 @@ test('draws a lone slice as a closed ring', () => {
 test('renders an empty track and no center when there are no slices', () => {
   const { container } = renderChart([])
 
-  expect(container.querySelectorAll('path')).toHaveLength(0)
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__slice')).toHaveLength(0)
   expect(container.querySelectorAll('circle')).toHaveLength(1)
   expect(container.querySelector('.network-flow-cmk-donut-chart__empty-track')).not.toBeNull()
   expect(container.querySelector('.network-flow-cmk-donut-chart__center')).toBeNull()
+})
+
+test('overlays every slice with the shared shading gradient', () => {
+  const { container } = renderChart()
+
+  const shading = [
+    ...container.querySelectorAll<SVGPathElement>('.network-flow-cmk-donut-chart__shading')
+  ]
+  expect(shading).toHaveLength(2)
+  const gradientId = container.querySelector('radialGradient')!.getAttribute('id')
+  expect(gradientId).toMatch(/^donut-shading-/)
+  expect(shading.map((el) => el.getAttribute('fill'))).toEqual([
+    `url(#${gradientId})`,
+    `url(#${gradientId})`
+  ])
 })

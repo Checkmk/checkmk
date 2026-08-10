@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type PieArcDatum, arc, pie } from 'd3-shape'
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
 import type { CmkDonutChartProps, DonutSlice } from './types'
@@ -21,6 +21,12 @@ const TRACK_STROKE = OUTER_RADIUS - INNER_RADIUS
 const SLICE_GAP_RADIANS = (1.5 * Math.PI) / 180
 
 const sliceArc = arc<PieArcDatum<DonutSlice>>().innerRadius(INNER_RADIUS).outerRadius(OUTER_RADIUS)
+
+// Unique per instance, or a second donut would reference this one's gradient.
+const shadingId = `donut-shading-${useId()}`
+// The gradient spans the full outer radius, so the ring's inner edge sits at
+// this fraction of it.
+const RING_INNER_OFFSET = `${(INNER_RADIUS / OUTER_RADIUS) * 100}%`
 
 const total = computed(() => props.slices.reduce((sum, slice) => sum + slice.value, 0))
 
@@ -75,12 +81,35 @@ const topSlice = computed(() => props.slices[0])
           :stroke-width="TRACK_STROKE"
           fill="none"
         />
+        <defs>
+          <radialGradient
+            :id="shadingId"
+            gradientUnits="userSpaceOnUse"
+            cx="0"
+            cy="0"
+            :r="OUTER_RADIUS"
+          >
+            <stop
+              :offset="RING_INNER_OFFSET"
+              class="network-flow-cmk-donut-chart__shading-stop--inner"
+            />
+            <stop offset="100%" class="network-flow-cmk-donut-chart__shading-stop--outer" />
+          </radialGradient>
+        </defs>
         <path
           v-for="segment in segments"
           :key="segment.key"
           class="network-flow-cmk-donut-chart__slice"
           :d="segment.path"
           :fill="segment.color"
+        />
+        <!-- Its own layer, so the slices keep their flat palette colour. -->
+        <path
+          v-for="segment in segments"
+          :key="`${segment.key}-shading`"
+          class="network-flow-cmk-donut-chart__shading"
+          :d="segment.path"
+          :fill="`url(#${shadingId})`"
         />
       </svg>
       <div v-if="topSlice" class="network-flow-cmk-donut-chart__center">
@@ -110,6 +139,10 @@ const topSlice = computed(() => props.slices[0])
   </div>
 </template>
 
+<style>
+@import url('../variables.css');
+</style>
+
 <style scoped>
 .network-flow-cmk-donut-chart {
   display: flex;
@@ -137,6 +170,20 @@ const topSlice = computed(() => props.slices[0])
 .network-flow-cmk-donut-chart__slice {
   stroke: var(--db-content-bg-color);
   stroke-width: 1.5;
+}
+
+.network-flow-cmk-donut-chart__shading {
+  pointer-events: none;
+}
+
+.network-flow-cmk-donut-chart__shading-stop--inner {
+  stop-color: var(--nf-donut-shading-inner-color);
+  stop-opacity: var(--nf-donut-shading-inner-opacity);
+}
+
+.network-flow-cmk-donut-chart__shading-stop--outer {
+  stop-color: var(--nf-donut-shading-outer-color);
+  stop-opacity: var(--nf-donut-shading-outer-opacity);
 }
 
 .network-flow-cmk-donut-chart__empty-track {

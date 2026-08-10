@@ -73,12 +73,17 @@ const {
   cachedSuggestions,
   suggestionRevision,
   clearCache: clearSuggestionCache
-} = useAttributeKeySuggestions(() =>
+} = useAttributeKeySuggestions((excludeId) =>
   buildAutocompleteContext(filterModel.value, {
     metricName: props.metricName,
-    staticResourceAttributeKeys: props.staticResourceAttributeKeys
+    staticResourceAttributeKeys: props.staticResourceAttributeKeys,
+    excludeId
   })
 )
+
+function queryKeySuggestions(condition: Condition, query: string): Promise<Response> {
+  return querySuggestions(query, condition.id)
+}
 
 watch(
   filterModel,
@@ -188,7 +193,7 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
           v-model="filterModel"
           :allow-or="props.allowOr"
           :operators="props.operators"
-          :query-suggestions="querySuggestions"
+          :query-suggestions="queryKeySuggestions"
           :query-value-suggestions="queryValueSuggestions"
           :suggestion-revision="suggestionRevision"
           :resolve-attribute-kind="resolveAttributeKind"

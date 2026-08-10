@@ -27,7 +27,7 @@ const { _t } = usei18n()
 const props = withDefaults(
   defineProps<{
     condition: Condition
-    querySuggestions: QuerySuggestionsFn
+    querySuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     suggestionRevision?: number
     operators?: Operator[] | undefined
@@ -64,7 +64,10 @@ const showValue = computed(() => operatorTakesValue(props.condition.operator))
 // Reading the revision yields a fresh options identity on each bump, so CmkSuggestions re-queries.
 const keyOptions = computed(() => {
   void props.suggestionRevision
-  return { type: 'callback-filtered' as const, querySuggestions: props.querySuggestions }
+  return {
+    type: 'callback-filtered' as const,
+    querySuggestions: (query: string) => props.querySuggestions(props.condition, query)
+  }
 })
 const valueOptions = computed(() => {
   void props.suggestionRevision

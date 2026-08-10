@@ -11,7 +11,6 @@ import {
   type Suggestion,
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
-import type { QuerySuggestionsFn } from 'cmk-ui-library/components/CmkSuggestions/types'
 import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -24,9 +23,13 @@ import type { AttributeKindKey, AutoCompleteContext } from './attributeFilterAda
  * Attribute-key autocomplete across the three attribute kinds, sectioned by kind.
  *
  * The caller supplies the REST context, which is what narrows the offered keys.
+ * ``buildContext`` receives the id of the pill being edited so it can drop that
+ * pill: a condition must not constrain the keys offered for its own key field.
  */
-export function useAttributeKeySuggestions(buildContext: () => AutoCompleteContext): {
-  querySuggestions: QuerySuggestionsFn
+export function useAttributeKeySuggestions(
+  buildContext: (excludeId?: string) => AutoCompleteContext
+): {
+  querySuggestions: (query: string, excludeId?: string) => Promise<Response>
   resolveKind: (key: string) => AttributeKindKey | null
   cachedSuggestions: (
     autocompleter: Autocompleter,
@@ -84,12 +87,12 @@ export function useAttributeKeySuggestions(buildContext: () => AutoCompleteConte
     }
   }
 
-  async function querySuggestions(query: string): Promise<Response> {
+  async function querySuggestions(query: string, excludeId?: string): Promise<Response> {
     const sections: Section[] = []
     ATTRIBUTE_KIND_ORDER.forEach((attributeKind) => {
       const autocompleter: Autocompleter = {
         fetch_method: 'rest_autocomplete',
-        data: { ident: KEY_IDENTS[attributeKind], params: { context: buildContext() } }
+        data: { ident: KEY_IDENTS[attributeKind], params: { context: buildContext(excludeId) } }
       }
       const response = cachedSuggestions(autocompleter, query)
       if (!response || response instanceof ErrorResponse) {

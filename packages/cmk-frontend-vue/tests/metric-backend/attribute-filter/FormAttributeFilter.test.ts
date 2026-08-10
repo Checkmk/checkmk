@@ -56,7 +56,7 @@ function singlePill(overrides: Partial<Condition> = {}): AttributeFilterModel {
   ]
 }
 
-function querySuggestions(query: string): Promise<Response> {
+function querySuggestions(_condition: Condition, query: string): Promise<Response> {
   const lower = query.toLowerCase()
   return Promise.resolve(
     new Response(KEY_SUGGESTIONS.filter((s) => s.name.toLowerCase().includes(lower)))

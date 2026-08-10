@@ -29,7 +29,7 @@ const vClickOutside = useClickOutside()
 
 const props = withDefaults(
   defineProps<{
-    querySuggestions: QuerySuggestionsFn
+    querySuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     suggestionRevision?: number
     resolveAttributeKind?: ((key: string) => AttributeKind) | undefined

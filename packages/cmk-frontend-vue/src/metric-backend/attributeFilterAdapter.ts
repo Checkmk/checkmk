@@ -194,7 +194,7 @@ export interface ContextOptions {
   metricName?: string | null
   staticResourceAttributeKeys?: string[] | null
   attributeKey?: string | null
-  excludeId?: string
+  excludeId?: string | undefined
 }
 
 export function buildAutocompleteContext(

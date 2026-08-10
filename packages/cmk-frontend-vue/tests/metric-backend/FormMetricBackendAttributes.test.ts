@@ -257,6 +257,44 @@ test('late value-backend suggestions merge in after the free-text echo (CMK-3772
   expect(screen.getByRole('option', { name: 'web' })).toBeInTheDocument()
 })
 
+test('re-editing a committed condition still populates the key dropdown (CMK-37460)', async () => {
+  // A key query still carrying the edited pill's `equals` condition matches no series
+  // and comes back empty; the query must drop the edited pill to recover the key list.
+  server.use(
+    http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {
+      const ident = params.ident as string
+      const body = (await request.json()) as {
+        value: string
+        parameters: { context: { attribute_filter: unknown } }
+      }
+      const constrained = JSON.stringify(body.parameters.context.attribute_filter).includes(
+        '"equals"'
+      )
+      const keys = constrained ? [] : (KEY_SUGGESTIONS[ident] ?? [])
+      const matching = body.value ? keys.filter((key) => key.includes(body.value)) : keys
+      return HttpResponse.json({ choices: matching.map((key) => ({ id: key, value: key })) })
+    })
+  )
+  renderAttributes({
+    type: 'equals',
+    key: { kind: 'resource', name: 'service.name' },
+    value: 'nonexistent'
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /^Edit condition:/ }))
+  const keyCombobox = await screen.findByRole('combobox', { name: 'Attribute key' })
+  if (keyCombobox.getAttribute('aria-expanded') !== 'true') {
+    await userEvent.click(keyCombobox)
+  }
+  await waitFor(() => {
+    expect(keyCombobox.getAttribute('aria-expanded')).toBe('true')
+  })
+  await userEvent.clear(screen.getByRole('textbox', { name: 'filter' }))
+
+  // With the edited pill dropped from the filter context, the full key list returns.
+  expect(await screen.findByRole('option', { name: 'service.name' })).toBeInTheDocument()
+})
+
 test('initializes the pills from a provided attribute filter, including exists', () => {
   renderAttributes({
     type: 'and',

@@ -134,6 +134,8 @@ class TestMonitorHostServicesFilters:
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -219,6 +221,8 @@ class TestMonitorHostServicesFilters:
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -330,6 +334,8 @@ class TestMonitorHostServices:
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                 }
@@ -403,6 +409,8 @@ class TestMonitorHostServices:
                     "plugin_output": "",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": 0,
                     "last_state_change": time.time(),
                 }
@@ -522,6 +530,8 @@ class TestMonitorHostServices:
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -584,6 +594,8 @@ class TestMonitorHostServicessLimitPermissions:
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -646,6 +658,8 @@ class TestMonitorHostServicessLimitPermissions:
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -707,6 +721,7 @@ class TestMonitorServiceOverview:
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -775,12 +790,12 @@ class TestMonitorServiceOverview:
             pytest.param({"acknowledged": 1}, ["ack"], id="problem acknowledged"),
             pytest.param(
                 {"notifications_enabled": 0},
-                ["notif_disabled"],
+                ["notif-disabled"],
                 id="notifications disabled",
             ),
             pytest.param(
                 {"scheduled_downtime_depth": 2, "acknowledged": 1, "notifications_enabled": 0},
-                ["downtime", "ack", "notif_disabled"],
+                ["downtime", "ack", "notif-disabled"],
                 id="all modes at once",
             ),
         ],
@@ -806,6 +821,7 @@ class TestMonitorServiceOverview:
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -859,6 +875,7 @@ class TestMonitorServiceOverview:
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -911,6 +928,7 @@ class TestMonitorServiceOverview:
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
+                    "is_flapping": 0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -1086,13 +1104,13 @@ _SERVICE_DESCRIPTION = "CPU load"
 _HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state plugin_output last_check last_state_change acknowledged "
-    "scheduled_downtime_depth notifications_enabled host_alias host_state host_acknowledged "
-    "host_scheduled_downtime_depth contact_groups long_plugin_output current_attempt "
-    "max_check_attempts next_check tags labels label_sources"
+    "scheduled_downtime_depth notifications_enabled is_flapping host_alias host_state "
+    "host_acknowledged host_scheduled_downtime_depth contact_groups long_plugin_output "
+    "current_attempt max_check_attempts next_check tags labels label_sources"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = (
     "description host_name state plugin_output acknowledged scheduled_downtime_depth "
-    "last_check last_state_change"
+    "notifications_enabled is_flapping last_check last_state_change"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"

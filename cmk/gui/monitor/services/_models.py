@@ -42,6 +42,8 @@ class Service:
     state: ServiceState
     acknowledged: bool
     in_downtime: bool
+    notifications_enabled: bool
+    is_flapping: bool
     summary: str
     last_check: dt.datetime | None
     last_state_change: dt.datetime
@@ -78,6 +80,7 @@ class ServiceOverview(Service):
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
+    is_flapping: bool
     contact_groups: list[str]
     long_output: str
     current_attempt: int

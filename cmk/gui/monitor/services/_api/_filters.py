@@ -54,7 +54,21 @@ class ServiceStateChoiceCondition:
     )
 
 
-type ServiceConditionNode = ServiceStateChoiceCondition | ServiceStringCondition
+@api_model
+class ServiceBooleanCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["acknowledged", "in_downtime", "notifications_enabled", "is_flapping"] = (
+        api_field(description="Boolean service field to filter on", example="acknowledged")
+    )
+    op: Literal["eq"] = api_field(description="Equality operation", example="eq")
+    value: bool = api_field(description="Boolean value to compare against", example=False)
+
+
+type ServiceConditionNode = (
+    ServiceStateChoiceCondition | ServiceStringCondition | ServiceBooleanCondition
+)
 
 
 @api_model(slots=False)
@@ -115,6 +129,16 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
             match node.op:
                 case "one_of" if len(node.value) > 1:
                     filters.append(f"Or: {len(node.value)}")
+
+        case ServiceBooleanCondition():
+            match node.field:
+                case "in_downtime":
+                    # Livestatus has no boolean downtime column; a service is in a scheduled
+                    # downtime when scheduled_downtime_depth is greater than zero.
+                    op = ">" if node.value else "="
+                    filters.append(f"Filter: scheduled_downtime_depth {op} 0")
+                case _:
+                    filters.append(f"Filter: {node.field} = {int(node.value)}")
 
         case ServiceAndNode() | ServiceOrNode():
             for child in node.children:

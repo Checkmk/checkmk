@@ -8,6 +8,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
 import type {
+  BooleanGroupFilter,
   CheckboxListFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
@@ -44,6 +45,18 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     field: 'summary'
   }
 
+  const modesFilter: BooleanGroupFilter<
+    'in_downtime' | 'acknowledged' | 'notifications_enabled' | 'is_flapping'
+  > = {
+    type: 'boolean-group',
+    groups: [
+      { field: 'in_downtime', title: _t('In downtime') },
+      { field: 'acknowledged', title: _t('Acknowledged') },
+      { field: 'notifications_enabled', title: _t('Notifications enabled') },
+      { field: 'is_flapping', title: _t('Flapping') }
+    ]
+  }
+
   return [
     {
       id: 'select',
@@ -69,7 +82,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 80,
       maxSize: 80,
-      meta: { justify: 'left' }
+      meta: { justify: 'left', filter: modesFilter }
     },
     {
       accessorKey: 'name',

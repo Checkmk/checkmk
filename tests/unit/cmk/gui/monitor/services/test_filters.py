@@ -10,6 +10,7 @@ import pytest
 from cmk.gui.monitor.services._api._filters import (
     parse_as_livestatus_filter,
     ServiceAndNode,
+    ServiceBooleanCondition,
     ServiceNotNode,
     ServiceOrNode,
     ServiceStateChoiceCondition,
@@ -43,6 +44,38 @@ def test_query_builder_string_fields_are_properly_overriden(
 ) -> None:
     condition = ServiceStringCondition(type="condition", field=public, op="contains", value="CPU")
     assert parse_as_livestatus_filter(condition) == f"Filter: {private} ~~ CPU"
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["acknowledged", "notifications_enabled", "is_flapping"],
+)
+@pytest.mark.parametrize(
+    "value, ls_value",
+    [
+        (True, 1),
+        (False, 0),
+    ],
+)
+def test_query_builder_boolean_condition_fields(
+    field: Literal["acknowledged", "notifications_enabled", "is_flapping"],
+    value: bool,
+    ls_value: int,
+) -> None:
+    condition = ServiceBooleanCondition(type="condition", field=field, op="eq", value=value)
+    assert parse_as_livestatus_filter(condition) == f"Filter: {field} = {ls_value}"
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (True, "Filter: scheduled_downtime_depth > 0"),
+        (False, "Filter: scheduled_downtime_depth = 0"),
+    ],
+)
+def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
+    condition = ServiceBooleanCondition(type="condition", field="in_downtime", op="eq", value=value)
+    assert parse_as_livestatus_filter(condition) == expected
 
 
 def test_query_builder_state_choice_single_no_or() -> None:
@@ -115,5 +148,20 @@ def test_query_builder_mixed_string_and_state_conditions() -> None:
 
     value = parse_as_livestatus_filter(nodes)
     expected = "Filter: description ~~ CPU\nFilter: state = 1\nAnd: 2"
+
+    assert value == expected
+
+
+def test_query_builder_combines_multiple_boolean_conditions() -> None:
+    nodes = ServiceAndNode(
+        type="and",
+        children=[
+            ServiceBooleanCondition(type="condition", field="acknowledged", op="eq", value=False),
+            ServiceBooleanCondition(type="condition", field="in_downtime", op="eq", value=False),
+        ],
+    )
+
+    value = parse_as_livestatus_filter(nodes)
+    expected = "Filter: acknowledged = 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2"
 
     assert value == expected

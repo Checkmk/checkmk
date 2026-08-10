@@ -69,6 +69,8 @@ class LiveStatusHostServicesRepository:
                 Services.plugin_output,
                 Services.acknowledged,
                 Services.scheduled_downtime_depth,
+                Services.notifications_enabled,
+                Services.is_flapping,
                 Services.last_check,
                 Services.last_state_change,
             ],
@@ -84,6 +86,8 @@ class LiveStatusHostServicesRepository:
                         state=ServiceState(row["state"]),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
+                        notifications_enabled=bool(row["notifications_enabled"]),
+                        is_flapping=bool(row["is_flapping"]),
                         summary=row["plugin_output"],
                         last_check=(
                             dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC)
@@ -111,6 +115,7 @@ class LiveStatusHostServicesRepository:
                 Services.acknowledged,
                 Services.scheduled_downtime_depth,
                 Services.notifications_enabled,
+                Services.is_flapping,
                 Services.host_alias,
                 Services.host_state,
                 Services.host_acknowledged,
@@ -148,6 +153,7 @@ class LiveStatusHostServicesRepository:
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
+            is_flapping=bool(row["is_flapping"]),
             host_alias=row["host_alias"],
             host_state=HostState(row["host_state"]),
             host_acknowledged=bool(row["host_acknowledged"]),

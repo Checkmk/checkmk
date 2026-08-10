@@ -46,9 +46,17 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
     if not service.notifications_enabled:
         modes.append(
             ServiceModeInfo(
-                icon_name="notif_disabled",
+                icon_name="notif-disabled",
                 link=service_view_link("service", service),
                 title=_("Notifications are disabled for this service"),
+            )
+        )
+    if service.is_flapping:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="flapping",
+                link=service_view_link("service", service),
+                title=_("This service is flapping"),
             )
         )
     return modes
@@ -79,6 +87,26 @@ def build_service_modes_by_id(
                     "service", site_id=site_id, hostname=hostname, service_name=service.name
                 ),
                 title=_("Problem acknowledged"),
+            )
+        )
+    if not service.notifications_enabled:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="notif-disabled",
+                link=service_view_link_by_id(
+                    "service", site_id=site_id, hostname=hostname, service_name=service.name
+                ),
+                title=_("Notifications are disabled for this service"),
+            )
+        )
+    if service.is_flapping:
+        modes.append(
+            ServiceModeInfo(
+                icon_name="flapping",
+                link=service_view_link_by_id(
+                    "service", site_id=site_id, hostname=hostname, service_name=service.name
+                ),
+                title=_("This service is flapping"),
             )
         )
     return modes

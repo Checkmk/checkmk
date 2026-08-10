@@ -228,6 +228,53 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   )
 })
 
+test('requests services that are not acknowledged and not in downtime', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
+  const panel = screen.getByRole('group', { name: 'Filter Mode' })
+  await userEvent.click(within(panel).getByLabelText('NOT Acknowledged'))
+  await userEvent.click(within(panel).getByLabelText('NOT In downtime'))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'and',
+          children: [
+            { type: 'condition', field: 'in_downtime', op: 'eq', value: false },
+            { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+          ]
+        }
+      }
+    })
+  )
+})
+
+test('clearing the mode filter restores the full, unfiltered list', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
+  let panel = screen.getByRole('group', { name: 'Filter Mode' })
+  await userEvent.click(within(panel).getByLabelText('Flapping'))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Mode' }))
+  panel = screen.getByRole('group', { name: 'Filter Mode' })
+  await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000 } })
+  )
+})
+
 test('resetting all filters restores the full, unfiltered list', async () => {
   mockServices([makeApiEntry()])
   renderApp()

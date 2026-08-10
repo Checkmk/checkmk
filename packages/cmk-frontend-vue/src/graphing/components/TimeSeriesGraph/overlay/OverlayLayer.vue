@@ -18,7 +18,21 @@ const props = defineProps<{
   pinX: number | null
 }>()
 
+const overlayRoot = ref<HTMLElement | null>(null)
 const overlayCanvas = ref<HTMLCanvasElement | null>(null)
+
+// Canvas takes colours as strings, so theme-dependent ones are resolved off the element
+// rather than referenced. Read per draw: the value is only correct once mounted and styled.
+const FOCUS_DOT_STROKE_FALLBACK = '#ffffff'
+
+function focusDotStroke(): string {
+  const root = overlayRoot.value
+  if (!root) {
+    return FOCUS_DOT_STROKE_FALLBACK
+  }
+  const resolved = getComputedStyle(root).getPropertyValue('--graphing-focus-dot-stroke').trim()
+  return resolved === '' ? FOCUS_DOT_STROKE_FALLBACK : resolved
+}
 
 function sizeCanvasToDevicePixelRatio(): void {
   const canvas = overlayCanvas.value
@@ -63,7 +77,7 @@ function redraw(): void {
         })
       }
     }
-    drawFocusDots(ctx, dots)
+    drawFocusDots(ctx, dots, focusDotStroke())
   }
 }
 
@@ -106,6 +120,7 @@ watch(() => props.pinX, redraw)
 
 <template>
   <div
+    ref="overlayRoot"
     class="graphing-overlay-layer"
     :style="{ width: `${plotWidth}px`, height: `${plotHeight}px` }"
   >
@@ -126,5 +141,13 @@ watch(() => props.pinX, redraw)
   position: absolute;
   top: 0;
   left: 0;
+}
+
+body[data-theme='facelift'] .graphing-overlay-layer {
+  --graphing-focus-dot-stroke: var(--color-conference-grey-100);
+}
+
+body[data-theme='modern-dark'] .graphing-overlay-layer {
+  --graphing-focus-dot-stroke: var(--color-white-100);
 }
 </style>

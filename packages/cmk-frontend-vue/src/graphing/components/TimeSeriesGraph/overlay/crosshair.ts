@@ -54,7 +54,11 @@ export interface FocusDot {
   closest: boolean
 }
 
-export function drawFocusDots(ctx: CanvasRenderingContext2D, dots: FocusDot[]): void {
+export function drawFocusDots(
+  ctx: CanvasRenderingContext2D,
+  dots: FocusDot[],
+  strokeColor: string
+): void {
   ctx.setLineDash([])
   for (const dot of dots) {
     if (dot.closest) {
@@ -62,7 +66,7 @@ export function drawFocusDots(ctx: CanvasRenderingContext2D, dots: FocusDot[]): 
     }
   }
   for (const dot of dots) {
-    drawDot(ctx, dot)
+    drawDot(ctx, dot, strokeColor)
   }
 }
 
@@ -74,12 +78,12 @@ function drawClosestHalo(ctx: CanvasRenderingContext2D, dot: FocusDot): void {
   ctx.stroke()
 }
 
-function drawDot(ctx: CanvasRenderingContext2D, dot: FocusDot): void {
+function drawDot(ctx: CanvasRenderingContext2D, dot: FocusDot, strokeColor: string): void {
   ctx.beginPath()
   ctx.arc(dot.x, dot.y, FOCUS_DOT_RADIUS, 0, Math.PI * 2)
   ctx.fillStyle = dot.color
   ctx.fill()
   ctx.lineWidth = 1
-  ctx.strokeStyle = COLOR_WHITE_100
+  ctx.strokeStyle = strokeColor
   ctx.stroke()
 }

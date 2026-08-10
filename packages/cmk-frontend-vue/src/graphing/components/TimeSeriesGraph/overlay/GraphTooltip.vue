@@ -98,15 +98,15 @@ const positionStyle = computed(() => {
   z-index: var(--z-index-tooltip-offset);
   min-width: 280px;
   max-width: 420px;
-  padding: var(--spacing);
-  background: var(--default-tooltip-background-color);
-  border: 1px solid var(--default-tooltip-text-color);
+  padding: var(--dimension-5);
+  background: var(--ux-theme-2);
+  border: 1px solid var(--font-color);
   border-radius: var(--border-radius);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
   line-height: normal;
   letter-spacing: 0.36px;
-  color: var(--default-tooltip-text-color);
+  color: var(--font-color);
   pointer-events: none;
 }
 
@@ -125,13 +125,13 @@ const positionStyle = computed(() => {
 .graphing-graph-tooltip__row {
   display: flex;
   align-items: center;
-  gap: var(--spacing);
+  gap: var(--dimension-3);
   padding: var(--spacing-half) 8px;
   border-radius: var(--border-radius);
 }
 
 .graphing-graph-tooltip__row--is-closest {
-  background: color-mix(in srgb, var(--default-tooltip-text-color) 10%, transparent);
+  background: color-mix(in srgb, var(--font-color) 10%, transparent);
 }
 
 .graphing-graph-tooltip__swatch {

@@ -34,7 +34,7 @@ function onClick(): void {
     @mousedown.stop
   >
     <svg class="graphing-pin-handle__svg" viewBox="0 0 20 20" aria-hidden="true">
-      <circle class="graphing-pin-handle__halo" cx="10" cy="10" r="14" />
+      <circle class="graphing-pin-handle__halo" cx="10" cy="10" r="12" />
       <circle class="graphing-pin-handle__body" cx="10" cy="10" r="9.5" />
       <g transform="translate(4 4)">
         <circle class="graphing-pin-handle__disc" cx="6" cy="6" r="6" />
@@ -52,10 +52,8 @@ function onClick(): void {
 
 <style scoped>
 .graphing-pin-handle {
-  --graph-pin-body: var(--color-conference-grey-100, #1e262e);
-  --graph-pin-outline: var(--color-white-100, #fff);
-  --graph-pin-disc: var(--color-corporate-green-50, #15d1a0);
-  --graph-pin-glyph: var(--color-conference-grey-100, #1e262e);
+  --graph-pin-disc: var(--color-corporate-green-50);
+  --graph-pin-glyph: var(--color-conference-grey-100);
 
   position: absolute;
   z-index: 3;
@@ -76,8 +74,8 @@ function onClick(): void {
 
 .graphing-pin-handle__halo {
   fill: none;
-  stroke: var(--color-white-10, rgb(255 255 255 / 10%));
-  stroke-width: 8px;
+  stroke: var(--graph-pin-halo);
+  stroke-width: 4px;
   opacity: 0;
 }
 
@@ -97,5 +95,17 @@ function onClick(): void {
 
 .graphing-pin-handle__glyph {
   fill: var(--graph-pin-glyph);
+}
+
+body[data-theme='facelift'] .graphing-pin-handle {
+  --graph-pin-body: var(--color-white-100);
+  --graph-pin-outline: var(--color-conference-grey-100);
+  --graph-pin-halo: var(--color-conference-grey-10);
+}
+
+body[data-theme='modern-dark'] .graphing-pin-handle {
+  --graph-pin-body: var(--color-conference-grey-100);
+  --graph-pin-outline: var(--color-white-100);
+  --graph-pin-halo: var(--color-white-10);
 }
 </style>

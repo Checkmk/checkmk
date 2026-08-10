@@ -88,7 +88,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=List(
                     title=Title("File patterns"),
                     help_text=Help(
-                        "<p>Here you can specify a list of filename patterns to be sent by the "
+                        "<p>Here you can specify a list of file name patterns to be sent by the "
                         "agent in the section <tt>fileinfo</tt>. UNC paths with globbing patterns "
                         "are used here, e.g. <tt>\\\\hostname\\share name\\*\\foo\\*.log</tt>. "
                         "Wildcards are not allowed in host or share names. "
@@ -97,7 +97,7 @@ def _parameter_form() -> Dictionary:
                         "of files as an entity and monitor the count, total size, the largest, "
                         "smallest oldest or newest file. Note: if you specify more than one matching rule, then "
                         "<b>all</b> matching rules will be used for defining pattern - not just the "
-                        " first one.</p>"
+                        "first one.</p>"
                     ),
                     element_template=String(field_size=FieldSize.LARGE),
                     add_element_label=Label("Add pattern"),

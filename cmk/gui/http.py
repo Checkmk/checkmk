@@ -16,6 +16,7 @@ import time
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass
 from enum import auto, StrEnum
 from typing import Any, cast, Literal, overload, Protocol
 
@@ -33,6 +34,69 @@ from cmk.web.utils.urls import is_allowed_url
 
 UploadedFile = tuple[str, str, bytes]
 HTTPMethod = Literal["get", "put", "post", "delete", "patch"]
+
+
+@dataclass(frozen=True)
+class ContentSecurityPolicy:
+    """A complete Content-Security-Policy for a single HTTP response.
+
+    ``LEGACY_CONTENT_SECURITY_POLICY`` is the policy Checkmk ships; a page can
+    opt into a stricter one via ``Response.set_content_security_policy``. See
+    CMK-31353.
+    """
+
+    directives: Mapping[str, str]
+
+    def serialize(self) -> str:
+        return "; ".join(f"{name} {value}" for name, value in self.directives.items())
+
+    def with_extra_source(self, directive: str, source: str) -> "ContentSecurityPolicy":
+        """Return a copy with ``source`` appended to ``directive`` (e.g. to
+        allow an external SAML IdP as an extra form-action target)."""
+        directives = dict(self.directives)
+        existing = directives.get(directive, "")
+        directives[directive] = f"{existing} {source}".strip()
+        return ContentSecurityPolicy(directives=directives)
+
+
+# The policy Checkmk has shipped historically (set by the site Apache in
+# omd/packages/apache-omd/skel/etc/apache/conf.d/security.conf). Kept as the
+# default so nothing regresses while pages are migrated to the strict policy.
+# NOTE: the source list values are semantically identical to the Apache string
+# (insignificant whitespace aside); an equivalence test guards this.
+LEGACY_CONTENT_SECURITY_POLICY = ContentSecurityPolicy(
+    directives={
+        "default-src": "'self' 'unsafe-inline' 'unsafe-eval' ssh: rdp:",
+        "img-src": "'self' data: https://*.tile.openstreetmap.org/",
+        "connect-src": "'self' https://crash.checkmk.com/",
+        "frame-ancestors": "'self'",
+        "base-uri": "'self'",
+        "form-action": "'self' javascript: 'unsafe-inline'",
+        "object-src": "'self'",
+        "worker-src": "'self' blob:",
+    }
+)
+
+# Target policy of the "Prevent XSS attacks with stricter CSP" initiative
+# (CMK-31353): no inline scripts/handlers, no eval. A page may only opt into
+# this once it is free of inline JavaScript. The non-script directives are kept
+# in sync with the legacy policy above.
+STRICT_CONTENT_SECURITY_POLICY = ContentSecurityPolicy(
+    directives={
+        "default-src": "'self'",
+        "script-src": "'self'",
+        # Vue style bindings need inline styles; style injection is far less
+        # dangerous than script injection.
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: https://*.tile.openstreetmap.org/",
+        "connect-src": "'self' https://crash.checkmk.com/",
+        "frame-ancestors": "'self'",
+        "base-uri": "'self'",
+        "form-action": "'self'",
+        "object-src": "'none'",
+        "worker-src": "'self' blob:",
+    }
+)
 
 
 class ContentDispositionType(StrEnum):
@@ -665,6 +729,16 @@ class Response(flask.Response):
         self.headers["Content-Security-Policy"] = (
             f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
         )
+
+    def set_content_security_policy(self, policy: ContentSecurityPolicy) -> None:
+        """Set a complete Content-Security-Policy for this response.
+
+        Use this to opt a page into a stricter policy than the default. See
+        cmk.gui.http.STRICT_CONTENT_SECURITY_POLICY and CMK-31353."""
+        self.headers["Content-Security-Policy"] = policy.serialize()
+
+    def has_content_security_policy(self) -> bool:
+        return "Content-Security-Policy" in self.headers
 
     def set_content_disposition(self, header_type: ContentDispositionType, filename: str) -> None:
         """Define the Content-Disposition header here, this HTTP header controls how

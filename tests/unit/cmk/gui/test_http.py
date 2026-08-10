@@ -663,3 +663,66 @@ def test_remote_ip() -> None:
     )
     assert r.remote_addr == "::1"
     assert r.remote_ip == "23.23.23.23"
+
+
+def _parse_csp(value: str) -> dict[str, frozenset[str]]:
+    """Parse a CSP header into {directive: {sources}} for whitespace-insensitive
+    comparison (CSP tokenization ignores insignificant whitespace)."""
+    out: dict[str, frozenset[str]] = {}
+    for part in value.split(";"):
+        tokens = part.split()
+        if tokens:
+            out[tokens[0]] = frozenset(tokens[1:])
+    return out
+
+
+def test_content_security_policy_serialize() -> None:
+    policy = http.ContentSecurityPolicy(
+        directives={"default-src": "'self'", "script-src": "'self'"}
+    )
+    assert policy.serialize() == "default-src 'self'; script-src 'self'"
+
+
+def test_legacy_policy_matches_current_apache_header() -> None:
+    """Safety gate (CMK-31353): the Python LEGACY policy must be identical to
+    the header the site Apache serves today, before CSP is removed from Apache.
+    Source: omd/packages/apache-omd/skel/etc/apache/conf.d/security.conf."""
+    apache_header = (
+        "default-src 'self' 'unsafe-inline' 'unsafe-eval' ssh: rdp:; "
+        "img-src 'self' data: https://*.tile.openstreetmap.org/ ; "
+        "connect-src 'self' https://crash.checkmk.com/; "
+        "frame-ancestors 'self' ; base-uri 'self'; "
+        "form-action 'self' javascript: 'unsafe-inline'; object-src 'self'; "
+        "worker-src 'self' blob:"
+    )
+    assert _parse_csp(http.LEGACY_CONTENT_SECURITY_POLICY.serialize()) == _parse_csp(apache_header)
+
+
+def test_set_content_security_policy() -> None:
+    r = http.Response()
+    assert not r.has_content_security_policy()
+    r.set_content_security_policy(http.STRICT_CONTENT_SECURITY_POLICY)
+    assert r.has_content_security_policy()
+    assert r.headers["Content-Security-Policy"] == http.STRICT_CONTENT_SECURITY_POLICY.serialize()
+
+
+def test_content_security_policy_with_extra_source() -> None:
+    policy = http.ContentSecurityPolicy(directives={"form-action": "'self'"})
+    extended = policy.with_extra_source("form-action", "https://idp.example/")
+    assert extended.directives["form-action"] == "'self' https://idp.example/"
+    # original is unchanged (frozen dataclass semantics)
+    assert policy.directives["form-action"] == "'self'"
+
+
+def test_strict_policy_forbids_unsafe_script_sources() -> None:
+    parsed = _parse_csp(http.STRICT_CONTENT_SECURITY_POLICY.serialize())
+    assert parsed["default-src"] == frozenset({"'self'"})
+    assert parsed["script-src"] == frozenset({"'self'"})
+    assert parsed["object-src"] == frozenset({"'none'"})
+    # 'unsafe-inline' is acceptable only for styles, never for scripts
+    for directive, sources in parsed.items():
+        if directive == "style-src":
+            continue
+        assert "'unsafe-inline'" not in sources
+        assert "'unsafe-eval'" not in sources
+        assert "javascript:" not in sources

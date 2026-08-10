@@ -20,8 +20,9 @@ function renderChart(slices: DonutSlice[] = SLICES) {
 test('renders one arc segment and one legend entry per slice', () => {
   const { container } = renderChart()
 
+  expect(container.querySelectorAll('path')).toHaveLength(2)
   // The empty-track circle is only rendered when there are no slices.
-  expect(container.querySelectorAll('circle')).toHaveLength(2)
+  expect(container.querySelectorAll('circle')).toHaveLength(0)
   expect(container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')).toHaveLength(2)
 })
 
@@ -49,16 +50,27 @@ test('highlights the top slice in the center', () => {
 test('colors each arc segment with its slice color', () => {
   const { container } = renderChart()
 
-  const strokes = [...container.querySelectorAll<SVGCircleElement>('circle')].map((el) =>
-    el.getAttribute('stroke')
+  const fills = [...container.querySelectorAll<SVGPathElement>('path')].map((el) =>
+    el.getAttribute('fill')
   )
   // The named colors resolve to their theme palette CSS variables.
-  expect(strokes).toEqual(['var(--color-light-blue-50)', 'var(--color-mid-grey-50)'])
+  expect(fills).toEqual(['var(--color-light-blue-50)', 'var(--color-mid-grey-50)'])
+})
+
+test('draws a lone slice as a closed ring', () => {
+  const { container } = renderChart([{ key: 'tls', label: 'TLS', value: 90, color: 'blue' }])
+
+  // A closed ring is all arcs; the straight edges of a segment would show up
+  // as line commands.
+  expect(
+    container.querySelector('.network-flow-cmk-donut-chart__slice')!.getAttribute('d')
+  ).not.toContain('L')
 })
 
 test('renders an empty track and no center when there are no slices', () => {
   const { container } = renderChart([])
 
+  expect(container.querySelectorAll('path')).toHaveLength(0)
   expect(container.querySelectorAll('circle')).toHaveLength(1)
   expect(container.querySelector('.network-flow-cmk-donut-chart__empty-track')).not.toBeNull()
   expect(container.querySelector('.network-flow-cmk-donut-chart__center')).toBeNull()

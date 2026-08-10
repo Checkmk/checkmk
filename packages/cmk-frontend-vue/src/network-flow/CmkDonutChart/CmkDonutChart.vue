@@ -4,53 +4,47 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed } from 'vue'
 
 import { chartColorCss } from '../colors'
-import type { CmkDonutChartProps } from './types'
+import type { CmkDonutChartProps, DonutSlice } from './types'
 
 const props = defineProps<CmkDonutChartProps>()
 
-// SVG geometry. The arcs are drawn as stroke segments on a single circle using
-// stroke-dasharray/dashoffset (the same technique as CmkProgressCircle), so no
-// charting dependency is needed. The <svg> is rotated -90deg so the first slice
-// starts at the top (12 o'clock) instead of at 3 o'clock.
-const SIZE = 120
-const STROKE = 20
-const RADIUS = (SIZE - STROKE) / 2
-const CENTER = SIZE / 2
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+// The viewBox is centered on the origin, where d3 draws its arcs.
+const SIZE = 300
+const OUTER_RADIUS = 130
+const INNER_RADIUS = 110
+const TRACK_RADIUS = (OUTER_RADIUS + INNER_RADIUS) / 2
+const TRACK_STROKE = OUTER_RADIUS - INNER_RADIUS
+const SLICE_GAP_RADIANS = (1.5 * Math.PI) / 180
+
+const sliceArc = arc<PieArcDatum<DonutSlice>>().innerRadius(INNER_RADIUS).outerRadius(OUTER_RADIUS)
 
 const total = computed(() => props.slices.reduce((sum, slice) => sum + slice.value, 0))
 
 interface Segment {
   key: string
   color: string
-  dash: number
-  gap: number
-  offset: number
+  path: string
 }
 
-// One dashed segment per slice: the dash covers the slice's fraction of the
-// ring, the gap covers the rest, and a growing negative offset moves each
-// segment to start where the previous one ended.
 const segments = computed<Segment[]>(() => {
   if (total.value <= 0) {
     return []
   }
-  let consumed = 0
-  return props.slices.map((slice) => {
-    const dash = (slice.value / total.value) * CIRCUMFERENCE
-    const segment: Segment = {
-      key: slice.key,
-      color: chartColorCss(slice.color),
-      dash,
-      gap: CIRCUMFERENCE - dash,
-      offset: -consumed
-    }
-    consumed += dash
-    return segment
-  })
+  const layout = pie<DonutSlice>()
+    .sort(null)
+    .value((slice) => slice.value)
+    // A lone slice gets no gap: it would otherwise be a full ring with a notch
+    // cut out of it.
+    .padAngle(props.slices.length > 1 ? SLICE_GAP_RADIANS : 0)
+  return layout(props.slices).map((datum) => ({
+    key: datum.data.key,
+    color: chartColorCss(datum.data.color),
+    path: sliceArc(datum) ?? ''
+  }))
 })
 
 function percent(value: number): number {
@@ -61,7 +55,7 @@ function percentText(value: number): string {
   return `${percent(value).toFixed(1)}%`
 }
 
-// The center highlights the top slice (the caller ranks them, so it is first).
+// The caller ranks the slices, so the top one is first.
 const topSlice = computed(() => props.slices[0])
 </script>
 
@@ -70,30 +64,23 @@ const topSlice = computed(() => props.slices[0])
     <div class="network-flow-cmk-donut-chart__figure">
       <svg
         class="network-flow-cmk-donut-chart__svg"
-        :viewBox="`0 0 ${SIZE} ${SIZE}`"
+        :viewBox="`${-SIZE / 2} ${-SIZE / 2} ${SIZE} ${SIZE}`"
         role="img"
         preserveAspectRatio="xMidYMid meet"
       >
         <circle
           v-if="!segments.length"
           class="network-flow-cmk-donut-chart__empty-track"
-          :cx="CENTER"
-          :cy="CENTER"
-          :r="RADIUS"
-          :stroke-width="STROKE"
+          :r="TRACK_RADIUS"
+          :stroke-width="TRACK_STROKE"
           fill="none"
         />
-        <circle
+        <path
           v-for="segment in segments"
           :key="segment.key"
-          :cx="CENTER"
-          :cy="CENTER"
-          :r="RADIUS"
-          :stroke="segment.color"
-          :stroke-width="STROKE"
-          fill="none"
-          :stroke-dasharray="`${segment.dash} ${segment.gap}`"
-          :stroke-dashoffset="segment.offset"
+          class="network-flow-cmk-donut-chart__slice"
+          :d="segment.path"
+          :fill="segment.color"
         />
       </svg>
       <div v-if="topSlice" class="network-flow-cmk-donut-chart__center">
@@ -144,7 +131,12 @@ const topSlice = computed(() => props.slices[0])
 .network-flow-cmk-donut-chart__svg {
   width: 100%;
   height: 100%;
-  transform: rotate(-90deg);
+}
+
+/* The divider takes the colour of the surface behind the chart. */
+.network-flow-cmk-donut-chart__slice {
+  stroke: var(--db-content-bg-color);
+  stroke-width: 1.5;
 }
 
 .network-flow-cmk-donut-chart__empty-track {

@@ -440,7 +440,7 @@ def _get_options() -> list[tuple[str, ValueSpec]]:
                 label=_("Skip local instances that are not running"),
                 help=_(
                     "If enabled, the plug-in will not attempt to connect to "
-                    "locally detected instances that are currently stopped."
+                    "locally detected instances that are currently stopped. "
                     "Only applicable for Windows."
                 ),
                 default_value=False,

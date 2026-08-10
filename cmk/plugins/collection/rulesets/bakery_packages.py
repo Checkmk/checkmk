@@ -59,11 +59,11 @@ def _form_spec() -> Dictionary:
                         ".tar.gz packages that result from baking agents. "
                         "Note: In order to avoid name changes in packages, the uncompressed TAR "
                         "packages also have a suffix of .tar.gz. Technically, they are compressed "
-                        "using gzip with a compression level of 0."
+                        "using gzip with a compression level of 0. "
                         "It's not recommended to activate compression unless you want to deploy "
-                        "large files resulting from custom files or your own bakery plugins. "
+                        "large files resulting from custom files or your own Bakery plug-ins. "
                         "All large files (larger than a few kb, mainly the agent updater and the "
-                        "agent controller) provided by Checkmk are precompressed and won't benefit "
+                        "Agent Controller) provided by Checkmk are precompressed and won't benefit "
                         "from enabling compression."
                     ),
                     label=Label("Apply compression"),

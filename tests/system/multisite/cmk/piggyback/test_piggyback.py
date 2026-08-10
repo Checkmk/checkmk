@@ -270,6 +270,7 @@ def _check_config_redistributed(
         config_inodes[site.id] = current_inode
 
 
+@pytest.mark.skip("flaky - CMK-35803")
 @pytest.mark.skip_if_not_edition("managed")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """
@@ -297,6 +298,7 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
         _check_config_redistributed([central_site, remote_site], config_inodes)
 
 
+@pytest.mark.skip("flaky - CMK-35803")
 @pytest.mark.skip_if_not_edition("managed")
 def test_config_sync_source_remote_remote_diff_customer(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],

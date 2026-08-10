@@ -22,10 +22,10 @@ metric_oracle_physical_writes = metrics.Metric(
 
 graph_oracle_physical_io_oracle_physical_io = graphs.Bidirectional(
     name="oracle_physical_io",
-    title=Title("Oracle physical IO"),
+    title=Title("Oracle physical I/O"),
     lower=graphs.Graph(
         name="oracle_physical_writes",
-        title=Title("Oracle physical IO"),
+        title=Title("Oracle physical I/O"),
         compound_lines=["oracle_physical_writes"],
     ),
     upper=graphs.Graph(

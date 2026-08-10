@@ -27,9 +27,9 @@ node_software_applications_oracle = Node(
 node_software_applications_oracle_dataguard_stats = Node(
     name="software_applications_oracle_dataguard_stats",
     path=["software", "applications", "oracle", "dataguard_stats"],
-    title=Title("Oracle dataguard statistics"),
+    title=Title("Oracle Data Guard statistics"),
     table=Table(
-        view=View(name="invoradataguardstats", title=Title("Oracle dataguard statistics")),
+        view=View(name="invoradataguardstats", title=Title("Oracle Data Guard statistics")),
         columns={
             "sid": TextField(Title("SID")),
             "db_unique": TextField(Title("Name")),

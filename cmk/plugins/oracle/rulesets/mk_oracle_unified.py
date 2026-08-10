@@ -73,7 +73,7 @@ SECTIONS: Sequence[SectionOptions] = (
     ),
     SectionOptions(
         section="dataguard_stats",
-        title=Title("Dataguard statistics"),
+        title=Title("Data Guard statistics"),
         mode="synchronous",
     ),
     SectionOptions(

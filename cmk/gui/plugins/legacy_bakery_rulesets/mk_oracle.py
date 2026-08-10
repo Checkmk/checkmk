@@ -118,7 +118,7 @@ def _agent_config_mk_oracle_oracle_sections() -> Sequence[Section | SectionWithH
         Section("undostat", "sync", _("Undo statistics")),
         Section("recovery_area", "sync", _("Recovery area")),
         Section("recovery_status", "sync", _("Recovery status")),
-        Section("dataguard_stats", "sync", _("Dataguard statistics")),
+        Section("dataguard_stats", "sync", _("Data Guard statistics")),
         Section("tablespaces", "async", _("Tablespaces")),
         Section("ts_quotas", None, _("TS quotas (not used)")),
         Section("rman", "async", _("RMAN backups")),

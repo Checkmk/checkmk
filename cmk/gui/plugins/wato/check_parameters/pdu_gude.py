@@ -48,7 +48,7 @@ def _parameter_valuespec_pdu_gude() -> Dictionary:
             (
                 "V",
                 Tuple(
-                    title=_("Voltage on Power Channel"),
+                    title=_("Voltage on power channel"),
                     elements=[
                         Integer(title=_("warning if below"), unit=_("V")),
                         Integer(title=_("critical if below"), unit=_("V")),

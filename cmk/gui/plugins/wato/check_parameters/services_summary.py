@@ -20,7 +20,7 @@ def _parameter_valuespec_services_summary() -> Dictionary:
             (
                 "ignored",
                 ListOfStrings(
-                    title=_("Ignored autostart services"),
+                    title=_("Ignored auto-start services"),
                     help=_(
                         "Regular expressions matching the beginning of the internal name "
                         "or the description of the service. "

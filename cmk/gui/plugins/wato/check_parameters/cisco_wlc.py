@@ -17,7 +17,7 @@ def _parameter_valuespec_cisco_wlc() -> Dictionary:
         help=_(
             "Here, you can set which alert type is set, when the given "
             "access point is missing (might be powered off). The access point "
-            "can be specified by the AP name or the AP model"
+            "can be specified by the AP name or the AP model."
         ),
         elements=[
             (

@@ -26,7 +26,7 @@ def _item_spec_oracle_jobs() -> TextInput:
         title=_("Scheduler job name"),
         help=_(
             "Here, you can set explicit scheduler jobs by defining them via SID, job owner "
-            "and job name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"
+            "and job name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>."
         ),
         regex=r".+\..+",
         allow_empty=False,

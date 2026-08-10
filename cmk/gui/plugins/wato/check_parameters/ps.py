@@ -718,7 +718,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                     world=Labels.World.CONFIG,
                     title=_("Host label"),
                     help=_(
-                        "Here you can set host labels that automatically get created when discovering the services."
+                        "Here, you can set host labels that automatically get created when discovering the services."
                     ),
                 ),
             ),

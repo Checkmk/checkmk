@@ -59,7 +59,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="docsis_cm_status",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("ID of the Entry")),
+        item_spec=lambda: TextInput(title=_("ID of the entry")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_docsis_cm_status,
         title=lambda: _("Docsis cable modem status"),

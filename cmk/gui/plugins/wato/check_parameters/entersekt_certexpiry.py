@@ -35,6 +35,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_entersekt_certexpiry,
-        title=lambda: _("Entersekt Certificate Expiration"),
+        title=lambda: _("Entersekt certificate expiration"),
     )
 )

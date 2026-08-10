@@ -19,7 +19,7 @@ def _parameter_valuespec_mssql_stats() -> Dictionary:
             (
                 "batch_requests/sec",
                 Tuple(
-                    title=_("Batch Requests/sec"),
+                    title=_("Batch requests/sec"),
                     elements=[
                         Float(title=_("warning at"), unit=_("/sec"), default_value=100000.0),
                         Float(title=_("critical at"), unit=_("/sec"), default_value=200000.0),

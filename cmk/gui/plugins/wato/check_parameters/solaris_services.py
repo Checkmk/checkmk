@@ -53,7 +53,7 @@ def _valuespec_inventory_solaris_services_rules() -> Dictionary:
                 Alternative(
                     title=_("Service name"),
                     elements=[
-                        FixedValue(value="full_descr", title=_("Full Description"), totext=""),
+                        FixedValue(value="full_descr", title=_("Full description"), totext=""),
                         FixedValue(
                             value="descr_without_prefix",
                             title=_("Description without type prefix"),

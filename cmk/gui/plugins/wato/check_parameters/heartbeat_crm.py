@@ -33,7 +33,7 @@ def _valuespec_inventory_heartbeat_crm_rules() -> Dictionary:
             (
                 "naildown_resources",
                 Checkbox(
-                    title=_("Naildown the resources"),
+                    title=_("Determine the resources"),
                     label=_("Mark the nodes of the resources as preferred one"),
                     help=_(
                         "Determines the resources for the node which is holding them during discovery. "

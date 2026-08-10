@@ -18,7 +18,7 @@ def _parameter_valuespec_skype_conferencing() -> Dictionary:
             (
                 "incomplete_calls",
                 Dictionary(
-                    title=_("Incomplete Calls"),
+                    title=_("Incomplete calls"),
                     elements=[
                         (
                             "upper",

@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 def _parameter_valuespec_ucs_bladecenter_chassis_voltage() -> Dictionary:
     return Dictionary(
-        help=_("Here you can configure the 3.3V and 12V voltage levels for each chassis."),
+        help=_("Here, you can configure the 3.3V and 12V voltage levels for each chassis."),
         elements=[
             (
                 "levels_3v_lower",
@@ -67,6 +67,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Chassis"), help=_("The identifier of the chassis.")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ucs_bladecenter_chassis_voltage,
-        title=lambda: _("UCS Bladecenter Chassis Voltage Levels"),
+        title=lambda: _("UCS Bladecenter chassis voltage levels"),
     )
 )

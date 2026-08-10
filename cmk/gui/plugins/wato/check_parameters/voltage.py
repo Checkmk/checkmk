@@ -21,7 +21,7 @@ def _parameter_valuespec_voltage() -> Dictionary:
             (
                 "levels",
                 Tuple(
-                    title=_("Upper levels for Voltage"),
+                    title=_("Upper levels for voltage"),
                     elements=[
                         Float(title=_("Warning at"), default_value=15.00, unit="V"),
                         Float(title=_("Critical at"), default_value=16.00, unit="V"),

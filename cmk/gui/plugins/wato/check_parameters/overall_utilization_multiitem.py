@@ -16,10 +16,10 @@ def _parameter_valuespec_overall_utilization_multiitem() -> Dictionary:
     return Dictionary(
         help=_(
             # xgettext: no-python-format
-            "The overall utilization as aggregation of various utilizatons"
-            "(cpu, memory, etc.) of components of a device (e.g. rack units"
-            "as components of a rack server as device) in the last check interval."
-            "The possible range is from 0% to 100%"
+            "The overall utilization as aggregation of various utilizations"
+            " (CPU, memory, etc.) of components of a device (e.g. rack units"
+            " as components of a rack server as device) in the last check interval."
+            " The possible range is from 0% to 100%"
         ),
         elements=[
             (

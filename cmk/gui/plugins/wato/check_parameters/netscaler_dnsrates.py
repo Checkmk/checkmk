@@ -46,6 +46,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_dnsrates,
-        title=lambda: _("Citrix Netscaler DNS counter rates"),
+        title=lambda: _("Citrix NetScaler DNS counter rates"),
     )
 )

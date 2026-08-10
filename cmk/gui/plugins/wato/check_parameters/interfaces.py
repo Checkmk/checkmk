@@ -509,7 +509,7 @@ def _valuespec_if_groups() -> Alternative:
     return Alternative(
         title=_("Network interface groups"),
         help=_(
-            "Normally the Interface checks create a single service for interface. "
+            "Normally, the interface checks create a single service for interface. "
             "By defining if-group patterns multiple interfaces can be combined together. "
             "A single service is created for this interface group showing the total traffic amount "
             "of its members. You can configure if interfaces which are identified as group interfaces "
@@ -979,7 +979,7 @@ def _parameter_valuespec_if() -> Dictionary:
                 "unit",
                 DropdownChoice(
                     title=_("Measurement unit"),
-                    help=_("Here you can specifiy the measurement unit of the network interface"),
+                    help=_("Here, you can specify the measurement unit of the network interface."),
                     default_value="byte",
                     choices=[
                         ("bit", _("Bits")),
@@ -1013,7 +1013,7 @@ def _parameter_valuespec_if() -> Dictionary:
                         title=_("Direction"),
                         orientation="horizontal",
                         choices=[
-                            ("both", _("In / Out"), vs_interface_traffic()),
+                            ("both", _("In / out"), vs_interface_traffic()),
                             ("in", _("In"), vs_interface_traffic()),
                             ("out", _("Out"), vs_interface_traffic()),
                         ],

@@ -38,6 +38,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fortisandbox_queues,
-        title=lambda: _("Fortinet FortiSandbox Queue Length"),
+        title=lambda: _("Fortinet FortiSandbox queue length"),
     )
 )

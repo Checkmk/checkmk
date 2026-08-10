@@ -47,6 +47,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of node")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_nodes,
-        title=lambda: _("Elasticsearch Nodes"),
+        title=lambda: _("Elasticsearch nodes"),
     )
 )

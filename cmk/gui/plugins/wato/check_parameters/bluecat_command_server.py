@@ -52,6 +52,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_command_server,
-        title=lambda: _("BlueCat Command Server settings"),
+        title=lambda: _("BlueCat command server settings"),
     )
 )

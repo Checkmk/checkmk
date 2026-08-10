@@ -38,6 +38,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=lambda: TextInput(title=_("The Index of the Overcurrent Protector")),
         parameter_valuespec=_parameter_valuespec_ocprot_current,
-        title=lambda: _("Electrical Current of Overcurrent Protectors"),
+        title=lambda: _("Electrical current of overcurrent protectors"),
     )
 )

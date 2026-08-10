@@ -25,7 +25,7 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
     return Migrate(
         Dictionary(
             help=_(
-                "The Data-Guard statistics are available in Oracle Enterprise Edition with enabled Data-Guard. "
+                "The Data Guard statistics are available in Oracle Enterprise Edition with enabled Data Guard. "
                 "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
                 "The apply and transport lag can be configured with this rule."
             ),
@@ -46,7 +46,7 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                         title=_("Check state of broker on primary: "),
                         default_value=False,
                         help=_(
-                            "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
+                            "Data Guards with dg_broker_start=false need 'Ignore Brokerstate' to monitor "
                             "the Switchoverstate on Primary."
                         ),
                     ),
@@ -54,7 +54,7 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                 (
                     "apply_lag",
                     Tuple(
-                        title=_("Apply lag: Maximum time"),
+                        title=_("Apply lag: maximum time"),
                         help=_(
                             "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."
                         ),
@@ -71,12 +71,12 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                 (
                     "apply_lag_min",
                     Tuple(
-                        title=_("Apply lag: Minimum time"),
+                        title=_("Apply lag: minimum time"),
                         help=_(
                             "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
                             "This is only useful if also <i>%(maximum_time)s</i> has been configured."
                         )
-                        % {"maximum_time": _("Apply lag: Maximum time")},
+                        % {"maximum_time": _("Apply lag: maximum time")},
                         elements=[
                             Age(
                                 title=_("Warning at"),
@@ -90,7 +90,7 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                 (
                     "missing_apply_lag_state",
                     MonitoringState(
-                        title=_("Apply lag: State in case the apply lag is not known"),
+                        title=_("Apply lag: state in case the apply lag is not known"),
                         default_value=1,
                     ),
                 ),
@@ -122,6 +122,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_dataguard_stats,
-        title=lambda: _("Oracle Data-Guard Stats"),
+        title=lambda: _("Oracle Data Guard stats"),
     )
 )

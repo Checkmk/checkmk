@@ -655,7 +655,7 @@ class DisableHostNotifications(Command):
 
     @override
     def name(self) -> str:
-        return "ENABLE_HOST_NOTIFICATIONS"
+        return "DISABLE_HOST_NOTIFICATIONS"
 
     @override
     def args(self) -> list[Command.Arguments]:
@@ -683,7 +683,7 @@ class DisableServiceNotifications(Command):
 
     @override
     def name(self) -> str:
-        return "ENABLE_SVC_NOTIFICATIONS"
+        return "DISABLE_SVC_NOTIFICATIONS"
 
     @override
     def args(self) -> list[Command.Arguments]:

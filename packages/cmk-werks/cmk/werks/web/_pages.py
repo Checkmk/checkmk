@@ -52,7 +52,7 @@ class WerkDetailPage(Page):
         _row(builder, _("Title"), HtmlBuilder.render_b(_render_werk_title(werk)))
         _row(builder, _("Component"), translator.component_of(werk))
         _row(builder, _("Date"), werk.date.astimezone().strftime(_TIME_FORMAT))
-        _row(builder, _("Checkmk Version"), werk.version)
+        _row(builder, _("Checkmk version"), werk.version)
         _row(
             builder,
             _("Level"),

@@ -56,9 +56,9 @@ def _deployment_mode_form() -> CascadingSingleChoice:
                     Title("Agent user"),
                     Help(
                         'This setting will lead to a "non-root agent deployment". Both agent'
-                        " and agent controller will be operated under the configured agent user. "
+                        " and Agent Controller will be operated under the configured agent user. "
                         "Additionally, the agent package will set proper permissions on the "
-                        " agent package's resources."
+                        "agent package's resources."
                     ),
                 ),
             ),

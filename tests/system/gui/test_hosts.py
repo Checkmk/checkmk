@@ -51,7 +51,7 @@ def test_navigate_to_host_properties(host: HostProperties) -> None:
 
     # - check absence of errors and warnings
     expect(host.main_area.locator("div.error")).to_have_count(0)
-    expect(host.main_area.locator("div.warning")).to_have_count(0)
+    host.main_area.check_no_warnings()
 
 
 def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site) -> None:

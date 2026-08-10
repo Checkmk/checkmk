@@ -73,7 +73,7 @@ test('adding a source appends an auto-expanded draft row', async () => {
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'B'])
   expect(store.items.value[1]).toMatchObject({ type: 'rrd_metric', host_name: null })
   // The new row opens expanded, showing its source configuration form.
-  expect(await screen.findByText('Single metric')).toBeInTheDocument()
+  expect(await screen.findByText('Single selection')).toBeInTheDocument()
 })
 
 test('the added row is scrolled into view', async () => {

@@ -36,7 +36,7 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
   return store
 }
 
-test('toggling to Dynamic query converts the row, keeping the metric and consolidation', async () => {
+test('toggling to multiple selections converts the row, keeping the metric and consolidation', async () => {
   const store = renderForm({
     ...newRrdMetricDraft('A', '#28a2f3'),
     host_name: 'h',
@@ -53,7 +53,7 @@ test('toggling to Dynamic query converts the row, keeping the metric and consoli
   expect('color' in item).toBe(false)
 })
 
-test('toggling back to Single metric restores a colored metric row with an empty selection', async () => {
+test('toggling back to single selection restores a colored metric row with an empty selection', async () => {
   const store = renderForm({ ...newRrdMetricDraft('A', '#28a2f3'), metric_name: 'util' })
 
   await fireEvent.click(screen.getByRole('switch'))

@@ -38,8 +38,8 @@ function onModeChange(isQuery: boolean): void {
   <div class="graphing-rrd-form">
     <CmkLabeledSwitch
       :model-value="item.type === 'rrd_query'"
-      :off-label="_t('Single metric')"
-      :on-label="_t('Dynamic query')"
+      :off-label="_t('Single selection')"
+      :on-label="_t('Multiple selections')"
       @update:model-value="onModeChange"
     />
 

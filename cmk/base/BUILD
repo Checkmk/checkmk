@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 py_library(
@@ -179,7 +178,6 @@ py_library(
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:diagnostics",
-        requirement("requests"),
     ],
 )
 

@@ -155,11 +155,6 @@ def test_no_errors_on_combined_graphs_page(
     # ), "There are broken graphs on the 'Combined graphs - Service search' page"
 
 
-# --- Graphing engine skeletons (CMK-35973): R1.3 Areas 2, 9 --------------------
-# Complete once the engine renders on these surfaces: reach the graph via
-# GraphAccessor.graph_root.
-
-
 def test_service_graphs_render_through_the_engine(
     service_graphs: ServiceGraphs,
     javascript_errors: list[str],
@@ -222,16 +217,72 @@ def test_service_graphs_have_titles_and_legend_no_broken(
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_combined_graphs_have_no_broken_graphs(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
+def test_combined_graphs_render_through_the_engine(
+    combined_graphs_page: CombinedGraphsServiceSearch,
+    javascript_errors: list[str],
+    requested_urls: list[str],
 ) -> None:
-    """CO-02 (R1.3 Area 2): the combined-graphs page renders with no broken graphs.
+    """Every card of the combined-graphs page is rendered by the engine.
 
-    Do: scroll through all loaded graph cards on the combined-graphs page.
-    Assert: zero broken-graph indicators; no uncaught JS errors.
+    The legacy renderer is still live and still serves other surfaces, so showing that the
+    engine renders here says nothing on its own: the legacy path has to be shown unused as
+    well.
+
+    Each card is checked for its own plot rather than for an engine element of its own: the
+    page mounts a single component holding all of them, so only the per-card plot separates
+    "the engine drew every card" from "it drew the first one".
     """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+    expect(
+        combined_graphs_page.panels, "The engine rendered no graph card at all"
+    ).not_to_have_count(0)
+    expect(
+        GraphAccessor(combined_graphs_page).engine_graph_group(GraphContainment.PAGE_DIRECT),
+        "The page did not mount exactly one engine component to hold its cards",
+    ).to_have_count(1)
+    for index, panel in enumerate(combined_graphs_page.all_panels()):
+        expect(panel.graph.canvas, f"Graph card {index} rendered no plot").to_be_visible()
+    expect(
+        GraphAccessor(combined_graphs_page).container(GraphContainment.PAGE_DIRECT),
+        "The legacy graph container is still on the page beside the engine's",
+    ).to_have_count(0)
+
+    # Without this, a listener that collected nothing would pass the check below as quietly
+    # as a page that really had stopped using the legacy renderer.
+    assert any(_ENGINE_GRAPH_ENDPOINT in url for url in requested_urls), (
+        f"No graph data was fetched at all, so nothing here observed a card being "
+        f"rendered: {requested_urls}"
+    )
+    legacy_requests = [url for url in requested_urls if _LEGACY_GRAPH_ENDPOINT in url]
+
+    assert not legacy_requests, f"The page asked the legacy renderer for a graph: {legacy_requests}"
+    assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
+
+
+def test_combined_graphs_have_no_broken_graphs(
+    combined_graphs_page: CombinedGraphsServiceSearch, javascript_errors: list[str]
+) -> None:
+    """No card of the combined-graphs page reports a failed load.
+
+    The cards stack well past the viewport, so each is scrolled to before the page is
+    judged. The notices land in the DOM either way, but only a card that was actually
+    painted can raise an error while painting.
+    """
+    expect(
+        combined_graphs_page.panels, "The engine rendered no graph card at all"
+    ).not_to_have_count(0)
+
+    for panel in combined_graphs_page.all_panels():
+        panel.graph.canvas.scroll_into_view_if_needed()
+
+    expect(
+        combined_graphs_page.broken_graph, "A graph card reported that it could not be loaded"
+    ).to_have_count(0)
+    assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
+
+
+# --- Graphing engine skeleton (CMK-35973): R1.3 Area 9 --------------------
+# Complete once the engine renders on this surface: reach the graph via
+# GraphAccessor.graph_root.
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)

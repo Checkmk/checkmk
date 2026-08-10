@@ -24,6 +24,7 @@ from tests.system.gui.testlib.host_details import HostDetails
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
+    fixture_combined_graphs_page,
     fixture_forecast_graph,
     fixture_graph_collection,
     fixture_graph_hosts_high_density,
@@ -59,6 +60,7 @@ logger = logging.getLogger(__name__)
 # these lists only keep the imports from being flagged as unused.
 setup_fixtures = [notification_user]
 graphing_fixtures = [
+    fixture_combined_graphs_page,
     fixture_forecast_graph,
     fixture_graph_collection,
     fixture_graph_hosts_high_density,

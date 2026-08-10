@@ -47,12 +47,28 @@ class CombinedGraphsServiceSearch(CmkPage):
     def global_time_picker(self) -> Locator:
         return self.main_area.locator(".graphing-global-time-picker")
 
+    def _panel(self, root: Locator) -> GraphPanel:
+        return GraphPanel(root, self.page, self.main_area)
+
     def panel(self, graph_title: str) -> GraphPanel:
-        return GraphPanel(self.panels.filter(has_text=graph_title), self.page, self.main_area)
+        return self._panel(self.panels.filter(has_text=graph_title))
+
+    def all_panels(self) -> list[GraphPanel]:
+        # ``.count()`` does not auto-wait, so this is only correct after ``wait_until_rendered``.
+        return [self._panel(self.panels.nth(index)) for index in range(self.panels.count())]
+
+    def wait_until_rendered(self) -> None:
+        """Waits for the first card's plot: the group assigns them all in one tick."""
+        self._panel(self.panels.first).graph.canvas.wait_for(state="visible")
 
     @property
     def broken_graph(self) -> Locator:
-        return self.main_area.locator("div[class*='brokengraph']")
+        """The notices shown in place of the cards that could not be loaded.
+
+        One per unloadable card, plus a standalone one when a first load produced no card
+        to sit over - so this is scoped to the group and not capped at a single element.
+        """
+        return self.main_area.locator(".graphing-graph-notice--error")
 
     def check_graph(self, graph_title: str) -> None:
         canvas = self.panel(graph_title).graph.canvas

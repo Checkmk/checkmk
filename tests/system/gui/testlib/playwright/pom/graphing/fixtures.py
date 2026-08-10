@@ -16,14 +16,23 @@ import pytest
 from playwright.sync_api import Page
 
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
+from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
+    CombinedGraphsServiceSearch,
+)
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
+from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.testlib.graphing import InjectedRrd
 from tests.testlib.site import Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
 SERVICE_WITH_GRAPHS = "Memory"
+
+# The combined page folds services into one card per matched graph template, so only a
+# filter spanning several templates leaves a test more than one card to judge. A linux dump
+# host's cpu services carry two.
+COMBINED_GRAPHS_SERVICE_FILTER = "cpu"
 
 
 @pytest.fixture(name="graph_hosts_with_varying_data", scope="module")
@@ -138,3 +147,27 @@ def fixture_service_graphs(
     before this navigates.
     """
     yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
+
+
+@pytest.fixture(name="combined_graphs_page")
+def fixture_combined_graphs_page(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+    requested_urls: list[str],
+) -> Iterator[CombinedGraphsServiceSearch]:
+    """The combined-graphs page for one host's cpu services, rendered and ready.
+
+    Depends on `javascript_errors` and `requested_urls` so their listeners are attached
+    before this navigates.
+    """
+    service_search = ServiceSearchPage(dashboard_page.page)
+    service_search.filter_sidebar.apply_host_filter(graph_hosts_with_varying_data[0])
+    service_search.filter_sidebar.apply_service_filter(COMBINED_GRAPHS_SERVICE_FILTER)
+    service_search.filter_sidebar.apply_filters(service_search.services_table)
+    service_search.main_area.click_item_in_dropdown_list(
+        "Services", "All metrics of same type in one graph"
+    )
+    combined_graphs = CombinedGraphsServiceSearch(service_search.page, navigate_to_page=False)
+    combined_graphs.wait_until_rendered()
+    yield combined_graphs

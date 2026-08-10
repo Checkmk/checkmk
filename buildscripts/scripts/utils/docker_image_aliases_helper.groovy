@@ -59,17 +59,10 @@ inside_container = { Map arg1=[:], Closure arg2 ->
     def (args, body) = arg2 == null ? [[:], arg1] : [arg1, arg2];
 
     if (kubernetes_inherit_from == "UNSET") {
-        def reference_repo_dir = cmd_output("""
-            if [ -f ${checkout_dir}/.git/objects/info/alternates ]; then \
-                dirname \$(cat ${checkout_dir}/.git/objects/info/alternates);\
-            fi
-         """);
-
         def image = args.image ?: docker_reference_image();
         def privileged = args.get("privileged", false).asBoolean();
         def init = args.get("init", false).asBoolean();
         def pull = args.get("pull", false).asBoolean();
-        def mount_reference_repo = args.get("mount_reference_repo", true).asBoolean();
         def mount_credentials = args.get("mount_credentials", false).asBoolean();
         def set_docker_group_id = args.get("set_docker_group_id", false).asBoolean();
         def mount_host_user_files = args.get("mount_host_user_files", true).asBoolean();
@@ -103,7 +96,6 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 + "--tmpfs ${env.HOME}/.cache:exec,size=24g,mode=777"
                 + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
                 + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
-                + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
                 + ["-v \"${container_shadow_workspace}/checkout_cache:${checkout_dir}/.cache\""]
                 + "--cpus=8"
                 + "--memory=32g"
@@ -122,7 +114,6 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE}")"
                 mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE}/checkout_tmp")"
                 mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE_TMP}")"
-                mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${reference_repo_dir}")"
 
                 # not needed every time, but easier done unconditionally
                 mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE}/dependencyscanner")"
@@ -197,16 +188,6 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
         def base_image = resolve_docker_image_alias("IMAGE_PYTHON_3_12");
         def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
         def docker_build_args = "--build-arg IMAGE_BASE=${base_image} -f ${dockerfile} .";
-
-        // the reference repo dir is required for any git based interactions
-        def reference_repo_dir = cmd_output("""
-            if [ -f ${checkout_dir}/.git/objects/info/alternates ]; then \
-                dirname \$(cat ${checkout_dir}/.git/objects/info/alternates);\
-            fi
-        """);
-        if (reference_repo_dir) {
-            run_args_str += " -v ${reference_repo_dir}:${reference_repo_dir}:ro";
-        }
 
         println("inside_container(image=${image_name} docker_args: ${run_args_str})");
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {

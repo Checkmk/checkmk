@@ -6,9 +6,7 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
-import ScheduleDowntimeForm, {
-  type ScheduleDowntimeFormValues
-} from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
+import { type ScheduleDowntimeFormValues } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 import { createScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
@@ -24,7 +22,7 @@ export function useScheduleHostDowntimeAction(): MonitoringAction<
       _t('Scheduled downtimes set the hosts in planned maintenance.'),
       _t('Downtimes reduce false alarms and avoid skewed availability statistics.')
     ],
-    form: ScheduleDowntimeForm,
+    targetKind: 'host',
     async schedule(api, targets, values, options) {
       const hostNames = targets.map((target) => target.name)
       if (values.includeChildHosts) {

@@ -15,6 +15,9 @@ export const ACTION_TARGET_COUNT: InjectionKey<ComputedRef<number>> = Symbol(
   'monitoringActionTargetCount'
 )
 
+/** The kind of object an action applies to, for forms shared between several pages. */
+export type ActionTargetKind = 'host' | 'service'
+
 export interface MonitoringAction<Values = unknown, Target = HostRef> {
   id: string
   title: TranslatedString
@@ -22,6 +25,7 @@ export interface MonitoringAction<Values = unknown, Target = HostRef> {
   /** Explanation paragraphs shown between the headline and the submit buttons. */
   description?: readonly TranslatedString[]
   form?: Component
+  formProps?: Record<string, unknown>
   defaultValues(): Values
   perform(targets: Target[], values: Values): Promise<ActionFeedback>
 }

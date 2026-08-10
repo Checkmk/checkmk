@@ -5,15 +5,14 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import type { Component } from 'vue'
 
 import {
   ScheduleDowntimeApi,
   type ScheduleDowntimeOptions
 } from '@/monitoring/shared/api/actions/downtime'
 
-import type { MonitoringAction } from '../types'
-import {
+import type { ActionTargetKind, MonitoringAction } from '../types'
+import ScheduleDowntimeForm, {
   type ScheduleDowntimeFormValues,
   defaultScheduleDowntimeValues,
   downtimeWindow
@@ -24,7 +23,7 @@ export const SCHEDULE_DOWNTIME_ACTION_ID = 'schedule_downtimes'
 export interface ScheduleDowntimeKindConfig<Target> {
   submitLabel: TranslatedString
   description: readonly TranslatedString[]
-  form: Component
+  targetKind: ActionTargetKind
   /** Perform the API call for the resolved targets and return the count actually acted on. */
   schedule(
     api: ScheduleDowntimeApi,
@@ -48,7 +47,8 @@ export function createScheduleDowntimeAction<Target>(
     title: _t('Schedule downtimes'),
     submitLabel: config.submitLabel,
     description: config.description,
-    form: config.form,
+    form: ScheduleDowntimeForm,
+    formProps: { targetKind: config.targetKind },
     defaultValues: defaultScheduleDowntimeValues,
     perform: async (targets: Target[], values: ScheduleDowntimeFormValues) => {
       const window = downtimeWindow(values)

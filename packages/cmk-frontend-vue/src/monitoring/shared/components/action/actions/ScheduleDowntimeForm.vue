@@ -123,7 +123,9 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
-const props = withDefaults(defineProps<{ targetKind?: 'host' | 'service' }>(), {
+import type { ActionTargetKind } from '../types'
+
+const props = withDefaults(defineProps<{ targetKind?: ActionTargetKind }>(), {
   targetKind: 'host'
 })
 

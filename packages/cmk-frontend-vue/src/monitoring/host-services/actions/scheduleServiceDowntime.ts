@@ -10,8 +10,6 @@ import { type ScheduleDowntimeFormValues } from '@/monitoring/shared/components/
 import { createScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
-import ScheduleServiceDowntimeForm from './ScheduleServiceDowntimeForm.vue'
-
 /** Target is the service description; the host is fixed to the page's host. */
 export function useScheduleServiceDowntimeAction(
   host: HostRef
@@ -24,7 +22,7 @@ export function useScheduleServiceDowntimeAction(
       _t('Scheduled downtimes set the services in planned maintenance.'),
       _t('Downtimes reduce false alarms and avoid skewed availability statistics.')
     ],
-    form: ScheduleServiceDowntimeForm,
+    targetKind: 'service',
     async schedule(api, targets, _values, options) {
       await api.scheduleServiceDowntime(host.name, targets, options)
       return targets.length

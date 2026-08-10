@@ -10,6 +10,9 @@ import { markRaw } from 'vue'
 
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
 import CommentForm from '@/monitoring/shared/components/action/actions/CommentForm.vue'
+import ScheduleDowntimeForm, {
+  defaultScheduleDowntimeValues
+} from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 
 test('renders the given form and gates submit on its validity', async () => {
   const { emitted } = render(ActionFormPane, {
@@ -28,6 +31,20 @@ test('renders the given form and gates submit on its validity', async () => {
 
   await userEvent.click(apply)
   expect(emitted('submit')).toEqual([[{ comment: 'on it' }]])
+})
+
+test('passes the form props on to the form', () => {
+  render(ActionFormPane, {
+    props: {
+      title: 'Schedule downtimes' as TranslatedString,
+      form: markRaw(ScheduleDowntimeForm),
+      formProps: { targetKind: 'service' },
+      initialValues: defaultScheduleDowntimeValues()
+    }
+  })
+
+  expect(screen.getByPlaceholderText('What is the occasion?')).toBeInTheDocument()
+  expect(screen.queryByText('Only for hosts: Set child hosts in downtime.')).not.toBeInTheDocument()
 })
 
 test('renders no inputs and is immediately submittable without a form', async () => {

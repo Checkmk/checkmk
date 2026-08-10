@@ -17,6 +17,7 @@ const props = defineProps<{
   description?: readonly TranslatedString[] | undefined
   submitLabel?: TranslatedString | undefined
   form?: Component | undefined
+  formProps?: Record<string, unknown> | undefined
   initialValues?: unknown
   indent?: boolean | undefined
 }>()
@@ -65,7 +66,13 @@ function cancel(): void {
       </div>
 
       <div class="monitoring-action-form-pane__body">
-        <component :is="form" v-if="form" v-model="draft" @update:valid="isValid = $event" />
+        <component
+          :is="form"
+          v-if="form"
+          v-bind="formProps"
+          v-model="draft"
+          @update:valid="isValid = $event"
+        />
         <p v-else class="monitoring-action-form-pane__confirm">
           {{ _t('This action runs immediately and has no further options.') }}
         </p>

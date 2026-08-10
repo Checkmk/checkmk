@@ -71,6 +71,7 @@ async function onSubmit(values: unknown): Promise<void> {
     :description="action.description"
     :submit-label="action.submitLabel"
     :form="action.form"
+    :form-props="action.formProps"
     :initial-values="initialValues"
     :indent="indent"
     @submit="onSubmit"

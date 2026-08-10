@@ -146,7 +146,7 @@ void main() {
                     smart_build(
                         use_upstream_build: true,
                         force_build: force_build,
-                        relative_job_name: "${edition_base_folder}/test-integration-packages",
+                        relative_job_name: "${edition_base_folder}/test-system-singlesite",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,

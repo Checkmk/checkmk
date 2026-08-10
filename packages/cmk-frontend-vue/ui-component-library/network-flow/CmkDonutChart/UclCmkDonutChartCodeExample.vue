@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
 
 const slices: DonutSlice[] = [
-  { key: 'tls', label: 'TLS', value: 47.2, color: 'green' },
-  { key: 'pops', label: 'POPS', value: 17.0, color: 'blue' },
+  { key: 'tls', label: 'TLS', value: 47.2, color: 'blue' },
+  { key: 'pops', label: 'POPS', value: 17.0, color: 'purple' },
   { key: 'other', label: 'Other', value: 35.8, color: 'grey' }
 ]
 </script>

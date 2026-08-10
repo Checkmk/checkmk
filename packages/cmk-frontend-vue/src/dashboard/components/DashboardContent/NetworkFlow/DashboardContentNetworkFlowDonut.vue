@@ -10,7 +10,8 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { NetworkFlowDonutContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
-import CmkDonutChart, { type ChartColor, type DonutSlice } from '@/network-flow/CmkDonutChart'
+import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
+import { CATEGORICAL_PALETTE } from '@/network-flow/colors'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'
@@ -18,11 +19,6 @@ import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<NetworkFlowDonutContent>>()
-
-// Slice colors are presentation, so the palette lives here rather than in the
-// config. Slices cycle through the accent palette; the aggregated "Other" tail
-// always uses the neutral grey.
-const SLICE_PALETTE: ChartColor[] = ['green', 'blue', 'magenta', 'yellow', 'orange', 'purple']
 
 function buildSlices(
   computedSlices: { label: string; value: number }[],
@@ -32,7 +28,7 @@ function buildSlices(
     key: `slice-${index}`,
     label: slice.label,
     value: slice.value,
-    color: SLICE_PALETTE[index % SLICE_PALETTE.length]!
+    color: CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length]!
   }))
   // The backend returns the grand total across all entities, so the tail beyond
   // the ranked slices becomes an aggregated "Other" slice.

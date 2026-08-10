@@ -20,6 +20,11 @@ export const a11yData = [
   {
     keys: ['Enter'],
     description: 'Submits the current query, emitting the search event.'
+  },
+  {
+    keys: ['Space'],
+    description:
+      'Activates the focused clear or search button, clearing or submitting the query respectively.'
   }
 ]
 

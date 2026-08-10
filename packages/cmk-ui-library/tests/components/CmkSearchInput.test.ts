@@ -51,6 +51,23 @@ test('emits the typed query on Enter', async () => {
   expect(emitted('search')).toEqual([['db']])
 })
 
+test('emits the typed query when the search button is clicked', async () => {
+  const { emitted } = renderInput()
+
+  await fireEvent.update(screen.getByRole('searchbox'), 'db')
+  await fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+
+  expect(emitted('search')).toEqual([['db']])
+})
+
+test('emits an empty query when the search button is clicked on an empty field', async () => {
+  const { emitted } = renderInput()
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+
+  expect(emitted('search')).toEqual([['']])
+})
+
 test('keeps the model value in sync while typing', async () => {
   const { emitted } = renderInput()
 

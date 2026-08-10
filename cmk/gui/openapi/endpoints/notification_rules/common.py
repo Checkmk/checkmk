@@ -3,11 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Event notification rule api request/response example"""
-
 from cmk.utils.notify_types import PluginOptions
 
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
+
+EVENT_CONSOLE_ALERTS_DESCRIPTION = """The Event Console can have events create notifications
+in Checkmk. These notifications are processed by the rule based notification system of
+Checkmk. This condition lets you distinguish them from host and service notifications and
+gives you access to special event fields.
+
+With this condition disabled, Event Console alerts do not match a rule that restricts host or
+service events. Since `match_host_event_type` and `match_service_event_type` are enabled by
+default, that is the case for every rule which does not explicitly disable both of them. Only
+a rule that disables both matches all events, Event Console alerts included."""
+
+EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION = """How this rule treats Event Console alerts.
+
+`match_only_event_console_alerts`: Event Console alerts match this rule. If at least one
+filter is set in `values`, the rule matches Event Console alerts exclusively and host and
+service notifications no longer match it. Without any filter, Event Console alerts match in
+addition to the host and service events configured in `match_host_event_type` and
+`match_service_event_type`.
+
+`do_not_match_event_console_alerts`: Event Console alerts never match this rule. Host and
+service notifications match according to the other conditions of the rule."""
 
 
 def notification_rule_request_example() -> APINotificationRule:

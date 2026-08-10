@@ -17,7 +17,7 @@ from cmk.utils import paths
 from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
 from cmk.utils.tags import TagID
 
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+from cmk.gui.openapi.endpoints.notification_rules.common import (
     notification_rule_request_example,
 )
 from cmk.gui.openapi.endpoints.notification_rules.request_schemas import (

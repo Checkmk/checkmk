@@ -49,7 +49,9 @@ from cmk.gui.fields import (
     TimePeriodIDField,
 )
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+from cmk.gui.openapi.endpoints.notification_rules.common import (
+    EVENT_CONSOLE_ALERTS_DESCRIPTION,
+    EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     notification_rule_request_example,
 )
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
@@ -721,8 +723,8 @@ class EventConsoleAlertAttributesBase(BaseSchema):
     match_type = fields.String(
         enum=["match_only_event_console_alerts", "do_not_match_event_console_alerts"],
         required=True,
-        example="match_only_event_console_events",
-        description="",
+        example="match_only_event_console_alerts",
+        description=EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     )
 
 
@@ -823,7 +825,6 @@ class CheckboxEventConsoleAlerts(Checkbox):
     value = fields.Nested(
         MatchTypeSelector,
         required=True,
-        description="The Event Console can have events create notifications in Check_MK. These notifications will be processed by the rule based notification system of Check_MK. This matching option helps you distinguishing and also gives you access to special event fields",
     )
 
 
@@ -2922,6 +2923,7 @@ class RuleConditions(BaseSchema):
     event_console_alerts = fields.Nested(
         EventConsoleAlertCheckbox,
         load_default=lambda: {"state": "disabled"},
+        description=EVENT_CONSOLE_ALERTS_DESCRIPTION,
     )
 
 

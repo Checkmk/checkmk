@@ -271,7 +271,7 @@ def _event_choices(
     ]
 
 
-def _validate_at_least_one_event(trigger_events: Mapping) -> None:
+def validate_at_least_one_event(trigger_events: Mapping) -> None:
     if not trigger_events:
         raise ValidationError(Message("At least one triggering event must be selected."))
 
@@ -349,7 +349,7 @@ def triggering_events() -> QuickSetupStage:
                                         ),
                                     ),
                                 },
-                                custom_validate=[_validate_at_least_one_event],
+                                custom_validate=[validate_at_least_one_event],
                             ),
                         ),
                         CascadingSingleChoiceElement(

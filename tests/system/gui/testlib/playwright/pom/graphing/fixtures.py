@@ -5,31 +5,41 @@
 
 """Reusable fixtures for the graph E2E suites.
 
-Registered for discovery in ``tests/system/gui/conftest.py``. The saved-surface fixture
-still to be built (forecast) `skip`s until completed by the graph test suites, since
-creating and surfacing it depends on the graph implementation.
+Registered for discovery in ``tests/system/gui/conftest.py``.
 """
 
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Final, NamedTuple
 
 import pytest
 from playwright.sync_api import Page
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.user import UserId
+from cmk.gui.nonfree.pro.graphing._forecast_model import TransformationParametersForecast
+from cmk.gui.nonfree.pro.graphing._forecasts import (
+    forecast_metric,
+    ForecastGraphModel,
+    ForecastGraphOptions,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
 )
+from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import SURFACES_BY_KEY
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
+from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
-from tests.testlib.graphing import InjectedRrd
+from tests.testlib.common.utils2 import is_cleanup_enabled
+from tests.testlib.graphing import GraphDataShape, injected_ping_rrds, InjectedRrd, PING_SERVICE
 from tests.testlib.site import ADMIN_USER, Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
@@ -361,4 +371,273 @@ def fixture_combined_graphs_page_all_services(
     """
     yield _open_combined_graphs(
         dashboard_page, host_name=graph_hosts_with_varying_data[0], service_filter=None
+    )
+
+
+# Every `GraphContainment.DASHBOARD_WIDGET` surface, one widget each, on a single dashboard.
+_ACTION_MENU_DASHBOARD_ID: Final = "e2e_action_menu_dashboard"
+_ACTION_MENU_DASHBOARD_TITLE: Final = "E2E action menu dashboard"
+_ACTION_MENU_WIDGET_TIMERANGE: Final = {"type": "predefined", "value": "last_25_hours"}
+_ACTION_MENU_WIDGET_SIZE: Final = {"width": 40, "height": 20}
+
+_KNOWN_GOOD_METRIC_NAME: Final = "mem_used"
+
+
+def _preferred_metric_name(metrics: Sequence[RrdMetric]) -> str:
+    for metric in metrics:
+        if metric.name == _KNOWN_GOOD_METRIC_NAME:
+            return metric.name
+    return metrics[0].name
+
+
+def _relative_grid_widget(
+    title: str,
+    content: Mapping[str, object],
+    *,
+    filters: Mapping[str, object] | None = None,
+    y: int,
+) -> dict[str, object]:
+    """One widget of a relative-grid dashboard, stacked in a single column at row `y`."""
+    return {
+        "general_settings": {
+            "title": {"text": title, "render_mode": "with_background"},
+            "render_background": True,
+        },
+        "content": dict(content),
+        "filters": dict(filters or {}),
+        "layout": {
+            "type": "relative_grid",
+            "position": {"x": 1, "y": y},
+            "size": _ACTION_MENU_WIDGET_SIZE,
+        },
+    }
+
+
+@pytest.fixture(name="dashboard_action_menu_surfaces")
+def fixture_dashboard_action_menu_surfaces(
+    test_site: Site,
+    rrd_metric_source: RrdMetricSource,
+    saved_custom_graph: str,
+) -> Iterator[str]:
+    """A custom dashboard holding one widget per `GraphContainment.DASHBOARD_WIDGET` surface.
+
+    Built directly through the relative-grid dashboard REST endpoint rather than the "Add
+    widget" wizard: two of the five surfaces (`problem_percentage_widget`,
+    `alert_notification_widget`) have no wizard UI to reach at all (they live behind a
+    separate, not-yet-implemented "Alerts & notifications" wizard category), so every
+    widget is created the same uniform way instead of mixing that in with wizard-driven
+    widgets for the rest.
+
+    Each widget's title is taken straight from its `GraphSurface.title` in
+    `graph_surfaces.py`, so a test resolves it with `BaseDashboard.get_widget(surface.title)`
+    without hard-coding the title a second time.
+
+    Yields the dashboard id (for `dashboard.py?name=<id>`).
+    """
+    host_name, service_name, metrics = rrd_metric_source
+    metric_name = _preferred_metric_name(metrics)
+    host_service_filters = {"host": {"host": host_name}, "service": {"service": service_name}}
+
+    widgets = {
+        "dashboard_graph_widget": _relative_grid_widget(
+            SURFACES_BY_KEY["dashboard_graph_widget"].title,
+            {
+                "type": "custom_graph",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": {},
+                "custom_graph": saved_custom_graph,
+            },
+            y=1,
+        ),
+        "single_timeseries_widget": _relative_grid_widget(
+            SURFACES_BY_KEY["single_timeseries_widget"].title,
+            {
+                "type": "single_timeseries",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": {},
+                "metric": metric_name,
+                "color": "default_metric",
+            },
+            filters=host_service_filters,
+            y=21,
+        ),
+        "problem_percentage_widget": _relative_grid_widget(
+            SURFACES_BY_KEY["problem_percentage_widget"].title,
+            {
+                "type": "problem_graph",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": {},
+            },
+            y=41,
+        ),
+        "alert_notification_widget": _relative_grid_widget(
+            SURFACES_BY_KEY["alert_notification_widget"].title,
+            {
+                "type": "alert_overview",
+                "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
+                "limit_objects": 10,
+            },
+            y=61,
+        ),
+        "scatterplot_widget": _relative_grid_widget(
+            SURFACES_BY_KEY["scatterplot_widget"].title,
+            {
+                "type": "average_scatterplot",
+                "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
+                "metric": metric_name,
+                "metric_color": "default",
+                "average_color": "default",
+                "median_color": "default",
+            },
+            filters=host_service_filters,
+            y=81,
+        ),
+    }
+
+    payload = {
+        "id": _ACTION_MENU_DASHBOARD_ID,
+        "general_settings": {
+            "title": {
+                "text": _ACTION_MENU_DASHBOARD_TITLE,
+                "render": True,
+                "include_context": False,
+            },
+            "description": "",
+            "menu": {
+                "topic": "overview",
+                "sort_index": 99,
+                "search_terms": [],
+                "is_show_more": False,
+            },
+            "visibility": {
+                "hide_in_monitor_menu": False,
+                "hide_in_drop_down_menus": False,
+                "share": "no",
+            },
+        },
+        "filter_context": {
+            "restricted_to_single": [],
+            "filters": {},
+            "mandatory_context_filters": [],
+        },
+        "widgets": widgets,
+        "layout": {"type": "relative_grid"},
+    }
+
+    with _as_admin_user(test_site):
+        test_site.openapi.dashboard.create_relative_grid_dashboard(payload)
+    try:
+        yield _ACTION_MENU_DASHBOARD_ID
+    finally:
+        if is_cleanup_enabled():
+            with _as_admin_user(test_site):
+                test_site.openapi.dashboard.delete(_ACTION_MENU_DASHBOARD_ID)
+
+
+_FORECAST_GRAPH_HOST_NAME: Final = "forecast-graph-engine"
+_FORECAST_GRAPH_NAME: Final = "e2e_forecast_graph"
+_FORECAST_GRAPH_TITLE: Final = "E2E forecast graph"
+
+# An age window rather than the "m1" default: "m1" starts at the current calendar month, so
+# early in a month it would stop short of the data `injected_ping_rrds` writes (six days,
+# ending three days ago).
+_FORECAST_GRAPH_PAST_WINDOW_SECONDS: Final = 14 * 86400
+_FORECAST_GRAPH_FUTURE_WINDOW_SECONDS: Final = 7 * 86400
+
+_FORECAST_GRAPH_PAGETYPE_STORE: Final = Path(
+    f"var/check_mk/web/{ADMIN_USER}/user_forecast_graphs.mk"
+)
+
+
+def _serialized_forecast_graph(metric_name: str) -> dict[str, object]:
+    """A forecast graph over `metric_name`, in the form its pagetype store keeps it.
+
+    Built through the product's own models, so the stored shape follows
+    `ForecastGraphModel.model_dump` instead of drifting from it.
+    """
+    parameters = TransformationParametersForecast(
+        past=("age", _FORECAST_GRAPH_PAST_WINDOW_SECONDS),
+        future=("next", _FORECAST_GRAPH_FUTURE_WINDOW_SECONDS),
+        changepoint_prior_scale="0.05",
+        seasonality_mode="additive",
+        interval_width="0.68",
+        display_past=_FORECAST_GRAPH_PAST_WINDOW_SECONDS,
+        display_model_parametrization=False,
+    )
+    return ForecastGraphModel(
+        name=_FORECAST_GRAPH_NAME,
+        title=_FORECAST_GRAPH_TITLE,
+        owner=UserId(ADMIN_USER),
+        topic="graphs",
+        public=False,
+        hidden=False,
+        elements=[],
+        sort_index=99,
+        is_show_more=False,
+        graph_options=ForecastGraphOptions(),
+        metrics=[
+            forecast_metric(
+                HostName(_FORECAST_GRAPH_HOST_NAME),
+                PING_SERVICE,
+                metric_name,
+                "max",
+                metric_name,
+                parameters,
+            )
+        ],
+        model_params=parameters,
+    ).model_dump(by_alias=True)
+
+
+@pytest.fixture(name="forecast_graph", scope="module")
+def fixture_forecast_graph(test_site: Site) -> Iterator[str]:
+    """A saved forecast graph over a metric carrying days of history; yields its title.
+
+    The history is injected because the forecast is fitted at day resolution and refuses a
+    metric with less than two days of values.
+
+    Written straight into the pagetype store: forecast graphs have no REST API. The owner
+    must be the user the browser logs in as, since a graph is created private.
+
+    Module-scoped so it runs before the browser fixtures: injecting the RRDs restarts the
+    site.
+    """
+    with injected_ping_rrds(
+        test_site, {_FORECAST_GRAPH_HOST_NAME: GraphDataShape.VARYING}
+    ) as injected:
+        metric_name = injected[_FORECAST_GRAPH_HOST_NAME].rrd.metric_names[0]
+        test_site.makedirs(_FORECAST_GRAPH_PAGETYPE_STORE.parent)
+        test_site.write_file(
+            _FORECAST_GRAPH_PAGETYPE_STORE,
+            repr({_FORECAST_GRAPH_NAME: _serialized_forecast_graph(metric_name)}) + "\n",
+        )
+        try:
+            yield _FORECAST_GRAPH_TITLE
+        finally:
+            # Dropping the whole file is safe: it holds no other forecast graph.
+            if is_cleanup_enabled():
+                test_site.delete_file(_FORECAST_GRAPH_PAGETYPE_STORE)
+
+
+@pytest.fixture(name="dashboard_with_action_menu_widgets")
+def fixture_dashboard_with_action_menu_widgets(
+    dashboard_page: MainDashboard,
+    dashboard_action_menu_surfaces: str,
+    test_site: Site,
+    javascript_errors: list[str],
+) -> CustomDashboard:
+    """The dashboard from `dashboard_action_menu_surfaces`, opened in the browser.
+
+    Navigated to directly by URL rather than through 'Customize > Dashboards', matching the
+    same direct-`goto` pattern other REST/file-seeded dashboard fixtures use.
+
+    Depends on `javascript_errors` so its listener is attached before this navigates.
+    """
+    dashboard_page.page.goto(
+        test_site.internal_url + f"dashboard.py?name={dashboard_action_menu_surfaces}",
+        wait_until="load",
+    )
+    dashboard_page.page.wait_for_load_state("networkidle")
+    return CustomDashboard(
+        dashboard_page.page, page_title=_ACTION_MENU_DASHBOARD_TITLE, navigate_to_page=False
     )

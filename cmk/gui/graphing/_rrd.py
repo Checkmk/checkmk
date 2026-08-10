@@ -45,7 +45,12 @@ from ._legacy import (
 )
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries, TimeSeriesValues
-from ._translated_metrics import find_matching_translation, TranslationSpec
+from ._translated_metrics import (
+    find_matching_translation,
+    map_metric_names,
+    parse_perf_data_with_rrd_metrics,
+    TranslationSpec,
+)
 from ._unit import user_specific_unit
 
 
@@ -63,6 +68,34 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description): 
         info["service_description"] = service_description
 
     return info
+
+
+def fetch_metric_name_mapping(
+    host_name: HostName,
+    service_name: ServiceName,
+    translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+    *,
+    site_id: SiteId | None = None,
+    debug: bool,
+) -> Mapping[tuple[SiteId, HostName, ServiceName], Mapping[MetricName, MetricName]]:
+    """Pair one service's raw metric names with their canonical names, per site.
+
+    The same host and service can be monitored by more than one site, each with its own
+    perf data, so every row is reported under the site it came from.
+    """
+    query = livestatus_lql([host_name], ["perf_data", "metrics", "check_command"], service_name)
+    with sites.only_sites(site_id), sites.prepend_site():
+        rows = sites.live().query(query)
+
+    by_site: dict[tuple[SiteId, HostName, ServiceName], Mapping[MetricName, MetricName]] = {}
+    for row_site_id, perf_data_string, rrd_metrics, row_check_command in rows:
+        perf_data, check_command = parse_perf_data_with_rrd_metrics(
+            perf_data_string, row_check_command, rrd_metrics, debug=debug
+        )
+        by_site[(SiteId(row_site_id), host_name, service_name)] = map_metric_names(
+            check_command, [MetricName(p.metric_name) for p in perf_data], translations
+        )
+    return by_site
 
 
 @dataclass(frozen=True, kw_only=True)

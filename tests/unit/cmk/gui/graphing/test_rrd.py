@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 
 import pytest
@@ -32,6 +32,7 @@ from cmk.gui.graphing._rrd import (
     _metric_props_by_service,
     _reverse_translate_into_all_potentially_relevant_metrics,
     _rrd_columns,
+    fetch_metric_name_mapping,
     MetricProperties,
     translate_and_merge_rrd_columns,
 )
@@ -163,6 +164,109 @@ def test_fetch_augmented_time_series_with_conversion(
                 color="#ffa000",
             ),
         ]
+
+
+_MAPPED_HOST = HostName("my-host")
+_MAPPED_SERVICE = ServiceName("CPU utilization")
+_MAPPED_CHECK_COMMAND = "check_mk-cpu_utilization"
+
+_MAPPING_TRANSLATIONS: Mapping[str, Mapping[MetricName, CheckMetricEntry]] = {
+    _MAPPED_CHECK_COMMAND: {MetricName("wait"): {"name": MetricName("io_wait")}},
+}
+
+_MAPPING_QUERY = """GET services
+Columns: perf_data metrics check_command
+Filter: host_name = my-host
+Filter: service_description = CPU utilization"""
+
+
+def _service_row(perf_data: str, metrics: Sequence[str]) -> dict[str, object]:
+    return {
+        "host_name": str(_MAPPED_HOST),
+        "service_description": str(_MAPPED_SERVICE),
+        "perf_data": perf_data,
+        "metrics": list(metrics),
+        "check_command": _MAPPED_CHECK_COMMAND,
+    }
+
+
+def _mapping_key(site_id: str) -> tuple[SiteId, HostName, ServiceName]:
+    return (SiteId(site_id), _MAPPED_HOST, _MAPPED_SERVICE)
+
+
+def test_fetch_metric_name_mapping_pairs_a_services_perfdata_names(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    with mock_livestatus(expect_status_query=True) as mock_live:
+        mock_live.add_table("services", [_service_row("wait=5", ["wait"])])
+        mock_live.expect_query(_MAPPING_QUERY)
+        assert fetch_metric_name_mapping(
+            _MAPPED_HOST, _MAPPED_SERVICE, _MAPPING_TRANSLATIONS, debug=True
+        ) == {_mapping_key("NO_SITE"): {"wait": "io_wait"}}
+
+
+def test_fetch_metric_name_mapping_adds_metrics_only_present_in_the_rrds(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    with mock_livestatus(expect_status_query=True) as mock_live:
+        mock_live.add_table("services", [_service_row("wait=5", ["wait", "user"])])
+        mock_live.expect_query(_MAPPING_QUERY)
+        assert fetch_metric_name_mapping(
+            _MAPPED_HOST, _MAPPED_SERVICE, _MAPPING_TRANSLATIONS, debug=True
+        ) == {_mapping_key("NO_SITE"): {"wait": "io_wait", "user": "user"}}
+
+
+def test_fetch_metric_name_mapping_normalizes_rrd_only_metric_names(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    with mock_livestatus(expect_status_query=True) as mock_live:
+        mock_live.add_table("services", [_service_row("wait=5", ["wait", "disk read"])])
+        mock_live.expect_query(_MAPPING_QUERY)
+        assert fetch_metric_name_mapping(
+            _MAPPED_HOST, _MAPPED_SERVICE, _MAPPING_TRANSLATIONS, debug=True
+        ) == {_mapping_key("NO_SITE"): {"wait": "io_wait", "disk_read": "disk_read"}}
+
+
+def test_fetch_metric_name_mapping_skips_rrd_metrics_containing_a_comma(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    with mock_livestatus(expect_status_query=True) as mock_live:
+        mock_live.add_table("services", [_service_row("wait=5", ["wait", "user,system"])])
+        mock_live.expect_query(_MAPPING_QUERY)
+        assert fetch_metric_name_mapping(
+            _MAPPED_HOST, _MAPPED_SERVICE, _MAPPING_TRANSLATIONS, debug=True
+        ) == {_mapping_key("NO_SITE"): {"wait": "io_wait"}}
+
+
+def test_fetch_metric_name_mapping_keys_every_site_monitoring_the_service(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    with mock_livestatus(expect_status_query=True) as mock_live:
+        mock_live.add_table("services", [_service_row("wait=5", ["wait"])], site="NO_SITE")
+        mock_live.add_table("services", [_service_row("user=2", ["user"])], site="remote")
+        mock_live.expect_query(_MAPPING_QUERY)
+        assert fetch_metric_name_mapping(
+            _MAPPED_HOST, _MAPPED_SERVICE, _MAPPING_TRANSLATIONS, debug=True
+        ) == {
+            _mapping_key("NO_SITE"): {"wait": "io_wait"},
+            _mapping_key("remote"): {"user": "user"},
+        }
+
+
+def test_fetch_metric_name_mapping_scopes_the_query_to_the_given_site(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
+    with mock_livestatus(expect_status_query=True) as mock_live:
+        mock_live.add_table("services", [_service_row("wait=5", ["wait"])], site="NO_SITE")
+        mock_live.add_table("services", [_service_row("user=2", ["user"])], site="remote")
+        mock_live.expect_query(_MAPPING_QUERY, sites=["remote"])
+        assert fetch_metric_name_mapping(
+            _MAPPED_HOST,
+            _MAPPED_SERVICE,
+            _MAPPING_TRANSLATIONS,
+            site_id=SiteId("remote"),
+            debug=True,
+        ) == {_mapping_key("remote"): {"user": "user"}}
 
 
 def test_translate_and_merge_rrd_columns() -> None:

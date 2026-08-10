@@ -13,6 +13,7 @@ from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
 )
+from cmk.gui.wato.pages.notifications.quick_setup import validate_at_least_one_event
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     Method,
     NotificationQuickSetupSpec,
@@ -221,3 +222,77 @@ def test_quick_setup_notifications_transform_to_frontend() -> None:
         trigger_events={"host", "service", "ec"}
     )
     assert migrate_to_notification_quick_setup_spec(event_rule) == quick_setup_params
+
+
+def _do_not_match_ec_alerts_event_rule() -> EventRule:
+    return EventRule(
+        rule_id=NotificationRuleID("uuid4_rule_id"),
+        allow_disable=False,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=False,
+        description="foo",
+        disabled=False,
+        notify_plugin=("mail", NotificationParameterID("parameter_id")),
+        match_ec=False,
+    )
+
+
+def test_do_not_match_ec_alerts_is_editable_in_quick_setup() -> None:
+    triggering_events = migrate_to_notification_quick_setup_spec(
+        _do_not_match_ec_alerts_event_rule()
+    )["triggering_events"]
+
+    assert triggering_events[0] == "specific_events"
+    specific_events = triggering_events[1]
+    assert specific_events == {
+        "host_events": [
+            ("state_change", (-1, 0)),
+            ("state_change", (-1, 1)),
+            ("state_change", (-1, 2)),
+            ("flapping_state", None),
+            ("downtime", None),
+            ("acknowledgement", None),
+            ("alert_handler", "success"),
+            ("alert_handler", "failure"),
+        ],
+        "service_events": [
+            ("state_change", (-1, 0)),
+            ("state_change", (-1, 1)),
+            ("state_change", (-1, 2)),
+            ("state_change", (-1, 3)),
+            ("flapping_state", None),
+            ("downtime", None),
+            ("acknowledgement", None),
+            ("alert_handler", "success"),
+            ("alert_handler", "failure"),
+        ],
+    }
+    validate_at_least_one_event(specific_events)
+
+
+def test_do_not_match_ec_alerts_keeps_excluding_ec_alerts_after_a_round_trip(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("cmk.gui.wato.pages.notifications.migrate.uuid4", return_value="uuid4_rule_id")
+    quick_setup_params = set_quick_setup_params(
+        migrate_to_notification_quick_setup_spec(_do_not_match_ec_alerts_event_rule())[
+            "triggering_events"
+        ]
+    )
+
+    event_rule = migrate_to_event_rule(quick_setup_params)
+
+    assert "match_ec" not in event_rule
+    assert event_rule["match_host_event"] == ["?r", "?d", "?u", "f", "s", "x", "as", "af"]
+    assert event_rule["match_service_event"] == [
+        "?r",
+        "?w",
+        "?c",
+        "?u",
+        "f",
+        "s",
+        "x",
+        "as",
+        "af",
+    ]

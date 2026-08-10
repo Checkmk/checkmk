@@ -1975,45 +1975,34 @@ def rbn_match_event_console(
 ) -> str | None:
     """
     match_ec options:
-    missing, without match_host_event and match_service_event -> match All events
-    missing, with match_host_event and/or match_service_event -> do not match on Event Console notifications
-    empty dict -> match on all Event Console notifications
-    dict with keys -> match on specific Event Console notifications
+    missing or None, without match_host_event and match_service_event -> match all events
+    missing or None, with match_host_event and/or match_service_event -> do not match Event Console alerts
+    False -> do not match Event Console alerts
+    empty dict -> match all Event Console alerts
+    dict with keys -> exclusively matches Event Console alerts passing these filters
     """
-    # "Triggering events" - "All events"
-    match_all_events = (
-        "match_ec" not in rule
-        and "match_host_event" not in rule
-        and "match_service_event" not in rule
-    )
-    # "Triggering events" - "Event console alerts"
-    match_ec_alerts_explicit = "match_ec" in rule
+    match_ec = rule.get("match_ec")
+    ec_alerts_selected = match_ec is not None and match_ec is not False
+    other_events_selected = "match_host_event" in rule or "match_service_event" in rule
+    all_events_selected = match_ec is None and not other_events_selected
 
-    # "Triggering events" - "Host events" or "Service events"
-    match_host_or_service_events_explicit = (
-        "match_host_event" in rule or "match_service_event" in rule
-    )
+    matches_ec_alerts = ec_alerts_selected or all_events_selected
+    matches_only_ec_alerts = ec_alerts_selected and (bool(match_ec) or not other_events_selected)
 
-    is_ec_notification = "EC_ID" in context
-    match_ec = match_all_events or match_ec_alerts_explicit
-    if not match_ec and is_ec_notification:
-        return "Notification has been created by the Event Console."
-
-    match_ec_options = rule.get("match_ec", False)
-
-    match_only_ec_events = match_ec_options or (
-        not match_all_events and not match_host_or_service_events_explicit
-    )
-    if not is_ec_notification and match_only_ec_events:
-        return "Notification has not been created by the Event Console."
-
-    if match_ec and match_ec_options and is_ec_notification:
+    if "EC_ID" in context:
+        if not matches_ec_alerts:
+            return "Notification has been created by the Event Console."
+        if not match_ec:
+            return None
         return (
-            _rbn_match_ec_rule_id(match_ec_options, context)
-            or _rbn_match_ec_priority(match_ec_options, context)
-            or _rbn_match_ec_facility(match_ec_options, context)
-            or _rbn_match_ec_comment(match_ec_options, context)
+            _rbn_match_ec_rule_id(match_ec, context)
+            or _rbn_match_ec_priority(match_ec, context)
+            or _rbn_match_ec_facility(match_ec, context)
+            or _rbn_match_ec_comment(match_ec, context)
         )
+
+    if matches_only_ec_alerts:
+        return "Notification has not been created by the Event Console."
     return None
 
 

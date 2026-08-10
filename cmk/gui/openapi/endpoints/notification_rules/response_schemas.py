@@ -39,7 +39,9 @@ from cmk.gui.fields import (
     TagGroupIDField,
 )
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+from cmk.gui.openapi.endpoints.notification_rules.common import (
+    EVENT_CONSOLE_ALERTS_DESCRIPTION,
+    EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     notification_rule_request_example,
 )
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
@@ -89,8 +91,8 @@ class EventConsoleAlertAttrsResponse(BaseSchema):
 class EventConsoleAlertsResponse(CheckboxOutput):
     match_type = fields.String(
         enum=["match_only_event_console_alerts", "do_not_match_event_console_alerts"],
-        example="match_only_event_console_events",
-        description="",
+        example="match_only_event_console_alerts",
+        description=EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     )
     values = fields.Nested(EventConsoleAlertAttrsResponse)
 
@@ -1234,7 +1236,10 @@ class ConditionsAttributes(BaseSchema):
     restrict_to_notification_numbers = fields.Nested(CheckboxRestrictNotificationNumbersOutput)
     throttle_periodic_notifications = fields.Nested(CheckboxThrottlePeriodicNotifcationsOuput)
     match_notification_comment = fields.Nested(CheckboxWithStrValueOutput)
-    event_console_alerts = fields.Nested(MatchEventConsoleAlertsResponse)
+    event_console_alerts = fields.Nested(
+        MatchEventConsoleAlertsResponse,
+        description=EVENT_CONSOLE_ALERTS_DESCRIPTION,
+    )
 
 
 class NotificationRuleAttributes(BaseSchema):

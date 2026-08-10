@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Mapping
-from typing import Final
+from typing import cast, Final
 
 import pytest
 from pytest import MonkeyPatch
@@ -123,6 +123,10 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
         "dong",
         "harry",
     }
+
+
+def _with_legacy_match_ec_none(rule: EventRule) -> EventRule:
+    return cast(EventRule, dict(rule, match_ec=None))
 
 
 @pytest.mark.parametrize(
@@ -468,6 +472,121 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             },
             "Notification has not been created by the Event Console.",
             id="Match on service events and event console alerts with filter",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("18"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 18",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_ec=False,
+            ),
+            {
+                "EC_ID": "test18",
+            },
+            "Notification has been created by the Event Console.",
+            id="Do not match Event Console alerts, notification from Event Console",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("19"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 19",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_ec=False,
+            ),
+            {
+                "PARAMETER_FROM_ADDRESS": "from@lala.com",
+            },
+            None,
+            id="Do not match Event Console alerts, no notification from Event Console",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("20"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 20",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_host_event=["?d", "?r"],
+                match_service_event=["?c", "?w", "?r"],
+                match_ec=False,
+            ),
+            {
+                "EC_ID": "test20",
+            },
+            "Notification has been created by the Event Console.",
+            id="Do not match Event Console alerts alongside host and service events, notification from Event Console",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("21"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 21",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_service_event=["?c", "?w", "?r"],
+                match_ec=False,
+            ),
+            {
+                "SERVICESTATE": "w",
+                "PREVIOUSSERVICEHARDSTATE": "r",
+            },
+            None,
+            id="Do not match Event Console alerts alongside service events, service notification",
+        ),
+        pytest.param(
+            _with_legacy_match_ec_none(
+                EventRule(
+                    rule_id=NotificationRuleID("22"),
+                    allow_disable=False,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    contact_object=False,
+                    description="Test rule 22",
+                    disabled=False,
+                    notify_plugin=("mail", None),
+                )
+            ),
+            {
+                "EC_ID": "test22",
+            },
+            None,
+            id="No Event Console condition configured, notification from Event Console",
+        ),
+        pytest.param(
+            _with_legacy_match_ec_none(
+                EventRule(
+                    rule_id=NotificationRuleID("23"),
+                    allow_disable=False,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    contact_object=False,
+                    description="Test rule 23",
+                    disabled=False,
+                    notify_plugin=("mail", None),
+                    match_host_event=["?d", "?r"],
+                )
+            ),
+            {
+                "EC_ID": "test23",
+            },
+            "Notification has been created by the Event Console.",
+            id="No Event Console condition configured alongside host events, notification from Event Console",
         ),
     ],
 )
@@ -904,6 +1023,34 @@ def test__rbn_match_rule_passes_minimal() -> None:
             timeperiods_active={},
         )
         is None
+    )
+
+
+def test__rbn_match_rule_do_not_match_ec_alerts_passes_host_notification() -> None:
+    assert (
+        notify._rbn_match_rule(
+            _make_rule() | {"match_ec": False},
+            EnrichedEventContext({"WHAT": "HOST", "HOSTNAME": HostName("testhost")}),
+            {},
+            define_servicegroups={},
+            analyse=False,
+            timeperiods_active={},
+        )
+        is None
+    )
+
+
+def test__rbn_match_rule_do_not_match_ec_alerts_blocks_ec_alert() -> None:
+    assert (
+        notify._rbn_match_rule(
+            _make_rule() | {"match_ec": False},
+            EnrichedEventContext({"WHAT": "HOST", "HOSTNAME": HostName("testhost"), "EC_ID": "42"}),
+            {},
+            define_servicegroups={},
+            analyse=False,
+            timeperiods_active={},
+        )
+        == "Notification has been created by the Event Console."
     )
 
 

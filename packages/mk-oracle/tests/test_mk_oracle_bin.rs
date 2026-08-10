@@ -808,7 +808,15 @@ fn test_migrate_reference_config_custom_metrics_cache_age() {
 #[test]
 fn test_migrate_reference_config_custom_metrics() {
     let cfg = legacy_cfg_path();
-    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    // the dynamic SQLS_SIDS of the reference config read the variables the
+    // legacy plugin sets at runtime; drop them so the expansion does not depend
+    // on the environment the test runs in
+    let output = run_bin()
+        .env_remove("ORACLE_SID")
+        .env_remove("SIDS")
+        .args(["-M", &cfg])
+        .ok()
+        .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     let config = mk_oracle::config::OracleConfig::load_str(&stdout)
@@ -827,23 +835,24 @@ fn test_migrate_reference_config_custom_metrics() {
     {
         use std::path::Path;
 
-        // dynamic SQLS_SIDS (env var / command) target all instances
-        assert_eq!(
-            global,
-            [
-                ("mycustomsection2", Some(Path::new("OtherSQL.sql"))),
-                ("mycustomsection3", Some(Path::new("custom_sql.sql"))),
-            ]
-        );
-
-        // SQLS_SECTION_NAME/SQLS_SECTION_SEP are migrated as-is
-        // (runtime support comes separately)
+        // dynamic SQLS_SIDS (env var / command) expand to nothing during the
+        // migration, so their sections are dropped instead of made global
         assert!(
-            stdout.contains(
-                "      - mycustomsection2:\n          path: OtherSQL.sql\n          header_name: my_custom_section\n          header_sep: \"|\"\n"
-            ),
-            "got: {stdout}"
+            global.is_empty(),
+            "no section may become a global custom metric, got: {global:?}"
         );
+        for section in ["mycustomsection2", "mycustomsection3"] {
+            assert!(
+                stdout.contains(&format!(
+                    "# WARNING: {section}: SQLS_SIDS is built by a shell expression that expanded to no SID, skipping custom SQL section; assign the intended instances manually\n"
+                )),
+                "got: {stdout}"
+            );
+            assert!(
+                !stdout.contains(&format!("- {section}:")),
+                "the dropped section must not reach the config, got: {stdout}"
+            );
+        }
 
         // static SQLS_SIDS → custom_metrics on the matching instances,
         // MYINST3 exists (REMOTE_INSTANCE_1), MYINST2 is created for the metric
@@ -976,6 +985,72 @@ partly () {
         ["partly"],
         "a section keeping one valid reference stays on that instance"
     );
+}
+
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_custom_sql_dynamic_sids() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    let cfg = dir.join("mk_oracle.cfg");
+    // "inherited" takes the top-level SQLS_SIDS, which reads a variable the
+    // legacy plugin only defines at runtime
+    fs::write(
+        &cfg,
+        r#"DBUSER='user:pass'
+SQLS_SIDS="$(echo "$SIDS" | paste -sd,)"
+SQLS_SECTIONS="expanded inherited"
+expanded () {
+    SQLS_SIDS=$(echo "PROD1 PROD2")
+    SQLS_SQL="a.sql"
+}
+inherited () {
+    SQLS_SQL="b.sql"
+}
+"#,
+    )
+    .unwrap();
+
+    let output = run_bin()
+        .env_remove("SIDS")
+        .args(["-M", cfg.to_str().unwrap()])
+        .ok()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(
+        stdout.contains(
+            "# WARNING: expanded: SQLS_SIDS is built by a shell expression, which cannot be migrated reliably; using the SIDs it expanded to: PROD1, PROD2\n"
+        ),
+        "got: {stdout}"
+    );
+    assert!(
+        stdout.contains(
+            "# WARNING: inherited: SQLS_SIDS is built by a shell expression that expanded to no SID, skipping custom SQL section; assign the intended instances manually\n"
+        ),
+        "got: {stdout}"
+    );
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    assert!(
+        ora.all_sections().iter().all(|s| !s.is_custom_metric()),
+        "an unresolved expression must not become a global custom metric"
+    );
+    let metrics_of = |sid: &str| -> Vec<String> {
+        ora.instances()
+            .iter()
+            .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some(sid))
+            .unwrap_or_else(|| panic!("instance {sid} not found in: {stdout}"))
+            .custom_metrics()
+            .iter()
+            .map(|s| s.item_value().unwrap().as_str().to_string())
+            .collect()
+    };
+    assert_eq!(metrics_of("PROD1"), ["expanded"]);
+    assert_eq!(metrics_of("PROD2"), ["expanded"]);
 }
 
 // windows ps1 legacy plugin doesn't support custom SQL sections

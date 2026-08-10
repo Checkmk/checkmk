@@ -957,12 +957,18 @@ it does for the legacy plugin.
 The generated file is a single YAML document consisting of:
 
 1. A header with the source path and the conversion timestamp.
-2. The complete legacy configuration, commented out — nothing is lost, and
-   unrecognized variables stay visible for manual follow-up.
-3. The recognized legacy variables with their resolved values, as comments.
-4. `# WARNING:` comments for custom SQL files that need manual attention, also
-   printed to the terminal (see [Adapting Custom SQL Files](#adapting-custom-sql-files)).
-5. The converted configuration below the `# --- Unified Config ---` marker.
+2. The recognized legacy variables with their resolved values, as comments
+   (credentials are masked); `REMOTE_INSTANCE_*` entries that could not be parsed
+   are marked `# INVALID`.
+3. `# WARNING:` comments for everything that needs manual attention, also printed
+   to the terminal: custom SQL files that cannot be executed as they are (see
+   [Adapting Custom SQL Files](#adapting-custom-sql-files)) and custom SQL sections
+   whose target instances could not be determined (see
+   [Custom SQL Sections](#custom-sql-sections-sqls_)).
+4. The converted configuration below the `# --- Unified Config ---` marker.
+
+The legacy file itself is not copied into the output — keep it until you have
+verified the migrated configuration.
 
 ### What Is Migrated
 
@@ -999,26 +1005,62 @@ Notes:
 
 Each function listed in `SQLS_SECTIONS` becomes one `custom_metrics:` entry:
 
-| Legacy variable                                  | Migrated to                                                     |
-| ------------------------------------------------ | --------------------------------------------------------------- |
-| Function name in `SQLS_SECTIONS`                 | The item name (YAML key) of the entry                           |
-| `SQLS_ITEM_NAME`                                 | Overrides the item name                                         |
-| `SQLS_DIR` + `SQLS_SQL`                          | `path:`                                                         |
-| `SQLS_SIDS` (literal list)                       | Places the entry under the matching `instances:` entries        |
-| `SQLS_SIDS` (dynamic, e.g. `$SIDS` or a command) | Global `custom_metrics:` (runs on all instances)                |
-| `SQLS_TNSALIAS`                                  | Places the entry under the instance with that `alias:`          |
-| `SQLS_SECTION_NAME` (≠ `oracle_sql`)             | `header_name:`                                                  |
-| `SQLS_SECTION_SEP` (ASCII code)                  | `header_sep:` (kept only together with a custom `header_name:`) |
+| Legacy variable                      | Migrated to                                                     |
+| ------------------------------------ | --------------------------------------------------------------- |
+| Function name in `SQLS_SECTIONS`     | The item name (YAML key) of the entry                           |
+| `SQLS_ITEM_NAME`                     | Overrides the item name                                         |
+| `SQLS_DIR` + `SQLS_SQL`              | `path:`                                                         |
+| `SQLS_SIDS` (literal list)           | Places the entry under the matching `instances:` entries        |
+| `SQLS_SIDS` (shell expression)       | The instances it expands to, or nothing (see below)             |
+| `SQLS_TNSALIAS`                      | Places the entry under the instance with that `alias:`          |
+| `SQLS_SECTION_NAME` (≠ `oracle_sql`) | `header_name:`                                                  |
+| `SQLS_SECTION_SEP` (ASCII code)      | `header_sep:` (kept only together with a custom `header_name:`) |
 
 Placement rules:
 
 - A section restricted to specific SIDs or to a TNS alias is attached to the
   corresponding `instances:` entries; new entries are created for SIDs and aliases
   that have no `DBUSER_*` counterpart.
-- A section without restrictions — including a dynamic `SQLS_SIDS` value that cannot
-  be resolved at migration time — becomes a global custom metric and runs on every
-  instance.
+- A section without any `SQLS_SIDS` or `SQLS_TNSALIAS` becomes a global custom metric
+  and runs on every instance.
+- A section whose `SQLS_SIDS` names a `REMOTE_INSTANCE_*` variable is attached to the
+  instance that variable defines. References that resolve to nothing are dropped with
+  a warning, and a section left without any instance is skipped.
 - A section without `SQLS_SQL` is skipped with a warning.
+
+##### Dynamic `SQLS_SIDS` values
+
+The legacy plugin allows `SQLS_SIDS` to be built by a shell expression, evaluated
+every time the plugin runs and typically derived from the SIDs the plugin has just
+discovered:
+
+```bash
+SQLS_SIDS="$(echo "$SIDS" | tr ' ' '\n' | awk '$0 !~ /^\+ASM([0-9]*)?$/' | paste -sd,)"
+```
+
+**Such a value cannot be represented in the new configuration**, which lists instances
+statically. The migration therefore keeps the SIDs the expression expands to while it
+sources the legacy config, and warns about every affected section:
+
+```
+# WARNING: mycustomsection1: SQLS_SIDS is built by a shell expression, which cannot be migrated reliably; using the SIDs it expanded to: PROD1, PROD2
+```
+
+Review those sections: the expansion is a snapshot taken on the migration host, and
+variables the legacy plugin only defines at runtime (`$SIDS`, `$ORACLE_SID`, `$AWK`,
+`$GREP`, …) are not set while the config is sourced. Expressions that depend on them
+expand to nothing, and the section is skipped instead of migrated:
+
+```
+# WARNING: mycustomsection1: SQLS_SIDS is built by a shell expression that expanded to no SID, skipping custom SQL section; assign the intended instances manually
+```
+
+Such a section is deliberately not migrated as a global custom metric: it would then
+run on every instance of the new configuration — including explicitly configured and
+remote ones that the legacy expression never selected — creating unexpected services
+and failing wherever the queried objects do not exist. Add the section back manually
+under the `instances:` entries it is meant to run on (or, if it really applies to all
+of them, as a global `custom_metrics:` entry).
 
 ### What Is Not Migrated
 

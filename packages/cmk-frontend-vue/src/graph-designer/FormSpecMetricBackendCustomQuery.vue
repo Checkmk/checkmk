@@ -30,6 +30,12 @@ const props = defineProps<{
 
 const data = defineModel<MetricBackendCustomQuery>('data', { required: true })
 
+const serviceNameTemplateErrors = computed<string[]>(() =>
+  props.backendValidation
+    .filter((message) => message.location[0] === 'service_name_template')
+    .map((message) => message.message)
+)
+
 const componentId = useId()
 
 // MetricBackendCustomQuery has no persisted consolidation function, only the two
@@ -92,6 +98,7 @@ const consolidation = computed<WireConsolidationFunction>({
               type="text"
               field-size="large"
               :placeholder="_t('Service name template')"
+              :external-errors="serviceNameTemplateErrors"
             />
             <CmkHelpText :help="METRIC_BACKEND_MACRO_HELP" />
           </div>

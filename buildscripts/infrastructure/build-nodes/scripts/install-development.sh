@@ -297,30 +297,16 @@ install_for_python_dev() {
         rm "${SCRIPT_DIR}"/INSTALLED_BY_PYENV
         print_debug "INSTALLED_BY_PYENV: $INSTALLED_BY_PYENV"
     else
-        # not installed via pyenv, do it the oldschool way
-        print_blue "All right, Python will be installed as done in the CI to $TARGET_DIR"
-        install_python_and_teammates
+        print_blue "Python comes fully hermetic from bazel, only installing openssl."
+        install_ssl
     fi
 
     print_green "Installation for Python development done"
 }
 
-install_python_and_teammates() {
+install_ssl() {
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-openssl.sh
-    "${SCRIPT_DIR}"/install-python.sh
-
-    if [[ $STRIP_LATER -eq 1 ]]; then
-        print_blue "strip_binaries during Python setup"
-        strip_for_python
-        "${SCRIPT_DIR}"/install-python.sh link-only
-    fi
-}
-
-strip_for_python() {
-    # strip only the content of the latest created directory
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "Python-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "openssl-*" -print -quit | head -n 1)"
 }
 
 install_for_cpp_dev() {
@@ -537,16 +523,6 @@ if [[ $INSTALL_FOR_LOCALIZE -eq 1 ]]; then
 fi
 if [[ $INSTALL_FOR_AISANDBOX -eq 1 && -z ${CI} ]]; then
     install_for_aisandbox
-fi
-
-if [[ $STRIP_LATER -gt 1 ]]; then
-    print_blue "strip_binaries finally"
-
-    if [[ $INSTALL_FOR_PYTHON -eq 1 && $INSTALLED_BY_PYENV -eq 0 ]]; then
-        print_debug "Link Python"
-        strip_for_python
-        "${SCRIPT_DIR}"/install-python.sh link-only
-    fi
 fi
 
 if [[ $INSTALL_ONLY -eq 0 ]]; then

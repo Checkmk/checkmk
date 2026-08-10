@@ -5,9 +5,7 @@
 
 """Reusable fixtures for the graph E2E suites.
 
-Registered for discovery in ``tests/system/gui/conftest.py``. The saved-surface fixture
-still to be built (forecast) `skip`s until completed by the graph test suites, since
-creating and surfacing it depends on the graph implementation.
+Registered for discovery in ``tests/system/gui/conftest.py``.
 """
 
 from collections.abc import Iterator, Mapping, Sequence
@@ -20,15 +18,19 @@ from playwright.sync_api import Page
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
 )
+from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphSurface
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
+from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
+from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_SLOW_DASHBOARD_LOAD_MS
+from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.graphing import InjectedRrd
 from tests.testlib.site import ADMIN_USER, Site
 
@@ -361,4 +363,227 @@ def fixture_combined_graphs_page_all_services(
     """
     yield _open_combined_graphs(
         dashboard_page, host_name=graph_hosts_with_varying_data[0], service_filter=None
+    )
+
+
+# Every `GraphContainment.DASHBOARD_WIDGET` surface, one widget each, on a single dashboard.
+_ACTION_MENU_DASHBOARD_ID: Final = "e2e_action_menu_dashboard"
+_ACTION_MENU_DASHBOARD_TITLE: Final = "E2E action menu dashboard"
+_ACTION_MENU_WIDGET_TIMERANGE: Final = {"type": "graph", "duration": 14400}
+_ACTION_MENU_WIDGET_SIZE: Final = {"width": 40, "height": 20}
+_KNOWN_GOOD_METRIC_NAME: Final = "mem_used"
+
+
+def _preferred_metric_name(metrics: Sequence[RrdMetric]) -> str:
+    for metric in metrics:
+        if metric.name == _KNOWN_GOOD_METRIC_NAME:
+            return metric.name
+    return metrics[0].name
+
+
+def _relative_grid_widget(
+    title: str,
+    content: Mapping[str, object],
+    *,
+    filters: Mapping[str, object] | None = None,
+    y: int,
+) -> dict[str, object]:
+    """One widget of a relative-grid dashboard, stacked in a single column at row `y`."""
+    return {
+        "general_settings": {
+            "title": {"text": title, "render_mode": "with_background"},
+            "render_background": True,
+        },
+        "content": dict(content),
+        "filters": dict(filters or {}),
+        "layout": {
+            "type": "relative_grid",
+            "position": {"x": 1, "y": y},
+            "size": _ACTION_MENU_WIDGET_SIZE,
+        },
+    }
+
+
+def _action_menu_dashboard_id(surface_key: str) -> str:
+    return f"{_ACTION_MENU_DASHBOARD_ID}_{surface_key}"
+
+
+def _action_menu_dashboard_title(surface_title: str) -> str:
+    return f"{_ACTION_MENU_DASHBOARD_TITLE}: {surface_title}"
+
+
+def _action_menu_widget_content(
+    surface_key: str,
+    *,
+    metric_name: str,
+    host_service_filters: Mapping[str, object],
+    saved_custom_graph: str,
+) -> tuple[Mapping[str, object], Mapping[str, object] | None]:
+    """The widget `content` (and `filters`, if any) for one action-menu dashboard surface."""
+    if surface_key == "dashboard_graph_widget":
+        return (
+            {
+                "type": "custom_graph",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": {},
+                "custom_graph": saved_custom_graph,
+            },
+            None,
+        )
+    if surface_key == "single_timeseries_widget":
+        return (
+            {
+                "type": "single_timeseries",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": {},
+                "metric": metric_name,
+                "color": "default_metric",
+            },
+            host_service_filters,
+        )
+    if surface_key == "problem_percentage_widget":
+        return (
+            {
+                "type": "problem_graph",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": {},
+            },
+            None,
+        )
+    if surface_key == "alert_notification_widget":
+        return (
+            {
+                "type": "alert_overview",
+                "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
+                "limit_objects": 10,
+            },
+            None,
+        )
+    if surface_key == "scatterplot_widget":
+        return (
+            {
+                "type": "average_scatterplot",
+                "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
+                "metric": metric_name,
+                "metric_color": "default",
+                "average_color": "default",
+                "median_color": "default",
+            },
+            host_service_filters,
+        )
+    raise ValueError(f"No action-menu widget content is defined for surface {surface_key!r}")
+
+
+@pytest.fixture(name="dashboard_action_menu_surfaces")
+def fixture_dashboard_action_menu_surfaces(
+    surface: GraphSurface,
+    test_site: Site,
+    rrd_metric_source: RrdMetricSource,
+    saved_custom_graph: str,
+) -> Iterator[str]:
+    """A single-widget custom dashboard for one `GraphContainment.DASHBOARD_WIDGET` surface.
+
+    One dashboard per surface, rather than one dashboard shared across all five: sharing one
+    meant every surface's setup had to wait for every *other* surface's widget to finish
+    loading too - including the average-scatterplot widget's mean/median computation over RRD
+    data, by far the slowest of the five, which pushed every surface's setup close to (and,
+    for the scatterplot surface itself, past) the dashboard-load timeout.
+
+    Built directly through the relative-grid dashboard REST endpoint rather than the "Add
+    widget" wizard: two of the five surfaces (`problem_percentage_widget`,
+    `alert_notification_widget`) have no wizard UI to reach at all (they live behind a
+    separate, not-yet-implemented "Alerts & notifications" wizard category), so every
+    widget is created the same uniform way instead of mixing that in with wizard-driven
+    widgets for the rest.
+
+    The widget's title is taken straight from `surface.title` in `graph_surfaces.py`, so a
+    test resolves it with `BaseDashboard.get_widget(surface.title)` without hard-coding the
+    title a second time.
+
+    Yields the dashboard id (for `dashboard.py?name=<id>&owner=<ADMIN_USER>`, since the
+    dashboard is created under `ADMIN_USER` and is private).
+    """
+    host_name, service_name, metrics = rrd_metric_source
+    metric_name = _preferred_metric_name(metrics)
+    content, filters = _action_menu_widget_content(
+        surface.key,
+        metric_name=metric_name,
+        host_service_filters={"host": {"host": host_name}, "service": {"service": service_name}},
+        saved_custom_graph=saved_custom_graph,
+    )
+
+    dashboard_id = _action_menu_dashboard_id(surface.key)
+    payload = {
+        "id": dashboard_id,
+        "general_settings": {
+            "title": {
+                "text": _action_menu_dashboard_title(surface.title),
+                "render": True,
+                "include_context": False,
+            },
+            "description": "",
+            "menu": {
+                "topic": "overview",
+                "sort_index": 99,
+                "search_terms": [],
+                "is_show_more": False,
+            },
+            "visibility": {
+                "hide_in_monitor_menu": False,
+                "hide_in_drop_down_menus": False,
+                "share": "no",
+            },
+        },
+        "filter_context": {
+            "restricted_to_single": [],
+            "filters": {},
+            "mandatory_context_filters": [],
+        },
+        "widgets": {
+            surface.key: _relative_grid_widget(surface.title, content, filters=filters, y=1)
+        },
+        "layout": {"type": "relative_grid"},
+    }
+
+    with _as_admin_user(test_site):
+        test_site.openapi.dashboard.create_relative_grid_dashboard(payload)
+    try:
+        yield dashboard_id
+    finally:
+        if is_cleanup_enabled():
+            with _as_admin_user(test_site):
+                test_site.openapi.dashboard.delete(dashboard_id)
+
+
+@pytest.fixture(name="dashboard_with_action_menu_widgets")
+def fixture_dashboard_with_action_menu_widgets(
+    dashboard_page: MainDashboard,
+    dashboard_action_menu_surfaces: str,
+    surface: GraphSurface,
+    test_site: Site,
+    javascript_errors: list[str],
+) -> CustomDashboard:
+    """The dashboard from `dashboard_action_menu_surfaces`, opened in the browser.
+
+    Navigated to directly by URL rather than through 'Customize > Dashboards', matching the
+    same direct-`goto` pattern other REST/file-seeded dashboard fixtures use.
+
+    Depends on `javascript_errors` so its listener is attached before this navigates.
+    """
+    dashboard_page.page.goto(
+        test_site.internal_url
+        + f"dashboard.py?name={dashboard_action_menu_surfaces}&owner={ADMIN_USER}",
+        wait_until="load",
+    )
+    dashboard_page.page.wait_for_load_state("networkidle")
+    return CustomDashboard(
+        dashboard_page.page,
+        page_title=_action_menu_dashboard_title(surface.title),
+        navigate_to_page=False,
+        # The average-scatterplot widget's mean/median computation over RRD data can push
+        # the initial page render past the default expect timeout, see the docstring of
+        # `fixture_dashboard_action_menu_surfaces` above.
+        dashboard_name_timeout=(
+            TIMEOUT_SLOW_DASHBOARD_LOAD_MS if surface.key == "scatterplot_widget" else None
+        ),
     )

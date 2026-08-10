@@ -172,6 +172,7 @@ class CMKOpenApiSession(requests.Session):
         self.metric_backend = MetricBackendAPI(self)
         self.graph = GraphAPI(self)
         self.custom_graph = CustomGraphAPI(self)
+        self.dashboard = DashboardAPI(self)
         self.autocomplete = AutocompleteAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
@@ -2380,6 +2381,38 @@ class CustomGraphAPI(BaseAPI):
                 "consolidation_function": consolidation_function,
             },
         )
+
+
+class DashboardAPI(BaseAPI):
+    """Dashboards created through the relative-grid REST model.
+
+    Only registered at ``APIVersion.UNSTABLE``, unlike most of this session's other
+    sub-clients (``INTERNAL``): the endpoint itself has no stable version yet.
+    """
+
+    def create_relative_grid_dashboard(self, body: Mapping[str, Any]) -> dict[str, Any]:
+        response = self.session.post(
+            "domain-types/dashboard_relative_grid/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            json=body,
+        )
+        if response.status_code != 201:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+    def delete(self, dashboard_id: str) -> None:
+        response = self.session.delete(
+            f"objects/dashboard/{dashboard_id}",
+            api_version=APIVersion.UNSTABLE,
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
 
 class AgentReceiverRelayAPI(ARBaseAPI):

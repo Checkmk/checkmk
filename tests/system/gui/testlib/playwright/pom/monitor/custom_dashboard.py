@@ -29,8 +29,15 @@ class CustomDashboard(BaseDashboard):
     To navigate: 'Customize > Dashboards > {select any dashboard from 'customized' table}'.
     """
 
-    def __init__(self, page: Page, page_title: str, navigate_to_page: bool = True):
+    def __init__(
+        self,
+        page: Page,
+        page_title: str,
+        navigate_to_page: bool = True,
+        dashboard_name_timeout: float | None = None,
+    ):
         self.page_title = page_title
+        self._dashboard_name_timeout = dashboard_name_timeout
         super().__init__(page, navigate_to_page)
 
     @override
@@ -41,7 +48,7 @@ class CustomDashboard(BaseDashboard):
 
     @override
     def validate_page(self) -> None:
-        self.check_selected_dashboard_name()
+        self.check_selected_dashboard_name(timeout=self._dashboard_name_timeout)
         self._validate_main_content()
 
     def _validate_main_content(self) -> None:

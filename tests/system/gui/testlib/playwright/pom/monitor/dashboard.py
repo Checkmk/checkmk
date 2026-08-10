@@ -51,12 +51,12 @@ class BaseDashboard(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
-    def check_selected_dashboard_name(self) -> None:
+    def check_selected_dashboard_name(self, timeout: float | None = None) -> None:
         """Check that the dashboard selector has the expected placeholder text."""
         expect(
             self.dashboard_selector,
             message="The dashboard selector does not contain the expected dashboard name.",
-        ).to_have_attribute("placeholder", self.page_title)
+        ).to_have_attribute("placeholder", self.page_title, timeout=timeout)
 
     @property
     def dashboard_container(self) -> Locator:

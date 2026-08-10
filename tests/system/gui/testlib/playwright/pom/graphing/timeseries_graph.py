@@ -10,7 +10,11 @@ import logging
 from playwright.sync_api import expect, FloatRect, Locator, Page
 
 from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
-from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    ACTION_MENU_BUTTON_NAME,
+    ACTION_MENU_DROPDOWN_SELECTOR,
+    GraphAccessor,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.page import MainArea
@@ -236,6 +240,16 @@ class GraphPanel:
     @property
     def legend(self) -> Locator:
         return self.root.locator(".graphing-graph-legend")
+
+    @property
+    def action_menu_button(self) -> Locator:
+        """The panel's action-menu (burger menu) trigger button, if any."""
+        return self.header.get_by_role("button", name=ACTION_MENU_BUTTON_NAME, exact=True)
+
+    def open_action_menu(self) -> Locator:
+        """Open the action menu and return the locator of its dropdown."""
+        self.action_menu_button.click()
+        return self.root.locator(ACTION_MENU_DROPDOWN_SELECTOR)
 
     @property
     def context_view(self) -> Locator:

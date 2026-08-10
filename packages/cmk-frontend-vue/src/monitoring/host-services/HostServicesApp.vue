@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -127,6 +128,9 @@ function onActionPerformed(result: ActionFeedbackResult): void {
           @focusin="hostServicesService.beginAutoPause()"
           @focusout="hostServicesService.endAutoPause()"
         />
+        <CmkButton variant="text" size="small" @click="hostServicesService.clearAllFilters()">
+          {{ _t('Reset all filters') }}
+        </CmkButton>
       </div>
       <div class="monitoring-host-services-app__header-end">
         <RefreshCountdown

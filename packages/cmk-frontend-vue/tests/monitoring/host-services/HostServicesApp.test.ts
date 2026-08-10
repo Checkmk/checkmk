@@ -228,6 +228,40 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   )
 })
 
+test('resetting all filters restores the full, unfiltered list', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Service' }))
+  await fireEvent.update(
+    within(screen.getByRole('group', { name: 'Filter Service' })).getByRole('textbox'),
+    'cpu'
+  )
+  await userEvent.click(
+    within(screen.getByRole('group', { name: 'Filter Service' })).getByRole('button', {
+      name: 'Apply'
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter Summary' }))
+  await fireEvent.update(
+    within(screen.getByRole('group', { name: 'Filter Summary' })).getByRole('textbox'),
+    'timeout'
+  )
+  await userEvent.click(
+    within(screen.getByRole('group', { name: 'Filter Summary' })).getByRole('button', {
+      name: 'Apply'
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: { limit: 1000 } })
+  )
+})
+
 test('marks the sorted column with its direction', async () => {
   mockServices([makeApiEntry()])
   renderApp()

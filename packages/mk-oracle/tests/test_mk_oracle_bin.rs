@@ -897,8 +897,8 @@ fn test_migrate_reference_config_custom_metrics() {
             )]
         );
 
-        // SQLS_TNSALIAS pins the metric to the aliased instance,
-        // its SQLS_SIDS is ignored
+        // SQLS_TNSALIAS pins the metric to the aliased instance, and its
+        // SQLS_SIDS is preserved as the SID of that same entry
         assert_eq!(
             custom_metrics_of("TNS"),
             [(
@@ -907,10 +907,14 @@ fn test_migrate_reference_config_custom_metrics() {
             )]
         );
         assert!(
-            !ora.instances()
-                .iter()
-                .any(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("NOT_USED")),
-            "SQLS_SIDS must be ignored when SQLS_TNSALIAS is set"
+            stdout.contains("      - sid: ALIASED_SID\n        alias: TNS\n"),
+            "SQLS_SIDS and SQLS_TNSALIAS must both be migrated, got: {stdout}"
+        );
+        assert!(
+            stdout.contains(
+                "# WARNING: mycustomsection5: SQLS_SIDS 'ALIASED_SID' is migrated next to SQLS_TNSALIAS 'TNS', but the instance is resolved by its alias, so the SID no longer restricts the section\n"
+            ),
+            "got: {stdout}"
         );
         assert!(
             !stdout.contains("- sid: REMOTE_INSTANCE_"),
@@ -984,6 +988,87 @@ partly () {
         metrics,
         ["partly"],
         "a section keeping one valid reference stays on that instance"
+    );
+}
+
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_custom_sql_tnsalias_with_sids() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    let cfg = dir.join("mk_oracle.cfg");
+    fs::write(
+        &cfg,
+        r#"DBUSER='user:pass'
+SQLS_SECTIONS="Invalid1 Invalid2 Ambiguous"
+Invalid1 () {
+    SQLS_TNSALIAS=NORMALDB_ALIAS
+    SQLS_SIDS=NORMALDB
+    SQLS_SQL=invalid_objects1.sql
+}
+Invalid2 () {
+    SQLS_TNSALIAS=ORCLCDB_ALIAS
+    SQLS_SIDS=ORCLCDB
+    SQLS_SQL=invalid_objects2.sql
+}
+Ambiguous () {
+    SQLS_TNSALIAS=SHARED_ALIAS
+    SQLS_SIDS="ONE,TWO"
+    SQLS_SQL=ambiguous.sql
+}
+"#,
+    )
+    .unwrap();
+
+    let output = run_bin().args(["-M", cfg.to_str().unwrap()]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    // each section keeps its own SID next to its alias instead of being
+    // collected under an alias-only instance
+    for (sid, alias, section, sql) in [
+        ("NORMALDB", "NORMALDB_ALIAS", "Invalid1", "invalid_objects1"),
+        ("ORCLCDB", "ORCLCDB_ALIAS", "Invalid2", "invalid_objects2"),
+    ] {
+        assert!(
+            stdout.contains(&format!(
+                "      - sid: {sid}\n        alias: {alias}\n        custom_metrics:\n          - {section}:\n              path: {sql}.sql\n"
+            )),
+            "got: {stdout}"
+        );
+        assert!(
+            stdout.contains(&format!(
+                "# WARNING: {section}: SQLS_SIDS '{sid}' is migrated next to SQLS_TNSALIAS '{alias}', but the instance is resolved by its alias, so the SID no longer restricts the section\n"
+            )),
+            "got: {stdout}"
+        );
+    }
+
+    // several SIDs cannot identify one aliased instance: the alias stays alone,
+    // but the loss is reported instead of happening silently
+    assert!(
+        stdout.contains("      - alias: SHARED_ALIAS\n"),
+        "got: {stdout}"
+    );
+    assert!(
+        stdout.contains(
+            "# WARNING: Ambiguous: SQLS_SIDS 'ONE, TWO' cannot be kept next to SQLS_TNSALIAS 'SHARED_ALIAS', the instance is resolved by its alias alone; verify that the alias connects to the intended database\n"
+        ),
+        "got: {stdout}"
+    );
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    let aliased: Vec<String> = ora
+        .instances()
+        .iter()
+        .filter_map(|i| i.alias().as_ref().map(|a| a.to_string()))
+        .collect();
+    assert_eq!(
+        aliased,
+        ["NORMALDB_ALIAS", "ORCLCDB_ALIAS", "SHARED_ALIAS"],
+        "every alias must get exactly one instance"
     );
 }
 

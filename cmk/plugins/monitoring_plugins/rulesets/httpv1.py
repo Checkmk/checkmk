@@ -173,7 +173,7 @@ def _active_checks_http_hostspec() -> Dictionary:
     return Dictionary(
         title=Title("Host settings"),
         help_text=Help(
-            "Usually Checkmk will nail this check to the primary IP address of the host it is "
+            "Usually Checkmk will connect this check with the primary IP address of the host it is "
             "attached to. It will use the corresponding IP version (IPv4/IPv6) and default port "
             "(80/443). With this option you can override either of these parameters. By default, no "
             "virtual host is set and HTTP/1.0 will be used. In some setups however, you may want "

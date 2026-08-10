@@ -19,7 +19,7 @@ from tests.system.gui.testlib.playwright.pom.setup.global_settings import (
     SiteSpecificGlobalSettings,
 )
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,20 @@ logger = logging.getLogger(__name__)
 SITE_SPECIFIC_SETTINGS_REL_PATH = Path("etc/check_mk/multisite.d/sites.mk")
 GLOBAL_SETTINGS_REL_PATH = Path("etc/omd/global.mk")
 SITE_CONF_REL_PATH = Path("etc/omd/site.conf")
+
+
+@pytest.fixture(name="remote_site_wato_disabled", scope="module")
+def fixture_remote_site_wato_disabled(test_site: Site, site_factory: SiteFactory) -> Iterator[Site]:
+    """Return a second Checkmk site object for a distributed setup, shared across this module.
+
+    WATO is disabled on the remote site (disable_remote_configuration=True).
+
+    This overrides the function-scoped fixture of the same name from the top-level conftest.
+    """
+    with site_factory.connected_remote_site(
+        "remote", test_site, "test_piggyback_hub_conf"
+    ) as remote_site:
+        yield remote_site
 
 
 class HubEnableActions(enum.Enum):

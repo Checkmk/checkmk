@@ -459,9 +459,9 @@ def test_unack_werks_needs_the_acknowledge_permission(
 @pytest.mark.parametrize(
     "count,expected_tooltip",
     [
-        pytest.param(1, "1 unacknowledged incompatible werk", id="singular"),
-        pytest.param(3, "3 unacknowledged incompatible werks", id="plural"),
-        pytest.param(0, "0 unacknowledged incompatible werks", id="zero_is_plural"),
+        pytest.param(1, "1 unacknowledged incompatible Werk", id="singular"),
+        pytest.param(3, "3 unacknowledged incompatible Werks", id="plural"),
+        pytest.param(0, "0 unacknowledged incompatible Werks", id="zero_is_plural"),
     ],
 )
 def test_unack_werks_tooltip_is_pluralized(

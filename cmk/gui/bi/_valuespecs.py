@@ -859,7 +859,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                 elements=[
                     Integer(
                         help=_(
-                            "Normally this value is <tt>1</tt>, which means that the best state "
+                            "Normally, this value is <tt>1</tt>, which means that the best state "
                             "of all child nodes is used as the overall state. If you set it for example "
                             "to <tt>2</tt>, then the node with the best state will not be regarded. "
                             "If the states of the child nodes were CRIT, WARN and OK, then the overall "
@@ -908,7 +908,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                 elements=[
                     Integer(
                         help=_(
-                            "Normally this value is <tt>1</tt>, which means that the worst state "
+                            "Normally, this value is <tt>1</tt>, which means that the worst state "
                             "of all child nodes is being used as the total state. If you set it, for example, "
                             "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
                             "Example: In the case of five nodes with the states CRIT, CRIT, WARN, OK, OK, the "

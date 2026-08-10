@@ -5,21 +5,25 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { CustomServicesWizard } from 'cmk-shared-typing/typescript/mode_custom_services'
+import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
+import { createCustomService } from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
-defineProps<CustomServicesWizard>()
+const props = defineProps<CustomServicesWizard>()
 
 const { _t } = usei18n()
 
 const currentStep = ref(1)
 const model = ref<ServiceModel>(emptyService())
+const saving = ref(false)
+const saveError = ref<string | null>(null)
 
 // A metric must be selected before the host-assignment step can be reached.
 const step1Valid = computed(() => isMetricSelected(model.value))
@@ -40,8 +44,24 @@ async function validateStep1(): Promise<boolean> {
   return step1Valid.value
 }
 
-function createAndActivate(): void {
-  // TODO(CMK-37547): persist the custom service and open Activate Changes.
+// Persist the custom service, then return to the Custom Services list. The new
+// rule shows up as a pending change in the top-bar Changes menu, where the user
+// activates it.
+async function createService(): Promise<void> {
+  saveError.value = null
+  saving.value = true
+  try {
+    const result = await createCustomService(model.value)
+    if (!result.ok) {
+      saveError.value = result.error ?? _t('Failed to create the custom service.')
+      return
+    }
+    window.location.href = props.back_url
+  } catch {
+    saveError.value = _t('Failed to create the custom service.')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -74,13 +94,14 @@ function createAndActivate(): void {
             v-model:service-name="model.serviceName"
             v-model:host-name="model.hostName"
           />
+          <CmkAlertBox v-if="saveError" variant="error" size="small">{{ saveError }}</CmkAlertBox>
         </template>
         <template #actions>
           <CmkWizardButton
             type="finish"
-            :override-label="_t('Create & activate changes')"
-            :disabled="!step2Valid"
-            @click="createAndActivate"
+            :override-label="_t('Create custom service')"
+            :disabled="!step2Valid || saving"
+            @click="createService"
           />
           <CmkWizardButton type="previous" />
         </template>

@@ -1289,7 +1289,7 @@ def notification_method() -> QuickSetupStage:
                             "state": DictElement(
                                 required=False,
                                 parameter_form=FixedValue(
-                                    title=Title("Host/Service state"),
+                                    title=Title("Host/service state"),
                                     value=None,
                                 ),
                             ),

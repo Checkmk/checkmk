@@ -730,7 +730,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 ("service", _("Service name")),
                 ("sl", _("Service level")),
                 ("check_type", _("Check type")),
-                ("state", _("Host/Service state")),
+                ("state", _("Host/service state")),
             ]
             + (
                 [

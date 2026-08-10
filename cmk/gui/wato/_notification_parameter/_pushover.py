@@ -80,7 +80,7 @@ def form_spec() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="emergency",
                             title=Title(
-                                "Emergency: Repeat push notification in intervalls till expire time."
+                                "Emergency: repeat push notification in intervals till expiry time."
                             ),
                             parameter_form=Tuple(
                                 elements=[
@@ -124,7 +124,7 @@ def form_spec() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="high",
-                            title=Title("High: Push notification alerts bypass quiet hours"),
+                            title=Title("High: push notification alerts bypass quiet hours"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(

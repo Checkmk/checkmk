@@ -139,7 +139,7 @@ def _valuespec_notification_logging(context: GlobalSettingsContext) -> DropdownC
         title=_("Notification log level"),
         help=_(
             "You can configure the notification mechanism to log more details about "
-            "the notifications into the notification log. This information are logged "
+            "the notifications into the notification log. This information is logged "
             "into the file <tt>%(log_file)s</tt>"
         )
         % {"log_file": context.site_neutral_log_dir / "notify.log"},

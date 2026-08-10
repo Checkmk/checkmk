@@ -497,7 +497,12 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 element.display_text = element.text_tokens[0][1]
 
         if self._element_texts_unique(elements):
-            return [SearchResult(title=e.display_text, url=e.url) for e in elements]
+            for element in elements:
+                if self._displays_host_address(element):
+                    element.context = self._host_name_of(element)
+            return [
+                SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements
+            ]
 
         # Some (ugly) special handling when the results are not unique
         # Whenever this happens we try to find a fitting second value
@@ -515,8 +520,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         # Add additional info to the display text
         for element in elements:
-            hostname = element.row.get("host_name", element.row.get("name"))
-            assert hostname is not None  # TODO: Why is this the case? Needed for correct typing.
+            hostname = self._host_name_of(element)
             if "&host_regex=" not in element.url:
                 element.url += "&host_regex=%s" % hostname
 
@@ -528,6 +532,23 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 element.context = hostname
 
         return [SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements]
+
+    def _displays_host_address(self, element: LivestatusResult) -> bool:
+        return (
+            self.livestatus_table != "services"
+            and any(
+                shortname == "ad" and text == element.display_text
+                for shortname, text in element.text_tokens
+            )
+            and self._host_name_of(element) != element.display_text
+        )
+
+    @staticmethod
+    def _host_name_of(element: LivestatusResult) -> str:
+        row = element.row
+        hostname = row["host_name"] if "host_name" in row else row["name"]
+        assert isinstance(hostname, str)
+        return hostname
 
     def _element_texts_unique(self, elements: list[LivestatusResult]) -> bool:
         used_texts: set[str] = set()

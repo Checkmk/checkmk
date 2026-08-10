@@ -36,6 +36,21 @@ UploadedFile = tuple[str, str, bytes]
 HTTPMethod = Literal["get", "put", "post", "delete", "patch"]
 
 
+CSPDirective = Literal[
+    "default-src",
+    "script-src",
+    "script-src-attr",
+    "style-src",
+    "img-src",
+    "connect-src",
+    "frame-ancestors",
+    "base-uri",
+    "form-action",
+    "object-src",
+    "worker-src",
+]
+
+
 @dataclass(frozen=True)
 class ContentSecurityPolicy:
     """A complete Content-Security-Policy for a single HTTP response.
@@ -45,25 +60,26 @@ class ContentSecurityPolicy:
     CMK-31353.
     """
 
-    directives: Mapping[str, str]
+    directives: Mapping[CSPDirective, str]
 
     def serialize(self) -> str:
         return "; ".join(f"{name} {value}" for name, value in self.directives.items())
 
-    def with_extra_source(self, directive: str, source: str) -> "ContentSecurityPolicy":
-        """Return a copy with ``source`` appended to ``directive`` (e.g. to
-        allow an external SAML IdP as an extra form-action target)."""
+    def with_extra_source(self, directive: CSPDirective, source: str) -> "ContentSecurityPolicy":
+        """Return a copy with ``source`` appended to ``directive``.
+
+        ``source`` must be a single source expression; whitespace/``;``/``,``
+        are rejected to prevent CSP injection."""
+        if not source or any(c.isspace() for c in source) or ";" in source or "," in source:
+            raise ValueError(f"Invalid CSP source expression: {source!r}")
         directives = dict(self.directives)
         existing = directives.get(directive, "")
         directives[directive] = f"{existing} {source}".strip()
         return ContentSecurityPolicy(directives=directives)
 
 
-# The policy Checkmk has shipped historically (set by the site Apache in
-# omd/packages/apache-omd/skel/etc/apache/conf.d/security.conf). Kept as the
-# default so nothing regresses while pages are migrated to the strict policy.
-# NOTE: the source list values are semantically identical to the Apache string
-# (insignificant whitespace aside); an equivalence test guards this.
+# The policy Checkmk shipped before CMK-31353. Applied by default so nothing
+# regresses while pages are migrated to the strict policy.
 LEGACY_CONTENT_SECURITY_POLICY = ContentSecurityPolicy(
     directives={
         "default-src": "'self' 'unsafe-inline' 'unsafe-eval' ssh: rdp:",
@@ -77,16 +93,13 @@ LEGACY_CONTENT_SECURITY_POLICY = ContentSecurityPolicy(
     }
 )
 
-# Target policy of the "Prevent XSS attacks with stricter CSP" initiative
-# (CMK-31353): no inline scripts/handlers, no eval. A page may only opt into
-# this once it is free of inline JavaScript. The non-script directives are kept
-# in sync with the legacy policy above.
+# Target policy of CMK-31353: no inline scripts/handlers, no eval. A page may
+# opt into it once free of inline JavaScript.
 STRICT_CONTENT_SECURITY_POLICY = ContentSecurityPolicy(
     directives={
         "default-src": "'self'",
         "script-src": "'self'",
-        # Vue style bindings need inline styles; style injection is far less
-        # dangerous than script injection.
+        # Vue style bindings need inline styles (far lower risk than scripts).
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: https://*.tile.openstreetmap.org/",
         "connect-src": "'self' https://crash.checkmk.com/",
@@ -702,6 +715,8 @@ class Response(flask.Response):
 
     default_mimetype = "text/html"  # type: ignore[mutable-override]
 
+    _content_security_policy: "ContentSecurityPolicy | None" = None
+
     def set_http_cookie(
         self, key: str, value: str, *, secure: bool, max_age: int | None = None
     ) -> None:
@@ -721,20 +736,23 @@ class Response(flask.Response):
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, "utf-8")
 
-    def set_csp_form_action(self, form_action: str) -> None:
-        """If you have a form action that is not within the site, the
-        Content-Security-Policy will block it. So you can add it here, Apache
-        will then take this value and complete the CSP"""
+    def add_csp_source(self, directive: CSPDirective, source: str) -> None:
+        """Append an extra source to a Content-Security-Policy directive.
 
-        self.headers["Content-Security-Policy"] = (
-            f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
-        )
+        For example ``add_csp_source("form-action", idp_url)`` to allow an
+        external SAML IdP as a form target. Extends the policy already set on
+        this response; if none has been set yet, it extends the legacy policy -
+        so a page that wants a stricter policy must set it first (via
+        set_content_security_policy) and then call this."""
+        base = self._content_security_policy or LEGACY_CONTENT_SECURITY_POLICY
+        self.set_content_security_policy(base.with_extra_source(directive, source))
 
     def set_content_security_policy(self, policy: ContentSecurityPolicy) -> None:
         """Set a complete Content-Security-Policy for this response.
 
         Use this to opt a page into a stricter policy than the default. See
         cmk.gui.http.STRICT_CONTENT_SECURITY_POLICY and CMK-31353."""
+        self._content_security_policy = policy
         self.headers["Content-Security-Policy"] = policy.serialize()
 
     def has_content_security_policy(self) -> bool:

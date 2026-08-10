@@ -8,8 +8,15 @@ from collections.abc import Callable, Iterator
 import pytest
 
 import cmk.gui.wsgi.applications.checkmk as checkmk_app
-from cmk.gui.http import Response
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import (
+    LEGACY_CONTENT_SECURITY_POLICY,
+    Response,
+    response,
+    STRICT_CONTENT_SECURITY_POLICY,
+)
 from cmk.gui.pages import page_registry, PageContext, PageEndpoint, PageHandler
+from cmk.web.utils.html import HTML
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 OS_ERROR_PAGE = "test_oserror_page"
@@ -81,3 +88,43 @@ def test_non_wsgi_oserror_from_page_handler_propagates(
 
     with pytest.raises(OSError, match="Random OS Error"):
         wsgi_app.get(f"/NO_SITE/check_mk/{OS_ERROR_PAGE}.py")
+
+
+CSP_PAGE = "test_csp_page"
+CSP_STRICT_PAGE = "test_csp_strict_page"
+
+
+def _csp_page(ctx: PageContext) -> None:
+    html.write_html(HTML.without_escaping("<div>hello</div>"))
+
+
+def _csp_strict_page(ctx: PageContext) -> None:
+    response.set_content_security_policy(STRICT_CONTENT_SECURITY_POLICY)
+    html.write_html(HTML.without_escaping("<div>hello</div>"))
+
+
+@pytest.fixture(name="csp_pages")
+def _csp_pages() -> Iterator[None]:
+    page_registry.register(PageEndpoint(CSP_PAGE, _csp_page))
+    page_registry.register(PageEndpoint(CSP_STRICT_PAGE, _csp_strict_page))
+    try:
+        yield
+    finally:
+        page_registry.unregister(CSP_PAGE)
+        page_registry.unregister(CSP_STRICT_PAGE)
+
+
+def test_csp_default_legacy_policy_is_applied(
+    logged_in_wsgi_app: WebTestAppForCMK, csp_pages: None
+) -> None:
+    """A page that sets no policy gets the legacy CSP from the central hook."""
+    resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_PAGE}.py", status=200)
+    assert resp.headers["Content-Security-Policy"] == LEGACY_CONTENT_SECURITY_POLICY.serialize()
+
+
+def test_csp_page_can_opt_into_strict_policy(
+    logged_in_wsgi_app: WebTestAppForCMK, csp_pages: None
+) -> None:
+    """A page that opts into the strict policy keeps it; the hook does not overwrite it."""
+    resp = logged_in_wsgi_app.get(f"/NO_SITE/check_mk/{CSP_STRICT_PAGE}.py", status=200)
+    assert resp.headers["Content-Security-Policy"] == STRICT_CONTENT_SECURITY_POLICY.serialize()

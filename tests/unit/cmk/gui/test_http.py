@@ -714,6 +714,43 @@ def test_content_security_policy_with_extra_source() -> None:
     assert policy.directives["form-action"] == "'self'"
 
 
+def test_add_csp_source_extends_legacy_when_nothing_set() -> None:
+    r = http.Response()
+    assert not r.has_content_security_policy()
+    r.add_csp_source("form-action", "https://idp.example/sso")
+    parsed = _parse_csp(r.headers["Content-Security-Policy"])
+    legacy = _parse_csp(http.LEGACY_CONTENT_SECURITY_POLICY.serialize())
+    # no policy was set, so it extends the legacy policy
+    assert parsed["default-src"] == legacy["default-src"]
+    assert parsed["form-action"] == legacy["form-action"] | {"https://idp.example/sso"}
+
+
+@pytest.mark.parametrize(
+    "bad_source",
+    [
+        "",
+        "https://evil.example/ ; script-src 'unsafe-inline'",  # directive injection
+        "https://a.example https://b.example",  # smuggles a second source
+        "https://a.example\n",  # newline
+    ],
+)
+def test_with_extra_source_rejects_injection(bad_source: str) -> None:
+    with pytest.raises(ValueError, match="Invalid CSP source"):
+        http.LEGACY_CONTENT_SECURITY_POLICY.with_extra_source("form-action", bad_source)
+
+
+def test_add_csp_source_extends_already_set_policy() -> None:
+    r = http.Response()
+    r.set_content_security_policy(http.STRICT_CONTENT_SECURITY_POLICY)
+    r.add_csp_source("connect-src", "https://metrics.example/")
+    parsed = _parse_csp(r.headers["Content-Security-Policy"])
+    strict = _parse_csp(http.STRICT_CONTENT_SECURITY_POLICY.serialize())
+    # the already-set strict policy is extended on an arbitrary directive,
+    # not downgraded to legacy
+    assert parsed["default-src"] == strict["default-src"]
+    assert parsed["connect-src"] == strict["connect-src"] | {"https://metrics.example/"}
+
+
 def test_strict_policy_forbids_unsafe_script_sources() -> None:
     parsed = _parse_csp(http.STRICT_CONTENT_SECURITY_POLICY.serialize())
     assert parsed["default-src"] == frozenset({"'self'"})

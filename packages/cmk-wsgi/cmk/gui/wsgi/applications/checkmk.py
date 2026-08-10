@@ -41,7 +41,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Response, response
+from cmk.gui.http import LEGACY_CONTENT_SECURITY_POLICY, request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -317,6 +317,13 @@ def _process_request(
             resp = _json_error_response(f"{_('Internal error')}: {e}")
         else:
             resp = handle_unhandled_exception(ctx.config)
+
+    # Apply the default Content-Security-Policy unless the page opted into a
+    # stricter one (CMK-31353). The CSP is owned by Python here, not the site
+    # Apache; pages migrated to the strict policy have already set their own
+    # header at this point.
+    if not resp.has_content_security_policy():
+        resp.set_content_security_policy(LEGACY_CONTENT_SECURITY_POLICY)
 
     resp.set_caching_headers()
     return resp(environ, start_response)

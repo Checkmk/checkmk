@@ -32,7 +32,8 @@ max_line_length = 100
 [*.{js,py,pl,pm,t}]
 max_line_length = 100
 
-[{*.scss,package.json,.envrc}]
+# JSON is formatted by prettier via `bazel run //:format`, which indents by 2.
+[{*.scss,*.json,.envrc}]
 indent_size = 2
 
 [{Makefile,*.make,*.am}]

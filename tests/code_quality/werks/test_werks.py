@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 from collections import defaultdict
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from functools import lru_cache, partial
 from pathlib import Path
 from typing import NamedTuple
@@ -114,19 +114,30 @@ def fixture_werks_loader_empty(tmp_path: Path) -> WerksLoader:
     )
 
 
+@pytest.fixture(scope="session", name="all_werks_raw")
+def fixture_all_werks_raw() -> Sequence[WerkV3]:
+    """
+    provide the werks as parsed from the `.werks` directory
+
+    Parsing the ~15k werk files takes ~16s, so this is session scoped. The consumers only read
+    from the returned werks.
+    """
+    return cmk.werks.tool.utils.load_raw_files(bazel_repo_root() / ".werks")
+
+
 @pytest.fixture(scope="session", name="werks_loaded")
-def fixture_werks_loader(tmp_path_factory: pytest.TempPathFactory) -> dict[int, WerkV3]:
+def fixture_werks_loader(
+    tmp_path_factory: pytest.TempPathFactory, all_werks_raw: Sequence[WerkV3]
+) -> dict[int, WerkV3]:
     """
     provide all werks available in the git repository
-
-    Loading the whole `.werks` corpus takes ~20s, so this is session scoped. The consumers only
-    read from the returned mapping.
     """
     tmp_path = tmp_path_factory.mktemp("werks")
     base_dir = tmp_path / "werks_base_dir_precompiled"
     base_dir.mkdir()
-    all_werks = cmk.werks.tool.utils.load_raw_files(bazel_repo_root() / ".werks")
-    cmk.werks.tool.utils.write_precompiled_werks(base_dir / "werks", {w.id: w for w in all_werks})
+    cmk.werks.tool.utils.write_precompiled_werks(
+        base_dir / "werks", {w.id: w for w in all_werks_raw}
+    )
 
     unacknowledged_werks_json = tmp_path / "ut_unacknowledged_werks_json"
     acknowledged_werks_mk = tmp_path / "ut_acknowledged_werks_mk"
@@ -149,15 +160,16 @@ def fixture_secwerks_loaded(werks_loaded: dict[int, WerkV3]) -> dict[int, WerkV3
     }
 
 
-def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
-    all_werks = cmk.werks.tool.utils.load_raw_files(bazel_repo_root() / ".werks")
+def test_write_precompiled_werks(
+    werks_loader_empty: WerksLoader, all_werks_raw: Sequence[WerkV3]
+) -> None:
     # Handle both v2 editions (cre, cee, cme, cce, cse) and v3 editions (community, pro, ultimatemt, ultimate, cloud)
-    cre_werks = {w.id: w for w in all_werks if w.edition.value in ("cre", "community")}
-    cee_werks = {w.id: w for w in all_werks if w.edition.value in ("cee", "pro")}
-    cme_werks = {w.id: w for w in all_werks if w.edition.value in ("cme", "ultimatemt")}
-    cce_werks = {w.id: w for w in all_werks if w.edition.value in ("cce", "ultimate")}
-    cse_werks = {w.id: w for w in all_werks if w.edition.value in ("cse", "cloud")}
-    assert len(all_werks) == sum(
+    cre_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cre", "community")}
+    cee_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cee", "pro")}
+    cme_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cme", "ultimatemt")}
+    cce_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cce", "ultimate")}
+    cse_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cse", "cloud")}
+    assert len(all_werks_raw) == sum(
         [len(cre_werks), len(cee_werks), len(cme_werks), len(cce_werks), len(cse_werks)]
     )
 
@@ -191,7 +203,7 @@ def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
     merged_werks.update(cme_werks)
     merged_werks.update(cce_werks)
     merged_werks.update(cse_werks)
-    assert len(all_werks) == len(merged_werks)
+    assert len(all_werks_raw) == len(merged_werks)
 
     assert set(merged_werks.keys()) == (werks_loaded.keys())
     for werk_id, werk in werks_loaded.items():

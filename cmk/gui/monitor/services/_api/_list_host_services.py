@@ -101,6 +101,11 @@ class HostServiceEntry:
         example=["hh"],
         default_factory=ApiOmitted,
     )
+    contact_groups: list[str] | ApiOmitted = api_field(
+        description="Contact groups this service is in. Omitted when it is in none.",
+        example=["all"],
+        default_factory=ApiOmitted,
+    )
     perfometer: ServicePerfometer | ApiOmitted = api_field(
         description=(
             "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
@@ -122,6 +127,9 @@ class HostServiceEntry:
             labels=service.labels if service.labels is not None else ApiOmitted(),
             tags=service.tags if service.tags is not None else ApiOmitted(),
             contacts=service.contacts if service.contacts is not None else ApiOmitted(),
+            contact_groups=service.contact_groups
+            if service.contact_groups is not None
+            else ApiOmitted(),
             perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
             or ApiOmitted(),
         )

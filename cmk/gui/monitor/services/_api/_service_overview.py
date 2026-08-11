@@ -143,7 +143,7 @@ class ServiceOverviewResponse:
             legacy_service_parameters_link=(
                 service_parameters_link(service) if may_see_parameters else None
             ),
-            contact_groups=service.contact_groups,
+            contact_groups=read(service.contact_groups, "contact_groups"),
             summary=service.summary,
             long_output=service.long_output,
             last_check=service.last_check,

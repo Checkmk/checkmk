@@ -117,6 +117,9 @@ class LiveStatusHostServicesRepository:
                         ),
                         tags=dict(row["tags"]) if "tags" in row else None,
                         contacts=list(row["contacts"]) if "contacts" in row else None,
+                        contact_groups=(
+                            list(row["contact_groups"]) if "contact_groups" in row else None
+                        ),
                     )
                     for row in q.iterate(conn)
                 ],
@@ -226,6 +229,7 @@ _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.LABELS: (Services.labels, Services.label_sources),
     ServiceOptionalField.TAGS: (Services.tags,),
     ServiceOptionalField.CONTACTS: (Services.contacts,),
+    ServiceOptionalField.CONTACT_GROUPS: (Services.contact_groups,),
 }
 
 

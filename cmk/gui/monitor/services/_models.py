@@ -65,6 +65,7 @@ class Service:
     labels: dict[str, ServiceLabelValue] | None
     tags: dict[str, str] | None
     contacts: list[str] | None
+    contact_groups: list[str] | None
 
     @property
     def state_label(self) -> ServiceStateLabel:
@@ -89,7 +90,6 @@ class ServiceOverview(Service):
     host_acknowledged: bool
     host_in_downtime: bool
     site_id: str
-    contact_groups: list[str]
     long_output: str
     current_attempt: int
     max_check_attempts: int
@@ -115,6 +115,7 @@ class ServiceOptionalField(enum.StrEnum):
     LABELS = "labels"
     TAGS = "tags"
     CONTACTS = "contacts"
+    CONTACT_GROUPS = "contact_groups"
 
     @classmethod
     def options(cls) -> str:

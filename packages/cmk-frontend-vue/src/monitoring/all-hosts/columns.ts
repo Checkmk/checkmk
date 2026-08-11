@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/vue-table'
+import type { Site } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/shared/api/types'
@@ -18,6 +19,8 @@ import { columnId } from '@/monitoring/shared/services/MonitoringService'
 export interface HostColumnOptions {
   /** Whether to render the row-action column, which needs permitted actions. */
   includeActions: boolean
+  /** Configured sites the user is authorized to see, for the site column's filter options. */
+  sites: readonly Site[]
 }
 
 /**
@@ -69,7 +72,9 @@ function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
  * The columns frozen to the edges of the table once it has to scroll
  * horizontally.
  */
-export function buildHostColumnPinning({ includeActions }: HostColumnOptions): ColumnPinningState {
+export function buildHostColumnPinning({
+  includeActions
+}: Pick<HostColumnOptions, 'includeActions'>): ColumnPinningState {
   return {
     left: ['select', 'state', 'modes', 'name'],
     ...(includeActions ? { right: ['actions'] } : {})
@@ -83,7 +88,10 @@ export function buildHostColumnPinning({ includeActions }: HostColumnOptions): C
  * states it itself. Columns carrying `hidden` are off until a user picks them,
  * which defines the set shown on first use.
  */
-export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnDef<HostEntry>[] {
+export function buildHostColumns({
+  includeActions,
+  sites
+}: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
   const stateFilter: CheckboxListFilter<'state'> = {
@@ -109,6 +117,12 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
   const addressFilter: StringInputFilter<'address'> = {
     type: 'string-input',
     field: 'address'
+  }
+
+  const siteFilter: CheckboxListFilter<'site_id'> = {
+    type: 'checkbox-list',
+    field: 'site_id',
+    options: sites.map((site) => ({ value: site.id, title: site.alias }))
   }
 
   const totalServicesFilter: NumericFilter<'num_services'> = {
@@ -211,7 +225,7 @@ export function buildHostColumns({ includeActions }: HostColumnOptions): ColumnD
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { filter: siteFilter, hidden: true }
     },
     {
       accessorKey: 'num_services',

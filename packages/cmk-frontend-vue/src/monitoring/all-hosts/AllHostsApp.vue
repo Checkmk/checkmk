@@ -96,7 +96,7 @@ async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
   ]
 }
 
-const columns = buildHostColumns({ includeActions: hasRowActions })
+const columns = buildHostColumns({ includeActions: hasRowActions, sites: props.sites })
 const columnPinning = buildHostColumnPinning({ includeActions: hasRowActions })
 
 const hostApi = new HostApi()

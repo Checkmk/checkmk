@@ -33,7 +33,7 @@ class HostColumnService extends MonitoringService<HostEntry> {
 
 function makeService() {
   const service = new HostColumnService(
-    buildHostColumns({ includeActions: true }),
+    buildHostColumns({ includeActions: true, sites: [] }),
     makeKeyShortcutService()
   )
   service.stopPolling()
@@ -41,7 +41,7 @@ function makeService() {
 }
 
 function columnIds(includeActions = true): (string | undefined)[] {
-  return buildHostColumns({ includeActions }).map(columnId)
+  return buildHostColumns({ includeActions, sites: [] }).map(columnId)
 }
 
 beforeEach(() => {
@@ -146,4 +146,24 @@ test('the fields of the fixed columns are never asked for, the API always sendin
 test('the actions column is neither rendered nor pinned when no row action is permitted', () => {
   expect(columnIds(false)).not.toContain('actions')
   expect(buildHostColumnPinning({ includeActions: false }).right).toBeUndefined()
+})
+
+test('the site column filter offers the configured sites as options', () => {
+  const columns = buildHostColumns({
+    includeActions: true,
+    sites: [
+      { id: 'local', alias: 'Local site' },
+      { id: 'remote', alias: 'Remote site' }
+    ]
+  })
+  const siteColumn = columns.find((column) => columnId(column) === 'site_id')
+
+  expect(siteColumn?.meta?.filter).toEqual({
+    type: 'checkbox-list',
+    field: 'site_id',
+    options: [
+      { value: 'local', title: 'Local site' },
+      { value: 'remote', title: 'Remote site' }
+    ]
+  })
 })

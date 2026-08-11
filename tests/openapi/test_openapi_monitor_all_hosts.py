@@ -601,6 +601,49 @@ class TestMonitorHostsFields:
         assert [host["name"] for host in resp.json["hosts"]] == [host["name"] for host in by_alias]
         assert _NON_DEFAULT_FIELD not in resp.json["hosts"][0]
 
+    def test_labels_are_read_and_returned_only_when_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('labels')} labels label_sources",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["labels"])
+
+        host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
+        assert host["labels"] == {"cmk/site": {"value": "heute", "source": "discovered"}}
+
+    def test_labels_are_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert "labels" not in resp.json["hosts"][0]
+
 
 class TestMonitorHostOverviewAuth:
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
@@ -942,6 +985,8 @@ _HOSTS = [
         "last_check": 1700000000,
         "last_state_change": 1700000060,
         "filename": "/wato/hosts.mk",
+        "labels": {"cmk/site": "heute"},
+        "label_sources": {"cmk/site": "discovered"},
     },
     {
         "name": "gestern",
@@ -959,6 +1004,8 @@ _HOSTS = [
         "last_check": 1700000100,
         "last_state_change": 1700000160,
         "filename": "/wato/network/hosts.mk",
+        "labels": {"cmk/site": "gestern"},
+        "label_sources": {"cmk/site": "discovered"},
     },
     {
         "name": "morgen",
@@ -977,6 +1024,8 @@ _HOSTS = [
         "last_state_change": 1700000260,
         # Not managed via Setup, e.g. added directly to the monitoring core.
         "filename": "/omd/sites/heute/etc/nagios/conf.d/hosts.mk",
+        "labels": {"cmk/site": "morgen"},
+        "label_sources": {"cmk/site": "discovered"},
     },
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in

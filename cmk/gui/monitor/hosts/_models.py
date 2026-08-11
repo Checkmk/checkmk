@@ -14,7 +14,8 @@ logic.
 import dataclasses
 import datetime as dt
 import enum
-from typing import assert_never, Literal, NewType, override
+from collections.abc import Mapping
+from typing import assert_never, Literal, NewType, override, Self
 
 from cmk.ruleset_matcher.labels import LabelSource
 
@@ -38,6 +39,18 @@ class ServiceCounts:
 
 
 @dataclasses.dataclass(frozen=True)
+class HostLabelValue:
+    value: str
+    source: LabelSource
+
+    @classmethod
+    def by_label(
+        cls, values: Mapping[str, str], sources: Mapping[str, LabelSource]
+    ) -> dict[str, Self]:
+        return {key: cls(value=value, source=sources[key]) for key, value in values.items()}
+
+
+@dataclasses.dataclass(frozen=True)
 class Host:
     """A host row.
 
@@ -56,6 +69,7 @@ class Host:
     folder: str | None
     last_check: dt.datetime | None
     last_state_change: dt.datetime | None
+    labels: dict[str, HostLabelValue] | None
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -71,17 +85,10 @@ class Host:
 
 
 @dataclasses.dataclass(frozen=True)
-class HostLabelValue:
-    value: str
-    source: LabelSource
-
-
-@dataclasses.dataclass(frozen=True)
 class HostOverview(Host):
     customer: str | None
     contact_groups: list[str] = dataclasses.field(default_factory=list)
     tags: dict[str, str] = dataclasses.field(default_factory=dict)
-    labels: dict[str, HostLabelValue] = dataclasses.field(default_factory=dict)
 
 
 class HostOptionalField(enum.StrEnum):
@@ -96,6 +103,7 @@ class HostOptionalField(enum.StrEnum):
     FOLDER = "folder"
     LAST_CHECK = "last_check"
     LAST_STATE_CHANGE = "last_state_change"
+    LABELS = "labels"
 
     @classmethod
     def options(cls) -> str:

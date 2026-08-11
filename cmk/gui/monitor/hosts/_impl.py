@@ -99,6 +99,11 @@ class LiveStatusHostRepository:
                             if (filename := row.get("filename")) is None
                             else _wato_folder_from_filename(filename)
                         ),
+                        labels=(
+                            HostLabelValue.by_label(row["labels"], row["label_sources"])
+                            if "labels" in row
+                            else None
+                        ),
                     )
                     for row in q.iterate(conn)
                 ],
@@ -157,10 +162,7 @@ class LiveStatusHostRepository:
             folder=_wato_folder_from_filename(row["filename"]),
             contact_groups=list(row["contact_groups"]),
             tags=dict(row["tags"]),
-            labels={
-                key: HostLabelValue(value=value, source=row["label_sources"][key])
-                for key, value in row["labels"].items()
-            },
+            labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
         )
 
     def count_total(self) -> int:
@@ -256,6 +258,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.FOLDER: (Hosts.filename,),
     HostOptionalField.LAST_CHECK: (Hosts.last_check,),
     HostOptionalField.LAST_STATE_CHANGE: (Hosts.last_state_change,),
+    HostOptionalField.LABELS: (Hosts.labels, Hosts.label_sources),
 }
 
 _SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField] = {

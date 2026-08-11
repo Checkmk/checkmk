@@ -116,7 +116,7 @@ class HostOverviewResponse:
             folder=read(host.folder, "folder"),
             contact_groups=host.contact_groups,
             tags=host.tags,
-            labels=host.labels,
+            labels=read(host.labels, "labels"),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )
 

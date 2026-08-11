@@ -573,7 +573,7 @@ class UserClient(RestApiClient):
             api_version=APIVersion.UNSTABLE,
         )
 
-    def create(
+    def create(  # noqa: PLR0917
         self,
         username: str,
         fullname: str,
@@ -662,7 +662,7 @@ class UserClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def edit(
+    def edit(  # noqa: PLR0917
         self,
         username: str,
         fullname: str | None = None,
@@ -2330,7 +2330,7 @@ class DowntimeClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def create_for_services(
+    def create_for_services(  # noqa: PLR0917
         self,
         start_time: datetime.datetime | str,
         end_time: datetime.datetime | str,
@@ -2404,7 +2404,7 @@ class DowntimeClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def modify(
+    def modify(  # noqa: PLR0917
         self,
         modify_type: FindByType,
         site_id: str | None = None,
@@ -3082,7 +3082,7 @@ class DcdClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def create(
+    def create(  # noqa: PLR0917
         self,
         dcd_id: str,
         site: str,
@@ -3130,7 +3130,7 @@ class DcdClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def edit(
+    def edit(  # noqa: PLR0917
         self,
         dcd_id: str,
         title: str,
@@ -3198,7 +3198,7 @@ class DcdMetricBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def create(
+    def create(  # noqa: PLR0917
         self,
         dcd_id: str,
         site: str,

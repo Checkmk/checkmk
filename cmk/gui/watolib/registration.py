@@ -102,7 +102,7 @@ from .timeperiods import TimeperiodUsageFinderRegistry
 from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
 
 
-def register(
+def register(  # noqa: PLR0917
     edition: version.Edition,
     rulespec_group_registry: RulespecGroupRegistry,
     automation_command_registry: AutomationCommandRegistry,

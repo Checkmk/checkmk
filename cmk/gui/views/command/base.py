@@ -44,7 +44,7 @@ CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
 
 class Command:
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         ident: str,
         title: LazyString,

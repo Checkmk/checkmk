@@ -424,7 +424,7 @@ def query_raw_api_data_v2(
     )
 
 
-def parse_api_data(
+def parse_api_data(  # noqa: PLR0917
     raw_cron_jobs: Sequence[V1CronJob],
     raw_pods: JSONPodList,
     raw_jobs: Sequence[V1Job],

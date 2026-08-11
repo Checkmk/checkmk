@@ -190,7 +190,7 @@ class NagiosCore(MonitoringCore):
             ),
         )
 
-    def _create_core_config(
+    def _create_core_config(  # noqa: PLR0917
         self,
         config_path: Path,
         hosts_config: Hosts,
@@ -334,7 +334,7 @@ def _validate_licensing(
         raise MKGeneralException(block_effect.message_raw)
 
 
-def create_config(
+def create_config(  # noqa: PLR0917
     outfile: IO[str],
     hosts_config: Hosts,
     host_tags: HostTags,
@@ -429,7 +429,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
     )
 
 
-def _create_nagios_config_host(
+def _create_nagios_config_host(  # noqa: PLR0917
     cfg: NagiosConfig,
     hosts_config: Hosts,
     host_tags: HostTags,
@@ -652,7 +652,7 @@ def transform_active_service_command(
 _ServiceLabels = dict[ServiceName, Labels]
 
 
-def _process_services_data(
+def _process_services_data(  # noqa: PLR0917
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -741,7 +741,7 @@ def _process_services_data(
 _PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
 
 
-def create_nagios_servicedefs(
+def create_nagios_servicedefs(  # noqa: PLR0917
     cfg: NagiosConfig,
     hosts_config: Hosts,
     config_cache: ConfigCache,
@@ -994,7 +994,7 @@ def create_nagios_servicedefs(
     return service_labels
 
 
-def _create_custom_check(
+def _create_custom_check(  # noqa: PLR0917
     entry: CustomCheck,
     cfg: NagiosConfig,
     config_cache: ConfigCache,
@@ -1148,7 +1148,7 @@ def _get_dependencies(
     )
 
 
-def _add_ping_service(
+def _add_ping_service(  # noqa: PLR0917
     cfg: NagiosConfig,
     hosts_config: Hosts,
     config_cache: ConfigCache,

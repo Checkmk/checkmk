@@ -29,7 +29,7 @@ class SpecialAgentCommandLine:
 
 
 class SpecialAgent:
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         plugins: Mapping[PluginLocation, v1.SpecialAgentConfig | internal.SpecialAgentConfig],
         host_name: HostName,

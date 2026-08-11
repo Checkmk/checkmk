@@ -51,7 +51,7 @@ __all__ = ["register"]
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
-def register(
+def register(  # noqa: PLR0917
     edition: Edition,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,

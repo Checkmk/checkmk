@@ -2803,7 +2803,7 @@ def _mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str])
 
 
 # also used in precompiled host checks!
-def run_checking(
+def run_checking(  # noqa: PLR0917
     app: CheckmkBaseApp,
     loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,

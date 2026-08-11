@@ -283,7 +283,7 @@ def get_agent_slideout(
 ) -> ModeHostAgentSlideout: ...
 
 
-def get_agent_slideout(
+def get_agent_slideout(  # noqa: PLR0917
     hostname: HostName,
     save_host: bool,
     host_exists: bool,

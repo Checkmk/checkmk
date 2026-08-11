@@ -19,7 +19,7 @@ class CheckmkFlaskApp(Flask):
     request_class = http.Request
     response_class = http.Response
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         import_name: str,
         session_interface: SessionInterface,

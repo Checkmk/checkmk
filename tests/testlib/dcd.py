@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def dcd_connector(
+def dcd_connector(  # noqa: PLR0917
     site: Site,
     dcd_id: str = "dcd_connector",
     interval: int = 5,

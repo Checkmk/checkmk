@@ -74,7 +74,7 @@ from .views import (
 )
 
 
-def register(
+def register(  # noqa: PLR0917
     edition: Edition,
     page_registry: PageRegistry,
     painter_registry: PainterRegistry,

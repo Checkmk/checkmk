@@ -707,7 +707,7 @@ class NumericRenderer:
 class Integer(ValueSpec[int]):
     """Editor for a single integer"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         size: int | None = None,
         minvalue: int | None = None,
@@ -949,7 +949,7 @@ class LegacyDataSize(Integer):
 class TextInput(ValueSpec[str]):
     """Editor for a line of text"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         label: str | None = None,
         size: int | Literal["max"] = 25,
@@ -1126,7 +1126,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(
+def ID(  # noqa: PLR0917
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1176,7 +1176,7 @@ def ID(
     )
 
 
-def UserID(
+def UserID(  # noqa: PLR0917
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1240,7 +1240,7 @@ class RegExp(TextInput):
     prefix: Literal["prefix"] = "prefix"
     complete: Literal["complete"] = "complete"
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         mode: Literal["infix", "prefix", "complete"],
         case_sensitive: bool = True,
@@ -1399,7 +1399,7 @@ RegExpUnicode = RegExp  # alias added in 2.1.0 for compatibility
 
 
 class EmailAddress(TextInput):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         make_clickable: bool = False,
         # TextInput
@@ -1636,7 +1636,7 @@ def Hostname(
 class HostAddress(TextInput):
     """Use this for all host / ip address input fields!"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         allow_host_name: bool = True,
         allow_ipv4_address: bool = True,
@@ -1788,7 +1788,7 @@ def AbsoluteDirname(
 
 
 class Url(TextInput):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         default_scheme: str,
         allowed_schemes: Collection[str],
@@ -1969,7 +1969,7 @@ class CheckmkVersionInput(TextInput):
 
 
 class TextAreaUnicode(TextInput):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         cols: int = 60,
         rows: int | Literal["auto"] = 20,
@@ -2078,7 +2078,7 @@ class Filename(TextInput):
     """A variant of TextInput() that validates a path to a filename that lies in an existing directory."""
 
     # TODO: Cleanup default / default_value?
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         default: str = "/tmp/foo",  # nosec B108 # BNS:13b2c8
         trans_func: Callable[[str], str] | None = None,
@@ -2168,7 +2168,7 @@ class Filename(TextInput):
 
 
 class ListOfStrings(ValueSpec[Sequence[str]]):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # ListOfStrings
         valuespec: ValueSpec[str] | None = None,
@@ -2383,7 +2383,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         REGULAR = "regular"
         FLOATING = "floating"
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         valuespec: ValueSpec[T],
         magic: str = "@!@",
@@ -2742,7 +2742,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
     Each sub-valuespec can be added only once
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         choices: GroupedListOfMultipleChoices | ListOfMultipleChoices,
         choice_page_name: str,
@@ -2939,7 +2939,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 class Float(ValueSpec[float]):
     """Same as Integer, but for floating point values"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         decimal_separator: str = ".",
         allow_int: bool = False,
@@ -3030,7 +3030,7 @@ class Float(ValueSpec[float]):
 
 
 class Percentage(Float):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # Float
         decimal_separator: str = ".",
@@ -3163,7 +3163,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
     can by dynamically computed"""
 
     # TODO: Cleanup redefined builtin sorted
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # DropdownChoice
         choices: DropdownChoices,
@@ -3398,7 +3398,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
     ident = ""
     # TODO: completely remove ident from this class! should only be defined in autocompleter!
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         regex: None | str | Pattern[str] = None,
         regex_error: str | None = None,
@@ -3551,7 +3551,7 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
 
 
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         css_spec: Sequence[str],
         hint_label: str,
@@ -3632,7 +3632,7 @@ type MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(
+def MonitoringState(  # noqa: PLR0917
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -3687,7 +3687,7 @@ type HostStateValue = Literal[0, 1, 2]
 
 
 class HostState(DropdownChoice):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # DropdownChoice
         sorted: bool = False,
@@ -3797,7 +3797,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         normal = "normal"
         foldable = "foldable"
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         choices: CascadingDropdownChoices,
         label: str | None = None,
@@ -4170,7 +4170,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
             for (type_id, type_name) in sorted(choices.items())
         ]
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # ListChoice
         # TODO: This None works together with get_elements which are implemented in the specific sub
@@ -4336,7 +4336,7 @@ class DualListChoice(ListChoice):
     fix this and make it this compatible to DropdownChoice()
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # DualListChoice
         autoheight: bool = False,
@@ -4543,7 +4543,7 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
     opens a further value spec for entering an alternative
     Value."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         explicit: ValueSpec,
         choices: DropdownChoices,
@@ -4674,7 +4674,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(
+def Weekday(  # noqa: PLR0917
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -4725,7 +4725,7 @@ class RelativeDate(OptionalDropdownChoice[int]):
     Useful for example for alarms. The date is represented by a UNIX timestamp
     where the seconds are silently ignored."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         default_days: int = 0,
         # DropdownChoice
@@ -4826,7 +4826,7 @@ class AbsoluteDate(ValueSpec[None | float]):
     zero (or will be ignored if non-zero), as long as include_time is not set
     to True"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         show_titles: bool = True,
         label: str | None = None,
@@ -5382,7 +5382,7 @@ class ComputedTimerange(NamedTuple):
 
 
 class Timerange(CascadingDropdown):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         include_time: bool = False,
         choices: CascadingDropdownChoices | None = None,
@@ -5675,7 +5675,7 @@ class Timerange(CascadingDropdown):
         return ComputedTimerange((int(prev_time), int(from_time)), titles[1] or prev_time_str)
 
 
-def DateFormat(
+def DateFormat(  # noqa: PLR0917
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -5727,7 +5727,7 @@ def DateFormat(
     )
 
 
-def TimeFormat(
+def TimeFormat(  # noqa: PLR0917
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -6278,7 +6278,7 @@ def _renders_own_form_sections(vs: ValueSpec) -> bool:
 
 class Dictionary(ValueSpec[DictionaryModel]):
     # TODO: Cleanup ancient "migrate"
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         elements: DictionaryElementsRaw,
         empty_text: str | None = None,
@@ -7136,7 +7136,7 @@ class Transparent[T](Transform[T]):
 
 
 class LDAPDistinguishedName(TextInput):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         enforce_suffix: str | None = None,
         # TextInput
@@ -7220,7 +7220,7 @@ class Password(TextInput):
     the algorithm at any time.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         is_stored_plain: bool = True,
         encrypt_value: bool = True,
@@ -7351,7 +7351,7 @@ class Password(TextInput):
 
 
 class PasswordSpec(Password):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         pwlen: int = 8,
         # Password
@@ -7600,7 +7600,7 @@ class ImageUpload(FileUpload):
 
 
 class UploadOrPasteTextFile(Alternative):
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         file_title: str | None = None,
         allow_empty: bool = False,
@@ -8441,7 +8441,7 @@ def ListOfTimeRanges(
     )
 
 
-def Fontsize(
+def Fontsize(  # noqa: PLR0917
     # Float
     decimal_separator: str = ".",
     allow_int: bool = False,
@@ -8690,7 +8690,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(
+def SchedulePeriod(  # noqa: PLR0917
     from_end: bool = True,
     # CascadingDropdown
     label: str | None = None,
@@ -8894,7 +8894,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
         return HTMLWriter.render_table(HTML.empty().join(rows))
 
 
-def ListOfCAs[T](
+def ListOfCAs[T](  # noqa: PLR0917
     # ListOf
     magic: str = "@!@",
     add_label: str | None = None,
@@ -8952,7 +8952,7 @@ class SetupSiteChoice(DropdownChoice):
     from this list.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         # DropdownChoice
         sorted: bool = False,
@@ -9022,7 +9022,7 @@ def MonitoringSiteChoice() -> DropdownChoice:
     )
 
 
-def LogLevelChoice(
+def LogLevelChoice(  # noqa: PLR0917
     with_verbose: bool = True,
     # DropdownChoice
     sorted: bool = False,

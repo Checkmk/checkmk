@@ -117,7 +117,7 @@ from cmk.licensing.registry import register_community_licensing_handler
 from cmk.shared_typing.main_menu import NavItemTopicEntry
 
 
-def register(
+def register(  # noqa: PLR0917
     edition: Edition,
     main_menu_registry: MainMenuRegistry,
     job_registry: BackgroundJobRegistry,

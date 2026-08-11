@@ -647,7 +647,7 @@ def _exec_run(
     return returncode
 
 
-def container_exec(
+def container_exec(  # noqa: PLR0917
     container: docker.models.containers.Container,
     cmd: str | Sequence[str],
     user: str = "",

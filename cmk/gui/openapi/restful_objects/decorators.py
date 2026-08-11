@@ -241,7 +241,7 @@ class Endpoint:
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         path: str,
         link_relation: LinkRelation,

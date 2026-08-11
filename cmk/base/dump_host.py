@@ -117,7 +117,7 @@ def print_(txt: str) -> None:
         sys.stdout.flush()
 
 
-def dump_host(
+def dump_host(  # noqa: PLR0917
     loaded_config: BaseConfig,
     hosts_config: Hosts,
     host_tags: HostTags,

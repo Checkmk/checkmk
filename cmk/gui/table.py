@@ -79,7 +79,7 @@ class Foldable(Enum):
 
 
 @contextmanager
-def table_element(
+def table_element(  # noqa: PLR0917
     table_id: str | None = None,
     title: HTMLContent | None = None,
     searchable: bool = True,
@@ -146,7 +146,7 @@ def table_element(
 
 
 class Table:
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         table_id: str | None = None,
         title: HTMLContent | None = None,

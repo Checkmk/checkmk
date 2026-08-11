@@ -1469,7 +1469,9 @@ async def process_cosmosdb(
             if args.debug:
                 raise result
             err.add("exception", "cosmosdb metric collection", str(result))
-            LOGGER.exception(result)
+            # TODO: Is this code really executed *within* an exception handler? It doesn't look like
+            # that...
+            LOGGER.exception(result)  # noqa: LOG004
             continue
 
         # resource id is always the cosmos account
@@ -2009,7 +2011,9 @@ async def _gather_metrics(
             if args.debug:
                 raise result
             err.add("exception", "metric collection", str(result))
-            LOGGER.exception(result)
+            # TODO: Is this code really executed *within* an exception handler? It doesn't look like
+            # that...
+            LOGGER.exception(result)  # noqa: LOG004
             continue
 
         for resource_id, metrics in result.items():

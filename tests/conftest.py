@@ -165,7 +165,9 @@ def pytest_exception_interact(
         )
     elif isinstance(excp_, subprocess.CalledProcessError):
         excp_.add_note(verbose_called_process_error(excp_))
-        logger.exception(excp_)
+        # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
+        # determine this statically.
+        logger.exception(excp_)  # noqa: LOG004
 
     report.longrepr = node.repr_failure(excinfo)
     if PYTEST_RAISE:

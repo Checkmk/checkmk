@@ -155,7 +155,9 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         ),
     )
     CrashReportStore().save(crash)
-    logger.exception(
+    # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
+    # determine this statically.
+    logger.exception(  # noqa: LOG004
         "Unhandled exception (Crash-ID: %(crash_id)s)", {"crash_id": crash.ident_to_text()}
     )
 

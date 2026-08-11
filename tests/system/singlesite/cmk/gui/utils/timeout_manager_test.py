@@ -28,8 +28,7 @@ def timeout_manager_disable() -> int:
     except TimeoutError as excp:
         logger.exception("Timeout raised while TimeoutManager was disabled!", exc_info=excp)
         return 1
-    else:
-        return 0
+    return 0
 
 
 def timeout_manager_raises_timeout() -> int:
@@ -39,9 +38,8 @@ def timeout_manager_raises_timeout() -> int:
         time.sleep(2)
     except RequestTimeout:
         return 0
-    else:
-        logger.exception("No timeout raised while TimeoutManager was enabled!")
-        return 1
+    logger.error("No timeout raised while TimeoutManager was enabled!")
+    return 1
 
 
 if __name__ == "__main__":

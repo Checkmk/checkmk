@@ -77,7 +77,6 @@ ignore = [
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
   "ISC004",  # Unparenthesized implicit string concatenation in collection
-  "LOG004",  # `.exception()` call outside exception handlers
   "PLW1641", # Object does not implement `__hash__` method
   "UP031",   # Use format specifiers instead of percent format
 ]

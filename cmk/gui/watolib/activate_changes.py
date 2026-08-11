@@ -705,7 +705,9 @@ def _handle_activation_changes_exception(
     exc_logger: logging.Logger, exception: Exception, site_activation_status: SiteActivationState
 ) -> None:
     if isinstance(exception, MKGeneralException | MKUserError):
-        exc_logger.exception("error activating changes")
+        # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
+        # determine this statically.
+        exc_logger.exception("error activating changes")  # noqa: LOG004
         message = str(exception)
     else:
         crash = handle_exception_as_gui_crash_report(

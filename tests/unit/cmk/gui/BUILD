@@ -41,6 +41,62 @@ py_library(
     ],
 )
 
+# Identity & access test suite: userdb, ldap, oauth, oauth2_connections,
+# auth_token.
+py_cmk_test(
+    name = "identity_tests",
+    srcs = glob([
+        "auth_token/**/*.py",
+        "ldap/**/*.py",
+        "oauth/**/*.py",
+        "oauth2_connections/**/*.py",
+        "userdb/**/*.py",
+    ]),
+    args = [
+        "tests/unit/cmk/gui/auth_token",
+        "tests/unit/cmk/gui/ldap",
+        "tests/unit/cmk/gui/oauth",
+        "tests/unit/cmk/gui/oauth2_connections",
+        "tests/unit/cmk/gui/userdb",
+    ],
+    env = {"EDITION": "community"},
+    use_project_pytest_config = True,
+    deps = [
+        ":conftest",
+        ":init_py",
+        "//cmk/gui:auth",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:page_toolkit",
+        "//cmk/gui:session_context",
+        "//cmk/gui/form_specs",
+        "//cmk/gui/ldap_integration",
+        "//cmk/gui/oauth",
+        "//cmk/gui/oauth2_connections",
+        "//cmk/gui/token_auth",
+        "//cmk/gui/userdb",
+        "//cmk/gui/utils",
+        "//cmk/gui/utils:middle",
+        "//cmk/gui/valuespec",
+        "//cmk/gui/watolib",
+        "//cmk/utils",
+        "//cmk/utils:paths",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//tests/unit:conftest",
+        requirement("fakeredis"),
+        requirement("flask"),
+        requirement("pytest-mock"),
+        requirement("python-dateutil"),
+        requirement("python-ldap"),
+        requirement("werkzeug"),
+    ],
+)
+
 # REST API test suite: openapi (incl. its conftest, inlined) + fields.
 py_cmk_test(
     name = "rest_api_tests",

@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::certs::trusted_cas;
 use crate::config;
 use crate::config::JSONLoader;
 use crate::misc;
@@ -26,6 +27,7 @@ fn register_panic_handler() {
 
 pub fn daemon(
     path_pre_configured_connections: &std::path::Path,
+    path_trusted_cas: &std::path::Path,
     mut registry: config::Registry,
     pull_config: config::PullConfig,
     client_config: config::ClientConfig,
@@ -33,12 +35,17 @@ pub fn daemon(
     agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     register_panic_handler();
+    let baked_cas = trusted_cas::load_baked_cas(path_trusted_cas);
+    // Connections that are already registered are covered here, connections created below get the
+    // baked CAs handed to the registration.
+    trusted_cas::trust_baked_cas(&baked_cas, &mut registry);
     process_pre_configured_connections(
         path_pre_configured_connections,
         &mut registry,
         &client_config,
         updater_registration,
         agent_updater,
+        &baked_cas,
     );
 
     // create channels, 3x TX + 1x RX to "synchronize" thread stops on failure
@@ -79,6 +86,7 @@ fn process_pre_configured_connections(
     client_config: &config::ClientConfig,
     updater_registration: config::UpdaterRegistration,
     agent_updater: AgentUpdater,
+    baked_cas: &trusted_cas::BakedCAs,
 ) {
     match config::PreConfiguredConnections::load(path_pre_configured_connections) {
         Ok(pre_configured) => {
@@ -88,6 +96,7 @@ fn process_pre_configured_connections(
                 registry,
                 updater_registration,
                 agent_updater,
+                baked_cas,
             ) {
                 error!(
                     "Error while processing pre-configured connections: {}",

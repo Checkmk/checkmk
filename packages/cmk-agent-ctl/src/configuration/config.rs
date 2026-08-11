@@ -138,7 +138,8 @@ pub struct RegistrationConnectionConfig {
     pub username: Option<String>,
     pub password: Option<String>,
     pub one_time_token: Option<String>,
-    pub root_certificate: Option<String>,
+    /// If empty, the agent receiver's certificate is confirmed interactively or blindly trusted.
+    pub root_certificates: Vec<String>,
     pub trust_server_cert: bool,
     pub client_config: ClientConfig,
 }
@@ -200,7 +201,7 @@ impl RegistrationConnectionConfig {
             username,
             password,
             one_time_token,
-            root_certificate: None,
+            root_certificates: vec![],
             trust_server_cert: endpoint_opts.trust_server_cert,
             client_config,
         })
@@ -732,12 +733,45 @@ impl fmt::Display for ConnectionMode {
     }
 }
 
+/// Add the CAs that are not trusted yet, preserving the order of both inputs.
+/// Returns whether any CA was added.
+pub fn add_missing_root_certs(root_certs: &mut Vec<String>, additional: &[String]) -> bool {
+    let mut added = false;
+    for cert in additional {
+        if !root_certs.contains(cert) {
+            root_certs.push(cert.clone());
+            added = true;
+        }
+    }
+    added
+}
+
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
         Some(fs::metadata(path)?.modified()?)
     } else {
         None
     })
+}
+
+#[cfg(test)]
+mod test_add_missing_root_certs {
+    use super::*;
+
+    #[test]
+    fn test_add_missing_root_certs() {
+        let mut root_certs = vec![String::from("site_ca")];
+        assert!(add_missing_root_certs(
+            &mut root_certs,
+            &[String::from("site_ca"), String::from("upcoming_site_ca")],
+        ));
+        // the already trusted CA is not stored twice
+        assert_eq!(root_certs, vec!["site_ca", "upcoming_site_ca"]);
+        assert!(!add_missing_root_certs(
+            &mut root_certs,
+            &[String::from("site_ca")]
+        ));
+    }
 }
 
 #[cfg(test)]

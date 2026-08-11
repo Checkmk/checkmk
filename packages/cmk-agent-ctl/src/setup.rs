@@ -399,6 +399,10 @@ mod tests {
             std::path::PathBuf::from(&home).join("pre_configured_connections.json")
         );
         assert_eq!(
+            p.trusted_cas_path,
+            std::path::PathBuf::from(&home).join("trusted_cas.json")
+        );
+        assert_eq!(
             p.registry_path,
             std::path::PathBuf::from(&home).join("registered_connections.json")
         );

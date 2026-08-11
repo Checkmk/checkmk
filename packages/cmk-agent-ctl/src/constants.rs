@@ -20,6 +20,7 @@ pub const CMK_UPDATE_AGENT_CMD: &str = "cmk-update-agent";
 
 // FILES
 pub const PRE_CONFIGURED_CONNECTIONS_FILE: &str = "pre_configured_connections.json";
+pub const TRUSTED_CAS_FILE: &str = "trusted_cas.json";
 pub const REGISTRY_FILE: &str = "registered_connections.json";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 // Agent updates. Baked next to CONFIG_FILE, but a separate artifact because two

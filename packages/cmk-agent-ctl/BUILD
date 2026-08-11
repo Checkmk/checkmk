@@ -19,6 +19,7 @@ rust_library(
     srcs = [
         "src/agent_receiver_api.rs",
         "src/certs.rs",
+        "src/certs/trusted_cas.rs",
         "src/cli.rs",
         "src/configuration.rs",
         "src/configuration/config.rs",

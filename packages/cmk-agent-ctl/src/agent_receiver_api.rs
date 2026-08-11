@@ -194,7 +194,7 @@ pub trait Registration {
     fn register_existing(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -204,7 +204,7 @@ pub trait Registration {
     fn register_new(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -353,7 +353,7 @@ impl Registration for Api {
     fn register_existing(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -365,7 +365,7 @@ impl Registration for Api {
         };
         self.call_registration_init_endpoint(
             Self::endpoint_url(base_url, &[endpoint])?,
-            root_cert,
+            root_certs,
             credentials,
             &RegisterExistingBody {
                 uuid: uuid.to_owned(),
@@ -379,7 +379,7 @@ impl Registration for Api {
     fn register_new(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -387,7 +387,7 @@ impl Registration for Api {
     ) -> AnyhowResult<RegisterNewResponse> {
         self.call_registration_init_endpoint(
             Self::endpoint_url(base_url, &["register_new"])?,
-            root_cert,
+            root_certs,
             credentials,
             &RegisterNewBody {
                 uuid: uuid.to_owned(),
@@ -431,7 +431,7 @@ impl Api {
     fn call_registration_init_endpoint<'a, T>(
         &self,
         url: reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         body: &impl Serialize,
         deserializer: fn(&str) -> serde_json::Result<T>,
@@ -442,8 +442,8 @@ impl Api {
         Self::deserialize_json_response(
             Self::apply_registration_auth(
                 certs::client(
-                    root_cert.map(|r| certs::HandshakeCredentials {
-                        server_root_certs: vec![r],
+                    (!root_certs.is_empty()).then(|| certs::HandshakeCredentials {
+                        server_root_certs: root_certs.to_vec(),
                         client_identity: None,
                     }),
                     self.use_proxy,

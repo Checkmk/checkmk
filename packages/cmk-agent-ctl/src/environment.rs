@@ -23,6 +23,7 @@ pub enum SetupMode {
 pub struct PathResolver {
     pub config_path: PathBuf,
     pub pre_configured_connections_path: PathBuf,
+    pub trusted_cas_path: PathBuf,
     pub registry_path: PathBuf,
 
     /// Baked by the site, read-only for the controller.
@@ -66,6 +67,7 @@ impl PathResolver {
             config_path: home_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: home_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
+            trusted_cas_path: home_dir.join(constants::TRUSTED_CAS_FILE),
             registry_path: home_dir.join(constants::REGISTRY_FILE),
             updater_config_path: home_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: home_dir.join(constants::UPDATER_STATE_FILE),
@@ -100,6 +102,7 @@ impl PathResolver {
             config_path: config_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: config_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
+            trusted_cas_path: config_dir.join(constants::TRUSTED_CAS_FILE),
             registry_path: runtime_dir.join(constants::REGISTRY_FILE),
             updater_config_path: config_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: runtime_dir.join(constants::UPDATER_STATE_FILE),

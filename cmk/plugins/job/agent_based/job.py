@@ -341,19 +341,22 @@ def check_job(
 
     # The exit code comes from the completed job, so without one we cannot say
     # anything about the outcome. Its start time is only needed while nothing runs.
-    if (
-        completed_job is None
-        or completed_job.exit_code is None
-        or (completed_job.start_time is None and not running_jobs)
-    ):
+    if completed_job is not None:
+        if completed_job.exit_code is None or (
+            completed_job.start_time is None and not running_jobs
+        ):
+            yield Result(state=State.UNKNOWN, summary="Got incomplete information for this job")
+            return
+        yield from _check_completed_job(
+            completed_job.exit_code,
+            completed_job.metrics,
+            {k: State(v) for k, v in params["exit_code_to_state_map"]},
+        )
+    elif not running_jobs:
+        # A job that has not completed yet has no exit code, but as long as it is
+        # running there is something to report. Without either, there is not.
         yield Result(state=State.UNKNOWN, summary="Got incomplete information for this job")
         return
-
-    yield from _check_completed_job(
-        completed_job.exit_code,
-        completed_job.metrics,
-        {k: State(v) for k, v in params["exit_code_to_state_map"]},
-    )
 
     if running_jobs:
         count = len(running_jobs)
@@ -366,14 +369,14 @@ def check_job(
         )
         # Werk 7477: the age levels apply to the job that has been running the longest.
         start_time = min(job.start_time for job in running_jobs)
-    elif completed_job.start_time is not None:
+    elif completed_job is not None and completed_job.start_time is not None:
         yield Result(
             state=State.OK,
             notice=f"Latest job started at {render.datetime(completed_job.start_time)}",
         )
         start_time = completed_job.start_time
     else:
-        return  # unreachable, the guard above has rejected this
+        return  # unreachable, the guards above have rejected this
 
     yield from _check_job_age(time.time() - start_time, bool(running_jobs), params["age"])
 

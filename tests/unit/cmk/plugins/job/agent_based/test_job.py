@@ -1027,12 +1027,70 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
             id="completed job from an empty file",
         ),
         pytest.param(
-            # A job that is running but has never completed has no exit code.
+            # A job that is running but has never completed has no exit code. That is
+            # not incomplete data - there is simply no outcome to report yet.
             "never-completed",
             job.check_plugin_job.check_default_parameters,
             [["==>", "never-completed.1234running", "<=="], ["start_time", str(TIME - 60)]],
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+            [
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
+                ),
+                Result(state=State.OK, summary="Job age (currently running): 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
             id="running job without a completed one",
+        ),
+        pytest.param(
+            # The age levels apply to a job that has never completed, too.
+            "never-completed",
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            [
+                ["==>", "never-completed.1234running", "<=="],
+                ["start_time", str(TIME - 60)],
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary=(
+                        "Job age (currently running): 1 minute 0 seconds"
+                        " (warn/crit at 1 second/2 seconds)"
+                    ),
+                ),
+                Metric("job_age", 60.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
+            ],
+            id="running job without a completed one, age levels breached",
+        ),
+        pytest.param(
+            # On a host without perl, one running file may carry a usable start time
+            # while another does not.
+            "no-perl",
+            job.check_plugin_job.check_default_parameters,
+            [
+                ["==>", "no-perl.1234running", "<=="],
+                ["start_time", str(TIME - 60)],
+                ["==>", "no-perl.4711running", "<=="],
+                ["start_time"],
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="1 running file without a usable start time (PID 4711)",
+                    details="To fix this start time issue, please update the agent or install perl on the host",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
+                ),
+                Result(state=State.OK, summary="Job age (currently running): 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
+            id="running job with an unusable file next to it",
         ),
         pytest.param(
             "Cleanup-Cache-Files",

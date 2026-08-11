@@ -26,6 +26,7 @@ py_library(
         requirement("python-dateutil"),
         requirement("requests"),
         requirement("opentelemetry-instrumentation-requests"),
+        "//cmk/gui/job_scheduler",
         "//packages/cmk-wsgi",
         "//tests:scripts",
         "//tests/system:pkg_marker",

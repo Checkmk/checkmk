@@ -64,7 +64,7 @@ rust_library(
         "sqls/instance.12010002.all.sql",
         "sqls/io_stats.0.all.sql",
         "sqls/jobs.10020000.all.sql",
-        "sqls/jobs.12010000.all.sql",
+        "sqls/jobs.12010000.cdb.sql",
         "sqls/locks.10020000.all.sql",
         "sqls/locks.12010000.all.sql",
         "sqls/logswitches.0.all.sql",

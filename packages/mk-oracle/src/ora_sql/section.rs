@@ -1048,6 +1048,66 @@ oracle:
         assert!(!pats[0].is_match("PDB4"));
     }
 
+    /// The factory statements of the builtin section `name`. Search dirs are
+    /// empty on purpose, so no stray on-disk SQL file can shadow them.
+    fn builtin_queries(name: &str, version: u32, tenant: Tenant) -> Vec<String> {
+        Section::new(
+            &section::SectionBuilder::new(name).build(),
+            0,
+            &Options::default(),
+        )
+        .find_queries_with_search_dirs(InstanceNumVersion::from(version), tenant, &[], &[])
+        .unwrap_or_else(|| panic!("builtin section '{name}' must resolve"))
+        .iter()
+        .map(|q| q.as_str().to_owned())
+        .collect()
+    }
+
+    // CMK-37363: covers the whole hop section name -> Id -> get_factory_query.
+    #[test]
+    fn test_jobs_section_query_selected_per_tenant() {
+        let no_cdb = builtin_queries(names::JOBS, 19_01_00_00, Tenant::NoCdb);
+        assert_eq!(no_cdb.len(), 1);
+        assert!(no_cdb[0].contains("dba_scheduler_jobs"), "{}", no_cdb[0]);
+        assert!(!no_cdb[0].contains("v$containers"), "{}", no_cdb[0]);
+
+        let cdb = builtin_queries(names::JOBS, 19_01_00_00, Tenant::Cdb);
+        assert_eq!(cdb.len(), 1);
+        assert!(cdb[0].contains("cdb_scheduler_jobs"), "{}", cdb[0]);
+        assert!(cdb[0].contains("v$containers"), "{}", cdb[0]);
+    }
+
+    // Legacy keys the item on the database name by default
+    // (agents/plugins/mk_oracle), and both arms must agree with it.
+    #[test]
+    fn test_jobs_both_tenants_key_the_item_on_the_db_name_by_default() {
+        for tenant in [Tenant::Cdb, Tenant::NoCdb] {
+            let sql = builtin_queries(names::JOBS, 19_01_00_00, tenant).join("\n");
+            // Flattened, so neither reindentation nor a CRLF checkout matters.
+            let flat = sql.split_whitespace().collect::<Vec<_>>().join(" ");
+            assert!(
+                flat.contains("DECODE(NVL(:IGNORE_DB_NAME, 0), 0,"),
+                "{tenant:?} arm does not map IGNORE_DB_NAME=0 to the DB name: {sql}"
+            );
+        }
+    }
+
+    // Without this the check goes permanently CRIT where legacy warned.
+    #[test]
+    fn test_jobs_both_tenants_blank_a_restarted_log_on_errors_job() {
+        for tenant in [Tenant::Cdb, Tenant::NoCdb] {
+            let sql = builtin_queries(names::JOBS, 19_01_00_00, tenant).join("\n");
+            assert!(
+                sql.contains("SCHED$_LOG_ON_ERRORS_CLASS"),
+                "{tenant:?} arm does not special-case the log-on-errors class: {sql}"
+            );
+            assert!(
+                sql.contains("j.last_start_date > jd.actual_start_date"),
+                "{tenant:?} arm does not compare the restart against the recorded run: {sql}"
+            );
+        }
+    }
+
     fn split_trimmed(sql: &str) -> Vec<&str> {
         split_sql_statements(sql)
             .into_iter()

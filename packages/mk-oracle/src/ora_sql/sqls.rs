@@ -88,9 +88,9 @@ pub mod query {
     }];
     pub const JOBS_META: &[RawMetadata] = &[
         RawMetadata {
-            sql: include_str!("../../sqls/jobs.12010000.all.sql"),
+            sql: include_str!("../../sqls/jobs.12010000.cdb.sql"),
             min_version: 12010000,
-            tenant: Tenant::All,
+            tenant: Tenant::Cdb,
         },
         RawMetadata {
             sql: include_str!("../../sqls/jobs.10020000.all.sql"),
@@ -502,6 +502,97 @@ mod tests {
         assert!(query_nothing.is_err());
         assert_ne!(query_old, query_new);
         assert_eq!(query_last, query_new);
+        // A non-CDB must never get the 11-field CDB query, even at version `None`.
+        assert_eq!(find_helper(id, 0, Tenant::NoCdb).unwrap(), query_old);
+        // A pre-12.1 CDB must still resolve.
+        assert_eq!(find_helper(id, 11020000, Tenant::Cdb).unwrap(), query_old);
+    }
+
+    /// The only section whose non-CDB shape differs in arity.
+    #[test]
+    fn test_find_jobs_tenant_split() {
+        let cdb = find_helper(Id::Jobs, 19010000, Tenant::Cdb).unwrap();
+        let no_cdb = find_helper(Id::Jobs, 19010000, Tenant::NoCdb).unwrap();
+
+        assert_ne!(cdb, no_cdb);
+        assert!(cdb.contains("cdb_scheduler_jobs"), "{cdb}");
+        assert!(no_cdb.contains("dba_scheduler_jobs"), "{no_cdb}");
+        assert!(!no_cdb.contains("container_name"), "{no_cdb}");
+        assert!(!no_cdb.contains("v$containers"), "{no_cdb}");
+    }
+
+    /// A tenant tag must never make a whole section vanish.
+    #[test]
+    fn test_every_section_resolves_for_both_tenants() {
+        const ALL_IDS: &[Id] = &[
+            Id::IoStats,
+            Id::TsQuotas,
+            Id::Jobs,
+            Id::Resumable,
+            Id::UndoStat,
+            Id::RecoveryArea,
+            Id::AsmDiskGroup,
+            Id::Locks,
+            Id::LogSwitches,
+            Id::LongActiveSessions,
+            Id::Processes,
+            Id::RecoveryStatus,
+            Id::Rman,
+            Id::Sessions,
+            Id::SystemParameter,
+            Id::TableSpaces,
+            Id::DataGuardStats,
+            Id::Instance,
+            Id::AsmInstance,
+            Id::Performance,
+        ];
+        assert_eq!(ALL_IDS.len(), QUERY_MAP.len(), "new Id not covered here");
+        for id in ALL_IDS {
+            for version in [12_01_00_00u32, 19_01_00_00, 21_03_00_00, 23_08_00_25] {
+                for tenant in [Tenant::Cdb, Tenant::NoCdb] {
+                    assert!(
+                        find_helper(*id, version, tenant).is_ok(),
+                        "{id:?} does not resolve at {version} for {tenant:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Tripwire for the shadowing rule in `build_query_metadata`. No section
+    /// declares two entries at one min_version today, so the body does not run.
+    #[test]
+    fn test_no_all_entry_shares_min_version_with_a_tenant_entry() {
+        for (id, metas) in QUERY_MAP.iter() {
+            for (a, b) in metas
+                .iter()
+                .enumerate()
+                .flat_map(|(i, a)| metas[i + 1..].iter().map(move |b| (a, b)))
+            {
+                if a.min_version != b.min_version {
+                    continue;
+                }
+                assert!(
+                    a.tenant != Tenant::All && b.tenant != Tenant::All && a.tenant != b.tenant,
+                    "{id:?} has ambiguous entries at min_version {}: {:?} and {:?}",
+                    a.min_version,
+                    a.tenant,
+                    b.tenant
+                );
+            }
+        }
+    }
+
+    /// ASM instances resolve as `NoCdb`, so these must resolve for both tenants.
+    #[test]
+    fn test_asm_reachable_sections_are_tenant_agnostic() {
+        for id in [Id::AsmDiskGroup, Id::AsmInstance, Id::Processes] {
+            assert_eq!(
+                find_helper(id, 19010000, Tenant::NoCdb).unwrap(),
+                find_helper(id, 19010000, Tenant::Cdb).unwrap(),
+                "{id:?} must not depend on the tenant"
+            );
+        }
     }
     #[test]
     fn test_find_resumable() {

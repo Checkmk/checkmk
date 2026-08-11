@@ -181,20 +181,20 @@ static TEST_SQL_INSTANCE: LazyLock<SqlQuery> = LazyLock::new(|| {
     )
 });
 
-/// `version` selects the SQL variant directly, bypassing the live
-/// version/tenant detection of `WorkInstances::get_info`. A legacy version
-/// forces the pre-CDB queries.
+/// `version` and `tenant` select the SQL variant directly, bypassing
+/// `WorkInstances::get_info`. Every endpoint in `WORKING_ENDPOINTS` is a CDB.
 fn connect_and_query(
     endpoint: &SqlDbEndpoint,
     id: sqls::Id,
     version: Option<InstanceNumVersion>,
+    tenant: Tenant,
 ) -> Vec<String> {
     let config = make_mini_config(endpoint);
     eprintln!("Connecting to {:#?}", endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     let conn = spot.connect(None).unwrap();
-    let factory_query = sqls::get_factory_query(id, version, Tenant::All, None).unwrap();
+    let factory_query = sqls::get_factory_query(id, version, tenant, None).unwrap();
     let queries = section::split_into_queries(&factory_query, config.params());
 
     queries
@@ -538,7 +538,7 @@ SELECT
     fn test_io_stats_query() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            let rows = connect_and_query(endpoint, sqls::Id::IoStats, None);
+            let rows = connect_and_query(endpoint, sqls::Id::IoStats, None, Tenant::Cdb);
             assert!(rows.len() > 10);
             let name_dot = format!("{}.", &endpoint.sid.clone().unwrap());
             for r in &rows {
@@ -588,7 +588,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::TsQuotas, None);
+            let rows = connect_and_query(endpoint, sqls::Id::TsQuotas, None, Tenant::Cdb);
             assert!(!rows.is_empty());
             let expected = format!("{}||||", get_service_name(endpoint));
             assert_eq!(rows[0], expected);
@@ -600,7 +600,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Jobs, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Jobs, None, Tenant::Cdb);
             assert!(rows.len() > 10);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -610,7 +610,7 @@ SELECT
                     "Row does not have enough columns: {}",
                     r
                 );
-                assert_eq!(line[0], get_sid(endpoint).as_str());
+                assert_eq!(line[0], get_service_name(endpoint));
                 assert!(
                     [1, 2, 3, 4, 6, 7, 8]
                         .iter()
@@ -627,7 +627,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Resumable, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Resumable, None, Tenant::Cdb);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
                 assert_eq!(
@@ -649,7 +649,7 @@ SELECT
             println!("endpoint.host = {}", &endpoint.host);
             for version in [None, Some(InstanceNumVersion::from(11_00_00_00))] {
                 println!("Testing version: {:?}", version);
-                let rows = connect_and_query(endpoint, sqls::Id::UndoStat, version);
+                let rows = connect_and_query(endpoint, sqls::Id::UndoStat, version, Tenant::Cdb);
                 assert_eq!(rows.len(), 1);
                 let r = &rows[0];
                 let line: Vec<&str> = r.split("|").collect();
@@ -676,7 +676,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::LogSwitches, None);
+            let rows = connect_and_query(endpoint, sqls::Id::LogSwitches, None, Tenant::Cdb);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
                 assert_eq!(
@@ -700,7 +700,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Processes, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Processes, None, Tenant::Cdb);
             assert!(!rows.is_empty());
             let array = rows[0].split('|').collect::<Vec<&str>>();
             assert_eq!(
@@ -720,7 +720,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::RecoveryStatus, None);
+            let rows = connect_and_query(endpoint, sqls::Id::RecoveryStatus, None, Tenant::Cdb);
             for r in rows {
                 let array = r.split('|').collect::<Vec<&str>>();
                 assert_eq!(
@@ -750,7 +750,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Rman, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Rman, None, Tenant::Cdb);
             assert!(rows.is_empty());
         }
     }
@@ -760,7 +760,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::SystemParameter, None);
+            let rows = connect_and_query(endpoint, sqls::Id::SystemParameter, None, Tenant::Cdb);
             assert!(rows.len() > 100);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -787,7 +787,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::TableSpaces, None);
+            let rows = connect_and_query(endpoint, sqls::Id::TableSpaces, None, Tenant::Cdb);
             assert!(rows.len() > 2);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -839,7 +839,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::DataGuardStats, None);
+            let rows = connect_and_query(endpoint, sqls::Id::DataGuardStats, None, Tenant::Cdb);
             assert!(rows.is_empty());
         }
     }
@@ -850,7 +850,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Instance, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Instance, None, Tenant::Cdb);
             assert!(rows.len() > 2);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -891,6 +891,7 @@ SELECT
                 endpoint,
                 sqls::Id::Instance,
                 Some(InstanceNumVersion::from(18_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(!rows.is_empty());
             let line_last: Vec<&str> = rows[0].split("|").collect();
@@ -903,6 +904,7 @@ SELECT
                 endpoint,
                 sqls::Id::Instance,
                 Some(InstanceNumVersion::from(17_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(!rows.is_empty());
             let line_old: Vec<&str> = rows[0].split("|").collect();
@@ -924,7 +926,7 @@ SELECT
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::AsmInstance, None);
+            let rows = connect_and_query(endpoint, sqls::Id::AsmInstance, None, Tenant::Cdb);
             assert_eq!(rows.len(), 1);
             let r = rows[0].clone();
             let line: Vec<&str> = r.split("|").collect();
@@ -954,6 +956,7 @@ SELECT
                 endpoint,
                 sqls::Id::AsmInstance,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             let old_line: Vec<&str> = old_rows[0].split("|").collect();
             assert!(
@@ -973,16 +976,13 @@ SELECT
 mod non_cdb_simulated {
     use super::*;
 
+    /// CMK-37363: `Tenant::NoCdb` alone selects the 10-field query, at any version.
     #[test]
     fn test_jobs_old() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(
-                endpoint,
-                sqls::Id::Jobs,
-                Some(InstanceNumVersion::from(11_00_00_00)),
-            );
+            let rows = connect_and_query(endpoint, sqls::Id::Jobs, None, Tenant::NoCdb);
             assert!(rows.len() > 10);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -1006,6 +1006,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::Locks,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -1035,6 +1036,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::LongActiveSessions,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(!rows.is_empty());
             assert_eq!(rows[0], format!("{}||||||||", get_sid(endpoint)));
@@ -1050,6 +1052,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::RecoveryStatus,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(rows.len() > 10);
             for r in rows {
@@ -1079,6 +1082,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::Rman,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(rows.is_empty());
         }
@@ -1093,6 +1097,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::Sessions,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             assert_eq!(rows.len(), 1);
             let line: Vec<&str> = rows[0].split("|").collect();
@@ -1112,6 +1117,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::TableSpaces,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(rows.len() > 2);
             rows.iter().for_each(|r| {
@@ -1158,6 +1164,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::Instance,
                 Some(InstanceNumVersion::from(12_00_00_00)),
+                Tenant::Cdb,
             );
             assert_eq!(rows.len(), 1);
             let r = rows[0].clone();
@@ -1193,6 +1200,7 @@ mod non_cdb_simulated {
                 endpoint,
                 sqls::Id::Performance,
                 Some(InstanceNumVersion::from(11_00_00_00)),
+                Tenant::Cdb,
             );
             assert!(rows.len() > 30);
             rows.iter().for_each(|r| {
@@ -1231,7 +1239,7 @@ mod cdb {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Locks, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Locks, None, Tenant::Cdb);
             assert!(rows.len() >= 3);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -1279,7 +1287,7 @@ mod cdb {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::LongActiveSessions, None);
+            let rows = connect_and_query(endpoint, sqls::Id::LongActiveSessions, None, Tenant::Cdb);
             assert!(rows.len() >= 3);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -1316,7 +1324,7 @@ mod cdb {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Sessions, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Sessions, None, Tenant::Cdb);
             assert_eq!(rows.len(), 3);
             let start = get_sid(endpoint) + ".";
             for n in [0, 1] {
@@ -1349,6 +1357,12 @@ mod cdb {
             line_2[1..].iter().for_each(|s| {
                 assert!(s.parse::<i32>().is_ok(), "Value is not a number: {}", s);
             });
+            // CMK-37360: a live database always has more than one session open.
+            assert!(
+                line_2[1].parse::<i32>().unwrap() > 1,
+                "instance-wide session count looks hard-wired: {}",
+                rows[2]
+            );
         }
     }
 
@@ -1357,7 +1371,7 @@ mod cdb {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
             println!("endpoint.host = {}", &endpoint.host);
-            let rows = connect_and_query(endpoint, sqls::Id::Performance, None);
+            let rows = connect_and_query(endpoint, sqls::Id::Performance, None, Tenant::Cdb);
             assert!(rows.len() > 30);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -1429,6 +1443,14 @@ mod cdb {
                 );
                 assert!(line[0].starts_with(get_sid(endpoint).as_str()));
             });
+            // CMK-37362: if this fails on a supported release, that release needs the
+            // per-PDB execution the legacy plug-in used.
+            let root_prefix = format!("{}.CDB$ROOT|", get_sid(endpoint));
+            assert!(
+                rows.iter()
+                    .any(|r| r.contains("|PGA_info|") && !r.starts_with(&root_prefix)),
+                "no per-PDB PGA_info rows: {rows:?}"
+            );
         }
     }
 

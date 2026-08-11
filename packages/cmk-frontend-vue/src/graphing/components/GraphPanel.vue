@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type Ref, computed, ref } from 'vue'
+import { type Ref, computed, ref, watch } from 'vue'
 
 import { loadMenu } from '../api/burgerMenu'
 import { useGraphInteraction } from '../composables/useGraphInteraction'
@@ -58,22 +58,19 @@ const {
   pinTime,
   onZoom,
   onPan,
+  onBrush,
   onReset,
+  abandonInspection,
   onPinCreate,
   clearPin
 } = useGraphInteraction(
   () => frameTimeRange.value, // getBaseline
   () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
-  (timeRange, kind) =>
-    updateTimeRange(
-      {
-        start: timeRange.start,
-        end: timeRange.end
-      },
-      kind
-    ) // onTimeRangeCommit
+  updateTimeRange // onTimeRangeCommit
 )
+
+watch(() => props.timePickerRequests, abandonInspection)
 
 const hiddenMetricNames = defineModel<string[]>('hiddenMetricNames', { default: () => [] })
 const hiddenLineNames = defineModel<string[]>('hiddenLineNames', { default: () => [] })
@@ -248,7 +245,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           :width="figureWidth"
           :plot-left="plotLeft"
           :plot-width="brushPlotWidth"
-          @update:requested-time-range="updateTimeRange"
+          @update:requested-time-range="onBrush"
         />
       </div>
 

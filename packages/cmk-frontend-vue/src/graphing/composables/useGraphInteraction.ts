@@ -7,16 +7,13 @@ import { type Ref, computed, ref, watch } from 'vue'
 
 import type { PinPayload, TimeRange, ZoomMode, ZoomPayload } from '../components/TimeSeriesGraph'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import { sameRequestedTimeRange } from '../utils/timeRange'
 import { useGlobalPin } from './useGlobalPin'
 import { useGraphView } from './useGraphView'
 
 // Stands in for the baseline until the first data fetch delivers one; hosts gate
 // their renderer on their own timeRange, so this view is never rendered.
 const EMPTY_TIME_RANGE: TimeRange = { start: 0, end: 0, step: 1 }
-
-function sameRange(a: RequestedTimeRange, b: RequestedTimeRange): boolean {
-  return a.start === b.start && a.end === b.end
-}
 
 // The per-graph interaction owner: the renderer is view-only (emit-and-wait) and this
 // composable holds everything that moves it — the view state machine, the zoom mode,
@@ -25,7 +22,7 @@ export function useGraphInteraction(
   getBaseline: () => TimeRange | undefined,
   getShowPin: () => boolean = () => false,
   getRequestedTimeRange?: () => RequestedTimeRange,
-  onTimeRangeCommit?: (timeRange: TimeRange, kind: TimeRangeCommitKind) => void
+  onTimeRangeCommit?: (range: RequestedTimeRange, kind: TimeRangeCommitKind) => void
 ) {
   const {
     timeRange: viewTimeRange,
@@ -58,7 +55,7 @@ export function useGraphInteraction(
   // range that is a step longer than any of the time picker's presets and drop the picker to
   // "Custom time range". The baseline is the fallback for hosts that request nothing.
   const zoomSession: Ref<{
-    resetTarget: TimeRange
+    resetTarget: RequestedTimeRange
     lastCommittedRequest: RequestedTimeRange
   } | null> = ref(null)
   const inspectionActive = computed(() => viewInspectionActive.value || zoomSession.value !== null)
@@ -76,32 +73,32 @@ export function useGraphInteraction(
     watch(getRequestedTimeRange, (current) => {
       if (
         zoomSession.value !== null &&
-        !sameRange(current, zoomSession.value.lastCommittedRequest)
+        !sameRequestedTimeRange(current, zoomSession.value.lastCommittedRequest)
       ) {
         zoomSession.value = null
       }
     })
   }
 
-  function commitTimeRange(timeRange: TimeRange, kind: TimeRangeCommitKind): void {
+  function commitTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
     // Canvas drag inverts pixels through a continuous scale, so the raw payload is usually
     // fractional, while the shared requestedTimeRange (and the backend) deal only with integers.
     const rounded: RequestedTimeRange = {
-      start: Math.round(timeRange.start),
-      end: Math.round(timeRange.end)
+      start: Math.round(range.start),
+      end: Math.round(range.end)
     }
     if (zoomSession.value === null) {
       const baseline = getBaseline()
       if (baseline !== undefined) {
         zoomSession.value = {
-          resetTarget: { ...baseline, ...getRequestedTimeRange?.() },
+          resetTarget: getRequestedTimeRange?.() ?? { start: baseline.start, end: baseline.end },
           lastCommittedRequest: rounded
         }
       }
     } else {
       zoomSession.value = { ...zoomSession.value, lastCommittedRequest: rounded }
     }
-    onTimeRangeCommit?.({ ...timeRange, ...rounded }, kind)
+    onTimeRangeCommit?.(rounded, kind)
   }
 
   function onZoom(payload: ZoomPayload): void {
@@ -116,12 +113,17 @@ export function useGraphInteraction(
     commitTimeRange(payload.timeRange, 'translated_timerange')
   }
 
-  function onReset(): void {
+  function abandonInspection(): void {
     handleIntent({ kind: 'reset' })
-    if (zoomSession.value !== null) {
-      onTimeRangeCommit?.(zoomSession.value.resetTarget, 'changed_timerange_span')
-    }
     zoomSession.value = null
+  }
+
+  function onReset(): void {
+    const endedSession = zoomSession.value
+    abandonInspection()
+    if (endedSession !== null) {
+      onTimeRangeCommit?.(endedSession.resetTarget, 'changed_timerange_span')
+    }
   }
 
   function onPinCreate(payload: PinPayload): void {
@@ -136,7 +138,9 @@ export function useGraphInteraction(
     pinTime,
     onZoom,
     onPan,
+    onBrush: commitTimeRange,
     onReset,
+    abandonInspection,
     onPinCreate,
     clearPin
   }

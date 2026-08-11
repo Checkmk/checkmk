@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { type Ref, nextTick, ref } from 'vue'
 
-import type { TimeRange } from '@/graphing/components/TimeSeriesGraph'
+import type { TimeRange, ValueRange } from '@/graphing/components/TimeSeriesGraph'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 import { useGraphInteraction } from '@/graphing/composables/useGraphInteraction'
 import type { RequestedTimeRange } from '@/graphing/types'
@@ -29,6 +29,10 @@ vi.mock('@/graphing/composables/useGlobalPin', async () => {
 
 const BASELINE: TimeRange = { start: 1000, end: 2000, step: 60 }
 const ZOOMED: TimeRange = { start: 1200, end: 1500, step: 60 }
+const SHIFTED: TimeRange = { start: 1100, end: 2100, step: 60 }
+const PEAK: ValueRange = { min: 10, max: 20 }
+
+const bounds = ({ start, end }: TimeRange): RequestedTimeRange => ({ start, end })
 
 describe('useGraphInteraction', () => {
   beforeEach(() => {
@@ -160,7 +164,10 @@ test('a time-zoom commits the new time range', () => {
 
   graph.onZoom({ timeRange: ZOOMED })
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(ZOOMED, 'changed_timerange_span')
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
+    bounds(ZOOMED),
+    'changed_timerange_span'
+  )
 })
 
 test('a fractional zoom payload is rounded before it is committed', () => {
@@ -170,7 +177,7 @@ test('a fractional zoom payload is rounded before it is committed', () => {
   graph.onZoom({ timeRange: { start: 1200.6, end: 1499.4, step: 60 } })
 
   expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
-    { start: 1201, end: 1499, step: 60 },
+    { start: 1201, end: 1499 },
     'changed_timerange_span'
   )
 })
@@ -207,7 +214,7 @@ test('a pan commits the new time range', () => {
 
   graph.onPan({ timeRange: shifted })
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(shifted, 'translated_timerange')
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(bounds(shifted), 'translated_timerange')
 })
 
 test('a reset commits the baseline time range', () => {
@@ -218,7 +225,10 @@ test('a reset commits the baseline time range', () => {
 
   graph.onReset()
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE, 'changed_timerange_span')
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
+    bounds(BASELINE),
+    'changed_timerange_span'
+  )
 })
 
 test('a reset commits the range the page requested, not the snapped one the backend served', () => {
@@ -237,7 +247,7 @@ test('a reset commits the range the page requested, not the snapped one the back
   graph.onReset()
 
   expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
-    { start: 1000, end: 2000, step: 60 },
+    { start: 1000, end: 2000 },
     'changed_timerange_span'
   )
 })
@@ -278,13 +288,31 @@ test('inspection (and thus the reset control) stays active after the baseline ca
 
   graph.onReset()
 
-  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(BASELINE, 'changed_timerange_span')
+  expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(
+    bounds(BASELINE),
+    'changed_timerange_span'
+  )
   expect(graph.inspectionActive.value).toBe(false)
 })
 
-test('a requestedTimeRange change matching our own commit (inner) keeps the reset target', async () => {
+test('abandoning the inspection ends it without publishing a range', () => {
+  const onTimeRangeCommit = vi.fn()
+  const graph = useGraphInteraction(() => BASELINE, undefined, undefined, onTimeRangeCommit)
+  graph.onZoom({ timeRange: ZOOMED })
+  onTimeRangeCommit.mockClear()
+
+  graph.abandonInspection()
+
+  expect(onTimeRangeCommit).not.toHaveBeenCalled()
+  expect(graph.inspectionActive.value).toBe(false)
+})
+
+test('a requested time range matching our own commit (inner) keeps the reset target', async () => {
   const baseline = ref<TimeRange>(BASELINE)
-  const requestedTimeRange = ref<RequestedTimeRange>({ start: BASELINE.start, end: BASELINE.end })
+  const requestedTimeRange = ref<RequestedTimeRange>({
+    start: BASELINE.start,
+    end: BASELINE.end
+  })
   const onTimeRangeCommit = vi.fn()
   const graph = useGraphInteraction(
     () => baseline.value,
@@ -307,9 +335,159 @@ test('a requestedTimeRange change matching our own commit (inner) keeps the rese
   expect(graph.inspectionActive.value).toBe(true)
 })
 
-test('an unrelated requestedTimeRange change (e.g. the global picker) drops the reset target', async () => {
+describe('the brush commits like the canvas gestures do', () => {
+  test.each(['translated_timerange', 'changed_timerange_span'] as const)(
+    'a brush window is committed with the %s kind the brush reported',
+    (kind) => {
+      const onTimeRangeCommit = vi.fn()
+      const graph = useGraphInteraction(() => BASELINE, undefined, undefined, onTimeRangeCommit)
+
+      graph.onBrush({ start: 1100, end: 2100 }, kind)
+
+      expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(bounds(SHIFTED), kind)
+    }
+  )
+
+  test('the echo of a brush commit is not mistaken for an outside change', async () => {
+    const baseline = ref<TimeRange>(BASELINE)
+    const requestedTimeRange = ref<RequestedTimeRange>({
+      start: BASELINE.start,
+      end: BASELINE.end
+    })
+    const graph = useGraphInteraction(
+      () => baseline.value,
+      undefined,
+      () => requestedTimeRange.value,
+      (timeRange) => {
+        requestedTimeRange.value = { start: timeRange.start, end: timeRange.end }
+      }
+    )
+
+    graph.onBrush({ start: SHIFTED.start, end: SHIFTED.end }, 'translated_timerange')
+    baseline.value = SHIFTED
+    await nextTick()
+
+    expect(graph.inspectionActive.value).toBe(true)
+  })
+})
+
+describe('a peak zoom outlives every change of the requested time range', () => {
+  function peakZoomedGraph() {
+    const baseline = ref<TimeRange>(BASELINE)
+    const requestedTimeRange = ref<RequestedTimeRange>({
+      start: BASELINE.start,
+      end: BASELINE.end
+    })
+    function request(range: RequestedTimeRange): void {
+      requestedTimeRange.value = range
+    }
+    const graph = useGraphInteraction(
+      () => baseline.value,
+      undefined,
+      () => requestedTimeRange.value,
+      (timeRange) => {
+        request({ start: timeRange.start, end: timeRange.end })
+      }
+    )
+    graph.onZoom({ timeRange: BASELINE, valueRange: PEAK })
+    return { graph, baseline, request }
+  }
+
+  async function refetchServes(baseline: Ref<TimeRange>, served: TimeRange): Promise<void> {
+    baseline.value = served
+    await nextTick()
+  }
+
+  test('a pan keeps it', async () => {
+    const { graph, baseline } = peakZoomedGraph()
+
+    graph.onPan({ timeRange: SHIFTED })
+    await refetchServes(baseline, SHIFTED)
+
+    expect(graph.viewTimeRange.value).toEqual(SHIFTED)
+    expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('a time zoom keeps it', async () => {
+    const { graph, baseline } = peakZoomedGraph()
+
+    graph.onZoom({ timeRange: ZOOMED })
+    await refetchServes(baseline, ZOOMED)
+
+    expect(graph.viewTimeRange.value).toEqual(ZOOMED)
+    expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('a brush move keeps it', async () => {
+    const { graph, baseline } = peakZoomedGraph()
+
+    graph.onBrush({ start: SHIFTED.start, end: SHIFTED.end }, 'translated_timerange')
+    await refetchServes(baseline, SHIFTED)
+
+    expect(graph.viewTimeRange.value).toEqual(SHIFTED)
+    expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('an outside range change keeps it, since only the host can judge that one', async () => {
+    const { graph, baseline, request } = peakZoomedGraph()
+
+    request({ start: 5000, end: 6000 })
+    await refetchServes(baseline, { start: 5000, end: 6000, step: 60 })
+
+    expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('a refetch re-serving the same window at another step keeps it', async () => {
+    const { graph, baseline } = peakZoomedGraph()
+
+    await refetchServes(baseline, { ...BASELINE, step: 120 })
+
+    expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('a requested range republished unchanged keeps it', async () => {
+    const { graph, request } = peakZoomedGraph()
+
+    request({ start: BASELINE.start, end: BASELINE.end })
+    await nextTick()
+
+    expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('the host abandoning the inspection ends it', () => {
+    const { graph } = peakZoomedGraph()
+
+    graph.abandonInspection()
+
+    expect(graph.viewValueRange.value).toBeNull()
+    expect(graph.inspectionActive.value).toBe(false)
+  })
+
+  test('a reset ends it', () => {
+    const { graph } = peakZoomedGraph()
+
+    graph.onReset()
+
+    expect(graph.viewValueRange.value).toBeNull()
+    expect(graph.inspectionActive.value).toBe(false)
+  })
+
+  test('it keeps the reset control reachable once the panned range has settled', async () => {
+    const { graph, baseline } = peakZoomedGraph()
+
+    graph.onPan({ timeRange: SHIFTED })
+    await refetchServes(baseline, SHIFTED)
+
+    expect(graph.inspectionActive.value).toBe(true)
+  })
+})
+
+test('an unrelated requested time range (e.g. the global picker) drops the reset target', async () => {
   const baseline = ref<TimeRange>(BASELINE)
-  const requestedTimeRange = ref<RequestedTimeRange>({ start: BASELINE.start, end: BASELINE.end })
+  const requestedTimeRange = ref<RequestedTimeRange>({
+    start: BASELINE.start,
+    end: BASELINE.end
+  })
   const onTimeRangeCommit = vi.fn()
   const graph = useGraphInteraction(
     () => baseline.value,

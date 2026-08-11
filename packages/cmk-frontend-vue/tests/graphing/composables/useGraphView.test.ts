@@ -19,7 +19,7 @@ describe('useGraphView', () => {
     expect(view.inspectionActive.value).toBe(false)
   })
 
-  test('a time-zoom sets the X window and re-autoscales Y', () => {
+  test('a time-zoom sets the X window and leaves Y auto-scaled when nothing zoomed it', () => {
     const view = useGraphView(() => baseline)
     const zoomed = { start: 1200, end: 1500, step: 60 }
 
@@ -27,6 +27,18 @@ describe('useGraphView', () => {
 
     expect(view.timeRange.value).toEqual(zoomed)
     expect(view.valueRange.value).toBeNull()
+  })
+
+  test('a time-zoom preserves a prior value-zoom rather than re-autoscaling Y', () => {
+    const view = useGraphView(() => baseline)
+    const valueWindow = { min: 0, max: 50 }
+    view.handleIntent({ kind: 'zoomTransient', timeRange: baseline, valueRange: valueWindow })
+    const zoomed = { start: 1200, end: 1500, step: 60 }
+
+    view.handleIntent({ kind: 'zoomTransient', timeRange: zoomed })
+
+    expect(view.timeRange.value).toEqual(zoomed)
+    expect(view.valueRange.value).toEqual(valueWindow)
   })
 
   test('a value-zoom sets the Y window and leaves X on the baseline', () => {
@@ -93,7 +105,7 @@ describe('useGraphView', () => {
     expect(view.valueRange.value).toEqual(valueWindow)
   })
 
-  test('a range commit clears inspection so the new baseline shows through', () => {
+  test('a range commit clears the X overlay so the new baseline shows through', () => {
     const committed = ref(baseline)
     const view = useGraphView(() => committed.value)
     view.handleIntent({ kind: 'zoomTransient', timeRange: { start: 1200, end: 1500, step: 60 } })
@@ -102,5 +114,18 @@ describe('useGraphView', () => {
     view.handleIntent({ kind: 'rangeCommit', timeRange: committed.value })
 
     expect(view.timeRange.value).toEqual({ start: 5000, end: 6000, step: 60 })
+  })
+
+  test('a range commit keeps a value-zoom', () => {
+    const committed = ref(baseline)
+    const view = useGraphView(() => committed.value)
+    const valueWindow = { min: 0, max: 50 }
+    view.handleIntent({ kind: 'zoomTransient', timeRange: baseline, valueRange: valueWindow })
+    committed.value = { start: 5000, end: 6000, step: 60 }
+
+    view.handleIntent({ kind: 'rangeCommit', timeRange: committed.value })
+
+    expect(view.timeRange.value).toEqual({ start: 5000, end: 6000, step: 60 })
+    expect(view.valueRange.value).toEqual(valueWindow)
   })
 })

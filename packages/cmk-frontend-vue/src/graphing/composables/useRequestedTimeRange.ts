@@ -5,10 +5,11 @@
  */
 import { fromDate, getLocalTimeZone } from '@internationalized/date'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { type Ref, ref, watch } from 'vue'
+import { type ComputedRef, computed, ref, watch } from 'vue'
 
 import { useGlobalTimeRange } from '../GlobalTimePicker/useGlobalTimeRange'
 import type { RequestedTimeRange } from '../types'
+import { sameRequestedTimeRange } from '../utils/timeRange'
 
 function toRequestedTimeRange(range: DateTimeRange): RequestedTimeRange {
   return {
@@ -29,59 +30,72 @@ function toDateTimeRange(range: RequestedTimeRange, timeZone: string): DateTimeR
 
 const DEFAULT_RANGE_SECONDS = 4 * 3600
 
+export interface RequestedTimeRangeState {
+  requestedTimeRange: ComputedRef<RequestedTimeRange>
+  setRequestedTimeRange: (range: RequestedTimeRange) => void
+  timePickerRequests: ComputedRef<number>
+}
+
 /**
  * The requested (user-chosen) time range for a graph data fetch owner.
  *
  * Seeded from the page's global time picker if one has already published a range,
  * otherwise from `initial` (default: the last four hours); follows every subsequent
- * picker change. The returned ref stays writable: local interactions (e.g. brush zoom)
- * can update it directly, and doing so publishes the new range to the global picker in
- * turn, which every other graph/graph-group on the page follows the same way.
+ * picker change.
  *
  * Call this from the component that owns the data fetch (e.g. a graph group or a
  * standalone panel host), not from presentational components like GraphPanel.
  */
-export function useRequestedTimeRange(initial?: RequestedTimeRange): Ref<RequestedTimeRange> {
-  const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+export function useRequestedTimeRange(initial?: RequestedTimeRange): RequestedTimeRangeState {
+  const { activeTimeRangeState, setActiveTimeRange } = useGlobalTimeRange()
 
   function fallbackRange(): RequestedTimeRange {
     const now = Math.floor(Date.now() / 1000)
     return { start: now - DEFAULT_RANGE_SECONDS, end: now }
   }
 
-  const requestedTimeRange = ref<RequestedTimeRange>(
-    activeTimeRange.value === null
+  const active = activeTimeRangeState.value
+  const request = ref<RequestedTimeRange>(
+    active.range === null
       ? initial === undefined
         ? fallbackRange()
         : { ...initial }
-      : toRequestedTimeRange(activeTimeRange.value)
+      : toRequestedTimeRange(active.range)
   )
+  const timePickerRequests = ref(0)
+
   // Mount order of the picker and the fetch owner is DOM-driven: if the picker mounts
   // later, its initial publish arrives through this watch and replaces the seed.
-  watch(activeTimeRange, (val) => {
-    if (val === null) {
+  watch(activeTimeRangeState, (state) => {
+    if (state.range === null) {
       return
     }
-    const next = toRequestedTimeRange(val)
-    if (
-      next.start === requestedTimeRange.value.start &&
-      next.end === requestedTimeRange.value.end
-    ) {
+    const next = toRequestedTimeRange(state.range)
+    if (sameRequestedTimeRange(next, request.value)) {
       return
     }
-    requestedTimeRange.value = next
-  })
-
-  watch(requestedTimeRange, (val) => {
-    if (activeTimeRange.value !== null) {
-      const current = toRequestedTimeRange(activeTimeRange.value)
-      if (val.start === current.start && val.end === current.end) {
-        return
-      }
+    request.value = next
+    if (state.origin === 'time_picker') {
+      timePickerRequests.value += 1
     }
-    const timeZone = activeTimeRange.value?.from.timeZone ?? getLocalTimeZone()
-    setActiveTimeRange(toDateTimeRange(val, timeZone))
   })
 
-  return requestedTimeRange
+  function setRequestedTimeRange(range: RequestedTimeRange): void {
+    request.value = { start: range.start, end: range.end }
+  }
+
+  watch(request, (range) => {
+    const published = activeTimeRangeState.value.range
+    if (published !== null && sameRequestedTimeRange(range, toRequestedTimeRange(published))) {
+      return
+    }
+    const timeZone = published?.from.timeZone ?? getLocalTimeZone()
+    setActiveTimeRange(toDateTimeRange(range, timeZone), 'external')
+  })
+
+  return {
+    requestedTimeRange: computed(() => request.value),
+    setRequestedTimeRange,
+    timePickerRequests: computed(() => timePickerRequests.value)
+  }
 }

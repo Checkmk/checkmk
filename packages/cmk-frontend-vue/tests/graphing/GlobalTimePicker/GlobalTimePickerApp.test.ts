@@ -37,7 +37,7 @@ const activeDurationSeconds = (): number => {
 describe('GlobalTimePickerApp', () => {
   // The stores are module-level singletons; reset them so each test starts from a known state.
   beforeEach(() => {
-    useGlobalTimeRange().setActiveTimeRange(null)
+    useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
     resetGlobalRefresh()
   })
 
@@ -51,7 +51,7 @@ describe('GlobalTimePickerApp', () => {
   })
 
   test('does not overwrite an already-seeded store', () => {
-    useGlobalTimeRange().setActiveTimeRange(rollingRange(99))
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(99), 'time_picker')
     render(GlobalTimePickerApp, { props: { ...PROPS } })
     expect(activeDurationSeconds()).toBe(99)
   })

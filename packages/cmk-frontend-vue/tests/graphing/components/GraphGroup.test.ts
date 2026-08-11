@@ -101,7 +101,7 @@ const requestedRanges = (): { start: number; end: number; step: number }[] =>
   postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range)
 
 beforeEach(() => {
-  useGlobalTimeRange().setActiveTimeRange(null)
+  useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -355,7 +355,7 @@ test('refetches graph and overview when the global picker publishes a range', as
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
 
   const published = range(9, 10)
-  useGlobalTimeRange().setActiveTimeRange(published)
+  useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
   const start = epochSeconds(published.from)

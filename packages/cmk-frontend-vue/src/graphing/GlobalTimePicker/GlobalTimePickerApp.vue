@@ -21,14 +21,14 @@ const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
 const fallback = rollingRange(props.default_time_range)
 
 if (activeTimeRange.value === null) {
-  setActiveTimeRange(fallback)
+  setActiveTimeRange(fallback, 'time_picker')
 }
 
 seedRefreshIntervalSeconds(props.default_refresh_time)
 
 const range = computed<DateTimeRange>({
   get: () => activeTimeRange.value ?? fallback,
-  set: setActiveTimeRange
+  set: (value: DateTimeRange) => setActiveTimeRange(value, 'time_picker')
 })
 </script>
 

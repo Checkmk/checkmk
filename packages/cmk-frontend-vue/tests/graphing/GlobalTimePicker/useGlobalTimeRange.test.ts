@@ -27,7 +27,7 @@ describe('useGlobalTimeRange', () => {
   // The store is a module-level singleton shared across the whole bundle; reset it so each test
   // starts from a known state.
   beforeEach(() => {
-    useGlobalTimeRange().setActiveTimeRange(null)
+    useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
   })
 
   test('starts as null', () => {
@@ -37,7 +37,7 @@ describe('useGlobalTimeRange', () => {
   test('a write is visible to a second consumer', () => {
     const writer = useGlobalTimeRange()
     const reader = useGlobalTimeRange()
-    writer.setActiveTimeRange(range(9, 10))
+    writer.setActiveTimeRange(range(9, 10), 'time_picker')
     expect(reader.activeTimeRange.value).toEqual(range(9, 10))
   })
 
@@ -47,9 +47,41 @@ describe('useGlobalTimeRange', () => {
     watch(reader.activeTimeRange, (value) => seen.push(value))
 
     // A write through a separate consumer (e.g. a graph panning) is observed by the reader.
-    useGlobalTimeRange().setActiveTimeRange(range(9, 10))
+    useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
     await nextTick()
     expect(seen).toEqual([range(9, 10)])
+  })
+
+  describe('the origin of the active range', () => {
+    test('starts out attributed to the time picker', () => {
+      expect(useGlobalTimeRange().activeTimeRangeState.value).toEqual({
+        range: null,
+        origin: 'time_picker'
+      })
+    })
+
+    test.each(['time_picker', 'external'] as const)(
+      'a write records the %s origin it was given',
+      (origin) => {
+        useGlobalTimeRange().setActiveTimeRange(range(9, 10), origin)
+
+        expect(useGlobalTimeRange().activeTimeRangeState.value.origin).toBe(origin)
+      }
+    )
+
+    test('the range and its origin become visible in the same update', async () => {
+      const reader = useGlobalTimeRange()
+      const seen: Array<{ fromDay: number | null; origin: string }> = []
+      const stopWatching = watch(reader.activeTimeRangeState, ({ range: published, origin }) => {
+        seen.push({ fromDay: published === null ? null : published.from.day, origin })
+      })
+
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'external')
+      await nextTick()
+      stopWatching()
+
+      expect(seen).toEqual([{ fromDay: 9, origin: 'external' }])
+    })
   })
 
   describe('pausing the global refresh', () => {
@@ -67,35 +99,35 @@ describe('useGlobalTimeRange', () => {
     })
 
     test('a range that already ended pauses the refresh', () => {
-      useGlobalTimeRange().setActiveTimeRange(range(9, 10))
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
 
       expect(useGlobalRefresh().refreshPaused.value).toBe(true)
     })
 
     test('a range ending now keeps the refresh running', () => {
-      useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600))
+      useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600), 'time_picker')
 
       expect(useGlobalRefresh().refreshPaused.value).toBe(false)
     })
 
     test('a range ending in the future keeps the refresh running', () => {
       // The "Today" quick range shape: ends at the end of the day.
-      useGlobalTimeRange().setActiveTimeRange(range(10, 11))
+      useGlobalTimeRange().setActiveTimeRange(range(10, 11), 'time_picker')
 
       expect(useGlobalRefresh().refreshPaused.value).toBe(false)
     })
 
     test('going back to a range ending now does not resume the refresh', () => {
-      useGlobalTimeRange().setActiveTimeRange(range(9, 10))
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
 
-      useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600))
+      useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600), 'time_picker')
 
       expect(useGlobalRefresh().refreshPaused.value).toBe(true)
     })
 
     test('resuming while a range that already ended is selected keeps that range', () => {
       const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
-      setActiveTimeRange(range(9, 10))
+      setActiveTimeRange(range(9, 10), 'time_picker')
 
       useGlobalRefresh().setRefreshPaused(false)
 

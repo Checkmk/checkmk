@@ -59,6 +59,7 @@ export interface GraphPanelProps {
   // so that parent components can forward their own optional range prop directly.
   dataTimeRange?: TimeRange | undefined
   requestedTimeRange: RequestedTimeRange
+  timePickerRequests: number
   interaction: Interaction
   title?: string
   showTitle?: boolean

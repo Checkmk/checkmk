@@ -30,63 +30,74 @@ describe('useRequestedTimeRange', () => {
   // The global picker store is a module-level singleton shared across the whole bundle; reset it
   // so each test starts from a known state.
   beforeEach(() => {
-    useGlobalTimeRange().setActiveTimeRange(null)
+    useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
   })
 
   test('seeds from initial when no global range is published', () => {
-    const requested = useRequestedTimeRange(INITIAL)
-    expect(requested.value).toEqual(INITIAL)
+    const { requestedTimeRange } = useRequestedTimeRange(INITIAL)
+    expect(requestedTimeRange.value).toEqual(INITIAL)
   })
 
   test('seeds from the global picker when it has already published a range', () => {
     const published = range(9, 10)
-    useGlobalTimeRange().setActiveTimeRange(published)
+    useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
 
-    const requested = useRequestedTimeRange(INITIAL)
+    const { requestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    expect(requested.value).toEqual({
+    expect(requestedTimeRange.value).toEqual({
       start: epochSeconds(published.from),
       end: epochSeconds(published.to)
     })
   })
 
   test('follows a global picker change published after setup', async () => {
-    const requested = useRequestedTimeRange(INITIAL)
+    const { requestedTimeRange } = useRequestedTimeRange(INITIAL)
 
     const published = range(9, 10)
-    useGlobalTimeRange().setActiveTimeRange(published)
+    useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
     await nextTick()
 
-    expect(requested.value).toEqual({
+    expect(requestedTimeRange.value).toEqual({
       start: epochSeconds(published.from),
       end: epochSeconds(published.to)
     })
   })
 
   test('keeps the last range when the global picker resets to null', async () => {
-    const requested = useRequestedTimeRange(INITIAL)
-    useGlobalTimeRange().setActiveTimeRange(range(9, 10))
+    const { requestedTimeRange } = useRequestedTimeRange(INITIAL)
+    useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
     await nextTick()
-    const last = { ...requested.value }
+    const last = { ...requestedTimeRange.value }
 
-    useGlobalTimeRange().setActiveTimeRange(null)
+    useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
     await nextTick()
 
-    expect(requested.value).toEqual(last)
+    expect(requestedTimeRange.value).toEqual(last)
   })
 
-  test('stays writable for local updates such as brush zooms', () => {
-    const requested = useRequestedTimeRange(INITIAL)
-    requested.value = { start: 5_000, end: 6_000 }
-    expect(requested.value).toEqual({ start: 5_000, end: 6_000 })
+  test('records a local update', () => {
+    const { requestedTimeRange, setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
+
+    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+
+    expect(requestedTimeRange.value).toEqual({ start: 5_000, end: 6_000 })
+  })
+
+  test('publishes a local update as external, never as the picker', async () => {
+    const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
+
+    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    await nextTick()
+
+    expect(useGlobalTimeRange().activeTimeRangeState.value.origin).toBe('external')
   })
 
   test('publishes a local update to the global picker', async () => {
-    useGlobalTimeRange().setActiveTimeRange(range(9, 10))
-    const requested = useRequestedTimeRange(INITIAL)
+    useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
+    const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
     await nextTick()
 
-    requested.value = { start: 5_000, end: 6_000 }
+    setRequestedTimeRange({ start: 5_000, end: 6_000 })
     await nextTick()
 
     const published = useGlobalTimeRange().activeTimeRange.value
@@ -96,11 +107,11 @@ describe('useRequestedTimeRange', () => {
   })
 
   test('reuses the active range timezone when publishing a local update', async () => {
-    useGlobalTimeRange().setActiveTimeRange(range(9, 10))
-    const requested = useRequestedTimeRange(INITIAL)
+    useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
+    const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
     await nextTick()
 
-    requested.value = { start: 5_000, end: 6_000 }
+    setRequestedTimeRange({ start: 5_000, end: 6_000 })
     await nextTick()
 
     const published = useGlobalTimeRange().activeTimeRange.value
@@ -109,9 +120,9 @@ describe('useRequestedTimeRange', () => {
   })
 
   test('falls back to the local timezone when publishing without a prior picker range', async () => {
-    const requested = useRequestedTimeRange(INITIAL)
+    const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    requested.value = { start: 5_000, end: 6_000 }
+    setRequestedTimeRange({ start: 5_000, end: 6_000 })
     await nextTick()
 
     const published = useGlobalTimeRange().activeTimeRange.value
@@ -123,23 +134,71 @@ describe('useRequestedTimeRange', () => {
     const second = useRequestedTimeRange(INITIAL)
     await nextTick()
 
-    first.value = { start: 5_000, end: 6_000 }
+    first.setRequestedTimeRange({ start: 5_000, end: 6_000 })
     await nextTick()
 
-    expect(second.value).toEqual({ start: 5_000, end: 6_000 })
+    expect(second.requestedTimeRange.value).toEqual({ start: 5_000, end: 6_000 })
   })
 
   test('settles instead of bouncing indefinitely once a local update round-trips back', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const requested = useRequestedTimeRange(INITIAL)
+    const { requestedTimeRange, setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    requested.value = { start: 5_000, end: 6_000 }
+    setRequestedTimeRange({ start: 5_000, end: 6_000 })
     await nextTick()
     await nextTick()
     await nextTick()
 
-    expect(requested.value).toEqual({ start: 5_000, end: 6_000 })
+    expect(requestedTimeRange.value).toEqual({ start: 5_000, end: 6_000 })
     expect(errorSpy).not.toHaveBeenCalled()
     errorSpy.mockRestore()
+  })
+
+  describe('counting the windows a time control asked for', () => {
+    test('starts at nothing asked for', () => {
+      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+
+      expect(timePickerRequests.value).toBe(0)
+    })
+
+    test('a picker range counts', async () => {
+      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
+      await nextTick()
+
+      expect(timePickerRequests.value).toBe(1)
+    })
+
+    test('an external range does not count, however far it moves the window', async () => {
+      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+
+      useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'external')
+      await nextTick()
+
+      expect(timePickerRequests.value).toBe(0)
+    })
+
+    test('the picker republishing the window already shown does not count', async () => {
+      const published = range(9, 10)
+      useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
+      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+      await nextTick()
+
+      useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
+      await nextTick()
+
+      expect(timePickerRequests.value).toBe(0)
+    })
+
+    test("this owner's own write does not count, even once it round-trips back", async () => {
+      const { setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange(INITIAL)
+
+      setRequestedTimeRange({ start: 5_000, end: 6_000 })
+      await nextTick()
+      await nextTick()
+
+      expect(timePickerRequests.value).toBe(0)
+    })
   })
 })

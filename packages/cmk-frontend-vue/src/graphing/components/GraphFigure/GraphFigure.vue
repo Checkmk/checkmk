@@ -15,7 +15,7 @@ import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useG
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { useGraphNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
-import type { RequestedTimeRange, TimeRange } from '../../types.ts'
+import type { RequestedTimeRange } from '../../types.ts'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import GraphNotice from '../GraphNotice.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
@@ -117,30 +117,38 @@ watch(isLoading, (loading) => {
   }
 })
 
+// Both committed time-zoom and pan windows land here: fetch the window and suspend the
+// refresh timer so a tick cannot yank the inspected window away; reset resumes it.
+const onCommittedTimeRange = (range: RequestedTimeRange) => {
+  zoomSessionActive.value = true
+  requestedTimeRange.value = { start: range.start, end: range.end }
+  timer.stop()
+}
+
+const {
+  viewTimeRange,
+  viewValueRange,
+  inspectionActive,
+  onZoom,
+  onPan,
+  onReset,
+  abandonInspection
+} = useGraphInteraction(
+  () => graph.value?.timeRange,
+  () => false,
+  () => requestedTimeRange.value,
+  onCommittedTimeRange
+)
+
 watch(
   () => [props.internal, props.combinationMode, JSON.stringify(props.timerange)],
   () => {
     zoomSessionActive.value = false
+    abandonInspection()
     refresh()
     timer.start()
   }
 )
-
-// Both committed time-zoom and pan windows land here: fetch the window and suspend the
-// refresh timer so a tick cannot yank the inspected window away; reset resumes it.
-const onCommittedTimeRange = (timeRange: TimeRange) => {
-  zoomSessionActive.value = true
-  requestedTimeRange.value = { start: timeRange.start, end: timeRange.end }
-  timer.stop()
-}
-
-const { viewTimeRange, viewValueRange, inspectionActive, onZoom, onPan, onReset } =
-  useGraphInteraction(
-    () => graph.value?.timeRange,
-    () => false,
-    () => requestedTimeRange.value,
-    onCommittedTimeRange
-  )
 
 const {
   hiddenMetricNames,

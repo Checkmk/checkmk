@@ -16,13 +16,18 @@ import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['panEnabled'],
+    props: ['panEnabled', 'time_range', 'valueRange'],
     emits: ['zoom', 'pan', 'reset'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
+      <span data-testid="value-range">{{ valueRange === null ? 'none' : valueRange.max }}</span>
       <button
         data-testid="emit-pan"
         @click="$emit('pan', { timeRange: { start: 500, end: 900, step: 60 } })"
+      />
+      <button
+        data-testid="emit-value-zoom"
+        @click="$emit('zoom', { timeRange: time_range, valueRange: { min: 0, max: 10 } })"
       />
       <button data-testid="emit-reset" @click="$emit('reset')" />
     </div>`
@@ -40,6 +45,8 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
   precision: { type: 'auto', digits: 2 },
   convertible: true
 }
+
+const REFRESH_INTERVAL_MS = 60_000
 
 const FETCHED = {
   title: 'CPU utilization',
@@ -260,6 +267,30 @@ test('a reset after a pan re-resolves the configured range', async () => {
   // The configured range ("last 4 hours") resolves relative to now, far past the panned window.
   const requestedRange = postSpy.mock.calls[2][1].body.requested_time_range
   expect(requestedRange.end).toBeGreaterThan(900)
+})
+
+test('a peak zoom outlives the refresh timer re-fetching the same window', async () => {
+  vi.useFakeTimers()
+  renderFigure()
+  await vi.advanceTimersByTimeAsync(1)
+  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
+  expect(screen.getByTestId('value-range')).toHaveTextContent('10')
+
+  await vi.advanceTimersByTimeAsync(REFRESH_INTERVAL_MS)
+
+  expect(postSpy).toHaveBeenCalledTimes(2)
+  expect(screen.getByTestId('value-range')).toHaveTextContent('10')
+})
+
+test('a peak zoom ends when the dashboard configures another range', async () => {
+  const { rerender } = renderFigure()
+  await screen.findByTestId('time-series-graph')
+  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
+  expect(screen.getByTestId('value-range')).toHaveTextContent('10')
+
+  await rerender({ timerange: { type: 'age', hours: 8 } })
+
+  expect(screen.getByTestId('value-range')).toHaveTextContent('none')
 })
 
 test('carries no context view but keeps panning enabled', async () => {

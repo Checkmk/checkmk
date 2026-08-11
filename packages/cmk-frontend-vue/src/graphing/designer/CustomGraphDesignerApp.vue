@@ -33,7 +33,7 @@ const { _t } = usei18n()
 // Single owner of the shared time-range default; header and body only read/update it.
 const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
 if (activeTimeRange.value === null) {
-  setActiveTimeRange(rollingRange(props.time_picker.default_time_range))
+  setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
 }
 
 seedRefreshIntervalSeconds(props.time_picker.default_refresh_time)

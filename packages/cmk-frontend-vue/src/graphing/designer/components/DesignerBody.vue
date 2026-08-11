@@ -78,7 +78,7 @@ const completeItems = computed(() => store.items.value.filter(isComplete))
 
 const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.
-const requestedTimeRange = useRequestedTimeRange()
+const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange()
 
 const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
@@ -271,6 +271,7 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
         :data-time-range="data.dataTimeRange.value"
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
+        :time-picker-requests="timePickerRequests"
         :title="graph.title ?? graphName"
         show-title
         show-timestamp
@@ -286,7 +287,7 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
           pin: 'enabled'
         }"
         :overview="drawnOverview"
-        @update:requested-time-range="requestedTimeRange = $event"
+        @update:requested-time-range="setRequestedTimeRange($event)"
       />
       <GraphNotice
         v-if="previewNotice"

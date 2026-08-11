@@ -61,7 +61,7 @@ const props = withDefaults(
 // Seeded from the backend-provided initial range, then follows the page's global time picker;
 // brush interactions, time zooms and pans on individual panels write to it directly, and that
 // write is published back to the global time picker so other graphs/groups on the page follow.
-const requestedTimeRange = useRequestedTimeRange({
+const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange({
   start: props.initial_time_range_start,
   end: props.initial_time_range_end
 })
@@ -74,7 +74,7 @@ const brushCoordination = useBrushCoordination(
 
 function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
   brushCoordination.onBrushChange(range, kind)
-  requestedTimeRange.value = range
+  setRequestedTimeRange(range)
 }
 
 watch(requestedTimeRange, (range) => {
@@ -160,6 +160,7 @@ const definitionCount = computed(() => props.graphs.length)
           :metrics="graph.metrics"
           :data-time-range="graph.timeRange"
           :requested-time-range="requestedTimeRange"
+          :time-picker-requests="timePickerRequests"
           :title="graph.title"
           :show-title="true"
           :show-timestamp="true"

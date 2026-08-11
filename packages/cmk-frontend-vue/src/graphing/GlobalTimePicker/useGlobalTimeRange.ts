@@ -9,18 +9,26 @@ import { type ComputedRef, computed, shallowRef } from 'vue'
 import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
 import { endsInThePast } from './private/timeRange'
 
+export type TimeRangeOrigin = 'time_picker' | 'external'
+
 export type ActiveTimeRange = DateTimeRange | null
+
+export interface ActiveTimeRangeState {
+  range: ActiveTimeRange
+  origin: TimeRangeOrigin
+}
 
 // Singleton shared across the page's Vue apps. Write only via setActiveTimeRange.
 // Shallow ref, always replace the value to trigger reactive updates.
 // Could move to a DOM-event bus if the bundle is split.
-const rangeState = shallowRef<ActiveTimeRange>(null)
+const state = shallowRef<ActiveTimeRangeState>({ range: null, origin: 'time_picker' })
 
 // Read-only accessor for the current time range.
-const activeTimeRange = computed(() => rangeState.value)
+const activeTimeRangeState = computed(() => state.value)
+const activeTimeRange = computed(() => state.value.range)
 
-function setActiveTimeRange(value: ActiveTimeRange): void {
-  rangeState.value = value
+function setActiveTimeRange(value: ActiveTimeRange, origin: TimeRangeOrigin): void {
+  state.value = { range: value, origin }
   pauseRefreshForRangeEndingInThePast(value)
 }
 
@@ -33,9 +41,10 @@ function pauseRefreshForRangeEndingInThePast(value: ActiveTimeRange): void {
 
 export interface GlobalTimeRange {
   activeTimeRange: ComputedRef<ActiveTimeRange>
-  setActiveTimeRange: (value: ActiveTimeRange) => void
+  activeTimeRangeState: ComputedRef<ActiveTimeRangeState>
+  setActiveTimeRange: (value: ActiveTimeRange, origin: TimeRangeOrigin) => void
 }
 
 export function useGlobalTimeRange(): GlobalTimeRange {
-  return { activeTimeRange, setActiveTimeRange }
+  return { activeTimeRange, activeTimeRangeState, setActiveTimeRange }
 }

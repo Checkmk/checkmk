@@ -38,7 +38,7 @@ const { _t } = usei18n()
 const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
 const range = computed<DateTimeRange>({
   get: () => activeTimeRange.value ?? rollingRange(timePicker.default_time_range),
-  set: setActiveTimeRange
+  set: (value: DateTimeRange) => setActiveTimeRange(value, 'time_picker')
 })
 </script>
 

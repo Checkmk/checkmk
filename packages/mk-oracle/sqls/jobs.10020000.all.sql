@@ -31,7 +31,13 @@ SELECT UPPER(
                    TO_DATE('1970-01-01', 'YYYY-MM-DD'))
        )                         AS next_run_date,    -- Next scheduled run (defaulted if null)
        NVL(j.schedule_name, '-') AS schedule_name,    -- Schedule name associated with the job (or '-' if none)
-       jd.status                                      -- Status of the most recent run (e.g., SUCCEEDED, FAILED, STOPPED)
+       -- Blank a log-on-errors job that restarted since its last log row:
+       -- the previous outcome is stale, not its current status.
+       CASE
+           WHEN j.job_class = 'SCHED$_LOG_ON_ERRORS_CLASS'
+               AND j.last_start_date > jd.actual_start_date THEN ''
+           ELSE jd.status
+           END                                        -- Status of the most recent run (e.g., SUCCEEDED, FAILED, STOPPED)
 FROM dba_scheduler_jobs j -- Data dictionary view of all Scheduler jobs
          JOIN v$database vd ON 1 = 1 -- Database metadata (name, role, mode)
          JOIN v$instance i ON 1 = 1 -- Instance metadata (instance name)

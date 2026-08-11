@@ -958,11 +958,14 @@ mod custom_path_tests {
 
     /// First resolved query body for `section` at `version`, using `search_dirs`
     /// as the relative-`path:` search roots (irrelevant for absolute paths).
+    ///
+    /// `Cdb`, not `All`: an `All` argument matches only `All`-tagged entries and
+    /// would bypass the tenant-specific jobs query.
     fn first_query(section: &Section, version: u32, search_dirs: &[PathBuf]) -> Option<String> {
         section
             .find_queries_with_search_dirs(
                 InstanceNumVersion::from(version),
-                Tenant::All,
+                Tenant::Cdb,
                 &[],
                 search_dirs,
             )

@@ -1123,6 +1123,44 @@ oracle:
         );
     }
 
+    // CMK-37363: derivation (v$database.cdb -> Tenant) + plumbing + selection.
+    // Four numeric components, or the version parses to None and this is vacuous.
+    #[test]
+    fn test_jobs_non_cdb_selects_ten_field_query() {
+        let yaml = one_builtin_section_yaml("jobs");
+        let statements = selected_statements(&yaml, "TESTDB", "19.28.0.0.0", "NO");
+
+        assert_eq!(statements.len(), 1);
+        assert!(
+            statements[0].contains("dba_scheduler_jobs"),
+            "{}",
+            statements[0]
+        );
+        assert!(
+            !statements[0].contains("container_name"),
+            "{}",
+            statements[0]
+        );
+    }
+
+    #[test]
+    fn test_jobs_cdb_keeps_container_column() {
+        let yaml = one_builtin_section_yaml("jobs");
+        let statements = selected_statements(&yaml, "TESTCDB", "19.28.0.0.0", "YES");
+
+        assert_eq!(statements.len(), 1);
+        assert!(
+            statements[0].contains("cdb_scheduler_jobs"),
+            "{}",
+            statements[0]
+        );
+        assert!(
+            statements[0].contains("container_name"),
+            "{}",
+            statements[0]
+        );
+    }
+
     // CMK-37361: the item expression must branch on d.cdb, otherwise a non-CDB
     // (con_id 0) gets the item `TESTDB.TESTDB` instead of `TESTDB`.
     #[test]

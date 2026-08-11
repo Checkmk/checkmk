@@ -29,12 +29,18 @@ SELECT vp.instance_name,                              -- Instance name (or DB na
                    TO_DATE('1970-01-01', 'YYYY-MM-DD'))
        )                         AS next_run_date,    -- Next scheduled run date/time (defaulted if null)
        NVL(j.schedule_name, '-') AS schedule_name,    -- Associated schedule name (or '-' if none)
-       jd.status                                      -- Status of the most recent run (SUCCEEDED, FAILED, STOPPED, etc.)
+       -- Blank a log-on-errors job that restarted since its last log row:
+       -- the previous outcome is stale, not its current status.
+       CASE
+           WHEN j.job_class = 'SCHED$_LOG_ON_ERRORS_CLASS'
+               AND j.last_start_date > jd.actual_start_date THEN ''
+           ELSE jd.status
+           END                                        -- Status of the most recent run (SUCCEEDED, FAILED, STOPPED, etc.)
 FROM cdb_scheduler_jobs j -- CDB view of scheduler jobs across all PDBs
 -- Join with Subquery: maps container ID to instance and container names
          JOIN (SELECT c.con_id,
                       UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0),
-                                   1, d.NAME, -- If :IGNORE_DB_NAME = 1 → show DB name
+                                   0, d.NAME, -- If :IGNORE_DB_NAME = 0 → show DB name
                                    i.instance_name -- Else → show instance name
                             )) AS instance_name,
                       c.name   AS container_name -- PDB name
@@ -46,16 +52,6 @@ FROM cdb_scheduler_jobs j -- CDB view of scheduler jobs across all PDBs
                  AND c.con_id <> 2               -- Exclude seed PDB (con_id = 2)
                  AND d.database_role = 'PRIMARY' -- Only primary DB (exclude standby)
                  AND d.open_mode = 'READ WRITE'  -- Only open databases
-               UNION ALL
-               -- Handles non-CDB-like representation (fallback case)
-               SELECT 0, d.name, c.name
-               FROM v$database d
-                        JOIN v$instance i
-                             ON i.con_id = d.con_id
-                        LEFT JOIN v$containers c
-                                  ON c.dbid = d.dbid
-               WHERE d.database_role = 'PRIMARY'
-                 AND d.open_mode = 'READ WRITE'
               ) vp
               ON j.con_id = vp.con_id
 -- Join with Subquery: get latest run log ID per job

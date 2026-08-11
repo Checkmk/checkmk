@@ -194,6 +194,14 @@ name = "deploy_svc_cmk_ec"
 package_target = "//packages/cmk-ec:wheel"
 services = ["mkeventd:restart"]
 
+# The GUI resolves the hashed bundle filenames from the dist's .manifest.json
+# once per apache process (lru_cache in cmk.gui.htmllib.html); without a
+# reload pages keep referencing the replaced bundles.
+[[service]]
+name = "deploy_svc_cmk_frontend_vue"
+package_target = "//packages/cmk-frontend-vue:frontend_vue_dist_pkg"
+services = ["apache:reload"]
+
 [[service]]
 name = "deploy_svc_livestatus"
 package_target = "//packages/livestatus:all"

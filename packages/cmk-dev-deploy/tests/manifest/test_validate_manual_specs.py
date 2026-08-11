@@ -82,3 +82,27 @@ def test_cmk_mcp_wheel_restarts_the_mcp_server_daemon() -> None:
     assert mcp is not None, "no [[service]] entry for the cmk-mcp wheel"
     assert mcp["services"] == ["mcp-server:restart"]
     assert Service("mcp-server") is Service.MCP_SERVER
+
+
+def test_frontend_vue_dist_reloads_apache() -> None:
+    """Deploying the cmk-frontend-vue dist must reload apache.
+
+    The GUI resolves the hashed bundle filenames from the dist's
+    .manifest.json once per apache process (lru_cache in
+    cmk.gui.htmllib.html); without a reload pages keep referencing the
+    replaced bundles.
+    """
+    manual = _load_specs_from_toml(specs_path(), is_nonfree_checkout=False)
+    vue = next(
+        (
+            s
+            for s in manual["service_specs"]
+            if s["package_target"] == "//packages/cmk-frontend-vue:frontend_vue_dist_pkg"
+        ),
+        None,
+    )
+    assert vue is not None, "no [[service]] entry for the cmk-frontend-vue dist"
+    assert vue["services"] == ["apache:reload"]
+    # The derived prefix makes both matching tiers fire: changed files under
+    # packages/cmk-frontend-vue/ and the resolved dist target package.
+    assert vue["source_prefix"] == "packages/cmk-frontend-vue"

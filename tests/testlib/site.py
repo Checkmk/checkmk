@@ -798,8 +798,14 @@ class Site:
             base=16,
         )
 
-    def file_timestamp(self, rel_path: str | Path) -> int:
-        return int(self.check_output(["stat", "-c", "%Y", self.path(rel_path).as_posix()]).rstrip())
+    def file_timestamp_ms(self, rel_path: str | Path) -> int:
+        """Return the last modification time of a file, in milliseconds."""
+        try:
+            stdout = self.check_output(["date", "-r", self.path(rel_path).as_posix(), r"+%s%3N"])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to read file '{rel_path}'!")
+            raise excp
+        return int(stdout.strip())
 
     def inode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path).as_posix()]).rstrip())

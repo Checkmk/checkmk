@@ -849,9 +849,14 @@ class HostsAPI(BaseAPI):
 
 class HostGroupsAPI(BaseAPI):
     def create(self, name: str, alias: str) -> requests.Response:
+        body = {"name": name, "alias": alias}
+        # In the ultimatemt edition every config object belongs to a customer,
+        # so the field is mandatory here.
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
         response = self.session.post(
             "/domain-types/host_group_config/collections/all",
-            json={"name": name, "alias": alias},
+            json=body,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

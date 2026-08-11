@@ -44,9 +44,11 @@ mode_localize = Mode(
     argument_optional=True,
     short_help="Do localization operations",
     long_help=[
-        "Brings you into localization mode. You can create "
-        "and/or improve the localization of Check_MKs GUI. "
-        "Call without arguments for a help on localization."
+        (
+            "Brings you into localization mode. You can create "
+            "and/or improve the localization of Check_MKs GUI. "
+            "Call without arguments for a help on localization."
+        )
     ],
 )
 

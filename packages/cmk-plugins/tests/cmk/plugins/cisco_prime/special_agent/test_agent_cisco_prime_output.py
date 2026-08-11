@@ -42,12 +42,14 @@ def test_wrong_arguments(capsys: pytest.CaptureFixture[str]) -> None:
 def test_agent_output(capsys: pytest.CaptureFixture[str]) -> None:
     main(["--debug", "--hostname", HOST, "--user", AUTH[0], "--password", AUTH[1]])
     assert capsys.readouterr() == (
-        "<<<cisco_prime_wifi_access_points:sep(0)>>>\n"
-        '{"authenticated": true, "user": "user"}\n'
-        "<<<cisco_prime_wifi_connections:sep(0)>>>\n"
-        '{"authenticated": true, "user": "user"}\n'
-        "<<<cisco_prime_wlan_controller:sep(0)>>>\n"
-        '{"authenticated": true, "user": "user"}\n',
+        (
+            "<<<cisco_prime_wifi_access_points:sep(0)>>>\n"
+            '{"authenticated": true, "user": "user"}\n'
+            "<<<cisco_prime_wifi_connections:sep(0)>>>\n"
+            '{"authenticated": true, "user": "user"}\n'
+            "<<<cisco_prime_wlan_controller:sep(0)>>>\n"
+            '{"authenticated": true, "user": "user"}\n'
+        ),
         "",
     )
 

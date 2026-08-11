@@ -673,8 +673,10 @@ def test_inv_oracle_instance_multiline() -> None:
         [
             "SID-ERROR",
             "FAILURE",
-            "ERROR: ORA-12541: TNS:no listener   SP2-0751: Unable to connect to Oracle.  "
-            "Exiting SQL*Plus",
+            (
+                "ERROR: ORA-12541: TNS:no listener   SP2-0751: Unable to connect to Oracle.  "
+                "Exiting SQL*Plus"
+            ),
         ],
         [
             "SID",

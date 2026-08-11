@@ -79,8 +79,10 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "name": "MyVM", "resource_group": "burningman", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
+                    (
+                        '{"cloud": "azure", "name": "MyVM", "resource_group": "burningman", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                        ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n'
+                    ),
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
                 ["MyVM"],
@@ -118,8 +120,10 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
+                    (
+                        '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                        ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n'
+                    ),
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
                 ["my_resource"],
@@ -154,8 +158,10 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
+                    (
+                        '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                        ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n'
+                    ),
                     "{}\n",
                 ],
                 ["my_resource"],
@@ -193,8 +199,10 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
+                    (
+                        '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                        ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n'
+                    ),
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
                 ["my_resource_6c554708"],

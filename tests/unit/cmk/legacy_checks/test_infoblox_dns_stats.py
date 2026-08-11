@@ -15,9 +15,11 @@ def test_empty_counters_treated_as_zero() -> None:
     result = check_infoblox_dns_stats(None, None, [["19149", "", "", "", "", ""]])
     assert result == (
         0,
-        "Since DNS process started: 19149 successful responses, 0 referrals, "
-        "0 queries received using recursion, 0 queries failed - "
-        "Queries: 0 for non-existent records, 0 for non-existent domain",
+        (
+            "Since DNS process started: 19149 successful responses, 0 referrals, "
+            "0 queries received using recursion, 0 queries failed - "
+            "Queries: 0 for non-existent records, 0 for non-existent domain"
+        ),
         [
             ("dns_successes", 19149),
             ("dns_referrals", 0),
@@ -33,9 +35,11 @@ def test_all_counters_populated() -> None:
     result = check_infoblox_dns_stats(None, None, [["100", "200", "300", "400", "500", "600"]])
     assert result == (
         0,
-        "Since DNS process started: 100 successful responses, 200 referrals, "
-        "500 queries received using recursion, 600 queries failed - "
-        "Queries: 300 for non-existent records, 400 for non-existent domain",
+        (
+            "Since DNS process started: 100 successful responses, 200 referrals, "
+            "500 queries received using recursion, 600 queries failed - "
+            "Queries: 300 for non-existent records, 400 for non-existent domain"
+        ),
         [
             ("dns_successes", 100),
             ("dns_referrals", 200),

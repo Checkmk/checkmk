@@ -15,22 +15,24 @@ def _get_section() -> iboi._OSInfo:
     section = iboi.parse_infoblox_osinfo(
         [
             [
-                "'--host=x86_64-unknown-linux-gnu' '--build=x86_64-unknown-linux-gnu' "
-                "'--target=x86_64-redhat-linux' '--program-prefix=' '--prefix=/usr' "
-                "'--exec-prefix=/usr' '--bindir=/usr/bin' '--sbindir=/usr/sbin' "
-                "'--datadir=/usr/share' '--includedir=/usr/include' '--libdir=/usr/lib64' "
-                "'--libexecdir=/usr/libexec' '--localstatedir=/var' '--sharedstatedir=/var/lib' "
-                "'--mandir=/usr/share/man' '--infodir=/usr/share/info' '--disable-static' "
-                "'--enable-shared' '--without-rpm' '--with-cflags=-O2 -g -D_FORTIFY_SOURCE=2' "
-                "'--with-sys-location=Unknown' '--with-logfile=/var/log/snmpd.log' "
-                "'--with-persistent-directory=/var/lib/net-snmp' '--with-default-snmp-version=3' "
-                "'--with-mib-modules=agentx' '--with-libwrap=yes' '--sysconfdir=/etc' "
-                "'--enable-ipv6' '--enable-ucd-snmp-compatibility' '--disable-embedded-perl' "
-                "'--enable-as-needed' '--with-perl-modules=INSTALLDIRS=vendor' "
-                "'--enable-local-smux' "
-                "'--with-temp-file-pattern=/var/run/net-snmp/snmp-tmp-XXXXXX' "
-                "'--with-transports=DTLSUDP TLSTCP' '--with-security-modules=tsm' "
-                "'--with-sys-contact=c"
+                (
+                    "'--host=x86_64-unknown-linux-gnu' '--build=x86_64-unknown-linux-gnu' "
+                    "'--target=x86_64-redhat-linux' '--program-prefix=' '--prefix=/usr' "
+                    "'--exec-prefix=/usr' '--bindir=/usr/bin' '--sbindir=/usr/sbin' "
+                    "'--datadir=/usr/share' '--includedir=/usr/include' '--libdir=/usr/lib64' "
+                    "'--libexecdir=/usr/libexec' '--localstatedir=/var' '--sharedstatedir=/var/lib' "
+                    "'--mandir=/usr/share/man' '--infodir=/usr/share/info' '--disable-static' "
+                    "'--enable-shared' '--without-rpm' '--with-cflags=-O2 -g -D_FORTIFY_SOURCE=2' "
+                    "'--with-sys-location=Unknown' '--with-logfile=/var/log/snmpd.log' "
+                    "'--with-persistent-directory=/var/lib/net-snmp' '--with-default-snmp-version=3' "
+                    "'--with-mib-modules=agentx' '--with-libwrap=yes' '--sysconfdir=/etc' "
+                    "'--enable-ipv6' '--enable-ucd-snmp-compatibility' '--disable-embedded-perl' "
+                    "'--enable-as-needed' '--with-perl-modules=INSTALLDIRS=vendor' "
+                    "'--enable-local-smux' "
+                    "'--with-temp-file-pattern=/var/run/net-snmp/snmp-tmp-XXXXXX' "
+                    "'--with-transports=DTLSUDP TLSTCP' '--with-security-modules=tsm' "
+                    "'--with-sys-contact=c"
+                )
             ]
         ]
     )

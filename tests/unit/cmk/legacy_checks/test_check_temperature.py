@@ -162,8 +162,10 @@ from .checktestlib import mock_item_state
             {"dev_status": 1, "dev_levels": (4, 4), "dev_levels_lower": (4, 4)},
             (
                 2,
-                "5 \xb0C (warn/crit at 4/4 \xb0C) (warn/crit below 4/4 \xb0C) "
-                "(device warn/crit at 4/4 \xb0C) (device warn/crit below 4/4 \xb0C)",
+                (
+                    "5 \xb0C (warn/crit at 4/4 \xb0C) (warn/crit below 4/4 \xb0C) "
+                    "(device warn/crit at 4/4 \xb0C) (device warn/crit below 4/4 \xb0C)"
+                ),
                 [("temp", 5, 4, 4)],
             ),
         ),
@@ -256,8 +258,10 @@ _WATO_DICT: TrendComputeDict = {
             wato_dict=_WATO_DICT,
             expected=(
                 2,
-                "rate: +11.0/5 min, rising faster than 10/5 min(!!), "
-                "33 minutes until temp limit reached(!!)",
+                (
+                    "rate: +11.0/5 min, rising faster than 10/5 min(!!), "
+                    "33 minutes until temp limit reached(!!)"
+                ),
             ),
         ),
         # No "minutes remaining" on downward slope calculated?
@@ -276,8 +280,10 @@ _WATO_DICT: TrendComputeDict = {
             wato_dict=_WATO_DICT,
             expected=(
                 2,
-                "rate: +100.0/5 min, rising faster than 10/5 min(!!), "
-                "-5 minutes until temp limit reached(!!)",
+                (
+                    "rate: +100.0/5 min, rising faster than 10/5 min(!!), "
+                    "-5 minutes until temp limit reached(!!)"
+                ),
             ),
         ),
         # Are the effects of last two test cases related somehow?

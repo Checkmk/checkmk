@@ -26,8 +26,10 @@ def test_local_files_involved_in_crash_with_stringified_frames() -> None:
     assert (
         local_files_involved_in_crash(
             [
-                "<FrameSummary file /omd/sites/heute/lib/python3/cmk/checkengine/"
-                "sectionparser.py, line 121 in _parse_raw_data>",
+                (
+                    "<FrameSummary file /omd/sites/heute/lib/python3/cmk/checkengine/"
+                    "sectionparser.py, line 121 in _parse_raw_data>"
+                ),
             ]
         )
         == []

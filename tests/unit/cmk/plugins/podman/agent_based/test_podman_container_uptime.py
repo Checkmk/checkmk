@@ -28,10 +28,12 @@ from .lib import SECTION_PAUSED, SECTION_RUNNING
 
 STRING_TABLE = [
     [
-        '{"Id": "id","Created": "created_date","Path": "sleep","Args": ["infinity"],'
-        '"State": {"OciVersion": "1.1.0","Status": "running","Running": true,"Paused": '
-        'false,"StartedAt": "2025-06-01T13:00:00+02:00","FinishedAt": "0001-01-01T00:00:00Z"}, '
-        '"RestartCount": 5}'
+        (
+            '{"Id": "id","Created": "created_date","Path": "sleep","Args": ["infinity"],'
+            '"State": {"OciVersion": "1.1.0","Status": "running","Running": true,"Paused": '
+            'false,"StartedAt": "2025-06-01T13:00:00+02:00","FinishedAt": "0001-01-01T00:00:00Z"}, '
+            '"RestartCount": 5}'
+        )
     ]
 ]
 

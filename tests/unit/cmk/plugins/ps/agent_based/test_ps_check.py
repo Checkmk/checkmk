@@ -1357,12 +1357,18 @@ def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None)
             state=State.OK,
             notice="\r\n".join(
                 [
-                    "name firefox, user on, virtual size 2.17 GiB, resident size 424 MiB,"
-                    " creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%",
-                    "name firefox, user on, virtual size 1.78 GiB, resident size 351 MiB,"
-                    " creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%",
-                    "name firefox, user on, virtual size 7.59 GiB, resident size 224 MiB,"
-                    " creation time 1970-01-01 00:34:04, pid 25758, cpu usage 0.0%",
+                    (
+                        "name firefox, user on, virtual size 2.17 GiB, resident size 424 MiB,"
+                        " creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%"
+                    ),
+                    (
+                        "name firefox, user on, virtual size 1.78 GiB, resident size 351 MiB,"
+                        " creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%"
+                    ),
+                    (
+                        "name firefox, user on, virtual size 7.59 GiB, resident size 224 MiB,"
+                        " creation time 1970-01-01 00:34:04, pid 25758, cpu usage 0.0%"
+                    ),
                     "name firefox, user on, virtual size 1.45 GiB, resident size 81.1 MiB,"
                     " creation time 1970-01-01 00:34:05, pid 25898, cpu usage %.1f%%\r\n"
                     % cpu_util,

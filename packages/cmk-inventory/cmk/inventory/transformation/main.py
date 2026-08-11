@@ -180,11 +180,13 @@ def _show_results(
     if unknown_file_paths:
         sys.stdout.write("=== Unknown file paths ===\n")
         info = [
-            "Please check the following list of inventory file paths. These files may be belong"
-            " to removed hosts or could not be assigned to the current list of available hosts."
-            " In the first case you can safely remove these files. In the second case they may"
-            " be transformed with the next go or you can also try to transform these files via"
-            " 'cmk-transform-inventory-files <HOST> [<HOST> ...]'."
+            (
+                "Please check the following list of inventory file paths. These files may be belong"
+                " to removed hosts or could not be assigned to the current list of available hosts."
+                " In the first case you can safely remove these files. In the second case they may"
+                " be transformed with the next go or you can also try to transform these files via"
+                " 'cmk-transform-inventory-files <HOST> [<HOST> ...]'."
+            )
         ]
         sys.stdout.write(f"{'\n'.join(info)}\n")
         for unknown_file_path in unknown_file_paths:

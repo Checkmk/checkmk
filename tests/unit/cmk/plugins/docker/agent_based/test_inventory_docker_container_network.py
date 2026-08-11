@@ -18,9 +18,11 @@ AGENT_OUTPUT = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"Networks": {"bridge": {"NetworkID": "8f2baa1938b7957f876c1f5aa6767b86395b6971f349793bd7fae12eae6b83f0", '
-        '"Gateway": "172.17.0.1", "IPAddress": "172.17.0.2", "IPPrefixLen": 16, "IPv6Gateway": "", '
-        '"GlobalIPv6Address": "", "GlobalIPv6PrefixLen": 0, "MacAddress": "02:42:ac:11:00:02", "DriverOpts": null}}}'
+        (
+            '{"Networks": {"bridge": {"NetworkID": "8f2baa1938b7957f876c1f5aa6767b86395b6971f349793bd7fae12eae6b83f0", '
+            '"Gateway": "172.17.0.1", "IPAddress": "172.17.0.2", "IPPrefixLen": 16, "IPv6Gateway": "", '
+            '"GlobalIPv6Address": "", "GlobalIPv6PrefixLen": 0, "MacAddress": "02:42:ac:11:00:02", "DriverOpts": null}}}'
+        )
     ],
 ]
 
@@ -30,8 +32,10 @@ AGENT_OUTPUT = [
 # section, so it is typically appendet to this section
 AGENT_OUTPUT_WITH_OCI_ERROR = AGENT_OUTPUT + [
     [
-        "OCI runtime exec failed: exec failed: container_linux.go:344: starting container process caused "
-        '"exec: "check_mk_agent": executable file not found in $PATH": unknown'
+        (
+            "OCI runtime exec failed: exec failed: container_linux.go:344: starting container process caused "
+            '"exec: "check_mk_agent": executable file not found in $PATH": unknown'
+        )
     ]
 ]
 
@@ -41,20 +45,24 @@ AGENT_OUTPUT_MULTIPLE_NODES = [
         '{"PluginVersion": "0.1","DockerPyVersion": "5.0.3","ApiVersion": "1.47"}',
     ],
     [
-        'Networks": {"bridge": {"IPAMConfig": null,"Links": null,"Aliases": null,"MacAddress": '
-        '"02:42:ac:11:00:02","DriverOpts": null,"NetworkID": "60b6b83f447ed3567bd7711bb9d337c2c69648dfc9bab88b441594e8fbdbc25a",'
-        '"EndpointID": "9c942bb42d3e408c65f132870b689e26efac93f4ec3c8bbac74deb732d90f8f7","Gateway": "172.17.0.1","IPAddress": "172.17.0.2",'
-        '"IPPrefixLen": 16,"IPv6Gateway": "","GlobalIPv6Address": "","GlobalIPv6PrefixLen": 0,"DNSNames": null}}'
+        (
+            'Networks": {"bridge": {"IPAMConfig": null,"Links": null,"Aliases": null,"MacAddress": '
+            '"02:42:ac:11:00:02","DriverOpts": null,"NetworkID": "60b6b83f447ed3567bd7711bb9d337c2c69648dfc9bab88b441594e8fbdbc25a",'
+            '"EndpointID": "9c942bb42d3e408c65f132870b689e26efac93f4ec3c8bbac74deb732d90f8f7","Gateway": "172.17.0.1","IPAddress": "172.17.0.2",'
+            '"IPPrefixLen": 16,"IPv6Gateway": "","GlobalIPv6Address": "","GlobalIPv6PrefixLen": 0,"DNSNames": null}}'
+        )
     ],
     [
         "@docker_version_info",
         '{"PluginVersion": "0.1","DockerPyVersion": "5.0.3","ApiVersion": "1.47"}',
     ],
     [
-        'Networks": {"bridge": {"IPAMConfig": null,"Links": null,"Aliases": null,"MacAddress": '
-        '"02:42:ac:11:00:02","DriverOpts": null,"NetworkID": "60b6b83f447ed3567bd7711bb9d337c2c69648dfc9bab88b441594e8fbdbc25a",'
-        '"EndpointID": "9c942bb42d3e408c65f132870b689e26efac93f4ec3c8bbac74deb732d90f8f7","Gateway": "172.17.0.1","IPAddress": "172.17.0.2",'
-        '"IPPrefixLen": 16,"IPv6Gateway": "","GlobalIPv6Address": "","GlobalIPv6PrefixLen": 0,"DNSNames": null}}'
+        (
+            'Networks": {"bridge": {"IPAMConfig": null,"Links": null,"Aliases": null,"MacAddress": '
+            '"02:42:ac:11:00:02","DriverOpts": null,"NetworkID": "60b6b83f447ed3567bd7711bb9d337c2c69648dfc9bab88b441594e8fbdbc25a",'
+            '"EndpointID": "9c942bb42d3e408c65f132870b689e26efac93f4ec3c8bbac74deb732d90f8f7","Gateway": "172.17.0.1","IPAddress": "172.17.0.2",'
+            '"IPPrefixLen": 16,"IPv6Gateway": "","GlobalIPv6Address": "","GlobalIPv6PrefixLen": 0,"DNSNames": null}}'
+        )
     ],
 ]
 

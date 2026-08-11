@@ -151,11 +151,13 @@ mode_create_diagnostics_dump = Mode(
     handler_function=_mode_create_diagnostics_dump,
     short_help="Create diagnostics dump",
     long_help=[
-        "Create a dump containing information for diagnostic analysis "
-        "in the folder var/check_mk/diagnostics. The dump content is "
-        "provided by discoverable plugins grouped into topics; use --list "
-        "to see what is available on this site. Without any option only "
-        "the always collected plugins are packed."
+        (
+            "Create a dump containing information for diagnostic analysis "
+            "in the folder var/check_mk/diagnostics. The dump content is "
+            "provided by discoverable plugins grouped into topics; use --list "
+            "to see what is available on this site. Without any option only "
+            "the always collected plugins are packed."
+        )
     ],
     sub_options=[
         Option(

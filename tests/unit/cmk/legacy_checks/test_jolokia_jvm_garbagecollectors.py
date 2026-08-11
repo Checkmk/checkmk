@@ -20,9 +20,11 @@ def _section() -> Section:
             [
                 "MyJIRA",
                 "java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",
-                '{"java.lang:name=MyName,type=GarbageCollector": {"CollectionTime": 13800,'
-                ' "Name": "MyName", "CollectionCount": 25200}, "java.lang:name=My undiscovered,'
-                'type=GarbageCollector": {"Name": "My undiscovered"}}',
+                (
+                    '{"java.lang:name=MyName,type=GarbageCollector": {"CollectionTime": 13800,'
+                    ' "Name": "MyName", "CollectionCount": 25200}, "java.lang:name=My undiscovered,'
+                    'type=GarbageCollector": {"Name": "My undiscovered"}}'
+                ),
             ]
         ]
     )

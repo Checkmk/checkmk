@@ -24,29 +24,33 @@ _STRING_TABLE_ZERO_FAILURES = [
 
 _STRING_TABLE_MSG_DICT = [
     [
-        '{"failures": [{"timestamp": "2019-09-20T10:52:03.110Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: '
-        '[SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "a", "type": "message", "letter_id": "ae66b494-db94-11e9-9de2-005056981acf"}, {"timestamp": '
-        '"2019-09-20T10:52:03.110Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", '
-        '"index": "b", "type": "message", "letter_id": "ae66b493-db94-11e9-9de2-005056981acf"}, {"timestamp": "2019-09-20T10:52:02.908Z", "message": '
-        '"{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "b", "type": "message", '
-        '"letter_id": "ae66b48f-db94-11e9-9de2-005056981acf"}, {"timestamp": "2019-09-20T10:52:02.908Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: '
-        '[SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "a", "type": "message", "letter_id": "ae66b48b-db94-11e9-9de2-005056981acf"}, {"timestamp": '
-        '"2019-09-20T10:52:02.908Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", '
-        '"index": "graylog_index1", "type": "message", "letter_id": "ae66b487-db94-11e9-9de2-005056981acf"}, {"timestamp": "2019-09-20T10:52:02.908Z", '
-        '"message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "graylog_index1", '
-        '"type": "message", "letter_id": "ae66b485-db94-11e9-9de2-005056981acf"}], "count": 6, "ds_param_since": 1800, "total": 198508}'
+        (
+            '{"failures": [{"timestamp": "2019-09-20T10:52:03.110Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: '
+            '[SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "a", "type": "message", "letter_id": "ae66b494-db94-11e9-9de2-005056981acf"}, {"timestamp": '
+            '"2019-09-20T10:52:03.110Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", '
+            '"index": "b", "type": "message", "letter_id": "ae66b493-db94-11e9-9de2-005056981acf"}, {"timestamp": "2019-09-20T10:52:02.908Z", "message": '
+            '"{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "b", "type": "message", '
+            '"letter_id": "ae66b48f-db94-11e9-9de2-005056981acf"}, {"timestamp": "2019-09-20T10:52:02.908Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: '
+            '[SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "a", "type": "message", "letter_id": "ae66b48b-db94-11e9-9de2-005056981acf"}, {"timestamp": '
+            '"2019-09-20T10:52:02.908Z", "message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", '
+            '"index": "graylog_index1", "type": "message", "letter_id": "ae66b487-db94-11e9-9de2-005056981acf"}, {"timestamp": "2019-09-20T10:52:02.908Z", '
+            '"message": "{\\"type\\":\\"cluster_block_exception\\",\\"reason\\":\\"blocked by: [SERVICE_UNAVAILABLE/2/no master];\\"}", "index": "graylog_index1", '
+            '"type": "message", "letter_id": "ae66b485-db94-11e9-9de2-005056981acf"}], "count": 6, "ds_param_since": 1800, "total": 198508}'
+        )
     ]
 ]
 
 _STRING_TABLE_MSG_STR = [
     [
-        '{"count": 5963, "failures": [{"timestamp": "2022-08-08T08:33:26.622Z", "letter_id": "c9d31a87-16f4-11ed-b805-001a4a1078b5", '
-        '"message": "ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping '
-        'for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]", '
-        '"index": "graylog_9375", "type": "indexing"}, {"timestamp": "2022-08-08T08:33:25.031Z", "letter_id": "c9d2f37d-16f4-11ed-b805-001a4a1078b5", '
-        '"message": "ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field '
-        '[app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]", "index": "graylog_9375", '
-        '"type": "indexing"}], "total": 131346, "ds_param_since": 1800}'
+        (
+            '{"count": 5963, "failures": [{"timestamp": "2022-08-08T08:33:26.622Z", "letter_id": "c9d31a87-16f4-11ed-b805-001a4a1078b5", '
+            '"message": "ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping '
+            'for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]", '
+            '"index": "graylog_9375", "type": "indexing"}, {"timestamp": "2022-08-08T08:33:25.031Z", "letter_id": "c9d2f37d-16f4-11ed-b805-001a4a1078b5", '
+            '"message": "ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field '
+            '[app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]", "index": "graylog_9375", '
+            '"type": "indexing"}], "total": 131346, "ds_param_since": 1800}'
+        )
     ]
 ]
 

@@ -112,12 +112,14 @@ bi_status_rows = LivestatusResponse(
                         "Check_MK Discovery",
                         1,
                         1,
-                        "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
-                        "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
-                        "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
-                        "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
-                        "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
-                        "host labels",
+                        (
+                            "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
+                            "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
+                            "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
+                            "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
+                            "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
+                            "host labels"
+                        ),
                         1,
                         1,
                         1,
@@ -165,12 +167,14 @@ bi_status_rows = LivestatusResponse(
                         "OMD heute Event Console",
                         0,
                         1,
-                        "OK - Current events: 0, Virtual memory: 191.69 MB, Overall event limit "
-                        "inactive, No hosts event limit active, No rules event limit active, "
-                        "Received messages: 0.00/s, Rule hits: 0.00/s, Rule tries: 0.00/s, Message "
-                        "drops: 0.00/s, Created events: 0.00/s, Client connects: 0.07/s, Rule hit "
-                        "ratio: -, Processing time per message: -, Time per client request: 0.16 "
-                        "ms",
+                        (
+                            "OK - Current events: 0, Virtual memory: 191.69 MB, Overall event limit "
+                            "inactive, No hosts event limit active, No rules event limit active, "
+                            "Received messages: 0.00/s, Rule hits: 0.00/s, Rule tries: 0.00/s, Message "
+                            "drops: 0.00/s, Created events: 0.00/s, Client connects: 0.07/s, Rule hit "
+                            "ratio: -, Processing time per message: -, Time per client request: 0.16 "
+                            "ms"
+                        ),
                         0,
                         1,
                         1,
@@ -183,9 +187,11 @@ bi_status_rows = LivestatusResponse(
                         "Interface 4",
                         1,
                         1,
-                        "WARN - [enx000e2e413816], Operational state: up, MAC: 00:0E:2E:41:38:16, "
-                        "100 MBit/s (wrong speed, expected: 0 Bit/s)(!), In: 607 B/s (0.0%), Out: "
-                        "415 B/s (0.0%)",
+                        (
+                            "WARN - [enx000e2e413816], Operational state: up, MAC: 00:0E:2E:41:38:16, "
+                            "100 MBit/s (wrong speed, expected: 0 Bit/s)(!), In: 607 B/s (0.0%), Out: "
+                            "415 B/s (0.0%)"
+                        ),
                         1,
                         1,
                         1,
@@ -209,8 +215,10 @@ bi_status_rows = LivestatusResponse(
                         "Interface 3",
                         0,
                         1,
-                        "OK - [docker0], Operational state: up, MAC: 02:42:BE:0A:7B:5A, assuming "
-                        "10 MBit/s, In: 0.00 B/s (0.0%), Out: 0.00 B/s (0.0%)",
+                        (
+                            "OK - [docker0], Operational state: up, MAC: 02:42:BE:0A:7B:5A, assuming "
+                            "10 MBit/s, In: 0.00 B/s (0.0%), Out: 0.00 B/s (0.0%)"
+                        ),
                         0,
                         1,
                         1,
@@ -222,8 +230,10 @@ bi_status_rows = LivestatusResponse(
                         "Interface 2",
                         1,
                         1,
-                        "WARN - [tun0], Operational state: up, 10 MBit/s (wrong speed, expected: 0 "
-                        "Bit/s)(!), In: 280 B/s (0.0%), Out: 87.2 B/s (0.0%)",
+                        (
+                            "WARN - [tun0], Operational state: up, 10 MBit/s (wrong speed, expected: 0 "
+                            "Bit/s)(!), In: 280 B/s (0.0%), Out: 87.2 B/s (0.0%)"
+                        ),
                         1,
                         1,
                         1,
@@ -235,13 +245,15 @@ bi_status_rows = LivestatusResponse(
                         "OMD heute performance",
                         0,
                         1,
-                        "OK - HostChecks: 14.4/s, ServiceChecks: 0.4/s, ProcessCreations: 0.0/s, "
-                        "LivestatusConnects: 0.2/s, LivestatusRequests: 0.9/s, LogMessages: 0.1/s, "
-                        "Average check latency: 1.571s, Average Checkmk latency: 0.359s, Check "
-                        "helper usage: 0.07%, Checkmk helper usage: 0.77%, Livestatus usage: 0%, "
-                        "Livestatus overflow rate: 0.0/s, Monitored Hosts: 2.00, Services: 27.00, "
-                        "Core version: Checkmk 2020.09.03, Livestatus version: 2020.09.03, Site "
-                        "certificate validity (until 3019-01-05 11:38:09): 364633.93",
+                        (
+                            "OK - HostChecks: 14.4/s, ServiceChecks: 0.4/s, ProcessCreations: 0.0/s, "
+                            "LivestatusConnects: 0.2/s, LivestatusRequests: 0.9/s, LogMessages: 0.1/s, "
+                            "Average check latency: 1.571s, Average Checkmk latency: 0.359s, Check "
+                            "helper usage: 0.07%, Checkmk helper usage: 0.77%, Livestatus usage: 0%, "
+                            "Livestatus overflow rate: 0.0/s, Monitored Hosts: 2.00, Services: 27.00, "
+                            "Core version: Checkmk 2020.09.03, Livestatus version: 2020.09.03, Site "
+                            "certificate validity (until 3019-01-05 11:38:09): 364633.93"
+                        ),
                         0,
                         1,
                         1,
@@ -292,12 +304,14 @@ bi_status_rows = LivestatusResponse(
                         "Check_MK Discovery",
                         1,
                         1,
-                        "WARN - 37 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
-                        "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
-                        "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, "
-                        "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
-                        "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
-                        "host labels",
+                        (
+                            "WARN - 37 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
+                            "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
+                            "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, "
+                            "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
+                            "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
+                            "host labels"
+                        ),
                         1,
                         1,
                         1,
@@ -321,8 +335,10 @@ bi_status_rows = LivestatusResponse(
                         "Interface 2",
                         1,
                         1,
-                        "WARN - [tun0], Operational state: up, 10 MBit/s (wrong speed, expected: 0 "
-                        "Bit/s)(!), In: 279 B/s (0.0%), Out: 86.2 B/s (0.0%)",
+                        (
+                            "WARN - [tun0], Operational state: up, 10 MBit/s (wrong speed, expected: 0 "
+                            "Bit/s)(!), In: 279 B/s (0.0%), Out: 86.2 B/s (0.0%)"
+                        ),
                         1,
                         1,
                         1,
@@ -346,8 +362,10 @@ bi_status_rows = LivestatusResponse(
                         "Interface 3",
                         0,
                         1,
-                        "OK - [docker0], Operational state: up, MAC: 02:42:BE:0A:7B:5A, assuming "
-                        "10 MBit/s, In: 0.00 B/s (0.0%), Out: 0.00 B/s (0.0%)",
+                        (
+                            "OK - [docker0], Operational state: up, MAC: 02:42:BE:0A:7B:5A, assuming "
+                            "10 MBit/s, In: 0.00 B/s (0.0%), Out: 0.00 B/s (0.0%)"
+                        ),
                         0,
                         1,
                         1,
@@ -359,9 +377,11 @@ bi_status_rows = LivestatusResponse(
                         "Interface 4",
                         1,
                         1,
-                        "WARN - [enx000e2e413816], Operational state: up, MAC: 00:0E:2E:41:38:16, "
-                        "100 MBit/s (wrong speed, expected: 0 Bit/s)(!), In: 603 B/s (0.0%), Out: "
-                        "410 B/s (0.0%)",
+                        (
+                            "WARN - [enx000e2e413816], Operational state: up, MAC: 00:0E:2E:41:38:16, "
+                            "100 MBit/s (wrong speed, expected: 0 Bit/s)(!), In: 603 B/s (0.0%), Out: "
+                            "410 B/s (0.0%)"
+                        ),
                         1,
                         1,
                         1,
@@ -386,8 +406,10 @@ bi_status_rows = LivestatusResponse(
                         "Interface 5",
                         0,
                         1,
-                        "OK - [wlp59s0], Operational state: up, MAC: 3C:58:C2:FF:34:8A, speed "
-                        "unknown, In: 0.00 B/s, Out: 0.00 B/s",
+                        (
+                            "OK - [wlp59s0], Operational state: up, MAC: 3C:58:C2:FF:34:8A, speed "
+                            "unknown, In: 0.00 B/s, Out: 0.00 B/s"
+                        ),
                         0,
                         1,
                         1,
@@ -399,12 +421,14 @@ bi_status_rows = LivestatusResponse(
                         "OMD heute Event Console",
                         0,
                         1,
-                        "OK - Current events: 0, Virtual memory: 191.69 MB, Overall event limit "
-                        "inactive, No hosts event limit active, No rules event limit active, "
-                        "Received messages: 0.00/s, Rule hits: 0.00/s, Rule tries: 0.00/s, Message "
-                        "drops: 0.00/s, Created events: 0.00/s, Client connects: 0.07/s, Rule hit "
-                        "ratio: -, Processing time per message: -, Time per client request: 0.16 "
-                        "ms",
+                        (
+                            "OK - Current events: 0, Virtual memory: 191.69 MB, Overall event limit "
+                            "inactive, No hosts event limit active, No rules event limit active, "
+                            "Received messages: 0.00/s, Rule hits: 0.00/s, Rule tries: 0.00/s, Message "
+                            "drops: 0.00/s, Created events: 0.00/s, Client connects: 0.07/s, Rule hit "
+                            "ratio: -, Processing time per message: -, Time per client request: 0.16 "
+                            "ms"
+                        ),
                         0,
                         1,
                         1,
@@ -471,12 +495,14 @@ bi_acknowledgment_status_rows = [
                 "Check_MK Discovery",
                 1,
                 1,
-                "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
-                "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
-                "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
-                "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
-                "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
-                "host labels",
+                (
+                    "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
+                    "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
+                    "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
+                    "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
+                    "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
+                    "host labels"
+                ),
                 1,
                 1,
                 1,
@@ -540,12 +566,14 @@ bi_downtime_status_rows = [
                 "Check_MK Discovery",
                 1,
                 1,
-                "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
-                "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
-                "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
-                "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
-                "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
-                "host labels",
+                (
+                    "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
+                    "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
+                    "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
+                    "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
+                    "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
+                    "host labels"
+                ),
                 1,
                 1,
                 1,
@@ -609,12 +637,14 @@ bi_service_period_status_rows = [
                 "Check_MK Discovery",
                 1,
                 1,
-                "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
-                "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
-                "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
-                "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
-                "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
-                "host labels",
+                (
+                    "WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, "
+                    "systemd_units_services_summary:1, omd_status:1, omd_apache:5, mounts:2, "
+                    "mknotifyd:2, mkeventd_status:1, mem_linux:1, lnx_thermal:13, lnx_if:1, "
+                    "livestatus_status:1, kernel_util:1, kernel_performance:1, diskstat:1, "
+                    "df:3, cpu_threads:1, cpu_loads:1)(!), no vanished services found, no new "
+                    "host labels"
+                ),
                 1,
                 1,
                 1,

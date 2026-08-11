@@ -31,12 +31,14 @@ MiB = 1024**2
 STRING_TABLE_STORAGETESTACCOUNT = [
     ["Resource"],
     [
-        '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "BlobStorage", "group":'
-        ' "BurningMan", "name": "st0ragetestaccount", "tags": {"monitoring": "some value"},'
-        ' "provider": "Microsoft.Storage", "subscription": "2fac104f-cb9c-461d-be57-037039662426",'
-        ' "type": "Microsoft.Storage/storageAccounts", "id": "/subscriptions/2fac104f-cb9c-461d'
-        "-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts"
-        '/st0ragetestaccount", "location": "westeurope"}'
+        (
+            '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "BlobStorage", "group":'
+            ' "BurningMan", "name": "st0ragetestaccount", "tags": {"monitoring": "some value"},'
+            ' "provider": "Microsoft.Storage", "subscription": "2fac104f-cb9c-461d-be57-037039662426",'
+            ' "type": "Microsoft.Storage/storageAccounts", "id": "/subscriptions/2fac104f-cb9c-461d'
+            "-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts"
+            '/st0ragetestaccount", "location": "westeurope"}'
+        )
     ],
     ["metrics following", "7"],
     [
@@ -65,12 +67,14 @@ STRING_TABLE_STORAGETESTACCOUNT = [
 STRING_TABLE_GLASTONBURY = [
     ["Resource"],
     [
-        '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "Storage", "group":'
-        ' "Glastonbury", "name": "glastonburydiag381", "tags": {}, "provider":'
-        ' "Microsoft.Storage", "subscription": "2fac104f-cb9c-461d-be57-037039662426",'
-        ' "type": "Microsoft.Storage/storageAccounts", "id": "/subscriptions/2fac104f-cb9c'
-        "-461d-be57-037039662426/resourceGroups/Glastonbury/providers/Microsoft.Storage"
-        '/storageAccounts/glastonburydiag381", "location": "westeurope"}'
+        (
+            '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "Storage", "group":'
+            ' "Glastonbury", "name": "glastonburydiag381", "tags": {}, "provider":'
+            ' "Microsoft.Storage", "subscription": "2fac104f-cb9c-461d-be57-037039662426",'
+            ' "type": "Microsoft.Storage/storageAccounts", "id": "/subscriptions/2fac104f-cb9c'
+            "-461d-be57-037039662426/resourceGroups/Glastonbury/providers/Microsoft.Storage"
+            '/storageAccounts/glastonburydiag381", "location": "westeurope"}'
+        )
     ],
     ["metrics following", "7"],
     [

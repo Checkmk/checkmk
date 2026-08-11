@@ -171,8 +171,10 @@ def check_edition_mismatch(changes: ChangeSet | None, site: SiteInfo | None) -> 
         return None
 
     lines = [
-        f"Edition mismatch: {len(mismatched)} changed file(s) require a higher edition "
-        f"than site '{site.name}' ({site_edition.value})",
+        (
+            f"Edition mismatch: {len(mismatched)} changed file(s) require a higher edition "
+            f"than site '{site.name}' ({site_edition.value})"
+        ),
         "These files will be filtered out during deployment:",
     ]
     display_limit = 10

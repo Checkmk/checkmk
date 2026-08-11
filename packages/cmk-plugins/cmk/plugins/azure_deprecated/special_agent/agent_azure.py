@@ -79,8 +79,10 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
     ],
     "Microsoft.Sql/servers/databases": [
         (
-            "storage_percent,deadlock,cpu_percent,dtu_consumption_percent,"
-            "connection_successful,connection_failed",
+            (
+                "storage_percent,deadlock,cpu_percent,dtu_consumption_percent,"
+                "connection_successful,connection_failed"
+            ),
             "PT1M",
             "average",
         ),
@@ -102,8 +104,10 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
     ],
     "Microsoft.DBforMySQL/servers": [
         (
-            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent,active_connections",
+            (
+                "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
+                "storage_percent,active_connections"
+            ),
             "PT1M",
             "average",
         ),
@@ -123,8 +127,10 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
             # NOTE: the "serverlog_storage_percent" metric may soon be phased out of the MySQL
             # flexible server as it is no longer mentioned in the documentation and is not present
             # in PostgreSQL flexible server documentation.
-            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent,active_connections",
+            (
+                "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
+                "storage_percent,active_connections"
+            ),
             "PT1M",
             "average",
         ),
@@ -141,8 +147,10 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
     ],
     "Microsoft.DBforPostgreSQL/servers": [
         (
-            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent,active_connections",
+            (
+                "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
+                "storage_percent,active_connections"
+            ),
             "PT1M",
             "average",
         ),

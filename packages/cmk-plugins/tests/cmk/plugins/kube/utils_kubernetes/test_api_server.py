@@ -225,13 +225,17 @@ def test_version_from_json(
     [
         (
             "I'm no json",
-            "Unknown endpoint information at endpoint /version, HTTP(S) response was "
-            "'I'm no json'.",
+            (
+                "Unknown endpoint information at endpoint /version, HTTP(S) response was "
+                "'I'm no json'."
+            ),
         ),
         (
             json.dumps({}),
-            "Data from endpoint /version did not have mandatory field 'gitVersion', HTTP(S) "
-            "response was '{}'.",
+            (
+                "Data from endpoint /version did not have mandatory field 'gitVersion', HTTP(S) "
+                "response was '{}'."
+            ),
         ),
     ],
 )
@@ -251,8 +255,10 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
             "",
             api.UnknownKubernetesVersion(git_version=api.GitVersion("")),
             [
-                "ERROR Could not parse version string '', using regex from kubectl "
-                "'\\s*v?([0-9]+(?:\\.[0-9]+)*).*'.",
+                (
+                    "ERROR Could not parse version string '', using regex from kubectl "
+                    "'\\s*v?([0-9]+(?:\\.[0-9]+)*).*'."
+                ),
             ],
         ),
         (
@@ -286,8 +292,10 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
             "1.01",
             api.UnknownKubernetesVersion(git_version=api.GitVersion("1.01")),
             [
-                "ERROR Could not parse version string '1.01', a version component is "
-                "zero-prefixed.",
+                (
+                    "ERROR Could not parse version string '1.01', a version component is "
+                    "zero-prefixed."
+                ),
             ],
         ),
     ],

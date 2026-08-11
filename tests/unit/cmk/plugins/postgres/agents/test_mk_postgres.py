@@ -281,9 +281,11 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 (
-                    "3190 postgres: logger\n"
-                    "1252 /usr/bin/postmaster -D /var/lib/pgsql/data\n"
-                    "3148 postmaster -D /var/lib/pgsql/data",
+                    (
+                        "3190 postgres: logger\n"
+                        "1252 /usr/bin/postmaster -D /var/lib/pgsql/data\n"
+                        "3148 postmaster -D /var/lib/pgsql/data"
+                    ),
                     None,
                 ),
             ],

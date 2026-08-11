@@ -822,11 +822,13 @@ def _prepare_testuser(container: docker.models.containers.Container, username: s
         [
             "bash",
             "-c",
-            "for f in /etc/pam.d/sudo /etc/pam.d/crond; do"
-            ' if [ -f "$f" ]; then'
-            " sed -i '1 a account sufficient pam_permit.so' \"$f\";"
-            " fi;"
-            " done",
+            (
+                "for f in /etc/pam.d/sudo /etc/pam.d/crond; do"
+                ' if [ -f "$f" ]; then'
+                " sed -i '1 a account sufficient pam_permit.so' \"$f\";"
+                " fi;"
+                " done"
+            ),
         ],
         check=False,
     )
@@ -840,8 +842,10 @@ def _prepare_testuser(container: docker.models.containers.Container, username: s
         [
             "bash",
             "-c",
-            f"existing=$(getent passwd {uid} | cut -d: -f1); "
-            f'[ -n "$existing" ] && userdel -f "$existing" || true',
+            (
+                f"existing=$(getent passwd {uid} | cut -d: -f1); "
+                f'[ -n "$existing" ] && userdel -f "$existing" || true'
+            ),
         ],
         check=True,
     )
@@ -850,8 +854,10 @@ def _prepare_testuser(container: docker.models.containers.Container, username: s
         [
             "bash",
             "-c",
-            f"existing=$(getent group {gid} | cut -d: -f1); "
-            f'[ -n "$existing" ] && groupdel "$existing" || true',
+            (
+                f"existing=$(getent group {gid} | cut -d: -f1); "
+                f'[ -n "$existing" ] && groupdel "$existing" || true'
+            ),
         ],
         check=True,
     )

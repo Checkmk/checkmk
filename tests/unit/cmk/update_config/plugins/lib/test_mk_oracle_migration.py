@@ -56,9 +56,11 @@ def test_sections_absent_falls_back_to_the_legacy_bakery_defaults() -> None:
     sections = dump(new_rule.rule)["main"]["sections"]
 
     assert new_rule.warnings == [
-        "'Sections' was not configured, so the selection the legacy bakery applied by "
-        "default has been written out explicitly. The new rule pins that selection "
-        "instead of deferring to the plugin later."
+        (
+            "'Sections' was not configured, so the selection the legacy bakery applied by "
+            "default has been written out explicitly. The new rule pins that selection "
+            "instead of deferring to the plugin later."
+        )
     ]
     assert sections["locks"] == "synchronous"
     assert sections["iostats"] == "disabled"

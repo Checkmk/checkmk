@@ -15,31 +15,39 @@ from cmk.plugins.omd.agent_based.omd_broker_queue import (
 
 STRINGTABLE: StringTable = [
     [
-        "["
-        '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_1","messages":1},'
-        '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_2","messages":2},'
-        '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.payload","messages":3},'
-        '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.config","messages":4}'
-        "]"
+        (
+            "["
+            '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_1","messages":1},'
+            '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_2","messages":2},'
+            '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.payload","messages":3},'
+            '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.config","messages":4}'
+            "]"
+        )
     ],
     [
-        "["
-        '{"node": "rabbit-heute_remote_1@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.payload","messages":0},'
-        '{"node": "rabbit-heute_remote_1@localhost", "vhost": "/", "name":"cmk.intersite.heute","messages":0},'
-        '{"node": "rabbit-heute_remote_1@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.config","messages":0}'
-        "]",
+        (
+            "["
+            '{"node": "rabbit-heute_remote_1@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.payload","messages":0},'
+            '{"node": "rabbit-heute_remote_1@localhost", "vhost": "/", "name":"cmk.intersite.heute","messages":0},'
+            '{"node": "rabbit-heute_remote_1@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.config","messages":0}'
+            "]"
+        ),
     ],
     [
-        "["
-        '{"node": "rabbit-heute_remote_1@localhost", "vhost": "customer1", "name":"cmk.intersite.heute","messages":0},'
-        '{"node": "rabbit-heute_remote_1@localhost", "vhost": "customer1", "name":"cmk.app.another-app.data","messages":2}'
-        "]"
+        (
+            "["
+            '{"node": "rabbit-heute_remote_1@localhost", "vhost": "customer1", "name":"cmk.intersite.heute","messages":0},'
+            '{"node": "rabbit-heute_remote_1@localhost", "vhost": "customer1", "name":"cmk.app.another-app.data","messages":2}'
+            "]"
+        )
     ],
     [
-        "["
-        '{"node": "rabbit-heute_remote_2@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.payload","messages":0},'
-        '{"node": "rabbit-heute_remote_2@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.config","messages":0}'
-        "]"
+        (
+            "["
+            '{"node": "rabbit-heute_remote_2@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.payload","messages":0},'
+            '{"node": "rabbit-heute_remote_2@localhost", "vhost": "/", "name":"cmk.app.piggyback-hub.config","messages":0}'
+            "]"
+        )
     ],
 ]
 
@@ -138,11 +146,13 @@ def _parse_with_cmk_broker_queue_info() -> SectionQueues:
     parsed = agent_section_omd_broker_queues.parse_function(
         [
             [
-                "["
-                '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_1","messages":1},'
-                '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_2","messages":2},'
-                '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.app.cmk-broker-test.some_queue","messages":3}'
-                "]"
+                (
+                    "["
+                    '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_1","messages":1},'
+                    '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_2","messages":2},'
+                    '{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.app.cmk-broker-test.some_queue","messages":3}'
+                    "]"
+                )
             ]
         ]
     )

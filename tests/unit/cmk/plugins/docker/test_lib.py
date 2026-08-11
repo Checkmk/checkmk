@@ -78,8 +78,10 @@ def test_parse_multiline() -> None:
             [
                 ["1", "2"],
                 [
-                    "OCI runtime exec failed: exec failed: container_linux.go:344: starting container "
-                    'process caused "exec: "check_mk_agent": executable file not found in $PATH": unknown'
+                    (
+                        "OCI runtime exec failed: exec failed: container_linux.go:344: starting container "
+                        'process caused "exec: "check_mk_agent": executable file not found in $PATH": unknown'
+                    )
                 ],
             ],
             [["1", "2"]],

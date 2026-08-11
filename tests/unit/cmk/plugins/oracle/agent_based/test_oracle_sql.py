@@ -105,27 +105,29 @@ AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
                     long=[],
                     parsing_error={
                         ("instance", "PL/SQL failure", 2): [
-                            "ERROR "
-                            "at "
-                            "line "
-                            "17: "
-                            "ORA-06550: "
-                            "line "
-                            "17, "
-                            "column "
-                            "5: "
-                            "PL/SQL: "
-                            "ORA-00933: "
-                            "SQL "
-                            "command "
-                            "not "
-                            "properly "
-                            "ended "
-                            "ORA-06550: "
-                            "line "
-                            "7, "
-                            "column "
-                            "5:"
+                            (
+                                "ERROR "
+                                "at "
+                                "line "
+                                "17: "
+                                "ORA-06550: "
+                                "line "
+                                "17, "
+                                "column "
+                                "5: "
+                                "PL/SQL: "
+                                "ORA-00933: "
+                                "SQL "
+                                "command "
+                                "not "
+                                "properly "
+                                "ended "
+                                "ORA-06550: "
+                                "line "
+                                "7, "
+                                "column "
+                                "5:"
+                            )
                         ]
                     },
                     metrics=[],
@@ -170,9 +172,11 @@ AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
             {
                 "YOBLE1 SQL NBA SESSIONS": Instance(
                     details=[
-                        "Active sessions: 0 (warn/crit "
-                        "at 10/20) / Inactive sessions: "
-                        "0 (warn/crit at 10/40)"
+                        (
+                            "Active sessions: 0 (warn/crit "
+                            "at 10/20) / Inactive sessions: "
+                            "0 (warn/crit at 10/40)"
+                        )
                     ],
                     elapsed=0.29444,
                     exit=0,
@@ -191,9 +195,11 @@ AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
             {
                 "YOBLE1 SQL NBA SESSIONS": Instance(
                     details=[
-                        "Active sessions: 0 (warn/crit "
-                        "at 10/20) / Inactive sessions: "
-                        "0 (warn/crit at 10/40)"
+                        (
+                            "Active sessions: 0 (warn/crit "
+                            "at 10/20) / Inactive sessions: "
+                            "0 (warn/crit at 10/40)"
+                        )
                     ],
                     elapsed=None,
                     exit=0,

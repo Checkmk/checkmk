@@ -27,12 +27,14 @@ def test_parse_cadvisor_if() -> None:
         cadvisor_if.parse_cadvisor_if(
             [
                 [
-                    '{"if_out_discards": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
-                    '"if_out_errors": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
-                    '"if_out_total": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "249.6433876514451"}], '
-                    '"if_in_errors": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
-                    '"if_in_discards": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
-                    '"if_in_total": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "212.2978367999952"}]}'
+                    (
+                        '{"if_out_discards": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
+                        '"if_out_errors": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
+                        '"if_out_total": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "249.6433876514451"}], '
+                        '"if_in_errors": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
+                        '"if_in_discards": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "0"}], '
+                        '"if_in_total": [{"host_selection_label": "pod", "labels": {"pod": "antivirus-5bd5bb8d47-tp87w"}, "value": "212.2978367999952"}]}'
+                    )
                 ]
             ]
         )

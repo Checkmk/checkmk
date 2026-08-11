@@ -442,9 +442,11 @@ mode_list_hosts = Mode(
     argument_optional=True,
     short_help="Print list of all hosts or members of host groups",
     long_help=[
-        "Called without argument lists all hosts. You may "
-        "specify one or more host groups to restrict the output to hosts "
-        "that are in at least one of those groups.",
+        (
+            "Called without argument lists all hosts. You may "
+            "specify one or more host groups to restrict the output to hosts "
+            "that are in at least one of those groups."
+        ),
     ],
     sub_options=[
         Option(
@@ -858,9 +860,11 @@ mode_dump_agent = Mode(
     argument_descr="HOSTNAME|ADDRESS",
     short_help="Show raw information from agent",
     long_help=[
-        "Shows the raw information received from the given host. For regular "
-        "hosts it shows the agent output plus possible piggyback information. "
-        "Does not work on clusters but only on real hosts. "
+        (
+            "Shows the raw information received from the given host. For regular "
+            "hosts it shows the agent output plus possible piggyback information. "
+            "Does not work on clusters but only on real hosts. "
+        )
     ],
     sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
 )
@@ -953,9 +957,11 @@ mode_dump = Mode(
     argument_optional=True,
     short_help="Dump info about all or some hosts",
     long_help=[
-        "Dumps out the complete configuration and information "
-        "about one, several or all hosts. It shows all services, hostgroups, "
-        "contacts and other information about that host.",
+        (
+            "Dumps out the complete configuration and information "
+            "about one, several or all hosts. It shows all services, hostgroups, "
+            "contacts and other information about that host."
+        ),
     ],
 )
 
@@ -1129,9 +1135,11 @@ mode_snmptranslate = Mode(
     argument_descr="HOST",
     short_help="Do snmptranslate on walk",
     long_help=[
-        "Does not contact the host again, but reuses the hosts walk from the directory "
-        f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
-        f"{_make_local_mibs_dir(cmk.utils.paths.omd_root)}."
+        (
+            "Does not contact the host again, but reuses the hosts walk from the directory "
+            f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
+            f"{_make_local_mibs_dir(cmk.utils.paths.omd_root)}."
+        )
     ],
 )
 
@@ -1348,8 +1356,10 @@ mode_snmpget = Mode(
     argument_optional=True,
     short_help="Fetch single OID from one or multiple hosts",
     long_help=[
-        "Does a snmpget on the given OID on one or multiple hosts. In case "
-        "no host is given, all known SNMP hosts are queried."
+        (
+            "Does a snmpget on the given OID on one or multiple hosts. In case "
+            "no host is given, all known SNMP hosts are queried."
+        )
     ],
     sub_options=[_SNMP_BACKEND_OPTION],
 )
@@ -1472,10 +1482,12 @@ mode_flush = Mode(
     argument_optional=True,
     short_help="Flush all data of some or all hosts",
     long_help=[
-        "Deletes all runtime data belonging to a host. This includes "
-        "the inventorized checks, the state of performance counters, "
-        "cached agent output, and logfiles. Precompiled host checks "
-        "are not deleted.",
+        (
+            "Deletes all runtime data belonging to a host. This includes "
+            "the inventorized checks, the state of performance counters, "
+            "cached agent output, and logfiles. Precompiled host checks "
+            "are not deleted."
+        ),
     ],
 )
 
@@ -1598,9 +1610,11 @@ mode_nagios_config = Mode(
     argument_optional=True,
     short_help="Output Nagios configuration",
     long_help=[
-        "Outputs the Nagios configuration. You may optionally add a list "
-        "of hosts. In that case the configuration is generated only for "
-        "that hosts (useful for debugging).",
+        (
+            "Outputs the Nagios configuration. You may optionally add a list "
+            "of hosts. In that case the configuration is generated only for "
+            "that hosts (useful for debugging)."
+        ),
     ],
 )
 
@@ -1739,11 +1753,13 @@ mode_update = Mode(
     handler_function=_mode_update,
     short_help="Create core config",
     long_help=[
-        "Updates the core configuration based on the current Checkmk "
-        "configuration. When using the Nagios core, the precompiled host "
-        "checks are created and the nagios configuration is updated. "
-        "When using the CheckMK Micro Core, the core configuration is created "
-        "and the configuration for the Core helper processes is being created.",
+        (
+            "Updates the core configuration based on the current Checkmk "
+            "configuration. When using the Nagios core, the precompiled host "
+            "checks are created and the nagios configuration is updated. "
+            "When using the CheckMK Micro Core, the core configuration is created "
+            "and the configuration for the Core helper processes is being created."
+        ),
         "The Agent Bakery is updating the agents.",
     ],
 )
@@ -1849,9 +1865,11 @@ mode_restart = Mode(
     argument_optional=True,
     argument_descr="[HostA, HostB]",
     long_help=[
-        "You may add host names as additional arguments. This enables the incremental "
-        "activate mechanism, only compiling these host names and using cached data for all "
-        "other hosts. Only supported with Checkmk Micro Core."
+        (
+            "You may add host names as additional arguments. This enables the incremental "
+            "activate mechanism, only compiling these host names and using cached data for all "
+            "other hosts. Only supported with Checkmk Micro Core."
+        )
     ],
     handler_function=_mode_restart,
     short_help="Create core config + core restart",
@@ -1958,9 +1976,11 @@ mode_reload = Mode(
     argument_optional=True,
     argument_descr="[HostA, HostB]",
     long_help=[
-        "You may add host names as additional arguments. This enables the incremental "
-        "activate mechanism, only compiling these host names and using cached data for all "
-        "other hosts. Only supported with Checkmk Micro Core."
+        (
+            "You may add host names as additional arguments. This enables the incremental "
+            "activate mechanism, only compiling these host names and using cached data for all "
+            "other hosts. Only supported with Checkmk Micro Core."
+        )
     ],
     handler_function=_mode_reload,
     short_help="Create core config + core reload",
@@ -2020,9 +2040,11 @@ mode_man = Mode(
     argument_optional=True,
     short_help="Show manpage for check CHECKTYPE",
     long_help=[
-        "Shows documentation about a check type. If /usr/bin/less is "
-        "available it is used as pager. Exit by pressing Q. "
-        "Use -M without an argument to show a list of all manual pages."
+        (
+            "Shows documentation about a check type. If /usr/bin/less is "
+            "available it is used as pager. Exit by pressing Q. "
+            "Use -M without an argument to show a list of all manual pages."
+        )
     ],
     sub_options=[
         Option(
@@ -2339,10 +2361,12 @@ mode_check_discovery = Mode(
     argument_descr="HOSTNAME",
     short_help="Check for not yet monitored services",
     long_help=[
-        "Make Check_MK behave as monitoring plug-ins that checks if an "
-        "inventory would find new or vanished services for the host. "
-        "If configured to do so, this will queue those hosts for automatic "
-        "autodiscovery"
+        (
+            "Make Check_MK behave as monitoring plug-ins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "autodiscovery"
+        )
     ],
     sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
 )
@@ -2706,15 +2730,21 @@ mode_discover = Mode(
     argument_optional=True,
     short_help="Find new services",
     long_help=[
-        "Make Check_MK behave as monitoring plug-ins that checks if an "
-        "inventory would find new or vanished services for the host. "
-        "If configured to do so, this will queue those hosts for automatic "
-        "autodiscovery",
-        "Can be restricted to certain check types. Write '--checks df -I' if "
-        "you just want to look for new filesystems. Use 'cmk -L' for a "
-        "list of all check types.",
-        "Can also be restricted to only discovering new host labels. "
-        "Use: '--only-host-labels' or '-L' ",
+        (
+            "Make Check_MK behave as monitoring plug-ins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "autodiscovery"
+        ),
+        (
+            "Can be restricted to certain check types. Write '--checks df -I' if "
+            "you just want to look for new filesystems. Use 'cmk -L' for a "
+            "list of all check types."
+        ),
+        (
+            "Can also be restricted to only discovering new host labels. "
+            "Use: '--only-host-labels' or '-L' "
+        ),
         "-II does the same as -I but deletes all existing checks of the specified types and hosts.",
     ],
     sub_options=[
@@ -3061,18 +3091,24 @@ mode_check = Mode(
     argument_optional=True,
     short_help="Check all services on the given HOST",
     long_help=[
-        "Execute all checks on the given HOST. Optionally you can specify "
-        "a second argument, the IPADDRESS. If you don't set this, the "
-        "configured IP address of the HOST is used.",
-        "By default the check results are sent to the core. If you provide "
-        "the option '-n', the results will not be sent to the core and the "
-        "counters of the check will not be stored.",
-        "You can use '-v' to see the results of the checks. Add '-p' to "
-        "also see the performance data of the checks. "
-        "Can be restricted to certain check types. Write '--checks df -I' if "
-        "you just want to look for new filesystems. Use 'check_mk -L' for a "
-        "list of all check types. Use 'tcp' for all TCP based checks and "
-        "'snmp' for all SNMP based checks.",
+        (
+            "Execute all checks on the given HOST. Optionally you can specify "
+            "a second argument, the IPADDRESS. If you don't set this, the "
+            "configured IP address of the HOST is used."
+        ),
+        (
+            "By default the check results are sent to the core. If you provide "
+            "the option '-n', the results will not be sent to the core and the "
+            "counters of the check will not be stored."
+        ),
+        (
+            "You can use '-v' to see the results of the checks. Add '-p' to "
+            "also see the performance data of the checks. "
+            "Can be restricted to certain check types. Write '--checks df -I' if "
+            "you just want to look for new filesystems. Use 'check_mk -L' for a "
+            "list of all check types. Use 'tcp' for all TCP based checks and "
+            "'snmp' for all SNMP based checks."
+        ),
     ],
     sub_options=[
         *_FETCHER_OPTIONS,
@@ -3330,9 +3366,11 @@ mode_inventory = Mode(
     argument_optional=True,
     short_help="Do a HW/SW Inventory on some or all hosts",
     long_help=[
-        "Does a HW/SW Inventory for all, one or several "
-        "hosts. If you add the option -f, --force then persisted sections "
-        "will be used even if they are outdated."
+        (
+            "Does a HW/SW Inventory for all, one or several "
+            "hosts. If you add the option -f, --force then persisted sections "
+            "will be used even if they are outdated."
+        )
     ],
     sub_options=[
         *_FETCHER_OPTIONS,

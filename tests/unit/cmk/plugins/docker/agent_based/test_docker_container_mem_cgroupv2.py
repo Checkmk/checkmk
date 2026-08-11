@@ -90,14 +90,16 @@ PLUGIN_OUTPUT_CGROUPV2 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"usage": 30220288, "stats": {"active_anon": 69632, "active_file": 11534336, "anon": 0, "ano'
-        'n_thp": 0, "file": 14868480, "file_dirty": 270336, "file_mapped": 1622016, "file_writeback":'
-        '270336, "inactive_anon": 270336, "inactive_file": 2895872, "kernel_stack": 36864, "pgactivat'
-        'e": 69234, "pgdeactivate": 3472, "pgfault": 91221240, "pglazyfree": 4554, "pglazyfreed": 0, '
-        '"pgmajfault": 66, "pgrefill": 4188, "pgscan": 1057, "pgsteal": 1059, "shmem": 0, "slab": 165'
-        '31456, "slab_reclaimable": 3469312, "slab_unreclaimable": 13062144, "sock": 0, "thp_collapse'
-        '_alloc": 0, "thp_fault_alloc": 0, "unevictable": 0, "workingset_activate": 231, "workingset_'
-        'nodereclaim": 0, "workingset_refault": 231}, "limit": 16591540224}'
+        (
+            '{"usage": 30220288, "stats": {"active_anon": 69632, "active_file": 11534336, "anon": 0, "ano'
+            'n_thp": 0, "file": 14868480, "file_dirty": 270336, "file_mapped": 1622016, "file_writeback":'
+            '270336, "inactive_anon": 270336, "inactive_file": 2895872, "kernel_stack": 36864, "pgactivat'
+            'e": 69234, "pgdeactivate": 3472, "pgfault": 91221240, "pglazyfree": 4554, "pglazyfreed": 0, '
+            '"pgmajfault": 66, "pgrefill": 4188, "pgscan": 1057, "pgsteal": 1059, "shmem": 0, "slab": 165'
+            '31456, "slab_reclaimable": 3469312, "slab_unreclaimable": 13062144, "sock": 0, "thp_collapse'
+            '_alloc": 0, "thp_fault_alloc": 0, "unevictable": 0, "workingset_activate": 231, "workingset_'
+            'nodereclaim": 0, "workingset_refault": 231}, "limit": 16591540224}'
+        )
     ],
 ]
 
@@ -107,13 +109,15 @@ PLUGIN_OUTPUT_CGROUPV2_LIMIT = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"usage": 3112960, "stats": {"active_anon": 0, "active_file": 0, "anon": 0, "anon_thp": 0, "'
-        'file": 946176, "file_dirty": 0, "file_mapped": 405504, "file_writeback": 0, "inactive_anon":'
-        '0, "inactive_file": 946176, "kernel_stack": 110592, "pgactivate": 0, "pgdeactivate": 0, "pgf'
-        'ault": 6237, "pglazyfree": 0, "pglazyfreed": 0, "pgmajfault": 0, "pgrefill": 0, "pgscan": 0,'
-        '"pgsteal": 0, "shmem": 0, "slab": 1060864, "slab_reclaimable": 135168, "slab_unreclaimable":'
-        '925696, "sock": 0, "thp_collapse_alloc": 0, "thp_fault_alloc": 0, "unevictable": 0, "working'
-        'set_activate": 0, "workingset_nodereclaim": 0, "workingset_refault": 33}, "limit": 57671680}'
+        (
+            '{"usage": 3112960, "stats": {"active_anon": 0, "active_file": 0, "anon": 0, "anon_thp": 0, "'
+            'file": 946176, "file_dirty": 0, "file_mapped": 405504, "file_writeback": 0, "inactive_anon":'
+            '0, "inactive_file": 946176, "kernel_stack": 110592, "pgactivate": 0, "pgdeactivate": 0, "pgf'
+            'ault": 6237, "pglazyfree": 0, "pglazyfreed": 0, "pgmajfault": 0, "pgrefill": 0, "pgscan": 0,'
+            '"pgsteal": 0, "shmem": 0, "slab": 1060864, "slab_reclaimable": 135168, "slab_unreclaimable":'
+            '925696, "sock": 0, "thp_collapse_alloc": 0, "thp_fault_alloc": 0, "unevictable": 0, "working'
+            'set_activate": 0, "workingset_nodereclaim": 0, "workingset_refault": 33}, "limit": 57671680}'
+        )
     ],
 ]
 

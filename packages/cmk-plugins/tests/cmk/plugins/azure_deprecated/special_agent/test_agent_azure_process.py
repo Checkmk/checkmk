@@ -477,16 +477,18 @@ def test_get_group_labels(
                     "cmk/azure/resource_group": "BurningMan",
                 }
             },
-            "<<<<burningman>>>>\n"
-            "<<<azure_labels:sep(0)>>>\n"
-            '{"group_name": "burningman"}\n'
-            '{"my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan"}\n'
-            "<<<<>>>>\n"
-            "<<<<>>>>\n"
-            "<<<azure_agent_info:sep(124)>>>\n"
-            'monitored-groups|["burningman"]\n'
-            'monitored-resources|["MyVM"]\n'
-            "<<<<>>>>\n",
+            (
+                "<<<<burningman>>>>\n"
+                "<<<azure_labels:sep(0)>>>\n"
+                '{"group_name": "burningman"}\n'
+                '{"my-resource-tag": "my-resource-value", "cmk/azure/resource_group": "BurningMan"}\n'
+                "<<<<>>>>\n"
+                "<<<<>>>>\n"
+                "<<<azure_agent_info:sep(124)>>>\n"
+                'monitored-groups|["burningman"]\n'
+                'monitored-resources|["MyVM"]\n'
+                "<<<<>>>>\n"
+            ),
         )
     ],
 )

@@ -29,10 +29,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
-                    "{'hostname': '', 'connection': 'my-server', "
-                    "'protocol': 'http', 'ignore_alerts': "
-                    "{'ignore_na': True, 'ignore_alert_rules': [], "
-                    "'ignore_alert_groups': []}}",
+                    (
+                        "{'hostname': '', 'connection': 'my-server', "
+                        "'protocol': 'http', 'ignore_alerts': "
+                        "{'ignore_na': True, 'ignore_alert_rules': [], "
+                        "'ignore_alert_groups': []}}"
+                    ),
                 ]
             ),
             id="without credentials",
@@ -56,11 +58,13 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
-                    "{'hostname': 'my-host', 'connection': "
-                    "'my-server', 'protocol': 'http', "
-                    "'ignore_alerts': {'ignore_na': False, "
-                    "'ignore_alert_rules': ['a', 'b'], "
-                    "'ignore_alert_groups': ['c']}}",
+                    (
+                        "{'hostname': 'my-host', 'connection': "
+                        "'my-server', 'protocol': 'http', "
+                        "'ignore_alerts': {'ignore_na': False, "
+                        "'ignore_alert_rules': ['a', 'b'], "
+                        "'ignore_alert_groups': ['c']}}"
+                    ),
                     "--disable-cert-verification",
                     "auth_login",
                     "--username",
@@ -87,10 +91,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             SpecialAgentCommand(
                 command_arguments=[
                     "--config",
-                    "{'hostname': '', 'connection': 'my-server', "
-                    "'protocol': 'https', 'ignore_alerts': "
-                    "{'ignore_na': True, 'ignore_alert_rules': ['a', "
-                    "'b'], 'ignore_alert_groups': []}}",
+                    (
+                        "{'hostname': '', 'connection': 'my-server', "
+                        "'protocol': 'https', 'ignore_alerts': "
+                        "{'ignore_na': True, 'ignore_alert_rules': ['a', "
+                        "'b'], 'ignore_alert_groups': []}}"
+                    ),
                     "--disable-cert-verification",
                     "auth_token",
                     "--token-id",

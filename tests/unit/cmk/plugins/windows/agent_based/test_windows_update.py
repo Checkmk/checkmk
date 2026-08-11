@@ -22,8 +22,10 @@ SECTION_OK: Final = windows_updates.Section(
         "Windows Media Player 11",
         "Windows Search 4.0 f�r Windows XP (KB940157)",
         "Microsoft Base Smartcard-Kryptografiedienstanbieter-Paket: x86 (KB909520)",
-        "Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET"
-        " Framework 3.5-Produktfamilie (KB951847) x86",
+        (
+            "Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET"
+            " Framework 3.5-Produktfamilie (KB951847) x86"
+        ),
     ],
     forced_reboot=None,
     failed=None,

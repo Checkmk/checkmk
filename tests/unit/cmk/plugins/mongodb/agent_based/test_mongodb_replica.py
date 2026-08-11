@@ -22,10 +22,12 @@ from cmk.plugins.mongodb.agent_based.mongodb_replica import (
         pytest.param(
             [
                 [
-                    '{"primary": "idbv0068.xyz.de:27017", "secondaries": {"active": '
-                    '["idbv0067.xyz:27017", "idbv0068.xyz.de:27017"], "passive": '
-                    '["idbv0070.xyz:27017", "idbv0071.xyz.de:27017"]}, "arbiters": '
-                    '["idbv0069.xyz.de:27017"]}'
+                    (
+                        '{"primary": "idbv0068.xyz.de:27017", "secondaries": {"active": '
+                        '["idbv0067.xyz:27017", "idbv0068.xyz.de:27017"], "passive": '
+                        '["idbv0070.xyz:27017", "idbv0071.xyz.de:27017"]}, "arbiters": '
+                        '["idbv0069.xyz.de:27017"]}'
+                    )
                 ]
             ],
             ReplicaSet(

@@ -733,18 +733,22 @@ def test_parse_args_or_exec_other_omd(
             Root(),
             ["start", "broken_site"],
             "",
-            "This site has an empty home directory /omd/sites/broken_site.\n"
-            "If you have created that site with 'omd create --no-init broken_site'\n"
-            "then please first do an 'omd init broken_site'.",
+            (
+                "This site has an empty home directory /omd/sites/broken_site.\n"
+                "If you have created that site with 'omd create --no-init broken_site'\n"
+                "then please first do an 'omd init broken_site'."
+            ),
         ),
         # 9. Command requiring version on a broken site as user
         (
             "broken_site",
             ["start"],
             "",
-            "This site has an empty home directory /omd/sites/broken_site.\n"
-            "If you have created that site with 'omd create --no-init broken_site'\n"
-            "then please first do an 'omd init broken_site'.",
+            (
+                "This site has an empty home directory /omd/sites/broken_site.\n"
+                "If you have created that site with 'omd create --no-init broken_site'\n"
+                "then please first do an 'omd init broken_site'."
+            ),
         ),
         # 10. Command requires root permission
         (

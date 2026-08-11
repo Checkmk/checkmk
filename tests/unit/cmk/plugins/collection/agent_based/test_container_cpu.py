@@ -94,11 +94,13 @@ MK_DOCKER_CONTAINER_CPU_CGROUPV1_0 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"cpu_usage": {"total_usage": 492596960696, "percpu_usage": [56412897570, 70863637554, 23303'
-        '982576, 58690336091, 53612953212, 65956324201, 88398597623, 75358231869], "usage_in_kernelmo'
-        'de": 1570000000, "usage_in_usermode": 490750000000}, "system_cpu_usage": 96928480000000, "on'
-        'line_cpus": 8, "throttling_data": {"periods": 0, "throttled_periods": 0, "throttled_time": 0'
-        "}}"
+        (
+            '{"cpu_usage": {"total_usage": 492596960696, "percpu_usage": [56412897570, 70863637554, 23303'
+            '982576, 58690336091, 53612953212, 65956324201, 88398597623, 75358231869], "usage_in_kernelmo'
+            'de": 1570000000, "usage_in_usermode": 490750000000}, "system_cpu_usage": 96928480000000, "on'
+            'line_cpus": 8, "throttling_data": {"periods": 0, "throttled_periods": 0, "throttled_time": 0'
+            "}}"
+        )
     ],
 ]
 
@@ -108,11 +110,13 @@ MK_DOCKER_CONTAINER_CPU_CGROUPV1_10 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"cpu_usage": {"total_usage": 510617797293, "percpu_usage": [56413193361, 78538845182, 27881'
-        '010731, 58691607576, 53626502638, 67285721659, 92822615190, 75358300956], "usage_in_kernelmo'
-        'de": 1580000000, "usage_in_usermode": 508750000000}, "system_cpu_usage": 97024520000000, "on'
-        'line_cpus": 8, "throttling_data": {"periods": 0, "throttled_periods": 0, "throttled_time": 0'
-        "}}"
+        (
+            '{"cpu_usage": {"total_usage": 510617797293, "percpu_usage": [56413193361, 78538845182, 27881'
+            '010731, 58691607576, 53626502638, 67285721659, 92822615190, 75358300956], "usage_in_kernelmo'
+            'de": 1580000000, "usage_in_usermode": 508750000000}, "system_cpu_usage": 97024520000000, "on'
+            'line_cpus": 8, "throttling_data": {"periods": 0, "throttled_periods": 0, "throttled_time": 0'
+            "}}"
+        )
     ],
 ]
 # mk_docker.py running on a host with cgroupv2
@@ -123,9 +127,11 @@ MK_DOCKER_CONTAINER_CPU_CGROUPV2_0 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.2", "ApiVersion": "1.41"}',
     ],
     [
-        '{"cpu_usage": {"total_usage": 176193343000, "usage_in_kernelmode": 944280000, "usage_in_user'
-        'mode": 175249062000}, "system_cpu_usage": 2624340000000, "online_cpus": 8, "throttling_data"'
-        ': {"periods": 0, "throttled_periods": 0, "throttled_time": 0}}'
+        (
+            '{"cpu_usage": {"total_usage": 176193343000, "usage_in_kernelmode": 944280000, "usage_in_user'
+            'mode": 175249062000}, "system_cpu_usage": 2624340000000, "online_cpus": 8, "throttling_data"'
+            ': {"periods": 0, "throttled_periods": 0, "throttled_time": 0}}'
+        )
     ],
 ]
 
@@ -135,9 +141,11 @@ MK_DOCKER_CONTAINER_CPU_CGROUPV2_10 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.2", "ApiVersion": "1.41"}',
     ],
     [
-        '{"cpu_usage": {"total_usage": 194273739000, "usage_in_kernelmode": 948242000, "usage_in_user'
-        'mode": 193325496000}, "system_cpu_usage": 2720280000000, "online_cpus": 8, "throttling_data"'
-        ': {"periods": 0, "throttled_periods": 0, "throttled_time": 0}}'
+        (
+            '{"cpu_usage": {"total_usage": 194273739000, "usage_in_kernelmode": 948242000, "usage_in_user'
+            'mode": 193325496000}, "system_cpu_usage": 2720280000000, "online_cpus": 8, "throttling_data"'
+            ': {"periods": 0, "throttled_periods": 0, "throttled_time": 0}}'
+        )
     ],
 ]
 

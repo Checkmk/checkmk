@@ -43,8 +43,10 @@ def _section_main() -> Section:
             [
                 "JIRA",
                 "*:name=*,type=ThreadPool/maxThreads,currentThreadCount,currentThreadsBusy/",
-                '{"Catalina:name=\\"http-nio-8080\\",type=ThreadPool": {"maxThreads": 150,'
-                ' "currentThreadCount": 25, "currentThreadsBusy": 12}}',
+                (
+                    '{"Catalina:name=\\"http-nio-8080\\",type=ThreadPool": {"maxThreads": 150,'
+                    ' "currentThreadCount": 25, "currentThreadsBusy": 12}}'
+                ),
             ],
             [
                 "JIRA",

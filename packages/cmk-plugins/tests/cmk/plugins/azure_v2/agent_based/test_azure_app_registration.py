@@ -88,9 +88,11 @@ SECTION = Section(
         (
             [
                 [
-                    '{"passwordCredentials": [{"customKeyIdentifier": null, "displayName": "Very very secure", "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a2", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"}, {"customKeyIdentifier": null, "displayName": "MyVault", "endDateTime": "2022-04-05T08:25:51.097Z", "hint": "gU1", "keyId": "0cc3fc97-d36a-43e8-a4fb-c9ed799a984e", "secretText": null, "startDateTime": "2022-04-05T08:25:51.097Z"}, {"customKeyIdentifier": "MyKey", "displayName": null, "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a3", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"},{"customKeyIdentifier": "no-start-date", "displayName": null, "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a4", "secretText": null}], '
-                    '"displayName": "srv-whatever", "id": "cd02b35f-c07b-40e2-82fb-e1f8b1907c4f", "appId": "9c677ced-6cb2-44b3-af54-65f768065fdf",'
-                    '"keyCredentials": [{"customKeyIdentifier": "B999CDD173508AC44705089C8C88FBBEA02B40CD", "displayName": "the best description", "endDateTime": "2043-11-29T11:55:54Z", "keyId": "d72e9c3a-91db-4b93-ba93-cdc24d120265", "startDateTime": "2021-11-29T11:55:54Z"}]}'
+                    (
+                        '{"passwordCredentials": [{"customKeyIdentifier": null, "displayName": "Very very secure", "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a2", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"}, {"customKeyIdentifier": null, "displayName": "MyVault", "endDateTime": "2022-04-05T08:25:51.097Z", "hint": "gU1", "keyId": "0cc3fc97-d36a-43e8-a4fb-c9ed799a984e", "secretText": null, "startDateTime": "2022-04-05T08:25:51.097Z"}, {"customKeyIdentifier": "MyKey", "displayName": null, "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a3", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"},{"customKeyIdentifier": "no-start-date", "displayName": null, "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a4", "secretText": null}], '
+                        '"displayName": "srv-whatever", "id": "cd02b35f-c07b-40e2-82fb-e1f8b1907c4f", "appId": "9c677ced-6cb2-44b3-af54-65f768065fdf",'
+                        '"keyCredentials": [{"customKeyIdentifier": "B999CDD173508AC44705089C8C88FBBEA02B40CD", "displayName": "the best description", "endDateTime": "2043-11-29T11:55:54Z", "keyId": "d72e9c3a-91db-4b93-ba93-cdc24d120265", "startDateTime": "2021-11-29T11:55:54Z"}]}'
+                    )
                 ],
             ],
             SECTION,

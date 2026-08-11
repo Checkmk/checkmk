@@ -133,14 +133,16 @@ def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert captured.out.rstrip().split("\n") == [
         "<<<azure_status:sep(0)>>>",
-        '{"issues": [{"description": "Description of the Azure Key Vault problem", '
-        '"region": "Global", "title": "Azure Key Vault issue affecting Azure China"}, '
-        '{"description": "Description of the Azure Databricks problem", "region": '
-        '"North Central US", "title": "Azure Databricks - North Central US - '
-        'Investigating"}, {"description": "Impact Statement: Azure Synapse Analytics '
-        'customers  may be experiencing connectivity issues", "region": "West '
-        'Europe", "title": "Azure Synapse Analytics Mitigating"}], "link": '
-        '"https://status.azure.com/en-us/status/", "regions": ["East US", "Central '
-        'US", "North Central US", "West Europe", "Global"]}',
+        (
+            '{"issues": [{"description": "Description of the Azure Key Vault problem", '
+            '"region": "Global", "title": "Azure Key Vault issue affecting Azure China"}, '
+            '{"description": "Description of the Azure Databricks problem", "region": '
+            '"North Central US", "title": "Azure Databricks - North Central US - '
+            'Investigating"}, {"description": "Impact Statement: Azure Synapse Analytics '
+            'customers  may be experiencing connectivity issues", "region": "West '
+            'Europe", "title": "Azure Synapse Analytics Mitigating"}], "link": '
+            '"https://status.azure.com/en-us/status/", "regions": ["East US", "Central '
+            'US", "North Central US", "West Europe", "Global"]}'
+        ),
     ]
     assert captured.err == ""

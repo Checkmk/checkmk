@@ -511,8 +511,10 @@ def _legacy_migration_cfg(oracle: OracleDatabase) -> str:
     return "\n".join(
         [
             "MAX_TASKS=10",
-            f"DBUSER='{oracle.cmk_username}:{oracle.cmk_password}"
-            f"::localhost:{oracle.PORT}:{oracle.SID}'",
+            (
+                f"DBUSER='{oracle.cmk_username}:{oracle.cmk_password}"
+                f"::localhost:{oracle.PORT}:{oracle.SID}'"
+            ),
             f"TNS_ADMIN={oracle.tns_admin_dir.as_posix()}",
             "",
             f'SQLS_SECTIONS="{_MIGRATION_METRIC}"',

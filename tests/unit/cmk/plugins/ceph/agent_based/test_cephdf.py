@@ -14,26 +14,28 @@ from cmk.plugins.lib import df
 
 STRING_TABLE = [
     [
-        '{"stats": {"total_bytes": 122903710400512, "total_avail_bytes": 88264260317184, '
-        '"total_used_bytes": 34639450083328, "total_used_raw_bytes": 34639450083328, '
-        '"total_used_raw_ratio": 0.2818421721458435, "num_osds": 16, "num_per_pool_osds": 16, '
-        '"num_per_pool_omap_osds": 16}, "stats_by_class": {"nvme": {"total_bytes": '
-        '122903710400512, "total_avail_bytes": 88264260317184, "total_used_bytes": '
-        '34639450083328, "total_used_raw_bytes": 34639450083328, "total_used_raw_ratio": '
-        '0.2818421721458435}}, "pools": [{"name": "nvme1", "id": 1, "stats": {"stored": '
-        '11672967409291, "stored_data": 11672967184384, "stored_omap": 224907, "objects": '
-        '3044978, "kb_used": 33686660127, "bytes_used": 34495139969953, "data_bytes_used": '
-        '34495139295232, "omap_bytes_used": 674721, "percent_used": 0.3389628827571869, '
-        '"max_avail": 22423858577408, "quota_objects": 0, "quota_bytes": 0, "dirty": 0, "rd": '
-        '61744664209, "rd_bytes": 4798695416181760, "wr": 137785316968, "wr_bytes": '
-        '3083978441281536, "compress_bytes_used": 0, "compress_under_bytes": 0, "stored_raw": '
-        '35018902601728, "avail_raw": 67271574686528}}, {"name": ".mgr", "id": 2, "stats": '
-        '{"stored": 19727088, "stored_data": 19727088, "stored_omap": 0, "objects": 6, "kb_used": '
-        '57804, "bytes_used": 59191296, "data_bytes_used": 59191296, "omap_bytes_used": 0, '
-        '"percent_used": 8.798849648883333e-07, "max_avail": 22423858577408, "quota_objects": 0, '
-        '"quota_bytes": 0, "dirty": 0, "rd": 84182, "rd_bytes": 142103552, "wr": 170979, '
-        '"wr_bytes": 3919172608, "compress_bytes_used": 0, "compress_under_bytes": 0, '
-        '"stored_raw": 59181264, "avail_raw": 67271574686528}}]}'
+        (
+            '{"stats": {"total_bytes": 122903710400512, "total_avail_bytes": 88264260317184, '
+            '"total_used_bytes": 34639450083328, "total_used_raw_bytes": 34639450083328, '
+            '"total_used_raw_ratio": 0.2818421721458435, "num_osds": 16, "num_per_pool_osds": 16, '
+            '"num_per_pool_omap_osds": 16}, "stats_by_class": {"nvme": {"total_bytes": '
+            '122903710400512, "total_avail_bytes": 88264260317184, "total_used_bytes": '
+            '34639450083328, "total_used_raw_bytes": 34639450083328, "total_used_raw_ratio": '
+            '0.2818421721458435}}, "pools": [{"name": "nvme1", "id": 1, "stats": {"stored": '
+            '11672967409291, "stored_data": 11672967184384, "stored_omap": 224907, "objects": '
+            '3044978, "kb_used": 33686660127, "bytes_used": 34495139969953, "data_bytes_used": '
+            '34495139295232, "omap_bytes_used": 674721, "percent_used": 0.3389628827571869, '
+            '"max_avail": 22423858577408, "quota_objects": 0, "quota_bytes": 0, "dirty": 0, "rd": '
+            '61744664209, "rd_bytes": 4798695416181760, "wr": 137785316968, "wr_bytes": '
+            '3083978441281536, "compress_bytes_used": 0, "compress_under_bytes": 0, "stored_raw": '
+            '35018902601728, "avail_raw": 67271574686528}}, {"name": ".mgr", "id": 2, "stats": '
+            '{"stored": 19727088, "stored_data": 19727088, "stored_omap": 0, "objects": 6, "kb_used": '
+            '57804, "bytes_used": 59191296, "data_bytes_used": 59191296, "omap_bytes_used": 0, '
+            '"percent_used": 8.798849648883333e-07, "max_avail": 22423858577408, "quota_objects": 0, '
+            '"quota_bytes": 0, "dirty": 0, "rd": 84182, "rd_bytes": 142103552, "wr": 170979, '
+            '"wr_bytes": 3919172608, "compress_bytes_used": 0, "compress_under_bytes": 0, '
+            '"stored_raw": 59181264, "avail_raw": 67271574686528}}]}'
+        )
     ]
 ]
 

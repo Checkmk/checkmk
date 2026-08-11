@@ -924,7 +924,9 @@ def test_iter_skipped_services_warnings() -> None:
     assert ServiceID(CheckPluginName("smart_temp"), "item") not in table
     assert ServiceID(CheckPluginName("df"), "item") not in table
     assert list(iter_skipped_services_warnings(hostname, table.skipped_services)) == [
-        f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
-        f"(plugin: smart_temp) on host: {hostname}, Service: {too_long_name}",
+        (
+            f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
+            f"(plugin: smart_temp) on host: {hostname}, Service: {too_long_name}"
+        ),
         f"Skipping invalid service with empty description (plugin: df) on host {hostname}",
     ]

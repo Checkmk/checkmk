@@ -161,9 +161,11 @@ class DockerSnmpHost:
             entrypoint=[
                 "/bin/sh",
                 "-c",
-                'echo "" >> /etc/snmp/snmpd.conf'
-                ' && echo "view systemview included .1" >> /etc/snmp/snmpd.conf'
-                " && exec snmpd -f -Lo -c /etc/snmp/snmpd.conf",
+                (
+                    'echo "" >> /etc/snmp/snmpd.conf'
+                    ' && echo "view systemview included .1" >> /etc/snmp/snmpd.conf'
+                    " && exec snmpd -f -Lo -c /etc/snmp/snmpd.conf"
+                ),
             ],
             network=self._network.name,
             name=container_name,

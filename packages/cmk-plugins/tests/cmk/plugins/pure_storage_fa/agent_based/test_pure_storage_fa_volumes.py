@@ -139,14 +139,16 @@ def test_parse_volume_excludes_protocol_endpoint() -> None:
     # ZeroDivisionError in check_filesystem_levels.  The fix filters these out during parsing.
     string_table: StringTable = [
         [
-            '{"items": ['
-            '{"name": "pure-protocol-endpoint", "subtype": "protocol_endpoint",'
-            ' "space": {"virtual": 0.0, "total_provisioned": 0.0, "data_reduction": null,'
-            ' "unique": 0.0, "snapshots": 0.0}},'
-            '{"name": "real-vol", "subtype": "regular",'
-            ' "space": {"virtual": 1024.0, "total_provisioned": 10240.0, "data_reduction": 2.0,'
-            ' "unique": 512.0, "snapshots": 0.0}}'
-            "]}"
+            (
+                '{"items": ['
+                '{"name": "pure-protocol-endpoint", "subtype": "protocol_endpoint",'
+                ' "space": {"virtual": 0.0, "total_provisioned": 0.0, "data_reduction": null,'
+                ' "unique": 0.0, "snapshots": 0.0}},'
+                '{"name": "real-vol", "subtype": "regular",'
+                ' "space": {"virtual": 1024.0, "total_provisioned": 10240.0, "data_reduction": 2.0,'
+                ' "unique": 512.0, "snapshots": 0.0}}'
+                "]}"
+            )
         ]
     ]
     section = parse_volume(string_table)

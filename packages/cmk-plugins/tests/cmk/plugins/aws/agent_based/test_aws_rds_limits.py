@@ -67,9 +67,11 @@ def test_discover_aws_rds_limits(
             },
             [
                 [
-                    '[["db_instances", "DB instances", 10, 1, "REGION"],'
-                    ' ["db_clusters", "DB clusters", 10, 8.5, "REGION"],'
-                    ' ["bogus_resource", "Bogus", 10, 1, "REGION"]]'
+                    (
+                        '[["db_instances", "DB instances", 10, 1, "REGION"],'
+                        ' ["db_clusters", "DB clusters", 10, 8.5, "REGION"],'
+                        ' ["bogus_resource", "Bogus", 10, 1, "REGION"]]'
+                    )
                 ]
             ],
             [

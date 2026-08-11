@@ -325,8 +325,10 @@ def test_fix_state() -> None:
     [
         (
             60,
-            "Cache generated 1 minute 0 seconds ago, cache interval: 2 minutes 0 seconds, "
-            "elapsed cache lifespan: 50.00%",
+            (
+                "Cache generated 1 minute 0 seconds ago, cache interval: 2 minutes 0 seconds, "
+                "elapsed cache lifespan: 50.00%"
+            ),
         ),
         (
             -60,

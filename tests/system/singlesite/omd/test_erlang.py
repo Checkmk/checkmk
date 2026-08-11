@@ -15,9 +15,11 @@ def test_erl_version(site: Site) -> None:
         "erl",
         "-noshell",
         "-eval",
-        "{ok,Version} = file:read_file(filename:join("
-        "[code:root_dir(),'releases',erlang:system_info(otp_release),'OTP_VERSION']"
-        ")),io:fwrite(Version),halt().",
+        (
+            "{ok,Version} = file:read_file(filename:join("
+            "[code:root_dir(),'releases',erlang:system_info(otp_release),'OTP_VERSION']"
+            ")),io:fwrite(Version),halt()."
+        ),
     ]
     assert "26.2.5.13" in site.check_output(cmd)
 
@@ -27,7 +29,9 @@ def test_erlang_ssl_smoke(site: Site) -> None:
         "erl",
         "-noshell",
         "-eval",
-        "ok = crypto:start(), "
-        "ok = io:format('~p~n~n~p~n~n', [crypto:supports(), ssl:versions()]), init:stop().",
+        (
+            "ok = crypto:start(), "
+            "ok = io:format('~p~n~n~p~n~n', [crypto:supports(), ssl:versions()]), init:stop()."
+        ),
     ]
     assert "ciphers" in site.check_output(cmd)

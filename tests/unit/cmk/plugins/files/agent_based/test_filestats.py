@@ -20,48 +20,68 @@ from cmk.plugins.files.agent_based.filestats import (
 STRING_TABLE = [
     ["[[[file_stats aix agent files]]]"],
     [
-        "{'stat_status': 'ok', 'age': 230276, 'mtime': 1544196317,"
-        " 'path': '/home/mo/git/check_mk/agents/check_mk_agent.aix', 'type': 'file', 'size': 12886}"
+        (
+            "{'stat_status': 'ok', 'age': 230276, 'mtime': 1544196317,"
+            " 'path': '/home/mo/git/check_mk/agents/check_mk_agent.aix', 'type': 'file', 'size': 12886}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990,"
-        " 'path': '/home/mo/git/check_mk/agents/plugins/mk_sap.aix', 'type': 'file', 'size': 3928}"
+        (
+            "{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990,"
+            " 'path': '/home/mo/git/check_mk/agents/plugins/mk_sap.aix', 'type': 'file', 'size': 3928}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 230276, 'mtime': 1544196317, 'path':"
-        " '/home/mo/git/check_mk/agents/plugins/mk_logwatch.aix', 'type': 'file', 'size': 1145}"
+        (
+            "{'stat_status': 'ok', 'age': 230276, 'mtime': 1544196317, 'path':"
+            " '/home/mo/git/check_mk/agents/plugins/mk_logwatch.aix', 'type': 'file', 'size': 1145}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990, 'path':"
-        " '/home/mo/git/check_mk/agents/plugins/netstat.aix', 'type': 'file', 'size': 1697}"
+        (
+            "{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990, 'path':"
+            " '/home/mo/git/check_mk/agents/plugins/netstat.aix', 'type': 'file', 'size': 1697}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 9398016, 'mtime': 1535028577, 'path':"
-        " '/home/mo/git/check_mk/agents/plugins/mk_inventory.aix', 'type': 'file', 'size': 2637}"
+        (
+            "{'stat_status': 'ok', 'age': 9398016, 'mtime': 1535028577, 'path':"
+            " '/home/mo/git/check_mk/agents/plugins/mk_inventory.aix', 'type': 'file', 'size': 2637}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990, 'path':"
-        " '/home/mo/git/check_mk/agents/plugins/mk_db2.aix', 'type': 'file', 'size': 10138}"
+        (
+            "{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990, 'path':"
+            " '/home/mo/git/check_mk/agents/plugins/mk_db2.aix', 'type': 'file', 'size': 10138}"
+        )
     ],
     ["{'type': 'summary', 'count': 6}"],
     ["[[[count_only $ection with funny characters %s &! (count files in ~)]]]"],
     ["{'type': 'summary', 'count': 35819}"],
     ["[[[extremes_only log files]]]"],
     [
-        "{'stat_status': 'ok', 'age': 89217820, 'mtime': 1455208773, 'path':"
-        " '/var/log/installer/casper.log', 'type': 'file', 'size': 1216}"
+        (
+            "{'stat_status': 'ok', 'age': 89217820, 'mtime': 1455208773, 'path':"
+            " '/var/log/installer/casper.log', 'type': 'file', 'size': 1216}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 4451, 'mtime': 1544422142, 'path': '/var/log/boot.log',"
-        " 'type': 'file', 'size': 2513750}"
+        (
+            "{'stat_status': 'ok', 'age': 4451, 'mtime': 1544422142, 'path': '/var/log/boot.log',"
+            " 'type': 'file', 'size': 2513750}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 252, 'mtime': 1544426341, 'path': '/var/log/auth.log',"
-        " 'type': 'file', 'size': 7288}"
+        (
+            "{'stat_status': 'ok', 'age': 252, 'mtime': 1544426341, 'path': '/var/log/auth.log',"
+            " 'type': 'file', 'size': 7288}"
+        )
     ],
     [
-        "{'stat_status': 'ok', 'age': 15965608, 'mtime': 1528460985, 'path': '/var/log/tacwho.log',"
-        " 'type': 'file', 'size': 0}"
+        (
+            "{'stat_status': 'ok', 'age': 15965608, 'mtime': 1528460985, 'path': '/var/log/tacwho.log',"
+            " 'type': 'file', 'size': 0}"
+        )
     ],
     ["{'type': 'summary', 'count': 17}"],
     ["[[[single_file file1.txt]]]"],

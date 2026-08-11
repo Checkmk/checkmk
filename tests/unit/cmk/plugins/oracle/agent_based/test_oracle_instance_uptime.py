@@ -81,8 +81,10 @@ def test_check_oracle_instance_uptime_error() -> None:
                         [
                             "IC731",
                             "FAILURE",
-                            "ORA-99999 tnsping failed for IC731 ERROR: ORA-28002: the password "
-                            "will expire within 1 days",
+                            (
+                                "ORA-99999 tnsping failed for IC731 ERROR: ORA-28002: the password "
+                                "will expire within 1 days"
+                            ),
                         ]
                     ]
                 ),

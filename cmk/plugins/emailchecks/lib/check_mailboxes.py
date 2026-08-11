@@ -133,11 +133,13 @@ def check_mailboxes(args: Args) -> CheckResult:
                     messages.append(
                         (
                             status,
-                            f"Oldest mail in {folder!r} is at least "
-                            f"{approx_age(oldest)} old "
-                            f"{status_icon[status]}"
-                            f"(warn/crit at {approx_age(args.warn_age_oldest)}"
-                            f"/{approx_age(args.crit_age_oldest)})",
+                            (
+                                f"Oldest mail in {folder!r} is at least "
+                                f"{approx_age(oldest)} old "
+                                f"{status_icon[status]}"
+                                f"(warn/crit at {approx_age(args.warn_age_oldest)}"
+                                f"/{approx_age(args.crit_age_oldest)})"
+                            ),
                         )
                     )
 
@@ -153,11 +155,13 @@ def check_mailboxes(args: Args) -> CheckResult:
                     messages.append(
                         (
                             status,
-                            f"Newest mail in {folder!r} is at least "
-                            f"{approx_age(newest)} old "
-                            f"{status_icon[status]}"
-                            f"(warn/crit at {approx_age(args.warn_age_newest)}"
-                            f"/{approx_age(args.crit_age_newest)})",
+                            (
+                                f"Newest mail in {folder!r} is at least "
+                                f"{approx_age(newest)} old "
+                                f"{status_icon[status]}"
+                                f"(warn/crit at {approx_age(args.warn_age_newest)}"
+                                f"/{approx_age(args.crit_age_newest)})"
+                            ),
                         )
                     )
                 elif not new_mails:
@@ -166,9 +170,11 @@ def check_mailboxes(args: Args) -> CheckResult:
                     messages.append(
                         (
                             status,
-                            f"No new mails found in {folder!r} {status_icon[status]}"
-                            f"(warn/crit at {approx_age(args.warn_age_newest)}"
-                            f"/{approx_age(args.crit_age_newest)})",
+                            (
+                                f"No new mails found in {folder!r} {status_icon[status]}"
+                                f"(warn/crit at {approx_age(args.warn_age_newest)}"
+                                f"/{approx_age(args.crit_age_newest)})"
+                            ),
                         )
                     )
 

@@ -104,35 +104,37 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0 = [
         '{"PluginVersion": "0.1", "ApiVersion": "1.40", "DockerPyVersion": "2.6.1"}',
     ],
     [
-        '{"io_queue_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 0, "op'
-        '": "Write", "major": 8, "minor": 0}, {"value": 0, "op": "Sync", "major": 8, "minor": 0}, {"v'
-        'alue": 0, "op": "Async", "major": 8, "minor": 0}, {"value": 0, "op": "Total", "major": 8, "m'
-        'inor": 0}], "io_service_bytes_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0'
-        '}, {"value": 115892224, "op": "Write", "major": 8, "minor": 0}, {"value": 6500352, "op": "Sy'
-        'nc", "major": 8, "minor": 0}, {"value": 109391872, "op": "Async", "major": 8, "minor": 0}, {'
-        '"value": 115892224, "op": "Total", "major": 8, "minor": 0}, {"value": 0, "op": "Read", "majo'
-        'r": 8, "minor": 0}, {"value": 115892224, "op": "Write", "major": 8, "minor": 0}, {"value": 6'
-        '500352, "op": "Sync", "major": 8, "minor": 0}, {"value": 109391872, "op": "Async", "major": '
-        '8, "minor": 0}, {"value": 115892224, "op": "Total", "major": 8, "minor": 0}], "io_service_ti'
-        'me_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 581357937, "op'
-        '": "Write", "major": 8, "minor": 0}, {"value": 204339427, "op": "Sync", "major": 8, "minor":'
-        '0}, {"value": 377018510, "op": "Async", "major": 8, "minor": 0}, {"value": 581357937, "op": '
-        '"Total", "major": 8, "minor": 0}], "time": 1640097371.652645, "io_wait_time_recursive": [{"v'
-        'alue": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 1149150164, "op": "Write", "major'
-        '": 8, "minor": 0}, {"value": 1122235223, "op": "Sync", "major": 8, "minor": 0}, {"value": 26'
-        '914941, "op": "Async", "major": 8, "minor": 0}, {"value": 1149150164, "op": "Total", "major"'
-        ': 8, "minor": 0}], "sectors_recursive": [{"value": 226352, "op": "", "major": 8, "minor": 0}'
-        '], "io_serviced_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 1'
-        '805, "op": "Write", "major": 8, "minor": 0}, {"value": 522, "op": "Sync", "major": 8, "minor'
-        '": 0}, {"value": 1283, "op": "Async", "major": 8, "minor": 0}, {"value": 1805, "op": "Total"'
-        ', "major": 8, "minor": 0}, {"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 180'
-        '5, "op": "Write", "major": 8, "minor": 0}, {"value": 522, "op": "Sync", "major": 8, "minor":'
-        '0}, {"value": 1283, "op": "Async", "major": 8, "minor": 0}, {"value": 1805, "op": "Total", "'
-        'major": 8, "minor": 0}], "io_time_recursive": [{"value": 2017966265, "op": "", "major": 8, "'
-        'minor": 0}], "names": {"8:0": "sda", "11:0": "sr0"}, "io_merged_recursive": [{"value": 0, "o'
-        'p": "Read", "major": 8, "minor": 0}, {"value": 0, "op": "Write", "major": 8, "minor": 0}, {"'
-        'value": 0, "op": "Sync", "major": 8, "minor": 0}, {"value": 0, "op": "Async", "major": 8, "m'
-        'inor": 0}, {"value": 0, "op": "Total", "major": 8, "minor": 0}]}'
+        (
+            '{"io_queue_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 0, "op'
+            '": "Write", "major": 8, "minor": 0}, {"value": 0, "op": "Sync", "major": 8, "minor": 0}, {"v'
+            'alue": 0, "op": "Async", "major": 8, "minor": 0}, {"value": 0, "op": "Total", "major": 8, "m'
+            'inor": 0}], "io_service_bytes_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0'
+            '}, {"value": 115892224, "op": "Write", "major": 8, "minor": 0}, {"value": 6500352, "op": "Sy'
+            'nc", "major": 8, "minor": 0}, {"value": 109391872, "op": "Async", "major": 8, "minor": 0}, {'
+            '"value": 115892224, "op": "Total", "major": 8, "minor": 0}, {"value": 0, "op": "Read", "majo'
+            'r": 8, "minor": 0}, {"value": 115892224, "op": "Write", "major": 8, "minor": 0}, {"value": 6'
+            '500352, "op": "Sync", "major": 8, "minor": 0}, {"value": 109391872, "op": "Async", "major": '
+            '8, "minor": 0}, {"value": 115892224, "op": "Total", "major": 8, "minor": 0}], "io_service_ti'
+            'me_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 581357937, "op'
+            '": "Write", "major": 8, "minor": 0}, {"value": 204339427, "op": "Sync", "major": 8, "minor":'
+            '0}, {"value": 377018510, "op": "Async", "major": 8, "minor": 0}, {"value": 581357937, "op": '
+            '"Total", "major": 8, "minor": 0}], "time": 1640097371.652645, "io_wait_time_recursive": [{"v'
+            'alue": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 1149150164, "op": "Write", "major'
+            '": 8, "minor": 0}, {"value": 1122235223, "op": "Sync", "major": 8, "minor": 0}, {"value": 26'
+            '914941, "op": "Async", "major": 8, "minor": 0}, {"value": 1149150164, "op": "Total", "major"'
+            ': 8, "minor": 0}], "sectors_recursive": [{"value": 226352, "op": "", "major": 8, "minor": 0}'
+            '], "io_serviced_recursive": [{"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 1'
+            '805, "op": "Write", "major": 8, "minor": 0}, {"value": 522, "op": "Sync", "major": 8, "minor'
+            '": 0}, {"value": 1283, "op": "Async", "major": 8, "minor": 0}, {"value": 1805, "op": "Total"'
+            ', "major": 8, "minor": 0}, {"value": 0, "op": "Read", "major": 8, "minor": 0}, {"value": 180'
+            '5, "op": "Write", "major": 8, "minor": 0}, {"value": 522, "op": "Sync", "major": 8, "minor":'
+            '0}, {"value": 1283, "op": "Async", "major": 8, "minor": 0}, {"value": 1805, "op": "Total", "'
+            'major": 8, "minor": 0}], "io_time_recursive": [{"value": 2017966265, "op": "", "major": 8, "'
+            'minor": 0}], "names": {"8:0": "sda", "11:0": "sr0"}, "io_merged_recursive": [{"value": 0, "o'
+            'p": "Read", "major": 8, "minor": 0}, {"value": 0, "op": "Write", "major": 8, "minor": 0}, {"'
+            'value": 0, "op": "Sync", "major": 8, "minor": 0}, {"value": 0, "op": "Async", "major": 8, "m'
+            'inor": 0}, {"value": 0, "op": "Total", "major": 8, "minor": 0}]}'
+        )
     ],
 ]
 
@@ -142,36 +144,38 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60 = [
         '{"PluginVersion": "0.1", "ApiVersion": "1.40", "DockerPyVersion": "2.6.1"}',
     ],
     [
-        '{"names": {"11:0": "sr0", "8:0": "sda"}, "io_merged_recursive": [{"value": 0, "minor": 0, "m'
-        'ajor": 8, "op": "Read"}, {"value": 0, "minor": 0, "major": 8, "op": "Write"}, {"value": 0, "'
-        'minor": 0, "major": 8, "op": "Sync"}, {"value": 0, "minor": 0, "major": 8, "op": "Async"}, {'
-        '"value": 0, "minor": 0, "major": 8, "op": "Total"}], "io_wait_time_recursive": [{"value": 32'
-        '7741887, "minor": 0, "major": 8, "op": "Read"}, {"value": 48900760071, "minor": 0, "major": '
-        '8, "op": "Write"}, {"value": 48873845130, "minor": 0, "major": 8, "op": "Sync"}, {"value": 3'
-        '54656828, "minor": 0, "major": 8, "op": "Async"}, {"value": 49228501958, "minor": 0, "major"'
-        ': 8, "op": "Total"}], "sectors_recursive": [{"value": 4423472, "minor": 0, "major": 8, "op":'
-        '""}], "time": 1640097433.218057, "io_serviced_recursive": [{"value": 131072, "minor": 0, "ma'
-        'jor": 8, "op": "Read"}, {"value": 264465, "minor": 0, "major": 8, "op": "Write"}, {"value": '
-        '263182, "minor": 0, "major": 8, "op": "Sync"}, {"value": 132355, "minor": 0, "major": 8, "op'
-        '": "Async"}, {"value": 395537, "minor": 0, "major": 8, "op": "Total"}, {"value": 131072, "mi'
-        'nor": 0, "major": 8, "op": "Read"}, {"value": 264465, "minor": 0, "major": 8, "op": "Write"}'
-        ', {"value": 263182, "minor": 0, "major": 8, "op": "Sync"}, {"value": 132355, "minor": 0, "ma'
-        'jor": 8, "op": "Async"}, {"value": 395537, "minor": 0, "major": 8, "op": "Total"}], "io_serv'
-        'ice_bytes_recursive": [{"value": 536870912, "minor": 0, "major": 8, "op": "Read"}, {"value":'
-        '1727946752, "minor": 0, "major": 8, "op": "Write"}, {"value": 1618554880, "minor": 0, "major'
-        '": 8, "op": "Sync"}, {"value": 646262784, "minor": 0, "major": 8, "op": "Async"}, {"value": '
-        '2264817664, "minor": 0, "major": 8, "op": "Total"}, {"value": 536870912, "minor": 0, "major"'
-        ': 8, "op": "Read"}, {"value": 1727946752, "minor": 0, "major": 8, "op": "Write"}, {"value": '
-        '1618554880, "minor": 0, "major": 8, "op": "Sync"}, {"value": 646262784, "minor": 0, "major":'
-        '8, "op": "Async"}, {"value": 2264817664, "minor": 0, "major": 8, "op": "Total"}], "io_servic'
-        'e_time_recursive": [{"value": 9490485126, "minor": 0, "major": 8, "op": "Read"}, {"value": 2'
-        '8621999618, "minor": 0, "major": 8, "op": "Write"}, {"value": 28244981108, "minor": 0, "majo'
-        'r": 8, "op": "Sync"}, {"value": 9867503636, "minor": 0, "major": 8, "op": "Async"}, {"value"'
-        ': 38112484744, "minor": 0, "major": 8, "op": "Total"}], "io_queue_recursive": [{"value": 0, '
-        '"minor": 0, "major": 8, "op": "Read"}, {"value": 0, "minor": 0, "major": 8, "op": "Write"}, '
-        '{"value": 0, "minor": 0, "major": 8, "op": "Sync"}, {"value": 0, "minor": 0, "major": 8, "op'
-        '": "Async"}, {"value": 0, "minor": 0, "major": 8, "op": "Total"}], "io_time_recursive": [{"v'
-        'alue": 30284678714, "minor": 0, "major": 8, "op": ""}]}'
+        (
+            '{"names": {"11:0": "sr0", "8:0": "sda"}, "io_merged_recursive": [{"value": 0, "minor": 0, "m'
+            'ajor": 8, "op": "Read"}, {"value": 0, "minor": 0, "major": 8, "op": "Write"}, {"value": 0, "'
+            'minor": 0, "major": 8, "op": "Sync"}, {"value": 0, "minor": 0, "major": 8, "op": "Async"}, {'
+            '"value": 0, "minor": 0, "major": 8, "op": "Total"}], "io_wait_time_recursive": [{"value": 32'
+            '7741887, "minor": 0, "major": 8, "op": "Read"}, {"value": 48900760071, "minor": 0, "major": '
+            '8, "op": "Write"}, {"value": 48873845130, "minor": 0, "major": 8, "op": "Sync"}, {"value": 3'
+            '54656828, "minor": 0, "major": 8, "op": "Async"}, {"value": 49228501958, "minor": 0, "major"'
+            ': 8, "op": "Total"}], "sectors_recursive": [{"value": 4423472, "minor": 0, "major": 8, "op":'
+            '""}], "time": 1640097433.218057, "io_serviced_recursive": [{"value": 131072, "minor": 0, "ma'
+            'jor": 8, "op": "Read"}, {"value": 264465, "minor": 0, "major": 8, "op": "Write"}, {"value": '
+            '263182, "minor": 0, "major": 8, "op": "Sync"}, {"value": 132355, "minor": 0, "major": 8, "op'
+            '": "Async"}, {"value": 395537, "minor": 0, "major": 8, "op": "Total"}, {"value": 131072, "mi'
+            'nor": 0, "major": 8, "op": "Read"}, {"value": 264465, "minor": 0, "major": 8, "op": "Write"}'
+            ', {"value": 263182, "minor": 0, "major": 8, "op": "Sync"}, {"value": 132355, "minor": 0, "ma'
+            'jor": 8, "op": "Async"}, {"value": 395537, "minor": 0, "major": 8, "op": "Total"}], "io_serv'
+            'ice_bytes_recursive": [{"value": 536870912, "minor": 0, "major": 8, "op": "Read"}, {"value":'
+            '1727946752, "minor": 0, "major": 8, "op": "Write"}, {"value": 1618554880, "minor": 0, "major'
+            '": 8, "op": "Sync"}, {"value": 646262784, "minor": 0, "major": 8, "op": "Async"}, {"value": '
+            '2264817664, "minor": 0, "major": 8, "op": "Total"}, {"value": 536870912, "minor": 0, "major"'
+            ': 8, "op": "Read"}, {"value": 1727946752, "minor": 0, "major": 8, "op": "Write"}, {"value": '
+            '1618554880, "minor": 0, "major": 8, "op": "Sync"}, {"value": 646262784, "minor": 0, "major":'
+            '8, "op": "Async"}, {"value": 2264817664, "minor": 0, "major": 8, "op": "Total"}], "io_servic'
+            'e_time_recursive": [{"value": 9490485126, "minor": 0, "major": 8, "op": "Read"}, {"value": 2'
+            '8621999618, "minor": 0, "major": 8, "op": "Write"}, {"value": 28244981108, "minor": 0, "majo'
+            'r": 8, "op": "Sync"}, {"value": 9867503636, "minor": 0, "major": 8, "op": "Async"}, {"value"'
+            ': 38112484744, "minor": 0, "major": 8, "op": "Total"}], "io_queue_recursive": [{"value": 0, '
+            '"minor": 0, "major": 8, "op": "Read"}, {"value": 0, "minor": 0, "major": 8, "op": "Write"}, '
+            '{"value": 0, "minor": 0, "major": 8, "op": "Sync"}, {"value": 0, "minor": 0, "major": 8, "op'
+            '": "Async"}, {"value": 0, "minor": 0, "major": 8, "op": "Total"}], "io_time_recursive": [{"v'
+            'alue": 30284678714, "minor": 0, "major": 8, "op": ""}]}'
+        )
     ],
 ]
 
@@ -221,11 +225,13 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 0}, {"major"'
-        ': 8, "minor": 0, "op": "write", "value": 139948032}], "io_serviced_recursive": null, "io_que'
-        'ue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": null, "io_'
-        'merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "time": 16412'
-        '07165.4858, "names": {"11:0": "sr0", "8:0": "sda"}}'
+        (
+            '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 0}, {"major"'
+            ': 8, "minor": 0, "op": "write", "value": 139948032}], "io_serviced_recursive": null, "io_que'
+            'ue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": null, "io_'
+            'merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "time": 16412'
+            '07165.4858, "names": {"11:0": "sr0", "8:0": "sda"}}'
+        )
     ],
 ]
 MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60 = [
@@ -234,11 +240,13 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60 = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 536879104}, '
-        '{"major": 8, "minor": 0, "op": "write", "value": 1750560768}], "io_serviced_recursive": null'
-        ', "io_queue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": n'
-        'ull, "io_merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "tim'
-        'e": 1641207226.9843512, "names": {"11:0": "sr0", "8:0": "sda"}}'
+        (
+            '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 536879104}, '
+            '{"major": 8, "minor": 0, "op": "write", "value": 1750560768}], "io_serviced_recursive": null'
+            ', "io_queue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": n'
+            'ull, "io_merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "tim'
+            'e": 1641207226.9843512, "names": {"11:0": "sr0", "8:0": "sda"}}'
+        )
     ],
 ]
 
@@ -251,13 +259,15 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_ALL_ZEROS = [
         '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
-        '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 0},'
-        ' {"major": 8, "minor": 0, "op": "write", "value": 0}],'
-        ' "io_serviced_recursive": null, "io_queue_recursive": null,'
-        ' "io_service_time_recursive": null, "io_wait_time_recursive": null,'
-        ' "io_merged_recursive": null, "io_time_recursive": null,'
-        ' "sectors_recursive": null, "time": 1640097369.0,'
-        ' "names": {"8:0": "sda"}}'
+        (
+            '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 0},'
+            ' {"major": 8, "minor": 0, "op": "write", "value": 0}],'
+            ' "io_serviced_recursive": null, "io_queue_recursive": null,'
+            ' "io_service_time_recursive": null, "io_wait_time_recursive": null,'
+            ' "io_merged_recursive": null, "io_time_recursive": null,'
+            ' "sectors_recursive": null, "time": 1640097369.0,'
+            ' "names": {"8:0": "sda"}}'
+        )
     ],
 ]
 

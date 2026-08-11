@@ -146,9 +146,11 @@ INTERFACE_COUNTERS = [
         pytest.param(
             [
                 [
-                    '{"name": "lif1", "uuid": "uuid1", "state": "up", "enabled": true, '
-                    '"node_name": "node1", "port_name": "e0a", "failover": "default", '
-                    '"home_node": "node1", "home_port": "e0a", "is_home": true}'
+                    (
+                        '{"name": "lif1", "uuid": "uuid1", "state": "up", "enabled": true, '
+                        '"node_name": "node1", "port_name": "e0a", "failover": "default", '
+                        '"home_node": "node1", "home_port": "e0a", "is_home": true}'
+                    )
                 ]
             ],
             {
@@ -170,14 +172,18 @@ INTERFACE_COUNTERS = [
         pytest.param(
             [
                 [
-                    '{"name": "lif1", "uuid": "uuid1", "state": "up", "enabled": true, '
-                    '"node_name": "node1", "port_name": "e0a", "failover": "default", '
-                    '"home_node": "node1", "home_port": "e0a", "is_home": true}'
+                    (
+                        '{"name": "lif1", "uuid": "uuid1", "state": "up", "enabled": true, '
+                        '"node_name": "node1", "port_name": "e0a", "failover": "default", '
+                        '"home_node": "node1", "home_port": "e0a", "is_home": true}'
+                    )
                 ],
                 [
-                    '{"name": "lif2", "uuid": "uuid2", "state": "down", "enabled": true, '
-                    '"node_name": "node1", "port_name": "e0b", "failover": "default", '
-                    '"home_node": "node1", "home_port": "e0b", "is_home": false}'
+                    (
+                        '{"name": "lif2", "uuid": "uuid2", "state": "down", "enabled": true, '
+                        '"node_name": "node1", "port_name": "e0b", "failover": "default", '
+                        '"home_node": "node1", "home_port": "e0b", "is_home": false}'
+                    )
                 ],
             ],
             {
@@ -223,8 +229,10 @@ def test_parse_netapp_interfaces(
         pytest.param(
             [
                 [
-                    '{"id": "node1:lif1:12345", "recv_data": 1000, "recv_packet": 100, '
-                    '"recv_errors": 1, "send_data": 2000, "send_packet": 200, "send_errors": 2}'
+                    (
+                        '{"id": "node1:lif1:12345", "recv_data": 1000, "recv_packet": 100, '
+                        '"recv_errors": 1, "send_data": 2000, "send_packet": 200, "send_errors": 2}'
+                    )
                 ]
             ],
             {
@@ -243,12 +251,16 @@ def test_parse_netapp_interfaces(
         pytest.param(
             [
                 [
-                    '{"id": "node1:lif1:12345", "recv_data": 1000, "recv_packet": 100, '
-                    '"recv_errors": 1, "send_data": 2000, "send_packet": 200, "send_errors": 2}'
+                    (
+                        '{"id": "node1:lif1:12345", "recv_data": 1000, "recv_packet": 100, '
+                        '"recv_errors": 1, "send_data": 2000, "send_packet": 200, "send_errors": 2}'
+                    )
                 ],
                 [
-                    '{"id": "node1:lif2:12346", "recv_data": 3000, "recv_packet": 300, '
-                    '"recv_errors": 3, "send_data": 4000, "send_packet": 400, "send_errors": 4}'
+                    (
+                        '{"id": "node1:lif2:12346", "recv_data": 3000, "recv_packet": 300, '
+                        '"recv_errors": 3, "send_data": 4000, "send_packet": 400, "send_errors": 4}'
+                    )
                 ],
             ],
             {

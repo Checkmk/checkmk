@@ -95,8 +95,10 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
                 ),
                 (
                     2,
-                    "Inodes used: 99.83% (warn/crit at 90.00%/95.00%), Inodes available: 111 "
-                    "(0.17%)",
+                    (
+                        "Inodes used: 99.83% (warn/crit at 90.00%/95.00%), Inodes available: 111 "
+                        "(0.17%)"
+                    ),
                     [("inodes_used", 65375.0, 58937.4, 62211.7, 0.0, 65486.0)],
                 ),
             ],

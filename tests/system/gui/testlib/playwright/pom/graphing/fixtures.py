@@ -289,6 +289,21 @@ def fixture_service_graphs(
     yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
 
 
+def _open_combined_graphs(
+    dashboard_page: MainDashboard, *, host_name: str, service_filter: str | None
+) -> CombinedGraphsServiceSearch:
+    """Open the combined-graphs page without waiting for its cards."""
+    service_search = ServiceSearchPage(dashboard_page.page)
+    service_search.filter_sidebar.apply_host_filter(host_name)
+    if service_filter is not None:
+        service_search.filter_sidebar.apply_service_filter(service_filter)
+    service_search.filter_sidebar.apply_filters(service_search.services_table)
+    service_search.main_area.click_item_in_dropdown_list(
+        "Services", "All metrics of same type in one graph"
+    )
+    return CombinedGraphsServiceSearch(service_search.page, navigate_to_page=False)
+
+
 @pytest.fixture(name="combined_graphs_page")
 def fixture_combined_graphs_page(
     dashboard_page: MainDashboard,
@@ -301,13 +316,29 @@ def fixture_combined_graphs_page(
     Depends on `javascript_errors` and `requested_urls` so their listeners are attached
     before this navigates.
     """
-    service_search = ServiceSearchPage(dashboard_page.page)
-    service_search.filter_sidebar.apply_host_filter(graph_hosts_with_varying_data[0])
-    service_search.filter_sidebar.apply_service_filter(COMBINED_GRAPHS_SERVICE_FILTER)
-    service_search.filter_sidebar.apply_filters(service_search.services_table)
-    service_search.main_area.click_item_in_dropdown_list(
-        "Services", "All metrics of same type in one graph"
+    combined_graphs = _open_combined_graphs(
+        dashboard_page,
+        host_name=graph_hosts_with_varying_data[0],
+        service_filter=COMBINED_GRAPHS_SERVICE_FILTER,
     )
-    combined_graphs = CombinedGraphsServiceSearch(service_search.page, navigate_to_page=False)
     combined_graphs.wait_until_rendered()
     yield combined_graphs
+
+
+@pytest.fixture(name="combined_graphs_page_all_services")
+def fixture_combined_graphs_page_all_services(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+) -> Iterator[CombinedGraphsServiceSearch]:
+    """The combined-graphs page over every service of one host, not waiting for its cards.
+
+    Dropping the service filter is what lets one template gather several of the host's
+    services - its filesystems, its temperature zones - into a single card. A card over one
+    service exercises none of the combining.
+
+    Depends on `javascript_errors` so its listener is attached before this navigates.
+    """
+    yield _open_combined_graphs(
+        dashboard_page, host_name=graph_hosts_with_varying_data[0], service_filter=None
+    )

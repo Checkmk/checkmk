@@ -24,6 +24,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_combined_graphs_page,
+    fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
     fixture_forecast_graph,
     fixture_graph_collection,
@@ -62,6 +63,7 @@ logger = logging.getLogger(__name__)
 setup_fixtures = [notification_user]
 graphing_fixtures = [
     fixture_combined_graphs_page,
+    fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
     fixture_forecast_graph,
     fixture_graph_collection,

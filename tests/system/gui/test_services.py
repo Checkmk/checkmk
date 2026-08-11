@@ -280,6 +280,32 @@ def test_combined_graphs_have_no_broken_graphs(
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
+def test_combined_graphs_over_all_services_have_no_broken_graphs(
+    combined_graphs_page_all_services: CombinedGraphsServiceSearch,
+    javascript_errors: list[str],
+) -> None:
+    """A card gathering several of a host's services loads, as one over a single service does.
+
+    This is the page a user reaches from a host's service list, and the only one of the two
+    where the engine has to combine anything: a card over one service exercises no
+    combination at all.
+    """
+    combined_graphs = combined_graphs_page_all_services
+
+    # The page settles on either cards or a notice. Waiting for whichever comes first is what
+    # earns the two assertions below: without it, a page still rendering would satisfy both.
+    expect(
+        combined_graphs.panels.or_(combined_graphs.broken_graph).first,
+        "The page rendered neither a graph card nor a notice explaining their absence",
+    ).to_be_visible()
+
+    expect(
+        combined_graphs.broken_graph, "A graph card reported that it could not be loaded"
+    ).to_have_count(0)
+    expect(combined_graphs.panels, "The engine rendered no graph card at all").not_to_have_count(0)
+    assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
+
+
 # --- Graphing engine skeleton (CMK-35973): R1.3 Area 9 --------------------
 # Complete once the engine renders on this surface: reach the graph via
 # GraphAccessor.graph_root.
